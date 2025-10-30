@@ -34,6 +34,8 @@ Thumbs.db
 # Storage
 storage/
 !storage/.gitkeep
+uploads/
+!uploads/.gitkeep
 
 # Logs
 logs/
