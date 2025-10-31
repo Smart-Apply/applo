@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { StorageModule } from './storage/storage.module';
 import { LLMModule } from './llm/llm.module';
 import { ProfileModule } from './profile/profile.module';
+import { UploadsModule } from './uploads/uploads.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ConfigService } from './config/config.service';
 
@@ -27,7 +28,8 @@ import { ConfigService } from './config/config.service';
     StorageModule,
     LLMModule,
     ProfileModule,
-    // TODO: Add UploadsModule, JobPostingsModule, ApplicationsModule
+    UploadsModule,
+    // TODO: Add JobPostingsModule, ApplicationsModule
   ],
   providers: [
     {
