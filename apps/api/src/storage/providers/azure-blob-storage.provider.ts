@@ -1,5 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { BlobServiceClient, ContainerClient, generateBlobSASQueryParameters, BlobSASPermissions, StorageSharedKeyCredential } from '@azure/storage-blob';
+import {
+  BlobServiceClient,
+  ContainerClient,
+  generateBlobSASQueryParameters,
+  BlobSASPermissions,
+  StorageSharedKeyCredential,
+} from '@azure/storage-blob';
 import { StorageProvider } from '../storage.interface';
 import { ConfigService } from '../../config/config.service';
 
@@ -22,7 +28,7 @@ export class AzureBlobStorageProvider implements StorageProvider {
     try {
       const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
       this.containerClient = blobServiceClient.getContainerClient(containerName);
-      
+
       // Extract account key from connection string for SAS generation
       const keyMatch = connectionString.match(/AccountKey=([^;]+)/);
       if (keyMatch && this.accountName) {
@@ -60,7 +66,7 @@ export class AzureBlobStorageProvider implements StorageProvider {
     try {
       const downloadResponse = await blockBlobClient.download();
       const buffer = await this.streamToBuffer(downloadResponse.readableStreamBody);
-      
+
       this.logger.log(`File downloaded from Azure Blob: ${key}`);
       return buffer;
     } catch (error) {

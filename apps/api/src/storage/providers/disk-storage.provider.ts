@@ -24,17 +24,17 @@ export class DiskStorageProvider implements StorageProvider {
     }
   }
 
-  async upload(key: string, buffer: Buffer, mimeType: string): Promise<string> {
+  async upload(key: string, buffer: Buffer, _mimeType: string): Promise<string> {
     const filePath = path.join(this.uploadDir, key);
     const fileDir = path.dirname(filePath);
 
     try {
       // Ensure subdirectories exist
       await fs.mkdir(fileDir, { recursive: true });
-      
+
       // Write file
       await fs.writeFile(filePath, buffer);
-      
+
       this.logger.log(`File uploaded successfully: ${key}`);
       return key;
     } catch (error) {
@@ -68,11 +68,11 @@ export class DiskStorageProvider implements StorageProvider {
     }
   }
 
-  async getSignedUrl(key: string, expiresInSeconds: number): Promise<string> {
+  async getSignedUrl(key: string, _expiresInSeconds: number): Promise<string> {
     // For disk storage, return a simple file path
     // In a real app, you might want to generate a temporary token
     const filePath = path.join(this.uploadDir, key);
-    
+
     try {
       // Check if file exists
       await fs.access(filePath);
