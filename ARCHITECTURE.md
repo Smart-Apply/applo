@@ -95,7 +95,7 @@ apps/api/src/
 │   ├── dto/                   # Update profile DTOs
 │   └── profile.module.ts
 │
-├── uploads/                   # ⏳ TODO
+├── uploads/                   # ✅ IMPLEMENTED
 │   ├── uploads.controller.ts  # POST /uploads
 │   ├── uploads.service.ts     # File validation + storage
 │   ├── dto/                   # Upload DTOs
