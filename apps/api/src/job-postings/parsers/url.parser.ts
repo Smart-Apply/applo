@@ -1,5 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
 import axios from 'axios';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class UrlParser {
         maxRedirects: 5,
       });
 
-      const $ = cheerio.load(response.data);
+      const $ = load(response.data);
 
       // Remove scripts, styles, navigation, footer, etc.
       $('script, style, nav, footer, header, aside, iframe, noscript').remove();

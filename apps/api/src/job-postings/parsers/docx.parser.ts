@@ -1,5 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import * as mammoth from 'mammoth';
+import mammoth from 'mammoth';
 
 @Injectable()
 export class DocxParser {
