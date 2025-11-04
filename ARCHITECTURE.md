@@ -107,7 +107,7 @@ apps/api/src/
 │   ├── dto/                        # Parse DTOs
 │   └── job-postings.module.ts
 │
-├── pdf/                       # ⏳ TODO
+├── pdf/                       # ✅ IMPLEMENTED
 │   ├── pdf.service.ts         # Puppeteer HTML→PDF
 │   └── pdf.module.ts
 │
