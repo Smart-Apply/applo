@@ -8,6 +8,7 @@ import { StorageModule } from './storage/storage.module';
 import { LLMModule } from './llm/llm.module';
 import { ProfileModule } from './profile/profile.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { JobPostingsModule } from './job-postings/job-postings.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { ConfigService } from './config/config.service';
@@ -30,7 +31,8 @@ import { ConfigService } from './config/config.service';
     LLMModule,
     ProfileModule,
     UploadsModule,
-    // TODO: Add JobPostingsModule, ApplicationsModule
+    JobPostingsModule,
+    // TODO: Add ApplicationsModule
   ],
   providers: [
     {
