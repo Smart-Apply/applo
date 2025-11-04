@@ -63,12 +63,8 @@ export class ApplicationProcessor {
             `${e.title} at ${e.company} (${e.startDate.toLocaleDateString()} - ${e.endDate ? e.endDate.toLocaleDateString() : 'Present'})`,
         )
         .join('\n');
-      const certificates = profile.certificates
-        .map((c) => `${c.name} by ${c.issuer}`)
-        .join(', ');
-      const projects = profile.projects
-        .map((p) => `${p.name}: ${p.description || ''}`)
-        .join('\n');
+      const certificates = profile.certificates.map((c) => `${c.name} by ${c.issuer}`).join(', ');
+      const projects = profile.projects.map((p) => `${p.name}: ${p.description || ''}`).join('\n');
 
       // 4. Generate Cover Letter
       this.logger.log('Generating cover letter...');
@@ -96,10 +92,9 @@ export class ApplicationProcessor {
 
       // 6. Convert to PDFs
       this.logger.log('Converting to PDFs...');
-      const coverLetterPdf = await this.pdfService.generatePDF(
-        coverLetterText,
-        { template: 'cover-letter' },
-      );
+      const coverLetterPdf = await this.pdfService.generatePDF(coverLetterText, {
+        template: 'cover-letter',
+      });
       const resumePdf = await this.pdfService.generatePDF(resumeText, {
         template: 'resume',
       });
@@ -131,10 +126,7 @@ export class ApplicationProcessor {
 
       this.logger.log(`Application ${applicationId} completed successfully`);
     } catch (error) {
-      this.logger.error(
-        `Application ${applicationId} failed: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Application ${applicationId} failed: ${error.message}`, error.stack);
 
       // Update application status to FAILED
       await this.prisma.application.update({

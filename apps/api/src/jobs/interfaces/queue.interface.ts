@@ -31,10 +31,7 @@ export interface QueueProvider {
   /**
    * Subscribe to jobs and process them
    */
-  subscribe(
-    type: JobType,
-    handler: (job: Job) => Promise<void>,
-  ): Promise<void>;
+  subscribe(type: JobType, handler: (job: Job) => Promise<void>): Promise<void>;
 
   /**
    * Get job status by ID

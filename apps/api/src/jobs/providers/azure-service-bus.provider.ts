@@ -1,21 +1,10 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import {
-  ServiceBusClient,
-  ServiceBusReceiver,
-  ServiceBusSender,
-} from '@azure/service-bus';
+import { ServiceBusClient, ServiceBusReceiver, ServiceBusSender } from '@azure/service-bus';
 import { ConfigService } from '../../config/config.service';
-import {
-  QueueProvider,
-  JobType,
-  Job,
-  JobStatus,
-} from '../interfaces/queue.interface';
+import { QueueProvider, JobType, Job, JobStatus } from '../interfaces/queue.interface';
 
 @Injectable()
-export class AzureServiceBusProvider
-  implements QueueProvider, OnModuleDestroy
-{
+export class AzureServiceBusProvider implements QueueProvider, OnModuleDestroy {
   private readonly logger = new Logger(AzureServiceBusProvider.name);
   private client: ServiceBusClient;
   private senders = new Map<JobType, ServiceBusSender>();
@@ -74,10 +63,7 @@ export class AzureServiceBusProvider
     return jobId;
   }
 
-  async subscribe(
-    type: JobType,
-    handler: (job: Job) => Promise<void>,
-  ): Promise<void> {
+  async subscribe(type: JobType, handler: (job: Job) => Promise<void>): Promise<void> {
     const queueName = this.getQueueName(type);
     const receiver = await this.getReceiver(type);
 
@@ -107,10 +93,7 @@ export class AzureServiceBusProvider
 
           this.logger.log(`Job ${job.id} completed successfully`);
         } catch (error) {
-          this.logger.error(
-            `Job ${job.id} failed: ${error.message}`,
-            error.stack,
-          );
+          this.logger.error(`Job ${job.id} failed: ${error.message}`, error.stack);
 
           // Update status to FAILED
           job.status = JobStatus.FAILED;

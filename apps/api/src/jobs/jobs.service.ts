@@ -20,13 +20,10 @@ export class JobsService implements OnModuleInit {
 
   private async registerHandlers() {
     // Register APPLICATION_GENERATE handler
-    await this.queueProvider.subscribe(
-      JobType.APPLICATION_GENERATE,
-      async (job: Job) => {
-        this.logger.log(`Processing job ${job.id}: ${job.type}`);
-        await this.applicationProcessor.process(job);
-      },
-    );
+    await this.queueProvider.subscribe(JobType.APPLICATION_GENERATE, async (job: Job) => {
+      this.logger.log(`Processing job ${job.id}: ${job.type}`);
+      await this.applicationProcessor.process(job);
+    });
   }
 
   /**

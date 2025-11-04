@@ -1,10 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  QueueProvider,
-  JobType,
-  Job,
-  JobStatus,
-} from '../interfaces/queue.interface';
+import { QueueProvider, JobType, Job, JobStatus } from '../interfaces/queue.interface';
 
 @Injectable()
 export class InMemoryQueueProvider implements QueueProvider {
@@ -35,10 +30,7 @@ export class InMemoryQueueProvider implements QueueProvider {
     return jobId;
   }
 
-  async subscribe(
-    type: JobType,
-    handler: (job: Job) => Promise<void>,
-  ): Promise<void> {
+  async subscribe(type: JobType, handler: (job: Job) => Promise<void>): Promise<void> {
     this.handlers.set(type, handler);
     this.logger.log(`Handler registered for job type: ${type}`);
   }
@@ -90,19 +82,14 @@ export class InMemoryQueueProvider implements QueueProvider {
         job.error = error.message;
         this.jobs.set(job.id, { ...job });
 
-        this.logger.error(
-          `Job ${job.id} failed: ${error.message}`,
-          error.stack,
-        );
+        this.logger.error(`Job ${job.id} failed: ${error.message}`, error.stack);
 
         // Retry logic (max 3 retries)
         if ((job.retryCount || 0) < 3) {
           job.retryCount = (job.retryCount || 0) + 1;
           job.status = JobStatus.PENDING;
           this.queue.push(job);
-          this.logger.log(
-            `Job ${job.id} queued for retry (${job.retryCount}/3)`,
-          );
+          this.logger.log(`Job ${job.id} queued for retry (${job.retryCount}/3)`);
         }
       }
     }

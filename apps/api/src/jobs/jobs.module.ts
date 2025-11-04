@@ -11,13 +11,7 @@ import { AzureServiceBusProvider } from './providers/azure-service-bus.provider'
 import { ApplicationProcessor } from './processors/application.processor';
 
 @Module({
-  imports: [
-    ConfigModule,
-    PrismaModule,
-    LLMModule,
-    PdfModule,
-    StorageModule,
-  ],
+  imports: [ConfigModule, PrismaModule, LLMModule, PdfModule, StorageModule],
   providers: [
     JobsService,
     ApplicationProcessor,

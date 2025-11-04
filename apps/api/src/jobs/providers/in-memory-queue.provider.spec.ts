@@ -3,11 +3,16 @@ import { InMemoryQueueProvider } from './in-memory-queue.provider';
 import { JobType, JobStatus } from '../interfaces/queue.interface';
 
 // Extend Jest matchers
+interface CustomMatchers<R = unknown> {
+  toBeOneOf(expected: any[]): R;
+}
+
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
-    interface Matchers<R> {
-      toBeOneOf(expected: any[]): R;
-    }
+    interface Expect extends CustomMatchers {}
+    interface Matchers<R> extends CustomMatchers<R> {}
+    interface InverseAsymmetricMatchers extends CustomMatchers {}
   }
 }
 
@@ -29,10 +34,7 @@ describe('InMemoryQueueProvider', () => {
   describe('publish', () => {
     it('should publish a job and return job ID', async () => {
       const jobData = { test: 'data' };
-      const jobId = await provider.publish(
-        JobType.APPLICATION_GENERATE,
-        jobData,
-      );
+      const jobId = await provider.publish(JobType.APPLICATION_GENERATE, jobData);
 
       expect(jobId).toBeDefined();
       expect(jobId).toMatch(/^job-/);
@@ -40,10 +42,7 @@ describe('InMemoryQueueProvider', () => {
 
     it('should create a job with correct properties', async () => {
       const jobData = { test: 'data' };
-      const jobId = await provider.publish(
-        JobType.APPLICATION_GENERATE,
-        jobData,
-      );
+      const jobId = await provider.publish(JobType.APPLICATION_GENERATE, jobData);
 
       const job = await provider.getJob(jobId);
 
@@ -51,10 +50,7 @@ describe('InMemoryQueueProvider', () => {
       expect(job?.id).toBe(jobId);
       expect(job?.type).toBe(JobType.APPLICATION_GENERATE);
       expect(job?.data).toEqual(jobData);
-      expect(job?.status).toBeOneOf([
-        JobStatus.PENDING,
-        JobStatus.PROCESSING,
-      ]);
+      expect(job?.status).toBeOneOf([JobStatus.PENDING, JobStatus.PROCESSING]);
       expect(job?.createdAt).toBeInstanceOf(Date);
       expect(job?.retryCount).toBe(0);
     });
@@ -82,10 +78,7 @@ describe('InMemoryQueueProvider', () => {
       await provider.subscribe(JobType.APPLICATION_GENERATE, handler);
 
       const jobData = { test: 'data' };
-      const jobId = await provider.publish(
-        JobType.APPLICATION_GENERATE,
-        jobData,
-      );
+      const jobId = await provider.publish(JobType.APPLICATION_GENERATE, jobData);
 
       // Wait for processing
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -114,10 +107,7 @@ describe('InMemoryQueueProvider', () => {
       await provider.subscribe(JobType.APPLICATION_GENERATE, handler);
 
       const jobData = { test: 'data' };
-      const jobId = await provider.publish(
-        JobType.APPLICATION_GENERATE,
-        jobData,
-      );
+      const jobId = await provider.publish(JobType.APPLICATION_GENERATE, jobData);
 
       // Wait for processing and retries
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -133,10 +123,7 @@ describe('InMemoryQueueProvider', () => {
       await provider.subscribe(JobType.APPLICATION_GENERATE, handler);
 
       const jobData = { test: 'data' };
-      const jobId = await provider.publish(
-        JobType.APPLICATION_GENERATE,
-        jobData,
-      );
+      const jobId = await provider.publish(JobType.APPLICATION_GENERATE, jobData);
 
       // Wait for processing and retries
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -151,10 +138,7 @@ describe('InMemoryQueueProvider', () => {
   describe('getJob', () => {
     it('should return job by ID', async () => {
       const jobData = { test: 'data' };
-      const jobId = await provider.publish(
-        JobType.APPLICATION_GENERATE,
-        jobData,
-      );
+      const jobId = await provider.publish(JobType.APPLICATION_GENERATE, jobData);
 
       const job = await provider.getJob(jobId);
 
@@ -182,14 +166,12 @@ expect.extend({
     const pass = expected.includes(received);
     if (pass) {
       return {
-        message: () =>
-          `expected ${received} not to be one of ${expected.join(', ')}`,
+        message: () => `expected ${received} not to be one of ${expected.join(', ')}`,
         pass: true,
       };
     } else {
       return {
-        message: () =>
-          `expected ${received} to be one of ${expected.join(', ')}`,
+        message: () => `expected ${received} to be one of ${expected.join(', ')}`,
         pass: false,
       };
     }

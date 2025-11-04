@@ -9,17 +9,21 @@ import { PdfService } from '../pdf/pdf.service';
 import { StorageService } from '../storage/storage.service';
 
 // Extend Jest matchers
+interface CustomMatchers<R = unknown> {
+  toBeOneOf(expected: any[]): R;
+}
+
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
-    interface Matchers<R> {
-      toBeOneOf(expected: any[]): R;
-    }
+    interface Expect extends CustomMatchers {}
+    interface Matchers<R> extends CustomMatchers<R> {}
+    interface InverseAsymmetricMatchers extends CustomMatchers {}
   }
 }
 
 describe('JobsService', () => {
   let service: JobsService;
-  let queueProvider: InMemoryQueueProvider;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -68,7 +72,6 @@ describe('JobsService', () => {
     }).compile();
 
     service = module.get<JobsService>(JobsService);
-    queueProvider = module.get<InMemoryQueueProvider>(InMemoryQueueProvider);
 
     // Initialize the service to register handlers
     await service.onModuleInit();
@@ -86,10 +89,7 @@ describe('JobsService', () => {
         jobPostingId: 'job-123',
       };
 
-      const jobId = await service.publishJob(
-        JobType.APPLICATION_GENERATE,
-        jobData,
-      );
+      const jobId = await service.publishJob(JobType.APPLICATION_GENERATE, jobData);
 
       expect(jobId).toBeDefined();
       expect(jobId).toMatch(/^job-/);
@@ -104,10 +104,7 @@ describe('JobsService', () => {
         jobPostingId: 'job-123',
       };
 
-      const jobId = await service.publishJob(
-        JobType.APPLICATION_GENERATE,
-        jobData,
-      );
+      const jobId = await service.publishJob(JobType.APPLICATION_GENERATE, jobData);
 
       const job = await service.getJobStatus(jobId);
 
@@ -142,14 +139,12 @@ expect.extend({
     const pass = expected.includes(received);
     if (pass) {
       return {
-        message: () =>
-          `expected ${received} not to be one of ${expected.join(', ')}`,
+        message: () => `expected ${received} not to be one of ${expected.join(', ')}`,
         pass: true,
       };
     } else {
       return {
-        message: () =>
-          `expected ${received} to be one of ${expected.join(', ')}`,
+        message: () => `expected ${received} to be one of ${expected.join(', ')}`,
         pass: false,
       };
     }
