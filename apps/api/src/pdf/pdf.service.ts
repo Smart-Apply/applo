@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
 import { ConfigService } from '../config/config.service';
 
@@ -14,7 +14,7 @@ export interface PdfGenerationOptions {
 }
 
 @Injectable()
-export class PdfService {
+export class PdfService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PdfService.name);
   private browser: puppeteer.Browser;
 
@@ -22,12 +22,17 @@ export class PdfService {
 
   async onModuleInit() {
     // Initialize browser on module startup
-    this.browser = await puppeteer.launch({
-      headless: true,
-      executablePath: this.configService.puppeteerExecutablePath || undefined,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-    this.logger.log('Puppeteer browser initialized');
+    try {
+      this.browser = await puppeteer.launch({
+        headless: true,
+        executablePath: this.configService.puppeteerExecutablePath || undefined,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+      this.logger.log('Puppeteer browser initialized');
+    } catch (error) {
+      this.logger.error('Failed to initialize Puppeteer browser', error);
+      throw new Error(`Puppeteer initialization failed: ${error.message}`);
+    }
   }
 
   async onModuleDestroy() {
@@ -38,6 +43,10 @@ export class PdfService {
   }
 
   async generatePDF(html: string, options: PdfGenerationOptions = {}): Promise<Buffer> {
+    if (!this.browser) {
+      throw new Error('Browser not initialized. Ensure onModuleInit has completed.');
+    }
+
     const page = await this.browser.newPage();
 
     try {
