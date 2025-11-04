@@ -43,7 +43,7 @@ export class ApplicationsController {
     @CurrentUser() user: any,
     @Body() dto: CreateApplicationDto,
   ): Promise<ApplicationResponseDto> {
-    return this.applicationsService.create(user.sub, dto);
+    return this.applicationsService.create(user.id, dto);
   }
 
   @Get()
@@ -68,7 +68,7 @@ export class ApplicationsController {
     @Query('includeJobPosting', new ParseBoolPipe({ optional: true }))
     includeJobPosting = false,
   ): Promise<ApplicationResponseDto[]> {
-    return this.applicationsService.findAll(user.sub, includeJobPosting);
+    return this.applicationsService.findAll(user.id, includeJobPosting);
   }
 
   @Get(':id')
@@ -95,7 +95,7 @@ export class ApplicationsController {
     @Query('includeJobPosting', new ParseBoolPipe({ optional: true }))
     includeJobPosting = false,
   ): Promise<ApplicationResponseDto> {
-    return this.applicationsService.findOne(user.sub, id, includeJobPosting);
+    return this.applicationsService.findOne(user.id, id, includeJobPosting);
   }
 
   @Get(':id/files')
@@ -115,6 +115,6 @@ export class ApplicationsController {
     @CurrentUser() user: any,
     @Param('id') id: string,
   ): Promise<ApplicationFilesResponseDto> {
-    return this.applicationsService.getFiles(user.sub, id);
+    return this.applicationsService.getFiles(user.id, id);
   }
 }

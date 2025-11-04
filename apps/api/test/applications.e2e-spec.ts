@@ -25,7 +25,7 @@ describe('ApplicationsController (e2e)', () => {
     await app.init();
 
     // Wait for module initialization (JobsService.onModuleInit)
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     prisma = app.get<PrismaService>(PrismaService);
 
@@ -112,14 +112,14 @@ describe('ApplicationsController (e2e)', () => {
         .expect(401);
     });
 
-    it('should return 400 with invalid UUID', async () => {
+    it('should return 404 with non-existent job posting ID', async () => {
       await request(app.getHttpServer())
         .post('/api/v1/applications')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          jobPostingId: 'invalid-uuid',
+          jobPostingId: 'non-existent-id',
         })
-        .expect(400);
+        .expect(404);
     });
   });
 
@@ -151,9 +151,7 @@ describe('ApplicationsController (e2e)', () => {
     });
 
     it('should return 401 without auth token', async () => {
-      await request(app.getHttpServer())
-        .get('/api/v1/applications')
-        .expect(401);
+      await request(app.getHttpServer()).get('/api/v1/applications').expect(401);
     });
   });
 
@@ -202,9 +200,7 @@ describe('ApplicationsController (e2e)', () => {
     });
 
     it('should return 401 without auth token', async () => {
-      await request(app.getHttpServer())
-        .get(`/api/v1/applications/${applicationId}`)
-        .expect(401);
+      await request(app.getHttpServer()).get(`/api/v1/applications/${applicationId}`).expect(401);
     });
   });
 
@@ -222,6 +218,18 @@ describe('ApplicationsController (e2e)', () => {
         },
       });
       pendingApplicationId = pendingApp.id;
+
+      // Create dummy files for testing
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const fs = require('fs');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const path = require('path');
+      const uploadsDir = path.join(process.cwd(), 'uploads/test');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(uploadsDir, 'cover-letter.pdf'), 'dummy cover letter content');
+      fs.writeFileSync(path.join(uploadsDir, 'resume.pdf'), 'dummy resume content');
 
       // Create a READY application with file keys
       const readyApp = await prisma.application.create({

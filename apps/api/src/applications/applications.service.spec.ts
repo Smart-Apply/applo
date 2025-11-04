@@ -1,8 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JobsService } from '../jobs/jobs.service';
@@ -135,22 +132,19 @@ describe('ApplicationsService', () => {
 
       expect(result.id).toBe('app-123');
       expect(result.status).toBe('PENDING');
-      expect(jobsService.publishJob).toHaveBeenCalledWith(
-        JobType.APPLICATION_GENERATE,
-        {
-          applicationId: 'app-123',
-          userId,
-          jobPostingId: dto.jobPostingId,
-        },
-      );
+      expect(jobsService.publishJob).toHaveBeenCalledWith(JobType.APPLICATION_GENERATE, {
+        applicationId: 'app-123',
+        userId,
+        jobPostingId: dto.jobPostingId,
+      });
     });
 
     it('should throw NotFoundException if job posting not found', async () => {
       jest.spyOn(prisma.jobPosting, 'findUnique').mockResolvedValue(null);
 
-      await expect(
-        service.create('user-123', { jobPostingId: 'invalid' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.create('user-123', { jobPostingId: 'invalid' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if profile not found', async () => {
@@ -161,9 +155,9 @@ describe('ApplicationsService', () => {
       } as any);
       jest.spyOn(prisma.profile, 'findUnique').mockResolvedValue(null);
 
-      await expect(
-        service.create('user-123', { jobPostingId: 'job-123' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.create('user-123', { jobPostingId: 'job-123' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should mark application as FAILED if job queueing fails', async () => {
@@ -191,13 +185,9 @@ describe('ApplicationsService', () => {
         jobPosting: { id: 'job-123', title: 'Test Job', company: 'Test Co' },
       };
 
-      jest
-        .spyOn(prisma.application, 'create')
-        .mockResolvedValue(mockApplication as any);
+      jest.spyOn(prisma.application, 'create').mockResolvedValue(mockApplication as any);
 
-      jest
-        .spyOn(jobsService, 'publishJob')
-        .mockRejectedValue(new Error('Queue error'));
+      jest.spyOn(jobsService, 'publishJob').mockRejectedValue(new Error('Queue error'));
 
       jest.spyOn(prisma.application, 'update').mockResolvedValue({
         ...mockApplication,
@@ -205,9 +195,7 @@ describe('ApplicationsService', () => {
         errorMessage: 'Failed to queue application for processing',
       } as any);
 
-      await expect(service.create(userId, dto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.create(userId, dto)).rejects.toThrow(BadRequestException);
 
       expect(prisma.application.update).toHaveBeenCalledWith({
         where: { id: 'app-123' },
@@ -236,9 +224,7 @@ describe('ApplicationsService', () => {
         updatedAt: new Date(),
       };
 
-      jest
-        .spyOn(prisma.application, 'findFirst')
-        .mockResolvedValue(application as any);
+      jest.spyOn(prisma.application, 'findFirst').mockResolvedValue(application as any);
 
       const result = await service.findOne('user-123', 'app-123');
 
@@ -252,9 +238,7 @@ describe('ApplicationsService', () => {
     it('should throw NotFoundException if application not found', async () => {
       jest.spyOn(prisma.application, 'findFirst').mockResolvedValue(null);
 
-      await expect(
-        service.findOne('user-123', 'invalid-id'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('user-123', 'invalid-id')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -277,9 +261,7 @@ describe('ApplicationsService', () => {
         },
       ];
 
-      jest
-        .spyOn(prisma.application, 'findMany')
-        .mockResolvedValue(applications as any);
+      jest.spyOn(prisma.application, 'findMany').mockResolvedValue(applications as any);
 
       const result = await service.findAll('user-123');
 
@@ -303,13 +285,9 @@ describe('ApplicationsService', () => {
         resumeFileKey: 'applications/app-123-resume.pdf',
       };
 
-      jest
-        .spyOn(prisma.application, 'findFirst')
-        .mockResolvedValue(application as any);
+      jest.spyOn(prisma.application, 'findFirst').mockResolvedValue(application as any);
 
-      jest
-        .spyOn(storageService, 'getSignedUrl')
-        .mockResolvedValue('https://storage.azure.com/...');
+      jest.spyOn(storageService, 'getSignedUrl').mockResolvedValue('https://storage.azure.com/...');
 
       const result = await service.getFiles('user-123', 'app-123');
 
@@ -326,17 +304,13 @@ describe('ApplicationsService', () => {
         status: 'PENDING',
       } as any);
 
-      await expect(
-        service.getFiles('user-123', 'app-123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.getFiles('user-123', 'app-123')).rejects.toThrow(BadRequestException);
     });
 
     it('should throw NotFoundException if application not found', async () => {
       jest.spyOn(prisma.application, 'findFirst').mockResolvedValue(null);
 
-      await expect(
-        service.getFiles('user-123', 'app-123'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.getFiles('user-123', 'app-123')).rejects.toThrow(NotFoundException);
     });
   });
 });
