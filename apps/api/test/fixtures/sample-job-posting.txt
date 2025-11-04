@@ -1,0 +1,26 @@
+Senior Software Engineer at Google
+
+Location: Remote, USA
+
+Job Description:
+We are looking for a talented Senior Software Engineer to join our team and help build the next generation of cloud infrastructure.
+
+Requirements:
+- 5+ years of experience in software development
+- Strong knowledge of Java, Python, or Go
+- Experience with distributed systems
+- Excellent problem-solving skills
+- Bachelor's degree in Computer Science or related field
+
+Responsibilities:
+- Design and implement scalable backend services
+- Collaborate with cross-functional teams
+- Mentor junior engineers
+- Participate in code reviews
+- Write technical documentation
+
+Nice to Have:
+- Experience with Kubernetes and Docker
+- Knowledge of machine learning frameworks
+- Previous experience at a fast-paced tech company
+- Contributions to open source projects
