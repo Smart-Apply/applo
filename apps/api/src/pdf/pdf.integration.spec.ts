@@ -78,11 +78,11 @@ describe('PDF Generation Integration', () => {
     `;
 
     const pdf = await service.generatePDF(html, { template: 'cover-letter' });
-    
+
     // Verify PDF is valid
     expect(pdf.toString('utf8', 0, 4)).toBe('%PDF');
     expect(pdf.length).toBeGreaterThan(5000); // Reasonable size
-    
+
     // Optional: Write to file for manual inspection during development
     // const fs = require('fs');
     // fs.writeFileSync('/tmp/cover-letter-test.pdf', pdf);
@@ -176,10 +176,10 @@ describe('PDF Generation Integration', () => {
     `;
 
     const pdf = await service.generatePDF(html, { template: 'resume' });
-    
+
     expect(pdf.toString('utf8', 0, 4)).toBe('%PDF');
     expect(pdf.length).toBeGreaterThan(5000);
-    
+
     // Optional: Write to file for manual inspection
     // const fs = require('fs');
     // fs.writeFileSync('/tmp/resume-test.pdf', pdf);
@@ -204,7 +204,7 @@ describe('PDF Generation Integration', () => {
     `;
 
     const pdf = await service.generatePDF(html);
-    
+
     expect(pdf.toString('utf8', 0, 4)).toBe('%PDF');
     expect(pdf.length).toBeGreaterThan(1000);
   }, 30000);

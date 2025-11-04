@@ -37,10 +37,7 @@ export class PdfService {
     }
   }
 
-  async generatePDF(
-    html: string,
-    options: PdfGenerationOptions = {},
-  ): Promise<Buffer> {
+  async generatePDF(html: string, options: PdfGenerationOptions = {}): Promise<Buffer> {
     const page = await this.browser.newPage();
 
     try {
@@ -80,10 +77,9 @@ export class PdfService {
   private getTemplateCSS(template: 'cover-letter' | 'resume'): string {
     // Base styles + template-specific styles
     const baseCSS = this.getBaseCSS();
-    const templateCSS = template === 'cover-letter' 
-      ? this.getCoverLetterCSS() 
-      : this.getResumeCSS();
-    
+    const templateCSS =
+      template === 'cover-letter' ? this.getCoverLetterCSS() : this.getResumeCSS();
+
     return `${baseCSS}\n${templateCSS}`;
   }
 

@@ -4,7 +4,6 @@ import { ConfigService } from '../config/config.service';
 
 describe('PdfService', () => {
   let service: PdfService;
-  let configService: ConfigService;
 
   const mockConfigService = {
     puppeteerExecutablePath: undefined,
@@ -25,7 +24,6 @@ describe('PdfService', () => {
     }).compile();
 
     service = module.get<PdfService>(PdfService);
-    configService = module.get<ConfigService>(ConfigService);
 
     // Initialize the browser
     await service.onModuleInit();
@@ -62,9 +60,9 @@ describe('PdfService', () => {
           </body>
         </html>
       `;
-      
+
       const pdf = await service.generatePDF(html, { template: 'cover-letter' });
-      
+
       expect(pdf).toBeInstanceOf(Buffer);
       expect(pdf.length).toBeGreaterThan(0);
       expect(pdf.toString('utf8', 0, 4)).toBe('%PDF');
@@ -84,9 +82,9 @@ describe('PdfService', () => {
           </body>
         </html>
       `;
-      
+
       const pdf = await service.generatePDF(html, { template: 'resume' });
-      
+
       expect(pdf).toBeInstanceOf(Buffer);
       expect(pdf.length).toBeGreaterThan(0);
       expect(pdf.toString('utf8', 0, 4)).toBe('%PDF');
@@ -94,7 +92,7 @@ describe('PdfService', () => {
 
     it('should handle invalid HTML gracefully', async () => {
       const invalidHtml = '<html><body><h1>Unclosed tag';
-      
+
       // Should still generate PDF (Puppeteer auto-closes tags)
       const pdf = await service.generatePDF(invalidHtml);
       expect(pdf).toBeInstanceOf(Buffer);
@@ -111,7 +109,7 @@ describe('PdfService', () => {
           left: '10mm',
         },
       };
-      
+
       const pdf = await service.generatePDF(html, options);
       expect(pdf).toBeInstanceOf(Buffer);
       expect(pdf.toString('utf8', 0, 4)).toBe('%PDF');
@@ -122,7 +120,7 @@ describe('PdfService', () => {
       const options = {
         format: 'Letter' as const,
       };
-      
+
       const pdf = await service.generatePDF(html, options);
       expect(pdf).toBeInstanceOf(Buffer);
       expect(pdf.toString('utf8', 0, 4)).toBe('%PDF');
@@ -130,7 +128,7 @@ describe('PdfService', () => {
 
     it('should default to A4 format', async () => {
       const html = '<html><body><h1>Test</h1></body></html>';
-      
+
       const pdf = await service.generatePDF(html);
       expect(pdf).toBeInstanceOf(Buffer);
       expect(pdf.toString('utf8', 0, 4)).toBe('%PDF');
