@@ -56,3 +56,6 @@ temp/
 
 # Azure
 .azure/
+
+# Uploaded files (disk storage)
+uploads/
