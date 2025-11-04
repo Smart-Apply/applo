@@ -284,12 +284,9 @@ export class JobPostingsService {
     // Build pattern for section headers with caching
     const cacheKey = headers.join('|');
     let sectionRegex = this.sectionRegexCache.get(cacheKey);
-    
+
     if (!sectionRegex) {
-      sectionRegex = new RegExp(
-        `(?:${cacheKey})\\s*:?\\s*([\\s\\S]*?)(?=(?:${cacheKey})|$)`,
-        'i',
-      );
+      sectionRegex = new RegExp(`(?:${cacheKey})\\s*:?\\s*([\\s\\S]*?)(?=(?:${cacheKey})|$)`, 'i');
       this.sectionRegexCache.set(cacheKey, sectionRegex);
     }
 
