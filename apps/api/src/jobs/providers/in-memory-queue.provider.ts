@@ -10,7 +10,7 @@ export class InMemoryQueueProvider implements QueueProvider {
   private processing = false;
 
   async publish<T>(type: JobType, data: T): Promise<string> {
-    const jobId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const jobId = `job-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
     const job: Job = {
       id: jobId,

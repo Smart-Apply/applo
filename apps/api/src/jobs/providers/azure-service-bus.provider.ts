@@ -38,7 +38,7 @@ export class AzureServiceBusProvider implements QueueProvider, OnModuleDestroy {
     const queueName = this.getQueueName(type);
     const sender = await this.getSender(type);
 
-    const jobId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const jobId = `job-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
     const job: Job = {
       id: jobId,
@@ -117,12 +117,12 @@ export class AzureServiceBusProvider implements QueueProvider, OnModuleDestroy {
 
   async healthCheck(): Promise<boolean> {
     try {
-      // Try to get queue properties as health check
-      const sender = this.senders.values().next().value;
-      if (sender) {
-        // If we can create sender, connection is healthy
-        return true;
-      }
+      // Check if client is initialized and connection is healthy
+      // For a more comprehensive check, we verify we can create a test sender
+      const testSender = this.client.createSender(
+        this.getQueueName(JobType.APPLICATION_GENERATE),
+      );
+      await testSender.close();
       return true;
     } catch (error) {
       this.logger.error('Service Bus health check failed', error);
@@ -151,7 +151,9 @@ export class AzureServiceBusProvider implements QueueProvider, OnModuleDestroy {
   }
 
   private getQueueName(type: JobType): string {
-    // Convert job type to queue name
-    return type.replace(':', '-'); // e.g., "application-generate"
+    // Convert job type to Azure Service Bus compliant queue name
+    // Azure queue names must be lowercase alphanumeric with hyphens
+    // and cannot start or end with a hyphen
+    return type.toLowerCase().replace(/[^a-z0-9-]/g, '-');
   }
 }
