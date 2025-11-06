@@ -4,9 +4,8 @@ import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-// Import HumanMessage - use require to avoid TypeScript module resolution issues with @langchain/core
-// This works at runtime but TypeScript can't resolve the path properly in some configurations
-const { HumanMessage } = require('@langchain/core/messages');
+// Import HumanMessage using the specific dist path to resolve module resolution issues
+import { HumanMessage } from '@langchain/core/dist/messages/index.js';
 
 // Define the structured output schema for job posting extraction
 const JobPostingSchema = z.object({
@@ -50,7 +49,9 @@ export class AgentUrlParser {
         openAIApiKey: azureApiKey,
         configuration: {
           baseURL: `${azureEndpoint}/openai/deployments/${azureDeployment}`,
-          defaultQuery: { 'api-version': process.env.AZURE_OPENAI_API_VERSION || '2024-02-15-preview' },
+          defaultQuery: {
+            'api-version': process.env.AZURE_OPENAI_API_VERSION || '2024-02-15-preview',
+          },
           defaultHeaders: { 'api-key': azureApiKey },
         },
         temperature: 0.3, // Lower temperature for more consistent extraction
@@ -149,12 +150,14 @@ export class AgentUrlParser {
       });
 
       // Wait for network to be idle (dynamic content loaded)
-      await page.waitForLoadState('networkidle', {
-        timeout: 5000,
-      }).catch(() => {
-        // Ignore timeout, some sites continuously load content
-        this.logger.debug('Network idle timeout, proceeding anyway');
-      });
+      await page
+        .waitForLoadState('networkidle', {
+          timeout: 5000,
+        })
+        .catch(() => {
+          // Ignore timeout, some sites continuously load content
+          this.logger.debug('Network idle timeout, proceeding anyway');
+        });
 
       // Handle common popups and cookie banners
       await this.handlePopups(page);
@@ -257,10 +260,7 @@ export class AgentUrlParser {
   /**
    * Use LLM to extract structured job posting data from page content
    */
-  private async extractStructuredData(
-    content: string,
-    url: string,
-  ): Promise<JobPostingExtraction> {
+  private async extractStructuredData(content: string, url: string): Promise<JobPostingExtraction> {
     this.logger.debug('Using LLM to extract structured data...');
 
     const schema = zodToJsonSchema(JobPostingSchema);
@@ -330,9 +330,7 @@ ${JSON.stringify(schema, null, 2)}`;
     }
 
     const totalItems =
-      data.requirements.length +
-      data.responsibilities.length +
-      data.niceToHave.length;
+      data.requirements.length + data.responsibilities.length + data.niceToHave.length;
 
     if (totalItems === 0 && (!data.description || data.description.length < 50)) {
       throw new Error('Insufficient job posting content extracted');

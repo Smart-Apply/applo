@@ -57,10 +57,10 @@ describe('AgentUrlParser', () => {
 
     it.skip('should parse a simple job posting page', async () => {
       parser = new AgentUrlParser();
-      
+
       // This would require a real URL and API key
       const result = await parser.parse('https://example.com/job-posting');
-      
+
       expect(result.title).toBeDefined();
       expect(result.company).toBeDefined();
       expect(result.requirements).toBeInstanceOf(Array);
