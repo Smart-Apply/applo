@@ -13,6 +13,7 @@ interface ParsedJobData {
   company: string;
   location?: string;
   description?: string;
+  language?: string;
   requirements: string[];
   responsibilities: string[];
   niceToHave: string[];
@@ -41,27 +42,30 @@ export class JobPostingsService {
     let parsed: ParsedJobData;
 
     // 1. Determine input source and extract text
-    if (dto.text) {
-      this.logger.log('Parsing job posting from text input');
-      rawText = this.textParser.parse(dto.text);
-      parsed = this.extractStructuredData(rawText);
-    } else if (dto.url) {
+    // Priority: URL > File > Text (URLs are most specific and should use agent parser)
+    if (dto.url) {
       this.logger.log(`Parsing job posting from URL: ${dto.url}`);
       const urlResult = await this.urlParser.parse(dto.url);
-      
+
       // Check if we got structured data from agent parser
       if (typeof urlResult === 'object' && 'rawText' in urlResult) {
         // Agent parser returned structured data
         rawText = urlResult.rawText;
         parsed = urlResult;
+        this.logger.log('✅ Agent parser returned structured data');
       } else {
         // Cheerio parser returned raw text
         rawText = urlResult as string;
         parsed = this.extractStructuredData(rawText);
+        this.logger.log('✅ Cheerio parser returned raw text');
       }
     } else if (dto.fileId) {
       this.logger.log(`Parsing job posting from file: ${dto.fileId}`);
       rawText = await this.parseFromFile(dto.fileId);
+      parsed = this.extractStructuredData(rawText);
+    } else if (dto.text) {
+      this.logger.log('Parsing job posting from text input');
+      rawText = this.textParser.parse(dto.text);
       parsed = this.extractStructuredData(rawText);
     } else {
       throw new BadRequestException('At least one input source (text, url, or fileId) is required');
@@ -77,6 +81,7 @@ export class JobPostingsService {
         company: parsed.company,
         location: parsed.location,
         description: parsed.description,
+        language: parsed.language,
         requirements: parsed.requirements,
         responsibilities: parsed.responsibilities,
         niceToHave: parsed.niceToHave,

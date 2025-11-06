@@ -1,11 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { chromium, Browser, Page } from 'playwright';
-import { ChatOpenAI } from '@langchain/openai';
+import { AzureChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-
-// Import HumanMessage using the specific dist path to resolve module resolution issues
-import { HumanMessage } from '@langchain/core/dist/messages/index.js';
 
 // Define the structured output schema for job posting extraction
 const JobPostingSchema = z.object({
@@ -13,6 +10,9 @@ const JobPostingSchema = z.object({
   company: z.string().describe('The company name'),
   location: z.string().optional().describe('The job location'),
   description: z.string().optional().describe('The job description'),
+  language: z
+    .string()
+    .describe('Detected language code (e.g., "de" for German, "en" for English, "fr" for French)'),
   requirements: z.array(z.string()).describe('List of job requirements'),
   responsibilities: z.array(z.string()).describe('List of job responsibilities'),
   niceToHave: z.array(z.string()).describe('Nice to have qualifications'),
@@ -31,42 +31,35 @@ export class AgentUrlParser {
   private browser: Browser | null = null;
   private readonly maxSteps: number;
   private readonly timeout: number;
-  private readonly llm: ChatOpenAI;
+  private readonly llm: AzureChatOpenAI;
 
   constructor() {
     // Configuration from environment variables
     this.maxSteps = parseInt(process.env.AGENT_MAX_STEPS || '10', 10);
     this.timeout = parseInt(process.env.AGENT_TIMEOUT || '30000', 10);
 
-    // Initialize LLM for agent reasoning
-    // Use Azure OpenAI if configured, otherwise fallback to OpenAI
+    // Initialize LLM for agent reasoning using Azure OpenAI
     const azureEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
     const azureApiKey = process.env.AZURE_OPENAI_API_KEY;
     const azureDeployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
+    const azureApiVersion = process.env.AZURE_OPENAI_API_VERSION || '2024-10-21';
 
-    if (azureEndpoint && azureApiKey && azureDeployment) {
-      this.llm = new ChatOpenAI({
-        openAIApiKey: azureApiKey,
-        configuration: {
-          baseURL: `${azureEndpoint}/openai/deployments/${azureDeployment}`,
-          defaultQuery: {
-            'api-version': process.env.AZURE_OPENAI_API_VERSION || '2024-02-15-preview',
-          },
-          defaultHeaders: { 'api-key': azureApiKey },
-        },
-        temperature: 0.3, // Lower temperature for more consistent extraction
-        maxTokens: 4000,
-      });
-    } else {
-      // Fallback to standard OpenAI (requires OPENAI_API_KEY env var)
-      this.llm = new ChatOpenAI({
-        modelName: 'gpt-4o-mini',
-        temperature: 0.3,
-        maxTokens: 4000,
-      });
+    if (!azureEndpoint || !azureApiKey || !azureDeployment) {
+      throw new Error(
+        'Azure OpenAI configuration missing. Please set AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, and AZURE_OPENAI_DEPLOYMENT_NAME',
+      );
     }
 
-    this.logger.log('AgentUrlParser initialized with LLM provider');
+    this.llm = new AzureChatOpenAI({
+      azureOpenAIApiKey: azureApiKey,
+      azureOpenAIApiDeploymentName: azureDeployment,
+      azureOpenAIApiVersion: azureApiVersion,
+      azureOpenAIEndpoint: azureEndpoint,
+      temperature: 0.2, // Lower temperature for more consistent extraction
+      maxTokens: 4000,
+    });
+
+    this.logger.log('AgentUrlParser initialized with Azure OpenAI');
   }
 
   /**
@@ -163,7 +156,7 @@ export class AgentUrlParser {
       await this.handlePopups(page);
 
       // Additional wait for JavaScript rendering
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(3000);
 
       return page;
     } catch (error) {
@@ -204,57 +197,156 @@ export class AgentUrlParser {
 
   /**
    * Extract text content from page
+   * Uses a generic approach: tries multiple common selectors and picks the one with most content
    */
   private async extractPageContent(page: Page): Promise<string> {
     this.logger.debug('Extracting page content...');
 
-    // Try to find main content area with common job posting selectors
+    // Generic selectors for job postings across different sites
+    // Ordered by specificity (more specific first)
     const mainContentSelectors = [
-      'main',
-      '[role="main"]',
+      // ID-based selectors (most specific)
+      '#jobDescriptionText',
+      '#job-description',
+      '#jobDescription',
+      '[id*="job-description"]',
+      '[id*="jobDescription"]',
+
+      // Class-based selectors (common patterns)
       '.job-description',
       '.job-detail',
       '.job-details',
-      '#job-description',
-      '#jobDescriptionText',
+      '.jobsearch-jobDescriptionText',
+      '.posting',
+      '[class*="job-description"]',
+      '[class*="jobDescription"]',
+
+      // Data attribute selectors
+      '[data-testid="job-description"]',
+      '[data-testid*="description"]',
+
+      // Semantic HTML (generic fallbacks)
+      'main',
+      '[role="main"]',
       'article',
       '.content',
-      '.posting',
-      '[data-testid="job-description"]',
     ];
 
-    let content = '';
+    let bestContent = '';
+    let bestSelector = '';
+    let bestLength = 0;
 
+    // Try all selectors and keep the one with most content
     for (const selector of mainContentSelectors) {
       try {
         const element = page.locator(selector).first();
-        if (await element.isVisible({ timeout: 1000 })) {
-          content = await element.innerText();
-          if (content.length > 200) {
-            this.logger.debug(`Found main content using selector: ${selector}`);
-            break;
+        if (await element.isVisible({ timeout: 500 })) {
+          const content = await element.innerText();
+          if (content.length > bestLength) {
+            bestContent = content;
+            bestSelector = selector;
+            bestLength = content.length;
           }
         }
       } catch {
-        // Try next selector
+        // Continue trying other selectors
       }
     }
 
-    // Fallback to body if no main content found
-    if (!content || content.length < 200) {
-      this.logger.debug('Using body as fallback for content extraction');
-      content = await page.locator('body').innerText();
+    // Fallback to body if no good content found
+    if (bestLength < 200) {
+      this.logger.debug('No sufficient content from specific selectors, using body as fallback');
+      bestContent = await page.locator('body').innerText();
+      bestSelector = 'body';
+      bestLength = bestContent.length;
+    }
+
+    this.logger.debug(`Best selector: ${bestSelector} with ${bestLength} characters`);
+
+    // Clean up the content before sending to LLM
+    bestContent = this.cleanContent(bestContent);
+
+    // Log content preview for debugging
+    if (bestContent.length < 500) {
+      this.logger.warn(`Content seems short after cleaning: ${bestContent}`);
+    } else {
+      this.logger.debug(`Content preview after cleaning: ${bestContent.substring(0, 300)}...`);
     }
 
     // Get page title for additional context
     const title = await page.title();
-    const fullContent = `Page Title: ${title}\n\n${content}`;
-
-    this.logger.debug(`Extracted ${fullContent.length} characters from page`);
+    const fullContent = `Page Title: ${title}\n\n${bestContent}`;
 
     await page.close();
 
     return fullContent;
+  }
+
+  /**
+   * Clean extracted content by removing common noise patterns
+   * Removes UI elements, navigation, login prompts, similar jobs, etc.
+   */
+  private cleanContent(content: string): string {
+    // Remove common noise patterns (case-insensitive)
+    const noisePatterns = [
+      // Login/Sign-in prompts (multiple lines)
+      /sign in.*?password.*?(?:show|forgot password).*?(?:new to|join now).{0,500}/gis,
+      /welcome back.*?email or phone.*?password.{0,300}/gis,
+      /by clicking continue.*?user agreement.*?privacy policy.{0,300}/gis,
+
+      // Similar jobs sections
+      /similar jobs.{0,50}\n.*/gis,
+      /people also viewed.{0,50}\n.*/gis,
+      /show more jobs like this.*/gis,
+      /show fewer jobs like this.*/gis,
+
+      // LinkedIn-specific UI
+      /get ai-powered advice.*/gis,
+      /referrals increase your chances.*/gis,
+      /see who you know.*/gis,
+      /get notified when a new job.*/gis,
+      /set alert.*/gis,
+      /use ai to assess.*/gis,
+      /tailor my resume.*/gis,
+      /am i a good fit.*/gis,
+
+      // Generic job search UI
+      /explore collaborative articles.*/gis,
+      /\d+\s+open jobs.*/gis,
+      /similar searches.*/gis,
+
+      // Repeated "Show more/less"
+      /show more\s+show less/gi,
+
+      // Multiple consecutive newlines
+      /\n{3,}/g,
+    ];
+
+    let cleaned = content;
+    for (const pattern of noisePatterns) {
+      cleaned = cleaned.replace(pattern, '\n');
+    }
+
+    // Remove lines that are likely navigation/UI (very short lines with common UI keywords)
+    const uiKeywords = /^(apply|save|share|report|sign in|join now|back|home|search|filter)$/i;
+    cleaned = cleaned
+      .split('\n')
+      .filter((line) => {
+        const trimmed = line.trim();
+        // Keep empty lines and longer lines
+        if (trimmed.length === 0 || trimmed.length > 50) return true;
+        // Remove short lines that match UI keywords
+        return !uiKeywords.test(trimmed);
+      })
+      .join('\n');
+
+    // Final cleanup: normalize whitespace
+    cleaned = cleaned
+      .replace(/\s+/g, ' ') // Multiple spaces to single
+      .replace(/\n\s+\n/g, '\n\n') // Clean up empty lines
+      .trim();
+
+    return cleaned;
   }
 
   /**
@@ -269,22 +361,28 @@ export class AgentUrlParser {
 
 URL: ${url}
 
-Extract the following information from the job posting content below:
-- Job title
-- Company name
-- Location (if mentioned)
-- Job description
-- Requirements (extract as a list)
-- Responsibilities (extract as a list)
-- Nice to have qualifications (extract as a list)
-- Salary information (if available)
-- Application deadline (if available)
+TASK: Extract the following information from the job posting content below:
+- Job title (the actual position name, e.g., "Senior Software Engineer", "Marketing Manager", "Consultant Cloud Infrastructure")
+- Company name (the organization offering the job, e.g., "Google", "Microsoft", "adesso SE")
+- Location (city and country, e.g., "Berlin, Germany", "Remote", "Essen, North Rhine-Westphalia, Germany")
+- Language (detect the primary language of the job posting and return ISO 639-1 code: "de" for German, "en" for English, "fr" for French, "es" for Spanish, etc.)
+- Job description (a summary of what the role is about)
+- Requirements (list of required qualifications, skills, experience)
+- Responsibilities (list of job duties and tasks)
+- Nice to have qualifications (optional/preferred qualifications)
+- Salary information (if mentioned)
+- Application deadline (if mentioned)
 
-Important:
-- Extract actual information, don't make up data
-- For lists, extract individual items
-- If information is not available, use empty arrays or omit optional fields
-- Be thorough and accurate
+IMPORTANT INSTRUCTIONS:
+- Extract ONLY factual information from the job posting
+- DO NOT extract UI elements, navigation text, or login prompts
+- DO NOT extract information from "similar jobs" sections
+- For the job title: extract ONLY the position name, not the company name or location
+- For the company: extract ONLY the company/organization name
+- For location: extract ONLY the geographical location (city, region, country)
+- For language: detect from the job posting content itself (not from URL or metadata)
+- If information is clearly not available, use empty arrays [] or omit optional fields
+- Be precise and accurate
 
 Job Posting Content:
 ${content.substring(0, MAX_CONTENT_LENGTH)}
@@ -293,7 +391,8 @@ Respond with a valid JSON object matching this schema:
 ${JSON.stringify(schema, null, 2)}`;
 
     try {
-      const response = await this.llm.invoke([new HumanMessage(prompt)]);
+      // Invoke LLM with prompt string directly
+      const response = await this.llm.invoke(prompt);
 
       // Parse the response - handle both JSON and text responses
       let jsonText = response.content.toString();
