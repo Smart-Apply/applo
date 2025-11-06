@@ -38,28 +38,36 @@ export class JobPostingsService {
    */
   async parseJobPosting(dto: ParseJobPostingDto): Promise<JobPostingResponseDto> {
     let rawText: string;
+    let parsed: ParsedJobData;
 
     // 1. Determine input source and extract text
     if (dto.text) {
       this.logger.log('Parsing job posting from text input');
       rawText = this.textParser.parse(dto.text);
+      parsed = this.extractStructuredData(rawText);
     } else if (dto.url) {
       this.logger.log(`Parsing job posting from URL: ${dto.url}`);
-      rawText = await this.urlParser.parse(dto.url);
+      const urlResult = await this.urlParser.parse(dto.url);
+      
+      // Check if we got structured data from agent parser
+      if (typeof urlResult === 'object' && 'rawText' in urlResult) {
+        // Agent parser returned structured data
+        rawText = urlResult.rawText;
+        parsed = urlResult;
+      } else {
+        // Cheerio parser returned raw text
+        rawText = urlResult as string;
+        parsed = this.extractStructuredData(rawText);
+      }
     } else if (dto.fileId) {
       this.logger.log(`Parsing job posting from file: ${dto.fileId}`);
       rawText = await this.parseFromFile(dto.fileId);
+      parsed = this.extractStructuredData(rawText);
     } else {
       throw new BadRequestException('At least one input source (text, url, or fileId) is required');
     }
 
-    // 2. Parse structured data from text
-    const parsed = this.extractStructuredData(rawText);
-
-    // 3. Use fallback values if extraction fails (for MVP simplicity)
-    // Note: Could be enhanced with LLM-based extraction for better accuracy
-
-    // 4. Persist in DB
+    // 2. Persist in DB
     const jobPosting = await this.prisma.jobPosting.create({
       data: {
         rawText,
