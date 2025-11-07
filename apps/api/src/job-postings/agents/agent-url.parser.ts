@@ -3,6 +3,7 @@ import { chromium, Browser, Page } from 'playwright';
 import { AzureChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import { PromptService } from '../../common/services';
 
 // Define the structured output schema for job posting extraction
 const JobPostingSchema = z.object({
@@ -274,7 +275,17 @@ export class AgentUrlParser {
     }
 
     // Get page title for additional context
-    const title = await page.title();
+    let title = await page.title();
+
+    // Clean job board names from title (often contains "at Workwise", "- LinkedIn", etc.)
+    title = title
+      .replace(/\s*[-|]\s*(?:Workwise|LinkedIn|Indeed|StepStone|Xing|Monster|Glassdoor)\s*$/gi, '')
+      .replace(/\s*at\s+(?:Workwise|LinkedIn|Indeed|StepStone|Xing|Monster|Glassdoor)\s*$/gi, '')
+      .trim();
+
+    this.logger.debug(`Original page title: ${await page.title()}`);
+    this.logger.debug(`Cleaned page title: ${title}`);
+
     const fullContent = `Page Title: ${title}\n\n${bestContent}`;
 
     await page.close();
@@ -289,34 +300,55 @@ export class AgentUrlParser {
   private cleanContent(content: string): string {
     // Remove common noise patterns (case-insensitive)
     const noisePatterns = [
-      // Login/Sign-in prompts (multiple lines)
-      /sign in.*?password.*?(?:show|forgot password).*?(?:new to|join now).{0,500}/gis,
-      /welcome back.*?email or phone.*?password.{0,300}/gis,
-      /by clicking continue.*?user agreement.*?privacy policy.{0,300}/gis,
+      // Job board company names that should never appear as the hiring company
+      /\bWorkwise\b(?!\s+GmbH)/gi,
+      /\bLinkedIn\b(?!\s+Corporation)/gi,
+      /\bIndeed\b(?!\s+Inc)/gi,
+      /\bStepStone\b/gi,
 
-      // Similar jobs sections
-      /similar jobs.{0,50}\n.*/gis,
-      /people also viewed.{0,50}\n.*/gis,
-      /show more jobs like this.*/gis,
-      /show fewer jobs like this.*/gis,
+      // Login/Sign-in prompts (very aggressive - captures entire login flows)
+      /sign in.*?(?:user agreement|cookie policy).{0,1000}/gis,
+      /welcome back.*?(?:sign in|join now).{0,500}/gis,
+      /join or sign in.*?cookie policy.{0,500}/gis,
+      /not you\?.*?(?:email|password).{0,300}/gis,
+      /by clicking.*?(?:agree|continue).*?(?:user agreement|privacy policy|cookie policy).{0,400}/gis,
+      /new to linkedin\?.*?join now.{0,200}/gis,
+      /forgot password\?.{0,100}/gis,
+      /remove photo.{0,100}/gis,
 
-      // LinkedIn-specific UI
+      // Similar jobs and recommendations (remove entire sections)
+      /similar jobs.*?(?=\n\n[A-Z]|$)/gis,
+      /people also viewed.*?(?=\n\n[A-Z]|$)/gis,
+      /show more jobs like this.*?show fewer jobs like this/gis,
+      /show more jobs.*$/gis,
+      /show fewer jobs.*$/gis,
+
+      // Job alerts and notifications
+      /get notified.*?(?:sign in|create job alert)/gis,
+      /sign in to create job alert.*/gis,
+      /see who.*?has hired for this role.*/gis,
+
+      // LinkedIn-specific UI noise
       /get ai-powered advice.*/gis,
-      /referrals increase your chances.*/gis,
-      /see who you know.*/gis,
-      /get notified when a new job.*/gis,
-      /set alert.*/gis,
-      /use ai to assess.*/gis,
-      /tailor my resume.*/gis,
-      /am i a good fit.*/gis,
+      /referrals increase your chances.*?see who you know/gis,
+      /be among the first \d+ applicants.*/gis,
+      /apply save share report/gis,
+      /save report this job/gis,
 
-      // Generic job search UI
-      /explore collaborative articles.*/gis,
-      /\d+\s+open jobs.*/gis,
-      /similar searches.*/gis,
+      // Generic job search UI and metadata
+      /explore collaborative articles.*?explore more/gis,
+      /we're unlocking community knowledge.*/gis,
+      /similar searches.*?(?=\n\n[A-Z]|$)/gis,
+      /\d+\s+open jobs/gi,
+      /seniority level.*?employment type.*?job function.*?industries/gis,
+      /mid-senior level.*?full-time.*?engineering and information technology.*?business consulting and services/gis,
 
-      // Repeated "Show more/less"
+      // Job listing metadata (dates, locations without context)
+      /\d+\s+(?:hours?|days?|weeks?|months?)\s+ago(?!\s+[a-z])/gi,
+
+      // Repeated UI patterns
       /show more\s+show less/gi,
+      /apply\s+join or sign in/gi,
 
       // Multiple consecutive newlines
       /\n{3,}/g,
@@ -324,29 +356,103 @@ export class AgentUrlParser {
 
     let cleaned = content;
     for (const pattern of noisePatterns) {
-      cleaned = cleaned.replace(pattern, '\n');
+      cleaned = cleaned.replace(pattern, '\n\n');
     }
 
-    // Remove lines that are likely navigation/UI (very short lines with common UI keywords)
-    const uiKeywords = /^(apply|save|share|report|sign in|join now|back|home|search|filter)$/i;
-    cleaned = cleaned
-      .split('\n')
-      .filter((line) => {
-        const trimmed = line.trim();
-        // Keep empty lines and longer lines
-        if (trimmed.length === 0 || trimmed.length > 50) return true;
-        // Remove short lines that match UI keywords
-        return !uiKeywords.test(trimmed);
-      })
-      .join('\n');
+    // Remove lines that are pure navigation/UI (short lines with UI keywords)
+    const uiKeywords =
+      /^(apply|save|share|report|sign in|join now|back|home|search|filter|show|email|password|phone|continue)$/i;
+    const lines = cleaned.split('\n');
+    const filteredLines: string[] = [];
+    const seenLines = new Set<string>();
 
-    // Final cleanup: normalize whitespace
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      // Skip empty lines temporarily
+      if (trimmed.length === 0) continue;
+
+      // Remove short UI lines
+      if (trimmed.length < 50 && uiKeywords.test(trimmed)) continue;
+
+      // Remove duplicate lines (especially job titles repeated)
+      const normalized = trimmed.toLowerCase();
+      if (seenLines.has(normalized)) continue;
+      seenLines.add(normalized);
+
+      filteredLines.push(line);
+    }
+
+    cleaned = filteredLines.join('\n');
+
+    // Final cleanup: normalize whitespace but preserve structure
     cleaned = cleaned
-      .replace(/\s+/g, ' ') // Multiple spaces to single
-      .replace(/\n\s+\n/g, '\n\n') // Clean up empty lines
+      .replace(/[ \t]+/g, ' ') // Multiple spaces/tabs to single space
+      .replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
       .trim();
 
     return cleaned;
+  }
+
+  /**
+   * Segment content into logical sections (requirements, responsibilities, etc.)
+   * This helps the LLM focus on the right content for each field
+   */
+  private segmentContent(content: string): {
+    companyInfo?: string;
+    requirements?: string;
+    responsibilities?: string;
+    niceToHave?: string;
+    benefits?: string;
+    fullContent: string;
+  } {
+    const sections: Record<string, string> = {};
+
+    // Pattern to detect section headers (German and English)
+    const sectionPatterns = [
+      {
+        key: 'companyInfo',
+        regex:
+          /(?:über|about)\s+([A-Z][^\n]{2,50})\s*\n([\s\S]{50,800}?)(?=\n\n[A-Z]|was\s+(?:bieten|erwartet|solltest)|$)/gim,
+      },
+      {
+        key: 'requirements',
+        regex:
+          /(?:was solltest du mitbringen|anforderungen|requirements|qualifications|what you bring|deine qualifikationen|das bringst du mit)\s*[:\n]+([\s\S]{50,1500}?)(?=\n\n(?:[A-Z]|was\s+|bonus|verantwort|aufgaben)|$)/gim,
+      },
+      {
+        key: 'responsibilities',
+        regex:
+          /(?:was erwartet dich|verantwortlichkeiten|responsibilities|your tasks|deine aufgaben|das erwartet dich|aufgaben)\s*[:\n]+([\s\S]{50,1500}?)(?=\n\n(?:[A-Z]|was\s+|bonus|anforderung)|$)/gim,
+      },
+      {
+        key: 'niceToHave',
+        regex:
+          /(?:bonuspunkte|von vorteil|idealerweise|wünschenswert|nice to have|bonus points|preferred|would be a plus)\s*[:\n,]+([\s\S]{20,500}?)(?=\n\n[A-Z]|$)/gim,
+      },
+      {
+        key: 'benefits',
+        regex:
+          /(?:was bieten wir|benefits|what we offer|perks|wir bieten)\s*[:\n]+([\s\S]{50,1000}?)(?=\n\n[A-Z]|$)/gim,
+      },
+    ];
+
+    for (const { key, regex } of sectionPatterns) {
+      const matches = [...content.matchAll(regex)];
+      if (matches.length > 0) {
+        // Take the first substantial match
+        const match = matches[0];
+        const extracted = match[key === 'companyInfo' ? 2 : 1]?.trim();
+        if (extracted && extracted.length > 30) {
+          sections[key] = extracted;
+        }
+      }
+    }
+
+    return {
+      ...sections,
+      fullContent: content,
+    } as any;
   }
 
   /**
@@ -355,40 +461,56 @@ export class AgentUrlParser {
   private async extractStructuredData(content: string, url: string): Promise<JobPostingExtraction> {
     this.logger.debug('Using LLM to extract structured data...');
 
+    // Log first 500 chars of cleaned content for debugging
+    this.logger.log(`📄 Cleaned content preview (first 500 chars):\n${content.substring(0, 500)}`);
+
     const schema = zodToJsonSchema(JobPostingSchema);
 
-    const prompt = `You are an expert at extracting structured job posting information from web page content.
+    // Segment content into logical sections
+    const segments = this.segmentContent(content);
 
-URL: ${url}
+    // Detect company name from content
+    const companyHint = this.detectCompany(content);
 
-TASK: Extract the following information from the job posting content below:
-- Job title (the actual position name, e.g., "Senior Software Engineer", "Marketing Manager", "Consultant Cloud Infrastructure")
-- Company name (the organization offering the job, e.g., "Google", "Microsoft", "adesso SE")
-- Location (city and country, e.g., "Berlin, Germany", "Remote", "Essen, North Rhine-Westphalia, Germany")
-- Language (detect the primary language of the job posting and return ISO 639-1 code: "de" for German, "en" for English, "fr" for French, "es" for Spanish, etc.)
-- Job description (a summary of what the role is about)
-- Requirements (list of required qualifications, skills, experience)
-- Responsibilities (list of job duties and tasks)
-- Nice to have qualifications (optional/preferred qualifications)
-- Salary information (if mentioned)
-- Application deadline (if mentioned)
+    // Log company detection result prominently
+    if (companyHint) {
+      this.logger.log(`🏢 ✅ Detected company: "${companyHint}"`);
+    } else {
+      this.logger.warn(`🏢 ❌ No company detected - LLM will have to extract from content`);
+    }
 
-IMPORTANT INSTRUCTIONS:
-- Extract ONLY factual information from the job posting
-- DO NOT extract UI elements, navigation text, or login prompts
-- DO NOT extract information from "similar jobs" sections
-- For the job title: extract ONLY the position name, not the company name or location
-- For the company: extract ONLY the company/organization name
-- For location: extract ONLY the geographical location (city, region, country)
-- For language: detect from the job posting content itself (not from URL or metadata)
-- If information is clearly not available, use empty arrays [] or omit optional fields
-- Be precise and accurate
+    // Build structured input for LLM with segmented sections
+    let structuredContent = segments.fullContent.substring(0, MAX_CONTENT_LENGTH);
 
-Job Posting Content:
-${content.substring(0, MAX_CONTENT_LENGTH)}
+    // Add segmented sections as hints if available
+    if (segments.companyInfo) {
+      structuredContent += `\n\n=== COMPANY SECTION ===\n${segments.companyInfo}`;
+    }
+    if (segments.requirements) {
+      structuredContent += `\n\n=== REQUIREMENTS SECTION ===\n${segments.requirements}`;
+    }
+    if (segments.responsibilities) {
+      structuredContent += `\n\n=== RESPONSIBILITIES SECTION ===\n${segments.responsibilities}`;
+    }
+    if (segments.niceToHave) {
+      structuredContent += `\n\n=== NICE TO HAVE SECTION ===\n${segments.niceToHave}`;
+    }
 
-Respond with a valid JSON object matching this schema:
-${JSON.stringify(schema, null, 2)}`;
+    // Load prompt template and inject variables
+    const prompt = await PromptService.renderPrompt('extract-job-posting', {
+      url,
+      content: structuredContent,
+      schema,
+      companyHint: companyHint || 'Not detected - extract from content',
+    });
+
+    // Log what we're sending to LLM
+    this.logger.log(
+      `📤 Sending to LLM with company hint: "${companyHint || 'Not detected - extract from content'}"`,
+    );
+    this.logger.debug(
+      `📤 First 800 chars of structured content sent to LLM:\n${structuredContent.substring(0, 800)}`,
+    );
 
     try {
       // Invoke LLM with prompt string directly
@@ -408,12 +530,86 @@ ${JSON.stringify(schema, null, 2)}`;
       // Validate against schema
       const validated = JobPostingSchema.parse(parsed);
 
+      // Log extracted company for comparison
+      this.logger.log(`📥 LLM extracted company: "${validated.company}"`);
+
+      // Post-processing: Override if LLM extracted a job board name but we detected the real company
+      const jobBoardBlacklist = [
+        'Workwise',
+        'LinkedIn',
+        'Indeed',
+        'StepStone',
+        'Xing',
+        'Monster',
+        'Glassdoor',
+      ];
+      if (companyHint && jobBoardBlacklist.includes(validated.company)) {
+        this.logger.warn(
+          `⚠️ LLM extracted blacklisted job board "${validated.company}" - overriding with detected company "${companyHint}"`,
+        );
+        validated.company = companyHint;
+      } else if (companyHint && validated.company !== companyHint) {
+        this.logger.warn(
+          `⚠️ COMPANY MISMATCH! Detected: "${companyHint}" but LLM extracted: "${validated.company}"`,
+        );
+      }
+
       this.logger.debug('Successfully extracted structured data');
       return validated;
     } catch (error) {
       this.logger.error(`Failed to extract structured data: ${error.message}`);
       throw new Error(`LLM extraction failed: ${error.message}`);
     }
+  }
+
+  /**
+   * Detect company name from content using patterns
+   */
+  private detectCompany(content: string): string | null {
+    // Try to find "Über [Company]" or "About [Company]" patterns (highest priority)
+    const aboutPatterns = [
+      /über\s+([A-Z][A-Za-z0-9\s&.,-]{2,50}(?:\s+GmbH|\s+AG|\s+SE|\s+Inc\.|\s+LLC|\s+Ltd\.))/i,
+      /about\s+([A-Z][A-Za-z0-9\s&.,-]{2,50}(?:\s+GmbH|\s+AG|\s+SE|\s+Inc\.|\s+LLC|\s+Ltd\.))/i,
+    ];
+
+    for (const pattern of aboutPatterns) {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        const company = match[1].trim();
+        this.logger.debug(`Detected company from 'Über/About' section: ${company}`);
+        return company;
+      }
+    }
+
+    // Try to find company in job posting metadata patterns
+    const metadataPatterns = [
+      // "Platform Architect - AWS at SAPERED Essen"
+      /at\s+([A-Z][A-Za-z0-9\s&.,-]{2,50})\s+(?:Essen|Berlin|Munich|Hamburg|remote)/i,
+      // "SAPERED GmbH 2 weeks ago"
+      /([A-Z][A-Za-z0-9\s&.,-]{2,50}(?:\s+GmbH|\s+AG|\s+SE))\s+\d+\s+(?:hours?|days?|weeks?|months?)\s+ago/i,
+    ];
+
+    for (const pattern of metadataPatterns) {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        const company = match[1].trim();
+        const blacklist = [
+          'Workwise',
+          'LinkedIn',
+          'Indeed',
+          'StepStone',
+          'Job',
+          'Career',
+          'Talent',
+        ];
+        if (!blacklist.some((term) => company.includes(term))) {
+          this.logger.debug(`Detected company from metadata: ${company}`);
+          return company;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**

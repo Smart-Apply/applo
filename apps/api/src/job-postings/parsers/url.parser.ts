@@ -24,7 +24,7 @@ export class UrlParser {
   constructor() {
     // Check if agent-based parsing is enabled
     this.useAgentFallback = process.env.ENABLE_AGENT_PARSER !== 'false';
-    
+
     if (this.useAgentFallback) {
       try {
         this.agentParser = new AgentUrlParser();
@@ -38,23 +38,55 @@ export class UrlParser {
 
   /**
    * Parse job posting from URL with intelligent fallback strategy
-   * 1. Try fast Cheerio parser first
-   * 2. If insufficient data, use agent-based parser
-   * 3. Return error with guidance if both fail
+   * 1. For dynamic sites (LinkedIn, Workwise, etc.), use agent parser directly
+   * 2. For static sites, try fast Cheerio parser first
+   * 3. If insufficient data, use agent-based parser as fallback
+   * 4. Return error with guidance if both fail
    * @param url URL to job posting page
    * @returns Parsed job data or raw text
    */
   async parse(url: string): Promise<string | ParsedJobData> {
-    // Step 1: Try fast Cheerio-based parsing
+    // Check if URL is from a known dynamic site that requires agent parser
+    const dynamicSites = ['linkedin.com', 'workwise.io', 'indeed.com', 'glassdoor.com', 'xing.com'];
+
+    const isDynamicSite = dynamicSites.some((site) => url.includes(site));
+
+    // For dynamic sites, skip Cheerio and go directly to agent parser
+    if (isDynamicSite && this.useAgentFallback && this.agentParser) {
+      this.logger.log(`Detected dynamic site, using agent parser directly for ${url}`);
+      try {
+        const agentResult = await this.agentParser.parse(url);
+
+        // Convert agent result to our format
+        return {
+          title: agentResult.title,
+          company: agentResult.company,
+          location: agentResult.location,
+          description: agentResult.description,
+          requirements: agentResult.requirements,
+          responsibilities: agentResult.responsibilities,
+          niceToHave: agentResult.niceToHave,
+          rawText: this.convertToRawText(agentResult),
+        };
+      } catch (error) {
+        this.logger.error(`Agent parser failed for ${url}: ${error.message}`);
+        throw new BadRequestException(
+          'Failed to parse job posting from dynamic site. ' +
+            'Try copying the job description text directly instead of using the URL.',
+        );
+      }
+    }
+
+    // Step 1: Try fast Cheerio-based parsing for static sites
     try {
       const text = await this.parseWithCheerio(url);
-      
+
       // Check if we got sufficient content
       if (this.isSufficientContent(text)) {
         this.logger.log(`Successfully parsed ${url} with Cheerio (fast path)`);
         return text;
       }
-      
+
       this.logger.warn(`Insufficient content from Cheerio for ${url}, trying agent parser...`);
     } catch (error) {
       this.logger.debug(`Cheerio parser failed for ${url}: ${error.message}`);
@@ -65,7 +97,7 @@ export class UrlParser {
       try {
         this.logger.log(`Using agent-based parser for ${url}`);
         const agentResult = await this.agentParser.parse(url);
-        
+
         // Convert agent result to our format
         return {
           title: agentResult.title,
@@ -81,7 +113,7 @@ export class UrlParser {
         this.logger.error(`Agent parser also failed for ${url}: ${error.message}`);
         throw new BadRequestException(
           'Failed to parse job posting. This site may require manual copying. ' +
-          'Try copying the job description text directly instead of using the URL.',
+            'Try copying the job description text directly instead of using the URL.',
         );
       }
     }
@@ -89,8 +121,8 @@ export class UrlParser {
     // Step 3: No fallback available
     throw new BadRequestException(
       'Could not extract sufficient content from URL. ' +
-      'This site may use heavy JavaScript rendering. ' +
-      'Try enabling the agent-based parser (ENABLE_AGENT_PARSER=true) or copy the text directly.',
+        'This site may use heavy JavaScript rendering. ' +
+        'Try enabling the agent-based parser (ENABLE_AGENT_PARSER=true) or copy the text directly.',
     );
   }
 
@@ -195,7 +227,7 @@ export class UrlParser {
     ];
 
     const lowerText = text.toLowerCase();
-    const matchCount = indicators.filter(indicator => lowerText.includes(indicator)).length;
+    const matchCount = indicators.filter((indicator) => lowerText.includes(indicator)).length;
 
     // Require at least 2 indicators for sufficient content
     return matchCount >= 2;
@@ -209,25 +241,27 @@ export class UrlParser {
 
     parts.push(`Job Title: ${agentResult.title}`);
     parts.push(`Company: ${agentResult.company}`);
-    
+
     if (agentResult.location) {
       parts.push(`Location: ${agentResult.location}`);
     }
-    
+
     if (agentResult.description) {
       parts.push(`\nDescription:\n${agentResult.description}`);
     }
-    
+
     if (agentResult.requirements.length > 0) {
-      parts.push(`\nRequirements:\n${agentResult.requirements.map(r => `- ${r}`).join('\n')}`);
+      parts.push(`\nRequirements:\n${agentResult.requirements.map((r) => `- ${r}`).join('\n')}`);
     }
-    
+
     if (agentResult.responsibilities.length > 0) {
-      parts.push(`\nResponsibilities:\n${agentResult.responsibilities.map(r => `- ${r}`).join('\n')}`);
+      parts.push(
+        `\nResponsibilities:\n${agentResult.responsibilities.map((r) => `- ${r}`).join('\n')}`,
+      );
     }
-    
+
     if (agentResult.niceToHave.length > 0) {
-      parts.push(`\nNice to Have:\n${agentResult.niceToHave.map(n => `- ${n}`).join('\n')}`);
+      parts.push(`\nNice to Have:\n${agentResult.niceToHave.map((n) => `- ${n}`).join('\n')}`);
     }
 
     if (agentResult.salary) {
