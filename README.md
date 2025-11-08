@@ -527,4 +527,10 @@ Contributions welcome! Please open an issue or PR.
 
 ---
 
+## 🎨 SmartApply Design
+
+[Figma-Projekt: SmartApply](https://www.figma.com/files/team/1506699563431594213/project/478813064/SmartApply?fuid=1506699559070757185)
+
+---
+
 Built with ❤️ using NestJS and Azure
