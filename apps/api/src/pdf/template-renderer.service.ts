@@ -73,7 +73,6 @@ export class TemplateRendererService {
   private templatesDir: string;
   private stylesDir: string;
 
-
   constructor() {
     // Use process.cwd() which always points to the project root where npm start was run
     const projectRoot = process.cwd();
