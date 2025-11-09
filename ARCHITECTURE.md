@@ -352,10 +352,12 @@ Request
 ### Secrets Management
 
 **Development:**
+
 - `.env` file (never committed)
 - Local environment variables
 
 **Production:**
+
 ```
 Azure Key Vault
 ├── database-url          (PostgreSQL connection string)
@@ -413,6 +415,7 @@ GitHub Actions
 ## 📊 Data Flow Examples
 
 ### 1. User Registration
+
 ```
 Client → POST /auth/register { email, password }
   → AuthController
@@ -425,6 +428,7 @@ Client → POST /auth/register { email, password }
 ```
 
 ### 2. File Upload
+
 ```
 Client → POST /uploads (multipart/form-data)
   → UploadsController
@@ -436,6 +440,7 @@ Client → POST /uploads (multipart/form-data)
 ```
 
 ### 3. Generate Application
+
 ```
 Client → POST /applications { jobPostingId }
   → ApplicationsController
@@ -443,7 +448,7 @@ Client → POST /applications { jobPostingId }
   → Create record (status: PENDING)
   → JobsService.publishJob()
   → Azure Service Bus queue
-  
+
 Worker consumes message:
   → ProfileService.getProfile()
   → JobPostingsService.getJobPosting()
@@ -456,35 +461,38 @@ Worker consumes message:
 
 ## 🔧 Technology Decisions
 
-| Requirement | Technology | Rationale |
-|-------------|-----------|-----------|
-| Runtime | Node.js 20 | LTS, async I/O, TypeScript support |
-| Framework | NestJS | Enterprise-grade, modular, TypeScript-first |
-| Database | PostgreSQL 16 | Relational, JSON support, Azure native |
-| ORM | Prisma | Type-safe, migrations, modern DX |
-| Auth | JWT + argon2 | Stateless, secure password hashing |
-| Storage | Azure Blob | Scalable object storage, SAS support |
-| Queue | Azure Service Bus | Reliable messaging, dead-letter queues |
-| LLM | Azure OpenAI | Enterprise-grade, GPT-4/4o access |
-| PDF | Puppeteer | Headless Chrome, HTML → PDF |
-| Container | Docker | Portable, Azure Container Apps native |
-| CI/CD | GitHub Actions | OIDC support, marketplace actions |
-| Secrets | Azure Key Vault | Managed, auditable, Managed Identity |
+| Requirement | Technology        | Rationale                                   |
+| ----------- | ----------------- | ------------------------------------------- |
+| Runtime     | Node.js 20        | LTS, async I/O, TypeScript support          |
+| Framework   | NestJS            | Enterprise-grade, modular, TypeScript-first |
+| Database    | PostgreSQL 16     | Relational, JSON support, Azure native      |
+| ORM         | Prisma            | Type-safe, migrations, modern DX            |
+| Auth        | JWT + argon2      | Stateless, secure password hashing          |
+| Storage     | Azure Blob        | Scalable object storage, SAS support        |
+| Queue       | Azure Service Bus | Reliable messaging, dead-letter queues      |
+| LLM         | Azure OpenAI      | Enterprise-grade, GPT-4/4o access           |
+| PDF         | Puppeteer         | Headless Chrome, HTML → PDF                 |
+| Container   | Docker            | Portable, Azure Container Apps native       |
+| CI/CD       | GitHub Actions    | OIDC support, marketplace actions           |
+| Secrets     | Azure Key Vault   | Managed, auditable, Managed Identity        |
 
 ## 📈 Scalability Considerations
 
 ### Horizontal Scaling
+
 - **Container Apps**: Auto-scale 1-3 replicas based on HTTP requests
 - **Database**: Connection pooling via Prisma
 - **Service Bus**: Multiple workers can consume from queue
 
 ### Performance Optimizations
+
 - **Caching**: Redis can be added for session/data caching
 - **CDN**: Azure CDN for static content (PDFs)
 - **Database**: Indexes on frequently queried fields
 - **Async Processing**: Heavy tasks (PDF, LLM) in background
 
 ### Monitoring (Future)
+
 - **Application Insights**: Request tracing, error tracking
 - **Log Analytics**: Centralized logging
 - **Alerts**: Failed jobs, high error rates

@@ -5,6 +5,7 @@ Production-grade MVP backend built with **TypeScript**, **NestJS**, and **Azure*
 ## 🎯 Overview
 
 Smart Apply is an intelligent job application assistant that:
+
 - Stores candidate profiles (skills, certificates, experiences, projects)
 - Ingests job postings from text, URLs, or uploaded files
 - **Agent-based URL parsing** for JavaScript-heavy job sites (Indeed, LinkedIn, Glassdoor)
@@ -120,9 +121,9 @@ npm run start:dev
 
 6. **Access the application**
 
-- API: http://localhost:3000/api/v1
-- Swagger Docs: http://localhost:3000/docs
-- Health Check: http://localhost:3000/api/v1/health
+- API: <http://localhost:3000/api/v1>
+- Swagger Docs: <http://localhost:3000/docs>
+- Health Check: <http://localhost:3000/api/v1/health>
 
 ### Development Commands
 
@@ -149,6 +150,7 @@ npm run start:prod         # Start production server
 ### Demo Credentials
 
 After seeding:
+
 - Email: `demo@smartapply.com`
 - Password: `Demo123!`
 
@@ -322,6 +324,7 @@ az ad app federated-credential create \
 Go to your GitHub repository → Settings → Secrets and variables → Actions
 
 Add these secrets (NO connection strings or API keys needed!):
+
 - `AZURE_CLIENT_ID`: App ID from step 1
 - `AZURE_TENANT_ID`: Your Azure AD tenant ID
 - `AZURE_SUBSCRIPTION_ID`: Your subscription ID
@@ -402,6 +405,7 @@ az containerapp update \
 #### 6. Deploy
 
 Push to `main` branch or manually trigger the workflow. The pipeline will:
+
 1. Authenticate to Azure using OIDC (no secrets!)
 2. Build Docker image
 3. Push to ACR
@@ -418,6 +422,7 @@ npm run test:e2e
 ```
 
 Tests cover:
+
 - Authentication flow (register, login, JWT validation)
 - Profile CRUD operations
 - Application pipeline (with mock LLM provider)
@@ -429,18 +434,22 @@ Access Swagger documentation at `/docs` when running locally.
 ### Key Endpoints
 
 #### Auth
+
 - `POST /api/v1/auth/register` - Register new user
 - `POST /api/v1/auth/login` - Login
 - `GET /api/v1/auth/me` - Get current user
 
 #### Profile
+
 - `GET /api/v1/profile` - Get user profile
 - `PUT /api/v1/profile` - Update profile
 
 #### Job Postings
+
 - `POST /api/v1/job-postings:parse` - Parse job description (text, URL, or file)
 
 #### Applications
+
 - `POST /api/v1/applications` - Create new application
 - `GET /api/v1/applications/:id` - Get application details
 - `GET /api/v1/applications/:id/files` - Get PDF download URLs (SAS)
@@ -475,6 +484,7 @@ Smart Apply supports multiple LLM providers through a pluggable interface:
 ### Available Providers
 
 #### 1. **Mock Provider** (Default)
+
 For testing without API calls. Returns placeholder content.
 
 ```bash
@@ -482,6 +492,7 @@ LLM_PROVIDER=mock
 ```
 
 #### 2. **Azure OpenAI Provider**
+
 Production-grade provider using Azure OpenAI Service.
 
 ```bash
@@ -493,6 +504,7 @@ AZURE_OPENAI_API_VERSION=2024-02-15-preview
 ```
 
 #### 3. **Hugging Face Provider** 🆕
+
 For local development with open-source models via Hugging Face Inference API.
 
 ```bash
@@ -502,22 +514,27 @@ HUGGINGFACE_MODEL=meta-llama/Llama-2-7b-chat-hf
 ```
 
 **Supported Models:**
+
 - `meta-llama/Llama-2-7b-chat-hf` (Default, recommended)
 - `meta-llama/Llama-2-13b-chat-hf` (Better quality, slower)
 - `mistralai/Mistral-7B-Instruct-v0.1` (Fast, good quality)
 - `tiiuae/falcon-7b-instruct` (Alternative option)
 
 **Setup:**
+
 1. Get a free API key from [Hugging Face](https://huggingface.co/settings/tokens)
 2. Add to `.env`:
+
    ```bash
    LLM_PROVIDER=huggingface
    HUGGINGFACE_API_KEY=hf_xxxxxxxxxxxxx
    HUGGINGFACE_MODEL=meta-llama/Llama-2-7b-chat-hf
    ```
+
 3. Restart the server
 
 **Notes:**
+
 - Free tier has rate limits (check [Hugging Face pricing](https://huggingface.co/pricing))
 - First request may be slow (model cold start)
 - Supports custom temperature and max_tokens options
@@ -526,12 +543,14 @@ HUGGINGFACE_MODEL=meta-llama/Llama-2-7b-chat-hf
 ### Prompt Templates
 
 All providers use Markdown-based templates in `/prompts`:
+
 - `cover-letter.md` - Cover letter generation template
 - `resume.md` - Resume generation template
 
 ## 🔄 Background Jobs
 
 Uses **Azure Service Bus** for:
+
 - Application generation pipeline
 - Async PDF creation
 - Job posting parsing (if from URL)
