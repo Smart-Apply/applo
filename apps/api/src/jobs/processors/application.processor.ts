@@ -92,7 +92,7 @@ export class ApplicationProcessor {
 
       // 6. Prepare structured data for PDF templates
       this.logger.log('Preparing structured data for PDFs...');
-      
+
       // Cover letter template data
       const coverLetterData = {
         candidateName,
@@ -128,7 +128,7 @@ export class ApplicationProcessor {
       // 7. Convert to PDFs
       this.logger.log('Converting to PDFs...');
       const coverLetterPdf = await this.pdfService.generateCoverLetterPDF(coverLetterData);
-      
+
       const resumePdf = resumeData
         ? await this.pdfService.generateResumePDF(resumeData)
         : await this.pdfService.generatePDF(resumeContent, { template: 'resume' });

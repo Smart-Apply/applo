@@ -100,10 +100,7 @@ describe('TemplateRendererService', () => {
             company: 'Tech Corp',
             location: 'SF',
             dateRange: 'Jan 2020 - Present',
-            achievements: [
-              'Led team of 5 engineers',
-              'Improved performance by 40%',
-            ],
+            achievements: ['Led team of 5 engineers', 'Improved performance by 40%'],
           },
         ],
         education: [

@@ -123,11 +123,13 @@ export class TemplateRendererService {
       // Set default values
       const templateData = {
         ...data,
-        date: data.date || new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
+        date:
+          data.date ||
+          new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
         closingPhrase: data.closingPhrase || 'Sincerely,',
       };
 
@@ -198,10 +200,7 @@ export class TemplateRendererService {
     if (html.includes('</head>')) {
       return html.replace('</head>', `<style>\n${css}\n</style>\n</head>`);
     } else if (html.includes('<html>')) {
-      return html.replace(
-        '<html>',
-        `<html>\n<head>\n<style>\n${css}\n</style>\n</head>`,
-      );
+      return html.replace('<html>', `<html>\n<head>\n<style>\n${css}\n</style>\n</head>`);
     } else {
       // Fallback: wrap everything
       return `<!DOCTYPE html>
