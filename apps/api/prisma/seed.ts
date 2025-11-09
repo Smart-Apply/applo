@@ -124,6 +124,30 @@ async function main() {
           },
         ],
       },
+      education: {
+        create: [
+          {
+            degree: 'Bachelor of Science in Computer Science',
+            institution: 'University of California, Berkeley',
+            fieldOfStudy: 'Computer Science',
+            startYear: new Date('2014-09-01'),
+            endYear: new Date('2018-06-01'),
+            gpa: '3.8/4.0',
+            description:
+              "Focus on Software Engineering and Distributed Systems. Dean's List 2016-2018.",
+          },
+          {
+            degree: 'Master of Science in Software Engineering',
+            institution: 'Stanford University',
+            fieldOfStudy: 'Software Engineering',
+            startYear: new Date('2018-09-01'),
+            endYear: new Date('2020-06-01'),
+            gpa: '3.9/4.0',
+            description:
+              'Thesis: Scalable Microservices Architecture for Cloud-Native Applications.',
+          },
+        ],
+      },
     },
   });
 

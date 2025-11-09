@@ -49,6 +49,9 @@ model Profile {
   // Certificates
   certificates  Certificate[]
   
+  // Education
+  education     Education[]
+  
   // Work experiences
   experiences   Experience[]
   
@@ -88,6 +91,23 @@ model Certificate {
   
   @@index([profileId])
   @@map("certificates")
+}
+
+model Education {
+  id           String  @id @default(cuid())
+  profileId    String
+  profile      Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  degree       String
+  institution  String
+  fieldOfStudy String?
+  startYear    DateTime?
+  endYear      DateTime?
+  gpa          String?
+  description  String?
+  
+  @@index([profileId])
+  @@map("education")
 }
 
 model Experience {
