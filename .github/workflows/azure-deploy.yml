@@ -1,4 +1,4 @@
-name: Azure Deployment
+name: CI/CD
 
 on:
   push:
@@ -8,69 +8,105 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_RESOURCE_GROUP: rg-smartapply-prod
-  AZURE_CONTAINER_REGISTRY: acrsmartapplyprod
-  AZURE_CONTAINER_APP: aca-smartapply-api
-  IMAGE_NAME: smartapply-api
-
-permissions:
-  id-token: write
-  contents: read
+  NODE_VERSION: '20.x'
 
 jobs:
-  build-and-deploy:
+  test:
+    name: Test & Lint
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: smartapply_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate --schema=apps/api/prisma/schema.prisma
+
+      - name: Run Prisma migrations
+        run: npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smartapply_test
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smartapply_test
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smartapply_test
+          JWT_SECRET: test-secret-key
+          AZURE_OPENAI_ENDPOINT: https://mock.openai.azure.com
+          AZURE_OPENAI_API_KEY: mock-key
+          AZURE_OPENAI_DEPLOYMENT_NAME: mock-deployment
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Azure Login (OIDC)
-        uses: azure/login@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          context: .
+          file: ./infra/Dockerfile
+          target: production
+          push: false
+          tags: smartapply-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Login to Azure Container Registry
-        run: |
-          az acr login --name ${{ env.AZURE_CONTAINER_REGISTRY }}
-
-      - name: Build and push Docker image
-        run: |
-          IMAGE_TAG="${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          IMAGE_LATEST="${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:latest"
-          
-          docker build -f infra/Dockerfile -t $IMAGE_TAG -t $IMAGE_LATEST --target production .
-          docker push $IMAGE_TAG
-          docker push $IMAGE_LATEST
-
-      - name: Run database migrations
-        run: |
-          # Run migrations in a temporary container or init container
-          # This is a simplified example - in production you'd use Azure Container Instances or Jobs
-          echo "Running database migrations..."
-          # az container create \
-          #   --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          #   --name migration-runner \
-          #   --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-          #   --restart-policy Never \
-          #   --environment-variables DATABASE_URL='@Microsoft.KeyVault(VaultName=kv-smartapply;SecretName=database-url)' \
-          #   --command-line "npx prisma migrate deploy"
-
-      - name: Deploy to Azure Container Apps
-        uses: azure/container-apps-deploy-action@v1
+      - name: Run Trivy security scan
+        uses: aquasecurity/trivy-action@master
         with:
-          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
-          containerAppName: ${{ env.AZURE_CONTAINER_APP }}
-          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          targetPort: 3000
-          
-      - name: Get Container App URL
-        run: |
-          APP_URL=$(az containerapp show \
-            --name ${{ env.AZURE_CONTAINER_APP }} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --query properties.configuration.ingress.fqdn \
-            --output tsv)
-          echo "Application deployed to: https://$APP_URL"
+          image-ref: smartapply-api:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
