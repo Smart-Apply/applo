@@ -101,7 +101,7 @@ apps/api/src/
 │   ├── dto/                   # Upload DTOs
 │   └── uploads.module.ts
 │
-├── job-postings/              # ⏳ TODO
+├── job-postings/              # ✅ IMPLEMENTED
 │   ├── job-postings.controller.ts  # POST /job-postings:parse
 │   ├── job-postings.service.ts     # Parsing logic
 │   ├── dto/                        # Parse DTOs
@@ -111,12 +111,12 @@ apps/api/src/
 │   ├── pdf.service.ts         # Puppeteer HTML→PDF
 │   └── pdf.module.ts
 │
-├── jobs/                      # ⏳ TODO
+├── jobs/                      # ✅ IMPLEMENTED
 │   ├── jobs.service.ts        # Service Bus producer/consumer
 │   ├── processors/            # Job handlers
 │   └── jobs.module.ts
 │
-└── applications/              # ⏳ TODO
+└── applications/              # ✅ IMPLEMENTED
     ├── applications.controller.ts   # POST /, GET /:id, GET /:id/files
     ├── applications.service.ts      # Pipeline orchestration
     ├── dto/                         # Create application DTOs
