@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Smart Apply - Local Setup Script
-# This script sets up the development environment
+# This script sets up the development environment for Backend + Frontend
 
 set -e
 
-echo "🚀 Smart Apply - Local Setup"
-echo "=============================="
+echo "🚀 Smart Apply - Full-Stack Setup"
+echo "=================================="
 echo ""
 
 # Check prerequisites
@@ -30,19 +30,39 @@ fi
 echo "✅ Prerequisites met"
 echo ""
 
-# Install dependencies
-echo "📦 Installing dependencies..."
+# Install Backend dependencies
+echo "📦 Installing backend dependencies..."
+cd apps/api
 npm install
-echo "✅ Dependencies installed"
+cd ../..
+echo "✅ Backend dependencies installed"
 echo ""
 
-# Setup environment
-if [ ! -f .env ]; then
-    echo "📝 Creating .env file..."
-    cp .env.example .env
-    echo "✅ .env file created"
+# Install Frontend dependencies
+echo "📦 Installing frontend dependencies..."
+cd apps/web
+npm install
+cd ../..
+echo "✅ Frontend dependencies installed (450 packages)"
+echo ""
+
+# Setup Backend environment
+if [ ! -f apps/api/.env ]; then
+    echo "📝 Creating backend .env file..."
+    cp apps/api/.env.example apps/api/.env
+    echo "✅ Backend .env file created"
 else
-    echo "ℹ️  .env file already exists"
+    echo "ℹ️  Backend .env file already exists"
+fi
+echo ""
+
+# Setup Frontend environment
+if [ ! -f apps/web/.env.local ]; then
+    echo "📝 Creating frontend .env.local file..."
+    echo "NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1" > apps/web/.env.local
+    echo "✅ Frontend .env.local file created"
+else
+    echo "ℹ️  Frontend .env.local file already exists"
 fi
 echo ""
 
@@ -65,6 +85,7 @@ echo ""
 
 # Generate Prisma client
 echo "🔧 Generating Prisma client..."
+cd apps/api
 npm run prisma:generate
 echo "✅ Prisma client generated"
 echo ""
@@ -78,31 +99,40 @@ echo ""
 # Seed database
 echo "🌱 Seeding database with demo data..."
 npm run prisma:seed
+cd ../..
 echo "✅ Database seeded"
 echo ""
 
-echo "=============================="
+echo "=================================="
 echo "✨ Setup Complete!"
-echo "=============================="
+echo "=================================="
 echo ""
 echo "🎯 Next steps:"
 echo ""
-echo "1. Start the API:"
-echo "   npm run start:dev"
+echo "1. Start the Backend API (Terminal 1):"
+echo "   cd apps/api && npm run start:dev"
+echo "   → http://localhost:3000"
+echo "   → Swagger UI: http://localhost:3000/docs"
 echo ""
-echo "2. Open Swagger UI:"
-echo "   http://localhost:3000/docs"
+echo "2. Start the Frontend (Terminal 2):"
+echo "   cd apps/web && npm run dev"
+echo "   → http://localhost:3001"
 echo ""
 echo "3. Login with demo user:"
 echo "   Email: demo@smartapply.com"
 echo "   Password: Demo123!"
 echo ""
 echo "4. Run tests:"
-echo "   npm run test:e2e"
+echo "   Backend: cd apps/api && npm run test:e2e"
+echo "   Frontend: cd apps/web && npm run lint"
 echo ""
 echo "📚 Documentation:"
 echo "   - README.md - Full documentation"
-echo "   - QUICKSTART.md - Quick start guide"
-echo "   - DELIVERY.md - What's implemented"
+echo "   - .github/agents/my-agents.md - Agent instructions"
+echo "   - MVP_FEATURES.md - Feature tracking & security todos"
+echo ""
+echo "🔒 Security Note:"
+echo "   Current security score: 6/10"
+echo "   See MVP_FEATURES.md for critical security todos before production!"
 echo ""
 echo "Happy coding! 🚀"
