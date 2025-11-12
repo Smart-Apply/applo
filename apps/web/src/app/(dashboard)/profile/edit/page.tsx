@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,9 +35,10 @@ export default function ProfileEditPage() {
   const { data: profile, isLoading } = useProfile();
   const user = useAuthStore((state) => state.user);
   const updateProfile = useUpdateProfile();
-
+  
   // State for skills management
   const [skills, setSkills] = useState<Skill[]>([]);
+  const prevProfileRef = useRef<number | undefined>(undefined);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -52,7 +53,7 @@ export default function ProfileEditPage() {
     },
   });
 
-  // Pre-populate form with existing data
+  // Pre-populate form and skills with existing data
   useEffect(() => {
     if (user && profile) {
       form.reset({
@@ -65,22 +66,32 @@ export default function ProfileEditPage() {
         summary: profile.summary || '',
       });
       
-      // Initialize skills state
-      setSkills(profile.skills || []);
+      // Only update skills if profile has changed (not on every render)
+      // Use startTransition to avoid cascading render warnings
+      if (prevProfileRef.current !== profile.id) {
+        startTransition(() => {
+          setSkills(profile.skills || []);
+        });
+        prevProfileRef.current = profile.id;
+      }
     }
   }, [user, profile, form]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       // Map frontend field names to backend DTO field names
+      // Filter out empty strings to avoid validation errors
+      // Strip 'id' from skills (backend expects only name and level)
+      const skillsWithoutIds = skills.map(({ name, level }) => ({ name, level }));
+      
       await updateProfile.mutateAsync({
-        fullName: data.name,
-        phone: data.phone || undefined,
-        location: data.location || undefined,
-        linkedinUrl: data.linkedIn || undefined,
-        portfolioUrl: data.website || undefined,
-        summary: data.summary || undefined,
-        skills: skills.length > 0 ? skills : undefined,
+        fullName: data.name || undefined,
+        phone: data.phone?.trim() || undefined,
+        location: data.location?.trim() || undefined,
+        linkedinUrl: data.linkedIn?.trim() || undefined,
+        portfolioUrl: data.website?.trim() || undefined,
+        summary: data.summary?.trim() || undefined,
+        skills: skills.length > 0 ? skillsWithoutIds : undefined,
       });
       
       // Navigate back to profile page on success

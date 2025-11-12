@@ -217,7 +217,7 @@ export default function ProfilePage() {
         <CardContent>
           {hasSkills ? (
             <div className="flex flex-wrap gap-2">
-              {profile.skills.map((skill, index) => (
+              {profile.skills?.map((skill, index) => (
                 <Badge key={index} variant="secondary" className="text-sm">
                   {skill.name}
                   {skill.level && (
@@ -254,12 +254,12 @@ export default function ProfilePage() {
         <CardContent>
           {hasExperiences ? (
             <div className="space-y-6">
-              {profile.experiences.map((exp, index) => (
+              {profile.experiences?.map((exp, index) => (
                 <div key={index} className="relative pl-8">
                   {/* Timeline dot */}
                   <div className="absolute left-0 top-1.5 h-3 w-3 rounded-full border-2 border-blue-600 bg-white" />
                   {/* Timeline line */}
-                  {index < profile.experiences.length - 1 && (
+                  {index < (profile.experiences?.length ?? 0) - 1 && (
                     <div className="absolute left-1.5 top-5 h-full w-0.5 bg-gray-200" />
                   )}
                   
@@ -322,12 +322,12 @@ export default function ProfilePage() {
         <CardContent>
           {hasEducation ? (
             <div className="space-y-6">
-              {profile.education.map((edu, index) => (
+              {profile.education?.map((edu, index) => (
                 <div key={index} className="relative pl-8">
                   {/* Timeline dot */}
                   <div className="absolute left-0 top-1.5 h-3 w-3 rounded-full border-2 border-green-600 bg-white" />
                   {/* Timeline line */}
-                  {index < profile.education.length - 1 && (
+                  {index < (profile.education?.length ?? 0) - 1 && (
                     <div className="absolute left-1.5 top-5 h-full w-0.5 bg-gray-200" />
                   )}
                   
@@ -383,7 +383,7 @@ export default function ProfilePage() {
         <CardContent>
           {hasCertificates ? (
             <div className="space-y-4">
-              {profile.certificates.map((cert, index) => (
+              {profile.certificates?.map((cert, index) => (
                 <div key={index} className="rounded-lg border p-4">
                   <h3 className="font-semibold text-gray-900">{cert.name}</h3>
                   <p className="text-sm text-gray-700">{cert.issuer}</p>
@@ -457,7 +457,7 @@ export default function ProfilePage() {
         <CardContent>
           {hasProjects ? (
             <div className="space-y-4">
-              {profile.projects.map((project, index) => (
+              {profile.projects?.map((project, index) => (
                 <div key={index} className="rounded-lg border p-4">
                   <h3 className="font-semibold text-gray-900">{project.name}</h3>
                   {project.description && (

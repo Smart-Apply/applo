@@ -22,6 +22,6 @@
       "@/*": ["apps/api/src/*"]
     }
   },
-  "include": ["apps/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["apps/api/**/*"],
+  "exclude": ["node_modules", "dist", "apps/web"]
 }
