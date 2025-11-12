@@ -69,86 +69,222 @@ export class ProfileService {
           },
         });
 
-        // Update skills (delete all and recreate)
+        // Update skills (differential: upsert with IDs, delete orphaned)
         if (dto.skills !== undefined) {
-          await tx.skill.deleteMany({ where: { profileId: profile.id } });
-          if (dto.skills.length > 0) {
-            await tx.skill.createMany({
-              data: dto.skills.map((skill) => ({
+          const providedIds = dto.skills.filter((s) => s.id).map((s) => s.id!);
+
+          // Delete skills that were not included in the update
+          if (dto.skills.length === 0) {
+            // Delete all if empty array provided
+            await tx.skill.deleteMany({ where: { profileId: profile.id } });
+          } else if (providedIds.length > 0) {
+            // Delete only orphaned skills (those not in the provided list)
+            await tx.skill.deleteMany({
+              where: {
                 profileId: profile.id,
-                name: skill.name,
-                category: 'General', // Default category since DTO doesn't have category
-                level: skill.level,
-              })),
+                id: { notIn: providedIds },
+              },
             });
+          }
+
+          // Upsert each skill (update if ID exists, create if not)
+          for (const skill of dto.skills) {
+            if (skill.id) {
+              // Update existing
+              await tx.skill.update({
+                where: { id: skill.id },
+                data: {
+                  name: skill.name,
+                  level: skill.level,
+                },
+              });
+            } else {
+              // Create new
+              await tx.skill.create({
+                data: {
+                  profileId: profile.id,
+                  name: skill.name,
+                  category: 'General',
+                  level: skill.level,
+                },
+              });
+            }
           }
         }
 
-        // Update certificates
+        // Update certificates (differential: upsert with IDs, delete orphaned)
         if (dto.certificates !== undefined) {
-          await tx.certificate.deleteMany({ where: { profileId: profile.id } });
-          if (dto.certificates.length > 0) {
-            await tx.certificate.createMany({
-              data: dto.certificates.map((cert) => ({
+          const providedIds = dto.certificates.filter((c) => c.id).map((c) => c.id!);
+
+          if (dto.certificates.length === 0) {
+            await tx.certificate.deleteMany({ where: { profileId: profile.id } });
+          } else if (providedIds.length > 0) {
+            await tx.certificate.deleteMany({
+              where: {
                 profileId: profile.id,
-                name: cert.name,
-                issuer: cert.issuer,
-                issueDate: cert.dateObtained ? new Date(cert.dateObtained) : null,
-                credentialUrl: cert.url,
-              })),
+                id: { notIn: providedIds },
+              },
             });
+          }
+
+          for (const cert of dto.certificates) {
+            if (cert.id) {
+              await tx.certificate.update({
+                where: { id: cert.id },
+                data: {
+                  name: cert.name,
+                  issuer: cert.issuer,
+                  issueDate: cert.dateObtained ? new Date(cert.dateObtained) : null,
+                  credentialUrl: cert.url,
+                },
+              });
+            } else {
+              await tx.certificate.create({
+                data: {
+                  profileId: profile.id,
+                  name: cert.name,
+                  issuer: cert.issuer,
+                  issueDate: cert.dateObtained ? new Date(cert.dateObtained) : null,
+                  credentialUrl: cert.url,
+                },
+              });
+            }
           }
         }
 
-        // Update experiences
+        // Update experiences (differential: upsert with IDs, delete orphaned)
         if (dto.experiences !== undefined) {
-          await tx.experience.deleteMany({ where: { profileId: profile.id } });
-          if (dto.experiences.length > 0) {
-            await tx.experience.createMany({
-              data: dto.experiences.map((exp) => ({
+          const providedIds = dto.experiences.filter((e) => e.id).map((e) => e.id!);
+
+          // Delete experiences that were not included in the update
+          if (dto.experiences.length === 0) {
+            await tx.experience.deleteMany({ where: { profileId: profile.id } });
+          } else if (providedIds.length > 0) {
+            await tx.experience.deleteMany({
+              where: {
                 profileId: profile.id,
-                title: exp.title,
-                company: exp.company,
-                startDate: new Date(exp.startDate),
-                endDate: exp.endDate ? new Date(exp.endDate) : null,
-                description: exp.description,
-              })),
+                id: { notIn: providedIds },
+              },
             });
+          }
+
+          // Upsert each experience
+          for (const exp of dto.experiences) {
+            if (exp.id) {
+              // Update existing
+              await tx.experience.update({
+                where: { id: exp.id },
+                data: {
+                  title: exp.title,
+                  company: exp.company,
+                  location: exp.location,
+                  startDate: new Date(exp.startDate),
+                  endDate: exp.endDate ? new Date(exp.endDate) : null,
+                  description: exp.description,
+                  isCurrent: exp.current || false,
+                },
+              });
+            } else {
+              // Create new
+              await tx.experience.create({
+                data: {
+                  profileId: profile.id,
+                  title: exp.title,
+                  company: exp.company,
+                  location: exp.location,
+                  startDate: new Date(exp.startDate),
+                  endDate: exp.endDate ? new Date(exp.endDate) : null,
+                  description: exp.description,
+                  isCurrent: exp.current || false,
+                },
+              });
+            }
           }
         }
 
-        // Update projects
+        // Update projects (differential: upsert with IDs, delete orphaned)
         if (dto.projects !== undefined) {
-          await tx.project.deleteMany({ where: { profileId: profile.id } });
-          if (dto.projects.length > 0) {
-            await tx.project.createMany({
-              data: dto.projects.map((proj) => ({
+          const providedIds = dto.projects.filter((p) => p.id).map((p) => p.id!);
+
+          if (dto.projects.length === 0) {
+            await tx.project.deleteMany({ where: { profileId: profile.id } });
+          } else if (providedIds.length > 0) {
+            await tx.project.deleteMany({
+              where: {
                 profileId: profile.id,
-                name: proj.name,
-                description: proj.description,
-                technologies: proj.technologies || [],
-                url: proj.url,
-              })),
+                id: { notIn: providedIds },
+              },
             });
+          }
+
+          for (const proj of dto.projects) {
+            if (proj.id) {
+              await tx.project.update({
+                where: { id: proj.id },
+                data: {
+                  name: proj.name,
+                  description: proj.description,
+                  technologies: proj.technologies || [],
+                  url: proj.url,
+                },
+              });
+            } else {
+              await tx.project.create({
+                data: {
+                  profileId: profile.id,
+                  name: proj.name,
+                  description: proj.description,
+                  technologies: proj.technologies || [],
+                  url: proj.url,
+                },
+              });
+            }
           }
         }
 
-        // Update education
+        // Update education (differential: upsert with IDs, delete orphaned)
         if (dto.education !== undefined) {
-          await tx.education.deleteMany({ where: { profileId: profile.id } });
-          if (dto.education.length > 0) {
-            await tx.education.createMany({
-              data: dto.education.map((edu) => ({
+          const providedIds = dto.education.filter((e) => e.id).map((e) => e.id!);
+
+          if (dto.education.length === 0) {
+            await tx.education.deleteMany({ where: { profileId: profile.id } });
+          } else if (providedIds.length > 0) {
+            await tx.education.deleteMany({
+              where: {
                 profileId: profile.id,
-                degree: edu.degree,
-                institution: edu.institution,
-                fieldOfStudy: edu.fieldOfStudy,
-                startYear: edu.startYear ? new Date(edu.startYear) : null,
-                endYear: edu.endYear ? new Date(edu.endYear) : null,
-                gpa: edu.gpa,
-                description: edu.description,
-              })),
+                id: { notIn: providedIds },
+              },
             });
+          }
+
+          for (const edu of dto.education) {
+            if (edu.id) {
+              await tx.education.update({
+                where: { id: edu.id },
+                data: {
+                  degree: edu.degree,
+                  institution: edu.institution,
+                  fieldOfStudy: edu.fieldOfStudy,
+                  startYear: edu.startYear ? new Date(edu.startYear) : null,
+                  endYear: edu.endYear ? new Date(edu.endYear) : null,
+                  gpa: edu.gpa,
+                  description: edu.description,
+                },
+              });
+            } else {
+              await tx.education.create({
+                data: {
+                  profileId: profile.id,
+                  degree: edu.degree,
+                  institution: edu.institution,
+                  fieldOfStudy: edu.fieldOfStudy,
+                  startYear: edu.startYear ? new Date(edu.startYear) : null,
+                  endYear: edu.endYear ? new Date(edu.endYear) : null,
+                  gpa: edu.gpa,
+                  description: edu.description,
+                },
+              });
+            }
           }
         }
 

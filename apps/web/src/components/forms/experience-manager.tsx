@@ -136,12 +136,16 @@ export function ExperienceManager({
     let updatedExperiences: Experience[];
 
     if (editingIndex !== null) {
-      // Update existing experience
+      // Update existing experience - PRESERVE THE ID!
+      const existingExperience = experiences[editingIndex];
       updatedExperiences = [...experiences];
-      updatedExperiences[editingIndex] = newExperience;
+      updatedExperiences[editingIndex] = {
+        ...newExperience,
+        ...(existingExperience.id && { id: existingExperience.id }), // Keep existing ID
+      };
       toast.success('Erfahrung aktualisiert');
     } else {
-      // Add new experience
+      // Add new experience (no ID yet - backend will assign one)
       updatedExperiences = [...experiences, newExperience];
       toast.success('Erfahrung hinzugefügt');
     }

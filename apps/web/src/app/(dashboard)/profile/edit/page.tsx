@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, startTransition } from 'react';
+import { useEffect, useState, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -40,7 +40,6 @@ export default function ProfileEditPage() {
   // State for skills and experiences management
   const [skills, setSkills] = useState<Skill[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
-  const prevProfileRef = useRef<number | undefined>(undefined);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -55,7 +54,7 @@ export default function ProfileEditPage() {
     },
   });
 
-  // Pre-populate form and skills with existing data
+  // Pre-populate form with existing data
   useEffect(() => {
     if (user && profile) {
       form.reset({
@@ -67,25 +66,42 @@ export default function ProfileEditPage() {
         website: profile.portfolioUrl || '',
         summary: profile.summary || '',
       });
-      
-      // Only update skills and experiences if profile has changed (not on every render)
-      // Use startTransition to avoid cascading render warnings
-      if (prevProfileRef.current !== profile.id) {
-        startTransition(() => {
-          setSkills(profile.skills || []);
-          setExperiences(profile.experiences || []);
-        });
-        prevProfileRef.current = profile.id;
-      }
     }
   }, [user, profile, form]);
+
+  // Sync skills and experiences from profile (separate effect to track changes properly)
+  useEffect(() => {
+    if (profile) {
+      // Update state when profile data changes (after successful mutation)
+      startTransition(() => {
+        setSkills(profile.skills || []);
+        setExperiences(profile.experiences || []);
+      });
+    }
+    // Only re-run when skills or experiences arrays change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.skills, profile?.experiences]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       // Map frontend field names to backend DTO field names
-      // Filter out empty strings to avoid validation errors
-      // Strip 'id' from skills (backend expects only name and level)
-      const skillsWithoutIds = skills.map(({ name, level }) => ({ name, level }));
+      // Keep IDs for differential updates (backend upserts based on ID presence)
+      const skillsForUpdate = skills.map(({ id, name, level }) => ({
+        ...(id && { id }), // Include ID if exists (for update), omit if new (for create)
+        name,
+        level,
+      }));
+      
+      const experiencesForUpdate = experiences.map(({ id, title, company, location, startDate, endDate, description, current }) => ({
+        ...(id && { id }), // Include ID if exists
+        title,
+        company,
+        location,
+        startDate,
+        endDate,
+        description,
+        current,
+      }));
       
       await updateProfile.mutateAsync({
         fullName: data.name || undefined,
@@ -94,12 +110,12 @@ export default function ProfileEditPage() {
         linkedinUrl: data.linkedIn?.trim() || undefined,
         portfolioUrl: data.website?.trim() || undefined,
         summary: data.summary?.trim() || undefined,
-        skills: skills.length > 0 ? skillsWithoutIds : undefined,
-        experiences: experiences.length > 0 ? experiences : undefined,
+        skills: skills.length > 0 ? skillsForUpdate : undefined,
+        experiences: experiences.length > 0 ? experiencesForUpdate : undefined,
       });
       
-      // Navigate back to profile page on success
-      router.push('/profile');
+      // Stay on edit page after save (data will refresh via React Query)
+      // User can manually navigate back via Cancel button or back arrow
     } catch (error) {
       // Error is handled by the mutation hook (toast notification)
       console.error('Failed to update profile:', error);
