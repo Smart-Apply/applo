@@ -60,11 +60,11 @@ export interface Profile {
   portfolioUrl?: string;
   linkedinUrl?: string;
   githubUrl?: string;
-  skills: Skill[];
-  experiences: Experience[];
-  education: Education[];
-  certificates: Certificate[];
-  projects: Project[];
+  skills?: Skill[];
+  experiences?: Experience[];
+  education?: Education[];
+  certificates?: Certificate[];
+  projects?: Project[];
   createdAt: string;
   updatedAt: string;
 }
@@ -78,6 +78,11 @@ export interface UpdateProfileDto {
   githubUrl?: string;
   portfolioUrl?: string;
   summary?: string;
+  skills?: Skill[];
+  experiences?: Experience[];
+  education?: Education[];
+  certificates?: Certificate[];
+  projects?: Project[];
 }
 
 // Job Posting Types

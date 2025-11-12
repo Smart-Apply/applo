@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,8 +12,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { SkillsManager } from '@/components/forms/skills-manager';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import type { Skill } from '@/types';
 
 // Validation schema for basic profile info
 const profileFormSchema = z.object({
@@ -33,6 +35,10 @@ export default function ProfileEditPage() {
   const { data: profile, isLoading } = useProfile();
   const user = useAuthStore((state) => state.user);
   const updateProfile = useUpdateProfile();
+  
+  // State for skills management
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const prevProfileRef = useRef<number | undefined>(undefined);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -47,7 +53,7 @@ export default function ProfileEditPage() {
     },
   });
 
-  // Pre-populate form with existing data
+  // Pre-populate form and skills with existing data
   useEffect(() => {
     if (user && profile) {
       form.reset({
@@ -59,19 +65,33 @@ export default function ProfileEditPage() {
         website: profile.portfolioUrl || '',
         summary: profile.summary || '',
       });
+      
+      // Only update skills if profile has changed (not on every render)
+      // Use startTransition to avoid cascading render warnings
+      if (prevProfileRef.current !== profile.id) {
+        startTransition(() => {
+          setSkills(profile.skills || []);
+        });
+        prevProfileRef.current = profile.id;
+      }
     }
   }, [user, profile, form]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       // Map frontend field names to backend DTO field names
+      // Filter out empty strings to avoid validation errors
+      // Strip 'id' from skills (backend expects only name and level)
+      const skillsWithoutIds = skills.map(({ name, level }) => ({ name, level }));
+      
       await updateProfile.mutateAsync({
-        fullName: data.name,
-        phone: data.phone || undefined,
-        location: data.location || undefined,
-        linkedinUrl: data.linkedIn || undefined,
-        portfolioUrl: data.website || undefined,
-        summary: data.summary || undefined,
+        fullName: data.name || undefined,
+        phone: data.phone?.trim() || undefined,
+        location: data.location?.trim() || undefined,
+        linkedinUrl: data.linkedIn?.trim() || undefined,
+        portfolioUrl: data.website?.trim() || undefined,
+        summary: data.summary?.trim() || undefined,
+        skills: skills.length > 0 ? skillsWithoutIds : undefined,
       });
       
       // Navigate back to profile page on success
@@ -289,6 +309,13 @@ export default function ProfileEditPage() {
                     <FormMessage />
                   </FormItem>
                 )}
+              />
+
+              {/* Skills Manager */}
+              <SkillsManager
+                skills={skills}
+                onSkillsChange={setSkills}
+                disabled={updateProfile.isPending}
               />
 
               {/* Action Buttons */}
