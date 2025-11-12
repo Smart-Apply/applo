@@ -55,8 +55,8 @@ export default function ProfileEditPage() {
         email: user.email || '',
         phone: profile.phone || '',
         location: profile.location || '',
-        linkedIn: profile.linkedIn || '',
-        website: profile.website || '',
+        linkedIn: profile.linkedinUrl || '',
+        website: profile.portfolioUrl || '',
         summary: profile.summary || '',
       });
     }
