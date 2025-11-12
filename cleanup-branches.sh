@@ -21,6 +21,15 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
     exit 1
 fi
 
+# Fetch latest changes from remote and prune stale references
+echo -e "${YELLOW}📡 Fetching latest changes from remote...${NC}"
+if git fetch --all --prune; then
+    echo -e "${GREEN}✅ Successfully synced with remote${NC}"
+else
+    echo -e "${RED}⚠️  Warning: Failed to fetch from remote${NC}"
+fi
+echo ""
+
 # Get current branch
 CURRENT_BRANCH=$(git branch --show-current)
 echo -e "Current branch: ${GREEN}${CURRENT_BRANCH}${NC}"
