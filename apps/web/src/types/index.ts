@@ -9,11 +9,13 @@ export interface User {
 
 // Profile Types
 export interface Skill {
+  id?: string; // Optional: present for existing skills, absent for new ones
   name: string;
   level?: string;
 }
 
 export interface Experience {
+  id?: string; // Optional: present for existing experiences, absent for new ones
   title: string;
   company: string;
   location?: string;
@@ -24,6 +26,7 @@ export interface Experience {
 }
 
 export interface Education {
+  id?: string; // Optional: present for existing education, absent for new ones
   degree: string;
   institution: string;
   fieldOfStudy?: string;
@@ -34,6 +37,7 @@ export interface Education {
 }
 
 export interface Certificate {
+  id?: string; // Optional: present for existing certificates, absent for new ones
   name: string;
   issuer: string;
   issueDate?: string;
@@ -43,6 +47,7 @@ export interface Certificate {
 }
 
 export interface Project {
+  id?: string; // Optional: present for existing projects, absent for new ones
   name: string;
   description?: string;
   technologies?: string[];

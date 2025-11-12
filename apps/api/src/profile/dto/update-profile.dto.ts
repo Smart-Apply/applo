@@ -6,10 +6,20 @@ import {
   ValidateNested,
   IsUrl,
   IsDateString,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class SkillDto {
+  @ApiProperty({
+    example: 'clx1234567890',
+    required: false,
+    description: 'If provided, updates existing skill; otherwise creates new one',
+  })
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @ApiProperty({ example: 'TypeScript' })
   @IsString()
   name: string;
@@ -21,6 +31,15 @@ export class SkillDto {
 }
 
 export class CertificateDto {
+  @ApiProperty({
+    example: 'clx1234567890',
+    required: false,
+    description: 'If provided, updates existing certificate; otherwise creates new one',
+  })
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @ApiProperty({ example: 'AWS Certified Solutions Architect' })
   @IsString()
   name: string;
@@ -41,6 +60,15 @@ export class CertificateDto {
 }
 
 export class ExperienceDto {
+  @ApiProperty({
+    example: 'clx1234567890',
+    required: false,
+    description: 'If provided, updates existing experience; otherwise creates new one',
+  })
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @ApiProperty({ example: 'Senior Software Engineer' })
   @IsString()
   title: string;
@@ -48,6 +76,11 @@ export class ExperienceDto {
   @ApiProperty({ example: 'TechCorp Inc.' })
   @IsString()
   company: string;
+
+  @ApiProperty({ example: 'Berlin, Germany', required: false })
+  @IsOptional()
+  @IsString()
+  location?: string;
 
   @ApiProperty({ example: '2020-01-15' })
   @IsDateString()
@@ -65,9 +98,23 @@ export class ExperienceDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @ApiProperty({ example: false, required: false })
+  @IsOptional()
+  @IsBoolean()
+  current?: boolean;
 }
 
 export class ProjectDto {
+  @ApiProperty({
+    example: 'clx1234567890',
+    required: false,
+    description: 'If provided, updates existing project; otherwise creates new one',
+  })
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @ApiProperty({ example: 'E-Commerce Platform' })
   @IsString()
   name: string;
@@ -96,6 +143,15 @@ export class ProjectDto {
 }
 
 export class EducationDto {
+  @ApiProperty({
+    example: 'clx1234567890',
+    required: false,
+    description: 'If provided, updates existing education; otherwise creates new one',
+  })
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @ApiProperty({ example: 'Bachelor of Science in Computer Science' })
   @IsString()
   degree: string;
