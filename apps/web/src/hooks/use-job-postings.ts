@@ -37,7 +37,7 @@ export function useParseJobPosting() {
   const token = useAuthStore((state) => state.token);
 
   return useMutation({
-    mutationFn: (data: { text?: string; url?: string; file?: File }) =>
+    mutationFn: (data: { text?: string; url?: string; fileId?: string }) =>
       api.jobPostings.parse(token!, data),
     onSuccess: () => {
       toast.success('Stellenanzeige erfolgreich geparst');
