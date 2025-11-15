@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from '../src/app.module';
 
 describe('AuthController (e2e)', () => {
@@ -12,6 +13,13 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    
+    // Add cookie parser middleware
+    app.use(cookieParser());
+    
+    // Set global prefix to match production setup
+    app.setGlobalPrefix('api/v1');
+    
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -27,7 +35,7 @@ describe('AuthController (e2e)', () => {
   });
 
   describe('/api/v1/auth/register (POST)', () => {
-    it('should register a new user', () => {
+    it('should register a new user and set cookie', () => {
       const email = `test-${Date.now()}@example.com`;
 
       return request(app.getHttpServer())
@@ -35,13 +43,16 @@ describe('AuthController (e2e)', () => {
         .send({
           email,
           password: 'Test123!',
-          firstName: 'Test',
-          lastName: 'User',
+          fullName: 'Test User',
         })
         .expect(201)
         .expect((res) => {
-          expect(res.body).toHaveProperty('accessToken');
+          // Should not return token in body anymore
+          expect(res.body).not.toHaveProperty('accessToken');
           expect(res.body.user).toHaveProperty('email', email);
+          // Should set cookie
+          expect(res.headers['set-cookie']).toBeDefined();
+          expect(res.headers['set-cookie'][0]).toMatch(/access_token=/);
         });
     });
 
@@ -100,17 +111,21 @@ describe('AuthController (e2e)', () => {
       });
     });
 
-    it('should login with valid credentials', () => {
+    it('should login with valid credentials and set cookie', () => {
       return request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({
           email: testEmail,
           password: testPassword,
         })
-        .expect(200)
+        .expect(201)
         .expect((res) => {
-          expect(res.body).toHaveProperty('accessToken');
+          // Should not return token in body anymore
+          expect(res.body).not.toHaveProperty('accessToken');
           expect(res.body.user).toHaveProperty('email', testEmail);
+          // Should set cookie
+          expect(res.headers['set-cookie']).toBeDefined();
+          expect(res.headers['set-cookie'][0]).toMatch(/access_token=/);
         });
     });
 
@@ -136,7 +151,7 @@ describe('AuthController (e2e)', () => {
   });
 
   describe('/api/v1/auth/me (GET)', () => {
-    let accessToken: string;
+    let cookies: string[];
 
     beforeAll(async () => {
       const email = `me-test-${Date.now()}@example.com`;
@@ -144,32 +159,70 @@ describe('AuthController (e2e)', () => {
       const response = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
         email,
         password: 'Test123!',
-        firstName: 'John',
-        lastName: 'Doe',
+        fullName: 'John Doe',
       });
 
-      accessToken = response.body.accessToken;
+      // Extract cookie from response
+      const setCookie = response.headers['set-cookie'];
+      cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
     });
 
-    it('should return current user with valid token', () => {
+    it('should return current user with valid cookie', () => {
       return request(app.getHttpServer())
         .get('/api/v1/auth/me')
-        .set('Authorization', `Bearer ${accessToken}`)
+        .set('Cookie', cookies)
         .expect(200)
         .expect((res) => {
           expect(res.body).toHaveProperty('email');
-          expect(res.body).toHaveProperty('firstName', 'John');
+          expect(res.body).toHaveProperty('fullName');
         });
     });
 
-    it('should reject without token', () => {
+    it('should reject without cookie', () => {
       return request(app.getHttpServer()).get('/api/v1/auth/me').expect(401);
     });
 
-    it('should reject with invalid token', () => {
+    it('should reject with invalid cookie', () => {
       return request(app.getHttpServer())
         .get('/api/v1/auth/me')
-        .set('Authorization', 'Bearer invalid-token')
+        .set('Cookie', ['access_token=invalid-token'])
+        .expect(401);
+    });
+  });
+
+  describe('/api/v1/auth/logout (POST)', () => {
+    let cookies: string[];
+
+    beforeAll(async () => {
+      const email = `logout-test-${Date.now()}@example.com`;
+
+      const response = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
+        email,
+        password: 'Test123!',
+      });
+
+      const setCookie = response.headers['set-cookie'];
+      cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+    });
+
+    it('should logout and clear cookie', () => {
+      return request(app.getHttpServer())
+        .post('/api/v1/auth/logout')
+        .set('Cookie', cookies)
+        .expect(201)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('message');
+          // Should clear the cookie
+          expect(res.headers['set-cookie']).toBeDefined();
+          // The cookie should have Max-Age=0 or Expires in the past
+          const setCookieHeader = res.headers['set-cookie'][0];
+          expect(setCookieHeader).toMatch(/access_token=/);
+        });
+    });
+
+    it('should require authentication', () => {
+      return request(app.getHttpServer())
+        .post('/api/v1/auth/logout')
         .expect(401);
     });
   });

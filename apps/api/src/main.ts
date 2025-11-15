@@ -3,6 +3,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
+import * as cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
@@ -21,6 +22,9 @@ async function bootstrap() {
 
   // Security
   app.use(helmet());
+  
+  // Cookie parser - must be before routes
+  app.use(cookieParser());
 
   // CORS configuration with restrictive policy
   // Only allows specified origins from CORS_ORIGINS environment variable
