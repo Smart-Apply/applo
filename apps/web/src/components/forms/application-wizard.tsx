@@ -243,6 +243,7 @@ interface ProfileStepProps {
 }
 
 function ProfileStep({ profile, isComplete }: ProfileStepProps) {
+  const router = useRouter();
   return (
     <Card>
       <CardHeader>
@@ -262,11 +263,9 @@ function ProfileStep({ profile, isComplete }: ProfileStepProps) {
                 Bitte vervollständige dein Profil, um fortzufahren. Füge mindestens eine
                 Zusammenfassung und Skills hinzu.
               </p>
-              <Button asChild variant="outline" size="sm" className="mt-3">
-                <Link href="/profile/edit">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Profil bearbeiten
-                </Link>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => router.push('/profile/edit')}>
+                <Edit className="mr-2 h-4 w-4" />
+                Profil bearbeiten
               </Button>
             </div>
           </div>
@@ -334,6 +333,7 @@ interface JobStepProps {
 }
 
 function JobStep({ jobPostings, selectedJobId, onSelectJob }: JobStepProps) {
+  const router = useRouter();
   return (
     <div className="space-y-4">
       <Card>
@@ -345,11 +345,9 @@ function JobStep({ jobPostings, selectedJobId, onSelectJob }: JobStepProps) {
         </CardHeader>
         <CardContent>
           <div className="flex justify-end mb-4">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/jobs">
-                <Briefcase className="mr-2 h-4 w-4" />
-                Neue Stellenanzeige hinzufügen
-              </Link>
+            <Button variant="outline" size="sm" onClick={() => router.push('/jobs')}>
+              <Briefcase className="mr-2 h-4 w-4" />
+              Neue Stellenanzeige hinzufügen
             </Button>
           </div>
 
@@ -360,10 +358,8 @@ function JobStep({ jobPostings, selectedJobId, onSelectJob }: JobStepProps) {
               <p className="text-sm text-gray-500 mb-4">
                 Erstelle zuerst eine Stellenanzeige, um fortzufahren.
               </p>
-              <Button asChild>
-                <Link href="/jobs">
-                  Stellenanzeige erstellen
-                </Link>
+              <Button onClick={() => router.push('/jobs')}>
+                Stellenanzeige erstellen
               </Button>
             </div>
           ) : (
@@ -431,7 +427,7 @@ function ReviewStep({ profile, job }: ReviewStepProps) {
                     {skill.name}
                   </Badge>
                 ))}
-                {profile?.skills?.length > 5 && (
+                {profile?.skills && profile.skills.length > 5 && (
                   <Badge variant="secondary">+{profile.skills.length - 5} mehr</Badge>
                 )}
               </div>

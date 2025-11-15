@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CenteredLoader } from '@/components/shared/loading';
 import { ApplicationCardSkeleton } from '@/components/shared/skeletons';
 import { Plus, FileText, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { ApplicationStatus } from '@/types';
 
 function getStatusInfo(status: ApplicationStatus) {
@@ -55,6 +55,7 @@ function getStatusInfo(status: ApplicationStatus) {
 type FilterStatus = 'all' | ApplicationStatus;
 
 export default function ApplicationsPage() {
+  const router = useRouter();
   const { data: applications, isLoading, refetch } = useApplications();
   const [selectedFilter, setSelectedFilter] = useState<FilterStatus>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -122,11 +123,9 @@ export default function ApplicationsPage() {
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             Aktualisieren
           </Button>
-          <Button asChild>
-            <Link href="/applications/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Neue Bewerbung
-            </Link>
+          <Button onClick={() => router.push('/applications/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Neue Bewerbung
           </Button>
         </div>
       </div>
@@ -204,33 +203,29 @@ export default function ApplicationsPage() {
                             {application.status === 'READY' && (
                               <>
                                 {application.coverLetterUrl && (
-                                  <Button asChild variant="outline" size="sm">
-                                    <a
-                                      href={application.coverLetterUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <FileText className="mr-2 h-4 w-4" />
-                                      Anschreiben
-                                    </a>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(application.coverLetterUrl, '_blank')}
+                                  >
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Anschreiben
                                   </Button>
                                 )}
                                 {application.resumeUrl && (
-                                  <Button asChild variant="outline" size="sm">
-                                    <a
-                                      href={application.resumeUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <FileText className="mr-2 h-4 w-4" />
-                                      Lebenslauf
-                                    </a>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(application.resumeUrl, '_blank')}
+                                  >
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Lebenslauf
                                   </Button>
                                 )}
                               </>
                             )}
-                            <Button asChild size="sm">
-                              <Link href={`/applications/${application.id}`}>Details</Link>
+                            <Button size="sm" onClick={() => router.push(`/applications/${application.id}`)}>
+                              Details
                             </Button>
                           </div>
                         </div>
@@ -267,11 +262,9 @@ export default function ApplicationsPage() {
               <p className="text-gray-500 mb-6">
                 Erstelle deine erste Bewerbung mit KI-Unterstützung
               </p>
-              <Button asChild>
-                <Link href="/applications/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Erste Bewerbung erstellen
-                </Link>
+              <Button onClick={() => router.push('/applications/new')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Erste Bewerbung erstellen
               </Button>
             </div>
           </CardContent>

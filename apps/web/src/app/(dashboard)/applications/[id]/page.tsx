@@ -98,9 +98,9 @@ export default function ApplicationDetailPage() {
     queryKey: ['applications', applicationId],
     queryFn: () => api.applications.getById(token!, applicationId),
     enabled: !!token && !!applicationId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Poll every 5 seconds if status is PENDING or GENERATING
-      return data?.status === 'PENDING' || data?.status === 'GENERATING' ? 5000 : false;
+      return query.state.data?.status === 'PENDING' || query.state.data?.status === 'GENERATING' ? 5000 : false;
     },
   });
 
@@ -286,8 +286,8 @@ export default function ApplicationDetailPage() {
               <p className="text-gray-500 mb-6">
                 Die angeforderte Bewerbung existiert nicht oder du hast keine Berechtigung.
               </p>
-              <Button asChild>
-                <Link href="/applications">Zu Bewerbungen</Link>
+              <Button onClick={() => router.push('/applications')}>
+                Zu Bewerbungen
               </Button>
             </div>
           </CardContent>
