@@ -67,8 +67,11 @@ describe('XSS Sanitization (e2e)', () => {
 
     // Extract token from cookie
     const cookies = registerRes.headers['set-cookie'];
-    const tokenCookie = cookies.find((c: string) => c.startsWith('access_token='));
-    accessToken = tokenCookie.split('=')[1].split(';')[0];
+    const cookieArray = Array.isArray(cookies) ? cookies : [cookies];
+    const tokenCookie = cookieArray.find((c: string) => c.startsWith('access_token='));
+    if (tokenCookie) {
+      accessToken = tokenCookie.split('=')[1].split(';')[0];
+    }
     userId = registerRes.body.user.id;
   });
 
