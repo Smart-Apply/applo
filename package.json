@@ -54,6 +54,7 @@
     "csrf-csrf": "^4.0.3",
     "handlebars": "^4.7.8",
     "helmet": "^7.1.0",
+    "isomorphic-dompurify": "^2.32.0",
     "langchain": "^1.0.3",
     "langchain-core": "^0.0.4",
     "mammoth": "^1.6.0",

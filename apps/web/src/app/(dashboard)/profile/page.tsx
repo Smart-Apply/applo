@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ProfileSkeleton } from '@/components/shared/skeletons';
+import { sanitizeText, sanitizeUrl } from '@/lib/sanitize';
 import {
   User,
   Mail,
@@ -117,13 +118,13 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
-            {profile?.linkedinUrl && (
+            {profile?.linkedinUrl && sanitizeUrl(profile.linkedinUrl) && (
               <div className="flex items-start gap-3">
                 <Linkedin className="mt-0.5 h-5 w-5 text-gray-500" />
                 <div>
                   <p className="text-sm font-medium text-gray-500">LinkedIn</p>
                   <a
-                    href={profile.linkedinUrl}
+                    href={sanitizeUrl(profile.linkedinUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-base text-blue-600 hover:underline"
@@ -133,13 +134,13 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
-            {profile?.portfolioUrl && (
+            {profile?.portfolioUrl && sanitizeUrl(profile.portfolioUrl) && (
               <div className="flex items-start gap-3">
                 <Globe className="mt-0.5 h-5 w-5 text-gray-500" />
                 <div>
                   <p className="text-sm font-medium text-gray-500">Website</p>
                   <a
-                    href={profile.portfolioUrl}
+                    href={sanitizeUrl(profile.portfolioUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-base text-blue-600 hover:underline"
@@ -386,9 +387,9 @@ export default function ProfilePage() {
                   {cert.credentialId && (
                     <p className="mt-2 text-xs text-gray-500">ID: {cert.credentialId}</p>
                   )}
-                  {cert.url && (
+                  {cert.url && sanitizeUrl(cert.url) && (
                     <a
-                      href={cert.url}
+                      href={sanitizeUrl(cert.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-2 inline-block text-sm text-blue-600 hover:underline"
@@ -462,9 +463,9 @@ export default function ProfilePage() {
                         </span>
                       </div>
                     )}
-                    {project.url && (
+                    {project.url && sanitizeUrl(project.url) && (
                       <a
-                        href={project.url}
+                        href={sanitizeUrl(project.url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"
