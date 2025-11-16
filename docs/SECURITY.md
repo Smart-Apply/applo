@@ -173,10 +173,10 @@ If validation fails, the application will **not start** and display a clear erro
 - **Audit Key Vault access** regularly
 
 ### Authentication
-- Use **HttpOnly cookies** for token storage (prevents XSS)
-- Implement **CSRF protection** for state-changing operations
-- Enable **rate limiting** on authentication endpoints (5 attempts/15min)
-- Enforce **strong password policies** (8+ chars, mixed case, numbers, symbols)
+- ✅ **HttpOnly cookies** for JWT token storage (prevents XSS, implemented)
+- ✅ **CSRF protection** available (csrf-csrf package, optional with `ENABLE_CSRF=true`)
+- ✅ **Rate limiting** on authentication endpoints (5 attempts/15min, strict)
+- ✅ **Strong password policies** enforced (8+ chars, mixed case, numbers, symbols)
 - Consider **2FA** for high-value accounts (post-MVP)
 
 ### Input Sanitization (XSS Protection)

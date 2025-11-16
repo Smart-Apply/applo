@@ -32,7 +32,7 @@
 | **System / DevOps** | Swagger Docs | Document all public endpoints | 🧩 Optional | 🔄 Enable for dev/testing | MVP |
 | **Security** | Strong JWT Secret | Generate secure JWT secret (64+ chars) | ⚠️ Partial | 🔴 Critical for Production | MVP |
 | **Security** | Restrictive CORS | Limit origins to frontend domain only | ⚠️ Partial | 🔴 Critical for Production | MVP |
-| **Security** | HttpOnly Cookies | Move JWT from localStorage to secure cookies | ❌ Not yet | 🔴 Critical (XSS protection) | MVP |
+| **Security** | HttpOnly Cookies | Move JWT from localStorage to secure cookies | ✅ Done | 🔴 Critical (XSS protection) | MVP |
 | **Security** | Password Strength Validation | Enforce strong passwords (8+ chars, mixed case, numbers, symbols) | ⚠️ Partial | 🟡 High Priority | MVP |
 | **Security** | Strict Rate Limiting | Limit auth endpoints to 5 attempts/15min | ⚠️ Partial | 🟡 High Priority | MVP |
 | **Security** | CSRF Protection | Add CSRF tokens for state-changing requests | ❌ Not yet | 🟡 High Priority | MVP |

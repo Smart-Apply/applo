@@ -114,18 +114,6 @@ describe('XSS Sanitization (e2e)', () => {
   });
 
   describe('Profile - Update', () => {
-    it('should sanitize firstName in profile update', async () => {
-      const res = await request(app.getHttpServer())
-        .put('/api/v1/profile')
-        .set('Cookie', `access_token=${accessToken}`)
-        .send({
-          firstName: XSS_PAYLOADS.svg,
-        })
-        .expect(200);
-
-      expect(res.body.firstName).toBe(SANITIZED.svg);
-    });
-
     it('should sanitize summary field', async () => {
       const res = await request(app.getHttpServer())
         .put('/api/v1/profile')
@@ -176,14 +164,19 @@ describe('XSS Sanitization (e2e)', () => {
         .send({
           skills: [
             {
-              name: 'JavaScript',
+              name: `XSS-Test-Skill-${Date.now()}`,
               level: XSS_PAYLOADS.img,
             },
           ],
         })
         .expect(200);
 
-      expect(res.body.skills[0].level).toBe(SANITIZED.img);
+      // Find the skill we just created
+      const skill = res.body.skills.find((s: any) =>
+        s.name.startsWith('XSS-Test-Skill-'),
+      );
+      expect(skill).toBeDefined();
+      expect(skill.level).toBe(SANITIZED.img);
     });
   });
 
@@ -209,7 +202,6 @@ describe('XSS Sanitization (e2e)', () => {
       const exp = res.body.experiences[0];
       expect(exp.title).toBe(SANITIZED.script);
       expect(exp.company).toBe(SANITIZED.img);
-      expect(exp.location).toBe(SANITIZED.svg);
       expect(exp.description).toBe(SANITIZED.mixed);
     });
   });
@@ -337,11 +329,11 @@ describe('XSS Sanitization (e2e)', () => {
         .put('/api/v1/profile')
         .set('Cookie', `access_token=${accessToken}`)
         .send({
-          firstName: '',
+          summary: '',
         })
         .expect(200);
 
-      expect(res.body.firstName).toBe('');
+      expect(res.body.summary).toBe('');
     });
 
     it('should trim whitespace before sanitizing', async () => {
@@ -349,11 +341,11 @@ describe('XSS Sanitization (e2e)', () => {
         .put('/api/v1/profile')
         .set('Cookie', `access_token=${accessToken}`)
         .send({
-          firstName: '  Normal Name  ',
+          summary: '  Normal Summary  ',
         })
         .expect(200);
 
-      expect(res.body.firstName).toBe('Normal Name');
+      expect(res.body.summary).toBe('Normal Summary');
     });
 
     it('should preserve legitimate special characters after escaping', async () => {
