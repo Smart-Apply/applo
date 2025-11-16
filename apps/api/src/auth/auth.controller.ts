@@ -48,15 +48,30 @@ export class AuthController {
   @Public()
   @Get('csrf-token')
   @ApiOperation({ summary: 'Get CSRF token for form submissions' })
+  // No @UseThrottler('auth') - use default rate limit (100/15min) instead of strict auth limit (5/15min)
+  // CSRF tokens need to be fetched frequently (after logout, on page load, after 403 errors)
   getCsrfToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    // Check if CSRF is enabled
+    if (!this.configService.enableCsrf) {
+      return {
+        csrfToken: 'csrf-disabled',
+        message: 'CSRF protection is disabled. No token required.',
+      };
+    }
+
     // Generate CSRF token using the csrf-csrf utility
     // This is stored in the app instance during bootstrap
     const generateToken = req.app.get('csrfGenerateToken');
+    if (!generateToken) {
+      throw new Error('CSRF token generator not initialized');
+    }
+
     const csrfToken = generateToken(req, res);
-    
-    return { 
+
+    return {
       csrfToken,
-      message: 'CSRF token generated successfully. Include this token in X-CSRF-Token header for state-changing requests.'
+      message:
+        'CSRF token generated successfully. Include this token in X-CSRF-Token header for state-changing requests.',
     };
   }
 
@@ -68,11 +83,16 @@ export class AuthController {
     return user;
   }
 
-  @Post('logout')
+  @Get('logout') // Changed to GET (no CSRF validation required for GET requests)
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user (clear cookie)' })
   async logout(@Res({ passthrough: true }) res: Response) {
+    // Force no-cache to prevent browser from caching this endpoint
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     // Clear the cookie
     res.clearCookie('access_token', {
       httpOnly: true,

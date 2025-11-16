@@ -36,6 +36,11 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           isAuthenticated: false,
         });
+        // Fetch new CSRF token for next login attempt
+        // Note: We don't await this to avoid blocking logout
+        import('@/lib/csrf').then(({ fetchCsrfToken }) => {
+          fetchCsrfToken().catch(console.error);
+        });
       },
 
       updateUser: (userData) =>

@@ -109,9 +109,8 @@ export const api = {
       }),
 
     logout: () =>
-      apiRequest<{ message: string }>('/auth/logout', {
-        method: 'POST',
-      }),
+      apiRequest<{ message: string }>('/auth/logout'),
+      // GET request (no method specified = GET), no CSRF token required
 
     me: () =>
       apiRequest<User>('/auth/me'),

@@ -35,6 +35,16 @@ export async function fetchCsrfToken(): Promise<void> {
       }
 
       const data = await response.json();
+      
+      // Check if CSRF is disabled on backend
+      if (data.csrfToken === 'csrf-disabled') {
+        csrfToken = null;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('ℹ️  CSRF protection disabled on backend');
+        }
+        return;
+      }
+      
       csrfToken = data.csrfToken;
       
       // Log success (dev only)

@@ -27,34 +27,48 @@ async function bootstrap() {
   // Cookie parser - must be before routes
   app.use(cookieParser());
 
-  // CSRF Protection using Double Submit Cookie Pattern
+  // CSRF Protection using Double Submit Cookie Pattern (Optional)
+  // Enable with ENABLE_CSRF=true environment variable
   // This protects against CSRF attacks on state-changing operations
-  const {
-    generateCsrfToken, // Generates a CSRF token pair (cookie + token)
-    doubleCsrfProtection, // Middleware to validate CSRF tokens
-  } = doubleCsrf({
-    getSecret: () => configService.jwtSecret, // Use JWT secret for CSRF token generation
-    getSessionIdentifier: (req) => req.headers['authorization'] || '', // Use auth header as session identifier
-    cookieName: '__Host-csrf', // Secure cookie name with __Host- prefix
-    cookieOptions: {
-      httpOnly: true,
-      sameSite: 'strict',
-      secure: configService.isProduction, // HTTPS only in production
-      path: '/',
-    },
-    size: 64, // Token size in bytes
-    ignoredMethods: ['GET', 'HEAD', 'OPTIONS'], // Don't require CSRF for read-only operations
-    getCsrfTokenFromRequest: (req) => req.headers['x-csrf-token'] as string, // Read token from custom header
-    errorConfig: {
-      statusCode: 403, // Forbidden
-      message: 'Invalid or missing CSRF token',
-      code: 'EBADCSRFTOKEN',
-    },
-  });
+  let doubleCsrfProtection;
+  if (configService.enableCsrf) {
+    const {
+      generateCsrfToken, // Generates a CSRF token pair (cookie + token)
+      doubleCsrfProtection: csrfMiddleware, // Middleware to validate CSRF tokens
+    } = doubleCsrf({
+      getSecret: () => configService.jwtSecret, // Use JWT secret for CSRF token generation
+      getSessionIdentifier: (req) => req.headers['authorization'] || '', // Use auth header as session identifier
+      // Use __Host- prefix only in production (requires HTTPS)
+      // In development, use simple name (localhost doesn't support __Host- prefix)
+      cookieName: configService.isProduction ? '__Host-csrf' : 'csrf',
+      cookieOptions: {
+        httpOnly: true,
+        // Use 'strict' in production for better security (assumes same-origin deployment)
+        // Use 'lax' in development for cross-origin (frontend:3001 -> backend:3000)
+        sameSite: configService.isProduction ? 'strict' : 'lax',
+        secure: configService.isProduction, // HTTPS only in production
+        path: '/',
+      },
+      size: 64, // Token size in bytes
+      ignoredMethods: ['GET', 'HEAD', 'OPTIONS'], // Don't require CSRF for read-only operations
+      getCsrfTokenFromRequest: (req) => req.headers['x-csrf-token'] as string, // Read token from custom header
+      errorConfig: {
+        statusCode: 403, // Forbidden
+        message: 'Invalid or missing CSRF token',
+        code: 'EBADCSRFTOKEN',
+      },
+    });
 
-  // Store CSRF utilities in app instance for controllers to access
-  app.set('csrfGenerateToken', generateCsrfToken);
-  app.set('csrfProtection', doubleCsrfProtection);
+    doubleCsrfProtection = csrfMiddleware;
+
+    // Store CSRF utilities in app instance for controllers to access
+    app.set('csrfGenerateToken', generateCsrfToken);
+    app.set('csrfProtection', doubleCsrfProtection);
+
+    logger.log('🛡️  CSRF protection enabled');
+  } else {
+    logger.warn('⚠️  CSRF protection disabled (set ENABLE_CSRF=true to enable)');
+  }
 
   // CORS configuration with restrictive policy
   // Only allows specified origins from CORS_ORIGINS environment variable
@@ -81,9 +95,11 @@ async function bootstrap() {
   // API prefix
   app.setGlobalPrefix('api/v1');
 
-  // Apply CSRF protection globally (after API prefix)
+  // Apply CSRF protection globally if enabled (after API prefix)
   // This will validate CSRF tokens on all POST, PUT, DELETE, PATCH requests
-  app.use(doubleCsrfProtection);
+  if (configService.enableCsrf && doubleCsrfProtection) {
+    app.use(doubleCsrfProtection);
+  }
 
   // Swagger documentation
   if (configService.isDevelopment) {
