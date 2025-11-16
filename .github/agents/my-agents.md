@@ -703,6 +703,221 @@ cd apps/web && npm run dev
 # - Swagger Docs: http://localhost:3000/docs
 ```
 
+## API Endpoints Reference
+
+All endpoints are prefixed with `/api/v1` and documented at `http://localhost:3000/docs` (Swagger UI).
+
+### Authentication Endpoints (Public)
+
+**POST /api/v1/auth/register**
+- **Purpose:** Register new user account
+- **Authentication:** None (Public)
+- **Rate Limit:** 5 attempts / 15 minutes (strict auth limit)
+- **Body:** `{ email, password, firstName, lastName }`
+- **Response:** `{ user: { id, email, firstName, lastName, createdAt } }`
+- **Cookie Set:** `access_token` (HttpOnly, Secure in prod, SameSite=strict, 7 days)
+- **Notes:** Password hashed with argon2, JWT token in HttpOnly cookie (not in response body)
+
+**POST /api/v1/auth/login**
+- **Purpose:** Login existing user
+- **Authentication:** None (Public)
+- **Rate Limit:** 5 attempts / 15 minutes (strict auth limit)
+- **Body:** `{ email, password }`
+- **Response:** `{ user: { id, email, firstName, lastName } }`
+- **Cookie Set:** `access_token` (HttpOnly, Secure in prod, SameSite=strict, 7 days)
+- **Notes:** JWT token in HttpOnly cookie (not in response body)
+
+**GET /api/v1/auth/csrf-token**
+- **Purpose:** Get CSRF token for state-changing requests
+- **Authentication:** None (Public)
+- **Rate Limit:** 100 requests / 15 minutes (default limit, NOT strict auth limit)
+- **Response:** `{ csrfToken: string, message: string }`
+- **Notes:** Only required if `ENABLE_CSRF=true`. Frontend automatically fetches and includes in X-CSRF-Token header
+
+**GET /api/v1/auth/me**
+- **Purpose:** Get current authenticated user
+- **Authentication:** Required (JWT from HttpOnly cookie)
+- **Response:** `{ id, email, firstName, lastName, createdAt }`
+- **Notes:** Used to verify authentication status
+
+**GET /api/v1/auth/logout**
+- **Purpose:** Logout user (clear auth cookie)
+- **Authentication:** Required (JWT from HttpOnly cookie)
+- **Response:** `{ message: "Logged out successfully" }`
+- **Cookie Cleared:** `access_token`
+- **Notes:** Changed from POST to GET to avoid CSRF validation requirement
+
+### Profile Endpoints (Protected)
+
+All profile endpoints require authentication via JWT in HttpOnly cookie (`access_token`).
+
+**GET /api/v1/profile**
+- **Purpose:** Get current user's complete profile with all relations
+- **Authentication:** Required
+- **Response:** Full profile object with nested arrays:
+  ```typescript
+  {
+    id, userId, firstName, lastName, phone, location,
+    linkedinUrl, githubUrl, portfolioUrl, summary,
+    skills: [{ id, name, category, level }],
+    experiences: [{ id, title, company, location, startDate, endDate, description, isCurrent }],
+    education: [{ id, degree, institution, fieldOfStudy, startYear, endYear, description }],
+    certificates: [{ id, name, issuer, issueDate, credentialUrl }],
+    projects: [{ id, name, description, technologies, url, startDate, endDate }]
+  }
+  ```
+- **Notes:** Returns 404 if profile not found (auto-created on user registration)
+
+**PUT /api/v1/profile**
+- **Purpose:** Update user profile (differential update for nested collections)
+- **Authentication:** Required
+- **Body:** Partial update with any combination of:
+  ```typescript
+  {
+    firstName?, lastName?, phone?, location?, summary?,
+    linkedinUrl?, githubUrl?, portfolioUrl?,
+    skills?: [{ id?, name, level? }],        // Upsert: with id = update, without = create
+    experiences?: [{ id?, title, company, location?, startDate, endDate?, description?, current? }],
+    education?: [{ id?, degree, institution, fieldOfStudy, startYear, endYear?, description? }],
+    certificates?: [{ id?, name, issuer, dateObtained, url? }],
+    projects?: [{ id?, name, description?, technologies?, url?, startDate?, endDate? }]
+  }
+  ```
+- **Response:** Complete updated profile (same structure as GET)
+- **Notes:** 
+  - Differential update for arrays: items with `id` are updated, without `id` are created
+  - Items not included in array are deleted (orphan removal)
+  - Empty array `[]` deletes all items in that collection
+  - All string inputs sanitized with `@Sanitize()` decorator (XSS protection)
+
+### Job Postings Endpoints (Protected)
+
+**POST /api/v1/job-postings/parse**
+- **Purpose:** Parse job posting from text, URL, or file and create normalized record
+- **Authentication:** Required
+- **Body:** `{ text?, url?, fileKey? }` (exactly one required)
+- **Response:** 
+  ```typescript
+  {
+    id, userId, source, rawContent,
+    title, company, location, type, salaryRange,
+    description, requirements, responsibilities,
+    createdAt, updatedAt
+  }
+  ```
+- **Notes:** Currently stores as-is, parsing logic TODO
+
+**GET /api/v1/job-postings**
+- **Purpose:** List all job postings for current user
+- **Authentication:** Required
+- **Response:** Array of job posting objects (same structure as POST response)
+- **Notes:** Sorted by createdAt descending
+
+**GET /api/v1/job-postings/:id**
+- **Purpose:** Get single job posting by ID
+- **Authentication:** Required
+- **Response:** Single job posting object
+- **Notes:** Returns 404 if not found or doesn't belong to user
+
+**DELETE /api/v1/job-postings/:id**
+- **Purpose:** Delete job posting
+- **Authentication:** Required
+- **Response:** 204 No Content
+- **Notes:** Cascade deletes related applications
+
+### Applications Endpoints (Protected)
+
+**POST /api/v1/applications**
+- **Purpose:** Create application and trigger background processing pipeline
+- **Authentication:** Required
+- **Body:** `{ jobPostingId, notes? }`
+- **Response:** 
+  ```typescript
+  {
+    id, userId, jobPostingId,
+    status: "PENDING",  // Initial status
+    coverLetterPath: null,
+    resumePath: null,
+    notes?,
+    createdAt, updatedAt
+  }
+  ```
+- **Pipeline:** PENDING → GENERATING → READY (or FAILED)
+  1. Load profile + job posting
+  2. Render LLM prompts with data
+  3. Call Azure OpenAI (or mock provider)
+  4. Generate PDFs with Puppeteer
+  5. Upload to Azure Blob Storage
+  6. Update status to READY
+- **Notes:** Background job submitted to queue (in-memory or Azure Service Bus)
+
+**GET /api/v1/applications**
+- **Purpose:** List all applications for current user
+- **Authentication:** Required
+- **Query Params:** `?includeJobPosting=true` (optional, default: false)
+- **Response:** Array of application objects (with optional jobPosting relation)
+- **Notes:** Sorted by createdAt descending
+
+**GET /api/v1/applications/:id**
+- **Purpose:** Get single application details
+- **Authentication:** Required
+- **Query Params:** `?includeJobPosting=true` (optional, default: false)
+- **Response:** Single application object (with optional jobPosting relation)
+- **Notes:** Returns 404 if not found or doesn't belong to user
+
+**GET /api/v1/applications/:id/files**
+- **Purpose:** Get SAS URLs for downloading cover letter and resume PDFs
+- **Authentication:** Required
+- **Response:** 
+  ```typescript
+  {
+    coverLetterUrl: string,  // Azure Blob SAS URL (1 hour expiry)
+    resumeUrl: string,       // Azure Blob SAS URL (1 hour expiry)
+    expiresAt: string        // ISO timestamp
+  }
+  ```
+- **Notes:** Returns 400 if status is not READY
+
+**GET /api/v1/applications/:id/download/cover-letter**
+- **Purpose:** Direct download of cover letter PDF
+- **Authentication:** Required
+- **Response:** PDF file stream
+- **Headers:** Content-Type: application/pdf, Content-Disposition: attachment
+- **Notes:** Alternative to SAS URLs, streams from storage provider
+
+**GET /api/v1/applications/:id/download/resume**
+- **Purpose:** Direct download of resume PDF
+- **Authentication:** Required
+- **Response:** PDF file stream
+- **Headers:** Content-Type: application/pdf, Content-Disposition: attachment
+- **Notes:** Alternative to SAS URLs, streams from storage provider
+
+### Rate Limiting
+
+- **Auth Endpoints** (register, login): 5 attempts / 15 minutes (strict)
+- **CSRF Token Endpoint**: 100 requests / 15 minutes (default)
+- **All Other Endpoints**: 100 requests / 15 minutes (default)
+
+### Error Responses
+
+All endpoints follow consistent error format:
+```typescript
+{
+  statusCode: number,
+  message: string | string[],
+  error: string,
+  code?: string  // e.g., "EBADCSRFTOKEN" for CSRF errors
+}
+```
+
+Common status codes:
+- `400` Bad Request (validation failed)
+- `401` Unauthorized (missing or invalid JWT)
+- `403` Forbidden (CSRF token invalid, when enabled)
+- `404` Not Found
+- `429` Too Many Requests (rate limit exceeded)
+- `500` Internal Server Error
+
 ## Reference Files
 
 ### Backend

@@ -173,11 +173,19 @@ If validation fails, the application will **not start** and display a clear erro
 - **Audit Key Vault access** regularly
 
 ### Authentication
-- Use **HttpOnly cookies** for token storage (prevents XSS)
-- Implement **CSRF protection** for state-changing operations
-- Enable **rate limiting** on authentication endpoints (5 attempts/15min)
-- Enforce **strong password policies** (8+ chars, mixed case, numbers, symbols)
+- ✅ **HttpOnly cookies** for JWT token storage (prevents XSS, implemented)
+- ✅ **CSRF protection** available (csrf-csrf package, optional with `ENABLE_CSRF=true`)
+- ✅ **Rate limiting** on authentication endpoints (5 attempts/15min, strict)
+- ✅ **Strong password policies** enforced (8+ chars, mixed case, numbers, symbols)
 - Consider **2FA** for high-value accounts (post-MVP)
+
+### Input Sanitization (XSS Protection)
+- ✅ **Backend sanitization** implemented on all user inputs (see [XSS_PROTECTION.md](./XSS_PROTECTION.md))
+- All string fields in DTOs use `@Sanitize()` decorator
+- HTML special characters escaped: `<`, `>`, `"`, `'`, `/`, `&`
+- ✅ **Frontend validation** for URLs (http/https only)
+- Rich text sanitization with DOMPurify (whitelist approach)
+- Defense-in-depth: Backend + Frontend + React's built-in escaping
 
 ### CORS & Headers
 - ✅ **CORS origins restricted** to specified domains (see [CORS_SECURITY.md](./CORS_SECURITY.md))
@@ -202,6 +210,7 @@ If validation fails, the application will **not start** and display a clear erro
 ## 📚 References
 
 - [OWASP JWT Security Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)
+- [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)
 - [RFC 7519: JWT Specification](https://tools.ietf.org/html/rfc7519#section-11.2)
 - [Azure Key Vault Best Practices](https://learn.microsoft.com/en-us/azure/key-vault/general/best-practices)
 - [NIST Password Guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html)
@@ -218,6 +227,8 @@ Before deploying to production, verify:
 - [ ] CORS origins restricted to production frontend domain
 - [ ] HTTPS enforced (HTTP redirects disabled)
 - [ ] Rate limiting enabled (especially on `/auth/*` endpoints)
+- [ ] Input sanitization applied to all user inputs (backend & frontend)
+- [ ] XSS protection tested with common attack vectors
 - [ ] Security headers configured (Helmet middleware active)
 - [ ] Application Insights enabled for monitoring
 - [ ] Secret rotation procedure documented and tested

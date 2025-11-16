@@ -83,45 +83,170 @@ Deliver a minimal yet production-grade application with:
 Use the previously defined Prisma models: **User**, **Profile**, **JobPosting**, **Application**.
 
 ## API Endpoints (v1)
-**Authentication** (Public)
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - Login (returns JWT + user)
-- `GET /api/v1/auth/me` - Get current user (Protected)
 
-**Profile** (Protected with JwtAuthGuard)
-- `GET /api/v1/profile` - Get user profile with relations
-- `PUT /api/v1/profile` - Update profile (name, phone, location, summary)
-- `POST /api/v1/profile/skills` - Add skill
-- `DELETE /api/v1/profile/skills/:id` - Remove skill
-- `POST /api/v1/profile/experiences` - Add experience
-- `PUT /api/v1/profile/experiences/:id` - Update experience
-- `DELETE /api/v1/profile/experiences/:id` - Delete experience
-- `POST /api/v1/profile/education` - Add education
-- `PUT /api/v1/profile/education/:id` - Update education
-- `DELETE /api/v1/profile/education/:id` - Delete education
-- `POST /api/v1/profile/certificates` - Add certificate
-- `PUT /api/v1/profile/certificates/:id` - Update certificate
-- `DELETE /api/v1/profile/certificates/:id` - Delete certificate
-- `POST /api/v1/profile/projects` - Add project
-- `PUT /api/v1/profile/projects/:id` - Update project
-- `DELETE /api/v1/profile/projects/:id` - Delete project
+All endpoints are prefixed with `/api/v1` and documented at `http://localhost:3000/docs` (Swagger UI).
 
-**Uploads** (Protected)
-- `POST /api/v1/uploads` - Upload file (returns file key)
+### Authentication Endpoints (Public)
 
-**Job Postings** (Protected)
-- `POST /api/v1/job-postings/parse` - Parse job posting (text/URL/file → normalized)
-- `GET /api/v1/job-postings` - List user's job postings
-- `GET /api/v1/job-postings/:id` - Get job posting details
-- `DELETE /api/v1/job-postings/:id` - Delete job posting
+**POST /api/v1/auth/register**
+- Register new user with email/password (argon2 hashed)
+- Rate limit: 5 attempts / 15 minutes (strict)
+- Sets HttpOnly cookie: `access_token` (Secure in prod, SameSite=strict, 7 days)
+- Returns: `{ user: { id, email, firstName, lastName } }` (token in cookie only)
 
-**Applications** (Protected)
-- `POST /api/v1/applications` - Create application (triggers pipeline)
-- `GET /api/v1/applications` - List user's applications
-- `GET /api/v1/applications/:id` - Get application details
-- `GET /api/v1/applications/:id/files` - Get PDF download URLs (SAS)
+**POST /api/v1/auth/login**
+- Login with email/password credentials
+- Rate limit: 5 attempts / 15 minutes (strict)
+- Sets HttpOnly cookie: `access_token` (Secure in prod, SameSite=strict, 7 days)
+- Returns: `{ user: { id, email, firstName, lastName } }` (token in cookie only)
 
-## Application Pipeline
+**GET /api/v1/auth/csrf-token**
+- Get CSRF token for state-changing requests (optional, only if `ENABLE_CSRF=true`)
+- Rate limit: 100 requests / 15 minutes (default, NOT strict auth limit)
+- Returns: `{ csrfToken: string, message: string }`
+- Frontend auto-fetches and includes in X-CSRF-Token header
+
+**GET /api/v1/auth/me**
+- Get current authenticated user details
+- Protected: Requires JWT in HttpOnly cookie
+- Returns: `{ id, email, firstName, lastName, createdAt }`
+
+**GET /api/v1/auth/logout**
+- Logout user (clear auth cookie)
+- Protected: Requires JWT in HttpOnly cookie
+- Clears: `access_token` cookie
+- Returns: `{ message: "Logged out successfully" }`
+- Note: Changed from POST to GET to avoid CSRF validation
+
+### Profile Endpoints (Protected)
+
+**GET /api/v1/profile**
+- Get complete profile with all nested relations
+- Returns: Full profile object including skills, experiences, education, certificates, projects arrays
+- Note: Auto-created on user registration, returns 404 if missing
+
+**PUT /api/v1/profile**
+- Update profile with differential updates for nested collections
+- Body: Partial update with any combination of basic fields + arrays
+- Nested arrays support upsert pattern:
+  - Items WITH `id`: Update existing item
+  - Items WITHOUT `id`: Create new item
+  - Items NOT in array: Delete (orphan removal)
+  - Empty array `[]`: Delete all items in collection
+- All string inputs sanitized with `@Sanitize()` decorator (XSS protection)
+- Returns: Complete updated profile
+
+**IMPORTANT:** Profile uses differential update pattern. No separate POST/DELETE endpoints for nested entities.
+Example: To add a skill, include it in `skills` array without `id`. To update, include `id`. To delete, omit from array.
+
+### Job Postings Endpoints (Protected)
+
+**POST /api/v1/job-postings/parse**
+- Parse job posting from text, URL, or file
+- Body: `{ text?, url?, fileKey? }` (exactly one required)
+- Returns: Normalized job posting with title, company, location, description, requirements, etc.
+- Note: Currently stores as-is, parsing logic TODO
+
+**GET /api/v1/job-postings**
+- List all job postings for current user
+- Returns: Array of job posting objects (sorted by createdAt desc)
+
+**GET /api/v1/job-postings/:id**
+- Get single job posting by ID
+- Returns: Job posting object or 404 if not found/unauthorized
+
+**DELETE /api/v1/job-postings/:id**
+- Delete job posting (cascade deletes related applications)
+- Returns: 204 No Content
+
+### Applications Endpoints (Protected)
+
+**POST /api/v1/applications**
+- Create application and trigger background processing pipeline
+- Body: `{ jobPostingId, notes? }`
+- Returns: `{ id, status: "PENDING", ... }` (initial status)
+- Pipeline: PENDING → GENERATING → READY (or FAILED)
+  1. Load profile + job posting
+  2. Render LLM prompts with data
+  3. Call Azure OpenAI (or mock provider)
+  4. Generate PDFs with Puppeteer
+  5. Upload to Azure Blob Storage
+  6. Update status to READY
+
+**GET /api/v1/applications**
+- List all applications for current user
+- Query: `?includeJobPosting=true` (optional, default: false)
+- Returns: Array of application objects (sorted by createdAt desc)
+
+**GET /api/v1/applications/:id**
+- Get single application details
+- Query: `?includeJobPosting=true` (optional, default: false)
+- Returns: Application object or 404 if not found/unauthorized
+
+**GET /api/v1/applications/:id/files**
+- Get Azure Blob SAS URLs for downloading PDFs
+- Returns: `{ coverLetterUrl, resumeUrl, expiresAt }` (1 hour expiry)
+- Note: Returns 400 if status is not READY
+
+**GET /api/v1/applications/:id/download/cover-letter**
+- Direct download of cover letter PDF (alternative to SAS URLs)
+- Returns: PDF file stream with Content-Disposition: attachment
+
+**GET /api/v1/applications/:id/download/resume**
+- Direct download of resume PDF (alternative to SAS URLs)
+- Returns: PDF file stream with Content-Disposition: attachment
+
+### Rate Limiting
+
+- **Auth endpoints** (register, login): 5 attempts / 15 minutes (strict)
+- **CSRF token endpoint**: 100 requests / 15 minutes (default, NOT strict)
+- **All other endpoints**: 100 requests / 15 minutes (default)
+
+### Error Format
+
+All endpoints return consistent error structure:
+```typescript
+{
+  statusCode: number,
+  message: string | string[],
+  error: string,
+  code?: string  // e.g., "EBADCSRFTOKEN" for CSRF errors
+}
+```
+
+Common codes: 400 (validation), 401 (unauthorized), 403 (CSRF/forbidden), 404 (not found), 429 (rate limit), 500 (server error)
+
+## Backend Architecture Patterns
+
+### Authentication Flow
+1. User registers/logs in via POST /auth/register or /auth/login
+2. Backend validates credentials, hashes password with argon2
+3. JWT token generated and stored in **HttpOnly cookie** (`access_token`)
+4. Frontend includes `credentials: 'include'` in all fetch requests
+5. JwtStrategy extracts token from cookie (not Authorization header)
+6. Token validated on every protected endpoint via `@UseGuards(JwtAuthGuard)`
+
+### Profile Update Pattern (Differential Updates)
+The profile endpoint uses a **differential update pattern** for nested collections:
+- **Upsert:** Items with `id` field are updated, items without `id` are created
+- **Delete:** Items not included in the array are deleted (orphan removal)
+- **Clear All:** Empty array `[]` deletes all items in that collection
+- **No Changes:** Omit the array entirely to keep existing items
+
+Example: Update profile with new skill and remove old ones not in array:
+```typescript
+PUT /api/v1/profile
+{
+  summary: "Updated summary",
+  skills: [
+    { id: "existing-id", name: "JavaScript", level: "Expert" },  // Update existing
+    { name: "TypeScript", level: "Advanced" }                    // Create new
+    // Skills not in this array will be deleted (orphan removal)
+  ]
+}
+```
+
+### Application Pipeline
 1. Load Profile + JobPosting  
 2. Render prompt templates (`prompts/cover-letter.md`, `prompts/resume.md`)  
 3. Call **Azure OpenAI** (provider interface) → Markdown/HTML  
@@ -142,9 +267,10 @@ Use the previously defined Prisma models: **User**, **Profile**, **JobPosting**,
 
 ## Security & Compliance
 
-### Current Security (7.5/10 Score)
+### Current Security (8.0/10 Score)
 **Implemented ✅**
 - JWT authentication with JwtAuthGuard on all protected endpoints
+- **JWT stored in HttpOnly cookies** (XSS-protected, no localStorage exposure)
 - Password hashing with argon2 (memory-hard, ASIC-resistant)
 - Helmet security headers (XSS, clickjacking, MIME sniffing protection)
 - CORS with configurable origins (restrictive whitelist)
@@ -154,12 +280,14 @@ Use the previously defined Prisma models: **User**, **Profile**, **JobPosting**,
 - Password strength validation (8+ chars, mixed case, number, special character)
 - Strong JWT secret generation (64+ characters, cryptographically secure)
 - Input validation with class-validator DTOs (whitelist + forbidNonWhitelisted)
+- **Input sanitization** with @Sanitize() decorator and DOMPurify (XSS protection)
 - User-friendly rate limit error messages in frontend
 - No PII in logs
 
 **Recently Implemented 🆕 (Issues #91-#96)**
 - ✅ **#91:** Strong JWT secret generation (openssl rand -base64 64)
 - ✅ **#92:** Restrictive CORS policy with environment-based origins
+- ✅ **#93:** HttpOnly cookies for JWT storage (XSS-protected token storage)
 - ✅ **#94:** Password strength validation with regex enforcement
 - ✅ **#95:** Strict rate limiting on auth endpoints (5/15min)
 - ✅ **#96:** CSRF protection with csrf-csrf (optional, disabled by default)
@@ -179,12 +307,12 @@ Use the previously defined Prisma models: **User**, **Profile**, **JobPosting**,
 - **Important:** `__Host-` cookie prefix only works with HTTPS (production)
 
 **High Priority 🟡 (Should fix before launch)**
-- JWT token stored in localStorage (XSS vulnerable, should use HttpOnly cookies) - Issue #93
-- No input sanitization (should use DOMPurify frontend + validator backend) - Issue #97
 - No refresh token strategy (only access tokens) - Issue #98
 
-**Completed but Disabled by Default ✅**
-- CSRF protection implemented (Issue #96) - Set `ENABLE_CSRF=true` to enable for production
+**Completed Security Features ✅**
+- JWT stored in HttpOnly cookies (Issue #93) - Enabled by default, XSS-protected
+- Input sanitization with @Sanitize() decorator (Issue #97) - Enabled by default
+- CSRF protection (Issue #96) - Optional, set `ENABLE_CSRF=true` to enable
 
 **Medium/Low Priority 🟢 (Post-launch)**
 - Content Security Policy (CSP) headers
