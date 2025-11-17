@@ -1,0 +1,37 @@
+{
+  "primary": {
+    "base": "#1B2A49",
+    "hover": "#22345A",
+    "soft": "#E5E9F2"
+  },
+  "secondary": {
+    "base": "#6B6969",
+    "hover": "#4F4E4E"
+  },
+  "accent": {
+    "base": "#3B82F6"
+  },
+  "background": {
+    "default": "#FFFFFF",
+    "muted": "#F5F6F8",
+    "surface": "#FAFAFA"
+  },
+  "border": {
+    "subtle": "#E0E0E0",
+    "strong": "#B0B0B0"
+  },
+  "text": {
+    "primary": "#1B2A49",
+    "secondary": "#6B6969",
+    "muted": "#A0A0A0",
+    "onPrimary": "#FFFFFF"
+  },
+  "status": {
+    "success": "#16A34A",
+    "successSoft": "#D1FADF",
+    "warning": "#EAB308",
+    "warningSoft": "#FEF3C7",
+    "error": "#DC2626",
+    "errorSoft": "#FEE2E2"
+  }
+}
