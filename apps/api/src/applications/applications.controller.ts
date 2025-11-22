@@ -21,6 +21,8 @@ import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto } from './dto/application-response.dto';
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
+import { ApplicationStatusResponseDto } from './dto/application-status-response.dto';
+import { UseThrottler } from '../common/decorators/throttle.decorator';
 
 @ApiTags('applications')
 @ApiBearerAuth()
@@ -102,6 +104,27 @@ export class ApplicationsController {
     includeJobPosting = false,
   ): Promise<ApplicationResponseDto> {
     return this.applicationsService.findOne(user.id, id, includeJobPosting);
+  }
+
+  @Get(':id/status')
+  @UseThrottler('health-check')
+  @ApiOperation({
+    summary: 'Get application status (lightweight)',
+    description:
+      'Returns only the status of an application. Optimized for polling with generous rate limits (600/min).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Status retrieved successfully',
+    type: ApplicationStatusResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Application not found' })
+  async getStatus(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<ApplicationStatusResponseDto> {
+    return this.applicationsService.getStatus(user.id, id);
   }
 
   @Get(':id/files')

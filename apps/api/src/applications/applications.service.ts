@@ -6,6 +6,7 @@ import { JobType } from '../jobs/interfaces/queue.interface';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
+import { ApplicationStatusResponseDto } from './dto/application-status-response.dto';
 
 @Injectable()
 export class ApplicationsService {
@@ -257,6 +258,35 @@ export class ApplicationsService {
     });
 
     this.logger.log(`Application ${applicationId} deleted successfully`);
+  }
+
+  /**
+   * Get only the status of an application (lightweight, for polling)
+   */
+  async getStatus(userId: string, applicationId: string): Promise<ApplicationStatusResponseDto> {
+    const application = await this.prisma.application.findFirst({
+      where: {
+        id: applicationId,
+        userId,
+      },
+      select: {
+        id: true,
+        status: true,
+        errorMessage: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+    }
+
+    return {
+      id: application.id,
+      status: application.status,
+      errorMessage: application.errorMessage,
+      updatedAt: application.updatedAt,
+    };
   }
 
   /**

@@ -82,12 +82,12 @@ export default function ApplicationsPage() {
       const apps = query.state.data;
       if (!apps) return false;
       
-      // Poll every 3 seconds if any application is PENDING or GENERATING
+      // Poll every 10 seconds if any application is PENDING or GENERATING
       const hasActiveApplications = apps.some(
         (app) => app.status === 'PENDING' || app.status === 'GENERATING'
       );
       
-      return hasActiveApplications ? 3000 : false;
+      return hasActiveApplications ? 10000 : false;
     },
   });
 

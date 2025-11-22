@@ -141,6 +141,14 @@ export interface Application {
   jobPosting?: JobPosting;
 }
 
+// Application Status Response (lightweight for polling)
+export interface ApplicationStatusResponse {
+  id: string;
+  status: ApplicationStatus;
+  errorMessage: string | null;
+  updatedAt: string;
+}
+
 // Application Files Types
 export interface ApplicationFile {
   key: string;

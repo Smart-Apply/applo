@@ -3,7 +3,7 @@
  * Base URL: http://localhost:3000/api/v1
  */
 
-import type { User, Profile, JobPosting, Application, UpdateProfileDto, ApplicationFilesResponse } from '@/types';
+import type { User, Profile, JobPosting, Application, UpdateProfileDto, ApplicationFilesResponse, ApplicationStatusResponse } from '@/types';
 import { ApiError, NetworkError, shouldRetry, getRetryDelay } from './errors';
 import { getCsrfToken, refreshCsrfToken } from './csrf';
 
@@ -234,6 +234,9 @@ export const api = {
 
     getById: (id: string) =>
       apiRequest<Application>(`/applications/${id}`),
+
+    getStatus: (id: string) =>
+      apiRequest<ApplicationStatusResponse>(`/applications/${id}/status`),
 
     getFiles: (id: string) =>
       apiRequest<ApplicationFilesResponse>(`/applications/${id}/files`),
