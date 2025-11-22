@@ -40,8 +40,8 @@
 | **Security** | CSRF Protection | Add CSRF tokens for state-changing requests | ✅ Done (#96) | 🟡 High Priority | MVP |
 | **Security** | Input Sanitization (XSS) | Sanitize user inputs (DOMPurify frontend, backend validation) | ✅ Done (#97) | 🟡 High Priority | MVP |
 | **Security** | Token Refresh Strategy | Implement refresh tokens (avoid 7-day expiration logout) | ✅ Done (#98) | 🟡 High Priority | MVP |
-| **Security** | Security Headers (Frontend) | Add CSP, X-Frame-Options in Next.js config | ❌ Not yet | 🟢 Medium Priority | MVP |
-| **Security** | Audit Logging | Log security events (failed logins, suspicious activity) | ❌ Not yet | 🟢 Medium Priority | Post-MVP |
+| **Security** | Security Headers (Frontend) | Add CSP, X-Frame-Options in Next.js config | ✅ Done | 🟢 Medium Priority | MVP |
+| **Security** | Audit Logging | Log security events (failed logins, suspicious activity) | ✅ Done | 🟢 Medium Priority | MVP |
 | **Security** | Content Security Policy (CSP) | Prevent XSS with strict CSP headers | ❌ Not yet | 🟢 Medium Priority | Post-MVP |
 | **Security** | Session Management | Track active sessions for multi-device logout | ❌ Not yet | 🟢 Low Priority | Post-MVP |
 | **Security** | Two-Factor Authentication (2FA) | TOTP-based 2FA (Google Authenticator) | ❌ Not yet | 🟢 Low Priority | Post-MVP |
@@ -70,11 +70,11 @@
 6. **CSRF Protection (#96):** csrf-csrf package (optional, disabled by default)
 7. **XSS Protection (#97):** @Sanitize() decorator on all user inputs
 8. **Refresh Tokens (#98):** Dual-token strategy with rotation, device tracking, max 5 tokens/user
+9. **Security Headers:** Frontend CSP, X-Frame-Options, HSTS in next.config.ts
+10. **Audit Logging:** Winston with daily rotation, 90-day retention, PII-compliant
 
 ### Medium Priority (Future Enhancements) 🟢
-9. **CSP Headers:** Add Content Security Policy for additional XSS protection
-10. **Audit Logs:** Security event tracking (failed logins, suspicious activity)
-11. **Security Headers:** Frontend security headers in next.config.ts
+11. **Enhanced Audit Logging:** Real-time alerts, SIEM integration, anomaly detection
 12. **Key Vault:** Migrate secrets from .env to Azure Key Vault (production)
 13. **Short-TTL SAS:** Reduce file download URLs to 15-minute expiry
 
