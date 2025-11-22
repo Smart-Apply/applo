@@ -338,4 +338,212 @@ describe('ApplicationsController (e2e)', () => {
         .expect(401);
     });
   });
+
+  describe('PATCH /api/v1/applications/:id/status', () => {
+    let applicationId: string;
+
+    beforeAll(async () => {
+      // Create a test application for status updates
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/applications')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          jobPostingId,
+          notes: 'Test application for status updates',
+        });
+      applicationId = response.body.id;
+    });
+
+    it('should update application status to INTERVIEW', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/status`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          status: 'INTERVIEW',
+        })
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        id: applicationId,
+        applicationStatus: 'INTERVIEW',
+      });
+      expect(response.body.statusUpdatedAt).toBeDefined();
+    });
+
+    it('should update application status to ACCEPTED', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/status`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          status: 'ACCEPTED',
+        })
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        id: applicationId,
+        applicationStatus: 'ACCEPTED',
+      });
+    });
+
+    it('should update application status to REJECTED', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/status`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          status: 'REJECTED',
+        })
+        .expect(200);
+
+      expect(response.body.applicationStatus).toBe('REJECTED');
+    });
+
+    it('should return 400 for invalid status', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/status`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          status: 'INVALID_STATUS',
+        })
+        .expect(400);
+
+      expect(response.body.message).toContain('Status must be one of');
+    });
+
+    it('should return 401 without auth token', async () => {
+      await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/status`)
+        .send({
+          status: 'INTERVIEW',
+        })
+        .expect(401);
+    });
+
+    it('should return 404 for non-existent application', async () => {
+      await request(app.getHttpServer())
+        .patch('/api/v1/applications/550e8400-e29b-41d4-a716-446655440000/status')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          status: 'INTERVIEW',
+        })
+        .expect(404);
+    });
+  });
+
+  describe('PATCH /api/v1/applications/:id/title', () => {
+    let applicationId: string;
+
+    beforeAll(async () => {
+      // Create a test application for title updates
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/applications')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          jobPostingId,
+          notes: 'Test application for title updates',
+        });
+      applicationId = response.body.id;
+    });
+
+    it('should update application title', async () => {
+      const newTitle = 'Senior Frontend Developer @ Google';
+      const response = await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/title`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: newTitle,
+        })
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        id: applicationId,
+        title: newTitle,
+      });
+    });
+
+    it('should return 400 for title that is too short', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/title`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Ab',
+        })
+        .expect(400);
+
+      expect(response.body.message).toContain('at least 3 characters');
+    });
+
+    it('should return 400 for title that is too long', async () => {
+      const longTitle = 'A'.repeat(61); // 61 characters (max is 60)
+      const response = await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/title`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: longTitle,
+        })
+        .expect(400);
+
+      expect(response.body.message).toContain('at most 60 characters');
+    });
+
+    it('should sanitize title (XSS protection)', async () => {
+      const maliciousTitle = '<script>alert("xss")</script>Senior Dev @ Acme';
+      const response = await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/title`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: maliciousTitle,
+        })
+        .expect(200);
+
+      // Sanitizer should remove script tags
+      expect(response.body.title).not.toContain('<script>');
+      expect(response.body.title).toContain('Senior Dev @ Acme');
+    });
+
+    it('should return 401 without auth token', async () => {
+      await request(app.getHttpServer())
+        .patch(`/api/v1/applications/${applicationId}/title`)
+        .send({
+          title: 'New Title',
+        })
+        .expect(401);
+    });
+
+    it('should return 404 for non-existent application', async () => {
+      await request(app.getHttpServer())
+        .patch('/api/v1/applications/550e8400-e29b-41d4-a716-446655440000/title')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'New Title',
+        })
+        .expect(404);
+    });
+  });
+
+  describe('Application Creation with Auto-Generated Title', () => {
+    it('should create application with auto-generated title', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/applications')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          jobPostingId,
+          notes: 'Test application with auto-generated title',
+        })
+        .expect(201);
+
+      expect(response.body).toMatchObject({
+        id: expect.any(String),
+        userId,
+        jobPostingId,
+        applicationStatus: 'APPLIED', // Default status
+        status: 'PENDING', // Generation status
+      });
+      
+      // Title should be auto-generated (either by LLM or fallback)
+      expect(response.body.title).toBeDefined();
+      expect(typeof response.body.title).toBe('string');
+      expect(response.body.title.length).toBeGreaterThan(0);
+      expect(response.body.title.length).toBeLessThanOrEqual(60);
+    });
+  });
 });
