@@ -207,10 +207,7 @@ export class ApplicationsController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Application not found' })
-  async delete(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-  ): Promise<void> {
+  async delete(@CurrentUser() user: any, @Param('id') id: string): Promise<void> {
     await this.applicationsService.delete(user.id, id);
   }
 }
