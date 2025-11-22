@@ -46,8 +46,8 @@ export function ResumePreview({ resume }: ResumePreviewProps) {
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Skills</h2>
               <div className={styles.skillsGrid}>
-                {resume.skillCategories.map((category) => (
-                  <div key={category.id || category.type} className={styles.skillCategory}>
+                {resume.skillCategories.map((category, index) => (
+                  <div key={category._key || category.id || category.type || `skill-cat-${index}`} className={styles.skillCategory}>
                     <p className={styles.skillCategoryTitle}>{category.type}</p>
                     <div className={styles.skillTags}>
                       {category.skills.map((skill) => (

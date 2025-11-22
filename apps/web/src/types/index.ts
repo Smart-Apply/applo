@@ -82,6 +82,7 @@ export interface ResumeSkillCategory {
   id?: string;
   type: string;
   skills: string[];
+  _key?: string; // Internal key for React rendering
 }
 
 export interface ResumeExperience {

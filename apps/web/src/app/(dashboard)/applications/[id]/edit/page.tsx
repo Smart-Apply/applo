@@ -12,11 +12,12 @@ import { CenteredLoader } from '@/components/shared/loading';
 import { ResumePreview } from '@/components/applications/resume-preview';
 import { ResumeFormEditor } from '@/components/applications/resume-form-editor';
 import { CoverLetterEditor } from '@/components/applications/cover-letter-editor';
+import { CoverLetterPreview } from '@/components/applications/cover-letter-preview';
 import { useApplication, useExportApplication, useUpdateApplicationResume, useUpsertCoverLetter } from '@/hooks/use-applications';
 import { parseResumeDraft, normalizeResumeForSave } from '@/lib/resume';
 import type { ResumeData } from '@/types';
 import { toast } from 'sonner';
-import { sanitizeHtml, stripHtml } from '@/lib/sanitize';
+import { stripHtml } from '@/lib/sanitize';
 
 const EMPTY_RESUME: ResumeData = {
   candidateName: 'Vorname Nachname',
@@ -209,11 +210,9 @@ export default function ApplicationResumeEditorPage() {
     );
   }
 
-  const isSaveDisabled = !parsedResume || !hasResumeChanges || updateResume.isPending;
-  const coverPreviewHtml = coverLetterValue ? sanitizeHtml(coverLetterValue) : '';
+  const isSaveDisabled = !parsedResume || updateResume.isPending;
   const coverMutationPending = upsertCoverLetter.isPending;
-  const isCoverSaveDisabled = !hasCoverChanges || !coverHasContent || coverMutationPending;
-  const hasSavedCoverLetter = lastSavedCoverLetter && stripHtml(lastSavedCoverLetter).trim().length > 0;
+  const isCoverSaveDisabled = !coverHasContent || coverMutationPending;
   const exportDisabledReason = (() => {
     if (application.status === 'GENERATING') {
       return 'Export läuft bereits. Bitte warte auf den Abschluss.';
@@ -224,11 +223,12 @@ export default function ApplicationResumeEditorPage() {
     if (hasCoverChanges) {
       return 'Speichere dein Anschreiben, bevor du exportierst.';
     }
-    if (!hasSavedCoverLetter) {
-      return 'Erstelle oder speichere zuerst ein Anschreiben.';
+    // Check if we have both resume and cover letter data (not necessarily saved, just present)
+    if (!parsedResume || !parsedResume.candidateName) {
+      return 'Lebenslauf fehlt. Bitte fülle die Daten aus.';
     }
-    if (!parsedResume) {
-      return 'Lebenslauf fehlt. Bitte speichere erneut.';
+    if (!coverHasContent) {
+      return 'Anschreiben fehlt. Bitte erstelle oder generiere ein Anschreiben.';
     }
     return null;
   })();
@@ -238,6 +238,11 @@ export default function ApplicationResumeEditorPage() {
     if (!canExport) return;
     try {
       await exportApplication.mutateAsync();
+      // Navigate to detail page after successful export initiation
+      toast.success('Export gestartet! Du wirst zur Detailseite weitergeleitet...');
+      setTimeout(() => {
+        router.push(`/applications/${applicationId}`);
+      }, 1500);
     } catch (err) {
       console.error('Export konnte nicht gestartet werden', err);
     }
@@ -302,85 +307,92 @@ export default function ApplicationResumeEditorPage() {
             </Button>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,520px)]">
-            <div className="space-y-6">
-              {parsedResume && (
-                <ResumeFormEditor
-                  value={parsedResume}
-                  onChange={(resume) => setParsedResume(resume)}
-                  disabled={updateResume.isPending}
-                />
-              )}
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,580px)]">
+            {/* Form Editor - Scrollable independently */}
+            <div className="h-[calc(100vh-280px)] overflow-y-auto pr-4">
+              <div className="space-y-6">
+                {parsedResume && (
+                  <ResumeFormEditor
+                    value={parsedResume}
+                    onChange={(resume) => setParsedResume(resume)}
+                    disabled={updateResume.isPending}
+                  />
+                )}
+              </div>
             </div>
 
-            <Card className="h-full sticky top-6">
-              <CardHeader>
-                <CardTitle>Live-Vorschau</CardTitle>
-                <CardDescription>Finale Layout-Vorschau</CardDescription>
-              </CardHeader>
-              <CardContent className="overflow-y-auto max-h-[800px]">
-                {parsedResume && <ResumePreview resume={parsedResume} />}
-              </CardContent>
-            </Card>
+            {/* Live Preview - Scrollable independently, sticky container */}
+            <div className="sticky top-6 h-[calc(100vh-280px)]">
+              <Card className="h-full flex flex-col">
+                <CardHeader className="flex-shrink-0">
+                  <CardTitle>Live-Vorschau</CardTitle>
+                  <CardDescription>A4-Format Vorschau</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-y-auto overflow-x-hidden">
+                  {parsedResume && (
+                    <div className="w-full">
+                      <ResumePreview resume={parsedResume} />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="cover-letter" className="space-y-6 focus-visible:outline-none">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,520px)]">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Anschreiben bearbeiten</CardTitle>
-                <CardDescription>Gib Hinweise für die KI oder bearbeite den Text direkt im Editor.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Hinweise für die Generierung</label>
-                  <Textarea
-                    value={instructions}
-                    onChange={(event) => setInstructions(event.target.value)}
-                    placeholder="Betone Azure-Projekte, Wunsch nach Remote-Setup, gewünschter Ton etc."
-                    rows={4}
-                    disabled={coverMutationPending}
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCoverReset} disabled={!hasCoverChanges || coverMutationPending}>
-                    Änderungen verwerfen
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleGenerateCoverLetter} disabled={coverMutationPending}>
-                    {coverMutationPending ? 'Generiere...' : 'Mit KI generieren'}
-                  </Button>
-                  <Button onClick={handleCoverSave} disabled={isCoverSaveDisabled}>
-                    {coverMutationPending ? 'Speichert...' : 'Anschreiben speichern'}
-                  </Button>
-                </div>
-                <CoverLetterEditor value={coverLetterValue} onChange={setCoverLetterValue} disabled={coverMutationPending} />
-                <p className="text-xs text-muted-foreground">
-                  Du kannst den Text oben frei bearbeiten. Beim Speichern wird er sanitisiert und für den PDF-Export vorbereitet.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Anschreiben Vorschau</CardTitle>
-                <CardDescription>So wird der HTML-Text später in das PDF gerendert.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {coverPreviewHtml ? (
-                  <article className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm leading-relaxed text-slate-700">
-                    <div dangerouslySetInnerHTML={{ __html: coverPreviewHtml }} />
-                  </article>
-                ) : (
-                  <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm text-muted-foreground">
-                    Noch kein Anschreiben vorhanden. Nutze die KI-Generierung oder erstelle deinen eigenen Text.
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,580px)]">
+            {/* Editor - Scrollable independently */}
+            <div className="h-[calc(100vh-280px)] overflow-y-auto pr-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Anschreiben bearbeiten</CardTitle>
+                  <CardDescription>Gib Hinweise für die KI oder bearbeite den Text direkt im Editor.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Hinweise für die Generierung</label>
+                    <Textarea
+                      value={instructions}
+                      onChange={(event) => setInstructions(event.target.value)}
+                      placeholder="Betone Azure-Projekte, Wunsch nach Remote-Setup, gewünschter Ton etc."
+                      rows={4}
+                      disabled={coverMutationPending}
+                    />
                   </div>
-                )}
-                <p className="mt-4 text-xs text-muted-foreground">
-                  Der finale PDF-Export verwendet dieses HTML. Speichere vor dem Export, um Änderungen zu übernehmen.
-                </p>
-              </CardContent>
-            </Card>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" onClick={handleCoverReset} disabled={!hasCoverChanges || coverMutationPending}>
+                      Änderungen verwerfen
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleGenerateCoverLetter} disabled={coverMutationPending}>
+                      {coverMutationPending ? 'Generiere...' : 'Mit KI generieren'}
+                    </Button>
+                    <Button onClick={handleCoverSave} disabled={isCoverSaveDisabled}>
+                      {coverMutationPending ? 'Speichert...' : 'Anschreiben speichern'}
+                    </Button>
+                  </div>
+                  <CoverLetterEditor value={coverLetterValue} onChange={setCoverLetterValue} disabled={coverMutationPending} />
+                  <p className="text-xs text-muted-foreground">
+                    Du kannst den Text oben frei bearbeiten. Beim Speichern wird er sanitisiert und für den PDF-Export vorbereitet.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Live Preview - Scrollable independently, sticky container */}
+            <div className="sticky top-6 h-[calc(100vh-280px)]">
+              <Card className="h-full flex flex-col">
+                <CardHeader className="flex-shrink-0">
+                  <CardTitle>Live-Vorschau</CardTitle>
+                  <CardDescription>So wird das Anschreiben im PDF gerendert</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-y-auto overflow-x-hidden">
+                  <div className="w-full">
+                    <CoverLetterPreview html={coverLetterValue} />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

@@ -285,7 +285,6 @@ export class ApplicationsService {
 
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
     this.ensureNotGenerating(application);
-    await this.cleanupGeneratedFiles(application);
 
     const normalized = this.normalizeResumeData(dto.resume);
 
@@ -293,10 +292,6 @@ export class ApplicationsService {
       where: { id: applicationId },
       data: {
         resumeText: JSON.stringify(normalized),
-        status: ApplicationStatus.PENDING,
-        coverLetterFileKey: null,
-        resumeFileKey: null,
-        errorMessage: null,
       },
       include: {
         jobPosting: true,
@@ -334,16 +329,12 @@ export class ApplicationsService {
 
     const sanitizedContent = this.sanitizeCoverLetter(content);
 
-    await this.cleanupGeneratedFiles(application);
-
     const updated = await this.prisma.application.update({
       where: { id: applicationId },
       data: {
         coverLetterText: sanitizedContent,
-        status: ApplicationStatus.PENDING,
-        coverLetterFileKey: null,
-        resumeFileKey: null,
-        errorMessage: null,
+        // Keep existing status (READY), don't reset to PENDING
+        // Keep existing PDFs, they'll be regenerated on next export
       },
       include: {
         jobPosting: true,

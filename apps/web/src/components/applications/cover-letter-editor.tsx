@@ -50,6 +50,7 @@ export function CoverLetterEditor({ value, onChange, disabled }: CoverLetterEdit
       ],
       content: value || '<p></p>',
       editable: !disabled,
+      immediatelyRender: false, // Required for Next.js SSR
       editorProps: {
         attributes: {
           class:

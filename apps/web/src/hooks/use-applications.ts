@@ -86,6 +86,8 @@ export function useApplicationFiles(id: string) {
 
 /**
  * Hook to delete an application
+ * Note: Does NOT automatically invalidate queries to allow batch operations.
+ * Call queryClient.invalidateQueries manually after batch deletions.
  */
 export function useDeleteApplication() {
   const queryClient = useQueryClient();
@@ -93,11 +95,16 @@ export function useDeleteApplication() {
   return useMutation({
     mutationFn: (id: string) =>
       api.applications.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
+    onSuccess: (_data, variables) => {
+      // Optimistically remove from cache without refetching
+      queryClient.setQueryData<Application[]>(['applications'], (old) => 
+        old ? old.filter(app => app.id !== variables) : []
+      );
       toastSuccess('Bewerbung wurde gelöscht');
     },
     onError: (error: unknown) => {
+      // On error, refetch to restore correct state
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
       toastError(error, 'Fehler beim Löschen der Bewerbung');
     },
   });

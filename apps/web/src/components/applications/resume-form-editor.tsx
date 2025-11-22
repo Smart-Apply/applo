@@ -22,7 +22,7 @@ export function ResumeFormEditor({ value, onChange, disabled }: ResumeFormEditor
   const addSkillCategory = () => {
     onChange({
       ...value,
-      skillCategories: [...value.skillCategories, { type: '', skills: [] }],
+      skillCategories: [...value.skillCategories, { type: '', skills: [], _key: Date.now().toString() }],
     });
   };
 
@@ -229,7 +229,7 @@ export function ResumeFormEditor({ value, onChange, disabled }: ResumeFormEditor
         </CardHeader>
         <CardContent className="space-y-4">
           {value.skillCategories.map((category, index) => (
-            <div key={index} className="space-y-3 rounded-lg border p-4">
+            <div key={category._key || `skill-${index}`} className="space-y-3 rounded-lg border p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-3">
                   <Input
