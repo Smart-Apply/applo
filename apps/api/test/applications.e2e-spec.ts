@@ -285,4 +285,57 @@ describe('ApplicationsController (e2e)', () => {
         .expect(401);
     });
   });
+
+  describe('GET /api/v1/applications/:id/stream (SSE)', () => {
+    let testApplicationId: string;
+
+    beforeAll(async () => {
+      // Create an application in PENDING status for testing
+      const application = await prisma.application.create({
+        data: {
+          userId,
+          jobPostingId,
+          status: 'PENDING',
+          notes: 'SSE test application',
+        },
+      });
+      testApplicationId = application.id;
+    });
+
+    afterAll(async () => {
+      // Clean up test application
+      await prisma.application.delete({
+        where: { id: testApplicationId },
+      });
+    });
+
+    it('should return SSE headers and 200 status', async () => {
+      // Test that the SSE endpoint is accessible and returns the correct headers
+      // Note: Full SSE streaming testing is complex with supertest
+      // We verify the endpoint exists, returns correct status, and has SSE headers
+      const response = await request(app.getHttpServer())
+        .get(`/api/v1/applications/${testApplicationId}/stream`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Accept', 'text/event-stream')
+        .timeout(3000); // 3 second timeout
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toContain('text/event-stream');
+    });
+
+    it('should return 404 for non-existent application', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/applications/550e8400-e29b-41d4-a716-446655440000/stream')
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Accept', 'text/event-stream')
+        .expect(404);
+    });
+
+    it('should return 401 without auth token', async () => {
+      await request(app.getHttpServer())
+        .get(`/api/v1/applications/${testApplicationId}/stream`)
+        .set('Accept', 'text/event-stream')
+        .expect(401);
+    });
+  });
 });
