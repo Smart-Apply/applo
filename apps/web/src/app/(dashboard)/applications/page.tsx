@@ -23,7 +23,8 @@ import type { ApplicationGenerationStatus } from '@/types';
 import { StatusDropdown } from '@/components/applications/status-dropdown';
 import { APPLICATION_ID_DISPLAY_LENGTH } from '@/lib/constants';
 
-// Keep using ApplicationStatus locally for generation status
+// Local type alias for PDF generation status to maintain backward compatibility
+// with existing helper functions (getStatusInfo) that expect ApplicationStatus
 type ApplicationStatus = ApplicationGenerationStatus;
 
 function getStatusInfo(status: ApplicationStatus) {

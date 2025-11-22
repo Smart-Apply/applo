@@ -6,6 +6,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import {
+  APPLICATION_TITLE_MIN_LENGTH,
+  APPLICATION_TITLE_MAX_LENGTH,
+} from '../src/applications/constants';
 
 describe('ApplicationsController (e2e)', () => {
   let app: INestApplication;
@@ -461,21 +465,21 @@ describe('ApplicationsController (e2e)', () => {
     });
 
     it('should return 400 for title that is too short', async () => {
-      const MIN_LENGTH = 3;
       const response = await request(app.getHttpServer())
         .patch(`/api/v1/applications/${applicationId}/title`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          title: 'A'.repeat(MIN_LENGTH - 1), // One char less than minimum
+          title: 'A'.repeat(APPLICATION_TITLE_MIN_LENGTH - 1), // One char less than minimum
         })
         .expect(400);
 
-      expect(response.body.message).toContain(`at least ${MIN_LENGTH} characters`);
+      expect(response.body.message).toContain(
+        `at least ${APPLICATION_TITLE_MIN_LENGTH} characters`,
+      );
     });
 
     it('should return 400 for title that is too long', async () => {
-      const MAX_LENGTH = 60;
-      const longTitle = 'A'.repeat(MAX_LENGTH + 1); // One char more than maximum
+      const longTitle = 'A'.repeat(APPLICATION_TITLE_MAX_LENGTH + 1); // One char more than maximum
       const response = await request(app.getHttpServer())
         .patch(`/api/v1/applications/${applicationId}/title`)
         .set('Authorization', `Bearer ${authToken}`)
@@ -484,7 +488,9 @@ describe('ApplicationsController (e2e)', () => {
         })
         .expect(400);
 
-      expect(response.body.message).toContain(`at most ${MAX_LENGTH} characters`);
+      expect(response.body.message).toContain(
+        `at most ${APPLICATION_TITLE_MAX_LENGTH} characters`,
+      );
     });
 
     it('should sanitize title (XSS protection)', async () => {

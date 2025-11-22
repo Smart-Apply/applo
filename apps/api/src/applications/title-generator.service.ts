@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { LLMService } from '../llm/llm.service';
-import { APPLICATION_TITLE_MAX_LENGTH } from './constants';
+import { APPLICATION_TITLE_MAX_LENGTH, ELLIPSIS_LENGTH } from './constants';
 
 export interface JobPostingForTitle {
   title: string;
@@ -62,8 +62,8 @@ Only return the title, nothing else. Keep it under ${APPLICATION_TITLE_MAX_LENGT
     const company = jobPosting.company || 'Unknown Company';
     const result = `${title} @ ${company}`;
     
-    // Truncate if too long
-    const truncateAt = APPLICATION_TITLE_MAX_LENGTH - 3; // Reserve space for "..."
+    // Truncate if too long (reserve space for ellipsis)
+    const truncateAt = APPLICATION_TITLE_MAX_LENGTH - ELLIPSIS_LENGTH;
     return result.length > APPLICATION_TITLE_MAX_LENGTH
       ? result.substring(0, truncateAt) + '...'
       : result;
