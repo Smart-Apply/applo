@@ -4,7 +4,7 @@
  */
 
 import type { User, Profile, JobPosting, Application, UpdateProfileDto, ApplicationFilesResponse, ApplicationStatusResponse } from '@/types';
-import { ApiError, NetworkError, shouldRetry, getRetryDelay } from './errors';
+import { ApiError, NetworkError, shouldRetry, getRetryDelay, isPermanentAuthFailure } from './errors';
 import { getCsrfToken, refreshCsrfToken } from './csrf';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -103,24 +103,45 @@ async function apiRequest<T>(
           throw new ApiError(response.status, 'CSRF token invalid or expired after retry.', errorData);
         }
 
-        // Handle 401 Unauthorized - attempt token refresh
-        if (response.status === 401 && !isRetryAfterRefresh) {
-          // Don't try to refresh on auth endpoints or refresh endpoint itself
-          const isAuthEndpoint = endpoint.startsWith('/auth/login') || 
-                                 endpoint.startsWith('/auth/register') ||
-                                 endpoint.startsWith('/auth/refresh');
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          // Check for permanent authentication failures (user/token deleted from DB)
+          // These should NOT trigger token refresh attempts
+          const errorMessage = errorData?.message || '';
+          const isPermAuthFailure = 
+            errorMessage.includes('User not found') ||
+            errorMessage.includes('Refresh token not found') ||
+            errorMessage.includes('token not found or revoked');
           
-          if (!isAuthEndpoint) {
-            // Try to refresh the token
-            const refreshed = await refreshAccessToken();
+          if (isPermAuthFailure) {
+            // User or tokens were deleted from database - redirect to login immediately
+            // Don't attempt refresh (it will fail anyway and cause retry loops)
+            if (typeof window !== 'undefined') {
+              console.warn('Authentication data invalid (user/token deleted). Redirecting to login...');
+              window.location.href = '/login?session_expired=true';
+            }
+            throw new ApiError(response.status, response.statusText, errorData);
+          }
+          
+          // For other 401 errors, attempt token refresh (only once)
+          if (!isRetryAfterRefresh) {
+            // Don't try to refresh on auth endpoints or refresh endpoint itself
+            const isAuthEndpoint = endpoint.startsWith('/auth/login') || 
+                                   endpoint.startsWith('/auth/register') ||
+                                   endpoint.startsWith('/auth/refresh');
             
-            if (refreshed) {
-              // Retry the original request with new access token
-              return makeRequest(true);
-            } else {
-              // Refresh failed, redirect to login
-              if (typeof window !== 'undefined') {
-                window.location.href = '/login?session_expired=true';
+            if (!isAuthEndpoint) {
+              // Try to refresh the token
+              const refreshed = await refreshAccessToken();
+              
+              if (refreshed) {
+                // Retry the original request with new access token
+                return makeRequest(true);
+              } else {
+                // Refresh failed, redirect to login
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/login?session_expired=true';
+                }
               }
             }
           }
@@ -149,6 +170,12 @@ async function apiRequest<T>(
     try {
       return await makeRequest();
     } catch (error) {
+      // Never retry permanent authentication failures (user/token deleted)
+      // They will never succeed and cause infinite loops
+      if (isPermanentAuthFailure(error)) {
+        throw error;
+      }
+      
       if (retry && shouldRetry(error, retryCount, maxRetries)) {
         retryCount++;
         const delay = getRetryDelay(retryCount);
