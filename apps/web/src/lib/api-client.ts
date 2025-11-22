@@ -14,25 +14,47 @@ interface RequestOptions extends RequestInit {
   maxRetries?: number;
 }
 
+// Track if a refresh is already in progress to prevent concurrent refresh requests
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
 /**
  * Refresh access token using refresh token
+ * Uses singleton pattern to prevent concurrent refresh requests
  */
 async function refreshAccessToken(): Promise<boolean> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include', // Send refresh token cookie
-    });
-
-    if (!response.ok) {
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Failed to refresh token:', error);
-    return false;
+  // If already refreshing, return the existing promise
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
   }
+
+  // Start new refresh
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include', // Send refresh token cookie
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to refresh token:', error);
+      return false;
+    } finally {
+      // Reset refresh state after a short delay to allow token propagation
+      setTimeout(() => {
+        isRefreshing = false;
+        refreshPromise = null;
+      }, 100);
+    }
+  })();
+
+  return refreshPromise;
 }
 
 /**
@@ -72,9 +94,13 @@ async function apiRequest<T>(
         
         // Handle CSRF token errors (403 Forbidden with CSRF error)
         if (response.status === 403 && errorData?.code === 'EBADCSRFTOKEN') {
-          // Refresh CSRF token and retry once
-          await refreshCsrfToken();
-          throw new ApiError(response.status, 'CSRF token invalid or expired. Please retry.', errorData);
+          // Refresh CSRF token and retry ONCE (only if not already retried)
+          if (!isRetryAfterRefresh) {
+            await refreshCsrfToken();
+            return makeRequest(true); // Retry with new CSRF token
+          }
+          // If already retried, throw error (don't retry infinitely)
+          throw new ApiError(response.status, 'CSRF token invalid or expired after retry.', errorData);
         }
 
         // Handle 401 Unauthorized - attempt token refresh
