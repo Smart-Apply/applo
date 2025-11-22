@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Eye,
   Package,
+  Pencil,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ApplicationGenerationStatus } from '@/types';
@@ -548,14 +549,23 @@ export default function ApplicationDetailPage() {
                 </CardDescription>
               </div>
               {files?.coverLetter && files?.resume && (
-                <Button
-                  variant="outline"
-                  onClick={handleDownloadBoth}
-                  loading={isDownloading.both}
-                >
-                  <Package className="mr-2 h-4 w-4" />
-                  Beide als ZIP
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push(`/applications/${application.id}/edit`)}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Bearbeiten
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleDownloadBoth}
+                    loading={isDownloading.both}
+                  >
+                    <Package className="mr-2 h-4 w-4" />
+                    Beide als ZIP
+                  </Button>
+                </div>
               )}
             </div>
           </CardHeader>
