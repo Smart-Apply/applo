@@ -1,10 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+// PDF Generation Status (system-facing)
 export enum ApplicationStatus {
   PENDING = 'PENDING',
   GENERATING = 'GENERATING',
   READY = 'READY',
   FAILED = 'FAILED',
+}
+
+// Application Tracking Status (user-facing)
+export enum ApplicationTrackingStatus {
+  APPLIED = 'APPLIED',
+  INTERVIEW = 'INTERVIEW',
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED',
 }
 
 export class ApplicationResponseDto {
@@ -17,7 +26,30 @@ export class ApplicationResponseDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440002' })
   jobPostingId: string;
 
-  @ApiProperty({ enum: ApplicationStatus, example: ApplicationStatus.READY })
+  @ApiPropertyOptional({
+    example: 'Senior Frontend Developer @ Google',
+    description: 'Custom application title (LLM-generated, user editable)',
+  })
+  title?: string;
+
+  @ApiProperty({
+    enum: ApplicationTrackingStatus,
+    example: ApplicationTrackingStatus.APPLIED,
+    description: 'User-facing application tracking status',
+  })
+  applicationStatus: ApplicationTrackingStatus;
+
+  @ApiPropertyOptional({
+    example: '2024-01-15T10:35:00Z',
+    description: 'Timestamp when application status was last updated',
+  })
+  statusUpdatedAt?: Date;
+
+  @ApiProperty({
+    enum: ApplicationStatus,
+    example: ApplicationStatus.READY,
+    description: 'System-facing PDF generation status',
+  })
   status: ApplicationStatus;
 
   @ApiPropertyOptional({ example: 'Kontakt über Networking Event' })

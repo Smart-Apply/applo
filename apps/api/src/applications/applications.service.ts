@@ -6,6 +6,7 @@ import {
   MessageEvent,
 } from '@nestjs/common';
 import type { Application } from '@prisma/client';
+import { ApplicationTrackingStatus } from '@prisma/client';
 import { Observable, interval } from 'rxjs';
 import { map, switchMap, takeWhile } from 'rxjs/operators';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,6 +14,7 @@ import { JobsService } from '../jobs/jobs.service';
 import { StorageService } from '../storage/storage.service';
 import { JobType } from '../jobs/interfaces/queue.interface';
 import { LLMService } from '../llm/llm.service';
+import { TitleGeneratorService } from './title-generator.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
@@ -31,6 +33,7 @@ export class ApplicationsService {
     private readonly jobsService: JobsService,
     private readonly storageService: StorageService,
     private readonly llmService: LLMService,
+    private readonly titleGenerator: TitleGeneratorService,
   ) {}
 
   private async getProfileWithRelations(userId: string): Promise<ProfileWithRelations> {
@@ -220,11 +223,16 @@ export class ApplicationsService {
     const profile = await this.getProfileWithRelations(userId);
     const resumeTemplate = buildResumeTemplateData(profile);
 
-    // 3. Create application record (no automatic generation yet)
+    // 3. Generate title for application
+    const title = await this.titleGenerator.generateTitle(jobPosting);
+
+    // 4. Create application record (no automatic generation yet)
     const application = await this.prisma.application.create({
       data: {
         userId,
         jobPostingId: dto.jobPostingId,
+        title,
+        applicationStatus: ApplicationTrackingStatus.APPLIED,
         status: ApplicationStatus.PENDING,
         notes: dto.notes,
         resumeText: JSON.stringify(resumeTemplate),
@@ -259,17 +267,22 @@ export class ApplicationsService {
     const profile = await this.getProfileWithRelations(userId);
     const resumeTemplate = buildResumeTemplateData(profile);
 
-    // 3. Generate cover letter with LLM
+    // 3. Generate title for application
+    const title = await this.titleGenerator.generateTitle(jobPosting);
+
+    // 4. Generate cover letter with LLM
     this.logger.log('Generating cover letter with LLM');
     const coverLetterContext = this.buildCoverLetterContext(resumeTemplate, jobPosting);
     const coverLetterContent = await this.llmService.generateCoverLetter(coverLetterContext);
     const sanitizedCoverLetter = this.sanitizeCoverLetter(coverLetterContent);
 
-    // 4. Create application with generated content (status: READY for editing)
+    // 5. Create application with generated content (status: READY for editing)
     const application = await this.prisma.application.create({
       data: {
         userId,
         jobPostingId: dto.jobPostingId,
+        title,
+        applicationStatus: ApplicationTrackingStatus.APPLIED,
         status: ApplicationStatus.READY,
         notes: dto.notes,
         resumeText: JSON.stringify(resumeTemplate),
@@ -555,6 +568,65 @@ export class ApplicationsService {
   }
 
   /**
+   * Update the tracking status of an application (user-facing)
+   */
+  async updateStatus(
+    userId: string,
+    applicationId: string,
+    status: ApplicationTrackingStatus,
+  ): Promise<ApplicationResponseDto> {
+    this.logger.log(
+      `Updating application ${applicationId} status to ${status} for user ${userId}`,
+    );
+
+    // Verify ownership
+    const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    // Update status and timestamp
+    const updated = await this.prisma.application.update({
+      where: { id: applicationId },
+      data: {
+        applicationStatus: status,
+        statusUpdatedAt: new Date(),
+      },
+      include: {
+        jobPosting: true,
+      },
+    });
+
+    this.logger.log(`Application ${applicationId} status updated to ${status}`);
+    return this.mapToResponseDto(updated);
+  }
+
+  /**
+   * Update the custom title of an application
+   */
+  async updateTitle(
+    userId: string,
+    applicationId: string,
+    title: string,
+  ): Promise<ApplicationResponseDto> {
+    this.logger.log(`Updating application ${applicationId} title for user ${userId}`);
+
+    // Verify ownership
+    const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    // Update title (validation already handled by DTO)
+    const updated = await this.prisma.application.update({
+      where: { id: applicationId },
+      data: {
+        title,
+      },
+      include: {
+        jobPosting: true,
+      },
+    });
+
+    this.logger.log(`Application ${applicationId} title updated`);
+    return this.mapToResponseDto(updated);
+  }
+
+  /**
    * Get only the status of an application (lightweight, for polling)
    */
   async getStatus(userId: string, applicationId: string): Promise<ApplicationStatusResponseDto> {
@@ -591,6 +663,9 @@ export class ApplicationsService {
       id: application.id,
       userId: application.userId,
       jobPostingId: application.jobPostingId,
+      title: application.title,
+      applicationStatus: application.applicationStatus,
+      statusUpdatedAt: application.statusUpdatedAt,
       status: application.status as ApplicationStatus,
       notes: application.notes,
       coverLetterText: application.coverLetterText,

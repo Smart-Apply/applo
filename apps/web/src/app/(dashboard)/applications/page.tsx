@@ -19,7 +19,13 @@ import { ApplicationCardSkeleton } from '@/components/shared/skeletons';
 import { Plus, FileText, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import type { ApplicationStatus } from '@/types';
+import type { ApplicationGenerationStatus } from '@/types';
+import { StatusDropdown } from '@/components/applications/status-dropdown';
+import { APPLICATION_ID_DISPLAY_LENGTH } from '@/lib/constants';
+
+// Local type alias for PDF generation status to maintain backward compatibility
+// with existing helper functions (getStatusInfo) that expect ApplicationStatus
+type ApplicationStatus = ApplicationGenerationStatus;
 
 function getStatusInfo(status: ApplicationStatus) {
   switch (status) {
@@ -76,20 +82,8 @@ export default function ApplicationsPage() {
   // Delete application mutation
   const deleteApplication = useDeleteApplication();
 
-  // Fetch applications with automatic polling
-  const { data: applications, isLoading, refetch } = useApplications({
-    refetchInterval: (query) => {
-      const apps = query.state.data;
-      if (!apps) return false;
-      
-      // Poll every 10 seconds if any application is PENDING or GENERATING
-      const hasActiveApplications = apps.some(
-        (app) => app.status === 'PENDING' || app.status === 'GENERATING'
-      );
-      
-      return hasActiveApplications ? 10000 : false;
-    },
-  });
+  // Fetch applications (no polling - SSE handles real-time updates on detail pages)
+  const { data: applications, isLoading, refetch } = useApplications();
 
   // Detect status changes and show toast notifications
   useEffect(() => {
@@ -236,18 +230,33 @@ export default function ApplicationsPage() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <CardTitle className="text-xl">
-                              {application.jobPosting?.title || `Bewerbung #${application.id}`}
+                              {application.title || `Bewerbung #${application.id.substring(0, APPLICATION_ID_DISPLAY_LENGTH)}`}
                             </CardTitle>
-                            <CardDescription className="mt-1">
-                              {application.jobPosting?.company && (
-                                <span className="font-medium">{application.jobPosting.company}</span>
-                              )}
-                              {application.jobPosting?.location && (
-                                <span className="text-gray-500">
-                                  {' • '}
-                                  {application.jobPosting.location}
-                                </span>
-                              )}
+                            <CardDescription className="mt-1 space-y-1">
+                              <div>
+                                {application.jobPosting?.company && (
+                                  <span className="font-medium">{application.jobPosting.company}</span>
+                                )}
+                                {application.jobPosting?.location && (
+                                  <span className="text-gray-500">
+                                    {' • '}
+                                    {application.jobPosting.location}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-2">
+                                {application.applicationStatus ? (
+                                  <StatusDropdown
+                                    applicationId={application.id}
+                                    currentStatus={application.applicationStatus}
+                                    variant="dropdown"
+                                  />
+                                ) : (
+                                  <div className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">
+                                    DEBUG: applicationStatus = {JSON.stringify(application.applicationStatus)}
+                                  </div>
+                                )}
+                              </div>
                             </CardDescription>
                           </div>
                           <Badge variant={statusInfo.variant} className="ml-4">
