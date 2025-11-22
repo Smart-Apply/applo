@@ -1,5 +1,7 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, MessageEvent } from '@nestjs/common';
 import type { Application } from '@prisma/client';
+import { Observable, interval } from 'rxjs';
+import { map, switchMap, takeWhile } from 'rxjs/operators';
 import { PrismaService } from '../prisma/prisma.service';
 import { JobsService } from '../jobs/jobs.service';
 import { StorageService } from '../storage/storage.service';
@@ -602,5 +604,61 @@ export class ApplicationsService {
           }
         : undefined,
     };
+  }
+
+  /**
+   * Stream real-time status updates for an application via Server-Sent Events (SSE)
+   * Polls the database every 2 seconds and streams updates until application reaches a final state
+   * @param userId - User ID (for authorization)
+   * @param applicationId - Application ID to stream status for
+   * @returns Observable that emits SSE MessageEvents with status updates
+   */
+  async streamStatus(userId: string, applicationId: string): Promise<Observable<MessageEvent>> {
+    // Verify application exists and belongs to user
+    await this.ensureApplicationOwnership(userId, applicationId);
+
+    // Create SSE stream that polls status every 2 seconds
+    return interval(2000).pipe(
+      // Fetch latest application status
+      switchMap(async () => {
+        const application = await this.prisma.application.findFirst({
+          where: {
+            id: applicationId,
+            userId,
+          },
+          select: {
+            id: true,
+            status: true,
+            updatedAt: true,
+            errorMessage: true,
+          },
+        });
+
+        if (!application) {
+          throw new NotFoundException(`Application with ID ${applicationId} not found`);
+        }
+
+        return application;
+      }),
+      // Transform to SSE MessageEvent format
+      map((application) => {
+        const status = application.status;
+        return {
+          data: {
+            id: application.id,
+            status: status,
+            updatedAt: application.updatedAt,
+            errorMessage: application.errorMessage,
+          },
+        } as MessageEvent;
+      }),
+      // Stop streaming when status reaches a final state (READY or FAILED)
+      // The `true` parameter ensures the final status is emitted before closing
+      takeWhile((event: MessageEvent) => {
+        const eventData = event.data as { status: ApplicationStatus };
+        const status = eventData.status;
+        return status === 'PENDING' || status === 'GENERATING';
+      }, true),
+    );
   }
 }
