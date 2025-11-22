@@ -13,8 +13,11 @@ import {
   StreamableFile,
   HttpCode,
   HttpStatus,
+  Sse,
+  MessageEvent,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -252,6 +255,26 @@ export class ApplicationsController {
     });
 
     return new StreamableFile(file);
+  }
+
+  @Get(':id/stream')
+  @Sse()
+  @ApiOperation({
+    summary: 'Stream application status updates via SSE',
+    description:
+      'Streams real-time status updates for an application. Connection automatically closes when status reaches READY or FAILED. More efficient than polling.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'SSE stream of status updates',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Application not found' })
+  async streamStatus(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<Observable<MessageEvent>> {
+    return this.applicationsService.streamStatus(user.id, id);
   }
 
   @Delete(':id')
