@@ -330,10 +330,31 @@ curl -I http://localhost:3001
 - [ ] Test iframe embedding is blocked (X-Frame-Options + frame-ancestors)
 
 ### Monitoring & Logging
-- Log **authentication failures** and suspicious patterns
-- Set up **alerts** for repeated failed logins
+
+✅ **Audit Logging Implemented** - Comprehensive security event tracking with winston
+
+**Logged Events:**
+- Authentication: LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT, REGISTRATION, REFRESH_TOKEN_USED
+- Security: RATE_LIMIT_EXCEEDED, CSRF_VALIDATION_FAILED, UNAUTHORIZED_ACCESS
+- Account Changes: PROFILE_UPDATED, PASSWORD_CHANGED
+
+**Features:**
+- Structured JSON logs with daily rotation (90-day retention)
+- Request context (IP, User-Agent) for threat analysis
+- Severity levels (info, warning, critical)
+- PII-compliant (no passwords logged)
+- Optional database persistence for compliance reporting
+
+**Log Location:** `logs/audit-YYYY-MM-DD.log`
+
+For detailed documentation, see [AUDIT_LOGGING.md](./AUDIT_LOGGING.md)
+
+**Future Enhancements:**
+- Set up **alerts** for repeated failed logins (5+ attempts)
 - Monitor **Key Vault access** for unauthorized attempts
 - Enable **Azure Application Insights** for security telemetry
+- SIEM integration (Splunk, ELK, Azure Sentinel)
+- Real-time alerting (Email, Slack, PagerDuty)
 
 ## 📚 References
 
