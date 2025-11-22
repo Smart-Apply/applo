@@ -43,6 +43,8 @@ export function useApplicationStream(applicationId: string | undefined): UseAppl
     }
 
     // Create SSE connection with credentials (for JWT cookie)
+    // Note: withCredentials is supported in modern browsers (Chrome 26+, Firefox 22+)
+    // This ensures HttpOnly cookies are sent with the request for JWT authentication
     const eventSource = new EventSource(
       `${API_BASE_URL}/applications/${applicationId}/stream`,
       { withCredentials: true }

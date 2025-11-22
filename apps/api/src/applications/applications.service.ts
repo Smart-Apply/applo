@@ -654,8 +654,9 @@ export class ApplicationsService {
       }),
       // Stop streaming when status reaches a final state (READY or FAILED)
       // The `true` parameter ensures the final status is emitted before closing
-      takeWhile((event: any) => {
-        const status = event.data.status;
+      takeWhile((event: MessageEvent) => {
+        const eventData = event.data as { status: ApplicationStatus };
+        const status = eventData.status;
         return status === 'PENDING' || status === 'GENERATING';
       }, true),
     );

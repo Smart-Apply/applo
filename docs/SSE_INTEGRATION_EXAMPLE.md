@@ -332,8 +332,8 @@ Handle connection errors gracefully and provide recovery options:
 ```typescript
 {error && (
   <div className="text-amber-600">
-    {error}
-    <button onClick={reconnect}>Retry</button>
+    <p>{error}</p>
+    <p className="text-sm">Connection will retry automatically.</p>
   </div>
 )}
 ```
