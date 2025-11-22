@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Put,
+  Patch,
   Get,
   Delete,
   Param,
@@ -26,6 +27,8 @@ import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto } from './dto/application-response.dto';
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
 import { ApplicationStatusResponseDto } from './dto/application-status-response.dto';
+import { UpdateApplicationStatusDto } from './dto/update-application-status.dto';
+import { UpdateApplicationTitleDto } from './dto/update-application-title.dto';
 import { UseThrottler } from '../common/decorators/throttle.decorator';
 import { UpdateResumeDto } from './dto/update-resume.dto';
 import { CoverLetterDto } from './dto/cover-letter.dto';
@@ -114,6 +117,49 @@ export class ApplicationsController {
     @Param('id') id: string,
   ): Promise<ApplicationResponseDto> {
     return this.applicationsService.requestExport(user.id, id);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({
+    summary: 'Update application tracking status',
+    description:
+      'Updates the user-facing application status (APPLIED, INTERVIEW, ACCEPTED, REJECTED)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Application status updated successfully',
+    type: ApplicationResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid status value' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Application not found' })
+  async updateStatus(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateApplicationStatusDto,
+  ): Promise<ApplicationResponseDto> {
+    return this.applicationsService.updateStatus(user.id, id, dto.status);
+  }
+
+  @Patch(':id/title')
+  @ApiOperation({
+    summary: 'Update application title',
+    description: 'Updates the custom application title (max 60 characters)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Application title updated successfully',
+    type: ApplicationResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid title (too short/long)' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Application not found' })
+  async updateTitle(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateApplicationTitleDto,
+  ): Promise<ApplicationResponseDto> {
+    return this.applicationsService.updateTitle(user.id, id, dto.title);
   }
 
   @Get()

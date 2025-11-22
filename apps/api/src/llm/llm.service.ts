@@ -36,6 +36,16 @@ export class LLMService {
     });
   }
 
+  /**
+   * Generate text directly from a prompt (for custom use cases)
+   */
+  async generateText(
+    prompt: string,
+    options?: { temperature?: number; maxTokens?: number; systemMessage?: string },
+  ): Promise<string> {
+    return this.provider.generateText(prompt, options);
+  }
+
   private async loadTemplate(fileName: string): Promise<string> {
     const templatePath = path.join(process.cwd(), 'prompts', fileName);
     try {
