@@ -5,11 +5,12 @@ import { StorageModule } from '../storage/storage.module';
 import { LLMModule } from '../llm/llm.module';
 import { ApplicationsController } from './applications.controller';
 import { ApplicationsService } from './applications.service';
+import { TitleGeneratorService } from './title-generator.service';
 
 @Module({
   imports: [PrismaModule, JobsModule, StorageModule, LLMModule],
   controllers: [ApplicationsController],
-  providers: [ApplicationsService],
+  providers: [ApplicationsService, TitleGeneratorService],
   exports: [ApplicationsService],
 })
 export class ApplicationsModule {}

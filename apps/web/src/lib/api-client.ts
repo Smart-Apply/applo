@@ -11,6 +11,7 @@ import type {
   UpdateProfileDto,
   ApplicationFilesResponse,
   ApplicationStatusResponse,
+  ApplicationTrackingStatus,
   ResumeData,
 } from '@/types';
 import { ApiError, NetworkError, shouldRetry, getRetryDelay, isPermanentAuthFailure } from './errors';
@@ -303,6 +304,18 @@ export const api = {
     export: (id: string) =>
       apiRequest<Application>(`/applications/${id}/export`, {
         method: 'POST',
+      }),
+
+    updateStatus: (id: string, status: ApplicationTrackingStatus) =>
+      apiRequest<Application>(`/applications/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }),
+
+    updateTitle: (id: string, title: string) =>
+      apiRequest<Application>(`/applications/${id}/title`, {
+        method: 'PATCH',
+        body: JSON.stringify({ title }),
       }),
   },
 };

@@ -187,8 +187,15 @@ model Application {
   jobPostingId  String
   jobPosting    JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
   
-  // Generation status
-  status        ApplicationStatus @default(PENDING)
+  // Custom Title (editable by user, LLM-generated on creation)
+  title         String? // e.g., "Senior Frontend Developer @ Google"
+  
+  // Application Status Tracking (user-facing)
+  applicationStatus   ApplicationTrackingStatus @default(APPLIED)
+  statusUpdatedAt     DateTime?
+  
+  // PDF Generation Status (system-facing)
+  status        ApplicationGenerationStatus @default(PENDING)
   
   // Generated content (Markdown/HTML before PDF)
   coverLetterText String?
@@ -207,10 +214,20 @@ model Application {
 
   @@index([userId])
   @@index([status])
+  @@index([userId, applicationStatus])
   @@map("applications")
 }
 
-enum ApplicationStatus {
+// User-facing application tracking status
+enum ApplicationTrackingStatus {
+  APPLIED      // Beworben
+  INTERVIEW    // Interview
+  ACCEPTED     // Angenommen
+  REJECTED     // Abgelehnt
+}
+
+// System-facing PDF generation status
+enum ApplicationGenerationStatus {
   PENDING      // Submitted, not yet started
   GENERATING   // LLM is generating content
   READY        // PDFs generated and stored
