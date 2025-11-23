@@ -28,6 +28,14 @@ export class TemplateResponseDto {
   })
   thumbnailUrl?: string | null;
 
+  @ApiProperty({
+    example: 'templates/clx1y2z3a4b5c6d7e8f9g0h1/preview.png',
+    required: false,
+    nullable: true,
+    description: 'Storage key for cached preview image',
+  })
+  previewImageKey?: string | null;
+
   @ApiProperty({ example: true })
   isActive: boolean;
 

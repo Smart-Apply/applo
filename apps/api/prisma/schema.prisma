@@ -251,6 +251,7 @@ model Template {
   type              TemplateType
   category          String   // e.g., "Professional", "Modern", "Creative", "Minimal", "Technical"
   thumbnailUrl      String?
+  previewImageKey   String?  // Storage key for cached preview image
   htmlTemplate      String   @db.Text
   cssStyles         String   @db.Text
   isActive          Boolean  @default(true)

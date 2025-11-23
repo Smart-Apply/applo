@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { useProfile } from '@/hooks/use-profile';
 import { useJobPostings } from '@/hooks/use-job-postings';
 import { useCreateApplicationWithGeneration } from '@/hooks/use-applications';
 import { useCoverLetterTemplates, useResumeTemplates, getDefaultTemplate } from '@/hooks/use-templates';
+import { TemplateCard } from '@/components/templates/template-card';
 import { Check, ChevronLeft, ChevronRight, X, AlertCircle, Briefcase, User, FileText, Edit, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import type { JobPosting, Profile, Skill, Experience, Template } from '@/types';
@@ -454,21 +455,38 @@ function TemplateStep({
   const { data: coverLetterTemplates, isLoading: coverLetterLoading } = useCoverLetterTemplates();
   const { data: resumeTemplates, isLoading: resumeLoading } = useResumeTemplates();
 
-  // Auto-select default templates on mount if nothing is selected
-  useState(() => {
-    if (!selectedCoverLetterTemplateId && coverLetterTemplates) {
-      const defaultTemplate = getDefaultTemplate(coverLetterTemplates);
-      if (defaultTemplate) {
-        onSelectCoverLetterTemplate(defaultTemplate.id);
+  // Auto-select matching cover letter template when resume template is selected
+  useEffect(() => {
+    if (selectedResumeTemplateId && resumeTemplates && coverLetterTemplates) {
+      const selectedResume = resumeTemplates.find((t) => t.id === selectedResumeTemplateId);
+      if (selectedResume) {
+        // Find matching cover letter template by category
+        const matchingCoverLetter = coverLetterTemplates.find(
+          (t) => t.category.toLowerCase() === selectedResume.category.toLowerCase()
+        );
+        
+        if (matchingCoverLetter) {
+          onSelectCoverLetterTemplate(matchingCoverLetter.id);
+        } else {
+          // Fallback to default cover letter template
+          const defaultCoverLetter = getDefaultTemplate(coverLetterTemplates);
+          if (defaultCoverLetter) {
+            onSelectCoverLetterTemplate(defaultCoverLetter.id);
+          }
+        }
       }
     }
+  }, [selectedResumeTemplateId, resumeTemplates, coverLetterTemplates, onSelectCoverLetterTemplate]);
+
+  // Auto-select default resume template on mount if nothing is selected
+  useEffect(() => {
     if (!selectedResumeTemplateId && resumeTemplates) {
       const defaultTemplate = getDefaultTemplate(resumeTemplates);
       if (defaultTemplate) {
         onSelectResumeTemplate(defaultTemplate.id);
       }
     }
-  });
+  }, [resumeTemplates, selectedResumeTemplateId, onSelectResumeTemplate]);
 
   if (coverLetterLoading || resumeLoading) {
     return <CenteredLoader message="Vorlagen werden geladen..." />;
@@ -476,120 +494,46 @@ function TemplateStep({
 
   return (
     <div className="space-y-6">
-      {/* Cover Letter Templates */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Anschreiben Vorlage</CardTitle>
-          <CardDescription>
-            Wähle eine Vorlage für dein Anschreiben aus
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {coverLetterTemplates?.map((template) => (
-              <button
-                key={template.id}
-                onClick={() => onSelectCoverLetterTemplate(template.id)}
-                className={`text-left rounded-lg border-2 p-4 transition-all hover:border-blue-300 ${
-                  selectedCoverLetterTemplateId === template.id
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 bg-white'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-medium">{template.name}</h3>
-                      {template.isDefault && (
-                        <Badge variant="outline" className="text-xs">
-                          <Sparkles className="w-3 h-3 mr-1" />
-                          Standard
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {template.description || 'Keine Beschreibung'}
-                    </p>
-                    <Badge variant="secondary" className="text-xs">
-                      {template.category}
-                    </Badge>
-                  </div>
-                  {selectedCoverLetterTemplateId === template.id && (
-                    <div className="flex-shrink-0 ml-4">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Resume Templates */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Lebenslauf Vorlage</CardTitle>
-          <CardDescription>
-            Wähle eine Vorlage für deinen Lebenslauf aus
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {resumeTemplates?.map((template) => (
-              <button
-                key={template.id}
-                onClick={() => onSelectResumeTemplate(template.id)}
-                className={`text-left rounded-lg border-2 p-4 transition-all hover:border-blue-300 ${
-                  selectedResumeTemplateId === template.id
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 bg-white'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-medium">{template.name}</h3>
-                      {template.isDefault && (
-                        <Badge variant="outline" className="text-xs">
-                          <Sparkles className="w-3 h-3 mr-1" />
-                          Standard
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {template.description || 'Keine Beschreibung'}
-                    </p>
-                    <Badge variant="secondary" className="text-xs">
-                      {template.category}
-                    </Badge>
-                  </div>
-                  {selectedResumeTemplateId === template.id && (
-                    <div className="flex-shrink-0 ml-4">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-        <div>
-          <p className="font-medium text-blue-900">Vorlagenauswahl</p>
-          <p className="text-sm text-blue-700 mt-1">
-            Du kannst jederzeit die Standardvorlagen verwenden, indem du keine auswählst.
-            Die gewählten Vorlagen bestimmen das Design deiner generierten Dokumente.
+      {/* Resume Templates - Only visible section */}
+      <div>
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold">Vorlagenauswahl</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Wähle eine Vorlage für deinen Lebenslauf. Das passende Anschreiben-Design wird automatisch ausgewählt.
           </p>
         </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {resumeTemplates?.map((template) => (
+            <TemplateCard
+              key={template.id}
+              template={template}
+              isSelected={selectedResumeTemplateId === template.id}
+              onSelect={onSelectResumeTemplate}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* Info box showing selected templates */}
+      {selectedResumeTemplateId && selectedCoverLetterTemplateId && (
+        <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="font-medium text-blue-900">Ausgewählte Vorlagen</p>
+            <div className="mt-2 space-y-1 text-sm text-blue-700">
+              <p>
+                <span className="font-medium">Lebenslauf:</span>{' '}
+                {resumeTemplates?.find((t) => t.id === selectedResumeTemplateId)?.name}
+              </p>
+              <p>
+                <span className="font-medium">Anschreiben:</span>{' '}
+                {coverLetterTemplates?.find((t) => t.id === selectedCoverLetterTemplateId)?.name}{' '}
+                <span className="text-xs opacity-75">(automatisch zugeordnet)</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
