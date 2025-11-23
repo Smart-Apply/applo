@@ -4,8 +4,8 @@ import * as request from 'supertest';
 import * as cookieParser from 'cookie-parser';
 import * as fs from 'fs';
 import * as path from 'path';
-import { AppModule } from '../src/app.module';
-import { AuditLoggerService } from '../src/common/audit-logger';
+import { AppModule } from '../../../src/app.module';
+import { AuditLoggerService } from '../../../src/common/audit-logger';
 
 describe('Audit Logging (e2e)', () => {
   let app: INestApplication;

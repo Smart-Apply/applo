@@ -4,8 +4,8 @@ import * as request from 'supertest';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { doubleCsrf } from 'csrf-csrf';
-import { AppModule } from '../src/app.module';
-import { ConfigService } from '../src/config/config.service';
+import { AppModule } from '../../../src/app.module';
+import { ConfigService } from '../../../src/config/config.service';
 
 describe('CSRF Protection (e2e)', () => {
   let app: INestApplication;
