@@ -464,7 +464,7 @@ export class AgentUrlParser {
     // Log first 500 chars of cleaned content for debugging
     this.logger.log(`📄 Cleaned content preview (first 500 chars):\n${content.substring(0, 500)}`);
 
-    const schema = zodToJsonSchema(JobPostingSchema);
+    const schema = zodToJsonSchema(JobPostingSchema as any);
 
     // Segment content into logical sections
     const segments = this.segmentContent(content);

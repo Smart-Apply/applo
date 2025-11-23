@@ -1,6 +1,20 @@
 # Smart Apply - AI-Powered Job Application Assistant
 
-Production-grade MVP backend built with **TypeScript**, **NestJS**, and **Azure** services.
+Production-grade full-stack MVP built with **TypeScript**, **NestJS**, **Next.js**, and **Azure** services.
+
+> **🆕 New: npm Workspaces Monorepo Structure** - Clean separation of backend and frontend with optimized dependency management.
+
+## 📦 What's New in This Version
+
+The project has been restructured as a proper **npm Workspaces monorepo**:
+
+- **Workspace Architecture**: Root package.json orchestrates `@smart-apply/api` and `@smart-apply/web` workspaces
+- **Optimized Dependencies**: Shared dependencies (1.2GB) in root, workspace-specific deps in each app (5MB + 3.8MB)
+- **Simplified Commands**: Run both apps with `npm run dev`, or individually with `npm run api:dev` / `npm run web:dev`
+- **Better Organization**: Tests restructured into `test/e2e/` and `test/unit/` folders, docs organized into 6 categories
+- **Faster Development**: Workspace symlinks enable cross-app imports, faster IDE indexing, and cleaner deployments
+
+See [`docs/guides/MONOREPO_WORKSPACE.md`](docs/guides/MONOREPO_WORKSPACE.md) for detailed workspace documentation.
 
 ## 🎯 Overview
 
@@ -54,69 +68,108 @@ Smart Apply is an intelligent job application assistant that:
 - **Icons**: Lucide React
 - **Notifications**: Sonner toasts
 
-### Project Structure
+### 🆕 Monorepo Structure (npm Workspaces)
 
-```
+```text
 smart-apply/
+├── package.json                   # 🆕 Workspace Root (Orchestrator)
+├── node_modules/                  # Shared dependencies (1.2GB)
+│   └── @smart-apply/              # Workspace symlinks
+│       ├── api -> ../../apps/api
+│       └── web -> ../../apps/web
 ├── apps/
-│   ├── api/                       # Backend (Port 3000)
+│   ├── api/                       # Backend Workspace (@smart-apply/api)
+│   │   ├── package.json           # 🆕 Backend dependencies (67 packages)
+│   │   ├── node_modules/          # Backend-specific deps (5.0MB)
 │   │   ├── src/
-│   │   │   ├── auth/              # JWT authentication
-│   │   │   ├── config/            # Environment configuration (Zod validation)
+│   │   │   ├── auth/              # JWT authentication + sessions
+│   │   │   ├── config/            # Environment configuration (Zod)
 │   │   │   ├── common/            # Guards, filters, interceptors
 │   │   │   ├── prisma/            # Database client
 │   │   │   ├── storage/           # Disk + Azure Blob providers
-│   │   │   ├── llm/               # Azure OpenAI + Hugging Face + Mock providers
-│   │   │   ├── pdf/               # PDF generation (TODO)
-│   │   │   ├── jobs/              # Service Bus integration (TODO)
+│   │   │   ├── llm/               # Azure OpenAI + Hugging Face + Mock
+│   │   │   ├── pdf/               # PDF generation (Puppeteer)
+│   │   │   ├── templates/         # Template system (7 templates)
+│   │   │   ├── jobs/              # Service Bus integration
 │   │   │   ├── profile/           # Profile CRUD
-│   │   │   ├── uploads/           # File uploads (TODO)
-│   │   │   ├── job-postings/      # Job parsing (TODO)
-│   │   │   ├── applications/      # Application pipeline (TODO)
+│   │   │   ├── uploads/           # File uploads
+│   │   │   ├── job-postings/      # Job parsing (Agent + Cheerio)
+│   │   │   ├── applications/      # Application pipeline
 │   │   │   ├── app.module.ts
 │   │   │   └── main.ts
 │   │   ├── prisma/
 │   │   │   ├── schema.prisma      # Database schema
-│   │   │   └── seed.ts            # Sample data
-│   │   └── test/                  # E2E tests
+│   │   │   ├── seed.ts            # Sample data
+│   │   │   └── seed-templates.ts  # Template seeding
+│   │   └── test/                  # 🆕 Organized test structure
+│   │       ├── e2e/               # E2E tests (14 files)
+│   │       │   ├── auth/          # Auth tests (3)
+│   │       │   ├── features/      # Feature tests (4)
+│   │       │   └── security/      # Security tests (6)
+│   │       ├── unit/              # Unit tests
+│   │       ├── fixtures/          # Test fixtures
+│   │       └── README.md          # Test documentation
 │   │
-│   └── web/                       # Frontend (Port 3001)
+│   └── web/                       # Frontend Workspace (@smart-apply/web)
+│       ├── package.json           # 🆕 Frontend dependencies (38 packages)
+│       ├── node_modules/          # Frontend-specific deps (3.8MB)
 │       ├── src/
 │       │   ├── app/
 │       │   │   ├── (auth)/        # Login, Register pages
 │       │   │   ├── (dashboard)/   # Dashboard layout + pages
+│       │   │   │   ├── dashboard/ # Stats & recent applications
+│       │   │   │   ├── profile/   # Profile management (view + edit)
+│       │   │   │   ├── jobs/      # Job postings list
+│       │   │   │   ├── applications/ # Applications (list + detail + wizard)
+│       │   │   │   └── settings/  # Settings & session management
 │       │   │   ├── layout.tsx     # Root layout with Providers
 │       │   │   └── page.tsx       # Landing page
 │       │   ├── components/
 │       │   │   ├── ui/            # shadcn/ui components (13)
-│       │   │   ├── forms/         # Form components (TODO)
-│       │   │   ├── pdf/           # PDF preview/editing (TODO)
-│       │   │   └── shared/        # Shared components (TODO)
+│       │   │   └── forms/         # Form components (ProfileManagers, Wizard)
 │       │   ├── hooks/             # Custom hooks (useProfile, useApplications)
-│       │   ├── stores/            # Zustand stores (auth)
+│       │   ├── stores/            # Zustand stores (auth with persistence)
 │       │   ├── lib/
-│       │   │   ├── api-client.ts  # Typed API client
-│       │   │   ├── providers.tsx  # React Query provider
+│       │   │   ├── api-client.ts  # Typed API client (with CSRF)
+│       │   │   ├── providers.tsx  # React Query + Toaster
 │       │   │   └── utils.ts       # Helper functions
 │       │   └── types/             # TypeScript types
 │       ├── .env.local             # Frontend environment variables
-│       └── package.json           # Frontend dependencies (450 pkgs)
+│       └── public/                # Static assets
+│
+├── docs/                          # 🆕 Organized documentation
+│   ├── README.md                  # Documentation index
+│   ├── security/                  # Security docs (7 files)
+│   ├── features/                  # Feature docs (5 files)
+│   ├── implementation/            # Implementation docs (5 files)
+│   ├── guides/                    # User guides (4 files)
+│   │   ├── MVP_EVALUATION.md      # 🆕 MVP status & roadmap
+│   │   ├── MONOREPO_WORKSPACE.md  # 🆕 Workspace documentation
+│   │   └── TEMPLATE_GUIDE.md      # 🆕 Template system guide
+│   ├── scripts/                   # Utility scripts
+│   └── archive/                   # Historical docs
 │
 ├── infra/
 │   ├── docker-compose.yml         # Local development
 │   └── Dockerfile                 # Multi-stage build
 ├── prompts/
-│   ├── cover-letter.md            # Cover letter template
-│   └── resume.md                  # Resume template
+│   ├── cover-letter.md            # Cover letter prompt
+│   ├── resume.md                  # Resume prompt
+│   └── extract-job-posting.md     # Job parsing prompt
 ├── .github/
-│   ├── copilot-instructions.md    # Copilot instructions
-│   ├── agents/
-│   │   └── my-agents.md           # Agent documentation
+│   ├── copilot-instructions.md    # Copilot instructions (updated)
 │   └── workflows/
 │       └── azure-deploy.yml       # CI/CD pipeline
-├── .env.example                   # Environment template
-└── package.json                   # Root workspace
+└── .env.example                   # Environment template
 ```
+
+**Key Changes:**
+
+- 🆕 **Workspace-based Monorepo**: Clean separation with npm workspaces
+- 🆕 **Dedicated package.json**: Both `apps/api` and `apps/web` have their own
+- 🆕 **Optimized Dependencies**: Shared (1.2GB) + API-specific (5MB) + Web-specific (3.8MB)
+- 🆕 **Organized Tests**: Tests moved to `apps/api/test/` with categories
+- 🆕 **Comprehensive Docs**: `docs/` folder with 6 categories
 
 ## 🚀 Local Development
 
@@ -199,6 +252,30 @@ npm run dev
 
 ### Development Commands
 
+#### 🆕 Workspace Commands (Run from Root)
+
+```bash
+# Start both apps in parallel
+npm run dev                # Starts API (3000) + Web (3001)
+
+# Individual app commands
+npm run api:dev            # Start API only
+npm run web:dev            # Start web only
+npm run api:build          # Build API
+npm run web:build          # Build web
+
+# Database commands (workspace-aware)
+npm run prisma:generate    # Generate Prisma Client
+npm run prisma:migrate     # Run migrations
+npm run prisma:seed        # Seed sample data
+npm run prisma:studio      # Open Prisma Studio
+
+# Workspace management
+npm install <pkg> --workspace=apps/api   # Install to API workspace
+npm install <pkg> --workspace=apps/web   # Install to Web workspace
+npm install -D <pkg>                     # Install to root (shared)
+```
+
 #### Backend (apps/api)
 
 ```bash
@@ -215,7 +292,7 @@ npm run prisma:seed        # Seed sample data
 
 # Testing
 npm run test               # Unit tests
-npm run test:e2e           # E2E tests
+npm run test:e2e           # E2E tests (14 test files)
 npm run test:cov           # Coverage
 
 # Build
@@ -309,19 +386,19 @@ npm run test:cov
 ### Implemented ✅
 
 - **Landing Page**: Hero section, features showcase, call-to-action
-- **Authentication**: 
+- **Authentication**:
   - Login & Registration forms with validation
   - JWT token management (persisted in localStorage)
   - Protected routes with auto-redirect
-- **Dashboard Layout**: 
+- **Dashboard Layout**:
   - Responsive sidebar navigation
   - Mobile-friendly hamburger menu
   - User profile dropdown with logout
-- **Dashboard**: 
+- **Dashboard**:
   - Statistics cards (Applications, Profile completion)
   - Recent applications list
   - Profile completion prompts
-- **API Integration**: 
+- **API Integration**:
   - Fully typed API client (`lib/api-client.ts`)
   - React Query for server state management
   - Custom hooks for Profile & Applications

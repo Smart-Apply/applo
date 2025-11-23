@@ -80,9 +80,9 @@ const envSchema = z.object({
 
 export type EnvConfig = z.infer<typeof envSchema>;
 
-export function validateEnv(): EnvConfig {
+export function validateEnv(config: Record<string, unknown>): EnvConfig {
   try {
-    return envSchema.parse(process.env);
+    return envSchema.parse(config);
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missingVars = error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('\n');

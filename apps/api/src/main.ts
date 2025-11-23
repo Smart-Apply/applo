@@ -6,11 +6,12 @@ import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import { doubleCsrf } from 'csrf-csrf';
 import { config } from 'dotenv';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
 
-// Load .env file explicitly before bootstrap
-config();
+// Load .env file from workspace root
+config({ path: join(__dirname, '../../../.env') });
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
