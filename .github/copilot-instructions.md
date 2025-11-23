@@ -348,7 +348,7 @@ CORS_ORIGINS=http://localhost:3000,http://localhost:3001
 
 # Security - Rate Limiting
 RATE_LIMIT_TTL=900           # 15 minutes in seconds
-RATE_LIMIT_MAX=100           # Standard endpoints: 100 requests per 15 min
+RATE_LIMIT_MAX=1000          # Standard endpoints: 1000 requests per 15 min (dev: 1000, prod: 300-500)
 RATE_LIMIT_AUTH_TTL=900      # Auth endpoints: 15 minutes
 RATE_LIMIT_AUTH_MAX=5        # Auth endpoints: 5 attempts per 15 min (STRICT)
 
