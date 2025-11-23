@@ -10,13 +10,14 @@ import { CenteredLoader } from '@/components/shared/loading';
 import { useProfile } from '@/hooks/use-profile';
 import { useJobPostings } from '@/hooks/use-job-postings';
 import { useCreateApplicationWithGeneration } from '@/hooks/use-applications';
-import { Check, ChevronLeft, ChevronRight, X, AlertCircle, Briefcase, User, FileText, Edit } from 'lucide-react';
+import { useCoverLetterTemplates, useResumeTemplates, getDefaultTemplate } from '@/hooks/use-templates';
+import { Check, ChevronLeft, ChevronRight, X, AlertCircle, Briefcase, User, FileText, Edit, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import type { JobPosting, Profile, Skill, Experience } from '@/types';
+import type { JobPosting, Profile, Skill, Experience, Template } from '@/types';
 import { toast } from 'sonner';
 import { ApplicationLoading } from '@/components/applications/application-loading';
 
-type WizardStep = 'profile' | 'job' | 'review';
+type WizardStep = 'profile' | 'job' | 'templates' | 'review';
 
 interface StepConfig {
   id: WizardStep;
@@ -39,10 +40,16 @@ const steps: StepConfig[] = [
     icon: Briefcase,
   },
   {
+    id: 'templates',
+    title: 'Vorlagen wählen',
+    description: 'Wähle Vorlagen für deine Bewerbung',
+    icon: FileText,
+  },
+  {
     id: 'review',
     title: 'Überprüfen & Generieren',
     description: 'Bestätige deine Bewerbung',
-    icon: FileText,
+    icon: Check,
   },
 ];
 
@@ -50,6 +57,8 @@ export function ApplicationWizard() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<WizardStep>('profile');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedCoverLetterTemplateId, setSelectedCoverLetterTemplateId] = useState<string | null>(null);
+  const [selectedResumeTemplateId, setSelectedResumeTemplateId] = useState<string | null>(null);
   
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: jobPostings, isLoading: jobPostingsLoading } = useJobPostings();
@@ -70,6 +79,9 @@ export function ApplicationWizard() {
         toast.error('Bitte wähle eine Stellenanzeige aus');
         return;
       }
+      setCurrentStep('templates');
+    } else if (currentStep === 'templates') {
+      // Templates are optional, we can proceed without selection (will use defaults)
       setCurrentStep('review');
     }
   };
@@ -77,8 +89,10 @@ export function ApplicationWizard() {
   const handleBack = () => {
     if (currentStep === 'job') {
       setCurrentStep('profile');
-    } else if (currentStep === 'review') {
+    } else if (currentStep === 'templates') {
       setCurrentStep('job');
+    } else if (currentStep === 'review') {
+      setCurrentStep('templates');
     }
   };
 
@@ -96,6 +110,8 @@ export function ApplicationWizard() {
       // Create application with immediate LLM generation
       const application = await createApplication.mutateAsync({
         jobPostingId: selectedJobId,
+        coverLetterTemplateId: selectedCoverLetterTemplateId || undefined,
+        resumeTemplateId: selectedResumeTemplateId || undefined,
       });
       
       // Success! Redirect to edit page
@@ -203,8 +219,22 @@ export function ApplicationWizard() {
           />
         )}
         
+        {currentStep === 'templates' && (
+          <TemplateStep
+            selectedCoverLetterTemplateId={selectedCoverLetterTemplateId}
+            selectedResumeTemplateId={selectedResumeTemplateId}
+            onSelectCoverLetterTemplate={setSelectedCoverLetterTemplateId}
+            onSelectResumeTemplate={setSelectedResumeTemplateId}
+          />
+        )}
+        
         {currentStep === 'review' && (
-          <ReviewStep profile={profile} job={selectedJob} />
+          <ReviewStep 
+            profile={profile} 
+            job={selectedJob}
+            coverLetterTemplateId={selectedCoverLetterTemplateId}
+            resumeTemplateId={selectedResumeTemplateId}
+          />
         )}
       </div>
 
@@ -408,12 +438,175 @@ function JobStep({ jobPostings, selectedJobId, onSelectJob }: JobStepProps) {
   );
 }
 
+interface TemplateStepProps {
+  selectedCoverLetterTemplateId: string | null;
+  selectedResumeTemplateId: string | null;
+  onSelectCoverLetterTemplate: (id: string) => void;
+  onSelectResumeTemplate: (id: string) => void;
+}
+
+function TemplateStep({
+  selectedCoverLetterTemplateId,
+  selectedResumeTemplateId,
+  onSelectCoverLetterTemplate,
+  onSelectResumeTemplate,
+}: TemplateStepProps) {
+  const { data: coverLetterTemplates, isLoading: coverLetterLoading } = useCoverLetterTemplates();
+  const { data: resumeTemplates, isLoading: resumeLoading } = useResumeTemplates();
+
+  // Auto-select default templates on mount if nothing is selected
+  useState(() => {
+    if (!selectedCoverLetterTemplateId && coverLetterTemplates) {
+      const defaultTemplate = getDefaultTemplate(coverLetterTemplates);
+      if (defaultTemplate) {
+        onSelectCoverLetterTemplate(defaultTemplate.id);
+      }
+    }
+    if (!selectedResumeTemplateId && resumeTemplates) {
+      const defaultTemplate = getDefaultTemplate(resumeTemplates);
+      if (defaultTemplate) {
+        onSelectResumeTemplate(defaultTemplate.id);
+      }
+    }
+  });
+
+  if (coverLetterLoading || resumeLoading) {
+    return <CenteredLoader message="Vorlagen werden geladen..." />;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Cover Letter Templates */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Anschreiben Vorlage</CardTitle>
+          <CardDescription>
+            Wähle eine Vorlage für dein Anschreiben aus
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {coverLetterTemplates?.map((template) => (
+              <button
+                key={template.id}
+                onClick={() => onSelectCoverLetterTemplate(template.id)}
+                className={`text-left rounded-lg border-2 p-4 transition-all hover:border-blue-300 ${
+                  selectedCoverLetterTemplateId === template.id
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-gray-200 bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-medium">{template.name}</h3>
+                      {template.isDefault && (
+                        <Badge variant="outline" className="text-xs">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Standard
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {template.description || 'Keine Beschreibung'}
+                    </p>
+                    <Badge variant="secondary" className="text-xs">
+                      {template.category}
+                    </Badge>
+                  </div>
+                  {selectedCoverLetterTemplateId === template.id && (
+                    <div className="flex-shrink-0 ml-4">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resume Templates */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Lebenslauf Vorlage</CardTitle>
+          <CardDescription>
+            Wähle eine Vorlage für deinen Lebenslauf aus
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {resumeTemplates?.map((template) => (
+              <button
+                key={template.id}
+                onClick={() => onSelectResumeTemplate(template.id)}
+                className={`text-left rounded-lg border-2 p-4 transition-all hover:border-blue-300 ${
+                  selectedResumeTemplateId === template.id
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-gray-200 bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-medium">{template.name}</h3>
+                      {template.isDefault && (
+                        <Badge variant="outline" className="text-xs">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Standard
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {template.description || 'Keine Beschreibung'}
+                    </p>
+                    <Badge variant="secondary" className="text-xs">
+                      {template.category}
+                    </Badge>
+                  </div>
+                  {selectedResumeTemplateId === template.id && (
+                    <div className="flex-shrink-0 ml-4">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+        <div>
+          <p className="font-medium text-blue-900">Vorlagenauswahl</p>
+          <p className="text-sm text-blue-700 mt-1">
+            Du kannst jederzeit die Standardvorlagen verwenden, indem du keine auswählst.
+            Die gewählten Vorlagen bestimmen das Design deiner generierten Dokumente.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface ReviewStepProps {
   profile: Profile | undefined;
   job?: JobPosting;
+  coverLetterTemplateId: string | null;
+  resumeTemplateId: string | null;
 }
 
-function ReviewStep({ profile, job }: ReviewStepProps) {
+function ReviewStep({ profile, job, coverLetterTemplateId, resumeTemplateId }: ReviewStepProps) {
+  const { data: coverLetterTemplates } = useCoverLetterTemplates();
+  const { data: resumeTemplates } = useResumeTemplates();
+  
+  const selectedCoverLetterTemplate = coverLetterTemplates?.find((t) => t.id === coverLetterTemplateId);
+  const selectedResumeTemplate = resumeTemplates?.find((t) => t.id === resumeTemplateId);
   return (
     <div className="space-y-4">
       <Card>
@@ -461,6 +654,45 @@ function ReviewStep({ profile, job }: ReviewStepProps) {
             ) : (
               <p className="text-sm text-red-600">Keine Stellenanzeige ausgewählt</p>
             )}
+          </div>
+
+          {/* Template Summary */}
+          <div>
+            <h3 className="font-medium text-sm text-gray-500 mb-2">AUSGEWÄHLTE VORLAGEN</h3>
+            <div className="space-y-2">
+              <div className="rounded-lg border bg-gray-50 p-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-gray-600" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Anschreiben:</p>
+                    <p className="text-sm text-gray-600">
+                      {selectedCoverLetterTemplate?.name || 'Standard Vorlage'}
+                    </p>
+                  </div>
+                  {selectedCoverLetterTemplate && (
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedCoverLetterTemplate.category}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <div className="rounded-lg border bg-gray-50 p-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-gray-600" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Lebenslauf:</p>
+                    <p className="text-sm text-gray-600">
+                      {selectedResumeTemplate?.name || 'Standard Vorlage'}
+                    </p>
+                  </div>
+                  {selectedResumeTemplate && (
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedResumeTemplate.category}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Info Box */}
