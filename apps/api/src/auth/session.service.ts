@@ -16,7 +16,7 @@ export class SessionService {
     refreshTokenId: string,
     req: Request,
   ): Promise<any> {
-    const parser = new UAParser(req.headers['user-agent']);
+    const parser = new UAParser.UAParser(req.headers['user-agent']);
     const device = parser.getResult();
 
     // Check session limit
