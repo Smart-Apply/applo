@@ -6,6 +6,7 @@ import { RegisterDto, LoginDto } from './dto';
 import { ConfigService } from '../config/config.service';
 import { AuditLoggerService } from '../common/audit-logger';
 import { SessionService } from './session.service';
+import { MAX_TOKENS_PER_USER } from './session.constants';
 import { Request } from 'express';
 
 interface TokenPair {
@@ -20,6 +21,8 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private auditLogger: AuditLoggerService,
+    // Use forwardRef to resolve circular dependency between AuthService and SessionService
+    // This is acceptable as both services are in the same module and need each other
     @Inject(forwardRef(() => SessionService))
     private sessionService: SessionService,
   ) {}
@@ -314,8 +317,7 @@ export class AuthService {
       await this.sessionService.createSession(userId, storedRefreshToken.id, req);
     }
 
-    // Enforce max tokens per user (e.g., 5 devices)
-    const MAX_TOKENS_PER_USER = 5;
+    // Enforce max tokens per user
     const userTokens = await this.prisma.refreshToken.findMany({
       where: {
         userId,

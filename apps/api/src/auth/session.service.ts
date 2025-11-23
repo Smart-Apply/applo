@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Request } from 'express';
 import * as UAParser from 'ua-parser-js';
-import * as crypto from 'crypto';
+import { 
+  MAX_SESSIONS_PER_USER, 
+  SESSION_EXPIRATION_DAYS, 
+  REVOKED_SESSION_CLEANUP_DAYS 
+} from './session.constants';
 
 @Injectable()
 export class SessionService {
@@ -21,13 +25,13 @@ export class SessionService {
 
     // Check session limit
     const activeSessions = await this.getActiveSessions(userId);
-    if (activeSessions.length >= 5) {
+    if (activeSessions.length >= MAX_SESSIONS_PER_USER) {
       // Remove oldest session (FIFO)
       await this.revokeSession(activeSessions[activeSessions.length - 1].id);
     }
 
-    // Calculate session expiration (30 days to match refresh token)
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    // Calculate session expiration
+    const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_DAYS * 24 * 60 * 60 * 1000);
 
     return this.prisma.session.create({
       data: {
@@ -140,8 +144,12 @@ export class SessionService {
           {
             AND: [
               { isActive: false },
-              // Clean up revoked sessions older than 30 days
-              { revokedAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
+              // Clean up revoked sessions older than configured days
+              { 
+                revokedAt: { 
+                  lt: new Date(Date.now() - REVOKED_SESSION_CLEANUP_DAYS * 24 * 60 * 60 * 1000) 
+                } 
+              },
             ],
           },
         ],
@@ -186,10 +194,5 @@ export class SessionService {
     return `${browser} on ${os}`;
   }
 
-  /**
-   * Hash token for storage (used for refresh token)
-   */
-  hashToken(token: string): string {
-    return crypto.createHash('sha256').update(token).digest('hex');
-  }
+
 }
