@@ -308,6 +308,9 @@ export class PdfService implements OnModuleDestroy {
       // Load PDF
       const pdfDoc = await PDFDocument.load(pdfBuffer);
 
+      // Default creator for all PDFs
+      const DEFAULT_PDF_CREATOR = 'Smart Apply';
+
       // Set metadata fields
       if (metadata.title) {
         pdfDoc.setTitle(metadata.title);
@@ -321,11 +324,8 @@ export class PdfService implements OnModuleDestroy {
       if (metadata.keywords && metadata.keywords.length > 0) {
         pdfDoc.setKeywords(metadata.keywords);
       }
-      if (metadata.creator) {
-        pdfDoc.setCreator(metadata.creator);
-      } else {
-        pdfDoc.setCreator('Smart Apply');
-      }
+      // Set creator (use provided value or default)
+      pdfDoc.setCreator(metadata.creator || DEFAULT_PDF_CREATOR);
 
       // Set creation and modification dates
       const now = new Date();
