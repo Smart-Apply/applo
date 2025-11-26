@@ -33,6 +33,7 @@ import { UpdateApplicationTitleDto } from './dto/update-application-title.dto';
 import { UseThrottler } from '../common/decorators/throttle.decorator';
 import { UpdateResumeDto } from './dto/update-resume.dto';
 import { CoverLetterDto } from './dto/cover-letter.dto';
+import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
 
 @ApiTags('applications')
 @ApiBearerAuth()
@@ -302,6 +303,44 @@ export class ApplicationsController {
     });
 
     return new StreamableFile(file);
+  }
+
+  @Get(':id/keywords')
+  @ApiOperation({
+    summary: 'Get keyword analysis for application',
+    description: 'Returns extracted keywords from job posting and match analysis against user profile',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Keywords analysis retrieved successfully',
+    type: ApplicationKeywordsResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Application not found' })
+  async getKeywordsAnalysis(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<ApplicationKeywordsResponseDto> {
+    return this.applicationsService.getKeywordsAnalysis(user.id, id);
+  }
+
+  @Post(':id/analyze-keywords')
+  @ApiOperation({
+    summary: 'Trigger keyword extraction and analysis',
+    description: 'Extracts keywords from the job posting using ATS Agent and analyzes match against profile',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Keywords extracted and analyzed successfully',
+    type: ApplicationKeywordsResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Application not found' })
+  async analyzeKeywords(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<ApplicationKeywordsResponseDto> {
+    return this.applicationsService.analyzeKeywords(user.id, id);
   }
 
   @Get(':id/stream')

@@ -167,3 +167,38 @@ export function useExportApplication(applicationId: string) {
     },
   });
 }
+
+/**
+ * Hook to analyze ATS keywords from job posting
+ */
+export function useAnalyzeKeywords(applicationId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => api.applications.analyzeKeywords(applicationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications', applicationId] });
+      queryClient.invalidateQueries({ queryKey: ['applications', applicationId, 'keywords'] });
+      toastSuccess('Keywords wurden analysiert');
+    },
+    onError: (error: unknown) => {
+      toastError(error, 'Keywords konnten nicht analysiert werden');
+    },
+  });
+}
+
+/**
+ * Hook to fetch keyword analysis
+ */
+export function useKeywordsAnalysis(applicationId: string) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  return useQuery({
+    queryKey: ['applications', applicationId, 'keywords'],
+    queryFn: () => api.applications.getKeywordsAnalysis(applicationId),
+    enabled: isAuthenticated && !!applicationId,
+    staleTime: 10 * 60 * 1000, // Keywords don't change often
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+}

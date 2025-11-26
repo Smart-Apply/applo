@@ -1,137 +1,80 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  getAllSynonyms,
-  buildReverseLookup,
-  getKeywordCategory,
-  TECHNICAL_SYNONYMS,
-  SOFT_SKILL_SYNONYMS,
-  EXPERIENCE_SYNONYMS,
-  INDUSTRY_SYNONYMS,
-  METHODOLOGY_SYNONYMS,
-  EDUCATION_SYNONYMS,
-  CERTIFICATION_SYNONYMS,
-} from './synonyms.dictionary';
+import { ATSKeywordAgent } from '../agents/ats/ats-keyword.agent';
+import { ATSAgentOutput, ATSAgentInput, ProfileData } from '../agents/agents.interface';
 import { KeywordMatchDto, MatchAnalysisResponseDto, ExtractedKeywordsDto } from './dto';
-
-interface ProfileData {
-  skills: { name: string; level?: string }[];
-  experiences: { title: string; company: string; description?: string }[];
-  education: { degree: string; institution: string; fieldOfStudy?: string }[];
-  certificates: { name: string; issuer: string }[];
-  projects: { name: string; description?: string; technologies: string[] }[];
-  languages: { name: string; level: string }[];
-  summary?: string;
-}
 
 interface JobPostingData {
   title: string;
   company: string;
+  location?: string;
   description?: string;
   requirements: string[];
   responsibilities: string[];
   niceToHave: string[];
   rawText?: string;
+  language?: 'de' | 'en';
 }
 
 @Injectable()
 export class KeywordsService {
   private readonly logger = new Logger(KeywordsService.name);
-  private readonly reverseLookup: Map<string, string>;
-  private readonly allSynonyms: Record<string, string[]>;
-  // Pre-compiled regex cache for performance
-  private readonly regexCache: Map<string, RegExp>;
 
-  constructor(private readonly prisma: PrismaService) {
-    this.reverseLookup = buildReverseLookup();
-    this.allSynonyms = getAllSynonyms();
-    this.regexCache = this.precompileRegexPatterns();
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly atsAgent: ATSKeywordAgent,
+  ) {}
 
   /**
-   * Pre-compile regex patterns for all keywords and their synonyms
+   * Extract keywords from job posting using ATS Agent
    */
-  private precompileRegexPatterns(): Map<string, RegExp> {
-    const cache = new Map<string, RegExp>();
-    for (const [canonical, synonyms] of Object.entries(this.allSynonyms)) {
-      const allVariations = [canonical, ...synonyms];
-      for (const variation of allVariations) {
-        const escaped = variation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        cache.set(variation.toLowerCase(), new RegExp(`\\b${escaped}\\b`, 'gi'));
-      }
-    }
-    return cache;
-  }
+  async extractKeywords(jobPosting: JobPostingData): Promise<ATSAgentOutput> {
+    this.logger.log(`Extracting keywords for: ${jobPosting.title} at ${jobPosting.company}`);
 
-  /**
-   * Extract keywords from job posting text
-   */
-  extractKeywords(jobPosting: JobPostingData): ExtractedKeywordsDto {
-    const text = this.buildJobPostingText(jobPosting);
-    const words = this.tokenize(text);
-
-    const result: ExtractedKeywordsDto = {
-      technical: [],
-      soft: [],
-      experience: [],
-      industry: [],
-      methodology: [],
-      education: [],
-      certifications: [],
+    // Build the input for the ATS Agent
+    const input: ATSAgentInput = {
+      jobPosting: {
+        title: jobPosting.title,
+        company: jobPosting.company,
+        location: jobPosting.location || null,
+        description: this.buildDescription(jobPosting),
+        requirements: jobPosting.requirements?.join('\n') || null,
+        responsibilities: jobPosting.responsibilities?.join('\n') || null,
+        language: jobPosting.language || this.detectLanguage(jobPosting),
+      },
     };
 
-    // Track which canonical keywords we've already found
-    const foundKeywords = new Set<string>();
+    // Execute the ATS Agent
+    const keywords = await this.atsAgent.execute(input);
 
-    // Check for multi-word phrases first (more specific matches)
-    for (const [canonical, synonyms] of Object.entries(this.allSynonyms)) {
-      const allVariations = [canonical, ...synonyms];
+    this.logger.log(`Extracted ${this.countKeywords(keywords)} keywords`);
+    return keywords;
+  }
 
-      for (const variation of allVariations) {
-        if (text.toLowerCase().includes(variation.toLowerCase())) {
-          if (!foundKeywords.has(canonical)) {
-            foundKeywords.add(canonical);
-            this.addKeywordToCategory(result, canonical);
-          }
-          break;
-        }
-      }
-    }
-
-    // Also check individual words
-    for (const word of words) {
-      const canonical = this.reverseLookup.get(word.toLowerCase());
-      if (canonical && !foundKeywords.has(canonical)) {
-        foundKeywords.add(canonical);
-        this.addKeywordToCategory(result, canonical);
-      }
-    }
-
-    // Extract years of experience patterns
-    const yearsPattern = /(\d+)\+?\s*(?:years?|yrs?)/gi;
-    let match;
-    while ((match = yearsPattern.exec(text)) !== null) {
-      const years = parseInt(match[1], 10);
-      const experienceLevel = this.yearsToLevel(years);
-      if (experienceLevel && !result.experience.includes(experienceLevel)) {
-        result.experience.push(experienceLevel);
-      }
-    }
-
-    this.logger.log(
-      `Extracted keywords: ${Object.values(result).flat().length} total`,
-    );
-
-    return result;
+  /**
+   * Convert ATSAgentOutput to legacy ExtractedKeywordsDto format
+   * For backwards compatibility with existing code
+   */
+  convertToLegacyFormat(keywords: ATSAgentOutput): ExtractedKeywordsDto {
+    return {
+      technical: [...keywords.technicalSkills, ...keywords.toolsAndTechnologies],
+      soft: keywords.softSkills,
+      experience: keywords.senioritySignals,
+      industry: keywords.industryKeywords,
+      methodology: [], // Not directly mapped in new format
+      education: keywords.requirementKeywords.filter((k) =>
+        /degree|bachelor|master|phd|diploma|university|college/i.test(k),
+      ),
+      certifications: keywords.requirementKeywords.filter((k) =>
+        /certified|certification|certificate|license/i.test(k),
+      ),
+    };
   }
 
   /**
    * Analyze how well a profile matches a job posting
    */
-  async analyzeMatch(
-    userId: string,
-    jobPostingId: string,
-  ): Promise<MatchAnalysisResponseDto> {
+  async analyzeMatch(userId: string, jobPostingId: string): Promise<MatchAnalysisResponseDto> {
     // Fetch profile
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
@@ -158,85 +101,29 @@ export class KeywordsService {
       throw new NotFoundException('Job posting not found');
     }
 
-    return this.performAnalysis(
-      this.mapProfileToData(profile),
-      this.mapJobPostingToData(jobPosting),
-    );
-  }
-
-  /**
-   * Map Prisma profile entity to ProfileData interface
-   */
-  private mapProfileToData(profile: {
-    skills: { name: string; level?: string | null }[];
-    experiences: { title: string; company: string; description?: string | null }[];
-    education: { degree: string; institution: string; fieldOfStudy?: string | null }[];
-    certificates: { name: string; issuer: string }[];
-    projects: { name: string; description?: string | null; technologies: string[] }[];
-    languages: { name: string; level: string }[];
-    summary?: string | null;
-  }): ProfileData {
-    return {
-      skills: profile.skills.map((s) => ({ name: s.name, level: s.level ?? undefined })),
-      experiences: profile.experiences.map((e) => ({
-        title: e.title,
-        company: e.company,
-        description: e.description ?? undefined,
-      })),
-      education: profile.education.map((e) => ({
-        degree: e.degree,
-        institution: e.institution,
-        fieldOfStudy: e.fieldOfStudy ?? undefined,
-      })),
-      certificates: profile.certificates.map((c) => ({ name: c.name, issuer: c.issuer })),
-      projects: profile.projects.map((p) => ({
-        name: p.name,
-        description: p.description ?? undefined,
-        technologies: p.technologies,
-      })),
-      languages: profile.languages.map((l) => ({ name: l.name, level: l.level })),
-      summary: profile.summary ?? undefined,
-    };
-  }
-
-  /**
-   * Map Prisma job posting entity to JobPostingData interface
-   */
-  private mapJobPostingToData(jobPosting: {
-    title: string;
-    company: string;
-    description?: string | null;
-    requirements: string[];
-    responsibilities: string[];
-    niceToHave: string[];
-    rawText?: string | null;
-  }): JobPostingData {
-    return {
+    // Extract keywords using ATS Agent
+    const keywords = await this.extractKeywords({
       title: jobPosting.title,
       company: jobPosting.company,
-      description: jobPosting.description ?? undefined,
+      location: jobPosting.location || undefined,
+      description: jobPosting.description || undefined,
       requirements: jobPosting.requirements,
       responsibilities: jobPosting.responsibilities,
       niceToHave: jobPosting.niceToHave,
-      rawText: jobPosting.rawText ?? undefined,
-    };
+      rawText: jobPosting.rawText || undefined,
+    });
+
+    // Perform matching analysis
+    return this.performAnalysis(this.mapProfileToData(profile), keywords);
   }
 
   /**
-   * Perform the actual match analysis
+   * Perform the actual match analysis between profile and extracted keywords
    */
-  performAnalysis(
-    profile: ProfileData,
-    jobPosting: JobPostingData,
-  ): MatchAnalysisResponseDto {
-    // Extract keywords from job posting
-    const extractedKeywords = this.extractKeywords(jobPosting);
-    const allJobKeywords = this.flattenExtractedKeywords(extractedKeywords);
-
-    // Build profile keyword set
+  performAnalysis(profile: ProfileData, keywords: ATSAgentOutput): MatchAnalysisResponseDto {
+    const allKeywords = this.flattenKeywords(keywords);
     const profileKeywords = this.extractProfileKeywords(profile);
 
-    // Perform matching
     const matchedKeywords: KeywordMatchDto[] = [];
     const missingKeywords: KeywordMatchDto[] = [];
 
@@ -247,55 +134,46 @@ export class KeywordsService {
       other: { matched: 0, total: 0 },
     };
 
-    for (const keyword of allJobKeywords) {
-      const category = getKeywordCategory(keyword);
-      const categoryKey = this.mapToMainCategory(category);
-      categoryStats[categoryKey].total++;
+    // Analyze each keyword
+    for (const { keyword, category } of allKeywords) {
+      const mainCategory = this.mapToMainCategory(category);
+      categoryStats[mainCategory].total++;
 
       const matchResult = this.findKeywordInProfile(keyword, profileKeywords);
 
       if (matchResult.found) {
-        categoryStats[categoryKey].matched++;
+        categoryStats[mainCategory].matched++;
         matchedKeywords.push({
           keyword,
-          category: category || 'technical',
+          category: this.mapToLegacyCategory(category),
           found: true,
           confidence: matchResult.confidence,
           locations: matchResult.locations,
-          frequency: this.countKeywordFrequency(keyword, jobPosting),
+          frequency: 1,
         });
       } else {
         missingKeywords.push({
           keyword,
-          category: category || 'technical',
+          category: this.mapToLegacyCategory(category),
           found: false,
           confidence: 0,
-          frequency: this.countKeywordFrequency(keyword, jobPosting),
+          frequency: 1,
         });
       }
     }
 
     // Calculate overall match percentage
-    const matchPercentage = this.calculateMatchPercentage(
-      matchedKeywords.length,
-      allJobKeywords.length,
-    );
+    const totalKeywords = allKeywords.length;
+    const matchPercentage =
+      totalKeywords > 0 ? Math.round((matchedKeywords.length / totalKeywords) * 100) : 0;
 
     // Generate insights
     const suggestions = this.generateSuggestions(missingKeywords, categoryStats);
     const strengths = this.identifyStrengths(matchedKeywords);
     const weaknesses = this.identifyWeaknesses(missingKeywords, categoryStats);
 
-    // Calculate category breakdown
-    const categoryBreakdown = {
-      technical: this.calculateCategoryPercentage(categoryStats.technical),
-      soft: this.calculateCategoryPercentage(categoryStats.soft),
-      experience: this.calculateCategoryPercentage(categoryStats.experience),
-      other: this.calculateCategoryPercentage(categoryStats.other),
-    };
-
     this.logger.log(
-      `Match analysis complete: ${matchPercentage}% (${matchedKeywords.length}/${allJobKeywords.length} keywords)`,
+      `Match analysis complete: ${matchPercentage}% (${matchedKeywords.length}/${totalKeywords} keywords)`,
     );
 
     return {
@@ -305,25 +183,206 @@ export class KeywordsService {
       suggestions,
       strengths,
       weaknesses,
-      categoryBreakdown,
+      categoryBreakdown: {
+        technical: this.calculateCategoryPercentage(categoryStats.technical),
+        soft: this.calculateCategoryPercentage(categoryStats.soft),
+        experience: this.calculateCategoryPercentage(categoryStats.experience),
+        other: this.calculateCategoryPercentage(categoryStats.other),
+      },
     };
   }
 
   /**
-   * Build complete text from job posting for analysis
+   * Build description from job posting parts
    */
-  private buildJobPostingText(jobPosting: JobPostingData): string {
+  private buildDescription(jobPosting: JobPostingData): string {
     const parts = [
-      jobPosting.title,
-      jobPosting.company,
       jobPosting.description,
+      jobPosting.rawText,
       ...(jobPosting.requirements || []),
       ...(jobPosting.responsibilities || []),
       ...(jobPosting.niceToHave || []),
-      jobPosting.rawText,
     ];
+    return parts.filter(Boolean).join('\n\n');
+  }
 
-    return parts.filter(Boolean).join(' ');
+  /**
+   * Detect language from job posting content
+   */
+  private detectLanguage(jobPosting: JobPostingData): 'de' | 'en' | null {
+    const text = this.buildDescription(jobPosting).toLowerCase();
+
+    // Simple heuristic: check for common German words
+    const germanWords = ['und', 'oder', 'für', 'mit', 'von', 'bei', 'wir', 'sie', 'ihre', 'unser'];
+    const englishWords = ['and', 'or', 'for', 'with', 'from', 'at', 'we', 'you', 'your', 'our'];
+
+    let germanScore = 0;
+    let englishScore = 0;
+
+    for (const word of germanWords) {
+      if (text.includes(` ${word} `)) germanScore++;
+    }
+    for (const word of englishWords) {
+      if (text.includes(` ${word} `)) englishScore++;
+    }
+
+    if (germanScore > englishScore) return 'de';
+    if (englishScore > germanScore) return 'en';
+    return null;
+  }
+
+  /**
+   * Count total keywords
+   */
+  private countKeywords(keywords: ATSAgentOutput): number {
+    return (
+      keywords.technicalSkills.length +
+      keywords.softSkills.length +
+      keywords.responsibilityKeywords.length +
+      keywords.requirementKeywords.length +
+      keywords.toolsAndTechnologies.length +
+      keywords.industryKeywords.length +
+      keywords.senioritySignals.length +
+      keywords.miscKeywords.length
+    );
+  }
+
+  /**
+   * Flatten keywords with category information
+   */
+  private flattenKeywords(keywords: ATSAgentOutput): { keyword: string; category: string }[] {
+    return [
+      ...keywords.technicalSkills.map((k) => ({ keyword: k, category: 'technical' })),
+      ...keywords.softSkills.map((k) => ({ keyword: k, category: 'soft' })),
+      ...keywords.responsibilityKeywords.map((k) => ({ keyword: k, category: 'responsibility' })),
+      ...keywords.requirementKeywords.map((k) => ({ keyword: k, category: 'requirement' })),
+      ...keywords.toolsAndTechnologies.map((k) => ({ keyword: k, category: 'tool' })),
+      ...keywords.industryKeywords.map((k) => ({ keyword: k, category: 'industry' })),
+      ...keywords.senioritySignals.map((k) => ({ keyword: k, category: 'seniority' })),
+      ...keywords.miscKeywords.map((k) => ({ keyword: k, category: 'misc' })),
+    ];
+  }
+
+  /**
+   * Map profile to ProfileData interface
+   */
+  private mapProfileToData(profile: any): ProfileData {
+    return {
+      firstName: profile.user?.firstName || '',
+      lastName: profile.user?.lastName || '',
+      email: profile.user?.email || '',
+      phone: profile.phone || undefined,
+      summary: profile.summary || undefined,
+      skills: profile.skills.map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        level: s.level || undefined,
+      })),
+      experiences: profile.experiences.map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        company: e.company,
+        location: e.location || undefined,
+        startDate: e.startDate,
+        endDate: e.endDate || undefined,
+        current: e.current,
+        description: e.description || undefined,
+      })),
+      education: profile.education.map((e: any) => ({
+        id: e.id,
+        degree: e.degree,
+        institution: e.institution,
+        fieldOfStudy: e.fieldOfStudy || undefined,
+        startDate: e.startDate || undefined,
+        endDate: e.endDate || undefined,
+      })),
+      certificates: profile.certificates.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        issuer: c.issuer,
+        issueDate: c.issueDate || undefined,
+        expiryDate: c.expiryDate || undefined,
+      })),
+      projects: profile.projects.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description || undefined,
+        url: p.url || undefined,
+        technologies: p.technologies || [],
+      })),
+      languages: profile.languages.map((l: any) => ({
+        id: l.id,
+        name: l.name,
+        level: l.level,
+      })),
+    };
+  }
+
+  /**
+   * Extract keywords from profile for matching
+   */
+  private extractProfileKeywords(profile: ProfileData): Map<string, string[]> {
+    const keywords = new Map<string, string[]>();
+
+    // Skills
+    for (const skill of profile.skills || []) {
+      this.addToKeywordMap(keywords, skill.name.toLowerCase(), 'skills');
+    }
+
+    // Experience titles and descriptions
+    for (const exp of profile.experiences || []) {
+      const words = this.tokenize(exp.title);
+      for (const word of words) {
+        this.addToKeywordMap(keywords, word, 'experience.title');
+      }
+      if (exp.description) {
+        const descWords = this.tokenize(exp.description);
+        for (const word of descWords) {
+          this.addToKeywordMap(keywords, word, 'experience.description');
+        }
+      }
+    }
+
+    // Education
+    for (const edu of profile.education || []) {
+      const eduText = `${edu.degree} ${edu.institution} ${edu.fieldOfStudy || ''}`;
+      const words = this.tokenize(eduText);
+      for (const word of words) {
+        this.addToKeywordMap(keywords, word, 'education');
+      }
+    }
+
+    // Certificates
+    for (const cert of profile.certificates || []) {
+      const certText = `${cert.name} ${cert.issuer}`;
+      const words = this.tokenize(certText);
+      for (const word of words) {
+        this.addToKeywordMap(keywords, word, 'certificates');
+      }
+    }
+
+    // Projects and technologies
+    for (const proj of profile.projects || []) {
+      for (const tech of proj.technologies || []) {
+        this.addToKeywordMap(keywords, tech.toLowerCase(), 'projects.technologies');
+      }
+      if (proj.description) {
+        const words = this.tokenize(proj.description);
+        for (const word of words) {
+          this.addToKeywordMap(keywords, word, 'projects.description');
+        }
+      }
+    }
+
+    // Summary
+    if (profile.summary) {
+      const words = this.tokenize(profile.summary);
+      for (const word of words) {
+        this.addToKeywordMap(keywords, word, 'summary');
+      }
+    }
+
+    return keywords;
   }
 
   /**
@@ -334,209 +393,49 @@ export class KeywordsService {
       .toLowerCase()
       .replace(/[^\w\s\-\.\+#]/g, ' ')
       .split(/\s+/)
-      .filter((word) => word.length > 1);
-  }
-
-  /**
-   * Add keyword to appropriate category
-   */
-  private addKeywordToCategory(result: ExtractedKeywordsDto, keyword: string): void {
-    const lowerKeyword = keyword.toLowerCase();
-
-    if (lowerKeyword in TECHNICAL_SYNONYMS) {
-      result.technical.push(keyword);
-    } else if (lowerKeyword in SOFT_SKILL_SYNONYMS) {
-      result.soft.push(keyword);
-    } else if (lowerKeyword in EXPERIENCE_SYNONYMS) {
-      result.experience.push(keyword);
-    } else if (lowerKeyword in INDUSTRY_SYNONYMS) {
-      result.industry.push(keyword);
-    } else if (lowerKeyword in METHODOLOGY_SYNONYMS) {
-      result.methodology.push(keyword);
-    } else if (lowerKeyword in EDUCATION_SYNONYMS) {
-      result.education.push(keyword);
-    } else if (lowerKeyword in CERTIFICATION_SYNONYMS) {
-      result.certifications.push(keyword);
-    } else {
-      // Default to technical for unknown keywords
-      result.technical.push(keyword);
-    }
-  }
-
-  /**
-   * Convert years of experience to level
-   */
-  private yearsToLevel(years: number): string | null {
-    if (years <= 2) return 'junior';
-    if (years <= 5) return 'mid';
-    if (years <= 8) return 'senior';
-    return 'principal';
-  }
-
-  /**
-   * Flatten extracted keywords into a single array
-   */
-  private flattenExtractedKeywords(extracted: ExtractedKeywordsDto): string[] {
-    return [
-      ...extracted.technical,
-      ...extracted.soft,
-      ...extracted.experience,
-      ...extracted.industry,
-      ...extracted.methodology,
-      ...extracted.education,
-      ...extracted.certifications,
-    ];
-  }
-
-  /**
-   * Extract all keywords from profile
-   */
-  private extractProfileKeywords(profile: ProfileData): Map<string, string[]> {
-    const keywords = new Map<string, string[]>();
-
-    // Skills
-    for (const skill of profile.skills || []) {
-      const canonical = this.getCanonicalKeyword(skill.name);
-      if (canonical) {
-        this.addToKeywordMap(keywords, canonical, 'skills');
-      }
-    }
-
-    // Experience titles and descriptions
-    for (const exp of profile.experiences || []) {
-      const titleKeywords = this.tokenize(exp.title);
-      for (const word of titleKeywords) {
-        const canonical = this.getCanonicalKeyword(word);
-        if (canonical) {
-          this.addToKeywordMap(keywords, canonical, 'experience.title');
-        }
-      }
-
-      if (exp.description) {
-        const descKeywords = this.tokenize(exp.description);
-        for (const word of descKeywords) {
-          const canonical = this.getCanonicalKeyword(word);
-          if (canonical) {
-            this.addToKeywordMap(keywords, canonical, 'experience.description');
-          }
-        }
-      }
-    }
-
-    // Education
-    for (const edu of profile.education || []) {
-      const eduText = `${edu.degree} ${edu.institution} ${edu.fieldOfStudy || ''}`;
-      const eduKeywords = this.tokenize(eduText);
-      for (const word of eduKeywords) {
-        const canonical = this.getCanonicalKeyword(word);
-        if (canonical) {
-          this.addToKeywordMap(keywords, canonical, 'education');
-        }
-      }
-    }
-
-    // Certificates
-    for (const cert of profile.certificates || []) {
-      const certText = `${cert.name} ${cert.issuer}`;
-      const certKeywords = this.tokenize(certText);
-      for (const word of certKeywords) {
-        const canonical = this.getCanonicalKeyword(word);
-        if (canonical) {
-          this.addToKeywordMap(keywords, canonical, 'certificates');
-        }
-      }
-    }
-
-    // Projects and technologies
-    for (const proj of profile.projects || []) {
-      for (const tech of proj.technologies || []) {
-        const canonical = this.getCanonicalKeyword(tech);
-        if (canonical) {
-          this.addToKeywordMap(keywords, canonical, 'projects.technologies');
-        }
-      }
-
-      if (proj.description) {
-        const descKeywords = this.tokenize(proj.description);
-        for (const word of descKeywords) {
-          const canonical = this.getCanonicalKeyword(word);
-          if (canonical) {
-            this.addToKeywordMap(keywords, canonical, 'projects.description');
-          }
-        }
-      }
-    }
-
-    // Summary
-    if (profile.summary) {
-      const summaryKeywords = this.tokenize(profile.summary);
-      for (const word of summaryKeywords) {
-        const canonical = this.getCanonicalKeyword(word);
-        if (canonical) {
-          this.addToKeywordMap(keywords, canonical, 'summary');
-        }
-      }
-    }
-
-    return keywords;
-  }
-
-  /**
-   * Get canonical keyword from any variation
-   */
-  private getCanonicalKeyword(word: string): string | null {
-    const lower = word.toLowerCase();
-
-    // Check if it's a canonical keyword
-    if (lower in this.allSynonyms) {
-      return lower;
-    }
-
-    // Check reverse lookup
-    const canonical = this.reverseLookup.get(lower);
-    return canonical || null;
+      .filter((word) => word.length > 2);
   }
 
   /**
    * Add keyword to map with location
    */
-  private addToKeywordMap(
-    map: Map<string, string[]>,
-    keyword: string,
-    location: string,
-  ): void {
-    const existing = map.get(keyword) || [];
+  private addToKeywordMap(map: Map<string, string[]>, keyword: string, location: string): void {
+    const normalized = keyword.toLowerCase().trim();
+    if (!normalized) return;
+
+    const existing = map.get(normalized) || [];
     if (!existing.includes(location)) {
       existing.push(location);
     }
-    map.set(keyword, existing);
+    map.set(normalized, existing);
   }
 
   /**
-   * Find keyword in profile with confidence scoring
+   * Find keyword in profile with fuzzy matching
    */
   private findKeywordInProfile(
     keyword: string,
     profileKeywords: Map<string, string[]>,
   ): { found: boolean; confidence: number; locations: string[] } {
-    const canonical = this.getCanonicalKeyword(keyword) || keyword.toLowerCase();
+    const normalizedKeyword = keyword.toLowerCase().trim();
 
-    if (profileKeywords.has(canonical)) {
-      const locations = profileKeywords.get(canonical) || [];
-      const confidence = this.calculateConfidence(locations);
-      return { found: true, confidence, locations };
+    // Exact match
+    if (profileKeywords.has(normalizedKeyword)) {
+      const locations = profileKeywords.get(normalizedKeyword) || [];
+      return { found: true, confidence: this.calculateConfidence(locations), locations };
     }
 
-    // Check if the raw keyword exists as a substring in any profile keyword
+    // Partial match (keyword contains or is contained in profile keyword)
     for (const [profileKeyword, locations] of profileKeywords) {
       if (
-        profileKeyword.includes(canonical) ||
-        canonical.includes(profileKeyword)
+        profileKeyword.includes(normalizedKeyword) ||
+        normalizedKeyword.includes(profileKeyword)
       ) {
         return { found: true, confidence: 0.7, locations };
       }
     }
 
+    // No match found
     return { found: false, confidence: 0, locations: [] };
   }
 
@@ -545,7 +444,6 @@ export class KeywordsService {
    */
   private calculateConfidence(locations: string[]): number {
     let confidence = 0;
-
     for (const location of locations) {
       if (location === 'skills') {
         confidence = Math.max(confidence, 1.0);
@@ -553,80 +451,69 @@ export class KeywordsService {
         confidence = Math.max(confidence, 0.9);
       } else if (location.startsWith('projects.technologies')) {
         confidence = Math.max(confidence, 0.85);
-      } else if (location === 'education') {
-        confidence = Math.max(confidence, 0.8);
       } else if (location === 'certificates') {
         confidence = Math.max(confidence, 0.85);
+      } else if (location === 'education') {
+        confidence = Math.max(confidence, 0.8);
       } else if (location === 'summary') {
         confidence = Math.max(confidence, 0.7);
       } else {
         confidence = Math.max(confidence, 0.6);
       }
     }
-
     return confidence;
-  }
-
-  /**
-   * Count how often a keyword appears in job posting
-   * Uses pre-compiled regex patterns for performance
-   */
-  private countKeywordFrequency(keyword: string, jobPosting: JobPostingData): number {
-    const text = this.buildJobPostingText(jobPosting).toLowerCase();
-    const canonical = keyword.toLowerCase();
-    const synonyms = this.allSynonyms[canonical] || [];
-    const allVariations = [canonical, ...synonyms];
-
-    let count = 0;
-    for (const variation of allVariations) {
-      const cachedRegex = this.regexCache.get(variation.toLowerCase());
-      if (cachedRegex) {
-        // Reset lastIndex for global regex
-        cachedRegex.lastIndex = 0;
-        const matches = text.match(cachedRegex);
-        count += matches ? matches.length : 0;
-      } else {
-        // Fallback for uncached patterns
-        const escaped = this.escapeRegex(variation);
-        const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
-        const matches = text.match(regex);
-        count += matches ? matches.length : 0;
-      }
-    }
-
-    return count;
-  }
-
-  /**
-   * Escape special regex characters
-   */
-  private escapeRegex(string: string): string {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   /**
    * Map category to main category for statistics
    */
-  private mapToMainCategory(
-    category: string | null,
-  ): 'technical' | 'soft' | 'experience' | 'other' {
-    if (!category) return 'other';
-    if (category === 'technical') return 'technical';
-    if (category === 'soft') return 'soft';
-    if (category === 'experience') return 'experience';
-    return 'other';
+  private mapToMainCategory(category: string): 'technical' | 'soft' | 'experience' | 'other' {
+    switch (category) {
+      case 'technical':
+      case 'tool':
+        return 'technical';
+      case 'soft':
+        return 'soft';
+      case 'seniority':
+      case 'requirement':
+        return 'experience';
+      default:
+        return 'other';
+    }
   }
 
   /**
-   * Calculate match percentage from matched and total counts
+   * Map to legacy category for DTO compatibility
    */
-  private calculateMatchPercentage(matchedCount: number, totalCount: number): number {
-    if (totalCount === 0) return 0;
-    return Math.round((matchedCount / totalCount) * 100);
+  private mapToLegacyCategory(
+    category: string,
+  ):
+    | 'technical'
+    | 'soft'
+    | 'experience'
+    | 'industry'
+    | 'methodology'
+    | 'education'
+    | 'certification' {
+    switch (category) {
+      case 'technical':
+      case 'tool':
+        return 'technical';
+      case 'soft':
+        return 'soft';
+      case 'seniority':
+        return 'experience';
+      case 'industry':
+        return 'industry';
+      case 'requirement':
+        return 'education';
+      default:
+        return 'technical';
+    }
   }
 
   /**
-   * Calculate category percentage with matched and total counts
+   * Calculate category percentage
    */
   private calculateCategoryPercentage(stats: { matched: number; total: number }): {
     matched: number;
@@ -636,12 +523,12 @@ export class KeywordsService {
     return {
       matched: stats.matched,
       total: stats.total,
-      percentage: this.calculateMatchPercentage(stats.matched, stats.total),
+      percentage: stats.total > 0 ? Math.round((stats.matched / stats.total) * 100) : 0,
     };
   }
 
   /**
-   * Generate improvement suggestions based on missing keywords
+   * Generate improvement suggestions
    */
   private generateSuggestions(
     missingKeywords: KeywordMatchDto[],
@@ -650,33 +537,25 @@ export class KeywordsService {
     const suggestions: string[] = [];
 
     // Technical skill suggestions
-    const missingTechnical = missingKeywords
-      .filter((k) => k.category === 'technical')
-      .slice(0, 3);
+    const missingTechnical = missingKeywords.filter((k) => k.category === 'technical').slice(0, 3);
     if (missingTechnical.length > 0) {
       const skills = missingTechnical.map((k) => `'${k.keyword}'`).join(', ');
       suggestions.push(`Add ${skills} to your skills if you have experience with them`);
     }
 
     // Low category match suggestions
-    if (categoryStats.technical.total > 0 && categoryStats.technical.matched / categoryStats.technical.total < 0.5) {
+    if (
+      categoryStats.technical.total > 0 &&
+      categoryStats.technical.matched / categoryStats.technical.total < 0.5
+    ) {
       suggestions.push('Consider highlighting more technical skills in your profile');
     }
 
-    if (categoryStats.soft.total > 0 && categoryStats.soft.matched / categoryStats.soft.total < 0.5) {
+    if (
+      categoryStats.soft.total > 0 &&
+      categoryStats.soft.matched / categoryStats.soft.total < 0.5
+    ) {
       suggestions.push('Add more soft skills to your profile summary or experience descriptions');
-    }
-
-    // Certification suggestions
-    const missingCerts = missingKeywords.filter((k) => k.category === 'certification');
-    if (missingCerts.length > 0) {
-      suggestions.push(`Consider obtaining certifications like ${missingCerts[0].keyword}`);
-    }
-
-    // Experience level suggestions
-    const missingExp = missingKeywords.filter((k) => k.category === 'experience');
-    if (missingExp.length > 0) {
-      suggestions.push('Ensure your experience level is clearly stated in your summary');
     }
 
     return suggestions.slice(0, 5);
@@ -688,20 +567,20 @@ export class KeywordsService {
   private identifyStrengths(matchedKeywords: KeywordMatchDto[]): string[] {
     const strengths: string[] = [];
 
-    // Strong technical match
     const technicalMatches = matchedKeywords.filter((k) => k.category === 'technical');
     if (technicalMatches.length >= 3) {
-      const topSkills = technicalMatches.slice(0, 3).map((k) => k.keyword).join(', ');
+      const topSkills = technicalMatches
+        .slice(0, 3)
+        .map((k) => k.keyword)
+        .join(', ');
       strengths.push(`Strong technical match for ${topSkills}`);
     }
 
-    // Experience match
     const expMatches = matchedKeywords.filter((k) => k.category === 'experience');
     if (expMatches.length > 0) {
       strengths.push('Experience level aligns with job requirements');
     }
 
-    // High confidence matches
     const highConfidence = matchedKeywords.filter((k) => k.confidence >= 0.9);
     if (highConfidence.length >= 2) {
       strengths.push('Multiple keywords found in relevant sections');
@@ -719,23 +598,19 @@ export class KeywordsService {
   ): string[] {
     const weaknesses: string[] = [];
 
-    // Critical missing technical skills
-    const criticalMissing = missingKeywords
-      .filter((k) => k.category === 'technical' && (k.frequency || 0) >= 2);
+    const criticalMissing = missingKeywords.filter(
+      (k) => k.category === 'technical' && (k.frequency || 0) >= 2,
+    );
     if (criticalMissing.length > 0) {
-      const skills = criticalMissing.slice(0, 2).map((k) => k.keyword).join(', ');
+      const skills = criticalMissing
+        .slice(0, 2)
+        .map((k) => k.keyword)
+        .join(', ');
       weaknesses.push(`Missing frequently mentioned skills: ${skills}`);
     }
 
-    // Low category coverage
     if (categoryStats.technical.total > 0 && categoryStats.technical.matched === 0) {
       weaknesses.push('No technical skill matches found');
-    }
-
-    // Missing certifications
-    const missingCerts = missingKeywords.filter((k) => k.category === 'certification');
-    if (missingCerts.length > 0) {
-      weaknesses.push('Missing required or preferred certifications');
     }
 
     return weaknesses.slice(0, 3);

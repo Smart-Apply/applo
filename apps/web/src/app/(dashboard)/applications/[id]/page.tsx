@@ -33,6 +33,7 @@ import { PDFPreviewModal } from '@/components/pdf/pdf-preview-modal';
 import { handleDownload, handleZipDownload, generateFilename } from '@/lib/pdf-utils';
 import { EditableTitle } from '@/components/applications/editable-title';
 import { StatusDropdown } from '@/components/applications/status-dropdown';
+import { ATSAnalysisPanel } from '@/components/applications/ats-analysis-panel';
 
 // Local alias for generation status
 type ApplicationStatus = ApplicationGenerationStatus;
@@ -700,6 +701,9 @@ export default function ApplicationDetailPage() {
           onExpired={handleExpiredUrl}
         />
       )}
+
+      {/* ATS Analysis Panel */}
+      <ATSAnalysisPanel applicationId={applicationId} />
 
       {/* Application Info */}
       <Card>

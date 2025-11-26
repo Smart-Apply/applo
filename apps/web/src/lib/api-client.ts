@@ -16,6 +16,7 @@ import type {
   SessionsResponse,
   Template,
   TemplateWithContent,
+  ApplicationKeywordsResponse,
 } from '@/types';
 import { ApiError, NetworkError, shouldRetry, getRetryDelay, isPermanentAuthFailure } from './errors';
 import { getCsrfToken, refreshCsrfToken } from './csrf';
@@ -382,6 +383,15 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify({ title }),
       }),
+
+    // ATS Keywords endpoints
+    analyzeKeywords: (id: string) =>
+      apiRequest<ApplicationKeywordsResponse>(`/applications/${id}/analyze-keywords`, {
+        method: 'POST',
+      }),
+
+    getKeywordsAnalysis: (id: string) =>
+      apiRequest<ApplicationKeywordsResponse>(`/applications/${id}/keywords`),
   },
 
   // Sessions

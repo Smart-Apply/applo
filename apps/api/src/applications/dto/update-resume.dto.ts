@@ -104,6 +104,17 @@ class CertificationEntryDto {
   date?: string;
 }
 
+class LanguageEntryDto {
+  @ApiProperty({ example: 'Deutsch' })
+  @IsString()
+  name: string;
+
+  @ApiPropertyOptional({ example: 'Muttersprache' })
+  @IsOptional()
+  @IsString()
+  level?: string;
+}
+
 class ResumeTemplateDto {
   @ApiProperty({ example: 'Arianit Sheholli' })
   @IsString()
@@ -170,6 +181,13 @@ class ResumeTemplateDto {
   @ValidateNested({ each: true })
   @Type(() => CertificationEntryDto)
   certifications?: CertificationEntryDto[];
+
+  @ApiPropertyOptional({ type: [LanguageEntryDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => LanguageEntryDto)
+  languages?: LanguageEntryDto[];
 }
 
 export class UpdateResumeDto {

@@ -177,5 +177,11 @@ export function normalizeResumeForSave(resume: ResumeData): ResumeData {
         date: trim(certification.date),
       }))
       .filter((certification) => certification.name && certification.issuer),
+    languages: resume.languages
+      ?.map((language) => ({
+        name: language.name.trim(),
+        level: trim(language.level),
+      }))
+      .filter((language) => language.name),
   };
 }
