@@ -49,6 +49,12 @@ const envSchema = z.object({
   AZURE_AI_FOUNDRY_CL_WRITER_ENDPOINT: z.string().optional(),
   AZURE_AI_FOUNDRY_API_KEY: z.string().optional(),
 
+  // Azure AI Foundry Agent IDs
+  PROJECT_ENDPOINT: z.string().optional(),
+  ATS_AGENT_ID: z.string().optional(),
+  CV_WRITER_AGENT_ID: z.string().optional(),
+  CL_WRITER_AGENT_ID: z.string().optional(),
+
   // Hugging Face
   HUGGINGFACE_API_KEY: z.string().optional(),
   HUGGINGFACE_MODEL: z.string().default('meta-llama/Llama-2-7b-chat-hf'),

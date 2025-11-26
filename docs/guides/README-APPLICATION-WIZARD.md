@@ -13,12 +13,14 @@ The ApplicationWizard component implements a 3-step flow:
 ## Features
 
 ### Step Indicators
+
 - Visual progress bar with icons
 - Active step highlighting
 - Completed step checkmarks
 - Responsive design for mobile and desktop
 
 ### Step 1: Profile Selection
+
 - Displays user profile summary
 - Shows skills with badges
 - Lists recent experiences
@@ -27,6 +29,7 @@ The ApplicationWizard component implements a 3-step flow:
 - Link to profile edit page for quick fixes
 
 ### Step 2: Job Selection
+
 - Lists all saved job postings
 - Visual selection with checkmarks
 - Displays job title, company, and location
@@ -34,6 +37,7 @@ The ApplicationWizard component implements a 3-step flow:
 - **Validation**: Requires job selection before proceeding
 
 ### Step 3: Review & Generate
+
 - Shows profile summary with top 5 skills
 - Displays selected job posting details
 - Information box explaining what happens next
@@ -48,7 +52,7 @@ The ApplicationWizard component implements a 3-step flow:
 
 ## Component Structure
 
-```
+``` plaintext
 ApplicationWizard
 ├── Step Indicator (Progress Bar)
 ├── Step Content
@@ -86,6 +90,7 @@ export default function NewApplicationPage() {
 ## API Integration
 
 The wizard integrates with the following hooks:
+
 - `useProfile()` - Fetches user profile data
 - `useJobPostings()` - Fetches saved job postings
 - `useCreateApplication()` - Creates new application
@@ -115,17 +120,20 @@ POST /api/v1/applications
 ## Validation Rules
 
 ### Profile Step
+
 - ✅ Must have summary text
 - ✅ Must have at least 1 skill
 - ⚠️ Shows warning if incomplete
 - ⚠️ Prevents navigation to next step
 
 ### Job Step
+
 - ✅ Must select exactly 1 job posting
 - ⚠️ Shows error toast if none selected
 - ⚠️ Prevents navigation to review step
 
 ### Review Step
+
 - ✅ Final confirmation before submission
 - ✅ Shows loading state during API call
 - ✅ Redirects on success
@@ -156,10 +164,12 @@ POST /api/v1/applications
 ## State Management
 
 The wizard maintains internal state for:
+
 - `currentStep`: Current active step
 - `selectedJobId`: Selected job posting ID
 
 External state (via hooks):
+
 - Profile data (React Query)
 - Job postings list (React Query)
 - Application creation mutation (React Query)

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,6 +8,86 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2 } from 'lucide-react';
 import type { ResumeData } from '@/types';
+
+/**
+ * Textarea that converts comma-separated text to array only on blur
+ */
+function CommaSeparatedTextarea({
+  value,
+  onChange,
+  disabled,
+  placeholder,
+  rows,
+}: {
+  value: string[];
+  onChange: (value: string[]) => void;
+  disabled?: boolean;
+  placeholder?: string;
+  rows?: number;
+}) {
+  const [text, setText] = useState(() => value.join(', '));
+
+  // Sync external changes (e.g., initial load)
+  useEffect(() => {
+    setText(value.join(', '));
+  }, [value]);
+
+  const handleBlur = useCallback(() => {
+    const parsed = text.split(',').map((s) => s.trim()).filter(Boolean);
+    onChange(parsed);
+  }, [text, onChange]);
+
+  return (
+    <Textarea
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={handleBlur}
+      disabled={disabled}
+      placeholder={placeholder}
+      rows={rows}
+    />
+  );
+}
+
+/**
+ * Textarea that converts newline-separated text to array only on blur
+ */
+function NewlineSeparatedTextarea({
+  value,
+  onChange,
+  disabled,
+  placeholder,
+  rows,
+}: {
+  value: string[];
+  onChange: (value: string[]) => void;
+  disabled?: boolean;
+  placeholder?: string;
+  rows?: number;
+}) {
+  const [text, setText] = useState(() => value.join('\n'));
+
+  // Sync external changes (e.g., initial load)
+  useEffect(() => {
+    setText(value.join('\n'));
+  }, [value]);
+
+  const handleBlur = useCallback(() => {
+    const parsed = text.split('\n').map((s) => s.trim()).filter(Boolean);
+    onChange(parsed);
+  }, [text, onChange]);
+
+  return (
+    <Textarea
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={handleBlur}
+      disabled={disabled}
+      placeholder={placeholder}
+      rows={rows}
+    />
+  );
+}
 
 interface ResumeFormEditorProps {
   value: ResumeData;
@@ -240,15 +321,9 @@ export function ResumeFormEditor({ value, onChange, disabled }: ResumeFormEditor
                     disabled={disabled}
                     placeholder="Kategorie (z.B. Programming Language, Framework)"
                   />
-                  <Textarea
-                    value={category.skills.join(', ')}
-                    onChange={(e) =>
-                      updateSkillCategory(
-                        index,
-                        category.type,
-                        e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
-                      )
-                    }
+                  <CommaSeparatedTextarea
+                    value={category.skills}
+                    onChange={(skills) => updateSkillCategory(index, category.type, skills)}
                     disabled={disabled}
                     placeholder="Skills durch Komma trennen (z.B. TypeScript, React, Node.js)"
                     rows={2}
@@ -320,15 +395,9 @@ export function ResumeFormEditor({ value, onChange, disabled }: ResumeFormEditor
                       placeholder="Zeitraum (z.B. Jan 2020 - Dez 2023)"
                     />
                   </div>
-                  <Textarea
-                    value={(exp.achievements || []).join('\n')}
-                    onChange={(e) =>
-                      updateExperience(
-                        index,
-                        'achievements',
-                        e.target.value.split('\n').filter(Boolean)
-                      )
-                    }
+                  <NewlineSeparatedTextarea
+                    value={exp.achievements || []}
+                    onChange={(achievements) => updateExperience(index, 'achievements', achievements)}
                     disabled={disabled}
                     placeholder="Erfolge & Aufgaben (eine pro Zeile)"
                     rows={4}
@@ -396,15 +465,9 @@ export function ResumeFormEditor({ value, onChange, disabled }: ResumeFormEditor
                     placeholder="Beschreibung"
                     rows={2}
                   />
-                  <Textarea
-                    value={(project.highlights || []).join('\n')}
-                    onChange={(e) =>
-                      updateProject(
-                        index,
-                        'highlights',
-                        e.target.value.split('\n').filter(Boolean)
-                      )
-                    }
+                  <NewlineSeparatedTextarea
+                    value={project.highlights || []}
+                    onChange={(highlights) => updateProject(index, 'highlights', highlights)}
                     disabled={disabled}
                     placeholder="Highlights (eine pro Zeile)"
                     rows={3}

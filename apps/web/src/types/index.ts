@@ -306,3 +306,74 @@ export interface ErrorResponse {
   error?: string;
   statusCode: number;
 }
+
+// ATS Keywords Types
+export interface ATSKeywords {
+  technicalSkills: string[];
+  softSkills: string[];
+  responsibilityKeywords: string[];
+  requirementKeywords: string[];
+  toolsAndTechnologies: string[];
+  industryKeywords: string[];
+  senioritySignals: string[];
+  miscKeywords: string[];
+}
+
+export type KeywordCategory = 
+  | 'technical' 
+  | 'soft' 
+  | 'responsibility' 
+  | 'requirement' 
+  | 'tool' 
+  | 'industry' 
+  | 'seniority' 
+  | 'misc';
+
+export interface KeywordMatch {
+  keyword: string;
+  category: KeywordCategory;
+  found: boolean;
+  usedIn?: string[];
+  confidence: number;
+}
+
+export interface CategoryScores {
+  technical: number;
+  soft: number;
+  experience: number;
+  industry: number;
+}
+
+export interface MatchAnalysis {
+  overallScore: number;
+  categoryScores: CategoryScores;
+  suggestions: string[];
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export interface ApplicationKeywordsResponse {
+  applicationId: string;
+  keywords: ATSKeywords;
+  matchAnalysis: MatchAnalysis;
+  matchedKeywords: KeywordMatch[];
+  missingKeywords: KeywordMatch[];
+  analyzedAt: string;
+}
+
+export type PipelineStage = 
+  | 'pending' 
+  | 'extracting-keywords' 
+  | 'generating-cv' 
+  | 'generating-cl' 
+  | 'finalizing' 
+  | 'complete' 
+  | 'failed';
+
+export interface PipelineStatus {
+  stage: PipelineStage;
+  progress: number;
+  message: string;
+  timestamp: string;
+  error?: string;
+}

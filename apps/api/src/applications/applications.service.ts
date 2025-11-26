@@ -15,12 +15,14 @@ import { StorageService } from '../storage/storage.service';
 import { JobType } from '../jobs/interfaces/queue.interface';
 import { LLMService } from '../llm/llm.service';
 import { TitleGeneratorService } from './title-generator.service';
+import { KeywordsService } from '../keywords/keywords.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
 import { ApplicationStatusResponseDto } from './dto/application-status-response.dto';
 import { UpdateResumeDto } from './dto/update-resume.dto';
 import { CoverLetterDto } from './dto/cover-letter.dto';
+import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
 import { buildResumeTemplateData, ProfileWithRelations } from './resume-template.util';
 import { sanitizeRichText } from '../common/services/html-sanitizer';
 
@@ -34,6 +36,7 @@ export class ApplicationsService {
     private readonly storageService: StorageService,
     private readonly llmService: LLMService,
     private readonly titleGenerator: TitleGeneratorService,
+    private readonly keywordsService: KeywordsService,
   ) {}
 
   private async getProfileWithRelations(userId: string): Promise<ProfileWithRelations> {
@@ -764,5 +767,381 @@ export class ApplicationsService {
         return shouldContinue;
       }, true),
     );
+  }
+
+  /**
+   * Get keywords analysis for an application
+   * Returns cached analysis if available, or triggers new analysis
+   */
+  async getKeywordsAnalysis(
+    userId: string,
+    applicationId: string,
+  ): Promise<ApplicationKeywordsResponseDto> {
+    const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    if (!application.jobPosting) {
+      throw new BadRequestException('Application has no associated job posting');
+    }
+
+    // Check if we have cached keywords analysis
+    if (application.keywordsData) {
+      try {
+        const cached = JSON.parse(application.keywordsData as string);
+        return {
+          applicationId,
+          keywords: cached.keywords,
+          matchAnalysis: cached.matchAnalysis,
+          matchedKeywords: cached.matchedKeywords || [],
+          missingKeywords: cached.missingKeywords || [],
+          analyzedAt: cached.analyzedAt ? new Date(cached.analyzedAt) : new Date(),
+        };
+      } catch {
+        this.logger.warn(`Failed to parse cached keywords for application ${applicationId}`);
+      }
+    }
+
+    // No cached data, trigger new analysis
+    return this.analyzeKeywords(userId, applicationId);
+  }
+
+  /**
+   * Analyze keywords for an application using ATS Agent
+   */
+  async analyzeKeywords(
+    userId: string,
+    applicationId: string,
+  ): Promise<ApplicationKeywordsResponseDto> {
+    const application = await this.prisma.application.findFirst({
+      where: { id: applicationId, userId },
+      include: { jobPosting: true },
+    });
+
+    if (!application) {
+      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+    }
+
+    if (!application.jobPosting) {
+      throw new BadRequestException('Application has no associated job posting');
+    }
+
+    const jobPosting = application.jobPosting;
+
+    // Extract keywords using ATS Agent
+    const keywords = await this.keywordsService.extractKeywords({
+      title: jobPosting.title,
+      company: jobPosting.company,
+      location: jobPosting.location || undefined,
+      description: jobPosting.description || undefined,
+      requirements: jobPosting.requirements,
+      responsibilities: jobPosting.responsibilities,
+      niceToHave: jobPosting.niceToHave,
+      rawText: jobPosting.rawText || undefined,
+    });
+
+    // Extract keywords from application's resume (not profile!)
+    // This allows ATS score to reflect edits made in the application
+    const resumeKeywords = this.extractResumeKeywords(application.resumeText);
+
+    // Fallback to profile if no resume exists yet
+    let candidateKeywords: Set<string>;
+    if (resumeKeywords.size > 0) {
+      candidateKeywords = resumeKeywords;
+      this.logger.debug(`Using resume keywords for matching (${resumeKeywords.size} keywords)`);
+    } else {
+      const profile = await this.getProfileWithRelations(userId);
+      candidateKeywords = this.extractProfileKeywords(profile);
+      this.logger.debug(`Using profile keywords for matching (${candidateKeywords.size} keywords)`);
+    }
+
+    // Perform matching
+    const { matchedKeywords, missingKeywords } = this.matchKeywords(keywords, candidateKeywords);
+
+    // Calculate match analysis
+    const matchAnalysis = this.calculateMatchAnalysis(matchedKeywords, missingKeywords, keywords);
+
+    // Cache the results
+    const analysisData = {
+      keywords,
+      matchAnalysis,
+      matchedKeywords,
+      missingKeywords,
+      analyzedAt: new Date(),
+    };
+
+    await this.prisma.application.update({
+      where: { id: applicationId },
+      data: { keywordsData: JSON.stringify(analysisData) },
+    });
+
+    this.logger.log(
+      `Keywords analysis complete for application ${applicationId}: ${matchAnalysis.overallScore}% match`,
+    );
+
+    return {
+      applicationId,
+      keywords,
+      matchAnalysis,
+      matchedKeywords,
+      missingKeywords,
+      analyzedAt: new Date(),
+    };
+  }
+
+  /**
+   * Extract keywords from profile for matching
+   */
+  private extractProfileKeywords(profile: ProfileWithRelations): Set<string> {
+    const keywords = new Set<string>();
+
+    // Skills
+    profile.skills.forEach((s) => keywords.add(s.name.toLowerCase()));
+
+    // Experience titles and descriptions
+    profile.experiences.forEach((e) => {
+      e.title.toLowerCase().split(/\s+/).forEach((w) => keywords.add(w));
+      if (e.description) {
+        e.description.toLowerCase().split(/\s+/).forEach((w) => {
+          if (w.length > 3) keywords.add(w);
+        });
+      }
+    });
+
+    // Projects and technologies
+    profile.projects.forEach((p) => {
+      p.technologies.forEach((t) => keywords.add(t.toLowerCase()));
+    });
+
+    // Certificates
+    profile.certificates.forEach((c) => {
+      c.name.toLowerCase().split(/\s+/).forEach((w) => keywords.add(w));
+    });
+
+    return keywords;
+  }
+
+  /**
+   * Extract keywords from application's saved resume JSON
+   * This is used to match against the edited resume, not the profile
+   */
+  private extractResumeKeywords(resumeText: string | null): Set<string> {
+    const keywords = new Set<string>();
+
+    if (!resumeText) {
+      return keywords;
+    }
+
+    try {
+      const resume = JSON.parse(resumeText);
+
+      // Summary - extract meaningful words
+      if (resume.summary) {
+        resume.summary.toLowerCase().split(/\s+/).forEach((w: string) => {
+          if (w.length > 3) keywords.add(w.replace(/[^a-zA-ZäöüÄÖÜß]/g, ''));
+        });
+      }
+
+      // Skills from all categories
+      if (resume.skillCategories && Array.isArray(resume.skillCategories)) {
+        resume.skillCategories.forEach((category: { skills?: string[] }) => {
+          if (category.skills && Array.isArray(category.skills)) {
+            category.skills.forEach((skill: string) => {
+              keywords.add(skill.toLowerCase().trim());
+            });
+          }
+        });
+      }
+
+      // Experience titles and achievements
+      if (resume.experiences && Array.isArray(resume.experiences)) {
+        resume.experiences.forEach((exp: { title?: string; company?: string; achievements?: string[] }) => {
+          if (exp.title) {
+            exp.title.toLowerCase().split(/\s+/).forEach((w: string) => keywords.add(w));
+          }
+          if (exp.achievements && Array.isArray(exp.achievements)) {
+            exp.achievements.forEach((achievement: string) => {
+              achievement.toLowerCase().split(/\s+/).forEach((w: string) => {
+                if (w.length > 3) keywords.add(w.replace(/[^a-zA-ZäöüÄÖÜß]/g, ''));
+              });
+            });
+          }
+        });
+      }
+
+      // Projects and highlights
+      if (resume.projects && Array.isArray(resume.projects)) {
+        resume.projects.forEach((project: { name?: string; description?: string; highlights?: string[] }) => {
+          if (project.name) {
+            project.name.toLowerCase().split(/\s+/).forEach((w: string) => keywords.add(w));
+          }
+          if (project.description) {
+            project.description.toLowerCase().split(/\s+/).forEach((w: string) => {
+              if (w.length > 3) keywords.add(w.replace(/[^a-zA-ZäöüÄÖÜß]/g, ''));
+            });
+          }
+          if (project.highlights && Array.isArray(project.highlights)) {
+            project.highlights.forEach((h: string) => {
+              h.toLowerCase().split(/\s+/).forEach((w: string) => {
+                if (w.length > 3) keywords.add(w.replace(/[^a-zA-ZäöüÄÖÜß]/g, ''));
+              });
+            });
+          }
+        });
+      }
+
+      // Certifications
+      if (resume.certifications && Array.isArray(resume.certifications)) {
+        resume.certifications.forEach((cert: { name?: string; issuer?: string }) => {
+          if (cert.name) {
+            cert.name.toLowerCase().split(/\s+/).forEach((w: string) => keywords.add(w));
+          }
+        });
+      }
+
+      // Education
+      if (resume.education && Array.isArray(resume.education)) {
+        resume.education.forEach((edu: { degree?: string; fieldOfStudy?: string }) => {
+          if (edu.degree) {
+            edu.degree.toLowerCase().split(/\s+/).forEach((w: string) => keywords.add(w));
+          }
+          if (edu.fieldOfStudy) {
+            edu.fieldOfStudy.toLowerCase().split(/\s+/).forEach((w: string) => keywords.add(w));
+          }
+        });
+      }
+
+      // Languages
+      if (resume.languages && Array.isArray(resume.languages)) {
+        resume.languages.forEach((lang: { name?: string }) => {
+          if (lang.name) {
+            keywords.add(lang.name.toLowerCase());
+          }
+        });
+      }
+
+      // Filter out empty strings and very short words
+      const filtered = new Set<string>();
+      keywords.forEach((k) => {
+        if (k && k.length > 1) {
+          filtered.add(k);
+        }
+      });
+
+      return filtered;
+    } catch (error) {
+      this.logger.warn('Failed to parse resume text for keyword extraction', error as Error);
+      return keywords;
+    }
+  }
+
+  /**
+   * Match extracted keywords against profile
+   */
+  private matchKeywords(
+    keywords: any,
+    profileKeywords: Set<string>,
+  ): { matchedKeywords: any[]; missingKeywords: any[] } {
+    const matched: any[] = [];
+    const missing: any[] = [];
+
+    const checkKeyword = (keyword: string, category: string) => {
+      const normalized = keyword.toLowerCase();
+      const found = profileKeywords.has(normalized) ||
+        [...profileKeywords].some((pk) => pk.includes(normalized) || normalized.includes(pk));
+
+      const match = {
+        keyword,
+        category,
+        found,
+        confidence: found ? 0.85 : 0,
+        usedIn: found ? ['profile'] : [],
+      };
+
+      if (found) {
+        matched.push(match);
+      } else {
+        missing.push(match);
+      }
+    };
+
+    // Check all keyword categories
+    keywords.technicalSkills?.forEach((k: string) => checkKeyword(k, 'technical'));
+    keywords.softSkills?.forEach((k: string) => checkKeyword(k, 'soft'));
+    keywords.toolsAndTechnologies?.forEach((k: string) => checkKeyword(k, 'tool'));
+    keywords.industryKeywords?.forEach((k: string) => checkKeyword(k, 'industry'));
+    keywords.senioritySignals?.forEach((k: string) => checkKeyword(k, 'seniority'));
+    keywords.requirementKeywords?.forEach((k: string) => checkKeyword(k, 'requirement'));
+
+    return { matchedKeywords: matched, missingKeywords: missing };
+  }
+
+  /**
+   * Calculate match analysis from matched/missing keywords
+   */
+  private calculateMatchAnalysis(
+    matchedKeywords: any[],
+    missingKeywords: any[],
+    keywords: any,
+  ): any {
+    const totalTechnical = (keywords.technicalSkills?.length || 0) + (keywords.toolsAndTechnologies?.length || 0);
+    const totalSoft = keywords.softSkills?.length || 0;
+    const totalExperience = (keywords.senioritySignals?.length || 0) + (keywords.requirementKeywords?.length || 0);
+    const totalIndustry = keywords.industryKeywords?.length || 0;
+
+    const matchedTechnical = matchedKeywords.filter((k) => k.category === 'technical' || k.category === 'tool').length;
+    const matchedSoft = matchedKeywords.filter((k) => k.category === 'soft').length;
+    const matchedExperience = matchedKeywords.filter((k) => k.category === 'seniority' || k.category === 'requirement').length;
+    const matchedIndustry = matchedKeywords.filter((k) => k.category === 'industry').length;
+
+    const technicalScore = totalTechnical > 0 ? Math.round((matchedTechnical / totalTechnical) * 100) : 0;
+    const softScore = totalSoft > 0 ? Math.round((matchedSoft / totalSoft) * 100) : 0;
+    const experienceScore = totalExperience > 0 ? Math.round((matchedExperience / totalExperience) * 100) : 0;
+    const industryScore = totalIndustry > 0 ? Math.round((matchedIndustry / totalIndustry) * 100) : 0;
+
+    // Weighted average
+    const weights = { technical: 0.4, soft: 0.2, experience: 0.25, industry: 0.15 };
+    const overallScore = Math.round(
+      technicalScore * weights.technical +
+      softScore * weights.soft +
+      experienceScore * weights.experience +
+      industryScore * weights.industry,
+    );
+
+    const suggestions: string[] = [];
+    const strengths: string[] = [];
+    const weaknesses: string[] = [];
+
+    if (technicalScore >= 70) {
+      strengths.push('Strong technical skill alignment');
+    } else if (technicalScore < 50) {
+      const missingTech = missingKeywords
+        .filter((k) => k.category === 'technical' || k.category === 'tool')
+        .slice(0, 3)
+        .map((k) => k.keyword);
+      if (missingTech.length > 0) {
+        suggestions.push(`Consider adding: ${missingTech.join(', ')}`);
+        weaknesses.push('Missing key technical skills');
+      }
+    }
+
+    if (softScore >= 70) {
+      strengths.push('Good soft skills match');
+    }
+
+    if (overallScore >= 75) {
+      strengths.push('Profile well-aligned with job requirements');
+    }
+
+    return {
+      overallScore,
+      categoryScores: {
+        technical: technicalScore,
+        soft: softScore,
+        experience: experienceScore,
+        industry: industryScore,
+      },
+      suggestions,
+      strengths,
+      weaknesses,
+    };
   }
 }

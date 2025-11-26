@@ -12,6 +12,7 @@ import { CenteredLoader } from '@/components/shared/loading';
 import { ResumeFormEditor } from '@/components/applications/resume-form-editor';
 import { CoverLetterEditor } from '@/components/applications/cover-letter-editor';
 import { ResumeTemplatePreview, CoverLetterTemplatePreview } from '@/components/applications/template-preview';
+import { ATSScoreSidebar } from '@/components/applications/ats-score-sidebar';
 import { useApplication, useExportApplication, useUpdateApplicationResume, useUpsertCoverLetter } from '@/hooks/use-applications';
 import { parseResumeDraft, normalizeResumeForSave } from '@/lib/resume';
 import type { ResumeData } from '@/types';
@@ -60,6 +61,9 @@ export default function ApplicationResumeEditorPage() {
   const [coverVersion, setCoverVersion] = useState<string | null>(null);
   const [instructions, setInstructions] = useState('');
   const [activeTab, setActiveTab] = useState<'resume' | 'cover-letter'>('resume');
+  
+  // Trigger ATS score refresh after saving
+  const [atsRefreshTrigger, setAtsRefreshTrigger] = useState(0);
 
   const upsertCoverLetter = useUpsertCoverLetter(applicationId);
   const exportApplication = useExportApplication(applicationId);
@@ -144,6 +148,8 @@ export default function ApplicationResumeEditorPage() {
       setResumeVersion(JSON.stringify(normalized));
       setResumeInitialized(true);
       toast.success('Lebenslauf gespeichert');
+      // Trigger ATS score refresh after saving
+      setAtsRefreshTrigger((prev) => prev + 1);
     } catch (err) {
       const message = (err as Error).message;
       toast.error('Lebenslauf konnte nicht gespeichert werden', {
@@ -337,7 +343,7 @@ export default function ApplicationResumeEditorPage() {
             </Button>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,580px)]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(380px,580px)_280px] lg:grid-cols-[minmax(0,1fr)_minmax(380px,580px)]">
             {/* Form Editor - Scrollable independently */}
             <div className="h-[calc(100vh-280px)] overflow-y-auto pr-4">
               <div className="space-y-6">
@@ -370,6 +376,22 @@ export default function ApplicationResumeEditorPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* ATS Score Sidebar - Only visible on xl screens */}
+            <div className="hidden xl:block sticky top-6 h-[calc(100vh-280px)] overflow-y-auto">
+              <ATSScoreSidebar
+                applicationId={applicationId}
+                refreshTrigger={atsRefreshTrigger}
+              />
+            </div>
+          </div>
+
+          {/* ATS Score Card - Visible on smaller screens (below xl) */}
+          <div className="xl:hidden">
+            <ATSScoreSidebar
+              applicationId={applicationId}
+              refreshTrigger={atsRefreshTrigger}
+            />
           </div>
         </TabsContent>
 
