@@ -35,6 +35,12 @@ export interface ResumeTemplateData {
   projects?: Project[];
   education?: Education[];
   certifications?: Certification[];
+  languages?: ResumeLanguage[];
+}
+
+export interface ResumeLanguage {
+  name: string;
+  level?: string;
 }
 
 export interface SkillCategory {

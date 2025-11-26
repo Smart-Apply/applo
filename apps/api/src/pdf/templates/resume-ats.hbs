@@ -136,5 +136,15 @@
     {{/each}}
   </div>
   {{/if}}
+
+  {{! Languages }}
+  {{#if languages}}
+  <div class="section no-break">
+    <h2>Languages</h2>
+    <p class="languages-list">
+      {{#each languages}}{{name}}{{#if level}} ({{level}}){{/if}}{{#unless @last}}, {{/unless}}{{/each}}
+    </p>
+  </div>
+  {{/if}}
 </body>
 </html>

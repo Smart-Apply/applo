@@ -37,39 +37,17 @@
     {{date}}
   </div>
 
-  <!-- Recipient -->
-  {{#if recipientName}}
-  <div class="recipient-section">
-    <strong>{{recipientName}}</strong>
-    {{#if companyName}}
-    {{companyName}}
-    {{/if}}
-    {{#if companyAddress}}
-    <br>{{companyAddress}}
-    {{/if}}
-  </div>
-  {{/if}}
-
-  <!-- Salutation -->
-  <div class="salutation">
-    Dear {{#if recipientName}}{{recipientName}}{{else}}Hiring Manager{{/if}},
-  </div>
-
-  <!-- Body Content -->
+  <!-- Body Content - includes salutation, body, and closing from LLM -->
   <div class="body-content">
     {{{content}}}
   </div>
 
-  <!-- Closing -->
-  <div class="closing">
-    <p>{{closingPhrase}}</p>
-    <div class="signature">
-      <strong>{{candidateName}}</strong>
-    </div>
+  <!-- Signature -->
+  <div class="signature">
+    <strong>{{candidateName}}</strong>
   </div>
 
   {{#if footer}}
-  <!-- Optional Footer -->
   <div class="footer">
     {{{footer}}}
   </div>
