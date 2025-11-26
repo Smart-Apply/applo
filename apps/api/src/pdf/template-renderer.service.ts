@@ -79,23 +79,25 @@ export class TemplateRendererService {
   private stylesDir: string;
 
   constructor(private readonly templatesService?: TemplatesService) {
-    // Use process.cwd() which always points to the project root where npm start was run
-    const projectRoot = process.cwd();
-
-    // Check if source templates exist (development mode)
-    const sourceTemplatesDir = path.join(projectRoot, 'apps', 'api', 'src', 'pdf', 'templates');
-
-    // For production, templates are in dist/templates
-    const distTemplatesDir = path.join(projectRoot, 'dist', 'templates');
-    try {
-      fsSync.accessSync(path.join(sourceTemplatesDir, 'cover-letter.hbs'));
-      this.templatesDir = sourceTemplatesDir;
-      this.stylesDir = path.join(projectRoot, 'apps', 'api', 'src', 'pdf', 'styles');
-      this.logger.log('Running in DEVELOPMENT mode');
-    } catch {
-      this.templatesDir = distTemplatesDir;
-      this.stylesDir = path.join(projectRoot, 'dist', 'styles');
-      this.logger.log('Running in PRODUCTION mode');
+    // Determine if running from source or dist
+    // __dirname when running from dist: /Users/.../dist/apps/api/pdf
+    // __dirname when running from src (ts-node): /Users/.../apps/api/src/pdf
+    
+    const isDevelopment = __dirname.includes('/src/');
+    
+    if (isDevelopment) {
+      // Development mode (ts-node): Use source templates
+      this.templatesDir = path.join(__dirname, 'templates');
+      this.stylesDir = path.join(__dirname, 'styles');
+      this.logger.log('Running in DEVELOPMENT mode (from source)');
+    } else {
+      // Production/compiled mode: Navigate from dist to source
+      // __dirname is like: /Users/.../dist/apps/api/pdf
+      // We need to go: ../../../../apps/api/src/pdf/templates
+      const projectRoot = path.join(__dirname, '../../../..');
+      this.templatesDir = path.join(projectRoot, 'apps/api/src/pdf/templates');
+      this.stylesDir = path.join(projectRoot, 'apps/api/src/pdf/styles');
+      this.logger.log('Running in COMPILED mode (using source templates)');
     }
 
     this.logger.log(`Templates directory: ${this.templatesDir}`);

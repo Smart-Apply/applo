@@ -167,18 +167,18 @@ async function bootstrap() {
     .setTitle('Smart Apply API')
     .setDescription(
       'AI-powered job application assistant API\n\n' +
-      '## Features\n' +
-      '- 🔐 JWT Authentication (HttpOnly cookies)\n' +
-      '- 👤 User Profile Management\n' +
-      '- 📝 Job Postings (Manual & Parser)\n' +
-      '- 📄 Application Generation (LLM → PDF)\n' +
-      '- 🎨 Custom Templates (Cover Letter & Resume)\n' +
-      '- 📊 Real-time Status Updates (SSE)\n' +
-      '- 🔒 Security Features (CSRF, Rate Limiting, XSS Protection)\n\n' +
-      '## Authentication\n' +
-      'This API uses JWT tokens stored in HttpOnly cookies for authentication. ' +
-      'After logging in via `/auth/login`, the access token is automatically included in subsequent requests. ' +
-      'Use the "Authorize" button to test endpoints in this UI.',
+        '## Features\n' +
+        '- 🔐 JWT Authentication (HttpOnly cookies)\n' +
+        '- 👤 User Profile Management\n' +
+        '- 📝 Job Postings (Manual & Parser)\n' +
+        '- 📄 Application Generation (LLM → PDF)\n' +
+        '- 🎨 Custom Templates (Cover Letter & Resume)\n' +
+        '- 📊 Real-time Status Updates (SSE)\n' +
+        '- 🔒 Security Features (CSRF, Rate Limiting, XSS Protection)\n\n' +
+        '## Authentication\n' +
+        'This API uses JWT tokens stored in HttpOnly cookies for authentication. ' +
+        'After logging in via `/auth/login`, the access token is automatically included in subsequent requests. ' +
+        'Use the "Authorize" button to test endpoints in this UI.',
     )
     .setVersion('1.0')
     .setContact(

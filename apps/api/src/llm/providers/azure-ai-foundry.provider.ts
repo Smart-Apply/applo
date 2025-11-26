@@ -15,7 +15,7 @@ import { LLMProvider, GenerateOptions } from '../llm.interface';
 export class AzureAIFoundryProvider implements LLMProvider, OnModuleInit {
   private readonly logger = new Logger(AzureAIFoundryProvider.name);
   private agentsClient: AgentsClient | null = null;
-  
+
   private readonly projectEndpoint: string;
   private readonly cvWriterAgentId: string;
   private readonly clWriterAgentId: string;
@@ -150,7 +150,7 @@ export class AzureAIFoundryProvider implements LLMProvider, OnModuleInit {
 
         // Extract text content
         const content = this.extractContentFromMessage(assistantMessage);
-        
+
         this.logger.log(`Successfully generated content with ${agentName}`);
         return content;
       } finally {
@@ -247,36 +247,44 @@ export class AzureAIFoundryProvider implements LLMProvider, OnModuleInit {
 
   /**
    * Detect if the prompt is for resume generation
+   * Checks the prompt header first for explicit "Resume Generation" or "CV Generation"
+   * Falls back to keyword detection if no clear header is found
    */
   private isResumePrompt(prompt: string): boolean {
-    const resumeKeywords = [
-      'resume',
-      'cv',
-      'curriculum vitae',
-      'work experience',
-      'professional experience',
-      'education',
-      'skills',
-      'qualifications',
-    ];
-
     const lowerPrompt = prompt.toLowerCase();
+    const firstLine = lowerPrompt.split('\n')[0];
+
+    // Check for explicit resume/CV generation prompt header
+    if (firstLine.includes('resume generation') || firstLine.includes('cv generation')) {
+      return true;
+    }
+
+    // Fallback: keyword detection (avoid false positives)
+    const resumeKeywords = ['curriculum vitae', 'ats-optimized resume', 'professional resume'];
+
     return resumeKeywords.some((keyword) => lowerPrompt.includes(keyword));
   }
 
   /**
    * Detect if the prompt is for cover letter generation
+   * Checks the prompt header first for explicit "Cover Letter Generation"
+   * Falls back to keyword detection if no clear header is found
    */
   private isCoverLetterPrompt(prompt: string): boolean {
-    const coverLetterKeywords = [
-      'cover letter',
-      'motivation letter',
-      'application letter',
-      'dear hiring manager',
-      'i am writing to express',
-    ];
-
     const lowerPrompt = prompt.toLowerCase();
+    const firstLine = lowerPrompt.split('\n')[0];
+
+    // Check for explicit cover letter generation prompt header
+    if (
+      firstLine.includes('cover letter generation') ||
+      firstLine.includes('motivation letter generation')
+    ) {
+      return true;
+    }
+
+    // Fallback: keyword detection
+    const coverLetterKeywords = ['cover letter', 'motivation letter', 'application letter'];
+
     return coverLetterKeywords.some((keyword) => lowerPrompt.includes(keyword));
   }
 }
