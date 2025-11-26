@@ -117,17 +117,24 @@ export default function ApplicationDetailPage() {
     
     // Only connect SSE if status is PENDING or GENERATING
     if (application.status !== 'PENDING' && application.status !== 'GENERATING') {
+      console.log(`[SSE] Skipping SSE for application ${applicationId} - status is ${application.status}`);
       return;
     }
 
+    console.log(`[SSE] Connecting to stream for application ${applicationId}`);
     const eventSource = new EventSource(
       `${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/stream`,
       { withCredentials: true }
     );
 
+    eventSource.onopen = () => {
+      console.log(`[SSE] Connection opened for application ${applicationId}`);
+    };
+
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log(`[SSE] Received update for application ${applicationId}:`, data);
         
         // Update query cache with new status
         queryClient.setQueryData(['applications', applicationId], (old: any) => {
@@ -137,23 +144,26 @@ export default function ApplicationDetailPage() {
 
         // If status changed to READY or FAILED, refetch full details
         if (data.status === 'READY' || data.status === 'FAILED') {
+          console.log(`[SSE] Final status reached (${data.status}), closing connection and refetching`);
           refetch();
           eventSource.close();
         }
       } catch (err) {
-        console.error('SSE parse error:', err);
+        console.error('[SSE] Parse error:', err);
       }
     };
 
     eventSource.onerror = (err) => {
-      console.error('SSE error:', err);
+      console.error('[SSE] Connection error:', err);
+      console.log('[SSE] ReadyState:', eventSource.readyState);
       eventSource.close();
       
-      // Fallback to single refetch on error
-      setTimeout(() => refetch(), 5000);
+      // No automatic refetch - SSE will be retried on next page load
+      // This prevents rate limit issues from constant retries
     };
 
     return () => {
+      console.log(`[SSE] Cleanup - closing connection for application ${applicationId}`);
       eventSource.close();
     };
   }, [isAuthenticated, applicationId, application?.status, queryClient, refetch]);
@@ -548,33 +558,39 @@ export default function ApplicationDetailPage() {
                   Bewerbungsunterlagen
                 </CardTitle>
                 <CardDescription>
-                  Deine generierten Bewerbungsunterlagen sind bereit zum Download
+                  {files?.coverLetter && files?.resume
+                    ? 'Deine generierten Bewerbungsunterlagen sind bereit zum Download'
+                    : files?.resume
+                    ? 'Dein Lebenslauf ist bereit zum Download'
+                    : 'Deine Bewerbungsunterlagen werden geladen...'}
                 </CardDescription>
               </div>
-              {files?.coverLetter && files?.resume && (
+              {files?.resume && (
                 <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     onClick={() => router.push(`/applications/${application.id}/edit`)}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
-                    Bearbeiten
+                    {files?.coverLetter ? 'Bearbeiten' : 'Lebenslauf bearbeiten'}
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleDownloadBoth}
-                    loading={isDownloading.both}
-                  >
-                    <Package className="mr-2 h-4 w-4" />
-                    Beide als ZIP
-                  </Button>
+                  {files?.coverLetter && (
+                    <Button
+                      variant="outline"
+                      onClick={handleDownloadBoth}
+                      loading={isDownloading.both}
+                    >
+                      <Package className="mr-2 h-4 w-4" />
+                      Beide als ZIP
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2">
-              {files?.coverLetter && (
+              {files?.coverLetter ? (
                 <div className="rounded-lg border p-4 space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
@@ -607,6 +623,21 @@ export default function ApplicationDetailPage() {
                       <Download className="mr-2 h-4 w-4" />
                       Download
                     </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-gray-300 p-4 space-y-3 bg-gray-50">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <FileText className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-500">Anschreiben</p>
+                      <p className="text-sm text-gray-400">Nicht vorhanden</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Bei dieser Bewerbung wurde kein Anschreiben generiert
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

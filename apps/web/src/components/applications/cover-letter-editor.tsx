@@ -54,24 +54,34 @@ export function CoverLetterEditor({ value, onChange, disabled }: CoverLetterEdit
       editorProps: {
         attributes: {
           class:
-            'prose prose-slate mx-auto min-h-[320px] max-w-none px-4 py-3 text-sm focus:outline-none',
+            'tiptap-editor min-h-[320px] max-w-none px-4 py-3 text-sm focus:outline-none',
         },
       },
       onUpdate({ editor }) {
         onChange(editor.getHTML());
       },
     },
-    [value, disabled],
+    [], // Remove value from dependencies - we handle updates via useEffect
   );
 
+  // Sync value changes to editor
   useEffect(() => {
     if (!editor) return;
+    
     const current = editor.getHTML();
+    
+    // Only update if the value actually changed and is different from current
     if (value && value !== current) {
-      editor.commands.setContent(value, { emitUpdate: false });
+      // Use queueMicrotask to avoid React state update conflicts
+      queueMicrotask(() => {
+        editor.commands.setContent(value, { emitUpdate: false });
+      });
     }
+    
     if (!value && current !== '<p></p>') {
-      editor.commands.clearContent();
+      queueMicrotask(() => {
+        editor.commands.clearContent();
+      });
     }
   }, [value, editor]);
 

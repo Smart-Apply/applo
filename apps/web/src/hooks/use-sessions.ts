@@ -12,9 +12,9 @@ export function useSessions() {
   return useQuery<SessionsResponse>({
     queryKey: ['sessions'],
     queryFn: () => api.sessions.list(),
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // DISABLED: Prevents rate limiting from tab switching
   });
 }
 

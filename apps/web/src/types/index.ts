@@ -209,7 +209,7 @@ export interface TemplateWithContent extends Template {
 export type ApplicationGenerationStatus = 'PENDING' | 'GENERATING' | 'READY' | 'FAILED';
 
 // Application Tracking Status (user-facing)
-export type ApplicationTrackingStatus = 'APPLIED' | 'INTERVIEW' | 'ACCEPTED' | 'REJECTED';
+export type ApplicationTrackingStatus = 'CREATED' | 'APPLIED' | 'INTERVIEW' | 'ACCEPTED' | 'REJECTED';
 
 // Legacy alias for backward compatibility
 export type ApplicationStatus = ApplicationGenerationStatus;

@@ -23,11 +23,11 @@ export class PdfService implements OnModuleDestroy {
   private readonly logger = new Logger(PdfService.name);
   private browser: puppeteer.Browser | null = null;
   private browserInitPromise: Promise<puppeteer.Browser> | null = null;
-  private templateRenderer: TemplateRendererService;
 
-  constructor(private configService: ConfigService) {
-    this.templateRenderer = new TemplateRendererService();
-  }
+  constructor(
+    private configService: ConfigService,
+    private templateRenderer: TemplateRendererService,
+  ) {}
 
   async onModuleDestroy() {
     if (this.browser) {

@@ -32,16 +32,19 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, user, clearAuth } = useAuthStore();
+  const { isAuthenticated, user, clearAuth, hasHydrated } = useAuthStore();
   
   // Auto-collapse sidebar in edit mode
   const isEditMode = pathname?.includes('/edit');
 
   useEffect(() => {
+    // Wait for auth store to hydrate from localStorage before checking auth
+    if (!hasHydrated) return;
+    
     if (!isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, hasHydrated, router]);
 
   const handleLogout = async () => {
     try {
@@ -57,8 +60,16 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
-  if (!isAuthenticated) {
-    return null; // Or a loading spinner
+  // Show loading while hydrating or if not authenticated (redirect pending)
+  if (!hasHydrated || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-500">Laden...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

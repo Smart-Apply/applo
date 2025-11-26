@@ -9,17 +9,18 @@ import type { Application, ResumeData } from '@/types';
  */
 export function useApplications(options?: {
   refetchInterval?: UseQueryOptions<Application[]>['refetchInterval'];
+  includeJobPosting?: boolean;
 }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   return useQuery<Application[]>({
-    queryKey: ['applications'],
-    queryFn: () => api.applications.list(),
+    queryKey: ['applications', { includeJobPosting: options?.includeJobPosting }],
+    queryFn: () => api.applications.list({ includeJobPosting: options?.includeJobPosting }),
     enabled: isAuthenticated,
     refetchInterval: options?.refetchInterval,
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep unused data in cache for 10 minutes
+    refetchOnWindowFocus: false, // DISABLED: Prevents rate limiting from tab switching
   });
 }
 
@@ -33,9 +34,9 @@ export function useApplication(id: string) {
     queryKey: ['applications', id],
     queryFn: () => api.applications.getById(id),
     enabled: isAuthenticated && !!id,
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep unused data in cache for 10 minutes
+    refetchOnWindowFocus: false, // DISABLED: Prevents rate limiting from tab switching
   });
 }
 
@@ -65,7 +66,12 @@ export function useCreateApplicationWithGeneration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { jobPostingId: string }) =>
+    mutationFn: (data: { 
+      jobPostingId: string; 
+      coverLetterTemplateId?: string; 
+      resumeTemplateId?: string; 
+      generateCoverLetter?: boolean;
+    }) =>
       api.applications.createWithGeneration(data),
     onSuccess: (application) => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
