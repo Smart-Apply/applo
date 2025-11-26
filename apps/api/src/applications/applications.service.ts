@@ -232,7 +232,7 @@ export class ApplicationsService {
         userId,
         jobPostingId: dto.jobPostingId,
         title,
-        applicationStatus: ApplicationTrackingStatus.APPLIED,
+        applicationStatus: ApplicationTrackingStatus.CREATED,
         status: ApplicationStatus.PENDING,
         notes: dto.notes,
         resumeText: JSON.stringify(resumeTemplate),
@@ -254,6 +254,9 @@ export class ApplicationsService {
   ): Promise<ApplicationResponseDto> {
     this.logger.log(`Creating application with immediate generation for user ${userId}`);
 
+    // Check if cover letter should be generated (default: true)
+    const shouldGenerateCoverLetter = dto.generateCoverLetter !== false;
+
     // 1. Verify job posting exists
     const jobPosting = await this.prisma.jobPosting.findUnique({
       where: { id: dto.jobPostingId },
@@ -270,11 +273,16 @@ export class ApplicationsService {
     // 3. Generate title for application
     const title = await this.titleGenerator.generateTitle(jobPosting);
 
-    // 4. Generate cover letter with LLM
-    this.logger.log('Generating cover letter with LLM');
-    const coverLetterContext = this.buildCoverLetterContext(resumeTemplate, jobPosting);
-    const coverLetterContent = await this.llmService.generateCoverLetter(coverLetterContext);
-    const sanitizedCoverLetter = this.sanitizeCoverLetter(coverLetterContent);
+    // 4. Generate cover letter with LLM (only if requested)
+    let sanitizedCoverLetter: string | null = null;
+    if (shouldGenerateCoverLetter) {
+      this.logger.log('Generating cover letter with LLM');
+      const coverLetterContext = this.buildCoverLetterContext(resumeTemplate, jobPosting);
+      const coverLetterContent = await this.llmService.generateCoverLetter(coverLetterContext);
+      sanitizedCoverLetter = this.sanitizeCoverLetter(coverLetterContent);
+    } else {
+      this.logger.log('Skipping cover letter generation (user opted out)');
+    }
 
     // 5. Create application with generated content (status: READY for editing)
     const application = await this.prisma.application.create({
@@ -282,12 +290,12 @@ export class ApplicationsService {
         userId,
         jobPostingId: dto.jobPostingId,
         title,
-        applicationStatus: ApplicationTrackingStatus.APPLIED,
+        applicationStatus: ApplicationTrackingStatus.CREATED,
         status: ApplicationStatus.READY,
         notes: dto.notes,
         resumeText: JSON.stringify(resumeTemplate),
         coverLetterText: sanitizedCoverLetter,
-        coverLetterTemplateId: dto.coverLetterTemplateId,
+        coverLetterTemplateId: shouldGenerateCoverLetter ? dto.coverLetterTemplateId : null,
         resumeTemplateId: dto.resumeTemplateId,
       },
       include: {
@@ -295,7 +303,7 @@ export class ApplicationsService {
       },
     });
 
-    this.logger.log(`Application ${application.id} created with generated content`);
+    this.logger.log(`Application ${application.id} created with generated content (coverLetter: ${shouldGenerateCoverLetter})`);
     return this.mapToResponseDto(application);
   }
 
@@ -378,10 +386,10 @@ export class ApplicationsService {
       throw new BadRequestException('Lebenslauf fehlt. Bitte speichere deine Änderungen.');
     }
 
+    // Cover letter is optional - user may have opted out during creation
+    // Log whether we're exporting with or without cover letter
     if (!application.coverLetterText) {
-      throw new BadRequestException(
-        'Anschreiben fehlt. Bitte generiere oder speichere ein Anschreiben.',
-      );
+      this.logger.log(`Exporting application ${applicationId} without cover letter (user opted out)`);
     }
 
     await this.cleanupGeneratedFiles(application);
@@ -674,6 +682,8 @@ export class ApplicationsService {
       resumeText: application.resumeText,
       coverLetterFileKey: application.coverLetterFileKey,
       resumeFileKey: application.resumeFileKey,
+      coverLetterTemplateId: application.coverLetterTemplateId,
+      resumeTemplateId: application.resumeTemplateId,
       errorMessage: application.errorMessage,
       createdAt: application.createdAt,
       updatedAt: application.updatedAt,

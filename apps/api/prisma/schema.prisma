@@ -193,7 +193,7 @@ model Application {
   title         String? // e.g., "Senior Frontend Developer @ Google"
   
   // Application Status Tracking (user-facing)
-  applicationStatus   ApplicationTrackingStatus @default(APPLIED)
+  applicationStatus   ApplicationTrackingStatus @default(CREATED)
   statusUpdatedAt     DateTime?
   
   // PDF Generation Status (system-facing)
@@ -230,6 +230,7 @@ model Application {
 
 // User-facing application tracking status
 enum ApplicationTrackingStatus {
+  CREATED      // Bewerbung erstellt (initial status)
   APPLIED      // Beworben
   INTERVIEW    // Interview
   ACCEPTED     // Angenommen

@@ -45,14 +45,14 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { setAuth, isAuthenticated } = useAuthStore();
+  const { setAuth, isAuthenticated, hasHydrated } = useAuthStore();
 
-  // Redirect to dashboard if already authenticated
+  // Redirect to dashboard if already authenticated (wait for hydration first)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (hasHydrated && isAuthenticated) {
       router.push('/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, hasHydrated, router]);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),

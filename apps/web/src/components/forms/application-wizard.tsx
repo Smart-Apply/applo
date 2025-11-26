@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { CenteredLoader } from '@/components/shared/loading';
 import { useProfile } from '@/hooks/use-profile';
 import { useJobPostings } from '@/hooks/use-job-postings';
@@ -60,6 +62,7 @@ export function ApplicationWizard() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedCoverLetterTemplateId, setSelectedCoverLetterTemplateId] = useState<string | null>(null);
   const [selectedResumeTemplateId, setSelectedResumeTemplateId] = useState<string | null>(null);
+  const [generateCoverLetter, setGenerateCoverLetter] = useState<boolean>(true);
   
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: jobPostings, isLoading: jobPostingsLoading } = useJobPostings();
@@ -111,8 +114,9 @@ export function ApplicationWizard() {
       // Create application with immediate LLM generation
       const application = await createApplication.mutateAsync({
         jobPostingId: selectedJobId,
-        coverLetterTemplateId: selectedCoverLetterTemplateId || undefined,
+        coverLetterTemplateId: generateCoverLetter ? (selectedCoverLetterTemplateId || undefined) : undefined,
         resumeTemplateId: selectedResumeTemplateId || undefined,
+        generateCoverLetter,
       });
       
       // Success! Redirect to edit page
@@ -226,6 +230,8 @@ export function ApplicationWizard() {
             selectedResumeTemplateId={selectedResumeTemplateId}
             onSelectCoverLetterTemplate={setSelectedCoverLetterTemplateId}
             onSelectResumeTemplate={setSelectedResumeTemplateId}
+            generateCoverLetter={generateCoverLetter}
+            onGenerateCoverLetterChange={setGenerateCoverLetter}
           />
         )}
         
@@ -235,6 +241,7 @@ export function ApplicationWizard() {
             job={selectedJob}
             coverLetterTemplateId={selectedCoverLetterTemplateId}
             resumeTemplateId={selectedResumeTemplateId}
+            generateCoverLetter={generateCoverLetter}
           />
         )}
       </div>
@@ -444,6 +451,8 @@ interface TemplateStepProps {
   selectedResumeTemplateId: string | null;
   onSelectCoverLetterTemplate: (id: string) => void;
   onSelectResumeTemplate: (id: string) => void;
+  generateCoverLetter: boolean;
+  onGenerateCoverLetterChange: (value: boolean) => void;
 }
 
 function TemplateStep({
@@ -451,6 +460,8 @@ function TemplateStep({
   selectedResumeTemplateId,
   onSelectCoverLetterTemplate,
   onSelectResumeTemplate,
+  generateCoverLetter,
+  onGenerateCoverLetterChange,
 }: TemplateStepProps) {
   const { data: coverLetterTemplates, isLoading: coverLetterLoading } = useCoverLetterTemplates();
   const { data: resumeTemplates, isLoading: resumeLoading } = useResumeTemplates();
@@ -494,12 +505,42 @@ function TemplateStep({
 
   return (
     <div className="space-y-6">
+      {/* Cover Letter Generation Option */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Generierungsoptionen</CardTitle>
+          <CardDescription>
+            Wähle aus, was generiert werden soll
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-3">
+            <Checkbox
+              id="generateCoverLetter"
+              checked={generateCoverLetter}
+              onCheckedChange={(checked) => onGenerateCoverLetterChange(checked === true)}
+            />
+            <div className="grid gap-1.5 leading-none">
+              <Label
+                htmlFor="generateCoverLetter"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                Anschreiben generieren
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Deaktiviere diese Option, wenn du nur einen Lebenslauf erstellen möchtest
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Resume Templates - Only visible section */}
       <div>
         <div className="mb-4">
           <h3 className="text-lg font-semibold">Vorlagenauswahl</h3>
           <p className="text-sm text-gray-600 mt-1">
-            Wähle eine Vorlage für deinen Lebenslauf. Das passende Anschreiben-Design wird automatisch ausgewählt.
+            Wähle eine Vorlage für deinen Lebenslauf.{generateCoverLetter && ' Das passende Anschreiben-Design wird automatisch ausgewählt.'}
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -515,7 +556,7 @@ function TemplateStep({
       </div>
 
       {/* Info box showing selected templates */}
-      {selectedResumeTemplateId && selectedCoverLetterTemplateId && (
+      {selectedResumeTemplateId && (
         <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-4">
           <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
           <div className="flex-1">
@@ -525,11 +566,16 @@ function TemplateStep({
                 <span className="font-medium">Lebenslauf:</span>{' '}
                 {resumeTemplates?.find((t) => t.id === selectedResumeTemplateId)?.name}
               </p>
-              <p>
-                <span className="font-medium">Anschreiben:</span>{' '}
-                {coverLetterTemplates?.find((t) => t.id === selectedCoverLetterTemplateId)?.name}{' '}
-                <span className="text-xs opacity-75">(automatisch zugeordnet)</span>
-              </p>
+              {generateCoverLetter && selectedCoverLetterTemplateId && (
+                <p>
+                  <span className="font-medium">Anschreiben:</span>{' '}
+                  {coverLetterTemplates?.find((t) => t.id === selectedCoverLetterTemplateId)?.name}{' '}
+                  <span className="text-xs opacity-75">(automatisch zugeordnet)</span>
+                </p>
+              )}
+              {!generateCoverLetter && (
+                <p className="text-blue-600 italic">Anschreiben wird nicht generiert</p>
+              )}
             </div>
           </div>
         </div>
@@ -543,9 +589,10 @@ interface ReviewStepProps {
   job?: JobPosting;
   coverLetterTemplateId: string | null;
   resumeTemplateId: string | null;
+  generateCoverLetter: boolean;
 }
 
-function ReviewStep({ profile, job, coverLetterTemplateId, resumeTemplateId }: ReviewStepProps) {
+function ReviewStep({ profile, job, coverLetterTemplateId, resumeTemplateId, generateCoverLetter }: ReviewStepProps) {
   const { data: coverLetterTemplates } = useCoverLetterTemplates();
   const { data: resumeTemplates } = useResumeTemplates();
   
@@ -604,22 +651,35 @@ function ReviewStep({ profile, job, coverLetterTemplateId, resumeTemplateId }: R
           <div>
             <h3 className="font-medium text-sm text-gray-500 mb-2">AUSGEWÄHLTE VORLAGEN</h3>
             <div className="space-y-2">
-              <div className="rounded-lg border bg-gray-50 p-3">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-gray-600" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Anschreiben:</p>
-                    <p className="text-sm text-gray-600">
-                      {selectedCoverLetterTemplate?.name || 'Standard Vorlage'}
-                    </p>
+              {generateCoverLetter && (
+                <div className="rounded-lg border bg-gray-50 p-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-gray-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Anschreiben:</p>
+                      <p className="text-sm text-gray-600">
+                        {selectedCoverLetterTemplate?.name || 'Standard Vorlage'}
+                      </p>
+                    </div>
+                    {selectedCoverLetterTemplate && (
+                      <Badge variant="secondary" className="text-xs">
+                        {selectedCoverLetterTemplate.category}
+                      </Badge>
+                    )}
                   </div>
-                  {selectedCoverLetterTemplate && (
-                    <Badge variant="secondary" className="text-xs">
-                      {selectedCoverLetterTemplate.category}
-                    </Badge>
-                  )}
                 </div>
-              </div>
+              )}
+              {!generateCoverLetter && (
+                <div className="rounded-lg border border-gray-200 bg-gray-100 p-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-gray-400" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-500">Anschreiben:</p>
+                      <p className="text-sm text-gray-400 italic">Wird nicht generiert</p>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="rounded-lg border bg-gray-50 p-3">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-gray-600" />
@@ -645,9 +705,11 @@ function ReviewStep({ profile, job, coverLetterTemplateId, resumeTemplateId }: R
             <div>
               <p className="font-medium text-blue-900">Was passiert als nächstes?</p>
               <p className="text-sm text-blue-700 mt-1">
-                Basierend auf deinem Profil und der ausgewählten Stellenanzeige werden
-                automatisch ein individuelles Anschreiben und ein angepasster Lebenslauf
-                erstellt. Dies kann einige Minuten dauern.
+                Basierend auf deinem Profil und der ausgewählten Stellenanzeige wird
+                {generateCoverLetter 
+                  ? ' automatisch ein individuelles Anschreiben und ein angepasster Lebenslauf erstellt'
+                  : ' automatisch ein angepasster Lebenslauf erstellt'
+                }. Dies kann einige Minuten dauern.
               </p>
             </div>
           </div>

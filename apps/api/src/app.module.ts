@@ -26,25 +26,47 @@ import { CSPViolationController } from './common/csp/csp-violation.controller';
     AuditLoggerModule,
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        throttlers: [
-          {
-            name: 'default',
+      useFactory: (config: ConfigService) => {
+        const isDevelopment = config.nodeEnv === 'development';
+        const developmentLimit = 10000000; // 10 million requests per minute in development
+        const defaultLimit = isDevelopment ? developmentLimit : config.rateLimitMax;
+        
+        // Log rate limit configuration for debugging
+        console.log('[ThrottlerModule] Configuration:', {
+          environment: config.nodeEnv,
+          isDevelopment,
+          default: {
             ttl: config.rateLimitTtl,
-            limit: config.rateLimitMax,
+            limit: defaultLimit,
+            configLimit: config.rateLimitMax,
           },
-          {
-            name: 'auth',
+          auth: {
             ttl: config.rateLimitAuthTtl,
             limit: config.rateLimitAuthMax,
           },
-          {
-            name: 'health-check',
-            ttl: 60000, // 60 seconds
-            limit: 600, // 600 requests per minute (10/sec) - very generous for polling
-          },
-        ],
-      }),
+        });
+
+        return {
+          throttlers: [
+            {
+              name: 'default',
+              ttl: config.rateLimitTtl,
+              // In development, effectively disable rate limiting with very high limit
+              limit: defaultLimit,
+            },
+            {
+              name: 'auth',
+              ttl: config.rateLimitAuthTtl,
+              limit: config.rateLimitAuthMax,
+            },
+            {
+              name: 'health-check',
+              ttl: 60000, // 60 seconds
+              limit: 600, // 600 requests per minute (10/sec) - very generous for polling
+            },
+          ],
+        };
+      },
     }),
     AuthModule,
     StorageModule,

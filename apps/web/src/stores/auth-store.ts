@@ -14,11 +14,13 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  hasHydrated: boolean;
   
   // Actions
   setAuth: (user: User) => void;
   clearAuth: () => void;
   updateUser: (user: Partial<User>) => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,6 +28,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
+      hasHydrated: false,
 
       setAuth: (user) =>
         set({
@@ -50,9 +53,14 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           user: state.user ? { ...state.user, ...userData } : null,
         })),
+
+      setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
     {
       name: 'smart-apply-auth',
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

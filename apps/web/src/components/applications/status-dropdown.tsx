@@ -18,6 +18,11 @@ const STATUS_CONFIG: Record<
   ApplicationTrackingStatus,
   { label: string; color: string; emoji: string }
 > = {
+  CREATED: {
+    label: 'Erstellt',
+    emoji: '📋',
+    color: 'bg-gray-100 text-gray-800 hover:bg-gray-100',
+  },
   APPLIED: {
     label: 'Beworben',
     emoji: '📝',

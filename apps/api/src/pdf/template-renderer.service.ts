@@ -78,7 +78,7 @@ export class TemplateRendererService {
   private templatesDir: string;
   private stylesDir: string;
 
-  constructor(private readonly templatesService?: TemplatesService) {
+  constructor(private readonly templatesService: TemplatesService) {
     // Determine if running from source or dist
     // __dirname when running from dist: /Users/.../dist/apps/api/pdf
     // __dirname when running from src (ts-node): /Users/.../apps/api/src/pdf
@@ -151,22 +151,20 @@ export class TemplateRendererService {
       let template: string;
       let css: string;
 
-      if (templateId && this.templatesService) {
-        // Load template from database
+      if (templateId) {
+        // Load specific template from database
+        this.logger.log(`Loading cover letter template: ${templateId}`);
         const dbTemplate = await this.templatesService.findOne(templateId);
         template = dbTemplate.htmlTemplate;
         css = dbTemplate.cssStyles;
-      } else if (this.templatesService) {
+      } else {
         // Load default template from database
+        this.logger.log('Loading default cover letter template');
         const defaultTemplate = await this.templatesService.findDefault(
           TemplateType.COVER_LETTER,
         );
         template = defaultTemplate.htmlTemplate;
         css = defaultTemplate.cssStyles;
-      } else {
-        // Fallback to file system templates (for backward compatibility)
-        template = await this.loadTemplate('cover-letter.hbs');
-        css = await this.loadStyles(['base.css', 'cover-letter.css']);
       }
 
       // Set default values
@@ -200,20 +198,18 @@ export class TemplateRendererService {
       let template: string;
       let css: string;
 
-      if (templateId && this.templatesService) {
-        // Load template from database
+      if (templateId) {
+        // Load specific template from database
+        this.logger.log(`Loading resume template: ${templateId}`);
         const dbTemplate = await this.templatesService.findOne(templateId);
         template = dbTemplate.htmlTemplate;
         css = dbTemplate.cssStyles;
-      } else if (this.templatesService) {
+      } else {
         // Load default template from database
+        this.logger.log('Loading default resume template');
         const defaultTemplate = await this.templatesService.findDefault(TemplateType.RESUME);
         template = defaultTemplate.htmlTemplate;
         css = defaultTemplate.cssStyles;
-      } else {
-        // Fallback to file system templates (for backward compatibility)
-        template = await this.loadTemplate('resume.hbs');
-        css = await this.loadStyles(['base.css', 'resume.css']);
       }
 
       const compiledTemplate = Handlebars.compile(template);

@@ -289,20 +289,20 @@ export const api = {
 
   // Applications
   applications: {
-    create: (data: { jobPostingId: string; coverLetterTemplateId?: string; resumeTemplateId?: string }) =>
+    create: (data: { jobPostingId: string; coverLetterTemplateId?: string; resumeTemplateId?: string; generateCoverLetter?: boolean }) =>
       apiRequest<Application>('/applications', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
 
-    createWithGeneration: (data: { jobPostingId: string; coverLetterTemplateId?: string; resumeTemplateId?: string }) =>
+    createWithGeneration: (data: { jobPostingId: string; coverLetterTemplateId?: string; resumeTemplateId?: string; generateCoverLetter?: boolean }) =>
       apiRequest<Application>('/applications/create-with-generation', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
 
-    list: () =>
-      apiRequest<Application[]>('/applications'),
+    list: (options?: { includeJobPosting?: boolean }) =>
+      apiRequest<Application[]>(`/applications${options?.includeJobPosting ? '?includeJobPosting=true' : ''}`),
 
     getById: (id: string) =>
       apiRequest<Application>(`/applications/${id}`),

@@ -44,8 +44,10 @@ export class ApplicationProcessor {
         throw new Error('Resume not provided');
       }
 
-      if (!application.coverLetterText) {
-        throw new Error('Cover letter not provided');
+      // Cover letter is optional - user may have opted out during creation
+      const hasCoverLetter = !!application.coverLetterText;
+      if (!hasCoverLetter) {
+        this.logger.log(`Application ${applicationId} has no cover letter - generating resume only`);
       }
 
       let resumeData: ResumeTemplateData;
@@ -59,33 +61,42 @@ export class ApplicationProcessor {
       // 2. Convert to PDFs
       this.logger.log('Converting HTML templates to PDFs...');
 
-      const coverLetterTemplateData = {
-        candidateName: resumeData.candidateName,
-        email: resumeData.email || application.user.email,
-        phone: resumeData.phone,
-        linkedin: resumeData.linkedin,
-        github: resumeData.github,
-        location: resumeData.location,
-        companyName: application.jobPosting.company,
-        content: application.coverLetterText,
-      };
+      let coverLetterKey: string | null = null;
+      
+      // Only generate cover letter PDF if content exists
+      if (hasCoverLetter) {
+        const coverLetterTemplateData = {
+          candidateName: resumeData.candidateName,
+          email: resumeData.email || application.user.email,
+          phone: resumeData.phone,
+          linkedin: resumeData.linkedin,
+          github: resumeData.github,
+          location: resumeData.location,
+          companyName: application.jobPosting.company,
+          content: application.coverLetterText!, // Non-null assertion: hasCoverLetter ensures this is defined
+        };
 
-      const coverLetterPdf = await this.pdfService.generateCoverLetterPDF(
-        coverLetterTemplateData,
-        application.coverLetterTemplateId || undefined,
-      );
+        const coverLetterPdf = await this.pdfService.generateCoverLetterPDF(
+          coverLetterTemplateData,
+          application.coverLetterTemplateId || undefined,
+        );
+
+        // Upload cover letter to storage
+        coverLetterKey = await this.storageService.upload(
+          `applications/${applicationId}/cover-letter.pdf`,
+          coverLetterPdf,
+          'application/pdf',
+        );
+      }
+
+      // Always generate resume PDF
       const resumePdf = await this.pdfService.generateResumePDF(
         resumeData,
         application.resumeTemplateId || undefined,
       );
 
-      // 3. Upload to Storage
+      // 3. Upload resume to Storage
       this.logger.log('Uploading to storage...');
-      const coverLetterKey = await this.storageService.upload(
-        `applications/${applicationId}/cover-letter.pdf`,
-        coverLetterPdf,
-        'application/pdf',
-      );
       const resumeKey = await this.storageService.upload(
         `applications/${applicationId}/resume.pdf`,
         resumePdf,
@@ -102,7 +113,7 @@ export class ApplicationProcessor {
         },
       });
 
-      this.logger.log(`Application ${applicationId} completed successfully`);
+      this.logger.log(`Application ${applicationId} completed successfully (coverLetter: ${hasCoverLetter})`);
     } catch (error) {
       this.logger.error(`Application ${applicationId} failed: ${error.message}`, error.stack);
 

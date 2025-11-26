@@ -4,6 +4,15 @@ import { Reflector } from '@nestjs/core';
 import { THROTTLER_NAME_KEY } from '../decorators/throttle.decorator';
 import { AuditLoggerService } from '../audit-logger';
 
+/**
+ * Custom ThrottlerGuard that:
+ * 1. Skips rate limiting in development (NODE_ENV === 'development')
+ * 2. Supports named throttlers via @UseThrottler('name') decorator
+ * 3. Logs rate limit violations for audit purposes
+ * 
+ * Note: @nestjs/throttler v5 changed the storage API - it only has increment(),
+ * not get(). We rely on the parent class for actual rate limiting logic.
+ */
 @Injectable()
 export class CustomThrottlerGuard extends ThrottlerGuard {
   constructor(
@@ -13,6 +22,62 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
     @Inject(AuditLoggerService) private readonly auditLogger: AuditLoggerService,
   ) {
     super(options, storageService, reflector);
+  }
+
+  /**
+   * Override canActivate to skip rate limiting in development
+   */
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Skip rate limiting entirely in development for easier testing
+    if (process.env.NODE_ENV === 'development') {
+      return true;
+    }
+
+    const response = context.switchToHttp().getResponse();
+    const request = context.switchToHttp().getRequest();
+
+    try {
+      // Call parent implementation which handles the actual rate limiting
+      const result = await super.canActivate(context);
+      
+      // Add basic rate limit headers on success
+      const throttlers = await this.getThrottlers(context);
+      if (throttlers.length > 0) {
+        const throttler = throttlers[0];
+        response.setHeader('X-RateLimit-Limit', throttler.limit);
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof ThrottlerException) {
+        const throttlers = await this.getThrottlers(context);
+        if (throttlers.length > 0) {
+          const throttler = throttlers[0];
+          const tracker = await this.getTracker(request);
+          const user = request.user;
+
+          // Log rate limit violation
+          console.warn('[RateLimitGuard] Rate limit exceeded:', {
+            endpoint: request.url,
+            method: request.method,
+            throttlerName: throttler.name,
+            limit: throttler.limit,
+            ttl: `${throttler.ttl}ms`,
+            tracker,
+            userId: user?.userId || 'anonymous',
+          });
+
+          this.auditLogger.logRateLimitViolation(user?.id, request.url, request);
+
+          // Add rate limit headers
+          response.setHeader('X-RateLimit-Limit', throttler.limit);
+          response.setHeader('X-RateLimit-Remaining', '0');
+          response.setHeader('Retry-After', Math.ceil(throttler.ttl / 1000));
+        }
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -42,66 +107,6 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
   }
 
   /**
-   * Override canActivate to add rate limit headers to response
-   */
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const response = context.switchToHttp().getResponse();
-    const request = context.switchToHttp().getRequest();
-
-    try {
-      // Get the throttlers that will be applied
-      const throttlers = await this.getThrottlers(context);
-
-      // Call parent implementation
-      const result = await super.canActivate(context);
-
-      // Add rate limit headers after successful check
-      if (throttlers.length > 0) {
-        const throttler = throttlers[0];
-        const tracker = await this.getTracker(request);
-        const key = this.generateKey(context, tracker, throttler.name || 'default');
-
-        // Get the current state from storage
-        try {
-          const record = await this.storageService.get(key);
-          if (record) {
-            const limit = throttler.limit;
-            response.setHeader('X-RateLimit-Limit', limit);
-            response.setHeader('X-RateLimit-Remaining', Math.max(0, limit - record.totalHits));
-            response.setHeader(
-              'X-RateLimit-Reset',
-              new Date(Date.now() + record.timeToExpire).getTime(),
-            );
-          }
-        } catch (e) {
-          // Ignore errors when getting storage state
-        }
-      }
-
-      return result;
-    } catch (error) {
-      // Add headers even on error
-      const throttlers = await this.getThrottlers(context);
-      if (throttlers.length > 0) {
-        const throttler = throttlers[0];
-        response.setHeader('X-RateLimit-Limit', throttler.limit);
-        response.setHeader('X-RateLimit-Remaining', '0');
-
-        if (error instanceof ThrottlerException) {
-          // Log rate limit violation
-          const user = request.user;
-          this.auditLogger.logRateLimitViolation(user?.id, request.url, request);
-          
-          // Add Retry-After header
-          response.setHeader('Retry-After', Math.ceil(throttler.ttl / 1000));
-        }
-      }
-
-      throw error;
-    }
-  }
-
-  /**
    * Get tracker identifier (IP for public routes, user ID for authenticated routes)
    */
   protected async getTracker(req: Record<string, any>): Promise<string> {
@@ -110,7 +115,7 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
       return `user:${req.user.userId}`;
     }
 
-    // For public requests (auth endpoints), use IP address
+    // For public requests, use IP address
     return req.ip || req.connection?.remoteAddress || 'unknown';
   }
 

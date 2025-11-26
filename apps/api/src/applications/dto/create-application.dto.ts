@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 
@@ -26,6 +26,15 @@ export class CreateApplicationDto {
   @IsOptional()
   @IsString()
   resumeTemplateId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Ob ein Anschreiben generiert werden soll',
+    example: true,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  generateCoverLetter?: boolean = true;
 
   @ApiPropertyOptional({
     description: 'Optionale Notizen zur Bewerbung',
