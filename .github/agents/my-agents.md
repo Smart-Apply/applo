@@ -109,14 +109,23 @@ npm run prisma:seed
 
 **All Core Modules Implemented ✅**
 - Auth (JWT + argon2, HttpOnly cookies)
-- Profile (differential updates for nested collections)
-- Job Postings (parse text/URL/file)
+- Profile (differential updates for nested collections including Languages)
+- Job Postings (parse text/URL/file, Azure AI Agent for URL parsing)
 - Applications (LLM → PDF → Storage pipeline)
 - Storage (Disk + Azure Blob providers)
 - LLM (Mock + Azure OpenAI providers)
 - Jobs (In-Memory + Service Bus providers)
-- PDF (Puppeteer)
+- PDF (Puppeteer with ATS-optimized templates)
 - Health (Terminus)
+
+**ATS-Optimized PDF Generation ✅**
+- 4 professional CSS templates (modern-professional, elegant-minimal, tech-modern, executive-classic)
+- Simple HTML structure for ATS parsing
+- No complex layouts, tables, or columns
+- Standard fonts (Arial, system fonts)
+- Languages section with proficiency levels
+- Templates stored in database (`ResumeTemplate` model)
+- Seeded via `npm run prisma:seed:templates`
 
 **Testing:**
 - E2E tests for all modules

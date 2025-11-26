@@ -48,12 +48,12 @@ Deliver a minimal yet production-grade application with:
 
 ## Backend Modules
 - `auth` (JWT authentication with argon2 password hashing)
-- `profile` (CRUD with Skills, Experiences, Education, Certificates, Projects)
+- `profile` (CRUD with Skills, Experiences, Education, Certificates, Projects, Languages)
 - `uploads` (file → Blob in prod)
-- `job-postings` (parse text/URL/file → normalized JobPosting)
+- `job-postings` (parse text/URL/file → normalized JobPosting, Azure AI Agent for URL parsing)
 - `applications` (pipeline orchestration: profile + job → LLM → PDF → Blob)
 - `llm` (Azure OpenAI + Hugging Face + mock providers)
-- `pdf` (Puppeteer + Handlebars templates)
+- `pdf` (Puppeteer + Handlebars templates, ATS-optimized PDFs with selectable templates)
 - `storage` (disk | azure-blob providers)
 - `jobs` (in-memory | service-bus providers)
 - `config` (Zod env schema), `common` (filters/guards/decorators)
@@ -450,16 +450,35 @@ npx shadcn@latest add <component>  # Add new shadcn/ui component
 
 ## Current Status
 
-### Backend (90% Complete) ✅
+### Backend (95% Complete) ✅
 - Authentication with JWT + argon2 ✅
-- Profile CRUD with all relations (Skills, Experiences, Education, Certificates, Projects) ✅
+- Profile CRUD with all relations (Skills, Experiences, Education, Certificates, Projects, Languages) ✅
 - Storage abstraction (Disk + Azure Blob providers) ✅
 - LLM abstraction (Mock + Azure OpenAI + Hugging Face providers) ✅
 - PDF generation (Puppeteer + Handlebars templates) ✅
+- **ATS-optimized PDF generation** with selectable CSS templates ✅
 - Jobs queue (In-Memory + Azure Service Bus providers) ✅
 - Applications pipeline (create → queue → generate → upload → ready) ✅
 - Security (Helmet, CORS, rate limiting, validation) ✅
-- **Remaining:** Job postings parser, File uploads endpoint, Health checks
+- **Remaining:** File uploads endpoint, Health checks
+
+### ATS-Optimized PDF Templates ✅
+- **4 Professional CSS Templates:**
+  - `modern-professional` - Clean, modern design with blue accents
+  - `elegant-minimal` - Minimalist with subtle styling
+  - `tech-modern` - Tech-focused with gradient accents
+  - `executive-classic` - Traditional, serif-based professional look
+- **ATS Compliance:**
+  - Simple, parseable HTML structure
+  - No tables, columns, or complex layouts
+  - Standard fonts (Arial, system fonts)
+  - Plain text skills (comma-separated, no badges)
+  - Clear section headers (H2 tags)
+  - Languages section with proficiency levels
+- **Template Management:**
+  - Templates stored in database (`ResumeTemplate` model)
+  - Seeded via `npm run prisma:seed:templates`
+  - User can select template per application
 
 ### Frontend (35% Complete) 🔄
 - **Implemented ✅**
@@ -497,4 +516,4 @@ npx shadcn@latest add <component>  # Add new shadcn/ui component
   - Version history + manual edit blocks pre-PDF
   - Managed Identity instead of connection strings
   - Prometheus/Grafana via Dapr/ACA add-ons
-  - ATS exports (PDF + JSON)
+  - ATS JSON export format
