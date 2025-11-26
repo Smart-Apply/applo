@@ -23,6 +23,13 @@ export class TitleGeneratorService {
    * Format: "[Job Title] @ [Company]" or similar
    */
   async generateTitle(jobPosting: JobPostingForTitle): Promise<string> {
+    // For MVP, use simple fallback to avoid Azure OpenAI rate limits
+    // TODO: Re-enable LLM title generation when quota is available
+    const fallbackTitle = this.generateFallbackTitle(jobPosting);
+    this.logger.debug(`Using fallback title: ${fallbackTitle}`);
+    return fallbackTitle;
+
+    /* Disabled due to Azure OpenAI rate limits
     const prompt = `Generate a concise application title (max ${APPLICATION_TITLE_MAX_LENGTH} chars) for this job posting.
 
 Job Title: ${jobPosting.title}
@@ -56,6 +63,7 @@ Only return the title, nothing else. Keep it under ${APPLICATION_TITLE_MAX_LENGT
       this.logger.warn(`Title generation failed, using fallback: ${error.message}`);
       return this.generateFallbackTitle(jobPosting);
     }
+    */
   }
 
   /**
