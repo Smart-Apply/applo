@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Shield, Bell, Palette, Globe, Trash2, ChevronRight } from 'lucide-react';
+import { User, Shield, Bell, Palette, Trash2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePreferences } from '@/hooks/use-preferences';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import {
@@ -35,6 +36,7 @@ import {
 export default function SettingsPage() {
   const router = useRouter();
   const { user, clearAuth, updateUser } = useAuthStore();
+  const { preferences, isLoading: prefsLoading, updatePreferences, isUpdating } = usePreferences();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -48,22 +50,18 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Preferences
-  const [language, setLanguage] = useState('de');
-  const [theme, setTheme] = useState('light');
-  const [emailNotifications, setEmailNotifications] = useState(true);
-
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // In a real app, you'd call an API endpoint to update user info
-      // For now, we'll just update the local state
-      updateUser({ firstName, lastName });
+      const response = await api.auth.updateProfile({ firstName, lastName });
+      updateUser(response.user);
       toast.success('Profil erfolgreich aktualisiert');
     } catch (error) {
-      toast.error('Fehler beim Aktualisieren des Profils');
+      console.error('Profile update error:', error);
+      const errorMessage = (error as Error)?.message || 'Fehler beim Aktualisieren des Profils';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -85,13 +83,21 @@ export default function SettingsPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Implement password change API endpoint
-      toast.success('Passwort erfolgreich geändert');
+      const response = await api.auth.changePassword({
+        currentPassword,
+        newPassword,
+      });
+      toast.success(response.message);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      
+      // User has been logged out from all devices, redirect to login
+      clearAuth();
+      router.push('/login');
     } catch (error) {
-      toast.error('Fehler beim Ändern des Passworts');
+      const errorMessage = (error as Error)?.message || 'Fehler beim Ändern des Passworts';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -101,13 +107,13 @@ export default function SettingsPage() {
     setIsDeleting(true);
 
     try {
-      // TODO: Implement account deletion API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await api.auth.deleteAccount();
       toast.success('Account wurde gelöscht');
       clearAuth();
       router.push('/');
     } catch (error) {
-      toast.error('Fehler beim Löschen des Accounts');
+      const errorMessage = (error as Error)?.message || 'Fehler beim Löschen des Accounts';
+      toast.error(errorMessage);
     } finally {
       setIsDeleting(false);
     }
@@ -308,133 +314,199 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Bewerbungs-Updates</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Erhalte Updates zu deinen Bewerbungen
-                  </p>
-                </div>
-                <Button
-                  variant={emailNotifications ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setEmailNotifications(!emailNotifications)}
-                >
-                  {emailNotifications ? 'Aktiviert' : 'Deaktiviert'}
-                </Button>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Neue Stellenanzeigen</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Erhalte Benachrichtigungen über neue Stellenanzeigen
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Deaktiviert
-                </Button>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Marketing-E-Mails</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Erhalte Newsletter und Produktupdates
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Deaktiviert
-                </Button>
-              </div>
+              {prefsLoading ? (
+                <p className="text-sm text-muted-foreground">Laden...</p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Bewerbungs-Updates</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Erhalte Updates zu deinen Bewerbungen
+                      </p>
+                    </div>
+                    <Button
+                      variant={preferences?.applicationUpdates ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={isUpdating}
+                      onClick={() => {
+                        updatePreferences({ applicationUpdates: !preferences?.applicationUpdates });
+                        toast.success('Einstellung aktualisiert');
+                      }}
+                    >
+                      {preferences?.applicationUpdates ? 'Aktiviert' : 'Deaktiviert'}
+                    </Button>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Neue Stellenanzeigen</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Erhalte Benachrichtigungen über neue Stellenanzeigen
+                      </p>
+                    </div>
+                    <Button
+                      variant={preferences?.newJobPostings ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={isUpdating}
+                      onClick={() => {
+                        updatePreferences({ newJobPostings: !preferences?.newJobPostings });
+                        toast.success('Einstellung aktualisiert');
+                      }}
+                    >
+                      {preferences?.newJobPostings ? 'Aktiviert' : 'Deaktiviert'}
+                    </Button>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Marketing-E-Mails</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Erhalte Newsletter und Produktupdates
+                      </p>
+                    </div>
+                    <Button
+                      variant={preferences?.marketingEmails ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={isUpdating}
+                      onClick={() => {
+                        updatePreferences({ marketingEmails: !preferences?.marketingEmails });
+                        toast.success('Einstellung aktualisiert');
+                      }}
+                    >
+                      {preferences?.marketingEmails ? 'Aktiviert' : 'Deaktiviert'}
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Preferences Tab */}
         <TabsContent value="preferences" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sprache & Region</CardTitle>
-              <CardDescription>
-                Wähle deine bevorzugte Sprache und Region
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="language">Sprache</Label>
-                <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger id="language">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="es">Español</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+          {prefsLoading ? (
+            <Card>
+              <CardContent className="py-6">
+                <p className="text-sm text-muted-foreground text-center">Laden...</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sprache & Region</CardTitle>
+                  <CardDescription>
+                    Wähle deine bevorzugte Sprache und Region
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Sprache</Label>
+                    <Select 
+                      value={preferences?.language || 'de'} 
+                      onValueChange={(value) => {
+                        updatePreferences({ language: value });
+                        toast.success('Sprache aktualisiert');
+                      }}
+                      disabled={isUpdating}
+                    >
+                      <SelectTrigger id="language">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="de">Deutsch</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="fr">Français</SelectItem>
+                        <SelectItem value="es">Español</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Design</CardTitle>
-              <CardDescription>
-                Passe das Erscheinungsbild der Anwendung an
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="theme">Theme</Label>
-                <Select value={theme} onValueChange={setTheme}>
-                  <SelectTrigger id="theme">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">Hell</SelectItem>
-                    <SelectItem value="dark">Dunkel</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Design</CardTitle>
+                  <CardDescription>
+                    Passe das Erscheinungsbild der Anwendung an
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="theme">Theme</Label>
+                    <Select 
+                      value={preferences?.theme || 'system'} 
+                      onValueChange={(value) => {
+                        updatePreferences({ theme: value });
+                        toast.success('Theme aktualisiert');
+                      }}
+                      disabled={isUpdating}
+                    >
+                      <SelectTrigger id="theme">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">Hell</SelectItem>
+                        <SelectItem value="dark">Dunkel</SelectItem>
+                        <SelectItem value="system">System</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Datenschutz</CardTitle>
-              <CardDescription>
-                Verwalte deine Datenschutz-Einstellungen
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Profil öffentlich</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Dein Profil kann von anderen gesehen werden
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Deaktiviert
-                </Button>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Analyse-Daten</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Hilf uns, die App zu verbessern
-                  </p>
-                </div>
-                <Button variant="default" size="sm">
-                  Aktiviert
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Datenschutz</CardTitle>
+                  <CardDescription>
+                    Verwalte deine Datenschutz-Einstellungen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Profil öffentlich</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Dein Profil kann von anderen gesehen werden
+                      </p>
+                    </div>
+                    <Button
+                      variant={preferences?.profilePublic ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={isUpdating}
+                      onClick={() => {
+                        updatePreferences({ profilePublic: !preferences?.profilePublic });
+                        toast.success('Einstellung aktualisiert');
+                      }}
+                    >
+                      {preferences?.profilePublic ? 'Aktiviert' : 'Deaktiviert'}
+                    </Button>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Analyse-Daten</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Hilf uns, die App zu verbessern
+                      </p>
+                    </div>
+                    <Button
+                      variant={preferences?.analyticsEnabled ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={isUpdating}
+                      onClick={() => {
+                        updatePreferences({ analyticsEnabled: !preferences?.analyticsEnabled });
+                        toast.success('Einstellung aktualisiert');
+                      }}
+                    >
+                      {preferences?.analyticsEnabled ? 'Aktiviert' : 'Deaktiviert'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
       </Tabs>
     </div>

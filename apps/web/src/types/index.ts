@@ -8,6 +8,22 @@ export interface User {
   updatedAt?: string;
 }
 
+export interface UserPreferences {
+  id: string;
+  userId: string;
+  // Notifications
+  applicationUpdates: boolean;
+  newJobPostings: boolean;
+  marketingEmails: boolean;
+  // Preferences
+  language: string;
+  theme: string;
+  profilePublic: boolean;
+  analyticsEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Profile Types
 export interface Skill {
   id?: string; // Optional: present for existing skills, absent for new ones

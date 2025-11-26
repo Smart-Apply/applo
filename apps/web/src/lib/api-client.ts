@@ -227,6 +227,23 @@ export const api = {
 
     getCsrfToken: () =>
       apiRequest<{ csrfToken: string; message: string }>('/auth/csrf-token'),
+
+    updateProfile: (data: { firstName?: string; lastName?: string }) =>
+      apiRequest<{ user: User }>('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+
+    changePassword: (data: { currentPassword: string; newPassword: string }) =>
+      apiRequest<{ message: string }>('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    deleteAccount: () =>
+      apiRequest<{ message: string }>('/auth/account', {
+        method: 'DELETE',
+      }),
   },
 
   // Profile
@@ -361,6 +378,18 @@ export const api = {
     revokeAll: () =>
       apiRequest<{ message: string; revokedCount: number }>('/auth/sessions', {
         method: 'DELETE',
+      }),
+  },
+
+  // User Preferences
+  preferences: {
+    get: () =>
+      apiRequest<UserPreferences>('/user-preferences'),
+
+    update: (data: Partial<UserPreferences>) =>
+      apiRequest<UserPreferences>('/user-preferences', {
+        method: 'PUT',
+        body: JSON.stringify(data),
       }),
   },
 };
