@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { UserPreferences } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from './dto';
 
@@ -26,34 +27,37 @@ export class UserPreferencesService {
   }
 
   async updatePreferences(userId: string, dto: UpdateUserPreferencesDto): Promise<UserPreferencesResponseDto> {
+    // Build update data from DTO
+    const updateData = this.buildUpdateData(dto);
+
     // Upsert preferences (create if not exists, update if exists)
     const preferences = await this.prisma.userPreferences.upsert({
       where: { userId },
       create: {
         userId,
-        ...(dto.applicationUpdates !== undefined && { applicationUpdates: dto.applicationUpdates }),
-        ...(dto.newJobPostings !== undefined && { newJobPostings: dto.newJobPostings }),
-        ...(dto.marketingEmails !== undefined && { marketingEmails: dto.marketingEmails }),
-        ...(dto.language !== undefined && { language: dto.language }),
-        ...(dto.theme !== undefined && { theme: dto.theme }),
-        ...(dto.profilePublic !== undefined && { profilePublic: dto.profilePublic }),
-        ...(dto.analyticsEnabled !== undefined && { analyticsEnabled: dto.analyticsEnabled }),
+        ...updateData,
       },
-      update: {
-        ...(dto.applicationUpdates !== undefined && { applicationUpdates: dto.applicationUpdates }),
-        ...(dto.newJobPostings !== undefined && { newJobPostings: dto.newJobPostings }),
-        ...(dto.marketingEmails !== undefined && { marketingEmails: dto.marketingEmails }),
-        ...(dto.language !== undefined && { language: dto.language }),
-        ...(dto.theme !== undefined && { theme: dto.theme }),
-        ...(dto.profilePublic !== undefined && { profilePublic: dto.profilePublic }),
-        ...(dto.analyticsEnabled !== undefined && { analyticsEnabled: dto.analyticsEnabled }),
-      },
+      update: updateData,
     });
 
     return this.mapToResponseDto(preferences);
   }
 
-  private mapToResponseDto(preferences: any): UserPreferencesResponseDto {
+  private buildUpdateData(dto: UpdateUserPreferencesDto): Partial<UserPreferences> {
+    const data: Partial<UserPreferences> = {};
+
+    if (dto.applicationUpdates !== undefined) data.applicationUpdates = dto.applicationUpdates;
+    if (dto.newJobPostings !== undefined) data.newJobPostings = dto.newJobPostings;
+    if (dto.marketingEmails !== undefined) data.marketingEmails = dto.marketingEmails;
+    if (dto.language !== undefined) data.language = dto.language;
+    if (dto.theme !== undefined) data.theme = dto.theme;
+    if (dto.profilePublic !== undefined) data.profilePublic = dto.profilePublic;
+    if (dto.analyticsEnabled !== undefined) data.analyticsEnabled = dto.analyticsEnabled;
+
+    return data;
+  }
+
+  private mapToResponseDto(preferences: UserPreferences): UserPreferencesResponseDto {
     return {
       id: preferences.id,
       userId: preferences.userId,

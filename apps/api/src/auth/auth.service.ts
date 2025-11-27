@@ -353,7 +353,7 @@ export class AuthService {
 
     // Log successful password change
     if (req) {
-      this.auditLogger.logSecurityEvent('PASSWORD_CHANGE_SUCCESS', user.email, req, user.id);
+      this.auditLogger.logPasswordChange(user.id, req);
     }
   }
 
