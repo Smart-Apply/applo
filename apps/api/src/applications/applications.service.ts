@@ -171,6 +171,10 @@ export class ApplicationsService {
         issuer: cert.issuer.trim(),
         date: trim(cert.date),
       })),
+      languages: (resume.languages || []).map((lang) => ({
+        name: lang.name.trim(),
+        level: lang.level?.trim(),
+      })).filter((lang) => lang.name),
     };
   }
 
@@ -1152,28 +1156,51 @@ Summary: ${resume.summary || 'Not provided'}
     const keywords = new Set<string>();
 
     if (!resumeText) {
+      this.logger.debug('extractResumeKeywords: No resumeText provided');
       return keywords;
     }
 
     try {
       const resume = JSON.parse(resumeText);
+      this.logger.debug(`extractResumeKeywords: Parsing resume with keys: ${Object.keys(resume).join(', ')}`);
 
-      // Summary - extract meaningful words
+      // Helper: Add keyword preserving tech terms (C++, .NET, AWS, etc.)
+      const addKeyword = (word: string) => {
+        const trimmed = word.trim().toLowerCase();
+        if (trimmed.length >= 2) {
+          keywords.add(trimmed);
+        }
+      };
+
+      // Helper: Split text but preserve tech terms
+      const extractWords = (text: string) => {
+        if (!text) return;
+        // Split on whitespace but keep special chars within words
+        text.split(/\s+/).forEach((w) => {
+          const cleaned = w.replace(/^[,;.:!?"'()\[\]{}]+|[,;.:!?"'()\[\]{}]+$/g, '');
+          if (cleaned.length >= 2) {
+            keywords.add(cleaned.toLowerCase());
+          }
+        });
+      };
+
+      // Summary
       if (resume.summary) {
-        resume.summary
-          .toLowerCase()
-          .split(/\s+/)
-          .forEach((w: string) => {
-            if (w.length > 3) keywords.add(w.replace(/[^a-zA-ZäöüÄÖÜß]/g, ''));
-          });
+        extractWords(resume.summary);
       }
 
-      // Skills from all categories
+      // Skills from all categories - MOST IMPORTANT for ATS matching
       if (resume.skillCategories && Array.isArray(resume.skillCategories)) {
-        resume.skillCategories.forEach((category: { skills?: string[] }) => {
+        resume.skillCategories.forEach((category: { type?: string; skills?: string[] }) => {
           if (category.skills && Array.isArray(category.skills)) {
             category.skills.forEach((skill: string) => {
-              keywords.add(skill.toLowerCase().trim());
+              // Add full skill name (e.g., "React.js", "Node.js", "C++")
+              addKeyword(skill);
+              // Also add without common suffixes for fuzzy matching
+              const simplified = skill.toLowerCase().replace(/\.js$|\.net$/i, '');
+              if (simplified !== skill.toLowerCase()) {
+                addKeyword(simplified);
+              }
             });
           }
         });
@@ -1183,21 +1210,9 @@ Summary: ${resume.summary || 'Not provided'}
       if (resume.experiences && Array.isArray(resume.experiences)) {
         resume.experiences.forEach(
           (exp: { title?: string; company?: string; achievements?: string[] }) => {
-            if (exp.title) {
-              exp.title
-                .toLowerCase()
-                .split(/\s+/)
-                .forEach((w: string) => keywords.add(w));
-            }
+            if (exp.title) extractWords(exp.title);
             if (exp.achievements && Array.isArray(exp.achievements)) {
-              exp.achievements.forEach((achievement: string) => {
-                achievement
-                  .toLowerCase()
-                  .split(/\s+/)
-                  .forEach((w: string) => {
-                    if (w.length > 3) keywords.add(w.replace(/[^a-zA-ZäöüÄÖÜß]/g, ''));
-                  });
-              });
+              exp.achievements.forEach((achievement: string) => extractWords(achievement));
             }
           },
         );
@@ -1207,28 +1222,10 @@ Summary: ${resume.summary || 'Not provided'}
       if (resume.projects && Array.isArray(resume.projects)) {
         resume.projects.forEach(
           (project: { name?: string; description?: string; highlights?: string[] }) => {
-            if (project.name) {
-              project.name
-                .toLowerCase()
-                .split(/\s+/)
-                .forEach((w: string) => keywords.add(w));
-            }
-            if (project.description) {
-              project.description
-                .toLowerCase()
-                .split(/\s+/)
-                .forEach((w: string) => {
-                  if (w.length > 3) keywords.add(w.replace(/[^a-zA-ZäöüÄÖÜß]/g, ''));
-                });
-            }
+            if (project.name) extractWords(project.name);
+            if (project.description) extractWords(project.description);
             if (project.highlights && Array.isArray(project.highlights)) {
-              project.highlights.forEach((h: string) => {
-                h.toLowerCase()
-                  .split(/\s+/)
-                  .forEach((w: string) => {
-                    if (w.length > 3) keywords.add(w.replace(/[^a-zA-ZäöüÄÖÜß]/g, ''));
-                  });
-              });
+              project.highlights.forEach((h: string) => extractWords(h));
             }
           },
         );
@@ -1237,30 +1234,15 @@ Summary: ${resume.summary || 'Not provided'}
       // Certifications
       if (resume.certifications && Array.isArray(resume.certifications)) {
         resume.certifications.forEach((cert: { name?: string; issuer?: string }) => {
-          if (cert.name) {
-            cert.name
-              .toLowerCase()
-              .split(/\s+/)
-              .forEach((w: string) => keywords.add(w));
-          }
+          if (cert.name) extractWords(cert.name);
         });
       }
 
       // Education
       if (resume.education && Array.isArray(resume.education)) {
         resume.education.forEach((edu: { degree?: string; fieldOfStudy?: string }) => {
-          if (edu.degree) {
-            edu.degree
-              .toLowerCase()
-              .split(/\s+/)
-              .forEach((w: string) => keywords.add(w));
-          }
-          if (edu.fieldOfStudy) {
-            edu.fieldOfStudy
-              .toLowerCase()
-              .split(/\s+/)
-              .forEach((w: string) => keywords.add(w));
-          }
+          if (edu.degree) extractWords(edu.degree);
+          if (edu.fieldOfStudy) extractWords(edu.fieldOfStudy);
         });
       }
 
@@ -1268,20 +1250,13 @@ Summary: ${resume.summary || 'Not provided'}
       if (resume.languages && Array.isArray(resume.languages)) {
         resume.languages.forEach((lang: { name?: string }) => {
           if (lang.name) {
-            keywords.add(lang.name.toLowerCase());
+            addKeyword(lang.name);
           }
         });
       }
 
-      // Filter out empty strings and very short words
-      const filtered = new Set<string>();
-      keywords.forEach((k) => {
-        if (k && k.length > 1) {
-          filtered.add(k);
-        }
-      });
-
-      return filtered;
+      this.logger.debug(`extractResumeKeywords: Extracted ${keywords.size} keywords: ${[...keywords].slice(0, 20).join(', ')}...`);
+      return keywords;
     } catch (error) {
       this.logger.warn('Failed to parse resume text for keyword extraction', error as Error);
       return keywords;
