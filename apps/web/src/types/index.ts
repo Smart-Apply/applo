@@ -218,7 +218,7 @@ export interface TemplateWithContent extends Template {
 export type ApplicationGenerationStatus = 'PENDING' | 'GENERATING' | 'READY' | 'FAILED';
 
 // Application Tracking Status (user-facing)
-export type ApplicationTrackingStatus = 'CREATED' | 'APPLIED' | 'INTERVIEW' | 'ACCEPTED' | 'REJECTED';
+export type ApplicationTrackingStatus = 'CREATED' | 'APPLIED' | 'INTERVIEW' | 'OFFER' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN';
 
 // Legacy alias for backward compatibility
 export type ApplicationStatus = ApplicationGenerationStatus;
@@ -232,7 +232,12 @@ export interface Application {
   title?: string;
   
   // Application tracking status (user-facing)
+  // mapped to trackingStatus in frontend for consistency, but backend might send applicationStatus
+  // Let's allow both for now or just use applicationStatus
   applicationStatus: ApplicationTrackingStatus;
+  // Alias for easier usage if needed, but for now let's stick to applicationStatus in types
+  // trackingStatus?: ApplicationTrackingStatus; 
+  
   statusUpdatedAt?: string;
   
   // PDF generation status (system-facing)

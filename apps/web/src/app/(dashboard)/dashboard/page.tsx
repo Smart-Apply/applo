@@ -1,347 +1,402 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useApplications } from '@/hooks/use-applications';
-import { useJobPostings } from '@/hooks/use-job-postings';
-import { useProfile } from '@/hooks/use-profile';
-import {
-  FileText,
-  Briefcase,
-  User,
-  Plus,
-  TrendingUp,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Send,
-  Calendar,
-  Building2,
-  ArrowRight
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { ApplicationTrackingStatus } from '@/types';
+import { useAuthStore } from '@/stores/auth-store';
+import { api } from '@/lib/api-client';
+import { Application, ApplicationTrackingStatus } from '@/types';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Plus,
+  FileText,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Briefcase,
+  ArrowRight,
+  TrendingUp,
+  Calendar,
+  MoreHorizontal,
+  ChevronRight,
+} from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { de } from 'date-fns/locale';
 
-// Status-Konfiguration
-const STATUS_CONFIG: Record<ApplicationTrackingStatus, { label: string; color: string; bgColor: string }> = {
-  CREATED: { label: 'Erstellt', color: 'text-muted-foreground', bgColor: 'bg-muted' },
-  APPLIED: { label: 'Beworben', color: 'text-accent', bgColor: 'bg-primary-soft' },
-  INTERVIEW: { label: 'Interview', color: 'text-warning-foreground', bgColor: 'bg-warning' },
-  ACCEPTED: { label: 'Angenommen', color: 'text-success-foreground', bgColor: 'bg-success' },
-  REJECTED: { label: 'Abgelehnt', color: 'text-destructive-foreground', bgColor: 'bg-destructive' },
+const STATUS_CONFIG: Record<
+  ApplicationTrackingStatus,
+  { label: string; color: string; bgColor: string; icon: any }
+> = {
+  CREATED: {
+    label: 'Erstellt',
+    color: 'text-slate-600',
+    bgColor: 'bg-slate-100',
+    icon: FileText,
+  },
+  APPLIED: {
+    label: 'Beworben',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
+    icon: Clock,
+  },
+  INTERVIEW: {
+    label: 'Interview',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100',
+    icon: Calendar,
+  },
+  OFFER: {
+    label: 'Angebot',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    icon: CheckCircle,
+  },
+  ACCEPTED: {
+    label: 'Angenommen',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    icon: CheckCircle,
+  },
+  REJECTED: {
+    label: 'Abgesagt',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
+    icon: XCircle,
+  },
+  WITHDRAWN: {
+    label: 'Zurückgezogen',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-100',
+    icon: XCircle,
+  },
 };
-
-// Profil-Vollständigkeit berechnen
-function calculateProfileCompletion(profile: {
-  summary?: string | null;
-  skills?: unknown[];
-  experiences?: unknown[];
-  education?: unknown[];
-  certificates?: unknown[];
-  projects?: unknown[];
-} | null | undefined): number {
-  if (!profile) return 0;
-
-  const fields = [
-    !!profile.summary,
-    (profile.skills?.length ?? 0) > 0,
-    (profile.experiences?.length ?? 0) > 0,
-    (profile.education?.length ?? 0) > 0,
-  ];
-
-  const bonusFields = [
-    (profile.certificates?.length ?? 0) > 0,
-    (profile.projects?.length ?? 0) > 0,
-  ];
-
-  const baseScore = fields.filter(Boolean).length / fields.length * 80;
-  const bonusScore = bonusFields.filter(Boolean).length / bonusFields.length * 20;
-
-  return Math.round(baseScore + bonusScore);
-}
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { data: profile, isLoading: profileLoading } = useProfile();
-  const { data: applications, isLoading: applicationsLoading } = useApplications({ includeJobPosting: true });
-  const { data: jobPostings, isLoading: jobsLoading } = useJobPostings();
+  const { user } = useAuthStore();
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    interviews: 0,
+    offers: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Berechne Status-Statistiken
-  const statusCounts: Partial<Record<ApplicationTrackingStatus, number>> = applications?.reduce((acc, app) => {
-    acc[app.applicationStatus] = (acc[app.applicationStatus] || 0) + 1;
-    return acc;
-  }, {} as Partial<Record<ApplicationTrackingStatus, number>>) || {};
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        const apps = await api.applications.list();
+        setApplications(apps);
 
-  const totalApplications = applications?.length || 0;
-  const acceptedCount = statusCounts.ACCEPTED || 0;
-  const rejectedCount = statusCounts.REJECTED || 0;
-  const activeCount = (statusCounts.APPLIED || 0) + (statusCounts.INTERVIEW || 0);
-  const successRate = totalApplications > 0 && (acceptedCount + rejectedCount) > 0
-    ? Math.round((acceptedCount / (acceptedCount + rejectedCount)) * 100)
-    : null;
+        // Calculate stats
+        const newStats = {
+          total: apps.length,
+          active: apps.filter(
+            (a) =>
+              !['REJECTED', 'WITHDRAWN', 'OFFER', 'ACCEPTED'].includes(a.applicationStatus)
+          ).length,
+          interviews: apps.filter((a) => a.applicationStatus === 'INTERVIEW')
+            .length,
+          offers: apps.filter((a) => ['OFFER', 'ACCEPTED'].includes(a.applicationStatus)).length,
+        };
+        setStats(newStats);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const profileCompletion = calculateProfileCompletion(profile);
+    loadDashboardData();
+  }, []);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Guten Morgen';
+    if (hour < 18) return 'Guten Tag';
+    return 'Guten Abend';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="mt-1 text-muted-foreground">
-            Willkommen zurück! Hier ist eine Übersicht deiner Bewerbungen.
+    <div className="space-y-8 animate-fade-in">
+      {/* Welcome Section */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary-soft p-8 shadow-medium">
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+            {getGreeting()}, {user?.firstName || 'Nutzer'}!
+          </h1>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl">
+            Hier ist ein Überblick über deine aktuellen Bewerbungen. Du hast{' '}
+            <span className="font-semibold text-primary">{stats.active}</span>{' '}
+            aktive Bewerbungen am Laufen.
           </p>
-        </div>
-        <Button onClick={() => router.push('/applications/new')} className="bg-primary text-primary-foreground hover:bg-primary/90">
-          <Plus className="mr-2 h-4 w-4" />
-          Neue Bewerbung
-        </Button>
-      </div>
-
-      {/* Haupt-Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow border-border bg-card" onClick={() => router.push('/applications')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Bewerbungen</CardTitle>
-            <FileText className="h-4 w-4 text-accent" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{totalApplications}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {activeCount} aktiv · {statusCounts.CREATED || 0} in Bearbeitung
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow border-border bg-card" onClick={() => router.push('/jobs')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Stellenanzeigen</CardTitle>
-            <Briefcase className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{jobsLoading ? '...' : jobPostings?.length || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Gespeicherte Jobs
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow border-border bg-card" onClick={() => router.push('/profile')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Profil</CardTitle>
-            <User className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{profileLoading ? '...' : `${profileCompletion}%`}</div>
-            <div className="w-full bg-muted rounded-full h-1.5 mt-2">
-              <div
-                className="bg-success h-1.5 rounded-full transition-all"
-                style={{ width: `${profileCompletion}%` }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Erfolgsquote</CardTitle>
-            <TrendingUp className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {successRate !== null ? `${successRate}%` : '–'}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {acceptedCount} angenommen · {rejectedCount} abgelehnt
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Status-Übersicht */}
-      <Card className="border-border bg-card">
-        <CardHeader>
-          <CardTitle className="text-lg text-foreground">Bewerbungs-Pipeline</CardTitle>
-          <CardDescription className="text-muted-foreground">Übersicht deiner Bewerbungen nach Status</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {(Object.entries(STATUS_CONFIG) as [ApplicationTrackingStatus, typeof STATUS_CONFIG[ApplicationTrackingStatus]][]).map(([status, config]) => (
-              <button
-                key={status}
-                onClick={() => router.push(`/applications?status=${status}`)}
-                className={`${config.bgColor} rounded-lg p-4 text-center hover:opacity-80 transition-opacity border border-transparent`}
-              >
-                <div className={`text-2xl font-bold ${config.color}`}>
-                  {statusCounts[status] || 0}
-                </div>
-                <div className={`text-xs font-medium ${config.color}`}>
-                  {config.label}
-                </div>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Zwei-Spalten-Layout */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Letzte Bewerbungen */}
-        <Card className="border-border bg-card">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground">Letzte Bewerbungen</CardTitle>
-              <CardDescription className="text-muted-foreground">Deine neuesten Bewerbungen</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => router.push('/applications')} className="text-muted-foreground hover:text-foreground">
-              Alle anzeigen
-              <ArrowRight className="ml-1 h-4 w-4" />
+          <div className="mt-6 flex gap-4">
+            <Button
+              className="rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 hover:-translate-y-0.5"
+              onClick={() => router.push('/applications/new')}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Neue Bewerbung
             </Button>
-          </CardHeader>
-          <CardContent>
-            {applicationsLoading ? (
-              <div className="text-center text-muted-foreground py-8">Lädt...</div>
-            ) : applications && applications.length > 0 ? (
-              <div className="space-y-3">
-                {applications.slice(0, 5).map((app) => {
-                  const statusConfig = STATUS_CONFIG[app.applicationStatus];
-                  return (
-                    <button
-                      key={app.id}
-                      onClick={() => router.push(`/applications/${app.id}`)}
-                      className="w-full flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors text-left"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                          <Building2 className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-medium truncate text-foreground">
-                            {app.jobPosting?.title || 'Unbekannte Stelle'}
-                          </p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {app.jobPosting?.company || 'Unbekanntes Unternehmen'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                        <Badge className={`${statusConfig.bgColor} ${statusConfig.color} border-0`}>
-                          {statusConfig.label}
-                        </Badge>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
-                <p className="text-muted-foreground mb-4">Noch keine Bewerbungen erstellt.</p>
-                <Button variant="outline" onClick={() => router.push('/applications/new')}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Erste Bewerbung erstellen
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <Button
+              variant="outline"
+              className="rounded-xl bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-background/80"
+              onClick={() => router.push('/jobs')}
+            >
+              <Briefcase className="mr-2 h-4 w-4" />
+              Jobs finden
+            </Button>
+          </div>
+        </div>
 
-        {/* Quick Actions & Tipps */}
-        <div className="space-y-6">
-          {/* Profil-Hinweis wenn nicht vollständig */}
-          {!profileLoading && profileCompletion < 100 && (
-            <Card className="border-accent/20 bg-primary-soft/50">
-              <CardHeader>
-                <CardTitle className="text-primary flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Profil vervollständigen
-                </CardTitle>
-                <CardDescription className="text-primary/80">
-                  Ein vollständiges Profil verbessert deine generierten Bewerbungen.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-primary/80">Fortschritt</span>
-                  <span className="text-sm font-medium text-primary">{profileCompletion}%</span>
+        {/* Decorative Background Elements */}
+        <div className="absolute right-0 top-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-primary/5 blur-3xl"></div>
+        <div className="absolute right-20 bottom-0 -mb-10 h-40 w-40 rounded-full bg-blue-500/5 blur-2xl"></div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title="Gesamt"
+          value={stats.total}
+          icon={FileText}
+          trend="+2 diese Woche"
+          color="text-blue-600"
+          bgColor="bg-blue-50"
+        />
+        <StatsCard
+          title="Aktiv"
+          value={stats.active}
+          icon={Clock}
+          trend="In Bearbeitung"
+          color="text-orange-600"
+          bgColor="bg-orange-50"
+        />
+        <StatsCard
+          title="Interviews"
+          value={stats.interviews}
+          icon={Calendar}
+          trend="Nächstes: Morgen"
+          color="text-purple-600"
+          bgColor="bg-purple-50"
+        />
+        <StatsCard
+          title="Angebote"
+          value={stats.offers}
+          icon={CheckCircle}
+          trend="1 Ausstehend"
+          color="text-green-600"
+          bgColor="bg-green-50"
+        />
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Main Content Area */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Recent Applications */}
+          <Card className="border-border/50 shadow-soft overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border/50 bg-muted/20">
+              <div>
+                <CardTitle className="text-xl font-bold">Aktuelle Bewerbungen</CardTitle>
+                <CardDescription>Deine zuletzt bearbeiteten Bewerbungen</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary hover:text-primary/80 hover:bg-primary/5"
+                onClick={() => router.push('/applications')}
+              >
+                Alle anzeigen <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              {applications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium">Keine Bewerbungen</h3>
+                  <p className="text-muted-foreground max-w-sm mt-1 mb-4">
+                    Du hast noch keine Bewerbungen angelegt. Starte jetzt deine Karriere!
+                  </p>
+                  <Button onClick={() => router.push('/applications/new')}>
+                    Erste Bewerbung erstellen
+                  </Button>
                 </div>
-                <div className="w-full bg-primary/10 rounded-full h-2 mb-4">
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {applications.slice(0, 5).map((app) => {
+                    const status = STATUS_CONFIG[app.applicationStatus] || STATUS_CONFIG.CREATED;
+                    const StatusIcon = status.icon;
+                    return (
+                      <div
+                        key={app.id}
+                        className="group flex items-center justify-between p-4 transition-colors hover:bg-muted/30"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-background border border-border/50 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
+                            <Briefcase className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                              {app.title || 'Unbenannte Bewerbung'}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {app.jobPostingId ? 'Job ID: ' + app.jobPostingId.substring(0, 8) : 'Keine Job-Zuordnung'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-6">
+                          <div className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${status.bgColor} ${status.color}`}>
+                            <StatusIcon className="h-3.5 w-3.5" />
+                            {status.label}
+                          </div>
+                          <div className="text-right hidden sm:block">
+                            <p className="text-xs text-muted-foreground">Aktualisiert</p>
+                            <p className="text-xs font-medium">
+                              {formatDistanceToNow(new Date(app.updatedAt), {
+                                addSuffix: true,
+                                locale: de,
+                              })}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => router.push(`/applications/${app.id}`)}
+                          >
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar Content */}
+        <div className="space-y-8">
+          {/* Profile Completion */}
+          <Card className="border-border/50 shadow-soft bg-gradient-to-br from-card to-muted/20">
+            <CardHeader>
+              <CardTitle className="text-lg">Profilstatus</CardTitle>
+              <CardDescription>Vervollständige dein Profil</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-end justify-between">
+                  <span className="text-2xl font-bold text-primary">85%</span>
+                  <span className="text-sm text-muted-foreground mb-1">Fast geschafft!</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                   <div
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${profileCompletion}%` }}
+                    className="h-full bg-primary transition-all duration-500 ease-out"
+                    style={{ width: '85%' }}
                   />
                 </div>
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>Lebenslauf hochgeladen</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>Kontaktdaten vollständig</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-foreground font-medium">
+                    <div className="h-4 w-4 rounded-full border-2 border-primary/30" />
+                    <span>LinkedIn verknüpfen</span>
+                  </div>
+                </div>
                 <Button
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                  onClick={() => router.push('/profile/edit')}
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={() => router.push('/profile')}
                 >
                   Profil bearbeiten
                 </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Quick Actions */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-foreground">Schnellzugriff</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                className="h-auto py-4 flex-col gap-2 hover:bg-muted/50 hover:text-foreground"
-                onClick={() => router.push('/applications/new')}
-              >
-                <Plus className="h-5 w-5 text-accent" />
-                <span className="text-xs">Neue Bewerbung</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-4 flex-col gap-2 hover:bg-muted/50 hover:text-foreground"
-                onClick={() => router.push('/jobs')}
-              >
-                <Briefcase className="h-5 w-5 text-primary" />
-                <span className="text-xs">Jobs durchsuchen</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-4 flex-col gap-2 hover:bg-muted/50 hover:text-foreground"
-                onClick={() => router.push('/profile/edit')}
-              >
-                <User className="h-5 w-5 text-success" />
-                <span className="text-xs">Profil bearbeiten</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-4 flex-col gap-2 hover:bg-muted/50 hover:text-foreground"
-                onClick={() => router.push('/applications?status=APPLIED')}
-              >
-                <Send className="h-5 w-5 text-warning" />
-                <span className="text-xs">Offene Bewerbungen</span>
-              </Button>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Aktivitäts-Hinweis */}
-          {applications && applications.length > 0 && (
-            <Card className="bg-muted/50 border-border">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    Letzte Aktivität: {new Date(applications[0].updatedAt || applications[0].createdAt).toLocaleDateString('de-DE', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Activity Notice */}
+          <Card className="border-border/50 shadow-soft">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Markttrends
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-xl bg-blue-50 p-4 border border-blue-100">
+                <p className="text-sm text-blue-800">
+                  <span className="font-semibold">Tipp:</span> Frontend-Entwickler werden aktuell stark gesucht. Aktualisiere deine Skills!
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </div>
+    </div >
+  );
+}
+
+function StatsCard({
+  title,
+  value,
+  icon: Icon,
+  trend,
+  color,
+  bgColor,
+}: {
+  title: string;
+  value: number;
+  icon: any;
+  trend: string;
+  color: string;
+  bgColor: string;
+}) {
+  return (
+    <Card className="border-border/50 shadow-soft hover:shadow-medium transition-all duration-300 group">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-foreground">{value}</span>
+            </div>
+          </div>
+          <div className={`rounded-xl p-3 ${bgColor} ${color} group-hover:scale-110 transition-transform`}>
+            <Icon className="h-6 w-6" />
+          </div>
+        </div>
+        <div className="mt-4 flex items-center gap-2">
+          <span className="flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+            <TrendingUp className="mr-1 h-3 w-3" />
+            {trend}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

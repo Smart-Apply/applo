@@ -23,14 +23,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ApplicationCardSkeleton } from '@/components/shared/skeletons';
-import { 
-  Plus, 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  RefreshCw, 
+import {
+  Plus,
+  FileText,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  RefreshCw,
   Trash2,
   ChevronLeft,
   ChevronRight,
@@ -60,13 +60,15 @@ const TRACKING_STATUS_TABS: {
   label: string;
   icon: typeof Briefcase;
 }[] = [
-  { value: 'all', label: 'Alle', icon: Briefcase },
-  { value: 'CREATED', label: 'Erstellt', icon: FileText },
-  { value: 'APPLIED', label: 'Beworben', icon: Send },
-  { value: 'INTERVIEW', label: 'Interview', icon: Users },
-  { value: 'ACCEPTED', label: 'Angenommen', icon: ThumbsUp },
-  { value: 'REJECTED', label: 'Abgelehnt', icon: ThumbsDown },
-];
+    { value: 'all', label: 'Alle', icon: Briefcase },
+    { value: 'CREATED', label: 'Erstellt', icon: FileText },
+    { value: 'APPLIED', label: 'Beworben', icon: Send },
+    { value: 'INTERVIEW', label: 'Interview', icon: Users },
+    { value: 'OFFER', label: 'Angebot', icon: CheckCircle },
+    { value: 'ACCEPTED', label: 'Angenommen', icon: ThumbsUp },
+    { value: 'REJECTED', label: 'Abgelehnt', icon: ThumbsDown },
+    { value: 'WITHDRAWN', label: 'Zurückgezogen', icon: XCircle },
+  ];
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Neueste zuerst' },
@@ -148,7 +150,7 @@ export default function ApplicationsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
+
   // Get initial values from URL query params
   const initialTab = (searchParams.get('status') as ApplicationTrackingStatus | 'all') || 'all';
   const initialSort = (searchParams.get('sort') as SortOption) || 'newest';
@@ -176,10 +178,10 @@ export default function ApplicationsPage() {
     if (selectedTab !== 'all') params.set('status', selectedTab);
     if (sortBy !== 'newest') params.set('sort', sortBy);
     if (currentPage > 1) params.set('page', currentPage.toString());
-    
+
     const queryString = params.toString();
     const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
-    
+
     // Use replaceState to avoid adding to history on every filter change
     window.history.replaceState(null, '', newUrl);
   }, [selectedTab, sortBy, currentPage, pathname]);
@@ -248,8 +250,10 @@ export default function ApplicationsPage() {
     CREATED: applications?.filter((app) => app.applicationStatus === 'CREATED').length || 0,
     APPLIED: applications?.filter((app) => app.applicationStatus === 'APPLIED').length || 0,
     INTERVIEW: applications?.filter((app) => app.applicationStatus === 'INTERVIEW').length || 0,
+    OFFER: applications?.filter((app) => app.applicationStatus === 'OFFER').length || 0,
     ACCEPTED: applications?.filter((app) => app.applicationStatus === 'ACCEPTED').length || 0,
     REJECTED: applications?.filter((app) => app.applicationStatus === 'REJECTED').length || 0,
+    WITHDRAWN: applications?.filter((app) => app.applicationStatus === 'WITHDRAWN').length || 0,
   }), [applications]);
 
   // Manual refresh handler
@@ -347,8 +351,8 @@ export default function ApplicationsPage() {
                     >
                       <Icon className="h-4 w-4" />
                       <span className="hidden sm:inline">{tab.label}</span>
-                      <Badge 
-                        variant={selectedTab === tab.value ? 'default' : 'secondary'} 
+                      <Badge
+                        variant={selectedTab === tab.value ? 'default' : 'secondary'}
                         className="ml-1 min-w-[1.5rem] justify-center"
                       >
                         {count}
@@ -523,7 +527,7 @@ export default function ApplicationsPage() {
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Zurück
               </Button>
-              
+
               <div className="flex items-center gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <Button

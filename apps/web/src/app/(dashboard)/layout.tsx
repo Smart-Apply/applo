@@ -15,6 +15,7 @@ import {
   Menu,
   Home,
   Settings,
+  ChevronRight,
 } from 'lucide-react';
 
 const navigation = [
@@ -63,26 +64,34 @@ export default function DashboardLayout({
   // Show loading while hydrating or if not authenticated (redirect pending)
   if (!hasHydrated || !isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-muted/30">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-500">Laden...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Laden...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-muted/30">
       {/* Desktop Sidebar - Hidden in edit mode */}
       {!isEditMode && (
-        <aside className="hidden w-64 border-r border-sidebar-border bg-sidebar md:block text-sidebar-foreground">
+        <aside className="hidden w-72 border-r border-border/50 bg-card/50 backdrop-blur-xl md:block text-foreground shadow-soft z-20">
           <div className="flex h-full flex-col">
-            <div className="flex h-16 items-center border-b border-sidebar-border px-6">
-              <h1 className="text-xl font-bold text-primary">Smart Apply</h1>
+            <div className="flex h-16 items-center px-6 border-b border-border/50">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                  S
+                </div>
+                <h1 className="text-lg font-bold tracking-tight text-foreground">Smart Apply</h1>
+              </div>
             </div>
 
-            <nav className="flex-1 space-y-1 px-3 py-4">
+            <nav className="flex-1 space-y-1 px-4 py-6">
+              <div className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                Menu
+              </div>
               {navigation.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
@@ -90,40 +99,46 @@ export default function DashboardLayout({
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                    className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
+                        ? 'bg-primary/5 text-primary shadow-sm'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       }`}
                   >
-                    <Icon className="h-5 w-5" />
-                    {item.name}
+                    <div className="flex items-center gap-3">
+                      <Icon className={`h-5 w-5 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                      {item.name}
+                    </div>
+                    {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
                   </Link>
                 );
               })}
             </nav>
 
-            <div className="border-t border-sidebar-border p-4">
-              <div className="mb-3 flex items-center gap-3 px-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-sm font-semibold text-sidebar-accent-foreground">
+            <div className="p-4 border-t border-border/50 bg-muted/10">
+              <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card p-3 shadow-sm transition-all hover:shadow-md cursor-pointer group">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary ring-2 ring-background group-hover:ring-primary/20 transition-all">
                   {(user?.firstName || user?.email)?.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex-1 truncate">
-                  <p className="truncate text-sm font-medium">
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">
                     {user?.firstName && user?.lastName
                       ? `${user.firstName} ${user.lastName}`
                       : user?.firstName || user?.email}
                   </p>
-                  <p className="truncate text-xs text-sidebar-foreground/70">{user?.email}</p>
+                  <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLogout();
+                  }}
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                className="w-full justify-start hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                onClick={handleLogout}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Abmelden
-              </Button>
             </div>
           </div>
         </aside>
@@ -131,8 +146,13 @@ export default function DashboardLayout({
 
       {/* Mobile Header */}
       <div className="flex flex-1 flex-col md:hidden">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background px-4">
-          <h1 className="text-lg font-bold text-primary">Smart Apply</h1>
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-md px-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
+              S
+            </div>
+            <h1 className="text-lg font-bold tracking-tight text-foreground">Smart Apply</h1>
+          </div>
 
           <Sheet>
             <SheetTrigger asChild>
@@ -140,13 +160,21 @@ export default function DashboardLayout({
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0 bg-sidebar border-sidebar-border text-sidebar-foreground">
+            <SheetContent side="left" className="w-72 p-0 bg-card border-r border-border">
               <div className="flex h-full flex-col">
-                <div className="flex h-16 items-center border-b border-sidebar-border px-6">
-                  <h1 className="text-xl font-bold text-primary">Smart Apply</h1>
+                <div className="flex h-16 items-center px-6 border-b border-border/50">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                      S
+                    </div>
+                    <h1 className="text-lg font-bold tracking-tight text-foreground">Smart Apply</h1>
+                  </div>
                 </div>
 
-                <nav className="flex-1 space-y-1 px-3 py-4">
+                <nav className="flex-1 space-y-1 px-4 py-6">
+                  <div className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                    Menu
+                  </div>
                   {navigation.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
@@ -154,51 +182,54 @@ export default function DashboardLayout({
                       <Link
                         key={item.name}
                         href={item.href}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                        className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
+                            ? 'bg-primary/5 text-primary shadow-sm'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                           }`}
                       >
-                        <Icon className="h-5 w-5" />
-                        {item.name}
+                        <div className="flex items-center gap-3">
+                          <Icon className={`h-5 w-5 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                          {item.name}
+                        </div>
+                        {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
                       </Link>
                     );
                   })}
                 </nav>
 
-                <div className="border-t border-sidebar-border p-4">
-                  <div className="mb-3 flex items-center gap-3 px-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-sm font-semibold text-sidebar-accent-foreground">
+                <div className="p-4 border-t border-border/50 bg-muted/10">
+                  <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card p-3 shadow-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                       {(user?.firstName || user?.email)?.charAt(0).toUpperCase()}
                     </div>
-                    <div className="flex-1 truncate">
-                      <p className="truncate text-sm font-medium">
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">
                         {user?.firstName && user?.lastName
                           ? `${user.firstName} ${user.lastName}`
                           : user?.firstName || user?.email}
                       </p>
-                      <p className="truncate text-xs text-sidebar-foreground/70">{user?.email}</p>
+                      <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Abmelden
-                  </Button>
                 </div>
               </div>
             </SheetContent>
           </Sheet>
         </header>
-        <main className="flex-1 p-4">{children}</main>
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">{children}</main>
       </div>
 
       {/* Desktop Main Content */}
-      <main className="hidden flex-1 md:block">
-        <div className="mx-auto max-w-7xl p-6">{children}</div>
+      <main className="hidden flex-1 md:block overflow-y-auto h-screen">
+        <div className="mx-auto max-w-7xl p-8">{children}</div>
       </main>
     </div>
   );
