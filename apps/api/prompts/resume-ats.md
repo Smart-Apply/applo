@@ -4,11 +4,17 @@
 
 Generate an ATS-optimized resume that passes automated screening while impressing human reviewers. Strategically place extracted keywords in optimal positions for ATS scanning.
 
+**🌍 CRITICAL LANGUAGE REQUIREMENT:**
+- The job posting is in its **ORIGINAL LANGUAGE** (could be German, English, French, Spanish, etc.)
+- You MUST generate the resume in the **SAME LANGUAGE** as the job posting
+- DO NOT translate to English - keep everything in the job posting's language
+- All sections (Professional Summary, Skills, Experience descriptions) must match the job posting language
+
 ## Candidate Profile
 
 {{profile}}
 
-## Job Posting
+## Job Posting (ORIGINAL LANGUAGE - DO NOT TRANSLATE)
 
 - **Position:** {{jobTitle}}
 - **Company:** {{companyName}}
@@ -37,8 +43,15 @@ The summary section has the highest weight in ATS scanning. It must include:
 - **Years of experience** with the most relevant technologies
 - **Key achievement** with quantifiable result
 
-**Example:**
+**🌍 LANGUAGE RULE:** Write the summary in the **SAME LANGUAGE** as the job posting!
+
+**Examples:**
+
+**English Job → English Summary:**
 "Senior Full-Stack Developer with 6+ years of experience in React, Node.js, and TypeScript. Expert in building scalable microservices using Docker and Kubernetes. Led teams that increased application performance by 45% and reduced deployment time by 60%. Passionate about clean code and Agile methodologies."
+
+**German Job → German Summary:**
+"Senior Full-Stack Developer mit 6+ Jahren Erfahrung in React, Node.js und TypeScript. Experte im Aufbau skalierbarer Microservices mit Docker und Kubernetes. Leitete Teams, die die Anwendungsperformance um 45% steigerten und die Deployment-Zeit um 60% reduzierten. Leidenschaftlich für Clean Code und Agile-Methoden."
 
 ### Skills Section (CRITICAL for ATS)
 
@@ -55,6 +68,12 @@ The skills section is often the first thing ATS scans. Structure it for maximum 
 3. **Use exact terminology** from job posting
 4. **Include skill proficiency** if mentioned in profile
 
+**🌍 LANGUAGE RULE:** 
+- If job posting is in German → Use German category names: "Programmiersprachen", "Frameworks", "Cloud & DevOps", "Datenbanken", "Tools & Methoden"
+- If job posting is in French → Use French: "Langages", "Frameworks", "Cloud", "Bases de données", "Outils"
+- If job posting is in Spanish → Use Spanish: "Lenguajes", "Frameworks", "Nube", "Bases de datos", "Herramientas"
+- **Keep skill names as-is** (e.g., "React", "Docker", "PostgreSQL" stay in English, they are proper nouns)
+
 ### Work Experience (Keyword Integration)
 
 For each position, apply these rules:
@@ -65,11 +84,19 @@ For each position, apply these rules:
 4. Use **STAR + Keywords** format:
    - [Action Verb] + [Keyword] + [Context] + [Quantifiable Result]
 
-**Example Bullets:**
+**🌍 LANGUAGE RULE:** Achievement bullets MUST be in the job posting's language!
+
+**Example Bullets (English Job):**
 - "Developed React-based dashboard using TypeScript, reducing page load time by 50%"
 - "Architected microservices infrastructure with Docker and Kubernetes, handling 1M+ requests/day"
 - "Led Agile team of 5 developers implementing CI/CD pipeline with Jenkins"
 - "Optimized PostgreSQL queries, improving database performance by 35%"
+
+**Example Bullets (German Job):**
+- "Entwickelte React-basiertes Dashboard mit TypeScript und reduzierte Ladezeit um 50%"
+- "Konzipierte Microservices-Infrastruktur mit Docker und Kubernetes für 1M+ Anfragen/Tag"
+- "Leitete agiles Team von 5 Entwicklern bei der Implementierung einer CI/CD-Pipeline mit Jenkins"
+- "Optimierte PostgreSQL-Abfragen und verbesserte Datenbankperformance um 35%"
 
 **Per Experience:**
 - 4-6 bullet points

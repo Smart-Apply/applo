@@ -22,42 +22,21 @@ export class CreateJobPostingDto {
   @Sanitize()
   location?: string;
 
+  @ApiPropertyOptional({ description: 'Detected language (ISO 639-1 code: de, en, fr, es, etc.)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  language?: string;
+
   @ApiPropertyOptional({ description: 'Job posting URL' })
   @IsOptional()
   @IsUrl()
   url?: string;
 
-  @ApiProperty({ description: 'Full job description' })
+  @ApiProperty({ description: 'Full job posting text (description, requirements, responsibilities, benefits, etc.)' })
   @IsString()
   @Sanitize()
-  description: string;
-
-  @ApiPropertyOptional({
-    description: 'Job requirements (one per line or as array)',
-    type: [String],
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  requirements?: string[];
-
-  @ApiPropertyOptional({
-    description: 'Job responsibilities (one per line or as array)',
-    type: [String],
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  responsibilities?: string[];
-
-  @ApiPropertyOptional({
-    description: 'Nice to have qualifications (one per line or as array)',
-    type: [String],
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  niceToHave?: string[];
+  fullText: string;
 
   @ApiPropertyOptional({ description: 'Salary range', maxLength: 100 })
   @IsOptional()

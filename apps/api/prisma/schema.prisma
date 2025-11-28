@@ -195,21 +195,20 @@ model JobPosting {
   userId      String
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // Raw input
+  // Raw input (original HTML/scraped content for debugging)
   rawText     String?
   sourceUrl   String?
   fileId      String? // Reference to uploaded file in storage
   
-  // Normalized fields
+  // Extracted core fields
   title       String
   company     String
   location    String?
-  description String?
-  language    String? // Detected language (e.g., "de", "en", "fr")
+  language    String? // Detected language (ISO 639-1: "de", "en", "fr", etc.)
   
-  requirements     String[] // Parsed requirements
-  responsibilities String[] // Parsed responsibilities
-  niceToHave       String[] // Optional qualifications
+  // Full job posting text (cleaned, for CV/CL agents)
+  // Contains: description, requirements, responsibilities, benefits, etc.
+  fullText    String  @db.Text
   
   applications Application[]
   

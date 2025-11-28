@@ -6,26 +6,17 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { PromptService } from '../../common/services';
 
 // Define the structured output schema for job posting extraction
-// Using .nullable() for optional fields because LLMs often return null instead of undefined
+// Simplified schema: only core fields + fullText (no structured arrays)
 const JobPostingSchema = z.object({
   title: z.string().describe('The job title'),
-  company: z.string().describe('The company name'),
-  location: z.string().nullable().describe('The job location, or null if not specified'),
-  description: z.string().nullable().describe('The job description, or null if not available'),
+  company: z.string().describe('The company name (NEVER use job board names like Workwise/LinkedIn)'),
+  location: z.string().nullable().describe('The job location (city, country), or null if not specified'),
   language: z
     .string()
-    .describe('Detected language code (e.g., "de" for German, "en" for English, "fr" for French)'),
-  requirements: z.array(z.string()).describe('List of job requirements'),
-  responsibilities: z.array(z.string()).describe('List of job responsibilities'),
-  niceToHave: z.array(z.string()).describe('Nice to have qualifications'),
-  salary: z
+    .describe('ISO 639-1 language code (e.g., "de", "en", "fr", "es", "it", "pt", "nl", "pl", "tr", "ar", "zh", "ja")'),
+  fullText: z
     .string()
-    .nullish()
-    .describe('Salary information if available, or null if not specified'),
-  applicationDeadline: z
-    .string()
-    .nullish()
-    .describe('Application deadline if available, or null if not specified'),
+    .describe('Complete job posting text including description, requirements, responsibilities, benefits, salary, etc. Keep original language and formatting.'),
 });
 
 export type JobPostingExtraction = z.infer<typeof JobPostingSchema>;
@@ -710,10 +701,8 @@ export class AgentUrlParser {
       throw new Error('Company name not found or too short');
     }
 
-    const totalItems =
-      data.requirements.length + data.responsibilities.length + data.niceToHave.length;
-
-    if (totalItems === 0 && (!data.description || data.description.length < 50)) {
+    // Validate fullText has sufficient content
+    if (!data.fullText || data.fullText.length < 50) {
       throw new Error('Insufficient job posting content extracted');
     }
 

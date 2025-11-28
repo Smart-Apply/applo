@@ -7,10 +7,8 @@ interface ParsedJobData {
   title: string;
   company: string;
   location?: string;
-  description?: string;
-  requirements: string[];
-  responsibilities: string[];
-  niceToHave: string[];
+  language?: string;
+  fullText: string;
   rawText: string;
 }
 
@@ -62,10 +60,8 @@ export class UrlParser {
           title: agentResult.title,
           company: agentResult.company,
           location: agentResult.location ?? undefined,
-          description: agentResult.description ?? undefined,
-          requirements: agentResult.requirements,
-          responsibilities: agentResult.responsibilities,
-          niceToHave: agentResult.niceToHave,
+          language: agentResult.language ?? undefined,
+          fullText: agentResult.fullText,
           rawText: this.convertToRawText(agentResult),
         };
       } catch (error) {
@@ -105,10 +101,8 @@ export class UrlParser {
           title: agentResult.title,
           company: agentResult.company,
           location: agentResult.location ?? undefined,
-          description: agentResult.description ?? undefined,
-          requirements: agentResult.requirements,
-          responsibilities: agentResult.responsibilities,
-          niceToHave: agentResult.niceToHave,
+          language: agentResult.language ?? undefined,
+          fullText: agentResult.fullText,
           rawText: this.convertToRawText(agentResult),
         };
       } catch (error) {
@@ -250,30 +244,9 @@ export class UrlParser {
       parts.push(`Location: ${agentResult.location}`);
     }
 
-    if (agentResult.description) {
-      parts.push(`\nDescription:\n${agentResult.description}`);
-    }
-
-    if (agentResult.requirements.length > 0) {
-      parts.push(`\nRequirements:\n${agentResult.requirements.map((r) => `- ${r}`).join('\n')}`);
-    }
-
-    if (agentResult.responsibilities.length > 0) {
-      parts.push(
-        `\nResponsibilities:\n${agentResult.responsibilities.map((r) => `- ${r}`).join('\n')}`,
-      );
-    }
-
-    if (agentResult.niceToHave.length > 0) {
-      parts.push(`\nNice to Have:\n${agentResult.niceToHave.map((n) => `- ${n}`).join('\n')}`);
-    }
-
-    if (agentResult.salary) {
-      parts.push(`\nSalary: ${agentResult.salary}`);
-    }
-
-    if (agentResult.applicationDeadline) {
-      parts.push(`\nApplication Deadline: ${agentResult.applicationDeadline}`);
+    // Add full text content
+    if (agentResult.fullText) {
+      parts.push(`\n${agentResult.fullText}`);
     }
 
     return parts.join('\n');

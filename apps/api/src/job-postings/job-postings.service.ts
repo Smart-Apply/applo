@@ -13,11 +13,8 @@ interface ParsedJobData {
   title: string;
   company: string;
   location?: string;
-  description?: string;
   language?: string;
-  requirements: string[];
-  responsibilities: string[];
-  niceToHave: string[];
+  fullText: string;
 }
 
 @Injectable()
@@ -59,6 +56,10 @@ export class JobPostingsService {
         // Cheerio parser returned raw text
         rawText = urlResult as string;
         parsed = this.extractStructuredData(rawText);
+        // Ensure fullText is present
+        if (!parsed.fullText) {
+          parsed.fullText = rawText;
+        }
         this.logger.log('✅ Cheerio parser returned raw text');
       }
     } else if (dto.fileId) {
@@ -83,11 +84,8 @@ export class JobPostingsService {
         title: parsed.title,
         company: parsed.company,
         location: parsed.location,
-        description: parsed.description,
         language: parsed.language,
-        requirements: parsed.requirements,
-        responsibilities: parsed.responsibilities,
-        niceToHave: parsed.niceToHave,
+        fullText: parsed.fullText,
       },
     });
 
@@ -113,13 +111,10 @@ export class JobPostingsService {
         title: dto.title,
         company: dto.company,
         location: dto.location,
-        description: dto.description,
-        requirements: dto.requirements || [],
-        responsibilities: dto.responsibilities || [],
-        niceToHave: dto.niceToHave || [],
+        language: dto.language,
+        fullText: dto.fullText,
         sourceUrl: dto.url,
-        // rawText can be constructed from the manual input for consistency
-        rawText: this.constructRawText(dto),
+        rawText: dto.fullText, // For manual input, fullText is also the rawText
       },
     });
 
@@ -128,53 +123,7 @@ export class JobPostingsService {
     return this.mapToResponseDto(jobPosting);
   }
 
-  /**
-   * Construct raw text representation from manual input
-   * This helps maintain consistency with parsed job postings
-   */
-  private constructRawText(dto: CreateJobPostingDto): string {
-    const parts: string[] = [];
 
-    parts.push(`Job Title: ${dto.title}`);
-    parts.push(`Company: ${dto.company}`);
-
-    if (dto.location) {
-      parts.push(`Location: ${dto.location}`);
-    }
-
-    if (dto.employmentType) {
-      parts.push(`Employment Type: ${dto.employmentType}`);
-    }
-
-    if (dto.salary) {
-      parts.push(`Salary: ${dto.salary}`);
-    }
-
-    if (dto.url) {
-      parts.push(`\nJob URL: ${dto.url}`);
-    }
-
-    if (dto.description) {
-      parts.push(`\nDescription:\n${dto.description}`);
-    }
-
-    if (dto.requirements && dto.requirements.length > 0) {
-      parts.push(`\nRequirements:`);
-      dto.requirements.forEach((req) => parts.push(`- ${req}`));
-    }
-
-    if (dto.responsibilities && dto.responsibilities.length > 0) {
-      parts.push(`\nResponsibilities:`);
-      dto.responsibilities.forEach((resp) => parts.push(`- ${resp}`));
-    }
-
-    if (dto.niceToHave && dto.niceToHave.length > 0) {
-      parts.push(`\nNice to Have:`);
-      dto.niceToHave.forEach((nice) => parts.push(`- ${nice}`));
-    }
-
-    return parts.join('\n');
-  }
 
   /**
    * Parse file content based on file type
@@ -209,215 +158,35 @@ export class JobPostingsService {
   }
 
   /**
-   * Extract structured data from raw text using regex patterns
-   * This is a simple MVP implementation - can be enhanced with LLM later
-   * @param text Raw text content
-   * @returns Parsed job data
+   * Simplified extraction fallback (when agent parsing fails)
+   * Just extracts basic fields, fullText is the raw text
    */
   private extractStructuredData(text: string): ParsedJobData {
-    // Extract title (look for common patterns)
-    const title = this.extractTitle(text);
+    // Basic extraction - try to find title and company in first few lines
+    const lines = text.split('\n').filter((l) => l.trim());
+    const firstLine = lines[0] || 'Unknown Position';
+    const secondLine = lines[1] || 'Unknown Company';
 
-    // Extract company name
-    const company = this.extractCompany(text);
+    // Simple title detection (first line with job keywords)
+    const title = firstLine.match(/engineer|developer|manager|analyst|specialist|consultant|designer|architect/i)
+      ? firstLine.trim()
+      : 'Unknown Position';
 
-    // Extract location
-    const location = this.extractLocation(text);
+    // Simple company detection (second line or look for "at Company")
+    const companyMatch = text.match(/(?:at|@)\s+([A-Z][a-zA-Z0-9\s&]+(?:Inc|LLC|Ltd|GmbH|AG|Corp)?)/);
+    const company = companyMatch ? companyMatch[1].trim() : secondLine.trim() || 'Unknown Company';
 
-    // Extract description (first substantial paragraph or section)
-    const description = this.extractDescription(text);
-
-    // Extract requirements
-    const requirements = this.extractSection(text, [
-      'requirements',
-      'qualifications',
-      'required skills',
-      'must have',
-      'what we need',
-      'you should have',
-      'minimum qualifications',
-    ]);
-
-    // Extract responsibilities
-    const responsibilities = this.extractSection(text, [
-      'responsibilities',
-      'duties',
-      'what you will do',
-      'role description',
-      'job description',
-      'you will',
-      'your mission',
-    ]);
-
-    // Extract nice-to-have
-    const niceToHave = this.extractSection(text, [
-      'nice to have',
-      'preferred',
-      'bonus',
-      'plus',
-      'nice-to-have',
-      'would be a plus',
-      'preferred qualifications',
-    ]);
+    // Simple location detection
+    const locationMatch = text.match(/(?:location|office|based in):\s*([^\n]+)/i);
+    const location = locationMatch ? locationMatch[1].trim() : undefined;
 
     return {
-      title: title || 'Unknown Position',
-      company: company || 'Unknown Company',
+      title,
+      company,
       location,
-      description: description || text.substring(0, 500),
-      requirements,
-      responsibilities,
-      niceToHave,
+      language: 'en', // Default fallback
+      fullText: text, // Use entire text as fullText
     };
-  }
-
-  /**
-   * Extract job title from text
-   */
-  private extractTitle(text: string): string | undefined {
-    // Look for patterns like "Job Title:", "Position:", "Role:", etc.
-    const patterns = [
-      /(?:job\s+title|position|role|vacancy|opening):\s*([^\n]+)/i,
-      /^([^\n]+?(?:engineer|developer|manager|analyst|specialist|consultant|designer|architect|lead|director|coordinator))/im,
-      /hiring\s+(?:for\s+)?([^\n]+)/i,
-    ];
-
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        return match[1].trim();
-      }
-    }
-
-    // Fallback: first line if it looks like a title (short and has job-related keywords)
-    const firstLine = text.split('\n')[0]?.trim();
-    if (
-      firstLine &&
-      firstLine.length < 100 &&
-      /engineer|developer|manager|analyst|specialist|consultant|designer|architect|lead|director/i.test(
-        firstLine,
-      )
-    ) {
-      return firstLine;
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Extract company name from text
-   */
-  private extractCompany(text: string): string | undefined {
-    // Look for patterns like "Company:", "at CompanyName", etc.
-    const patterns = [
-      /(?:company|employer|organization):\s*([^\n]+)/i,
-      /(?:at|@)\s+([A-Z][a-zA-Z0-9\s&]+(?:Inc|LLC|Ltd|GmbH|AG|Corp)?)/,
-      /(?:join|working\s+at)\s+([A-Z][a-zA-Z0-9\s&]+)/,
-    ];
-
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        return match[1].trim();
-      }
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Extract location from text
-   */
-  private extractLocation(text: string): string | undefined {
-    const patterns = [
-      /(?:location|office|based\s+in):\s*([^\n]+)/i,
-      /(?:remote|hybrid|on-site|onsite)(?:\s*[,-]\s*([^\n]+))?/i,
-      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*,\s*[A-Z]{2,})/,
-    ];
-
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match) {
-        return match[1]?.trim() || match[0].trim();
-      }
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Extract description from text
-   */
-  private extractDescription(text: string): string | undefined {
-    // Look for description section
-    const patterns = [
-      /(?:job\s+description|about\s+(?:the\s+)?(?:role|position)|overview):\s*([^\n]+(?:\n(?!\n)[^\n]+)*)/i,
-    ];
-
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        return match[1].trim();
-      }
-    }
-
-    // Fallback: first substantial paragraph
-    const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim().length > 100);
-    return paragraphs[0]?.trim();
-  }
-
-  // Cache for compiled regex patterns to improve performance
-  private sectionRegexCache = new Map<string, RegExp>();
-
-  /**
-   * Extract section items (requirements, responsibilities, etc.)
-   */
-  private extractSection(text: string, headers: string[]): string[] {
-    const items: string[] = [];
-
-    // Build pattern for section headers with caching
-    const cacheKey = headers.join('|');
-    let sectionRegex = this.sectionRegexCache.get(cacheKey);
-
-    if (!sectionRegex) {
-      sectionRegex = new RegExp(`(?:${cacheKey})\\s*:?\\s*([\\s\\S]*?)(?=(?:${cacheKey})|$)`, 'i');
-      this.sectionRegexCache.set(cacheKey, sectionRegex);
-    }
-
-    const match = text.match(sectionRegex);
-    if (!match || !match[1]) {
-      return items;
-    }
-
-    const sectionText = match[1];
-
-    // Extract bullet points (various formats)
-    const bulletPatterns = [
-      /[•\-\*]\s*([^\n]+)/g,
-      /^\s*\d+\.\s*([^\n]+)/gm,
-      /^(?:\s{2,}|\t)([A-Z][^\n]+)/gm,
-    ];
-
-    for (const pattern of bulletPatterns) {
-      const matches = Array.from(sectionText.matchAll(pattern));
-      if (matches.length > 0) {
-        items.push(...matches.map((m) => m[1].trim()).filter((item) => item.length > 10));
-        break; // Use first matching pattern
-      }
-    }
-
-    // If no bullets found, split by newlines and filter
-    if (items.length === 0) {
-      items.push(
-        ...sectionText
-          .split('\n')
-          .map((line) => line.trim())
-          .filter((line) => line.length > 15 && line.length < 300),
-      );
-    }
-
-    // Limit to reasonable number of items
-    return items.slice(0, 20);
   }
 
   /**
@@ -482,10 +251,8 @@ export class JobPostingsService {
       title: jobPosting.title,
       company: jobPosting.company,
       location: jobPosting.location,
-      description: jobPosting.description,
-      requirements: jobPosting.requirements,
-      responsibilities: jobPosting.responsibilities,
-      niceToHave: jobPosting.niceToHave,
+      language: jobPosting.language,
+      fullText: jobPosting.fullText,
       rawText: jobPosting.rawText,
       sourceUrl: jobPosting.sourceUrl,
       fileId: jobPosting.fileId,

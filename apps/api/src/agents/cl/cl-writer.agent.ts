@@ -142,7 +142,9 @@ export class CLWriterAgent implements Agent<CLAgentInput, CLAgentOutput> {
 ## Target Position
 - **Title:** ${jobPosting.title}
 - **Company:** ${jobPosting.company}
-- **Description:** ${jobPosting.description}
+
+## Job Posting Full Text
+${jobPosting.fullText}
 
 ## Extracted Keywords from Job Posting
 ${JSON.stringify(keywords, null, 2)}
@@ -310,7 +312,7 @@ Return ONLY the JSON object.
    */
   private generateSimpleCoverLetter(
     profile: ProfileData,
-    jobPosting: { title: string; company: string; description: string },
+    jobPosting: { title: string; company: string; fullText: string },
     language: 'de' | 'en',
   ): string {
     const name = `${profile.firstName} ${profile.lastName}`;

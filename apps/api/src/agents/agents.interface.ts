@@ -25,9 +25,7 @@ export interface ATSAgentInput {
     title: string;
     company: string;
     location: string | null;
-    description: string;
-    requirements: string | null;
-    responsibilities: string | null;
+    fullText: string; // Complete job posting text (description, requirements, responsibilities, benefits, etc.)
     language: 'de' | 'en' | null;
   };
 }
@@ -55,7 +53,7 @@ export interface CVAgentInput {
   jobPosting: {
     title: string;
     company: string;
-    description: string;
+    fullText: string; // Complete job posting text
   };
   language: 'de' | 'en';
 }
@@ -83,7 +81,7 @@ export interface CLAgentInput {
   jobPosting: {
     title: string;
     company: string;
-    description: string;
+    fullText: string; // Complete job posting text
   };
   language: 'de' | 'en';
 }

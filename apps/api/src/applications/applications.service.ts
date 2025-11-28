@@ -299,24 +299,20 @@ Summary: ${resume.summary || 'Not provided'}
       title: string;
       company: string;
       location?: string | null;
-      description?: string | null;
-      requirements: string[];
-      responsibilities: string[];
-      niceToHave: string[];
+      language?: string | null;
+      fullText: string;
       rawText?: string | null;
     },
     profileKeywords: Set<string>,
   ): Promise<{ matchedKeywords: KeywordMatch[]; missingKeywords: KeywordMatch[] }> {
     try {
-      // Extract keywords using ATS Agent
+      // Extract keywords using ATS Agent (simplified - only fullText needed)
       const keywords = await this.keywordsService.extractKeywords({
         title: jobPosting.title,
         company: jobPosting.company,
         location: jobPosting.location || undefined,
-        description: jobPosting.description || undefined,
-        requirements: jobPosting.requirements,
-        responsibilities: jobPosting.responsibilities,
-        niceToHave: jobPosting.niceToHave,
+        language: jobPosting.language || undefined,
+        fullText: jobPosting.fullText,
         rawText: jobPosting.rawText || undefined,
       });
 
@@ -1048,15 +1044,13 @@ Summary: ${resume.summary || 'Not provided'}
 
     const jobPosting = application.jobPosting;
 
-    // Extract keywords using ATS Agent
+    // Extract keywords using ATS Agent (simplified with fullText)
     const keywords = await this.keywordsService.extractKeywords({
       title: jobPosting.title,
       company: jobPosting.company,
       location: jobPosting.location || undefined,
-      description: jobPosting.description || undefined,
-      requirements: jobPosting.requirements,
-      responsibilities: jobPosting.responsibilities,
-      niceToHave: jobPosting.niceToHave,
+      language: jobPosting.language || undefined,
+      fullText: jobPosting.fullText,
       rawText: jobPosting.rawText || undefined,
     });
 

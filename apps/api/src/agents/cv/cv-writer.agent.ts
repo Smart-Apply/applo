@@ -140,7 +140,9 @@ export class CVWriterAgent implements Agent<CVAgentInput, CVAgentOutput> {
 ## Target Position
 - **Title:** ${jobPosting.title}
 - **Company:** ${jobPosting.company}
-- **Description:** ${jobPosting.description}
+
+## Job Posting Full Text
+${jobPosting.fullText}
 
 ## Extracted Keywords from Job Posting
 ${JSON.stringify(keywords, null, 2)}

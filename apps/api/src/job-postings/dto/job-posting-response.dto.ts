@@ -13,19 +13,13 @@ export class JobPostingResponseDto {
   @ApiPropertyOptional({ description: 'Job location' })
   location?: string;
 
-  @ApiPropertyOptional({ description: 'Full job description' })
-  description?: string;
+  @ApiPropertyOptional({ description: 'Detected language (ISO 639-1 code)' })
+  language?: string;
 
-  @ApiProperty({ description: 'Job requirements', type: [String] })
-  requirements: string[];
+  @ApiProperty({ description: 'Full job posting text (description, requirements, responsibilities, benefits, etc.)' })
+  fullText: string;
 
-  @ApiProperty({ description: 'Job responsibilities', type: [String] })
-  responsibilities: string[];
-
-  @ApiProperty({ description: 'Nice to have qualifications', type: [String] })
-  niceToHave: string[];
-
-  @ApiPropertyOptional({ description: 'Raw text content' })
+  @ApiPropertyOptional({ description: 'Raw HTML/scraped content for debugging' })
   rawText?: string;
 
   @ApiPropertyOptional({ description: 'Source URL if provided' })

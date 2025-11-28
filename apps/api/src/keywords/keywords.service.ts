@@ -8,12 +8,9 @@ interface JobPostingData {
   title: string;
   company: string;
   location?: string;
-  description?: string;
-  requirements: string[];
-  responsibilities: string[];
-  niceToHave: string[];
+  language?: string;
+  fullText: string;
   rawText?: string;
-  language?: 'de' | 'en';
 }
 
 @Injectable()
@@ -31,16 +28,14 @@ export class KeywordsService {
   async extractKeywords(jobPosting: JobPostingData): Promise<ATSAgentOutput> {
     this.logger.log(`Extracting keywords for: ${jobPosting.title} at ${jobPosting.company}`);
 
-    // Build the input for the ATS Agent
+    // Build the input for the ATS Agent (simplified with fullText)
     const input: ATSAgentInput = {
       jobPosting: {
         title: jobPosting.title,
         company: jobPosting.company,
         location: jobPosting.location || null,
-        description: this.buildDescription(jobPosting),
-        requirements: jobPosting.requirements?.join('\n') || null,
-        responsibilities: jobPosting.responsibilities?.join('\n') || null,
-        language: jobPosting.language || this.detectLanguage(jobPosting),
+        fullText: jobPosting.fullText,
+        language: (jobPosting.language as 'de' | 'en') || this.detectLanguage(jobPosting.fullText),
       },
     };
 
@@ -101,15 +96,13 @@ export class KeywordsService {
       throw new NotFoundException('Job posting not found');
     }
 
-    // Extract keywords using ATS Agent
+    // Extract keywords using ATS Agent (simplified with fullText)
     const keywords = await this.extractKeywords({
       title: jobPosting.title,
       company: jobPosting.company,
       location: jobPosting.location || undefined,
-      description: jobPosting.description || undefined,
-      requirements: jobPosting.requirements,
-      responsibilities: jobPosting.responsibilities,
-      niceToHave: jobPosting.niceToHave,
+      language: jobPosting.language || undefined,
+      fullText: jobPosting.fullText,
       rawText: jobPosting.rawText || undefined,
     });
 
@@ -193,24 +186,10 @@ export class KeywordsService {
   }
 
   /**
-   * Build description from job posting parts
+   * Detect language from job posting full text
    */
-  private buildDescription(jobPosting: JobPostingData): string {
-    const parts = [
-      jobPosting.description,
-      jobPosting.rawText,
-      ...(jobPosting.requirements || []),
-      ...(jobPosting.responsibilities || []),
-      ...(jobPosting.niceToHave || []),
-    ];
-    return parts.filter(Boolean).join('\n\n');
-  }
-
-  /**
-   * Detect language from job posting content
-   */
-  private detectLanguage(jobPosting: JobPostingData): 'de' | 'en' | null {
-    const text = this.buildDescription(jobPosting).toLowerCase();
+  private detectLanguage(text: string): 'de' | 'en' | null {
+    const lowercase = text.toLowerCase();
 
     // Simple heuristic: check for common German words
     const germanWords = ['und', 'oder', 'für', 'mit', 'von', 'bei', 'wir', 'sie', 'ihre', 'unser'];
@@ -220,10 +199,10 @@ export class KeywordsService {
     let englishScore = 0;
 
     for (const word of germanWords) {
-      if (text.includes(` ${word} `)) germanScore++;
+      if (lowercase.includes(` ${word} `)) germanScore++;
     }
     for (const word of englishWords) {
-      if (text.includes(` ${word} `)) englishScore++;
+      if (lowercase.includes(` ${word} `)) englishScore++;
     }
 
     if (germanScore > englishScore) return 'de';

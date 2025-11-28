@@ -20,7 +20,8 @@ import {
   MapPin,
   Building2,
   Calendar,
-  ChevronRight
+  ChevronRight,
+  Eye
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -137,103 +138,120 @@ export default function JobsPage() {
       {/* Job Postings List */}
       <div>
         {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="h-48 animate-pulse bg-muted/50 border-transparent" />
-            ))}
-          </div>
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-20 animate-pulse bg-muted/50" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         ) : jobPostings && jobPostings.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {jobPostings.map((job, index) => (
-              <Card
-                key={job.id}
-                className="group hover:shadow-soft hover:-translate-y-1 transition-all duration-300 border-border/50 overflow-hidden flex flex-col"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1.5 flex-1 min-w-0">
-                      <CardTitle className="text-lg font-semibold leading-tight truncate" title={job.title}>
-                        {job.title}
-                      </CardTitle>
-                      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <Building2 className="h-3.5 w-3.5 shrink-0" />
-                          <span className="font-medium text-foreground/80 truncate">{job.company}</span>
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {jobPostings.map((job, index) => (
+                  <div
+                    key={job.id}
+                    className="group hover:bg-muted/30 transition-colors p-4"
+                    style={{ animationDelay: `${index * 30}ms` }}
+                  >
+                    <div className="flex items-start gap-4">
+                      {/* Main Info */}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-base leading-tight mb-1 truncate" title={job.title}>
+                              {job.title}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                                <span className="font-medium">{job.company}</span>
+                              </div>
+                              {job.location && (
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                  <span>{job.location}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5 shrink-0" />
+                                <span>{new Date(job.createdAt).toLocaleDateString('de-DE')}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        {job.location && (
-                          <div className="flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate">{job.location}</span>
+
+                        {/* Description */}
+                        {job.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                            {job.description}
+                          </p>
+                        )}
+
+                        {/* Requirements Tags */}
+                        {job.requirements && job.requirements.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {job.requirements.slice(0, 5).map((req, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-[10px] font-normal bg-muted/50 text-muted-foreground hover:bg-muted">
+                                {req.length > 25 ? req.substring(0, 25) + '...' : req}
+                              </Badge>
+                            ))}
+                            {job.requirements.length > 5 && (
+                              <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
+                                +{job.requirements.length - 5} weitere
+                              </Badge>
+                            )}
                           </div>
                         )}
                       </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {job.sourceUrl && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.open(job.sourceUrl, '_blank')}
+                            title="Original öffnen"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.push(`/job-postings/${job.id}`)}
+                          title="Details anzeigen"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => router.push(`/applications/new?jobId=${job.id}`)}
+                        >
+                          <Briefcase className="mr-2 h-3.5 w-3.5" />
+                          Bewerben
+                        </Button>
+                        <Button
+                          onClick={() => handleDeleteClick(job.id, job.title)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground hover:text-destructive"
+                          title="Löschen"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      onClick={() => handleDeleteClick(job.id, job.title)}
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 -mr-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Löschen</span>
-                    </Button>
                   </div>
-                </CardHeader>
-
-                <CardContent className="pb-3 flex-1 space-y-4">
-                  {job.description && (
-                    <div className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                      {job.description}
-                    </div>
-                  )}
-
-                  {job.requirements && job.requirements.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {job.requirements.slice(0, 3).map((req, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-[10px] font-normal bg-muted/50 text-muted-foreground hover:bg-muted">
-                          {req.length > 20 ? req.substring(0, 20) + '...' : req}
-                        </Badge>
-                      ))}
-                      {job.requirements.length > 3 && (
-                        <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
-                          +{job.requirements.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
-                    <Calendar className="h-3 w-3" />
-                    <span>Hinzugefügt am {new Date(job.createdAt).toLocaleDateString('de-DE')}</span>
-                  </div>
-                </CardContent>
-
-                <CardFooter className="pt-0 pb-4 px-6 flex gap-2 border-t border-border/50 mt-auto pt-4">
-                  {job.sourceUrl && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => window.open(job.sourceUrl, '_blank')}
-                    >
-                      <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                      Original
-                    </Button>
-                  )}
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="flex-[2] shadow-sm group-hover:shadow transition-all"
-                    onClick={() => router.push(`/applications/new?jobId=${job.id}`)}
-                  >
-                    <Briefcase className="mr-2 h-3.5 w-3.5" />
-                    Bewerben
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border border-dashed border-border bg-muted/10 animate-in fade-in zoom-in-95 duration-500">
             <div className="relative mb-6">

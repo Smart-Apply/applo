@@ -23,11 +23,8 @@ export interface ApplicationPipelineInput {
     title: string;
     company: string;
     location?: string;
-    description: string;
-    requirements: string[];
-    responsibilities: string[];
-    niceToHave: string[];
-    rawText?: string;
+    language?: string;
+    fullText: string; // Complete job posting text
   };
   profile: ProfileData;
   language: 'de' | 'en';
@@ -159,10 +156,8 @@ export class ApplicationPipelineService {
         title: jobPosting.title,
         company: jobPosting.company,
         location: jobPosting.location || null,
-        description: jobPosting.description,
-        requirements: jobPosting.requirements?.join('\n') || null,
-        responsibilities: jobPosting.responsibilities?.join('\n') || null,
-        language: this.detectLanguage(jobPosting.description),
+        fullText: jobPosting.fullText,
+        language: jobPosting.language ? (jobPosting.language as 'de' | 'en') : this.detectLanguage(jobPosting.fullText),
       },
     };
 
@@ -175,7 +170,7 @@ export class ApplicationPipelineService {
   private async generateCV(
     keywords: ATSAgentOutput,
     profile: ProfileData,
-    jobPosting: { title: string; company: string; description: string },
+    jobPosting: { title: string; company: string; fullText: string },
     language: 'de' | 'en',
   ): Promise<CVAgentOutput> {
     const input: CVAgentInput = {
@@ -194,7 +189,7 @@ export class ApplicationPipelineService {
   private async generateCoverLetter(
     keywords: ATSAgentOutput,
     profile: ProfileData,
-    jobPosting: { title: string; company: string; description: string },
+    jobPosting: { title: string; company: string; fullText: string },
     language: 'de' | 'en',
   ): Promise<CLAgentOutput> {
     const input: CLAgentInput = {

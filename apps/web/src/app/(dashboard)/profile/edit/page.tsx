@@ -45,7 +45,7 @@ export default function ProfileEditPage() {
   // State for skills, experiences, education, certificates, and projects management
   const [skills, setSkills] = useState<Skill[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [education, setEducation] = useState<EducationWithYears[]>([]);
+  const [education, setEducation] = useState<Education[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -53,7 +53,7 @@ export default function ProfileEditPage() {
   
   // Refs to track latest state values (prevent stale closure issues)
   const experiencesRef = useRef<Experience[]>([]);
-  const educationRef = useRef<EducationWithYears[]>([]);
+  const educationRef = useRef<Education[]>([]);
   const certificatesRef = useRef<Certificate[]>([]);
   const projectsRef = useRef<Project[]>([]);
   
