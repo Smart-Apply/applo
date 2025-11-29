@@ -90,42 +90,65 @@ These keywords are in the job posting but not explicitly in the profile. Include
 - Confident but not arrogant
 - Specific and concrete, not generic
 - Action-oriented with strong verbs
-- Adapt language to job posting (German/English)
 
-### Language Detection
+### CRITICAL: Language Requirement
 
-- If job posting is in German, write in German
-- If job posting is in English, write in English
-- Use formal address appropriate to the language
+**Detected Language:** {{language}} ({{languageName}})
+
+**YOU MUST write the cover letter in {{languageName}}!**
+
+- If language is "de" → Write EVERYTHING in German (Sehr geehrte Damen und Herren, Mit freundlichen Grüßen)
+- If language is "en" → Write EVERYTHING in English (Dear Hiring Manager, Best regards)
+- DO NOT mix languages
+- Use formal address appropriate to the language (Sie/du in German, you in English)
 
 ### Formatting
 
-Return the cover letter as **clean HTML** (no markdown):
+Return the cover letter as **clean HTML** (no markdown).
 
+**LANGUAGE-SPECIFIC EXAMPLES:**
+
+**If language is "de" (German):**
 ```html
 <p>Sehr geehrte Damen und Herren,</p>
 
-<p>Opening paragraph with keywords integrated naturally...</p>
+<p>Opening paragraph with keywords integrated naturally IN GERMAN...</p>
 
-<p>Body paragraph 1 with STAR achievements...</p>
+<p>Body paragraph 1 with STAR achievements IN GERMAN...</p>
 
-<p>Body paragraph 2 with more achievements...</p>
+<p>Body paragraph 2 with more achievements IN GERMAN...</p>
 
-<p>Closing paragraph reinforcing fit...</p>
+<p>Closing paragraph reinforcing fit IN GERMAN...</p>
 
 <p>Mit freundlichen Grüßen</p>
 ```
 
+**If language is "en" (English):**
+```html
+<p>Dear Hiring Manager,</p>
+
+<p>Opening paragraph with keywords integrated naturally IN ENGLISH...</p>
+
+<p>Body paragraph 1 with STAR achievements IN ENGLISH...</p>
+
+<p>Body paragraph 2 with more achievements IN ENGLISH...</p>
+
+<p>Closing paragraph reinforcing fit IN ENGLISH...</p>
+
+<p>Best regards,</p>
+```
+
 ## Important Rules
 
-1. **Length:** Maximum 350-400 words (approximately 1 page)
-2. **No HTML wrappers:** Only use `<p>` tags for paragraphs
-3. **No bullet points:** Use flowing prose
-4. **No signature:** End with the greeting only (name added by template)
-5. **Keyword focus:** First paragraph is most important for ATS
+1. **LANGUAGE:** MUST match {{languageName}} ({{language}})
+2. **Length:** Maximum 350-400 words (approximately 1 page)
+3. **No HTML wrappers:** Only use `<p>` tags for paragraphs
+4. **No bullet points:** Use flowing prose
+5. **No signature:** End with the greeting only (name added by template)
+6. **Keyword focus:** First paragraph is most important for ATS
 
 ## Output
 
-Return ONLY the HTML content, starting with the salutation `<p>Sehr geehrte...</p>` or `<p>Dear...</p>` and ending with the closing `<p>Mit freundlichen Grüßen</p>` or `<p>Best regards,</p>`.
+Return ONLY the HTML content in {{languageName}}, starting with the appropriate salutation and ending with the appropriate closing.
 
 Generate a compelling, keyword-optimized cover letter that will pass ATS screening while impressing human reviewers.

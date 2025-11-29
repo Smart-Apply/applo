@@ -5,10 +5,15 @@
 Generate an ATS-optimized resume that passes automated screening while impressing human reviewers. Strategically place extracted keywords in optimal positions for ATS scanning.
 
 **🌍 CRITICAL LANGUAGE REQUIREMENT:**
-- The job posting is in its **ORIGINAL LANGUAGE** (could be German, English, French, Spanish, etc.)
-- You MUST generate the resume in the **SAME LANGUAGE** as the job posting
-- DO NOT translate to English - keep everything in the job posting's language
-- All sections (Professional Summary, Skills, Experience descriptions) must match the job posting language
+
+**Detected Language:** {{language}} ({{languageName}})
+
+**YOU MUST generate the resume in {{languageName}}!**
+
+- Language code "{{language}}" means you MUST write in {{languageName}}
+- DO NOT translate to another language
+- All sections (Professional Summary, Skills, Experience descriptions) must be in {{languageName}}
+- Section headers and content MUST match the detected language
 
 ## Candidate Profile
 
@@ -43,14 +48,14 @@ The summary section has the highest weight in ATS scanning. It must include:
 - **Years of experience** with the most relevant technologies
 - **Key achievement** with quantifiable result
 
-**🌍 LANGUAGE RULE:** Write the summary in the **SAME LANGUAGE** as the job posting!
+**🌍 LANGUAGE RULE:** Write the summary in {{languageName}} (language: {{language}})
 
-**Examples:**
+**Examples based on detected language:**
 
-**English Job → English Summary:**
+**If language is "en" (English):**
 "Senior Full-Stack Developer with 6+ years of experience in React, Node.js, and TypeScript. Expert in building scalable microservices using Docker and Kubernetes. Led teams that increased application performance by 45% and reduced deployment time by 60%. Passionate about clean code and Agile methodologies."
 
-**German Job → German Summary:**
+**If language is "de" (German):**
 "Senior Full-Stack Developer mit 6+ Jahren Erfahrung in React, Node.js und TypeScript. Experte im Aufbau skalierbarer Microservices mit Docker und Kubernetes. Leitete Teams, die die Anwendungsperformance um 45% steigerten und die Deployment-Zeit um 60% reduzierten. Leidenschaftlich für Clean Code und Agile-Methoden."
 
 ### Skills Section (CRITICAL for ATS)
@@ -68,11 +73,15 @@ The skills section is often the first thing ATS scans. Structure it for maximum 
 3. **Use exact terminology** from job posting
 4. **Include skill proficiency** if mentioned in profile
 
-**🌍 LANGUAGE RULE:** 
-- If job posting is in German → Use German category names: "Programmiersprachen", "Frameworks", "Cloud & DevOps", "Datenbanken", "Tools & Methoden"
-- If job posting is in French → Use French: "Langages", "Frameworks", "Cloud", "Bases de données", "Outils"
-- If job posting is in Spanish → Use Spanish: "Lenguajes", "Frameworks", "Nube", "Bases de datos", "Herramientas"
+**🌍 LANGUAGE RULE (language: {{language}}):**
+
+- If language is "de" (German) → Use German category names: "Programmiersprachen", "Frameworks", "Cloud & DevOps", "Datenbanken", "Tools & Methoden"
+- If language is "en" (English) → Use English category names: "Languages", "Frameworks", "Cloud & DevOps", "Databases", "Tools & Methods"
+- If language is "fr" (French) → Use French: "Langages", "Frameworks", "Cloud", "Bases de données", "Outils"
+- If language is "es" (Spanish) → Use Spanish: "Lenguajes", "Frameworks", "Nube", "Bases de datos", "Herramientas"
 - **Keep skill names as-is** (e.g., "React", "Docker", "PostgreSQL" stay in English, they are proper nouns)
+
+**YOUR OUTPUT MUST USE {{languageName}} category names!**
 
 ### Work Experience (Keyword Integration)
 
@@ -80,23 +89,38 @@ For each position, apply these rules:
 
 1. **Job Title** - Match with keywords if applicable
 2. **Company** | **Duration**
-3. **First bullet point** MUST include 2-3 priority keywords (highest ATS weight)
-4. Use **STAR + Keywords** format:
+3. **Description (REQUIRED)** - Provide a brief 1-2 sentence overview of the role:
+   - Summarize main responsibilities and focus areas
+   - Include 2-3 relevant keywords naturally
+   - Keep it concise (20-40 words)
+   - Write in past tense for former roles, present tense for current role
+4. **First bullet point** MUST include 2-3 priority keywords (highest ATS weight)
+5. Use **STAR + Keywords** format for achievements:
    - [Action Verb] + [Keyword] + [Context] + [Quantifiable Result]
 
-**🌍 LANGUAGE RULE:** Achievement bullets MUST be in the job posting's language!
+**🌍 LANGUAGE RULE:** Description and achievement bullets MUST be in {{languageName}} (language: {{language}})!
 
-**Example Bullets (English Job):**
+**Example Description if language is "en" (English):**
+"Led development of cloud-native applications using React, Node.js, and Azure. Responsible for architecture decisions, code reviews, and team mentorship."
+
+**Example Description if language is "de" (German):**
+"Leitete die Entwicklung von Cloud-nativen Anwendungen mit React, Node.js und Azure. Verantwortlich für Architekturentscheidungen, Code-Reviews und Team-Mentoring."
+
+**Example Achievement Bullets if language is "en" (English):**
+
 - "Developed React-based dashboard using TypeScript, reducing page load time by 50%"
 - "Architected microservices infrastructure with Docker and Kubernetes, handling 1M+ requests/day"
 - "Led Agile team of 5 developers implementing CI/CD pipeline with Jenkins"
 - "Optimized PostgreSQL queries, improving database performance by 35%"
 
-**Example Bullets (German Job):**
+**Example Achievement Bullets if language is "de" (German):**
+
 - "Entwickelte React-basiertes Dashboard mit TypeScript und reduzierte Ladezeit um 50%"
 - "Konzipierte Microservices-Infrastruktur mit Docker und Kubernetes für 1M+ Anfragen/Tag"
 - "Leitete agiles Team von 5 Entwicklern bei der Implementierung einer CI/CD-Pipeline mit Jenkins"
 - "Optimierte PostgreSQL-Abfragen und verbesserte Datenbankperformance um 35%"
+
+**YOU MUST USE {{languageName}} for all experience descriptions and achievement bullets!**
 
 **Per Experience:**
 - 4-6 bullet points
@@ -173,6 +197,7 @@ Return a JSON object with the following structure:
       "company": "Tech Company",
       "location": "San Francisco, CA",
       "dateRange": "Jan 2020 - Present",
+      "description": "Brief 1-2 sentence overview of the role, responsibilities, and technologies used. Include relevant keywords naturally.",
       "achievements": [
         "Led React and TypeScript development of customer dashboard serving <span class='metric'>500K+ users</span>",
         "Implemented microservices architecture using Node.js and Docker, improving scalability by <span class='metric'>60%</span>",

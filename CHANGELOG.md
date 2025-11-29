@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] - 2024-01-XX
 
+### ✨ Features
+
+#### ATS Score Weighted Calculation
+
+- **Weighted Score Algorithm**: Implemented category-based weighted scoring for ATS match analysis
+  - Hard Skills (Technical): 40% weight
+  - Soft Skills: 20% weight
+  - Experience: 30% weight
+  - Certificates/Education: 10% weight
+- **Smart Normalization**: Score calculation considers only categories with actual keywords
+- **Test Coverage**: Added comprehensive test suite (`weighted-score.spec.ts`) with 5 test scenarios
+- **Documentation**: Updated `docs/ATS_OPTIMIZATION.md` with score calculation explanation
+- **API Compatibility**: No breaking changes - `matchPercentage` now returns weighted score
+
 ### 🔧 Major Restructuring - npm Workspaces Monorepo
 
 #### Added

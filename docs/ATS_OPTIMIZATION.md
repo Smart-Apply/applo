@@ -35,6 +35,30 @@ When generating PDFs through Smart Apply, you can choose between two formats:
 1. **Standard Format**: Professional-looking with modern styling, colors, and graphics
 2. **ATS-Optimized Format**: Maximum parsability with simple formatting
 
+### ATS Score Calculation
+
+Smart Apply calculates a **weighted ATS match score** based on your profile's alignment with the job posting. The score uses the following weights:
+
+| Category | Weight | Description |
+|----------|--------|-------------|
+| **Hard Skills** | 40% | Technical skills, tools, programming languages, frameworks |
+| **Soft Skills** | 20% | Communication, teamwork, problem-solving, leadership |
+| **Experience** | 30% | Years of experience, seniority level, job requirements |
+| **Certificates & Education** | 10% | Certifications, degrees, courses, additional qualifications |
+
+**How it works:**
+- Each category is scored based on keyword matches between your profile and the job posting
+- The final score is a weighted average of all categories
+- Higher scores (80%+) indicate strong alignment with the job requirements
+- Lower scores (< 50%) suggest missing key qualifications
+
+**Example:**
+- Hard Skills: 90% match × 0.40 = 36 points
+- Soft Skills: 80% match × 0.20 = 16 points
+- Experience: 70% match × 0.30 = 21 points
+- Certificates: 50% match × 0.10 = 5 points
+- **Total ATS Score: 78%**
+
 ### ATS-Optimized PDFs Include:
 
 - ✅ **Text-Based Content**: All text is selectable and searchable (no images with text)

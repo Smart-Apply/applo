@@ -52,11 +52,12 @@ Deliver a minimal yet production-grade application with:
 - `uploads` (file → Blob in prod)
 - `job-postings` (parse text/URL/file → normalized JobPosting, Azure AI Agent for URL parsing)
 - `applications` (pipeline orchestration: profile + job → LLM → PDF → Blob)
-- `llm` (Azure OpenAI + Hugging Face + mock providers)
+- `llm` (Azure OpenAI + Hugging Face + mock providers, **automatic language detection**)
 - `pdf` (Puppeteer + Handlebars templates, ATS-optimized PDFs with selectable templates)
 - `storage` (disk | azure-blob providers)
 - `jobs` (in-memory | service-bus providers)
 - `config` (Zod env schema), `common` (filters/guards/decorators)
+- `keywords` (ATS keyword extraction and matching with language detection)
 
 ## Frontend Structure
 - `app/` (App Router with route groups)
@@ -479,6 +480,22 @@ npx shadcn@latest add <component>  # Add new shadcn/ui component
   - Templates stored in database (`ResumeTemplate` model)
   - Seeded via `npm run prisma:seed:templates`
   - User can select template per application
+
+### Automatic Language Detection ✅
+- **Intelligent Language Recognition:**
+  - Analyzes job posting text for language markers (German/English keywords)
+  - Scoring algorithm counts frequency of language-specific words
+  - Detects 'de' (German) or 'en' (English) with fallback to English
+- **Adaptive Content Generation:**
+  - Cover letters automatically generated in detected language
+  - Resumes adapt section headers and descriptions to match language
+  - Technical terms (React, Docker, etc.) remain in English
+- **Template Integration:**
+  - Language code passed to LLM prompts as `{{language}}` and `{{languageName}}`
+  - Templates include language-specific instructions and examples
+  - Formal address adapts to language (Sie/du vs. you)
+- **Testing:** Unit tests verify detection accuracy across various text samples
+- **Documentation:** See `docs/features/AUTOMATIC_LANGUAGE_DETECTION.md`
 
 ### Frontend (35% Complete) 🔄
 - **Implemented ✅**

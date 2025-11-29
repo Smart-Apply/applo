@@ -87,6 +87,147 @@ export class LLMService {
   }
 
   /**
+   * Intelligently categorize skills based on candidate profile and industry context
+   * Uses LLM to create logical, industry-appropriate skill categories
+   */
+  async categorizeSkills(context: SkillCategorizationContext): Promise<SkillCategory[]> {
+    this.logger.log(
+      `Categorizing ${context.skills.length} skills for ${context.industry || 'general'} industry`,
+    );
+
+    const skillsList = context.skills.join(', ');
+
+    const prompt = `You are an expert career counselor and resume writer. Your task is to intelligently categorize a candidate's skills into logical, industry-appropriate groups.
+
+**Candidate Context:**
+${context.candidateContext || 'General professional'}
+
+**Industry/Field:**
+${context.industry || 'Not specified - infer from skills'}
+
+**Skills to categorize:**
+${skillsList}
+
+**Instructions:**
+1. Analyze the skills and candidate background to determine the most appropriate categories
+2. Create 3-6 categories that make sense for this specific industry/field
+3. Use category names that are relevant to the candidate's profession (NOT just generic tech categories)
+4. Group related skills together logically
+5. Order categories by relevance (most important skills first)
+
+**Examples of good categorization:**
+- IT/Software: "Programming Languages", "Frontend Frameworks", "Cloud & DevOps", "Databases", "Tools"
+- Marketing: "Digital Marketing", "Content Creation", "Analytics Tools", "Social Media Platforms", "Design Software"
+- Healthcare: "Clinical Skills", "Medical Equipment", "Software Systems", "Administrative", "Certifications"
+- Finance: "Financial Analysis", "Software & Tools", "Regulatory Compliance", "Reporting", "Languages"
+- General Business: "Core Competencies", "Software & Tools", "Communication", "Project Management"
+
+**Output Format:**
+Return ONLY a JSON array in this exact format (no markdown, no additional text):
+[
+  {
+    "type": "Category Name",
+    "skills": ["Skill 1", "Skill 2", "Skill 3"]
+  },
+  {
+    "type": "Another Category",
+    "skills": ["Skill 4", "Skill 5"]
+  }
+]
+
+**Rules:**
+- Use the EXACT skill names provided (don't modify or translate them)
+- Each skill should appear in exactly ONE category
+- If a skill doesn't fit elsewhere, create an "Other" or appropriate catch-all category
+- Aim for 3-6 categories maximum for clarity
+- Return valid JSON only`;
+
+    try {
+      const response = await this.provider.generateText(prompt, {
+        temperature: 0.3, // Lower temperature for more consistent categorization
+        maxTokens: 1000,
+        systemMessage:
+          'You are an expert at organizing and categorizing professional skills based on industry context. You return clean JSON output.',
+      });
+
+      // Parse LLM response
+      const parsed = JSON.parse(response.trim());
+
+      // Validate structure
+      if (!Array.isArray(parsed)) {
+        throw new Error('LLM response is not an array');
+      }
+
+      const categories: SkillCategory[] = parsed
+        .map((cat: any) => ({
+          type: String(cat.type || 'Other').trim(),
+          skills: Array.isArray(cat.skills)
+            ? cat.skills.map((s: any) => String(s).trim()).filter(Boolean)
+            : [],
+        }))
+        .filter((cat) => cat.type && cat.skills.length > 0);
+
+      this.logger.log(`Successfully categorized skills into ${categories.length} categories`);
+      return categories;
+    } catch (error) {
+      this.logger.error('Failed to categorize skills with LLM', error);
+      // Return a fallback single category
+      return [
+        {
+          type: 'Skills',
+          skills: context.skills,
+        },
+      ];
+    }
+  }
+
+  /**
+   * Translate professional summary to target language
+   * Preserves professional tone and key information
+   */
+  async translateSummary(
+    summary: string,
+    fromLanguage: string,
+    toLanguage: string,
+  ): Promise<string> {
+    if (!summary || fromLanguage === toLanguage) {
+      return summary;
+    }
+
+    const languageNames: Record<string, string> = {
+      de: 'German',
+      en: 'English',
+      fr: 'French',
+      es: 'Spanish',
+    };
+
+    const fromLang = languageNames[fromLanguage] || fromLanguage;
+    const toLang = languageNames[toLanguage] || toLanguage;
+
+    this.logger.log(`Translating summary from ${fromLang} to ${toLang}`);
+
+    const prompt = `Translate the following professional summary from ${fromLang} to ${toLang}.
+
+**Original Summary (${fromLang}):**
+${summary}
+
+**Instructions:**
+1. Translate accurately while maintaining professional tone
+2. Keep the same length (2-3 sentences)
+3. Preserve key achievements, years of experience, and technical terms
+4. Technical terms (React, Docker, AWS, etc.) should remain in English
+5. Return ONLY the translated text, no explanations
+
+**Translated Summary (${toLang}):**`;
+
+    return this.provider.generateText(prompt, {
+      temperature: 0.3, // Lower temperature for accurate translation
+      maxTokens: 500,
+      systemMessage: `You are a professional translator specializing in resume and career documents. You translate accurately while maintaining professional tone and preserving technical terminology.`,
+    });
+  }
+
+  /**
    * Modify existing cover letter content based on user instructions
    * Applies AI-based changes to current content while preserving structure
    */
@@ -183,6 +324,8 @@ Geändertes Anschreiben:`;
       .map((k) => k.keyword)
       .join(', ');
 
+    const language = context.language || 'en';
+
     return {
       profile: context.profile,
       jobTitle: context.jobTitle,
@@ -195,6 +338,8 @@ Geändertes Anschreiben:`;
       softSkillKeywords: softSkillKeywords || 'None',
       experienceKeywords: experienceKeywords || 'None',
       industryKeywords: industryKeywords || 'None',
+      language: language,
+      languageName: language === 'de' ? 'German' : 'English',
     };
   }
 
@@ -217,6 +362,8 @@ Geändertes Anschreiben:`;
       .map((k) => k.keyword)
       .join(', ');
 
+    const language = context.language || 'en';
+
     return {
       profile: context.profile,
       jobTitle: context.jobTitle,
@@ -225,6 +372,8 @@ Geändertes Anschreiben:`;
       matchedKeywords: matchedKeywordsList || 'None identified',
       missingKeywords: missingKeywordsList || 'None',
       priorityKeywords: priorityKeywords || 'None',
+      language: language,
+      languageName: language === 'de' ? 'German' : 'English',
     };
   }
 }
@@ -284,6 +433,8 @@ export interface ATSCoverLetterContext {
   matchedKeywords: KeywordMatch[];
   /** Keywords from job posting not found in candidate profile */
   missingKeywords: KeywordMatch[];
+  /** Detected language code ('de' for German, 'en' for English) */
+  language?: string;
 }
 
 /**
@@ -303,4 +454,28 @@ export interface ATSResumeContext {
   matchedKeywords: KeywordMatch[];
   /** Keywords from job posting not found in candidate profile */
   missingKeywords: KeywordMatch[];
+  /** Detected language code ('de' for German, 'en' for English) */
+  language?: string;
+}
+
+/**
+ * Context for intelligent skill categorization
+ */
+export interface SkillCategorizationContext {
+  /** List of skill names to categorize */
+  skills: string[];
+  /** Candidate context (e.g., "Senior Software Engineer", "Marketing Manager") */
+  candidateContext?: string;
+  /** Industry or field (e.g., "IT", "Healthcare", "Finance") */
+  industry?: string;
+}
+
+/**
+ * Skill category result
+ */
+export interface SkillCategory {
+  /** Category name (e.g., "Programming Languages", "Digital Marketing") */
+  type: string;
+  /** List of skills in this category */
+  skills: string[];
 }

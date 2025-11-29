@@ -9,7 +9,7 @@ You are an expert resume writer creating an ATS-optimized, professional resume.
 ## Professional Summary:
 {{summary}}
 
-## Technical Skills:
+## Skills (as comma-separated list):
 {{skills}}
 
 ## Work Experience:
@@ -27,6 +27,18 @@ You are an expert resume writer creating an ATS-optimized, professional resume.
 ## Instructions:
 1. Create a professional, ATS-friendly resume (max 2 pages)
 2. Analyze the provided information and structure it as JSON (not markdown or HTML)
+3. **IMPORTANT - Skill Categorization:** Intelligently group the skills into logical, industry-appropriate categories:
+   - Analyze the candidate's background, job title, and industry
+   - Create category names that make sense for their field (NOT just generic tech categories)
+   - Examples:
+     * IT Professional: "Programming Languages", "Frameworks & Libraries", "Cloud & DevOps", "Databases", "Tools & Platforms"
+     * Marketing: "Digital Marketing", "Content Creation", "Analytics & Tools", "Social Media", "Project Management"
+     * Healthcare: "Clinical Skills", "Medical Equipment", "Software Systems", "Certifications", "Administrative"
+     * Finance: "Financial Analysis", "Software & Tools", "Regulations & Compliance", "Reporting", "Languages"
+     * Sales: "CRM Platforms", "Sales Techniques", "Communication", "Analytics Tools", "Languages"
+   - Group related skills together (e.g., "React", "Vue", "Angular" → "Frontend Frameworks")
+   - Aim for 3-6 categories maximum to maintain clarity
+   - If a skill doesn't fit any category, create "Other" or a relevant catch-all category
 
 ## Output Format:
 Return a JSON object with the following structure:
@@ -103,7 +115,11 @@ Return a JSON object with the following structure:
 3. **Prioritize**: Put most impressive and relevant achievements first
 4. **Be Specific**: Mention technologies, team sizes, impact
 5. **Keep Concise**: Each bullet point should be one impactful line
-6. **Skill Categories**: Organize skills logically (use types: Languages, Frameworks, Cloud, Databases, Tools, Other)
+6. **Smart Skill Categorization**: 
+   - Create categories that reflect the candidate's industry and role
+   - Avoid generic categories if industry-specific ones make more sense
+   - Group related skills together (e.g., all frontend frameworks in one category)
+   - Order categories by relevance (most important skills first)
 7. **Recent First**: Order experiences from most recent to oldest
 8. **No Fluff**: Every word should add value
 

@@ -385,14 +385,17 @@ export function ExperienceManager({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Beschreibung</FormLabel>
+                    <FormLabel>Beschreibung (optional)</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Beschreibe deine Aufgaben und Erfolge..."
+                        placeholder="Beschreibe deine Hauptverantwortlichkeiten und Tätigkeiten (z.B. 'Entwicklung von Cloud-Lösungen mit Azure und React...')&#10;&#10;💡 Hinweis: Diese Beschreibung wird im Lebenslauf angezeigt. Wenn du dich auf englische Stellen bewirbst, schreibe die Beschreibung auf Englisch."
                         className="min-h-[120px] resize-none"
                         {...field}
                       />
                     </FormControl>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      💡 <strong>Tipp:</strong> Diese Beschreibung erscheint im Lebenslauf. Passe die Sprache an deine Zielstellen an (Deutsch für deutsche Jobs, Englisch für internationale Jobs).
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -31,6 +31,11 @@ class ExperienceEntryDto {
   @IsString()
   dateRange: string;
 
+  @ApiPropertyOptional({ example: 'Verantwortlich für die Entwicklung von Cloud-Lösungen...' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
   @ApiPropertyOptional({ type: [String], example: ['Führte Cloud-Migration durch'] })
   @IsOptional()
   @IsArray()
@@ -188,6 +193,11 @@ class ResumeTemplateDto {
   @ValidateNested({ each: true })
   @Type(() => LanguageEntryDto)
   languages?: LanguageEntryDto[];
+
+  @ApiPropertyOptional({ example: 'de', description: 'Language code for the resume (de or en)' })
+  @IsOptional()
+  @IsString()
+  language?: string;
 }
 
 export class UpdateResumeDto {

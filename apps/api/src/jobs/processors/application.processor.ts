@@ -76,6 +76,7 @@ export class ApplicationProcessor {
           location: resumeData.location,
           companyName: application.jobPosting.company,
           content: application.coverLetterText!, // Non-null assertion: hasCoverLetter ensures this is defined
+          language: resumeData.language || 'en', // Pass language for multilingual support
         };
 
         // Always use ATS-optimized format for better parsing by applicant tracking systems

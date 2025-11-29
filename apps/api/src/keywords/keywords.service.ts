@@ -155,9 +155,13 @@ export class KeywordsService {
       }
     }
 
-    // Calculate overall match percentage
+    // Calculate weighted match percentage based on category importance
+    // Weights: Hard Skills (40%), Soft Skills (20%), Experience (30%), Other (10%)
+    const matchPercentage = this.calculateWeightedScore(categoryStats);
+
+    // Calculate simple match percentage for comparison/logging
     const totalKeywords = allKeywords.length;
-    const matchPercentage =
+    const simpleMatchPercentage =
       totalKeywords > 0 ? Math.round((matchedKeywords.length / totalKeywords) * 100) : 0;
 
     // Generate insights
@@ -166,7 +170,7 @@ export class KeywordsService {
     const weaknesses = this.identifyWeaknesses(missingKeywords, categoryStats);
 
     this.logger.log(
-      `Match analysis complete: ${matchPercentage}% (${matchedKeywords.length}/${totalKeywords} keywords)`,
+      `Match analysis complete: ${matchPercentage}% weighted (${simpleMatchPercentage}% simple, ${matchedKeywords.length}/${totalKeywords} keywords)`,
     );
 
     return {
@@ -504,6 +508,42 @@ export class KeywordsService {
       total: stats.total,
       percentage: stats.total > 0 ? Math.round((stats.matched / stats.total) * 100) : 0,
     };
+  }
+
+  /**
+   * Calculate weighted ATS score based on category importance
+   * Weights: Hard Skills (40%), Soft Skills (20%), Experience (30%), Other/Certificates (10%)
+   */
+  private calculateWeightedScore(
+    categoryStats: Record<string, { matched: number; total: number }>,
+  ): number {
+    const weights = {
+      technical: 0.4, // Hard Skills - 40%
+      soft: 0.2, // Soft Skills - 20%
+      experience: 0.3, // Experience - 30%
+      other: 0.1, // Certificates, Education, etc. - 10%
+    };
+
+    let weightedScore = 0;
+    let totalWeight = 0;
+
+    // Calculate weighted score for each category
+    for (const [category, stats] of Object.entries(categoryStats)) {
+      const weight = weights[category] || 0;
+      const categoryScore = stats.total > 0 ? stats.matched / stats.total : 0;
+
+      weightedScore += categoryScore * weight;
+      totalWeight += stats.total > 0 ? weight : 0;
+    }
+
+    // Normalize score to 0-100
+    // If no categories have keywords, return 0
+    if (totalWeight === 0) return 0;
+
+    // Adjust score based on actual weight coverage
+    const finalScore = (weightedScore / totalWeight) * 100;
+
+    return Math.round(finalScore);
   }
 
   /**

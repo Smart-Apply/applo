@@ -41,6 +41,10 @@ function formatDateRange(start?: Date | null, end?: Date | null, isCurrent?: boo
   return `${startLabel} – ${endLabel}`;
 }
 
+/**
+ * Build skill categories from database skills (fallback method)
+ * Groups skills by their category field, or "Skills" if no category is set
+ */
 function buildSkillCategories(skills: Skill[]): ResumeSkillCategory[] {
   if (!skills.length) {
     return [];
@@ -59,7 +63,27 @@ function buildSkillCategories(skills: Skill[]): ResumeSkillCategory[] {
   }));
 }
 
-export function buildResumeTemplateData(profile: ProfileWithRelations): ResumeTemplateData {
+/**
+ * Build skill categories with provided categorization (from LLM or other source)
+ * This allows external categorization logic to be injected
+ */
+export function buildSkillCategoriesWithCustom(
+  skills: Skill[],
+  customCategories?: ResumeSkillCategory[],
+): ResumeSkillCategory[] {
+  // If custom categories provided, use them
+  if (customCategories && customCategories.length > 0) {
+    return customCategories;
+  }
+
+  // Otherwise fall back to default grouping by category field
+  return buildSkillCategories(skills);
+}
+
+export function buildResumeTemplateData(
+  profile: ProfileWithRelations,
+  customSkillCategories?: ResumeSkillCategory[],
+): ResumeTemplateData {
   const candidateName =
     [profile.user.firstName, profile.user.lastName].filter(Boolean).join(' ').trim() ||
     profile.user.email;
@@ -72,7 +96,7 @@ export function buildResumeTemplateData(profile: ProfileWithRelations): ResumeTe
     github: profile.githubUrl ?? undefined,
     location: profile.location ?? undefined,
     summary: profile.summary ?? undefined,
-    skillCategories: buildSkillCategories(profile.skills),
+    skillCategories: buildSkillCategoriesWithCustom(profile.skills, customSkillCategories),
     experiences: profile.experiences
       .sort((a, b) => b.startDate.getTime() - a.startDate.getTime())
       .map((exp) => ({
@@ -80,6 +104,7 @@ export function buildResumeTemplateData(profile: ProfileWithRelations): ResumeTe
         company: exp.company,
         location: exp.location ?? undefined,
         dateRange: formatDateRange(exp.startDate, exp.endDate, exp.isCurrent),
+        description: exp.description ?? undefined,
         achievements: exp.achievements?.length ? exp.achievements : undefined,
       })),
     projects: profile.projects.map((project) => ({

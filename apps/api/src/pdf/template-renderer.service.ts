@@ -20,6 +20,7 @@ export interface CoverLetterTemplateData {
   content: string; // HTML content from LLM
   closingPhrase?: string;
   footer?: string;
+  language?: string; // Language code ('de', 'en', etc.) for localized content
 }
 
 export interface ResumeTemplateData {
@@ -36,6 +37,7 @@ export interface ResumeTemplateData {
   education?: Education[];
   certifications?: Certification[];
   languages?: ResumeLanguage[];
+  language?: string; // Language code ('de', 'en', etc.) for localized section headers
 }
 
 export interface ResumeLanguage {
@@ -53,6 +55,7 @@ export interface Experience {
   company: string;
   location?: string;
   dateRange: string; // e.g., "Jan 2020 - Present"
+  description?: string; // Job description / responsibilities
   achievements?: string[]; // HTML strings
 }
 
@@ -143,6 +146,51 @@ export class TemplateRendererService {
         default:
           return options.inverse(this);
       }
+    });
+
+    // Translation helper for multilingual templates
+    // Usage: {{t "resume.summary" @root.language}}
+    Handlebars.registerHelper('t', function (key: string, language?: string) {
+      // If language is not provided or is an object (Handlebars context), try to extract from @root
+      if (!language || typeof language === 'object') {
+        // Try to get from root context if available
+        const context = (this as any);
+        language = context?.language || 'en';
+      }
+      
+      const lang = language || 'en';
+      const translations: Record<string, Record<string, string>> = {
+        'resume.summary': {
+          en: 'Professional Summary',
+          de: 'Profil',
+        },
+        'resume.skills': {
+          en: 'Skills',
+          de: 'Fähigkeiten',
+        },
+        'resume.experience': {
+          en: 'Professional Experience',
+          de: 'Berufserfahrung',
+        },
+        'resume.education': {
+          en: 'Education',
+          de: 'Ausbildung',
+        },
+        'resume.certifications': {
+          en: 'Certifications',
+          de: 'Zertifikate',
+        },
+        'resume.languages': {
+          en: 'Languages',
+          de: 'Sprachen',
+        },
+        'resume.projects': {
+          en: 'Projects',
+          de: 'Projekte',
+        },
+      };
+
+      return translations[key]?.[lang] || translations[key]?.['en'] || key;
     });
   }
 

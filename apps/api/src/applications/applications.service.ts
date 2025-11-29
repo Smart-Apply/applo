@@ -30,6 +30,9 @@ import { sanitizeRichText } from '../common/services/html-sanitizer';
 @Injectable()
 export class ApplicationsService {
   private readonly logger = new Logger(ApplicationsService.name);
+  
+  // In-memory cache for skill categorization (keyed by sorted skill names)
+  private readonly skillCategorizationCache = new Map<string, { type: string; skills: string[] }[]>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -59,6 +62,94 @@ export class ApplicationsService {
     }
 
     return profile;
+  }
+
+  /**
+   * Intelligently categorize skills using LLM based on candidate profile
+   * Uses in-memory cache to avoid re-categorizing the same skill set
+   */
+  private async categorizeSkillsWithLLM(
+    profile: ProfileWithRelations,
+  ): Promise<{ type: string; skills: string[] }[]> {
+    // Skip if no skills
+    if (!profile.skills || profile.skills.length === 0) {
+      return [];
+    }
+
+    try {
+      const skillNames = profile.skills.map((s) => s.name);
+      
+      // Create cache key from sorted skill names (order-independent)
+      const cacheKey = [...skillNames].sort().join('|');
+      
+      // Check cache first
+      const cached = this.skillCategorizationCache.get(cacheKey);
+      if (cached) {
+        this.logger.debug(`Using cached skill categorization for ${skillNames.length} skills`);
+        return cached;
+      }
+
+      // Build context for LLM
+      const candidateName =
+        [profile.user.firstName, profile.user.lastName].filter(Boolean).join(' ').trim() ||
+        'Professional';
+
+      // Infer industry/role from profile
+      const latestExperience = profile.experiences
+        .sort((a, b) => b.startDate.getTime() - a.startDate.getTime())
+        .at(0);
+
+      const candidateContext = latestExperience
+        ? `${latestExperience.title} with experience in ${latestExperience.company}`
+        : profile.summary
+          ? profile.summary.substring(0, 200)
+          : candidateName;
+
+      // Attempt to infer industry from experiences or education
+      let industry: string | undefined;
+      if (latestExperience?.title) {
+        const title = latestExperience.title.toLowerCase();
+        if (title.includes('software') || title.includes('developer') || title.includes('engineer')) {
+          industry = 'IT/Software Development';
+        } else if (title.includes('marketing') || title.includes('content')) {
+          industry = 'Marketing';
+        } else if (title.includes('sales') || title.includes('business development')) {
+          industry = 'Sales';
+        } else if (title.includes('finance') || title.includes('analyst')) {
+          industry = 'Finance';
+        } else if (title.includes('nurse') || title.includes('doctor') || title.includes('healthcare')) {
+          industry = 'Healthcare';
+        }
+      }
+
+      this.logger.log(
+        `Categorizing ${skillNames.length} skills for ${candidateContext} (Industry: ${industry || 'auto-detect'})`,
+      );
+
+      // Call LLM service
+      const categories = await this.llmService.categorizeSkills({
+        skills: skillNames,
+        candidateContext,
+        industry,
+      });
+
+      this.logger.log(`LLM categorized skills into ${categories.length} categories`);
+      
+      // Cache the result
+      this.skillCategorizationCache.set(cacheKey, categories);
+      
+      // Prevent cache from growing too large (limit to 100 entries)
+      if (this.skillCategorizationCache.size > 100) {
+        const firstKey = this.skillCategorizationCache.keys().next().value;
+        this.skillCategorizationCache.delete(firstKey);
+      }
+      
+      return categories;
+    } catch (error) {
+      this.logger.error('Failed to categorize skills with LLM, using fallback', error);
+      // Fallback: return empty to use default categorization
+      return [];
+    }
   }
 
   private sanitizeCoverLetter(content: string): string {
@@ -220,10 +311,16 @@ export class ApplicationsService {
       company: string;
       location?: string | null;
       description?: string | null;
+      fullText?: string;
+      language?: string | null;
     },
     matchedKeywords: KeywordMatch[],
     missingKeywords: KeywordMatch[],
   ) {
+    // Detect language from job posting
+    const detectedLanguage = jobPosting.language || 
+      (jobPosting.fullText ? this.detectLanguage(jobPosting.fullText) : null) || 
+      'en';
     // Format profile information
     const skills = (resume.skillCategories || [])
       .flatMap((category: { skills: string[] }) => category.skills)
@@ -261,6 +358,7 @@ Summary: ${resume.summary || 'Not provided'}
       jobDescription: jobPosting.description || undefined,
       matchedKeywords,
       missingKeywords,
+      language: detectedLanguage,
     };
   }
 
@@ -274,10 +372,17 @@ Summary: ${resume.summary || 'Not provided'}
       title: string;
       company: string;
       description?: string | null;
+      fullText?: string;
+      language?: string | null;
     },
     matchedKeywords: KeywordMatch[],
     missingKeywords: KeywordMatch[],
   ) {
+    // Detect language from job posting
+    const detectedLanguage = jobPosting.language || 
+      (jobPosting.fullText ? this.detectLanguage(jobPosting.fullText) : null) || 
+      'en';
+
     const profileString = JSON.stringify(resume, null, 2);
 
     return {
@@ -287,6 +392,7 @@ Summary: ${resume.summary || 'Not provided'}
       jobDescription: jobPosting.description || undefined,
       matchedKeywords,
       missingKeywords,
+      language: detectedLanguage,
     };
   }
 
@@ -375,6 +481,38 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
+   * Detect language from job posting text using simple heuristics
+   * Returns 'de' for German, 'en' for English, or null if undetermined
+   */
+  private detectLanguage(text: string): 'de' | 'en' | null {
+    const lowercase = text.toLowerCase();
+
+    // Common German words (excluding ones that overlap with English)
+    const germanWords = ['und', 'für', 'mit', 'von', 'bei', 'wir', 'sie', 'ihre', 'unser', 'durch', 'über', 'zum'];
+    const englishWords = ['and', 'for', 'with', 'from', 'at', 'we', 'you', 'your', 'our', 'through', 'about', 'the'];
+
+    let germanScore = 0;
+    let englishScore = 0;
+
+    for (const word of germanWords) {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      const matches = lowercase.match(regex);
+      if (matches) germanScore += matches.length;
+    }
+    for (const word of englishWords) {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      const matches = lowercase.match(regex);
+      if (matches) englishScore += matches.length;
+    }
+
+    this.logger.debug(`Language detection: German=${germanScore}, English=${englishScore}`);
+
+    if (germanScore > englishScore && germanScore > 2) return 'de';
+    if (englishScore > germanScore && englishScore > 2) return 'en';
+    return null;
+  }
+
+  /**
    * Create a new application and trigger background processing
    */
   async create(userId: string, dto: CreateApplicationDto): Promise<ApplicationResponseDto> {
@@ -391,7 +529,29 @@ Summary: ${resume.summary || 'Not provided'}
 
     // 2. Prefill resume data from profile
     const profile = await this.getProfileWithRelations(userId);
-    const resumeTemplate = buildResumeTemplateData(profile);
+    
+    // 2.1. Intelligently categorize skills using LLM
+    const skillCategories = await this.categorizeSkillsWithLLM(profile);
+    const resumeTemplate = buildResumeTemplateData(profile, skillCategories);
+
+    // 2.2. Detect language from job posting for multilingual templates
+    const detectedLanguage = jobPosting.language || this.detectLanguage(jobPosting.fullText) || 'en';
+    resumeTemplate.language = detectedLanguage;
+
+    // 2.3. Translate summary if job language differs from profile language (assume profile is in German)
+    const profileLanguage = 'de'; // Assume profile is written in German
+    if (resumeTemplate.summary && detectedLanguage !== profileLanguage) {
+      this.logger.log(`Translating summary from ${profileLanguage} to ${detectedLanguage}`);
+      try {
+        resumeTemplate.summary = await this.llmService.translateSummary(
+          resumeTemplate.summary,
+          profileLanguage,
+          detectedLanguage,
+        );
+      } catch (error) {
+        this.logger.warn('Failed to translate summary, using original', error as Error);
+      }
+    }
 
     // 3. Generate title for application
     const title = await this.titleGenerator.generateTitle(jobPosting);
@@ -438,7 +598,29 @@ Summary: ${resume.summary || 'Not provided'}
 
     // 2. Get profile data
     const profile = await this.getProfileWithRelations(userId);
-    const resumeTemplate = buildResumeTemplateData(profile);
+    
+    // 2.1. Intelligently categorize skills using LLM
+    const skillCategories = await this.categorizeSkillsWithLLM(profile);
+    const resumeTemplate = buildResumeTemplateData(profile, skillCategories);
+
+    // 2.2. Detect language from job posting for multilingual templates
+    const detectedLanguage = jobPosting.language || this.detectLanguage(jobPosting.fullText) || 'en';
+    resumeTemplate.language = detectedLanguage;
+
+    // 2.3. Translate summary if job language differs from profile language (assume profile is in German)
+    const profileLanguage = 'de'; // Assume profile is written in German
+    if (resumeTemplate.summary && detectedLanguage !== profileLanguage) {
+      this.logger.log(`Translating summary from ${profileLanguage} to ${detectedLanguage}`);
+      try {
+        resumeTemplate.summary = await this.llmService.translateSummary(
+          resumeTemplate.summary,
+          profileLanguage,
+          detectedLanguage,
+        );
+      } catch (error) {
+        this.logger.warn('Failed to translate summary, using original', error as Error);
+      }
+    }
 
     // 3. Generate title for application
     const title = await this.titleGenerator.generateTitle(jobPosting);
