@@ -157,8 +157,14 @@ Generate an ATS-optimized resume by:
 3. Highlighting projects that showcase relevant technologies
 4. Including education and certifications that match requirements
 
-## Language
-Output in: ${language === 'de' ? 'German' : 'English'}
+## Language Detection (CRITICAL)
+**ANALYZE the Job Posting Full Text above and determine its language:**
+- If the job posting is written in German → Write the CV in German
+- If the job posting is written in English → Write the CV in English
+- If the job posting is written in any other language → Write the CV in that language
+
+**DO NOT use the provided language hint (${language}) if it conflicts with the actual job posting language.**
+**The job posting language ALWAYS takes priority over any hint.**
 
 ## Output Format (JSON)
 Return a JSON object with:

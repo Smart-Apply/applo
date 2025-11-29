@@ -335,25 +335,63 @@ export class ApplicationPipelineService {
   }
 
   /**
-   * Detect language from text
+   * Detect language from text with improved accuracy
    */
   private detectLanguage(text: string): 'de' | 'en' | null {
     const lowerText = text.toLowerCase();
-    const germanWords = ['und', 'oder', 'für', 'mit', 'bei', 'wir', 'ihre'];
-    const englishWords = ['and', 'or', 'for', 'with', 'at', 'we', 'your'];
+    
+    // Expanded German indicators (very common German words/patterns)
+    const germanIndicators = [
+      'und', 'oder', 'für', 'mit', 'bei', 'wir', 'ihre', 'ihr', 'den', 'der', 'die', 'das',
+      'eine', 'einen', 'einem', 'einer', 'deine', 'deinen', 'deiner', 'unsere', 'unseren',
+      'sie', 'sind', 'haben', 'können', 'werden', 'möchten', 'sollten', 'dich', 'dein',
+      'entwicklung', 'erfahrung', 'kenntnisse', 'aufgaben', 'verantwortung',
+      'deutsch', 'englisch', 'umfeld', 'zusammenarbeit', 'über', 'nach'
+    ];
+    
+    // Expanded English indicators (MORE common words - heavily weighted)
+    const englishIndicators = [
+      'the', 'and', 'or', 'for', 'with', 'at', 'in', 'on', 'of', 'to', 'from', 'by', 'as',
+      'we', 'you', 'your', 'our', 'their', 'them', 'they',
+      'are', 'is', 'will', 'have', 'has', 'had', 'can', 'would', 'should', 'must',
+      'this', 'that', 'these', 'those', 'who', 'what', 'where', 'when', 'how', 'why',
+      'development', 'experience', 'knowledge', 'responsibilities', 'tasks',
+      'skills', 'requirements', 'team', 'work', 'build', 'design', 'implement',
+      'role', 'position', 'company', 'looking', 'join', 'apply', 'about', 'mission',
+      'proven', 'strong', 'familiarity', 'understanding', 'fluency', 'collaborative'
+    ];
 
     let germanScore = 0;
     let englishScore = 0;
 
-    for (const word of germanWords) {
-      if (lowerText.includes(` ${word} `)) germanScore++;
+    // Count occurrences (with word boundaries)
+    for (const word of germanIndicators) {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      const matches = lowerText.match(regex);
+      if (matches) germanScore += matches.length;
     }
-    for (const word of englishWords) {
-      if (lowerText.includes(` ${word} `)) englishScore++;
+    
+    for (const word of englishIndicators) {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      const matches = lowerText.match(regex);
+      if (matches) englishScore += matches.length;
     }
 
-    if (germanScore > englishScore) return 'de';
-    if (englishScore > germanScore) return 'en';
-    return null;
+    this.logger.log(`🌍 Language detection: German score=${germanScore}, English score=${englishScore}`);
+
+    // Require significant difference (at least 50% more) - higher threshold
+    const threshold = 1.5;
+    if (germanScore > englishScore * threshold) {
+      this.logger.log('🇩🇪 Detected language: GERMAN');
+      return 'de';
+    }
+    if (englishScore > germanScore * threshold) {
+      this.logger.log('🇬🇧 Detected language: ENGLISH');
+      return 'en';
+    }
+    
+    // Default to English if scores are too close
+    this.logger.log('🇬🇧 Language unclear, defaulting to: ENGLISH');
+    return 'en';
   }
 }

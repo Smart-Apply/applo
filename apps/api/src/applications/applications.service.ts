@@ -550,7 +550,21 @@ Summary: ${resume.summary || 'Not provided'}
     }
 
     let content = dto.content;
-    if (!content || dto.regenerate) {
+    
+    // If regenerate is true and instructions are provided, modify existing content
+    if (dto.regenerate && dto.instructions && dto.content) {
+      this.logger.log('Modifying cover letter with AI based on instructions');
+      content = await this.llmService.modifyCoverLetterContent(
+        dto.content,
+        dto.instructions,
+        {
+          jobTitle: jobPosting.title,
+          companyName: jobPosting.company || 'Unknown Company',
+        },
+      );
+    }
+    // If no content or regenerate without existing content, generate new
+    else if (!content || dto.regenerate) {
       // Extract keywords from resume for ATS-optimized generation
       const resumeKeywords = this.extractResumeKeywords(application.resumeText);
 

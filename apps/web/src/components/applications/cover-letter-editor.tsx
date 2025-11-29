@@ -70,15 +70,25 @@ export function CoverLetterEditor({ value, onChange, disabled }: CoverLetterEdit
     
     const current = editor.getHTML();
     
+    console.log('🔄 CoverLetterEditor: Value changed', {
+      hasValue: !!value,
+      valueLength: value?.length || 0,
+      currentLength: current.length,
+      areEqual: value === current,
+    });
+    
     // Only update if the value actually changed and is different from current
     if (value && value !== current) {
+      console.log('✅ CoverLetterEditor: Updating content...');
       // Use queueMicrotask to avoid React state update conflicts
       queueMicrotask(() => {
         editor.commands.setContent(value, { emitUpdate: false });
+        console.log('✅ CoverLetterEditor: Content updated');
       });
     }
     
     if (!value && current !== '<p></p>') {
+      console.log('🗑️ CoverLetterEditor: Clearing content...');
       queueMicrotask(() => {
         editor.commands.clearContent();
       });

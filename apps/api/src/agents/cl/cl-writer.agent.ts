@@ -167,8 +167,14 @@ Generate a compelling, personalized cover letter by:
 - Avoid generic phrases like "I am writing to apply"
 - Show don't tell - use specific examples
 
-## Language
-Output in: ${language === 'de' ? 'German' : 'English'}
+## Language Detection (CRITICAL)
+**ANALYZE the Job Posting Full Text above and determine its language:**
+- If the job posting is written in German → Write the cover letter in German
+- If the job posting is written in English → Write the cover letter in English
+- If the job posting is written in any other language → Write the cover letter in that language
+
+**DO NOT use the provided language hint (${language}) if it conflicts with the actual job posting language.**
+**The job posting language ALWAYS takes priority over any hint.**
 
 ## Output Format (JSON)
 Return a JSON object with:

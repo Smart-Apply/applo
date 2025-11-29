@@ -207,29 +207,85 @@ export default function ApplicationResumeEditorPage() {
     }
   };
 
-  const handleGenerateCoverLetter = async () => {
+  const handleApplyAIChanges = async () => {
+    if (!instructions.trim()) {
+      toast.error('Bitte gib Anweisungen für die AI ein');
+      return;
+    }
+
+    console.log('🔵 Starting AI changes...');
+    console.log('📝 Current editor content length:', coverLetterValue?.length || 0);
+    console.log('💡 Instructions:', instructions.trim());
+
     try {
-      const trimmed = instructions.trim();
-      const updated = await upsertCoverLetter.mutateAsync({
-        instructions: trimmed ? trimmed : undefined,
-        regenerate: true,
+      // If there's existing content in editor, send it as base for modifications
+      const currentContent = coverLetterValue && stripHtml(coverLetterValue).trim().length > 0 
+        ? coverLetterValue 
+        : undefined;
+
+      console.log('📤 Sending to API:', {
+        hasContent: !!currentContent,
+        contentLength: currentContent?.length || 0,
+        instructionsLength: instructions.trim().length,
       });
+
+      const updated = await upsertCoverLetter.mutateAsync({
+        instructions: instructions.trim(),
+        content: currentContent,
+        regenerate: true, // Always regenerate with instructions
+      });
+
+      console.log('📥 Received from API:', {
+        hasCoverLetterText: !!updated.coverLetterText,
+        coverLetterTextLength: updated.coverLetterText?.length || 0,
+        coverLetterTextPreview: updated.coverLetterText?.substring(0, 100),
+      });
+
+      if (!updated.coverLetterText) {
+        throw new Error('Keine Antwort vom Server erhalten');
+      }
 
       // Convert LLM output (Markdown) to Tiptap-compatible HTML
-      const sanitized = toTiptapHtml(updated.coverLetterText || '');
-
-      // Use startTransition to batch state updates
-      startTransition(() => {
-        setCoverLetterValue(sanitized);
-        setLastSavedCoverLetter(sanitized);
-        setCoverVersion(sanitized);
-        setCoverInitialized(true);
+      const sanitized = toTiptapHtml(updated.coverLetterText);
+      
+      console.log('🔄 Converted to HTML:', {
+        sanitizedLength: sanitized.length,
+        sanitizedPreview: sanitized.substring(0, 100),
       });
 
-      toast.success('Anschreiben generiert');
+      // Clear instructions immediately
+      setInstructions('');
+
+      // Simulate streaming effect by gradually showing content
+      // Split into words and display them progressively
+      const words = sanitized.split(' ');
+      const totalWords = words.length;
+      const wordsPerUpdate = Math.max(5, Math.floor(totalWords / 20)); // Show 5-10 words at a time
+      let currentIndex = 0;
+
+      toast.info('AI generiert Änderungen...');
+
+      const streamInterval = setInterval(() => {
+        currentIndex += wordsPerUpdate;
+        
+        if (currentIndex >= totalWords) {
+          // Final update with complete content
+          setCoverLetterValue(sanitized);
+          setCoverVersion(sanitized);
+          setCoverInitialized(true);
+          clearInterval(streamInterval);
+          
+          console.log('✅ Streaming complete');
+          toast.success('AI-Änderungen angewendet. Bitte speichern.');
+        } else {
+          // Progressive update
+          const partialContent = words.slice(0, currentIndex).join(' ');
+          setCoverLetterValue(partialContent + '...');
+        }
+      }, 50); // Update every 50ms for smooth streaming effect
     } catch (err) {
-      console.error('Cover letter generation failed', err);
-      toast.error('Anschreiben konnte nicht generiert werden');
+      console.error('❌ AI generation failed', err);
+      toast.error('AI-Generierung fehlgeschlagen: ' + (err as Error).message);
     }
   };
 
@@ -481,22 +537,41 @@ export default function ApplicationResumeEditorPage() {
                     <CardDescription>Bearbeite das Anschreiben direkt im Editor oder generiere es neu.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20">
                       <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                        <Sparkles className="h-3.5 w-3.5 text-primary" />
-                        KI-Generierung (Optional)
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        AI-Assistent
                       </label>
                       <Textarea
                         value={instructions}
                         onChange={(event) => setInstructions(event.target.value)}
-                        placeholder="Z.B.: Betone meine Erfahrung mit React und meinen Wunsch nach Remote-Arbeit..."
+                        placeholder="Z.B.: Betone meine React-Erfahrung stärker und füge Details über Remote-Arbeit hinzu..."
                         rows={3}
                         disabled={coverMutationPending}
-                        className="resize-none bg-background"
+                        className="resize-none bg-background/80 backdrop-blur-sm border-primary/20 focus:border-primary/40"
                       />
-                      <Button variant="secondary" size="sm" onClick={handleGenerateCoverLetter} disabled={coverMutationPending} className="w-full">
-                        {coverMutationPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-2" /> : <Sparkles className="h-3.5 w-3.5 mr-2" />}
-                        Neu generieren
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/50 p-2 rounded">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        <span>Die AI passt den aktuellen Inhalt an. Danach musst du manuell speichern.</span>
+                      </div>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={handleApplyAIChanges} 
+                        disabled={coverMutationPending || !instructions.trim()} 
+                        className="w-full bg-primary hover:bg-primary/90"
+                      >
+                        {coverMutationPending ? (
+                          <>
+                            <RefreshCw className="h-3.5 w-3.5 animate-spin mr-2" />
+                            AI arbeitet...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-3.5 w-3.5 mr-2" />
+                            Änderungen mit AI anwenden
+                          </>
+                        )}
                       </Button>
                     </div>
 

@@ -86,6 +86,48 @@ export class LLMService {
     return this.provider.generateText(prompt, options);
   }
 
+  /**
+   * Modify existing cover letter content based on user instructions
+   * Applies AI-based changes to current content while preserving structure
+   */
+  async modifyCoverLetterContent(
+    currentContent: string,
+    instructions: string,
+    context: { jobTitle: string; companyName: string },
+  ): Promise<string> {
+    this.logger.log(
+      `Modifying cover letter for ${context.jobTitle} at ${context.companyName} with instructions: ${instructions.substring(0, 50)}...`,
+    );
+
+    const prompt = `Du bist ein professioneller Karriereberater und hilfst einem Kandidaten, sein Anschreiben zu verbessern.
+
+Aktueller Anschreiben-Inhalt:
+${currentContent}
+
+Position: ${context.jobTitle}
+Unternehmen: ${context.companyName}
+
+Anweisungen des Kandidaten:
+${instructions}
+
+Aufgabe:
+1. Wende die gewünschten Änderungen präzise an
+2. Behalte die professionelle Struktur und Tonalität bei
+3. Halte die Länge ähnlich (nicht wesentlich länger oder kürzer)
+4. Bewahre wichtige Erfolge und Erfahrungen, außer sie sollen geändert werden
+5. Integriere die Änderungen natürlich in den bestehenden Text
+6. Gib NUR das geänderte Anschreiben im Markdown-Format zurück (keine Erklärungen)
+
+Geändertes Anschreiben:`;
+
+    return this.provider.generateText(prompt, {
+      temperature: 0.7,
+      maxTokens: 2000,
+      systemMessage:
+        'Du bist ein Experte im Verfassen und Optimieren von Bewerbungsanschreiben. Du wendest Änderungswünsche präzise an und behältst dabei professionelle Qualität.',
+    });
+  }
+
   private async loadTemplate(fileName: string): Promise<string> {
     const templatePath = path.join(process.cwd(), 'prompts', fileName);
     try {

@@ -292,6 +292,12 @@ export class AgentUrlParser {
     // Generic selectors for job postings across different sites
     // Ordered by specificity (more specific first)
     const mainContentSelectors = [
+      // LinkedIn-specific selectors (MOST SPECIFIC - try first)
+      '.jobs-description__content',
+      '.jobs-description',
+      '.show-more-less-html__markup',
+      '[class*="jobs-description"]',
+
       // ID-based selectors (most specific)
       '#jobDescriptionText',
       '#job-description',
@@ -382,62 +388,30 @@ export class AgentUrlParser {
   /**
    * Clean extracted content by removing common noise patterns
    * Removes UI elements, navigation, login prompts, similar jobs, etc.
+   * CONSERVATIVE APPROACH: Only remove obvious noise, keep all job content
    */
   private cleanContent(content: string): string {
-    // Remove common noise patterns (case-insensitive)
+    // Remove ONLY very specific noise patterns (much less aggressive)
     const noisePatterns = [
-      // Job board company names that should never appear as the hiring company
-      /\bWorkwise\b(?!\s+GmbH)/gi,
-      /\bLinkedIn\b(?!\s+Corporation)/gi,
-      /\bIndeed\b(?!\s+Inc)/gi,
-      /\bStepStone\b/gi,
+      // Login/Sign-in prompts (only very specific patterns)
+      /sign in to create job alert/gi,
+      /new to linkedin\? join now/gi,
+      /forgot password\?/gi,
 
-      // Login/Sign-in prompts (very aggressive - captures entire login flows)
-      /sign in.*?(?:user agreement|cookie policy).{0,1000}/gis,
-      /welcome back.*?(?:sign in|join now).{0,500}/gis,
-      /join or sign in.*?cookie policy.{0,500}/gis,
-      /not you\?.*?(?:email|password).{0,300}/gis,
-      /by clicking.*?(?:agree|continue).*?(?:user agreement|privacy policy|cookie policy).{0,400}/gis,
-      /new to linkedin\?.*?join now.{0,200}/gis,
-      /forgot password\?.{0,100}/gis,
-      /remove photo.{0,100}/gis,
+      // Job alerts (specific)
+      /get notified about new .* jobs/gi,
 
-      // Similar jobs and recommendations (remove entire sections)
-      /similar jobs.*?(?=\n\n[A-Z]|$)/gis,
-      /people also viewed.*?(?=\n\n[A-Z]|$)/gis,
-      /show more jobs like this.*?show fewer jobs like this/gis,
-      /show more jobs.*$/gis,
-      /show fewer jobs.*$/gis,
+      // LinkedIn UI noise (specific)
+      /be among the first \d+ applicants/gi,
+      /over \d+ applicants/gi,
+      /\d+ applicants/gi,
 
-      // Job alerts and notifications
-      /get notified.*?(?:sign in|create job alert)/gis,
-      /sign in to create job alert.*/gis,
-      /see who.*?has hired for this role.*/gis,
-
-      // LinkedIn-specific UI noise
-      /get ai-powered advice.*/gis,
-      /referrals increase your chances.*?see who you know/gis,
-      /be among the first \d+ applicants.*/gis,
-      /apply save share report/gis,
-      /save report this job/gis,
-
-      // Generic job search UI and metadata
-      /explore collaborative articles.*?explore more/gis,
-      /we're unlocking community knowledge.*/gis,
-      /similar searches.*?(?=\n\n[A-Z]|$)/gis,
-      /\d+\s+open jobs/gi,
-      /seniority level.*?employment type.*?job function.*?industries/gis,
-      /mid-senior level.*?full-time.*?engineering and information technology.*?business consulting and services/gis,
-
-      // Job listing metadata (dates, locations without context)
-      /\d+\s+(?:hours?|days?|weeks?|months?)\s+ago(?!\s+[a-z])/gi,
-
-      // Repeated UI patterns
+      // Repeated UI patterns (specific)
       /show more\s+show less/gi,
-      /apply\s+join or sign in/gi,
+      /apply\s+save\s+share/gi,
 
       // Multiple consecutive newlines
-      /\n{3,}/g,
+      /\n{4,}/g,
     ];
 
     let cleaned = content;
@@ -445,9 +419,8 @@ export class AgentUrlParser {
       cleaned = cleaned.replace(pattern, '\n\n');
     }
 
-    // Remove lines that are pure navigation/UI (short lines with UI keywords)
-    const uiKeywords =
-      /^(apply|save|share|report|sign in|join now|back|home|search|filter|show|email|password|phone|continue)$/i;
+    // Remove ONLY very short UI lines (< 20 chars with specific keywords)
+    const uiKeywords = /^(apply|save|share|report|sign in|join now|back|home|search|filter|show)$/i;
     const lines = cleaned.split('\n');
     const filteredLines: string[] = [];
     const seenLines = new Set<string>();
@@ -458,8 +431,8 @@ export class AgentUrlParser {
       // Skip empty lines temporarily
       if (trimmed.length === 0) continue;
 
-      // Remove short UI lines
-      if (trimmed.length < 50 && uiKeywords.test(trimmed)) continue;
+      // Remove ONLY very short UI lines (< 20 chars)
+      if (trimmed.length < 20 && uiKeywords.test(trimmed)) continue;
 
       // Remove duplicate lines (especially job titles repeated)
       const normalized = trimmed.toLowerCase();
@@ -566,7 +539,19 @@ export class AgentUrlParser {
     }
 
     // Build structured input for LLM with segmented sections
-    let structuredContent = segments.fullContent.substring(0, MAX_CONTENT_LENGTH);
+    let structuredContent = segments.fullContent;
+
+    // CRITICAL: Cut off at "Similar jobs" section to prevent confusion
+    const similarJobsIndex = structuredContent.search(
+      /\b(similar jobs|people also viewed|show more jobs|explore collaborative articles)\b/i,
+    );
+    if (similarJobsIndex !== -1) {
+      structuredContent = structuredContent.substring(0, similarJobsIndex);
+      this.logger.debug(`Cut content at "Similar jobs" section (position ${similarJobsIndex})`);
+    }
+
+    // Limit to max length
+    structuredContent = structuredContent.substring(0, MAX_CONTENT_LENGTH);
 
     // Add segmented sections as hints if available
     if (segments.companyInfo) {
@@ -618,19 +603,33 @@ export class AgentUrlParser {
       // Parse the response - handle both JSON and text responses
       let jsonText = response.content.toString();
 
+      // Log RAW LLM response for debugging
+      this.logger.log(`📥 RAW LLM RESPONSE (first 500 chars): ${jsonText.substring(0, 500)}`);
+
       // Extract JSON from markdown code blocks if present
       const jsonMatch = jsonText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
       if (jsonMatch) {
         jsonText = jsonMatch[1];
+        this.logger.debug('Extracted JSON from markdown code block');
       }
 
       const parsed = JSON.parse(jsonText);
+      this.logger.log(`📥 PARSED JSON keys: ${Object.keys(parsed).join(', ')}`);
+      this.logger.log(
+        `📥 PARSED fullText exists: ${!!parsed.fullText}, length: ${parsed.fullText?.length || 0}`,
+      );
 
       // Validate against schema
       const validated = JobPostingSchema.parse(parsed);
 
       // Log extracted company for comparison
       this.logger.log(`📥 LLM extracted company: "${validated.company}"`);
+      this.logger.log(
+        `📥 LLM extracted fullText length: ${validated.fullText?.length || 0} characters`,
+      );
+      this.logger.log(
+        `📥 LLM extracted fullText preview (first 200 chars): ${validated.fullText?.substring(0, 200) || 'EMPTY'}`,
+      );
 
       // Post-processing: Override if LLM extracted a job board name but we detected the real company
       const jobBoardBlacklist = [
