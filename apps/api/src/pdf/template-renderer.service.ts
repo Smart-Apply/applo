@@ -148,6 +148,32 @@ export class TemplateRendererService {
       }
     });
 
+    // Format date helper - formats ISO date strings to readable format
+    Handlebars.registerHelper('formatDate', function (dateString: string, language?: string) {
+      if (!dateString) return '';
+      
+      try {
+        const date = new Date(dateString);
+        const lang = (typeof language === 'string' ? language : 'en') || 'en';
+        
+        const monthNames = {
+          en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          de: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+          fr: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+          es: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+          it: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+        };
+        
+        const months = monthNames[lang] || monthNames.en;
+        const year = date.getFullYear();
+        const month = months[date.getMonth()];
+        
+        return `${month} ${year}`;
+      } catch (error) {
+        return dateString;
+      }
+    });
+
     // Translation helper for multilingual templates
     // Usage: {{t "resume.summary" @root.language}}
     Handlebars.registerHelper('t', function (key: string, language?: string) {

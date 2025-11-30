@@ -63,6 +63,19 @@ const TEMPLATE_DESIGNS = [
     styleFolder: 'executive-classic',
     isDefault: false,
   },
+  {
+    category: 'Sidebar',
+    name: { en: 'Sidebar Profile', de: 'Seitenleiste Profil', fr: 'Profil Sidebar', es: 'Perfil Lateral', it: 'Profilo Sidebar' },
+    description: {
+      en: 'Two-column layout with dark sidebar and profile photo. Modern and professional.',
+      de: 'Zweispaltiges Layout mit dunkler Seitenleiste und Profilbild. Modern und professionell.',
+      fr: 'Mise en page à deux colonnes avec barre latérale sombre et photo de profil. Moderne et professionnel.',
+      es: 'Diseño de dos columnas con barra lateral oscura y foto de perfil. Moderno y profesional.',
+      it: 'Layout a due colonne con sidebar scura e foto profilo. Moderno e professionale.',
+    },
+    styleFolder: 'sidebar-profile',
+    isDefault: false,
+  },
 ];
 
 // Helper function to read template files
@@ -89,6 +102,7 @@ async function seedMultilingualTemplates() {
   // Read HTML templates (shared across all languages)
   const coverLetterHTML = readTemplateFile('cover-letter-ats.hbs');
   const resumeHTML = readTemplateFile('resume-ats.hbs');
+  const sidebarResumeHTML = readTemplateFile('sidebar-profile-resume.hbs');
 
   let totalCreated = 0;
 
@@ -105,6 +119,9 @@ async function seedMultilingualTemplates() {
 
     for (const language of LANGUAGES) {
       const cssStyles = readCSSFile(design.styleFolder, language);
+      
+      // Use special HTML template for Sidebar design
+      const currentResumeHTML = design.category === 'Sidebar' ? sidebarResumeHTML : resumeHTML;
 
       // 1. Cover Letter Template
       const coverLetterId = `${design.category.toLowerCase()}-cover-letter-${language}`;
@@ -139,7 +156,7 @@ async function seedMultilingualTemplates() {
       await prisma.template.upsert({
         where: { id: resumeId },
         update: {
-          htmlTemplate: resumeHTML,
+          htmlTemplate: currentResumeHTML,
           cssStyles: cssStyles,
           name: design.name[language],
           description: design.description[language],
@@ -154,7 +171,7 @@ async function seedMultilingualTemplates() {
           category: design.category,
           language,
           baseTemplateId: resumeBaseId,
-          htmlTemplate: resumeHTML,
+          htmlTemplate: currentResumeHTML,
           cssStyles: cssStyles,
           isActive: true,
           isDefault: design.isDefault && language === 'en', // Only English variant is default
