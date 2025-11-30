@@ -399,9 +399,10 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
-    export: (id: string) =>
+    export: (id: string, language?: 'de' | 'en' | 'fr' | 'es' | 'it') =>
       apiRequest<Application>(`/applications/${id}/export`, {
         method: 'POST',
+        body: language ? JSON.stringify({ language }) : undefined,
       }),
 
     updateStatus: (id: string, status: ApplicationTrackingStatus) =>

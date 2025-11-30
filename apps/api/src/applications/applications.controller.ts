@@ -25,6 +25,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
+import { ExportApplicationDto } from './dto/export-application.dto';
 import { ApplicationResponseDto } from './dto/application-response.dto';
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
 import { ApplicationStatusResponseDto } from './dto/application-status-response.dto';
@@ -114,8 +115,12 @@ export class ApplicationsController {
   @Post(':id/export')
   @ApiOperation({ summary: 'PDF-Export anstoßen' })
   @ApiResponse({ status: 200, type: ApplicationResponseDto })
-  async export(@CurrentUser() user: any, @Param('id') id: string): Promise<ApplicationResponseDto> {
-    return this.applicationsService.requestExport(user.id, id);
+  async export(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: ExportApplicationDto = {},
+  ): Promise<ApplicationResponseDto> {
+    return this.applicationsService.requestExport(user.id, id, dto.language);
   }
 
   @Patch(':id/status')

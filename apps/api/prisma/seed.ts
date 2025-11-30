@@ -163,7 +163,9 @@ async function main() {
     },
   });
 
-  console.log('✅ Created demo profile with skills, certificates, experiences, projects, and languages');
+  console.log(
+    '✅ Created demo profile with skills, certificates, experiences, projects, and languages',
+  );
 
   // Create sample job posting
   const jobPosting = await prisma.jobPosting.create({
@@ -172,27 +174,44 @@ async function main() {
       title: 'Senior TypeScript Developer',
       company: 'Azure Solutions Corp',
       location: 'Seattle, WA (Hybrid)',
-      description:
-        'We are seeking an experienced TypeScript developer to join our cloud-native development team.',
-      rawText: 'Full job description here...',
-      requirements: [
-        '5+ years of TypeScript/JavaScript experience',
-        'Strong experience with Node.js and NestJS',
-        'Experience with Azure cloud services',
-        'Proficiency in PostgreSQL or similar databases',
-        'Experience with containerization (Docker, Kubernetes)',
-      ],
-      responsibilities: [
-        'Design and develop scalable microservices',
-        'Collaborate with cross-functional teams',
-        'Mentor junior developers',
-        'Participate in code reviews and architectural decisions',
-      ],
-      niceToHave: [
-        'Experience with Azure OpenAI or similar AI services',
-        'Familiarity with CI/CD pipelines',
-        'Open source contributions',
-      ],
+      rawText: `We are seeking an experienced TypeScript developer to join our cloud-native development team.
+  
+  Requirements:
+  • 5+ years of TypeScript/JavaScript experience
+  • Strong experience with Node.js and NestJS
+  • Experience with Azure cloud services
+  • Proficiency in PostgreSQL or similar databases
+  • Experience with containerization (Docker, Kubernetes)
+  
+  Responsibilities:
+  • Design and develop scalable microservices
+  • Collaborate with cross-functional teams
+  • Mentor junior developers
+  • Participate in code reviews and architectural decisions
+  
+  Nice to have:
+  • Experience with Azure OpenAI or similar AI services
+  • Familiarity with CI/CD pipelines
+  • Open source contributions`,
+      fullText: `We are seeking an experienced TypeScript developer to join our cloud-native development team.
+  
+  Requirements:
+  • 5+ years of TypeScript/JavaScript experience
+  • Strong experience with Node.js and NestJS
+  • Experience with Azure cloud services
+  • Proficiency in PostgreSQL or similar databases
+  • Experience with containerization (Docker, Kubernetes)
+  
+  Responsibilities:
+  • Design and develop scalable microservices
+  • Collaborate with cross-functional teams
+  • Mentor junior developers
+  • Participate in code reviews and architectural decisions
+  
+  Nice to have:
+  • Experience with Azure OpenAI or similar AI services
+  • Familiarity with CI/CD pipelines
+  • Open source contributions`,
     },
   });
 

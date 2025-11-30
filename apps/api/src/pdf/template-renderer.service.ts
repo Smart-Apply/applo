@@ -163,30 +163,51 @@ export class TemplateRendererService {
         'resume.summary': {
           en: 'Professional Summary',
           de: 'Profil',
+          fr: 'Résumé Professionnel',
+          es: 'Resumen Profesional',
+          it: 'Profilo Professionale',
         },
         'resume.skills': {
-          en: 'Skills',
-          de: 'Fähigkeiten',
+          en: 'Technical Skills',
+          de: 'Technische Fähigkeiten',
+          fr: 'Compétences Techniques',
+          es: 'Habilidades Técnicas',
+          it: 'Competenze Tecniche',
         },
         'resume.experience': {
           en: 'Professional Experience',
           de: 'Berufserfahrung',
+          fr: 'Expérience Professionnelle',
+          es: 'Experiencia Profesional',
+          it: 'Esperienza Professionale',
         },
         'resume.education': {
           en: 'Education',
           de: 'Ausbildung',
+          fr: 'Formation',
+          es: 'Educación',
+          it: 'Formazione',
         },
         'resume.certifications': {
           en: 'Certifications',
           de: 'Zertifikate',
+          fr: 'Certifications',
+          es: 'Certificaciones',
+          it: 'Certificazioni',
         },
         'resume.languages': {
           en: 'Languages',
           de: 'Sprachen',
+          fr: 'Langues',
+          es: 'Idiomas',
+          it: 'Lingue',
         },
         'resume.projects': {
-          en: 'Projects',
-          de: 'Projekte',
+          en: 'Key Projects',
+          de: 'Wichtige Projekte',
+          fr: 'Projets Clés',
+          es: 'Proyectos Clave',
+          it: 'Progetti Chiave',
         },
       };
 
@@ -205,6 +226,7 @@ export class TemplateRendererService {
     try {
       let template: string;
       let css: string;
+      let language = 'en'; // Default language
 
       if (atsOptimized) {
         // Use ATS-optimized template from filesystem
@@ -217,17 +239,20 @@ export class TemplateRendererService {
         const dbTemplate = await this.templatesService.findOne(templateId);
         template = dbTemplate.htmlTemplate;
         css = dbTemplate.cssStyles;
+        language = dbTemplate.language || 'en'; // Use template's language
       } else {
         // Load default template from database
         this.logger.log('Loading default cover letter template');
         const defaultTemplate = await this.templatesService.findDefault(TemplateType.COVER_LETTER);
         template = defaultTemplate.htmlTemplate;
         css = defaultTemplate.cssStyles;
+        language = defaultTemplate.language || 'en'; // Use template's language
       }
 
       // Set default values
       const templateData = {
         ...data,
+        language, // Add language to template data for 't' helper
         date:
           data.date ||
           new Date().toLocaleDateString('en-US', {
@@ -259,6 +284,7 @@ export class TemplateRendererService {
     try {
       let template: string;
       let css: string;
+      let language = 'en'; // Default language
 
       if (atsOptimized) {
         // Use ATS-optimized template from filesystem
@@ -271,16 +297,20 @@ export class TemplateRendererService {
         const dbTemplate = await this.templatesService.findOne(templateId);
         template = dbTemplate.htmlTemplate;
         css = dbTemplate.cssStyles;
+        language = dbTemplate.language || 'en'; // Use template's language
       } else {
         // Load default template from database
         this.logger.log('Loading default resume template');
         const defaultTemplate = await this.templatesService.findDefault(TemplateType.RESUME);
         template = defaultTemplate.htmlTemplate;
         css = defaultTemplate.cssStyles;
+        language = defaultTemplate.language || 'en'; // Use template's language
       }
 
+      // Add language to template data for 't' helper
+      const templateData = { ...data, language };
       const compiledTemplate = Handlebars.compile(template);
-      const html = compiledTemplate(data);
+      const html = compiledTemplate(templateData);
 
       return this.wrapWithStyles(html, css);
     } catch (error) {

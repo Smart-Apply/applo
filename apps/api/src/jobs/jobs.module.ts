@@ -5,13 +5,14 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { LLMModule } from '../llm/llm.module';
 import { PdfModule } from '../pdf/pdf.module';
 import { StorageModule } from '../storage/storage.module';
+import { TemplatesModule } from '../templates/templates.module';
 import { JobsService } from './jobs.service';
 import { InMemoryQueueProvider } from './providers/in-memory-queue.provider';
 import { AzureServiceBusProvider } from './providers/azure-service-bus.provider';
 import { ApplicationProcessor } from './processors/application.processor';
 
 @Module({
-  imports: [ConfigModule, PrismaModule, LLMModule, PdfModule, StorageModule],
+  imports: [ConfigModule, PrismaModule, LLMModule, PdfModule, StorageModule, TemplatesModule],
   providers: [
     JobsService,
     ApplicationProcessor,

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PdfService } from '../../pdf/pdf.service';
 import { StorageService } from '../../storage/storage.service';
+import { TemplatesService } from '../../templates/templates.service';
 import { Job } from '../interfaces/queue.interface';
 import type { ResumeTemplateData } from '../../pdf/template-renderer.service';
 
@@ -9,6 +10,7 @@ export interface ApplicationJobData {
   applicationId: string;
   userId: string;
   jobPostingId: string;
+  language?: 'de' | 'en' | 'fr' | 'es' | 'it';
 }
 
 @Injectable()
@@ -19,12 +21,13 @@ export class ApplicationProcessor {
     private readonly prisma: PrismaService,
     private readonly pdfService: PdfService,
     private readonly storageService: StorageService,
+    private readonly templatesService: TemplatesService,
   ) {}
 
   async process(job: Job<ApplicationJobData>): Promise<void> {
-    const { applicationId, userId, jobPostingId } = job.data;
+    const { applicationId, userId, jobPostingId, language } = job.data;
 
-    this.logger.log(`Processing application ${applicationId}`);
+    this.logger.log(`Processing application ${applicationId} with language: ${language || 'default'}`);
 
     try {
       // 1. Load current application state
@@ -67,6 +70,16 @@ export class ApplicationProcessor {
 
       // Only generate cover letter PDF if content exists
       if (hasCoverLetter) {
+        // Resolve template ID to match selected language
+        let coverLetterTemplateId = application.coverLetterTemplateId;
+        if (language && coverLetterTemplateId) {
+          coverLetterTemplateId = await this.resolveTemplateForLanguage(
+            coverLetterTemplateId,
+            language,
+            'COVER_LETTER',
+          );
+        }
+
         const coverLetterTemplateData = {
           candidateName: resumeData.candidateName,
           email: resumeData.email || application.user.email,
@@ -76,14 +89,14 @@ export class ApplicationProcessor {
           location: resumeData.location,
           companyName: application.jobPosting.company,
           content: application.coverLetterText!, // Non-null assertion: hasCoverLetter ensures this is defined
-          language: resumeData.language || 'en', // Pass language for multilingual support
+          language: language || 'en', // Use selected language from export request
         };
 
-        // Always use ATS-optimized format for better parsing by applicant tracking systems
+        // Generate cover letter PDF using database template (which are already ATS-optimized)
         const coverLetterPdf = await this.pdfService.generateCoverLetterPDF(
           coverLetterTemplateData,
-          application.coverLetterTemplateId || undefined,
-          { atsOptimized: true },
+          coverLetterTemplateId || undefined,
+          { atsOptimized: false }, // Use DB template instead of filesystem template
         );
 
         // Upload cover letter to storage
@@ -94,11 +107,27 @@ export class ApplicationProcessor {
         );
       }
 
-      // Always generate resume PDF with ATS optimization
+      // Resolve template ID to match selected language
+      let resumeTemplateId = application.resumeTemplateId;
+      if (language && resumeTemplateId) {
+        resumeTemplateId = await this.resolveTemplateForLanguage(
+          resumeTemplateId,
+          language,
+          'RESUME',
+        );
+      }
+
+      // Add selected language to resume data
+      const resumeDataWithLanguage = {
+        ...resumeData,
+        language: language || 'en', // Use selected language from export request
+      };
+
+      // Generate resume PDF using database template (which are already ATS-optimized)
       const resumePdf = await this.pdfService.generateResumePDF(
-        resumeData,
-        application.resumeTemplateId || undefined,
-        { atsOptimized: true },
+        resumeDataWithLanguage,
+        resumeTemplateId || undefined,
+        { atsOptimized: false }, // Use DB template instead of filesystem template
       );
 
       // 3. Upload resume to Storage
@@ -135,6 +164,57 @@ export class ApplicationProcessor {
       });
 
       throw error; // Re-throw for retry logic
+    }
+  }
+
+  /**
+   * Resolve template ID to language-specific variant
+   */
+  private async resolveTemplateForLanguage(
+    templateId: string,
+    language: string,
+    type: 'COVER_LETTER' | 'RESUME',
+  ): Promise<string | null> {
+    try {
+      // Get the selected template to find its category
+      const selectedTemplate = await this.prisma.template.findUnique({
+        where: { id: templateId },
+        select: { category: true, language: true },
+      });
+
+      if (!selectedTemplate) {
+        this.logger.warn(`Template ${templateId} not found, keeping original`);
+        return templateId;
+      }
+
+      // If template already matches the language, use it
+      if (selectedTemplate.language === language) {
+        this.logger.debug(`Template ${templateId} already matches language ${language}`);
+        return templateId;
+      }
+
+      // Find the same design in the target language
+      const languageVariant = await this.templatesService.findByCategoryAndLanguage(
+        selectedTemplate.category,
+        language,
+        type,
+      );
+
+      if (languageVariant) {
+        this.logger.log(
+          `Resolved template ${templateId} (${selectedTemplate.category}) to ${languageVariant.id} for language ${language}`,
+        );
+        return languageVariant.id;
+      }
+
+      // Fallback: keep original template
+      this.logger.warn(
+        `No ${language} variant found for ${selectedTemplate.category}, keeping original`,
+      );
+      return templateId;
+    } catch (error) {
+      this.logger.error(`Failed to resolve template: ${error.message}`);
+      return templateId; // Fallback to original
     }
   }
 }

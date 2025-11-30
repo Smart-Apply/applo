@@ -79,6 +79,7 @@ export default function ApplicationResumeEditorPage() {
   const [coverVersion, setCoverVersion] = useState<string | null>(null);
   const [instructions, setInstructions] = useState('');
   const [activeTab, setActiveTab] = useState<'resume' | 'cover-letter' | 'ats-score'>('resume');
+  const [selectedLanguage, setSelectedLanguage] = useState<'de' | 'en' | 'fr' | 'es' | 'it'>('en');
 
   // Trigger ATS score refresh after saving
   const [atsRefreshTrigger, setAtsRefreshTrigger] = useState(0);
@@ -347,7 +348,7 @@ export default function ApplicationResumeEditorPage() {
   const handleExport = async () => {
     if (!canExport) return;
     try {
-      await exportApplication.mutateAsync();
+      await exportApplication.mutateAsync(selectedLanguage);
       // Navigate to detail page after successful export initiation
       toast.success('Export gestartet! Du wirst zur Detailseite weitergeleitet...');
       setTimeout(() => {
@@ -499,13 +500,30 @@ export default function ApplicationResumeEditorPage() {
             </div>
 
             {/* Live Preview - Scrollable independently */}
-            <div className="h-[calc(100vh-200px)] overflow-y-auto bg-gray-100 rounded-lg shadow-2xl">
-              {parsedResume && (
-                <ResumeTemplatePreview
-                  resume={parsedResume}
-                  templateId={application?.resumeTemplateId}
-                />
-              )}
+            <div className="space-y-3">
+              <div className="flex items-center justify-end gap-2 px-2">
+                <label className="text-sm font-medium text-muted-foreground">Sprache:</label>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value as 'de' | 'en' | 'fr' | 'es' | 'it')}
+                  className="text-sm border border-border/50 rounded-md px-3 py-1.5 bg-background hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="en">🇬🇧 English</option>
+                  <option value="de">🇩🇪 Deutsch</option>
+                  <option value="fr">🇫🇷 Français</option>
+                  <option value="es">🇪🇸 Español</option>
+                  <option value="it">🇮🇹 Italiano</option>
+                </select>
+              </div>
+              <div className="h-[calc(100vh-260px)] overflow-y-auto bg-gray-100 rounded-lg shadow-2xl">
+                {parsedResume && (
+                  <ResumeTemplatePreview
+                    resume={parsedResume}
+                    templateId={application?.resumeTemplateId}
+                    language={selectedLanguage}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </TabsContent>
@@ -587,18 +605,35 @@ export default function ApplicationResumeEditorPage() {
               </div>
 
               {/* Live Preview - Scrollable independently */}
-              <div className="h-[calc(100vh-200px)] overflow-y-auto bg-gray-100 rounded-lg shadow-2xl">
-                <CoverLetterTemplatePreview
-                  html={coverLetterValue}
-                  candidateName={parsedResume?.candidateName}
-                  email={parsedResume?.email}
-                  phone={parsedResume?.phone}
-                  location={parsedResume?.location}
-                  linkedin={parsedResume?.linkedin}
-                  github={parsedResume?.github}
-                  companyName={application?.jobPosting?.company}
-                  templateId={application?.coverLetterTemplateId}
-                />
+              <div className="space-y-3">
+                <div className="flex items-center justify-end gap-2 px-2">
+                  <label className="text-sm font-medium text-muted-foreground">Sprache:</label>
+                  <select
+                    value={selectedLanguage}
+                    onChange={(e) => setSelectedLanguage(e.target.value as 'de' | 'en' | 'fr' | 'es' | 'it')}
+                    className="text-sm border border-border/50 rounded-md px-3 py-1.5 bg-background hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="en">🇬🇧 English</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="it">🇮🇹 Italiano</option>
+                  </select>
+                </div>
+                <div className="h-[calc(100vh-260px)] overflow-y-auto bg-gray-100 rounded-lg shadow-2xl">
+                  <CoverLetterTemplatePreview
+                    html={coverLetterValue}
+                    candidateName={parsedResume?.candidateName}
+                    email={parsedResume?.email}
+                    phone={parsedResume?.phone}
+                    location={parsedResume?.location}
+                    linkedin={parsedResume?.linkedin}
+                    github={parsedResume?.github}
+                    companyName={application?.jobPosting?.company}
+                    templateId={application?.coverLetterTemplateId}
+                    language={selectedLanguage}
+                  />
+                </div>
               </div>
             </div>
           </TabsContent>

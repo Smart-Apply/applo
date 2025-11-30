@@ -859,8 +859,12 @@ Summary: ${resume.summary || 'Not provided'}
     return this.mapToResponseDto(updated);
   }
 
-  async requestExport(userId: string, applicationId: string): Promise<ApplicationResponseDto> {
-    this.logger.log(`Export requested for application ${applicationId}`);
+  async requestExport(
+    userId: string,
+    applicationId: string,
+    language?: 'de' | 'en' | 'fr' | 'es' | 'it',
+  ): Promise<ApplicationResponseDto> {
+    this.logger.log(`Export requested for application ${applicationId} with language: ${language || 'default'}`);
 
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
     this.ensureNotGenerating(application);
@@ -897,6 +901,7 @@ Summary: ${resume.summary || 'Not provided'}
       applicationId,
       userId,
       jobPostingId: application.jobPostingId,
+      language, // Pass selected language to job worker
     });
 
     return this.mapToResponseDto(updated);

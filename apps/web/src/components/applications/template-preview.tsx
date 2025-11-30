@@ -65,14 +65,14 @@ function registerHandlebarsHelpers() {
           de: 'Profil',
           fr: 'Résumé Professionnel',
           es: 'Resumen Profesional',
-          it: 'Sommario Professionale',
+          it: 'Profilo Professionale',
         },
         'resume.skills': {
-          en: 'Skills',
-          de: 'Fähigkeiten',
-          fr: 'Compétences',
-          es: 'Habilidades',
-          it: 'Competenze',
+          en: 'Technical Skills',
+          de: 'Technische Fähigkeiten',
+          fr: 'Compétences Techniques',
+          es: 'Habilidades Técnicas',
+          it: 'Competenze Tecniche',
         },
         'resume.experience': {
           en: 'Professional Experience',
@@ -86,7 +86,7 @@ function registerHandlebarsHelpers() {
           de: 'Ausbildung',
           fr: 'Formation',
           es: 'Educación',
-          it: 'Istruzione',
+          it: 'Formazione',
         },
         'resume.certifications': {
           en: 'Certifications',
@@ -103,11 +103,11 @@ function registerHandlebarsHelpers() {
           it: 'Lingue',
         },
         'resume.projects': {
-          en: 'Projects',
-          de: 'Projekte',
-          fr: 'Projets',
-          es: 'Proyectos',
-          it: 'Progetti',
+          en: 'Key Projects',
+          de: 'Wichtige Projekte',
+          fr: 'Projets Clés',
+          es: 'Proyectos Clave',
+          it: 'Progetti Chiave',
         },
       };
 
@@ -121,6 +121,7 @@ function registerHandlebarsHelpers() {
 interface ResumeTemplatePreviewProps {
   resume: ResumeData;
   templateId?: string | null;
+  language?: 'de' | 'en' | 'fr' | 'es' | 'it';
 }
 
 interface CoverLetterTemplatePreviewProps {
@@ -133,13 +134,14 @@ interface CoverLetterTemplatePreviewProps {
   github?: string;
   companyName?: string;
   templateId?: string | null;
+  language?: 'de' | 'en' | 'fr' | 'es' | 'it';
 }
 
 /**
  * Renders resume content using the actual Handlebars template from the database.
  * If no templateId provided, loads and uses the default resume template.
  */
-export function ResumeTemplatePreview({ resume, templateId }: ResumeTemplatePreviewProps) {
+export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: ResumeTemplatePreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
   // Load all resume templates to find the default if no templateId is provided
@@ -161,6 +163,7 @@ export function ResumeTemplatePreview({ resume, templateId }: ResumeTemplatePrev
     github: resume.github,
     location: resume.location,
     summary: resume.summary,
+    language, // Use selected language from prop
     skillCategories: resume.skillCategories?.map(cat => ({
       type: cat.type,
       skills: cat.skills,
@@ -191,7 +194,7 @@ export function ResumeTemplatePreview({ resume, templateId }: ResumeTemplatePrev
       issuer: cert.issuer,
       date: cert.date,
     })),
-  }), [resume]);
+  }), [resume, language]);
 
   // Render template when data changes
   useEffect(() => {
@@ -348,6 +351,7 @@ export function CoverLetterTemplatePreview({
   github,
   companyName,
   templateId,
+  language = 'en',
 }: CoverLetterTemplatePreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
@@ -371,12 +375,13 @@ export function CoverLetterTemplatePreview({
     github,
     companyName,
     content: html,
+    language, // Use selected language from prop
     date: new Date().toLocaleDateString('de-DE', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     }),
-  }), [html, candidateName, email, phone, location, linkedin, github, companyName]);
+  }), [html, candidateName, email, phone, location, linkedin, github, companyName, language]);
 
   // Render template when data changes
   useEffect(() => {

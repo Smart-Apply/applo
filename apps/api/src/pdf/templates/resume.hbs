@@ -35,7 +35,7 @@
   <!-- Professional Summary -->
   {{#if summary}}
   <div class="summary-section no-break">
-    <h2>Professional Summary</h2>
+    <h2>{{t 'resume.summary'}}</h2>
     <p>{{{summary}}}</p>
   </div>
   {{/if}}
@@ -43,7 +43,7 @@
   <!-- Skills -->
   {{#if skillCategories}}
   <div class="section no-break">
-    <div class="section-title">Technical Skills</div>
+    <div class="section-title">{{t 'resume.skills'}}</div>
     <div class="skills-container">
       {{#each skillCategories}}
       <div class="skill-category">
@@ -62,7 +62,7 @@
   <!-- Experience -->
   {{#if experiences}}
   <div class="section">
-    <div class="section-title">Professional Experience</div>
+    <div class="section-title">{{t 'resume.experience'}}</div>
     {{#each experiences}}
     <div class="experience-item no-break">
       <div class="experience-header">
@@ -85,7 +85,7 @@
   <!-- Projects -->
   {{#if projects}}
   <div class="section">
-    <div class="section-title">Key Projects</div>
+    <div class="section-title">{{t 'resume.projects'}}</div>
     {{#each projects}}
     <div class="project-item no-break">
       <div class="project-header">
@@ -112,7 +112,7 @@
   <!-- Education -->
   {{#if education}}
   <div class="section">
-    <div class="section-title">Education</div>
+    <div class="section-title">{{t 'resume.education'}}</div>
     {{#each education}}
     <div class="education-item no-break">
       <div class="education-content">
@@ -134,7 +134,7 @@
   <!-- Certifications -->
   {{#if certifications}}
   <div class="section">
-    <div class="section-title">Certifications</div>
+    <div class="section-title">{{t 'resume.certifications'}}</div>
     {{#each certifications}}
     <div class="certification-item no-break">
       <div class="certification-name">{{name}}</div>

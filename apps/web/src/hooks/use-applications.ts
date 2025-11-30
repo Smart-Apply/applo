@@ -152,7 +152,7 @@ export function useExportApplication(applicationId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => api.applications.export(applicationId),
+    mutationFn: (language?: 'de' | 'en' | 'fr' | 'es' | 'it') => api.applications.export(applicationId, language),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId] });
       toastSuccess('PDF-Export gestartet');
