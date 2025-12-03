@@ -173,6 +173,6 @@ jobs:
       - name: Notify on Slack (Optional)
         if: success()
         run: |
-          echo "🚀 Deployment successful!"
+          echo "🚀 Deployment successful!!"
           echo "API URL: ${{ steps.get-url.outputs.url }}"
           echo "Swagger: ${{ steps.get-url.outputs.url }}/docs"
