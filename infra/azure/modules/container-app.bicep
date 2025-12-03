@@ -43,8 +43,42 @@ param frontendUrl string
 @description('Azure OpenAI deployment name')
 param openAiDeploymentName string
 
+@description('Azure OpenAI endpoint')
+param openAiEndpoint string
+
+@description('Azure OpenAI API key')
+@secure()
+param openAiApiKey string
+
+@description('Azure OpenAI API version')
+param openAiApiVersion string
+
+@description('Azure AI Foundry project endpoint')
+param projectEndpoint string
+
+@description('CV Writer Agent ID')
+param cvWriterAgentId string
+
+@description('Cover Letter Writer Agent ID')
+param clWriterAgentId string
+
+@description('ATS Agent ID')
+param atsAgentId string
+
+@description('Enable agent-based URL parser')
+param enableAgentParser bool
+
+@description('Maximum steps for agent execution')
+param agentMaxSteps int
+
+@description('Agent timeout in milliseconds')
+param agentTimeout int
+
 @description('Enable Azure OpenAI')
 param enableAzureOpenAI bool
+
+@description('Storage account name')
+param storageAccountName string
 
 @description('Resource tags')
 param tags object
@@ -97,6 +131,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: 'refresh-token-secret'
           value: refreshTokenSecret
+        }
+        {
+          name: 'azure-openai-api-key'
+          value: openAiApiKey
         }
       ]
     }
@@ -167,8 +205,52 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: enableAzureOpenAI ? 'azure-openai' : 'mock'
             }
             {
+              name: 'AZURE_OPENAI_ENDPOINT'
+              value: openAiEndpoint
+            }
+            {
+              name: 'AZURE_OPENAI_API_KEY'
+              secretRef: 'azure-openai-api-key'
+            }
+            {
               name: 'AZURE_OPENAI_DEPLOYMENT_NAME'
               value: openAiDeploymentName
+            }
+            {
+              name: 'AZURE_OPENAI_API_VERSION'
+              value: openAiApiVersion
+            }
+            {
+              name: 'PROJECT_ENDPOINT'
+              value: projectEndpoint
+            }
+            {
+              name: 'CV_WRITER_AGENT_ID'
+              value: cvWriterAgentId
+            }
+            {
+              name: 'CL_WRITER_AGENT_ID'
+              value: clWriterAgentId
+            }
+            {
+              name: 'ATS_AGENT_ID'
+              value: atsAgentId
+            }
+            {
+              name: 'ENABLE_AGENT_PARSER'
+              value: string(enableAgentParser)
+            }
+            {
+              name: 'AGENT_MAX_STEPS'
+              value: string(agentMaxSteps)
+            }
+            {
+              name: 'AGENT_TIMEOUT'
+              value: string(agentTimeout)
+            }
+            {
+              name: 'AZURE_STORAGE_ACCOUNT'
+              value: storageAccountName
             }
             {
               name: 'CORS_ORIGINS'

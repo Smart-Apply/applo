@@ -127,9 +127,19 @@ param refreshTokenSecret = '$REFRESH_TOKEN_SECRET'
 // Frontend URL (update after frontend deployment)
 param frontendUrl = 'https://smartapply.vercel.app'
 
-// Azure OpenAI (optional)
-param openAiDeploymentName = 'gpt-4o'
-param enableAzureOpenAI = false
+// Azure OpenAI & AI Foundry Configuration
+param openAiDeploymentName = 'gpt-4.1'
+param openAiEndpoint = 'https://smart-apply-test-ai.services.ai.azure.com/'
+param openAiApiKey = 'BYYHbmL2SsdfPRXnnHA2VuKW8GymK3nEcAZrqIiL3eRlqfndij7TJQQJ99BKACYeBjFXJ3w3AAAAACOGzQKD'
+param openAiApiVersion = '2024-10-21'
+param projectEndpoint = 'https://smart-apply-test-ai.services.ai.azure.com/api/projects/smartApplytest'
+param cvWriterAgentId = 'asst_ZLNYVwISUTw93NA2Yq53ZW1G'
+param clWriterAgentId = 'asst_wXDlhHUsjgnaF6MPOsoSPoCy'
+param atsAgentId = 'asst_Jn2tlDlX3ZhzVIQhhw5Qa57W'
+param enableAgentParser = true
+param agentMaxSteps = 10
+param agentTimeout = 30000
+param enableAzureOpenAI = true
 EOF
     
     # Deploy to Azure

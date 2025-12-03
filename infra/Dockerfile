@@ -5,6 +5,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
 # Copy package files
 COPY package*.json ./
 COPY tsconfig*.json ./
@@ -26,6 +29,9 @@ RUN npm run build
 FROM node:20-alpine AS deps
 
 WORKDIR /app
+
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
 
 COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
@@ -60,14 +66,15 @@ CMD ["npm", "run", "start:dev"]
 # Stage 4: Production
 FROM node:20-alpine AS production
 
-# Install Chromium for Puppeteer
+# Install Chromium and OpenSSL for Puppeteer and Prisma
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    openssl
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \

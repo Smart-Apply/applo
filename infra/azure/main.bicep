@@ -35,8 +35,39 @@ param frontendUrl string
 @description('Azure OpenAI deployment name')
 param openAiDeploymentName string = 'gpt-4o'
 
+@description('Azure OpenAI endpoint URL')
+param openAiEndpoint string = 'https://smart-apply-test-ai.services.ai.azure.com/'
+
+@description('Azure OpenAI API key')
+@secure()
+param openAiApiKey string
+
+@description('Azure OpenAI API version')
+param openAiApiVersion string = '2024-10-21'
+
+@description('Azure AI Foundry project endpoint')
+param projectEndpoint string = 'https://smart-apply-test-ai.services.ai.azure.com/api/projects/smartApplytest'
+
+@description('CV Writer Agent ID')
+param cvWriterAgentId string = 'asst_ZLNYVwISUTw93NA2Yq53ZW1G'
+
+@description('Cover Letter Writer Agent ID')
+param clWriterAgentId string = 'asst_wXDlhHUsjgnaF6MPOsoSPoCy'
+
+@description('ATS Agent ID')
+param atsAgentId string = 'asst_Jn2tlDlX3ZhzVIQhhw5Qa57W'
+
+@description('Enable agent-based URL parser')
+param enableAgentParser bool = true
+
+@description('Maximum steps for agent execution')
+param agentMaxSteps int = 10
+
+@description('Agent timeout in milliseconds')
+param agentTimeout int = 30000
+
 @description('Enable Azure OpenAI (requires separate provisioning)')
-param enableAzureOpenAI bool = false
+param enableAzureOpenAI bool = true
 
 // Variables
 var resourceGroupName = '${appName}-${environment}-rg'
@@ -159,7 +190,18 @@ module api './modules/container-app.bicep' = {
     refreshTokenSecret: refreshTokenSecret
     frontendUrl: frontendUrl
     openAiDeploymentName: openAiDeploymentName
+    openAiEndpoint: openAiEndpoint
+    openAiApiKey: openAiApiKey
+    openAiApiVersion: openAiApiVersion
+    projectEndpoint: projectEndpoint
+    cvWriterAgentId: cvWriterAgentId
+    clWriterAgentId: clWriterAgentId
+    atsAgentId: atsAgentId
+    enableAgentParser: enableAgentParser
+    agentMaxSteps: agentMaxSteps
+    agentTimeout: agentTimeout
     enableAzureOpenAI: enableAzureOpenAI
+    storageAccountName: storage.outputs.storageAccountName
     tags: tags
   }
 }
