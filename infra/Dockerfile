@@ -15,7 +15,6 @@ RUN npm ci
 
 # Copy source code
 COPY apps ./apps
-COPY prompts ./prompts
 
 # Generate Prisma client
 RUN npm run prisma:generate
@@ -82,7 +81,7 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy built application
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/prompts ./prompts
+COPY --from=builder /app/apps/api/prompts ./prompts
 COPY package*.json ./
 
 # Create storage directory
