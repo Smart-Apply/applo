@@ -174,6 +174,10 @@ EOF
         --name "$DEPLOYMENT_NAME" \
         --query properties.outputs.keyVaultUri.value -o tsv | sed 's|https://||;s|/||;s|.vault.azure.net||')
     
+    WEB_URL=$(az deployment sub show \
+        --name "$DEPLOYMENT_NAME" \
+        --query properties.outputs.webUrl.value -o tsv)
+    
     # Print summary
     echo ""
     log_success "==================================================="
@@ -184,6 +188,7 @@ EOF
     log_info "Container Registry: $ACR_NAME"
     log_info "Key Vault: $KEY_VAULT_NAME"
     log_info "API URL: $API_URL (after first deployment)"
+    log_info "Frontend URL: $WEB_URL"
     echo ""
     
     # Save outputs to file

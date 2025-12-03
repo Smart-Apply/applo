@@ -1,0 +1,93 @@
+name: Deploy Frontend to Azure Static Web Apps
+
+on:
+  push:
+    branches:
+      - mvp
+    paths:
+      - 'apps/web/**'
+      - '.github/workflows/azure-deploy-frontend.yml'
+  pull_request:
+    branches:
+      - mvp
+    paths:
+      - 'apps/web/**'
+  workflow_dispatch:
+
+env:
+  AZURE_STATIC_WEB_APP_NAME: smartapply-dev-web
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy Frontend
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Static Web App deployment token
+        id: get-token
+        run: |
+          DEPLOYMENT_TOKEN=$(az staticwebapp secrets list \
+            --name ${{ env.AZURE_STATIC_WEB_APP_NAME }} \
+            --resource-group smartapply-dev-rg \
+            --query properties.apiKey -o tsv)
+          echo "::add-mask::$DEPLOYMENT_TOKEN"
+          echo "DEPLOYMENT_TOKEN=$DEPLOYMENT_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Build and Deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.get-token.outputs.DEPLOYMENT_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: 'upload'
+          app_location: '/apps/web'
+          api_location: ''
+          output_location: ''
+          skip_app_build: false
+          app_build_command: 'npm run build'
+
+      - name: Get Static Web App URL
+        id: get-url
+        run: |
+          URL=$(az staticwebapp show \
+            --name ${{ env.AZURE_STATIC_WEB_APP_NAME }} \
+            --resource-group smartapply-dev-rg \
+            --query defaultHostname -o tsv)
+          echo "url=https://$URL" >> $GITHUB_OUTPUT
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Frontend Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Frontend URL:** ${{ steps.get-url.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Update CORS in backend Container App" >> $GITHUB_STEP_SUMMARY
+          echo "2. Test frontend → backend connection" >> $GITHUB_STEP_SUMMARY
+
+  close_pull_request:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APP_DEPLOYMENT_TOKEN }}
+          action: 'close'

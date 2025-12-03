@@ -29,8 +29,11 @@ param jwtSecret string
 @secure()
 param refreshTokenSecret string
 
-@description('Frontend URL for CORS')
-param frontendUrl string
+@description('GitHub repository URL')
+param repositoryUrl string = 'https://github.com/Ar1anit/smart-apply'
+
+@description('GitHub branch name')
+param repositoryBranch string = 'mvp'
 
 @description('Azure OpenAI deployment name')
 param openAiDeploymentName string = 'gpt-4o'
@@ -173,6 +176,7 @@ module containerEnv './modules/container-environment.bicep' = {
 }
 
 // Backend API (Container App)
+// Note: frontendUrl is set to wildcard initially, update after Static Web App deployment
 module api './modules/container-app.bicep' = {
   name: 'api-deployment'
   scope: rg
@@ -188,7 +192,7 @@ module api './modules/container-app.bicep' = {
     keyVaultName: keyVault.outputs.keyVaultName
     jwtSecret: jwtSecret
     refreshTokenSecret: refreshTokenSecret
-    frontendUrl: frontendUrl
+    frontendUrl: 'https://*.azurestaticapps.net'
     openAiDeploymentName: openAiDeploymentName
     openAiEndpoint: openAiEndpoint
     openAiApiKey: openAiApiKey
@@ -202,6 +206,21 @@ module api './modules/container-app.bicep' = {
     agentTimeout: agentTimeout
     enableAzureOpenAI: enableAzureOpenAI
     storageAccountName: storage.outputs.storageAccountName
+    tags: tags
+  }
+}
+
+// Frontend (Static Web App)
+module web './modules/static-web-app.bicep' = {
+  name: 'web-deployment'
+  scope: rg
+  params: {
+    location: location
+    environment: environment
+    appName: appName
+    apiUrl: api.outputs.fqdn
+    repositoryUrl: repositoryUrl
+    repositoryBranch: repositoryBranch
     tags: tags
   }
 }
@@ -226,6 +245,7 @@ output resourceGroupName string = rg.name
 output containerRegistryLoginServer string = acr.outputs.loginServer
 output containerRegistryName string = acr.outputs.registryName
 output apiUrl string = api.outputs.fqdn
+output webUrl string = web.outputs.url
 output postgresServerName string = postgres.outputs.serverName
 output storageAccountName string = storage.outputs.storageAccountName
 output serviceBusNamespace string = serviceBus.outputs.namespaceName

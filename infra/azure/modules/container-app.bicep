@@ -110,7 +110,12 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           }
         ]
       }
-      // Registry will be configured by GitHub Actions on first deployment
+      registries: [
+        {
+          server: '${containerRegistryName}.azurecr.io'
+          identity: 'system'
+        }
+      ]
       secrets: [
         {
           name: 'database-url'
