@@ -6,11 +6,11 @@ param appName = 'smartapply'
 
 // Database credentials
 param postgresAdminUsername = 'sqladmin'
-param postgresAdminPassword = '1ZQ6Ik/KX8zA6/ocAuiZwztK+7Pt2JsIgXckrMZxCGQ='
+param postgresAdminPassword = 'dfBVip7txci63GcVReig9/dedn/nxb/9BcVwGeQZg3k='
 
 // Security secrets
-param jwtSecret = 'lrAtaqdDFU46X0hw1c93KaqPo98f4GrlUOXbB3+4zu90OvC0Ki1LGZhdiFL4jXzEZjaHT71Mu/MocXTDYJftAg=='
-param refreshTokenSecret = 'VrWLdRd37q4x8xSo4Mr1MqVlvYXQSYkZFSCd6ogN6/q1xYh5vZ/bChTu8F7KVeQIsQt3/trADPxRDbIrX9qfvw=='
+param jwtSecret = 'WYv8z0VcI2+02/kl5LCoDLpNGL8zhbogIe658At7nWEBR3/v8R0pt0Bw6xM5WsGb7zlOXMe9dIfMw70BQ0/ctg=='
+param refreshTokenSecret = 'Y0S1cAgNO6NQNXXTX/Y9UvWj0pJn7duQ73dFHHGmW6umrolDu/U5VCBcpYV6JWC9chAOHz2XLB/f5XBOlHxHkw=='
 
 // Azure OpenAI & AI Foundry Configuration
 param openAiDeploymentName = 'gpt-4.1'

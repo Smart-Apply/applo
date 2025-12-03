@@ -71,11 +71,8 @@ resource firewallRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2
   }
 }
 
-// Connection string (stored in Key Vault)
-var connectionString = 'postgresql://${adminUsername}:${adminPassword}@${postgresServer.properties.fullyQualifiedDomainName}:5432/${databaseName}?sslmode=require'
-
+// Outputs for constructing connection string
 output serverId string = postgresServer.id
 output serverName string = postgresServer.name
 output databaseName string = database.name
-output connectionString string = connectionString
 output fqdn string = postgresServer.properties.fullyQualifiedDomainName

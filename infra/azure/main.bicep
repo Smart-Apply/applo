@@ -175,6 +175,9 @@ module containerEnv './modules/container-environment.bicep' = {
   }
 }
 
+// Variables for connection strings
+var databaseConnectionString = 'postgresql://${postgresAdminUsername}@${postgres.outputs.serverName}:${postgresAdminPassword}@${postgres.outputs.fqdn}:5432/${postgres.outputs.databaseName}?sslmode=require'
+
 // Frontend (Static Web App) - Deploy first to get URL
 // Note: Static Web Apps not available in North Europe, using West Europe
 module web './modules/static-web-app.bicep' = {
@@ -201,7 +204,7 @@ module api './modules/container-app.bicep' = {
     appName: appName
     containerEnvironmentId: containerEnv.outputs.environmentId
     containerRegistryName: acr.outputs.registryName
-    databaseUrl: postgres.outputs.connectionString
+    databaseUrl: databaseConnectionString
     storageConnectionString: storage.outputs.connectionString
     serviceBusConnectionString: serviceBus.outputs.connectionString
     keyVaultName: keyVault.outputs.keyVaultName
@@ -234,7 +237,7 @@ module secrets './modules/key-vault-secrets.bicep' = {
     jwtSecret: jwtSecret
     refreshTokenSecret: refreshTokenSecret
     postgresAdminPassword: postgresAdminPassword
-    databaseUrl: postgres.outputs.connectionString
+    databaseUrl: databaseConnectionString
     storageConnectionString: storage.outputs.connectionString
     serviceBusConnectionString: serviceBus.outputs.connectionString
   }
