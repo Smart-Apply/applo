@@ -124,9 +124,6 @@ param postgresAdminPassword = '$POSTGRES_PASSWORD'
 param jwtSecret = '$JWT_SECRET'
 param refreshTokenSecret = '$REFRESH_TOKEN_SECRET'
 
-// Frontend URL (update after frontend deployment)
-param frontendUrl = 'https://smartapply.vercel.app'
-
 // Azure OpenAI & AI Foundry Configuration
 param openAiDeploymentName = 'gpt-4.1'
 param openAiEndpoint = 'https://smart-apply-test-ai.services.ai.azure.com/'

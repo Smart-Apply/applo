@@ -175,8 +175,23 @@ module containerEnv './modules/container-environment.bicep' = {
   }
 }
 
-// Backend API (Container App)
-// Note: frontendUrl is set to wildcard initially, update after Static Web App deployment
+// Frontend (Static Web App) - Deploy first to get URL
+// Note: Static Web Apps not available in North Europe, using West Europe
+module web './modules/static-web-app.bicep' = {
+  name: 'web-deployment'
+  scope: rg
+  params: {
+    location: 'westeurope'  // Static Web Apps only available in: westus2, centralus, eastus2, westeurope, eastasia
+    environment: environment
+    appName: appName
+    apiUrl: 'https://${appName}-${environment}-api.${location}.azurecontainerapps.io'
+    repositoryUrl: repositoryUrl
+    repositoryBranch: repositoryBranch
+    tags: tags
+  }
+}
+
+// Backend API (Container App) - Deploy after frontend to use its URL
 module api './modules/container-app.bicep' = {
   name: 'api-deployment'
   scope: rg
@@ -192,7 +207,7 @@ module api './modules/container-app.bicep' = {
     keyVaultName: keyVault.outputs.keyVaultName
     jwtSecret: jwtSecret
     refreshTokenSecret: refreshTokenSecret
-    frontendUrl: 'https://*.azurestaticapps.net'
+    frontendUrl: web.outputs.url
     openAiDeploymentName: openAiDeploymentName
     openAiEndpoint: openAiEndpoint
     openAiApiKey: openAiApiKey
@@ -206,21 +221,6 @@ module api './modules/container-app.bicep' = {
     agentTimeout: agentTimeout
     enableAzureOpenAI: enableAzureOpenAI
     storageAccountName: storage.outputs.storageAccountName
-    tags: tags
-  }
-}
-
-// Frontend (Static Web App)
-module web './modules/static-web-app.bicep' = {
-  name: 'web-deployment'
-  scope: rg
-  params: {
-    location: location
-    environment: environment
-    appName: appName
-    apiUrl: api.outputs.fqdn
-    repositoryUrl: repositoryUrl
-    repositoryBranch: repositoryBranch
     tags: tags
   }
 }

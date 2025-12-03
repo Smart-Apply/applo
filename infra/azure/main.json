@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "15132667895173073747"
+      "templateHash": "10725178974796204219"
     }
   },
   "parameters": {
@@ -59,10 +59,18 @@
         "description": "Refresh token secret"
       }
     },
-    "frontendUrl": {
+    "repositoryUrl": {
       "type": "string",
+      "defaultValue": "https://github.com/Ar1anit/smart-apply",
       "metadata": {
-        "description": "Frontend URL for CORS"
+        "description": "GitHub repository URL"
+      }
+    },
+    "repositoryBranch": {
+      "type": "string",
+      "defaultValue": "mvp",
+      "metadata": {
+        "description": "GitHub branch name"
       }
     },
     "openAiDeploymentName": {
@@ -72,9 +80,78 @@
         "description": "Azure OpenAI deployment name"
       }
     },
+    "openAiEndpoint": {
+      "type": "string",
+      "defaultValue": "https://smart-apply-test-ai.services.ai.azure.com/",
+      "metadata": {
+        "description": "Azure OpenAI endpoint URL"
+      }
+    },
+    "openAiApiKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Azure OpenAI API key"
+      }
+    },
+    "openAiApiVersion": {
+      "type": "string",
+      "defaultValue": "2024-10-21",
+      "metadata": {
+        "description": "Azure OpenAI API version"
+      }
+    },
+    "projectEndpoint": {
+      "type": "string",
+      "defaultValue": "https://smart-apply-test-ai.services.ai.azure.com/api/projects/smartApplytest",
+      "metadata": {
+        "description": "Azure AI Foundry project endpoint"
+      }
+    },
+    "cvWriterAgentId": {
+      "type": "string",
+      "defaultValue": "asst_ZLNYVwISUTw93NA2Yq53ZW1G",
+      "metadata": {
+        "description": "CV Writer Agent ID"
+      }
+    },
+    "clWriterAgentId": {
+      "type": "string",
+      "defaultValue": "asst_wXDlhHUsjgnaF6MPOsoSPoCy",
+      "metadata": {
+        "description": "Cover Letter Writer Agent ID"
+      }
+    },
+    "atsAgentId": {
+      "type": "string",
+      "defaultValue": "asst_Jn2tlDlX3ZhzVIQhhw5Qa57W",
+      "metadata": {
+        "description": "ATS Agent ID"
+      }
+    },
+    "enableAgentParser": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Enable agent-based URL parser"
+      }
+    },
+    "agentMaxSteps": {
+      "type": "int",
+      "defaultValue": 10,
+      "metadata": {
+        "description": "Maximum steps for agent execution"
+      }
+    },
+    "agentTimeout": {
+      "type": "int",
+      "defaultValue": 30000,
+      "metadata": {
+        "description": "Agent timeout in milliseconds"
+      }
+    },
     "enableAzureOpenAI": {
       "type": "bool",
-      "defaultValue": false,
+      "defaultValue": true,
       "metadata": {
         "description": "Enable Azure OpenAI (requires separate provisioning)"
       }
@@ -956,6 +1033,159 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
+      "name": "web-deployment",
+      "resourceGroup": "[variables('resourceGroupName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "westeurope"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "appName": {
+            "value": "[parameters('appName')]"
+          },
+          "apiUrl": {
+            "value": "[format('https://{0}-{1}-api.{2}.azurecontainerapps.io', parameters('appName'), parameters('environment'), parameters('location'))]"
+          },
+          "repositoryUrl": {
+            "value": "[parameters('repositoryUrl')]"
+          },
+          "repositoryBranch": {
+            "value": "[parameters('repositoryBranch')]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "17327879838158901705"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region"
+              }
+            },
+            "environment": {
+              "type": "string",
+              "metadata": {
+                "description": "Environment name"
+              }
+            },
+            "appName": {
+              "type": "string",
+              "metadata": {
+                "description": "Application name"
+              }
+            },
+            "apiUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "API URL for backend connection"
+              }
+            },
+            "repositoryUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "GitHub repository URL"
+              }
+            },
+            "repositoryBranch": {
+              "type": "string",
+              "metadata": {
+                "description": "GitHub branch name"
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Resource tags"
+              }
+            }
+          },
+          "variables": {
+            "staticWebAppName": "[format('{0}-{1}-web', parameters('appName'), parameters('environment'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Web/staticSites",
+              "apiVersion": "2023-01-01",
+              "name": "[variables('staticWebAppName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "sku": {
+                "name": "Free",
+                "tier": "Free"
+              },
+              "properties": {
+                "repositoryUrl": "[parameters('repositoryUrl')]",
+                "branch": "[parameters('repositoryBranch')]",
+                "buildProperties": {
+                  "appLocation": "/apps/web",
+                  "apiLocation": "",
+                  "outputLocation": "",
+                  "appBuildCommand": "npm run build",
+                  "apiBuildCommand": "",
+                  "skipGithubActionWorkflowGeneration": true
+                },
+                "stagingEnvironmentPolicy": "Enabled",
+                "allowConfigFileUpdates": true,
+                "provider": "GitHub"
+              }
+            },
+            {
+              "type": "Microsoft.Web/staticSites/config",
+              "apiVersion": "2023-01-01",
+              "name": "[format('{0}/{1}', variables('staticWebAppName'), 'appsettings')]",
+              "properties": {
+                "NEXT_PUBLIC_API_URL": "[parameters('apiUrl')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/staticSites', variables('staticWebAppName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "staticWebAppId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Web/staticSites', variables('staticWebAppName'))]"
+            },
+            "staticWebAppName": {
+              "type": "string",
+              "value": "[variables('staticWebAppName')]"
+            },
+            "defaultHostname": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Web/staticSites', variables('staticWebAppName')), '2023-01-01').defaultHostname]"
+            },
+            "url": {
+              "type": "string",
+              "value": "[format('https://{0}', reference(resourceId('Microsoft.Web/staticSites', variables('staticWebAppName')), '2023-01-01').defaultHostname)]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
       "name": "api-deployment",
       "resourceGroup": "[variables('resourceGroupName')]",
       "properties": {
@@ -998,13 +1228,46 @@
             "value": "[parameters('refreshTokenSecret')]"
           },
           "frontendUrl": {
-            "value": "[parameters('frontendUrl')]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'web-deployment'), '2025-04-01').outputs.url.value]"
           },
           "openAiDeploymentName": {
             "value": "[parameters('openAiDeploymentName')]"
           },
+          "openAiEndpoint": {
+            "value": "[parameters('openAiEndpoint')]"
+          },
+          "openAiApiKey": {
+            "value": "[parameters('openAiApiKey')]"
+          },
+          "openAiApiVersion": {
+            "value": "[parameters('openAiApiVersion')]"
+          },
+          "projectEndpoint": {
+            "value": "[parameters('projectEndpoint')]"
+          },
+          "cvWriterAgentId": {
+            "value": "[parameters('cvWriterAgentId')]"
+          },
+          "clWriterAgentId": {
+            "value": "[parameters('clWriterAgentId')]"
+          },
+          "atsAgentId": {
+            "value": "[parameters('atsAgentId')]"
+          },
+          "enableAgentParser": {
+            "value": "[parameters('enableAgentParser')]"
+          },
+          "agentMaxSteps": {
+            "value": "[parameters('agentMaxSteps')]"
+          },
+          "agentTimeout": {
+            "value": "[parameters('agentTimeout')]"
+          },
           "enableAzureOpenAI": {
             "value": "[parameters('enableAzureOpenAI')]"
+          },
+          "storageAccountName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'storage-deployment'), '2025-04-01').outputs.storageAccountName.value]"
           },
           "tags": {
             "value": "[variables('tags')]"
@@ -1017,7 +1280,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "14507495676320892898"
+              "templateHash": "14661621296932922480"
             }
           },
           "parameters": {
@@ -1099,10 +1362,76 @@
                 "description": "Azure OpenAI deployment name"
               }
             },
+            "openAiEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure OpenAI endpoint"
+              }
+            },
+            "openAiApiKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Azure OpenAI API key"
+              }
+            },
+            "openAiApiVersion": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure OpenAI API version"
+              }
+            },
+            "projectEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure AI Foundry project endpoint"
+              }
+            },
+            "cvWriterAgentId": {
+              "type": "string",
+              "metadata": {
+                "description": "CV Writer Agent ID"
+              }
+            },
+            "clWriterAgentId": {
+              "type": "string",
+              "metadata": {
+                "description": "Cover Letter Writer Agent ID"
+              }
+            },
+            "atsAgentId": {
+              "type": "string",
+              "metadata": {
+                "description": "ATS Agent ID"
+              }
+            },
+            "enableAgentParser": {
+              "type": "bool",
+              "metadata": {
+                "description": "Enable agent-based URL parser"
+              }
+            },
+            "agentMaxSteps": {
+              "type": "int",
+              "metadata": {
+                "description": "Maximum steps for agent execution"
+              }
+            },
+            "agentTimeout": {
+              "type": "int",
+              "metadata": {
+                "description": "Agent timeout in milliseconds"
+              }
+            },
             "enableAzureOpenAI": {
               "type": "bool",
               "metadata": {
                 "description": "Enable Azure OpenAI"
+              }
+            },
+            "storageAccountName": {
+              "type": "string",
+              "metadata": {
+                "description": "Storage account name"
               }
             },
             "tags": {
@@ -1142,6 +1471,12 @@
                       }
                     ]
                   },
+                  "registries": [
+                    {
+                      "server": "[format('{0}.azurecr.io', parameters('containerRegistryName'))]",
+                      "identity": "system"
+                    }
+                  ],
                   "secrets": [
                     {
                       "name": "database-url",
@@ -1162,6 +1497,10 @@
                     {
                       "name": "refresh-token-secret",
                       "value": "[parameters('refreshTokenSecret')]"
+                    },
+                    {
+                      "name": "azure-openai-api-key",
+                      "value": "[parameters('openAiApiKey')]"
                     }
                   ]
                 },
@@ -1232,8 +1571,52 @@
                           "value": "[if(parameters('enableAzureOpenAI'), 'azure-openai', 'mock')]"
                         },
                         {
+                          "name": "AZURE_OPENAI_ENDPOINT",
+                          "value": "[parameters('openAiEndpoint')]"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_API_KEY",
+                          "secretRef": "azure-openai-api-key"
+                        },
+                        {
                           "name": "AZURE_OPENAI_DEPLOYMENT_NAME",
                           "value": "[parameters('openAiDeploymentName')]"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_API_VERSION",
+                          "value": "[parameters('openAiApiVersion')]"
+                        },
+                        {
+                          "name": "PROJECT_ENDPOINT",
+                          "value": "[parameters('projectEndpoint')]"
+                        },
+                        {
+                          "name": "CV_WRITER_AGENT_ID",
+                          "value": "[parameters('cvWriterAgentId')]"
+                        },
+                        {
+                          "name": "CL_WRITER_AGENT_ID",
+                          "value": "[parameters('clWriterAgentId')]"
+                        },
+                        {
+                          "name": "ATS_AGENT_ID",
+                          "value": "[parameters('atsAgentId')]"
+                        },
+                        {
+                          "name": "ENABLE_AGENT_PARSER",
+                          "value": "[string(parameters('enableAgentParser'))]"
+                        },
+                        {
+                          "name": "AGENT_MAX_STEPS",
+                          "value": "[string(parameters('agentMaxSteps'))]"
+                        },
+                        {
+                          "name": "AGENT_TIMEOUT",
+                          "value": "[string(parameters('agentTimeout'))]"
+                        },
+                        {
+                          "name": "AZURE_STORAGE_ACCOUNT",
+                          "value": "[parameters('storageAccountName')]"
                         },
                         {
                           "name": "CORS_ORIGINS",
@@ -1345,7 +1728,8 @@
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'postgres-deployment')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'servicebus-deployment')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'storage-deployment')]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'storage-deployment')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'web-deployment')]"
       ]
     },
     {
@@ -1541,6 +1925,10 @@
     "apiUrl": {
       "type": "string",
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'api-deployment'), '2025-04-01').outputs.fqdn.value]"
+    },
+    "webUrl": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'web-deployment'), '2025-04-01').outputs.url.value]"
     },
     "postgresServerName": {
       "type": "string",

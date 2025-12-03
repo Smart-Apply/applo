@@ -16,9 +16,22 @@ param postgresAdminPassword = '' // TODO: Set via command line or Key Vault refe
 param jwtSecret = '' // TODO: Generate with: openssl rand -base64 64
 param refreshTokenSecret = '' // TODO: Generate with: openssl rand -base64 64
 
-// Frontend URL
-param frontendUrl = 'https://smartapply.vercel.app' // TODO: Update with your frontend URL
+// GitHub configuration
+param repositoryUrl = 'https://github.com/Ar1anit/smart-apply'
+param repositoryBranch = 'mvp'
 
 // Azure OpenAI configuration
-param openAiDeploymentName = 'gpt-4o'
-param enableAzureOpenAI = false // Set to true if you have Azure OpenAI provisioned
+param openAiDeploymentName = 'gpt-4.1'
+param openAiEndpoint = 'https://smart-apply-test-ai.services.ai.azure.com/'
+param openAiApiKey = 'BYYHbmL2SsdfPRXnnHA2VuKW8GymK3nEcAZrqIiL3eRlqfndij7TJQQJ99BKACYeBjFXJ3w3AAAAACOGzQKD'
+param openAiApiVersion = '2024-10-21'
+param enableAzureOpenAI = true
+
+// Azure AI Foundry Agents configuration
+param projectEndpoint = 'https://smart-apply-test-ai.services.ai.azure.com/api/projects/smartApplytest'
+param cvWriterAgentId = 'asst_ZLNYVwISUTw93NA2Yq53ZW1G'
+param clWriterAgentId = 'asst_wXDlhHUsjgnaF6MPOsoSPoCy'
+param atsAgentId = 'asst_Jn2tlDlX3ZhzVIQhhw5Qa57W'
+param enableAgentParser = true
+param agentMaxSteps = 10
+param agentTimeout = 30000

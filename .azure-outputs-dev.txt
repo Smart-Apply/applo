@@ -1,10 +1,10 @@
-# Azure Deployment Outputs - Wed Dec  3 22:51:36 CET 2025
+# Azure Deployment Outputs - Thu Dec  4 00:11:08 CET 2025
 
 RESOURCE_GROUP=smartapply-dev-rg
 ACR_NAME=smartapplydevacr
 KEY_VAULT_NAME=smartapply-dev-vault
 API_URL=https://smartapply-dev-api.ashycliff-786e35b4.northeurope.azurecontainerapps.io
-DEPLOYMENT_NAME=smartapply-dev-20251203-223609
+DEPLOYMENT_NAME=smartapply-dev-20251204-000750
 
 # To deploy the application:
 # 1. Set up GitHub Actions secrets (see docs/guides/AZURE_DEPLOYMENT.md)
