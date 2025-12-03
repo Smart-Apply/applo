@@ -22,8 +22,8 @@ COPY apps ./apps
 # Generate Prisma client
 RUN npm run prisma:generate
 
-# Build application
-RUN npm run build
+# Build backend only (not frontend)
+RUN npm run api:build
 
 # Stage 2: Production dependencies
 FROM node:20-alpine AS deps
