@@ -34,7 +34,8 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+# Install all dependencies (needed for Swagger and other runtime deps in main.ts)
+RUN npm ci && npm cache clean --force
 
 # Stage 3: Development
 FROM node:20-alpine AS development
