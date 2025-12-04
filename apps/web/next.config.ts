@@ -5,8 +5,8 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   
-  // Static export for Azure Static Web Apps (faster deployment, no warm-up issues)
-  output: 'export',
+  // Standalone output for optimized Azure deployment
+  output: 'standalone',
   
   // Set workspace root for file tracing (monorepo setup)
   outputFileTracingRoot: path.join(__dirname, "../../"),
