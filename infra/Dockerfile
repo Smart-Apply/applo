@@ -33,8 +33,12 @@ WORKDIR /app
 # Install OpenSSL for Prisma
 RUN apk add --no-cache openssl
 
+# Copy all package.json files for workspace dependencies
 COPY package*.json ./
-# Install all dependencies (needed for Swagger and other runtime deps in main.ts)
+COPY apps/api/package*.json ./apps/api/
+COPY apps/web/package*.json ./apps/web/
+
+# Install all dependencies including workspace packages (needed for Swagger and other runtime deps in main.ts)
 RUN npm ci && npm cache clean --force
 
 # Stage 3: Development
