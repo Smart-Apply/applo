@@ -33,6 +33,13 @@ jobs:
         with:
           submodules: true
 
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+
       - name: Log in to Azure
         uses: azure/login@v2
         with:
@@ -52,6 +59,8 @@ jobs:
 
       - name: Build and Deploy
         uses: Azure/static-web-apps-deploy@v1
+        env:
+          NODE_VERSION: '20'
         with:
           azure_static_web_apps_api_token: ${{ steps.get-token.outputs.DEPLOYMENT_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}

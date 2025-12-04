@@ -4,9 +4,21 @@ on:
   push:
     branches:
       - mvp
+    paths:
+      - 'apps/api/**'
+      - 'infra/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/azure-deploy.yml'
   pull_request:
     branches:
       - mvp
+    paths:
+      - 'apps/api/**'
+      - 'infra/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/azure-deploy.yml'
   workflow_dispatch:
 
 env:
