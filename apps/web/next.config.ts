@@ -5,11 +5,15 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   
+  // Standalone output for Docker container deployment
+  output: 'standalone',
+  
   // Set workspace root for file tracing (monorepo setup)
   outputFileTracingRoot: path.join(__dirname, "../../"),
 
   // Image configuration for external template preview images
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'http',

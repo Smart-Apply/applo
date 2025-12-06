@@ -1,0 +1,94 @@
+name: Deploy Frontend to Azure Container Apps
+
+on:
+  push:
+    branches:
+      - mvp
+    paths:
+      - 'apps/web/**'
+      - 'infra/Dockerfile.web'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/azure-deploy-frontend.yml'
+  pull_request:
+    branches:
+      - mvp
+    paths:
+      - 'apps/web/**'
+      - 'infra/Dockerfile.web'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/azure-deploy-frontend.yml'
+  workflow_dispatch:
+
+env:
+  AZURE_CONTAINER_REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+  CONTAINER_APP_NAME: smartapply-dev-web
+  RESOURCE_GROUP: smartapply-dev-rg
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to Azure Container Registry
+        run: az acr login --name ${{ env.AZURE_CONTAINER_REGISTRY }}
+
+      - name: Build and push Docker image
+        run: |
+          export DOCKER_BUILDKIT=1
+          docker build \
+            --platform linux/amd64 \
+            --target runner \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            --cache-from ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/smart-apply-web:latest \
+            -t ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/smart-apply-web:${{ github.sha }} \
+            -t ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/smart-apply-web:latest \
+            -f infra/Dockerfile.web \
+            .
+          docker push ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/smart-apply-web:${{ github.sha }}
+          docker push ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/smart-apply-web:latest
+
+      - name: Deploy to Azure Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/smart-apply-web:${{ github.sha }}
+
+      - name: Get Container App URL
+        id: get-url
+        run: |
+          URL=$(az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "url=https://$URL" >> $GITHUB_OUTPUT
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Frontend Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Frontend URL:** ${{ steps.get-url.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify frontend is accessible" >> $GITHUB_STEP_SUMMARY
+          echo "2. Update backend CORS if needed" >> $GITHUB_STEP_SUMMARY
+          echo "3. Test frontend → backend connection" >> $GITHUB_STEP_SUMMARY

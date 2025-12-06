@@ -70,7 +70,7 @@ export function buildResumeFromProfile(
       endDate: experience.endDate || undefined,
       dateRange: formatRange(experience.startDate, experience.endDate),
       description: experience.description || undefined,
-      achievements: experience.achievements || [],
+      achievements: [],
     })),
     projects: (profile.projects || []).map((project) => ({
       id: project.id || createClientId(),
