@@ -101,8 +101,7 @@ Nice to Have:
           data: expect.objectContaining({
             title: expect.any(String),
             company: expect.any(String),
-            requirements: expect.any(Array),
-            responsibilities: expect.any(Array),
+            fullText: expect.any(String), // Changed from structured fields to fullText
           }),
         }),
       );

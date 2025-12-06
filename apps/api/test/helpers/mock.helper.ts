@@ -102,6 +102,8 @@ export class MockHelper {
       generateResume: jest.fn().mockResolvedValue('Resume content'),
       translate: jest.fn().mockResolvedValue('Translated text'),
       detectLanguage: jest.fn().mockReturnValue('en'),
+      categorizeSkills: jest.fn().mockResolvedValue({ technical: [], soft: [], other: [] }),
+      translateSummary: jest.fn().mockResolvedValue('Translated summary'),
     } as unknown as LLMService;
   }
 

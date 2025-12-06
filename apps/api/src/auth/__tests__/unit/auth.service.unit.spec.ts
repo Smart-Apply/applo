@@ -297,19 +297,21 @@ describe('AuthService (Unit)', () => {
 
   describe('validateUser', () => {
     it('should return user when validation succeeds', async () => {
-      // Arrange
-      prisma.user.findUnique = jest.fn().mockResolvedValue(mockUser);
+      // Arrange - Mock returns only selected fields (matching service select)
+      const selectedUser = {
+        id: mockUser.id,
+        email: mockUser.email,
+        firstName: mockUser.firstName,
+        lastName: mockUser.lastName,
+        provider: mockUser.provider,
+      };
+      prisma.user.findUnique = jest.fn().mockResolvedValue(selectedUser);
 
       // Act
       const result = await service.validateUser(mockUser.id);
 
       // Assert
-      expect(result).toEqual({
-        id: mockUser.id,
-        email: mockUser.email,
-        firstName: mockUser.firstName,
-        lastName: mockUser.lastName,
-      });
+      expect(result).toEqual(selectedUser);
     });
 
     it('should throw UnauthorizedException when user not found', async () => {
@@ -350,15 +352,21 @@ describe('AuthService (Unit)', () => {
         .mockReturnValueOnce('access-token')
         .mockReturnValueOnce('refresh-token');
 
+      const mockReq = {
+        headers: { 'user-agent': 'test-agent' },
+        ip: '127.0.0.1',
+      } as any;
+
       // Act
-      await service['generateTokens'](mockUser.id, mockUser.email, 'test-agent', '127.0.0.1');
+      await service['generateTokens'](mockUser.id, mockUser.email, 'test-agent', '127.0.0.1', mockReq);
 
       // Assert
+      // createSession is called with (userId, refreshTokenId, req)
+      // refreshTokenId comes from prisma.refreshToken.create() which returns { id: 'refresh-token-id', ... }
       expect(sessionService.createSession).toHaveBeenCalledWith(
         mockUser.id,
-        'refresh-token',
-        'test-agent',
-        '127.0.0.1',
+        'refresh-token-id', // From MockHelper.createMockPrismaService
+        mockReq,
       );
     });
   });

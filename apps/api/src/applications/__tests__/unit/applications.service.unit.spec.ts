@@ -6,6 +6,11 @@ import { JobsService } from '../../../jobs/jobs.service';
 import { StorageService } from '../../../storage/storage.service';
 import { JobType } from '../../../jobs/interfaces/queue.interface';
 import { CreateApplicationDto } from '../../dto/create-application.dto';
+import { MockHelper } from '../../../../test/helpers/mock.helper';
+import { LLMService } from '../../../llm/llm.service';
+import { TitleGeneratorService } from '../../title-generator.service';
+import { KeywordsService } from '../../../keywords/keywords.service';
+import { TemplatesService } from '../../../templates/templates.service';
 
 describe('ApplicationsService', () => {
   let service: ApplicationsService;
@@ -47,29 +52,30 @@ describe('ApplicationsService', () => {
           },
         },
         {
-          provide: 'LLMService',
+          provide: LLMService,
           useValue: MockHelper.createMockLLMService(),
         },
         {
-          provide: 'TitleGeneratorService',
+          provide: TitleGeneratorService,
           useValue: {
             generateTitle: jest.fn().mockResolvedValue('Generated Title'),
           },
         },
         {
-          provide: 'KeywordsService',
+          provide: KeywordsService,
           useValue: {
             extractKeywords: jest.fn().mockResolvedValue({ technicalSkills: [] }),
           },
         },
         {
-          provide: 'TemplatesService',
+          provide: TemplatesService,
           useValue: {
             findDefault: jest.fn().mockResolvedValue({
               id: 'template-1',
               name: 'Modern Professional',
-              htmlContent: '<html><body>{{candidateName}}</body></html>',
-              cssContent: 'body { font-family: Arial; }',
+              htmlTemplate: '<html><body>{{candidateName}}</body></html>',
+              cssStyles: 'body { font-family: Arial; }',
+              language: 'en',
             }),
           },
         },
@@ -112,7 +118,7 @@ describe('ApplicationsService', () => {
       jest.spyOn(prisma.profile, 'findUnique').mockResolvedValue({
         id: 'profile-123',
         userId,
-        summary: null,
+        summary: 'Test summary',
         phone: null,
         location: null,
         linkedinUrl: null,
@@ -120,7 +126,99 @@ describe('ApplicationsService', () => {
         portfolioUrl: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+        user: {
+          id: userId,
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User',
+          password: 'hashed',
+          provider: 'local',
+          providerId: null,
+          createdAt: new Date(),
+        },
+        skills: [
+          { id: 'skill-1', profileId: 'profile-123', name: 'TypeScript', level: 'Expert', createdAt: new Date(), updatedAt: new Date() },
+          { id: 'skill-2', profileId: 'profile-123', name: 'React', level: 'Advanced', createdAt: new Date(), updatedAt: new Date() },
+        ],
+        experiences: [
+          {
+            id: 'exp-1',
+            profileId: 'profile-123',
+            title: 'Senior Developer',
+            company: 'Tech Corp',
+            location: 'Berlin',
+            startDate: new Date('2020-01-01'),
+            endDate: null,
+            current: true,
+            description: 'Building awesome apps',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+        education: [
+          {
+            id: 'edu-1',
+            profileId: 'profile-123',
+            degree: 'Bachelor of Science',
+            field: 'Computer Science',
+            institution: 'Tech University',
+            location: 'Berlin',
+            startDate: new Date('2015-09-01'),
+            endDate: new Date('2019-06-01'),
+            current: false,
+            description: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+        projects: [
+          {
+            id: 'proj-1',
+            profileId: 'profile-123',
+            name: 'Smart Apply',
+            description: 'Job application automation tool',
+            url: 'https://github.com/test/smart-apply',
+            technologies: ['TypeScript', 'React', 'Node.js'],
+            startDate: new Date('2024-01-01'),
+            endDate: null,
+            current: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+        certificates: [
+          {
+            id: 'cert-1',
+            profileId: 'profile-123',
+            name: 'AWS Certified Developer',
+            issuer: 'Amazon Web Services',
+            issueDate: new Date('2023-05-01'),
+            expiryDate: null,
+            credentialId: 'AWS-123456',
+            credentialUrl: 'https://aws.amazon.com/verify',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+        languages: [
+          {
+            id: 'lang-1',
+            profileId: 'profile-123',
+            name: 'English',
+            proficiency: 'Native',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: 'lang-2',
+            profileId: 'profile-123',
+            name: 'German',
+            proficiency: 'Fluent',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      } as any);
 
       jest.spyOn(prisma.application, 'create').mockResolvedValue({
         id: 'app-123',
@@ -152,17 +250,20 @@ describe('ApplicationsService', () => {
         },
       } as any);
 
-      jest.spyOn(jobsService, 'publishJob').mockResolvedValue('job-id-123');
-
       const result = await service.create(userId, dto);
 
       expect(result.id).toBe('app-123');
       expect(result.status).toBe('PENDING');
-      expect(jobsService.publishJob).toHaveBeenCalledWith(JobType.APPLICATION_GENERATE, {
-        applicationId: 'app-123',
-        userId,
-        jobPostingId: dto.jobPostingId,
-      });
+      // Note: create() no longer publishes jobs - it just creates the application record
+      expect(prisma.application.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            userId,
+            jobPostingId: dto.jobPostingId,
+            status: 'PENDING',
+          }),
+        }),
+      );
     });
 
     it('should throw NotFoundException if job posting not found', async () => {
@@ -186,51 +287,8 @@ describe('ApplicationsService', () => {
       );
     });
 
-    it('should mark application as FAILED if job queueing fails', async () => {
-      const userId = 'user-123';
-      const dto: CreateApplicationDto = {
-        jobPostingId: 'job-123',
-      };
-
-      jest.spyOn(prisma.jobPosting, 'findUnique').mockResolvedValue({
-        id: 'job-123',
-        title: 'Test Job',
-        company: 'Test Co',
-      } as any);
-
-      jest.spyOn(prisma.profile, 'findUnique').mockResolvedValue({
-        id: 'profile-123',
-        userId,
-      } as any);
-
-      const mockApplication = {
-        id: 'app-123',
-        userId,
-        jobPostingId: dto.jobPostingId,
-        status: 'PENDING',
-        jobPosting: { id: 'job-123', title: 'Test Job', company: 'Test Co' },
-      };
-
-      jest.spyOn(prisma.application, 'create').mockResolvedValue(mockApplication as any);
-
-      jest.spyOn(jobsService, 'publishJob').mockRejectedValue(new Error('Queue error'));
-
-      jest.spyOn(prisma.application, 'update').mockResolvedValue({
-        ...mockApplication,
-        status: 'FAILED',
-        errorMessage: 'Failed to queue application for processing',
-      } as any);
-
-      await expect(service.create(userId, dto)).rejects.toThrow(BadRequestException);
-
-      expect(prisma.application.update).toHaveBeenCalledWith({
-        where: { id: 'app-123' },
-        data: {
-          status: 'FAILED',
-          errorMessage: 'Failed to queue application for processing',
-        },
-      });
-    });
+    // Note: Test removed because create() no longer publishes jobs.
+    // The method now only creates the application record without queueing background jobs.
   });
 
   describe('findOne', () => {

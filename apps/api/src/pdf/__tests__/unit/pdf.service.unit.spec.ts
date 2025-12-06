@@ -3,6 +3,19 @@ import { PdfService } from '../../pdf.service';
 import { ConfigService } from '../../../config/config.service';
 import { TemplateRendererService } from '../../template-renderer.service';
 
+// Mock Puppeteer module
+jest.mock('puppeteer', () => ({
+  launch: jest.fn().mockResolvedValue({
+    newPage: jest.fn().mockResolvedValue({
+      setContent: jest.fn(),
+      addStyleTag: jest.fn(), // Add missing method
+      pdf: jest.fn().mockResolvedValue(Buffer.from('%PDF-1.4\nMock PDF content')),
+      close: jest.fn(),
+    }),
+    close: jest.fn(),
+  }),
+}));
+
 describe('PdfService', () => {
   let service: PdfService;
 

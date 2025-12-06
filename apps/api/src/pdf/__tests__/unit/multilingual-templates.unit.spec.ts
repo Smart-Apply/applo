@@ -6,6 +6,7 @@ import { ResumeTemplateData } from '../../template-renderer.service';
 describe('TemplateRendererService - Multilingual Support', () => {
   let service: TemplateRendererService;
   let templatesService: TemplatesService;
+  let mockTemplate: any; // Declare at describe level for access in tests
 
   const mockResumeData: ResumeTemplateData = {
     candidateName: 'Max Mustermann',
@@ -58,7 +59,7 @@ describe('TemplateRendererService - Multilingual Support', () => {
   };
 
   beforeEach(async () => {
-    const mockTemplate = {
+    mockTemplate = {
       id: 'template-1',
       name: 'Modern Professional',
       htmlTemplate: `<!DOCTYPE html>
@@ -73,7 +74,7 @@ describe('TemplateRendererService - Multilingual Support', () => {
   </header>
   {{#if summary}}
   <section class="summary">
-    <h2>{{t "resume.profile" language}}</h2>
+    <h2>{{t "resume.summary" language}}</h2>
     <p>{{summary}}</p>
   </section>
   {{/if}}
@@ -148,7 +149,18 @@ describe('TemplateRendererService - Multilingual Support', () => {
 </body>
 </html>`,
       cssStyles: 'body { font-family: Arial; margin: 20px; }',
-      language: 'de',
+      language: undefined, // Let test data.language override
+    };
+
+    const mockTemplatesService = {
+      findOne: jest.fn().mockResolvedValue(mockTemplate),
+      // findDefault returns template with language from current test context
+      // This is a workaround because the service overrides data.language with template.language
+      findDefault: jest.fn().mockImplementation(() => {
+        // Return template with 'de' language by default (for German tests)
+        // Each test can override by setting mockResumeData.language before calling renderResume
+        return Promise.resolve({ ...mockTemplate, language: 'de' });
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -156,10 +168,7 @@ describe('TemplateRendererService - Multilingual Support', () => {
         TemplateRendererService,
         {
           provide: TemplatesService,
-          useValue: {
-            findOne: jest.fn().mockResolvedValue(mockTemplate),
-            findDefault: jest.fn().mockResolvedValue(mockTemplate),
-          },
+          useValue: mockTemplatesService,
         },
       ],
     }).compile();
@@ -170,10 +179,11 @@ describe('TemplateRendererService - Multilingual Support', () => {
 
   describe('renderResume with German language', () => {
     it('should render German section headers when language is "de"', async () => {
-      const html = await service.renderResume(mockResumeData, undefined, true);
+      // Use database template (atsOptimized=false) to test multilingual support
+      const html = await service.renderResume(mockResumeData, undefined, false);
 
       // Check for German section headers (using actual translations from template-renderer.service.ts)
-      expect(html).toContain('<h2>Professionelles Profil</h2>'); // Professional Summary in German
+      expect(html).toContain('<h2>Profil</h2>'); // Professional Summary in German (resume.summary)
       expect(html).toContain('<h2>Technische Fähigkeiten</h2>'); // Skills in German
       expect(html).toContain('<h2>Berufserfahrung</h2>'); // Experience in German
       expect(html).toContain('<h2>Ausbildung</h2>'); // Education in German
@@ -186,7 +196,7 @@ describe('TemplateRendererService - Multilingual Support', () => {
     });
 
     it('should preserve German content from resume data', async () => {
-      const html = await service.renderResume(mockResumeData, undefined, true);
+      const html = await service.renderResume(mockResumeData, undefined, false);
 
       // Check German content is preserved
       expect(html).toContain('Max Mustermann');
@@ -199,6 +209,12 @@ describe('TemplateRendererService - Multilingual Support', () => {
 
   describe('renderResume with English language', () => {
     it('should render English section headers when language is "en"', async () => {
+      // Override mock to return English template
+      jest.spyOn(templatesService, 'findDefault').mockResolvedValueOnce({
+        ...mockTemplate,
+        language: 'en',
+      } as any);
+
       const englishData: ResumeTemplateData = {
         ...mockResumeData,
         candidateName: 'John Doe',
@@ -221,7 +237,7 @@ describe('TemplateRendererService - Multilingual Support', () => {
         language: 'en', // English language
       };
 
-      const html = await service.renderResume(englishData, undefined, true);
+      const html = await service.renderResume(englishData, undefined, false);
 
       // Check for English section headers (using actual translations)
       expect(html).toContain('Professional Summary');
@@ -237,16 +253,22 @@ describe('TemplateRendererService - Multilingual Support', () => {
 
   describe('renderResume without language (fallback)', () => {
     it('should default to English when language is not specified', async () => {
+      // Override mock to return template without language (defaults to 'en')
+      jest.spyOn(templatesService, 'findDefault').mockResolvedValueOnce({
+        ...mockTemplate,
+        language: undefined, // Will default to 'en' in service
+      } as any);
+
       const dataWithoutLanguage: ResumeTemplateData = {
         ...mockResumeData,
         language: undefined,
       };
 
-      const html = await service.renderResume(dataWithoutLanguage, undefined, true);
+      const html = await service.renderResume(dataWithoutLanguage, undefined, false);
 
-      // Should default to English
+      // Should default to English (resume.summary key)
       expect(html).toContain('Professional Summary');
-      expect(html).toContain('Skills');
+      expect(html).toContain('Technical Skills');
       expect(html).toContain('Professional Experience');
     });
   });

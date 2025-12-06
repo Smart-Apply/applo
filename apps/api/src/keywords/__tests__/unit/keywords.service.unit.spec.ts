@@ -52,10 +52,10 @@ describe('KeywordsService', () => {
     company: 'TechCorp',
     location: 'Berlin',
     fullText: 'Looking for senior developer with TypeScript and React experience. Responsibilities include developing apps. AWS knowledge is a nice to have.',
-    rawText: null,
-    sourceUrl: null,
-    fileId: null,
-    language: null,
+    rawText: undefined, // Changed from null to undefined
+    sourceUrl: undefined, // Changed from null to undefined
+    fileId: undefined, // Changed from null to undefined
+    language: 'en', // Changed from null to 'en'
     userId: 'user-1',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -158,9 +158,11 @@ describe('KeywordsService', () => {
         where: { id: 'job-1' },
       });
 
-      expect(result).toHaveProperty('overallScore');
-      expect(result).toHaveProperty('matches');
-      expect(result).toHaveProperty('missing');
+      // Updated to match new output format from ATS Agent
+      expect(result).toHaveProperty('matchPercentage');
+      expect(result).toHaveProperty('matchedKeywords');
+      expect(result).toHaveProperty('missingKeywords');
+      expect(result).toHaveProperty('categoryBreakdown');
       expect(result).toHaveProperty('suggestions');
     });
   });

@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PdfService } from './pdf.service';
-import { TemplateRendererService } from './template-renderer.service';
-import { AtsValidatorService } from './ats-validator.service';
-import { ConfigService } from '../config/config.service';
-import { TemplatesService } from '../templates/templates.service';
-import { PrismaService } from '../prisma/prisma.service';
-import type { ResumeTemplateData, CoverLetterTemplateData } from './template-renderer.service';
+import { PdfService } from '../../pdf.service';
+import { TemplateRendererService } from '../../template-renderer.service';
+import { AtsValidatorService } from '../../ats-validator.service';
+import { ConfigService } from '../../../config/config.service';
+import { TemplatesService } from '../../../templates/templates.service';
+import { PrismaService } from '../../../prisma/prisma.service';
+import type { ResumeTemplateData, CoverLetterTemplateData } from '../../template-renderer.service';
 
 describe('ATS-Optimized PDF Generation Integration', () => {
   let pdfService: PdfService;

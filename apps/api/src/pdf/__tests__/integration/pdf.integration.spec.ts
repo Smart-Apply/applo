@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PdfService } from './pdf.service';
-import { TemplateRendererService } from './template-renderer.service';
-import { ConfigService } from '../config/config.service';
+import { PdfService } from '../../pdf.service';
+import { TemplateRendererService } from '../../template-renderer.service';
+import { ConfigService } from '../../../config/config.service';
 
 describe('PDF Generation Integration', () => {
   let service: PdfService;

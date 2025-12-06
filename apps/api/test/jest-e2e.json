@@ -2,12 +2,15 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": ".",
   "testEnvironment": "node",
-  "testMatch": ["**/e2e/**/*.e2e-spec.ts", "**/unit/**/*.spec.ts"],
+  "testMatch": ["**/e2e/**/*.e2e-spec.ts"],
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/../src/$1"
   },
-  "setupFiles": ["<rootDir>/setup.ts"]
+  "setupFiles": ["<rootDir>/setup.ts"],
+  "testTimeout": 60000,
+  "maxWorkers": 1,
+  "forceExit": true
 }

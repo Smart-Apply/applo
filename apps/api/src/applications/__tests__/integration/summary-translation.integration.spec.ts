@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApplicationsService } from './applications.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { JobsService } from '../jobs/jobs.service';
-import { StorageService } from '../storage/storage.service';
-import { LLMService } from '../llm/llm.service';
-import { TitleGeneratorService } from './title-generator.service';
-import { KeywordsService } from '../keywords/keywords.service';
+import { ApplicationsService } from '../../applications.service';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { JobsService } from '../../../jobs/jobs.service';
+import { StorageService } from '../../../storage/storage.service';
+import { LLMService } from '../../../llm/llm.service';
+import { TitleGeneratorService } from '../../title-generator.service';
+import { KeywordsService } from '../../../keywords/keywords.service';
 
 describe('ApplicationsService - Summary Translation Integration', () => {
   let service: ApplicationsService;

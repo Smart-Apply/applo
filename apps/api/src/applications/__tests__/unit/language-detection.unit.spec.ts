@@ -6,6 +6,7 @@ import { StorageService } from '../../../storage/storage.service';
 import { LLMService } from '../../../llm/llm.service';
 import { TitleGeneratorService } from '../../title-generator.service';
 import { KeywordsService } from '../../../keywords/keywords.service';
+import { TemplatesService } from '../../../templates/templates.service';
 
 describe('ApplicationsService - Language Detection', () => {
   let service: ApplicationsService;
@@ -39,13 +40,14 @@ describe('ApplicationsService - Language Detection', () => {
           useValue: {},
         },
         {
-          provide: 'TemplatesService',
+          provide: TemplatesService,
           useValue: {
             findDefault: jest.fn().mockResolvedValue({
               id: 'template-1',
               name: 'Modern Professional',
-              htmlContent: '<html><body>{{candidateName}}</body></html>',
-              cssContent: 'body { font-family: Arial; }',
+              htmlTemplate: '<html><body>{{candidateName}}</body></html>',
+              cssStyles: 'body { font-family: Arial; }',
+              language: 'en',
             }),
           },
         },
