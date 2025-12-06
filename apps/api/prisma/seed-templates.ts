@@ -1,6 +1,10 @@
 import { PrismaClient, TemplateType } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { config } from 'dotenv';
+
+// Load .env from apps/api directory (one level up from prisma/seed-templates.ts)
+config({ path: path.join(__dirname, '../.env') });
 
 const prisma = new PrismaClient();
 

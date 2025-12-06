@@ -3,8 +3,8 @@ import * as argon2 from 'argon2';
 import { config } from 'dotenv';
 import { join } from 'path';
 
-// Load .env from project root (two levels up from prisma/seed.ts)
-config({ path: join(__dirname, '../../../.env') });
+// Load .env from apps/api directory (one level up from prisma/seed.ts)
+config({ path: join(__dirname, '../.env') });
 
 const prisma = new PrismaClient();
 

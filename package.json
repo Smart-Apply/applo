@@ -37,11 +37,11 @@
     "test:all": "npm run test:all --workspace=apps/api",
     "test:all:cov": "npm run test:all:cov --workspace=apps/api",
     "test:cov": "npm run test:cov --workspace=apps/api",
-    "prisma:generate": "npm run prisma:generate --workspace=apps/api",
-    "prisma:migrate": "npm run prisma:migrate --workspace=apps/api",
-    "prisma:seed": "npm run prisma:seed --workspace=apps/api",
-    "prisma:seed:templates": "npm run prisma:seed:templates --workspace=apps/api",
-    "prisma:studio": "npm run prisma:studio --workspace=apps/api"
+    "prisma:generate": "cd apps/api && npm run prisma:generate",
+    "prisma:migrate": "cd apps/api && npm run prisma:migrate",
+    "prisma:seed": "cd apps/api && npm run prisma:seed",
+    "prisma:seed:templates": "cd apps/api && npm run prisma:seed:templates",
+    "prisma:studio": "cd apps/api && npm run prisma:studio"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.2.1",
@@ -53,6 +53,7 @@
     "@typescript-eslint/eslint-plugin": "^6.18.0",
     "@typescript-eslint/parser": "^6.18.0",
     "concurrently": "^9.1.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.2",
