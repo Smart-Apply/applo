@@ -128,9 +128,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
 
-# Copy built shared package from builder (required at runtime)
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder /app/packages/shared/package.json ./packages/shared/
+# Copy built shared package from builder to node_modules (required at runtime)
+COPY --from=builder /app/packages/shared/dist ./node_modules/@smart-apply/shared/dist
+COPY --from=builder /app/packages/shared/package.json ./node_modules/@smart-apply/shared/package.json
 
 # Copy built application (compiled JS only)
 COPY --from=builder /app/dist ./dist
