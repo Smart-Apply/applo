@@ -32,12 +32,15 @@ COPY apps/api/prisma ./apps/api/prisma
 
 # Install ONLY API production dependencies (no dev deps, no web packages)
 # Prisma client will be generated via postinstall hook
+ENV NODE_OPTIONS="--max-old-space-size=6144"
 RUN --mount=type=cache,target=/root/.npm \
-    NODE_OPTIONS="--max-old-space-size=6144" \
     npm ci --workspace=apps/api --workspace=packages/shared --omit=dev --legacy-peer-deps && \
     npm cache clean --force && \
     rm -rf /root/.npm/_logs && \
     rm -rf /tmp/*
+
+# Build shared package (needed at runtime)
+RUN npm run shared:build
 
 # Stage 2: Build application
 FROM node:20-alpine AS builder
@@ -72,8 +75,8 @@ COPY apps/api/prisma ./apps/api/prisma
 
 # Install only API workspace dependencies to save memory in CI/CD
 # Note: This installs API deps + shared root deps (like @nestjs/cli)
+ENV NODE_OPTIONS="--max-old-space-size=6144"
 RUN --mount=type=cache,target=/root/.npm \
-    NODE_OPTIONS="--max-old-space-size=6144" \
     npm ci --workspace=apps/api --workspace=packages/shared --include-workspace-root --legacy-peer-deps && \
     npm cache clean --force
 
@@ -85,6 +88,9 @@ COPY apps/api/nest-cli.json ./apps/api/
 
 # Copy prompts directory (needed at runtime)
 COPY apps/api/prompts ./apps/api/prompts
+
+# Build shared package first (required by API)
+RUN npm run shared:build
 
 # Build application
 RUN npm run api:build
@@ -128,6 +134,10 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy Prisma client from deps (already generated there)
 COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
+
+# Copy built shared package from deps (required at runtime)
+COPY --from=deps /app/packages/shared/dist ./node_modules/@smart-apply/shared/dist
+COPY --from=deps /app/packages/shared/package.json ./node_modules/@smart-apply/shared/
 
 # Copy built application (compiled JS only)
 COPY --from=builder /app/dist ./dist

@@ -26,6 +26,9 @@ COPY packages/shared/src ./packages/shared/src
 # Install only production dependencies for web workspace
 RUN --mount=type=cache,target=/root/.npm npm ci --workspace=apps/web --workspace=packages/shared --omit=dev --legacy-peer-deps && npm cache clean --force
 
+# Build shared package (needed at runtime)
+RUN npm run shared:build
+
 # Stage 2: Builder
 FROM node:20-alpine AS builder
 WORKDIR /app
@@ -56,11 +59,16 @@ COPY apps/web/public ./apps/web/public
 COPY apps/web/tsconfig.json ./apps/web/
 COPY apps/web/next.config.ts ./apps/web/
 COPY apps/web/postcss.config.mjs ./apps/web/
+COPY apps/web/eslint.config.mjs ./apps/web/
 COPY apps/web/components.json ./apps/web/
 
 # Set environment variables for optimal build
 ENV NEXT_TELEMETRY_DISABLED=1 \
     NODE_ENV=production
+
+# Build shared package first (required by web)
+WORKDIR /app
+RUN npm run shared:build
 
 # Build the Next.js app
 WORKDIR /app/apps/web
