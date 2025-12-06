@@ -124,9 +124,13 @@ WORKDIR /app
 # Copy ONLY production dependencies from deps stage (no dev deps)
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy Prisma client from deps (already generated there)
-COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
+# Copy Prisma client from builder stage (properly generated with all dependencies)
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Remove symlink and create real directory for shared package
+RUN rm -rf ./node_modules/@smart-apply/shared && \
+    mkdir -p ./node_modules/@smart-apply/shared
 
 # Copy built shared package from builder to node_modules (required at runtime)
 COPY --from=builder /app/packages/shared/dist ./node_modules/@smart-apply/shared/dist
