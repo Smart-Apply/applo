@@ -38,7 +38,6 @@
     "create-agents": "ts-node -r tsconfig-paths/register scripts/create-agents.ts"
   },
   "dependencies": {
-    "@smart-apply/shared": "1.0.0",
     "@azure/ai-agents": "^1.0.0",
     "@azure/identity": "^4.0.0",
     "@azure/keyvault-secrets": "^4.8.0",
@@ -60,6 +59,7 @@
     "@nestjs/terminus": "^10.2.0",
     "@nestjs/throttler": "^5.1.1",
     "@prisma/client": "^5.8.0",
+    "@smart-apply/shared": "1.0.0",
     "argon2": "^0.31.2",
     "axios": "^1.6.5",
     "cheerio": "^1.0.0-rc.12",
@@ -103,7 +103,8 @@
     "@types/passport-jwt": "^4.0.0",
     "@types/pdf-parse": "^1.1.5",
     "@types/ua-parser-js": "^0.7.39",
-    "@types/validator": "^13.15.9"
+    "@types/validator": "^13.15.9",
+    "baseline-browser-mapping": "^2.9.3"
   },
   "jest": {
     "moduleFileExtensions": [
