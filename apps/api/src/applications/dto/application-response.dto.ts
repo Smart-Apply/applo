@@ -93,6 +93,57 @@ export class ApplicationResponseDto {
   updatedAt: Date;
 
   @ApiPropertyOptional({
+    description: 'ATS keywords extracted from job posting and profile (max 20)',
+    example: {
+      hard_skills: [
+        { keyword: 'React', source: 'both', priority: 1 },
+        { keyword: 'TypeScript', source: 'job', priority: 1 },
+      ],
+      tools_and_tech: [{ keyword: 'Docker', source: 'both', priority: 2 }],
+      domains: [
+        { keyword: 'Web Development', source: 'both', priority: 1 },
+      ],
+      methodologies: [{ keyword: 'Agile', source: 'job', priority: 2 }],
+    },
+  })
+  atsKeywords?: {
+    hard_skills: Array<{ keyword: string; source: string; priority: number }>;
+    tools_and_tech: Array<{
+      keyword: string;
+      source: string;
+      priority: number;
+    }>;
+    domains: Array<{ keyword: string; source: string; priority: number }>;
+    methodologies: Array<{
+      keyword: string;
+      source: string;
+      priority: number;
+    }>;
+  };
+
+  @ApiPropertyOptional({
+    description:
+      'Tailored profile data (selected skills/experiences relevant to this job)',
+    example: {
+      target_role: 'Full-Stack Developer',
+      target_company: 'Acme Corp',
+      reasoning_short: 'Candidate has strong React and Node.js experience',
+      selected_hard_skills: ['React', 'Node.js', 'TypeScript'],
+      selected_soft_skills: ['Communication', 'Problem-solving'],
+      selected_experiences: [
+        {
+          profileExperienceId: 'exp123',
+          title: 'Senior Developer',
+          company: 'Tech Inc',
+          summary: 'Built scalable web apps',
+          why_relevant: 'Direct experience with React',
+        },
+      ],
+    },
+  })
+  tailoredProfile?: any;
+
+  @ApiPropertyOptional({
     description: 'Job Posting Details (falls include=jobPosting)',
   })
   jobPosting?: {

@@ -100,6 +100,19 @@ export class ConfigService {
     return this.nestConfig.get('LLM_PROVIDER', { infer: true });
   }
 
+  // LLM Configuration (reuses existing Azure OpenAI deployment)
+  get llmTemperatureDefault(): number {
+    return parseFloat(this.nestConfig.get('LLM_TEMPERATURE_DEFAULT', { infer: true }) || '0.5');
+  }
+
+  get llmMaxTokensDefault(): number {
+    return parseInt(this.nestConfig.get('LLM_MAX_TOKENS_DEFAULT', { infer: true }) || '3000', 10);
+  }
+
+  get logLlmCalls(): boolean {
+    return this.nestConfig.get('LOG_LLM_CALLS', { infer: true }) === 'true';
+  }
+
   get huggingFaceApiKey(): string | undefined {
     return this.nestConfig.get('HUGGINGFACE_API_KEY', { infer: true });
   }

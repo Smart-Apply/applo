@@ -90,6 +90,26 @@ export class ApplicationsController {
     return this.applicationsService.createWithGeneration(user.id, dto);
   }
 
+  @Post(':id/regenerate-single-pipeline')
+  @ApiOperation({
+    summary: '🧪 TEST: Regenerate application with new single-LLM pipeline',
+    description:
+      'TESTING ENDPOINT: Regenerates resume, cover letter, and ATS keywords using the new single-LLM pipeline. Use this to test the refactored generation flow.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Application regenerated with single-LLM pipeline',
+    type: ApplicationResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Application not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async regenerateWithSinglePipeline(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<ApplicationResponseDto> {
+    return this.applicationsService.generateWithSinglePipeline(id, user.id);
+  }
+
   @Put(':id/resume')
   @ApiOperation({ summary: 'Lebenslauf-Daten aktualisieren' })
   @ApiResponse({ status: 200, type: ApplicationResponseDto })

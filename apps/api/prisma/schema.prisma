@@ -262,6 +262,10 @@ model Application {
   matchScore    Float?   // 0-100 match percentage
   matchDetails  Json?    // Detailed breakdown of matches
   
+  // New single-LLM pipeline fields
+  atsKeywords       Json?  // AtsKeywordsOutputDto (focused 20-keyword set)
+  tailoredProfile   Json?  // TailoredProfileDto (selected profile data for debugging)
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

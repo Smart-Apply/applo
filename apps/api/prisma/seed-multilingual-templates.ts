@@ -80,18 +80,36 @@ const TEMPLATE_DESIGNS = [
 
 // Helper function to read template files
 function readTemplateFile(filename: string): string {
-  const filePath = path.join(__dirname, '../src/pdf/templates', filename);
+  // Find the project root by looking for src directory
+  // Works both when running from prisma/ (dev) and prisma/dist/ (compiled)
+  let basePath = __dirname;
+  
+  // If we're in dist folder, go up one more level
+  if (basePath.endsWith('dist')) {
+    basePath = path.join(basePath, '..');
+  }
+  
+  // Now resolve relative to apps/api root (two levels up from prisma/)
+  const filePath = path.join(basePath, '..', 'src', 'pdf', 'templates', filename);
   return fs.readFileSync(filePath, 'utf-8');
 }
 
 // Helper function to read CSS file from language-specific folder
 function readCSSFile(styleFolder: string, language: Language): string {
-  const filePath = path.join(__dirname, '../src/pdf/styles', styleFolder, `${language}.css`);
+  // Find the project root
+  let basePath = __dirname;
+  
+  // If we're in dist folder, go up one more level
+  if (basePath.endsWith('dist')) {
+    basePath = path.join(basePath, '..');
+  }
+  
+  const filePath = path.join(basePath, '..', 'src', 'pdf', 'styles', styleFolder, `${language}.css`);
   if (fs.existsSync(filePath)) {
     return fs.readFileSync(filePath, 'utf-8');
   }
   // Fallback to English if language-specific CSS not found
-  const fallbackPath = path.join(__dirname, '../src/pdf/styles', styleFolder, 'en.css');
+  const fallbackPath = path.join(basePath, '..', 'src', 'pdf', 'styles', styleFolder, 'en.css');
   console.warn(`CSS file not found for ${styleFolder}/${language}.css, using fallback: en.css`);
   return fs.readFileSync(fallbackPath, 'utf-8');
 }

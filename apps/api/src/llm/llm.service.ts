@@ -2,6 +2,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { LLMProvider } from './llm.interface';
+import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class LLMService {
@@ -10,6 +11,7 @@ export class LLMService {
   constructor(
     @Inject('LLM_PROVIDER')
     private readonly provider: LLMProvider,
+    private readonly configService: ConfigService,
   ) {}
 
   async generateCoverLetter(context: CoverLetterContext): Promise<string> {
@@ -84,6 +86,295 @@ export class LLMService {
     options?: { temperature?: number; maxTokens?: number; systemMessage?: string },
   ): Promise<string> {
     return this.provider.generateText(prompt, options);
+  }
+
+  /**
+   * Call LLM with template and return raw text response
+   * Loads template from prompts/ folder, renders variables, and calls LLM
+   *
+   * @param templatePath - Relative path to template (e.g., "v1/skill-selector.md")
+   * @param variables - Variables to inject into template (supports {{json variable}} for JSON serialization)
+   * @param options - Optional LLM generation options
+   * @returns Raw text response from LLM
+   */
+  async callText(
+    templatePath: string,
+    variables: Record<string, any>,
+    options?: { temperature?: number; maxTokens?: number; systemMessage?: string },
+  ): Promise<string> {
+    const startTime = Date.now();
+    const template = await this.loadTemplate(templatePath);
+    const prompt = this.renderTemplate(template, variables);
+
+    const shouldLog = process.env.LOG_LLM_CALLS === 'true';
+    if (shouldLog) {
+      this.logger.log(`LLM callText: ${templatePath}`, {
+        templatePath,
+        userId: variables.userId || 'unknown',
+        jobPostingId: variables.jobPostingId || 'unknown',
+      });
+    }
+
+    const defaultOptions = {
+      temperature: 0.5,
+      maxTokens: 3000,
+      ...options,
+    };
+
+    try {
+      const response = await this.provider.generateText(prompt, defaultOptions);
+      const duration = Date.now() - startTime;
+
+      if (shouldLog) {
+        this.logger.log(`LLM callText completed: ${templatePath} (${duration}ms)`);
+      }
+
+      return response;
+    } catch (error) {
+      this.logger.error(`LLM callText failed: ${templatePath}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Call LLM with template and return parsed JSON response
+   * Enforces structured JSON output with error recovery
+   *
+   * @param templatePath - Relative path to template (e.g., "v1/ats-keywords.md")
+   * @param variables - Variables to inject into template
+   * @param options - Optional LLM generation options
+   * @returns Parsed JSON object of type T
+   * @throws Error if JSON parsing fails after recovery attempts
+   */
+  async callJson<T>(
+    templatePath: string,
+    variables: Record<string, any>,
+    options?: { temperature?: number; maxTokens?: number; systemMessage?: string },
+  ): Promise<T> {
+    const startTime = Date.now();
+    const template = await this.loadTemplate(templatePath);
+    const prompt = this.renderTemplate(template, variables);
+
+    const shouldLog = process.env.LOG_LLM_CALLS === 'true';
+    if (shouldLog) {
+      this.logger.log(`LLM callJson: ${templatePath}`, {
+        templatePath,
+        userId: variables.userId || 'unknown',
+        jobPostingId: variables.jobPostingId || 'unknown',
+      });
+    }
+
+    const defaultOptions = {
+      temperature: 0.5,
+      maxTokens: 3000,
+      ...options,
+    };
+
+    try {
+      const response = await this.provider.generateText(prompt, defaultOptions);
+      const parsed = this.parseJsonResponse<T>(response, templatePath);
+      const duration = Date.now() - startTime;
+
+      if (shouldLog) {
+        this.logger.log(`LLM callJson completed: ${templatePath} (${duration}ms)`);
+      }
+
+      return parsed;
+    } catch (error) {
+      this.logger.error(`LLM callJson failed: ${templatePath}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Parse JSON response from LLM with error recovery
+   * Handles common LLM output issues like markdown code blocks and trailing text
+   */
+  private parseJsonResponse<T>(response: string, templatePath: string): T {
+    try {
+      // Trim whitespace
+      let cleaned = response.trim();
+
+      // Remove markdown code blocks (```json ... ``` or ``` ... ```)
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '');
+        cleaned = cleaned.replace(/\n?```\s*$/i, '');
+        cleaned = cleaned.trim();
+      }
+
+      // Try to find JSON object/array if there's extra text
+      const jsonMatch = cleaned.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+      if (jsonMatch) {
+        cleaned = jsonMatch[1];
+      }
+
+      // Basic trailing comma repair (only for simple cases)
+      cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
+
+      // Parse JSON
+      const parsed = JSON.parse(cleaned);
+
+      // Apply validation if template path matches known types
+      if (templatePath.includes('skill-selector')) {
+        return this.validateTailoredProfile(parsed) as T;
+      } else if (templatePath.includes('ats-keywords')) {
+        return this.validateAtsKeywords(parsed) as T;
+      }
+
+      return parsed as T;
+    } catch (error) {
+      this.logger.error(
+        `Failed to parse LLM JSON response for template: ${templatePath}`,
+        error.message,
+      );
+      this.logger.debug('Raw LLM response:', response.substring(0, 500));
+      throw new Error(`Failed to parse LLM JSON response for template: ${templatePath}`);
+    }
+  }
+
+  /**
+   * Validate and fix TailoredProfileDto output from LLM
+   * Enforces constraints like max skills, max experiences, etc.
+   */
+  private validateTailoredProfile(data: any): any {
+    if (!data.target_role || !data.target_company) {
+      throw new Error(
+        'Invalid tailored profile: missing required fields (target_role, target_company)',
+      );
+    }
+
+    // Ensure all required fields exist with defaults
+    const validated = {
+      target_role: data.target_role || 'Unknown Role',
+      target_company: data.target_company || 'Unknown Company',
+      reasoning_short: data.reasoning_short || '',
+      selected_hard_skills: Array.isArray(data.selected_hard_skills)
+        ? data.selected_hard_skills
+        : [],
+      selected_soft_skills: Array.isArray(data.selected_soft_skills)
+        ? data.selected_soft_skills
+        : [],
+      selected_tools: Array.isArray(data.selected_tools) ? data.selected_tools : [],
+      selected_experiences: Array.isArray(data.selected_experiences)
+        ? data.selected_experiences
+        : [],
+      selected_projects: Array.isArray(data.selected_projects) ? data.selected_projects : [],
+      selected_certificates: Array.isArray(data.selected_certificates)
+        ? data.selected_certificates
+        : [],
+      selected_education: Array.isArray(data.selected_education) ? data.selected_education : [],
+    };
+
+    // Enforce max limits with truncation
+    if (validated.selected_hard_skills.length > 12) {
+      this.logger.warn(
+        `LLM returned ${validated.selected_hard_skills.length} hard skills, truncating to 12`,
+      );
+      validated.selected_hard_skills = validated.selected_hard_skills.slice(0, 12);
+    }
+
+    if (validated.selected_soft_skills.length > 6) {
+      this.logger.warn(
+        `LLM returned ${validated.selected_soft_skills.length} soft skills, truncating to 6`,
+      );
+      validated.selected_soft_skills = validated.selected_soft_skills.slice(0, 6);
+    }
+
+    if (validated.selected_tools.length > 8) {
+      this.logger.warn(`LLM returned ${validated.selected_tools.length} tools, truncating to 8`);
+      validated.selected_tools = validated.selected_tools.slice(0, 8);
+    }
+
+    if (validated.selected_experiences.length > 5) {
+      this.logger.warn(
+        `LLM returned ${validated.selected_experiences.length} experiences, truncating to 5`,
+      );
+      validated.selected_experiences = validated.selected_experiences.slice(0, 5);
+    }
+
+    if (validated.selected_projects.length > 5) {
+      this.logger.warn(
+        `LLM returned ${validated.selected_projects.length} projects, truncating to 5`,
+      );
+      validated.selected_projects = validated.selected_projects.slice(0, 5);
+    }
+
+    return validated;
+  }
+
+  /**
+   * Validate AtsKeywordsOutputDto from LLM
+   * Enforces max 20 keywords total across all categories
+   * NOTE: Source field (job/both) is now determined separately by deterministic matching
+   */
+  private validateAtsKeywords(data: any): any {
+    const validated = {
+      hard_skills: Array.isArray(data.hard_skills) ? data.hard_skills : [],
+      tools_and_tech: Array.isArray(data.tools_and_tech) ? data.tools_and_tech : [],
+      domains: Array.isArray(data.domains) ? data.domains : [],
+      methodologies: Array.isArray(data.methodologies) ? data.methodologies : [],
+    };
+
+    // Validate each keyword has required fields (no source field, added later)
+    const validateKeyword = (kw: any) => {
+      if (!kw.keyword || typeof kw.keyword !== 'string') {
+        this.logger.warn(`Invalid keyword object: ${JSON.stringify(kw)}`);
+        return null;
+      }
+
+      return {
+        keyword: kw.keyword.trim(),
+        priority: [1, 2, 3].includes(kw.priority) ? kw.priority : 2,
+      };
+    };
+
+    validated.hard_skills = validated.hard_skills.map(validateKeyword).filter(Boolean);
+    validated.tools_and_tech = validated.tools_and_tech.map(validateKeyword).filter(Boolean);
+    validated.domains = validated.domains.map(validateKeyword).filter(Boolean);
+    validated.methodologies = validated.methodologies.map(validateKeyword).filter(Boolean);
+
+    // Count total keywords
+    const totalKeywords =
+      validated.hard_skills.length +
+      validated.tools_and_tech.length +
+      validated.domains.length +
+      validated.methodologies.length;
+
+    // If over 20, truncate by priority
+    if (totalKeywords > 20) {
+      this.logger.warn(`LLM returned ${totalKeywords} keywords, truncating to 20 by priority`);
+
+      // Flatten all keywords with category info
+      const allKeywords: Array<{
+        keyword: string;
+        source: string;
+        priority: number;
+        category: string;
+      }> = [
+        ...validated.hard_skills.map((kw) => ({ ...kw, category: 'hard_skills' })),
+        ...validated.tools_and_tech.map((kw) => ({ ...kw, category: 'tools_and_tech' })),
+        ...validated.domains.map((kw) => ({ ...kw, category: 'domains' })),
+        ...validated.methodologies.map((kw) => ({ ...kw, category: 'methodologies' })),
+      ];
+
+      // Sort by priority (1 = highest), then by source ('both' > 'job' > 'profile')
+      const sourceScore = { both: 3, job: 2, profile: 1 };
+      allKeywords.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return sourceScore[b.source] - sourceScore[a.source];
+      });
+
+      // Take top 20
+      const top20 = allKeywords.slice(0, 20);
+
+      // Rebuild categories
+      validated.hard_skills = top20.filter((kw) => kw.category === 'hard_skills');
+      validated.tools_and_tech = top20.filter((kw) => kw.category === 'tools_and_tech');
+      validated.domains = top20.filter((kw) => kw.category === 'domains');
+      validated.methodologies = top20.filter((kw) => kw.category === 'methodologies');
+    }
+
+    return validated;
   }
 
   /**
@@ -281,6 +572,14 @@ Geändertes Anschreiben:`;
 
   private renderTemplate(template: string, context: any): string {
     let rendered = template;
+
+    // Handle {{json variable}} syntax for JSON serialization
+    for (const [key, value] of Object.entries(context)) {
+      const jsonPlaceholder = new RegExp(`{{json ${key}}}`, 'g');
+      if (rendered.match(jsonPlaceholder)) {
+        rendered = rendered.replace(jsonPlaceholder, JSON.stringify(value, null, 2));
+      }
+    }
 
     // Simple template variable replacement
     for (const [key, value] of Object.entries(context)) {
