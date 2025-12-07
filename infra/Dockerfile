@@ -89,7 +89,19 @@ RUN npm run shared:build
 RUN npm run api:build
 
 # Compile Prisma seed scripts to JavaScript (production-ready)
-RUN cd apps/api/prisma && npx tsc
+# Using explicit CLI args to avoid tsconfig inheritance issues
+RUN cd apps/api && npx tsc \
+      prisma/seed.ts \
+      prisma/seed-all.ts \
+      prisma/seed-multilingual-templates.ts \
+      --module commonjs \
+      --target ES2021 \
+      --outDir prisma/dist \
+      --moduleResolution node \
+      --esModuleInterop \
+      --skipLibCheck \
+      --resolveJsonModule \
+      --allowSyntheticDefaultImports
 
 # Remove development dependencies and Web packages after build
 RUN npm prune --production && \
