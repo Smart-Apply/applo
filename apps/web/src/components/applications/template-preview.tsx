@@ -102,11 +102,11 @@ function registerHandlebarsHelpers() {
           it: 'Profilo Professionale',
         },
         'resume.skills': {
-          en: 'Technical Skills',
-          de: 'Technische Fähigkeiten',
-          fr: 'Compétences Techniques',
-          es: 'Habilidades Técnicas',
-          it: 'Competenze Tecniche',
+          en: 'Skills',
+          de: 'Fähigkeiten',
+          fr: 'Compétences',
+          es: 'Habilidades',
+          it: 'Competenze',
         },
         'resume.experience': {
           en: 'Professional Experience',

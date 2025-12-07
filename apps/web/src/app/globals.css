@@ -197,6 +197,39 @@
     background: linear-gradient(135deg, var(--primary-soft) 0%, var(--background) 100%);
   }
 
+  /* Custom Stats Card Colors from Palette */
+  .text-stats-primary {
+    color: #1B2A49;
+  }
+
+  .bg-stats-primary {
+    background-color: #E5E9F2;
+  }
+
+  .text-stats-warning {
+    color: #EAB308;
+  }
+
+  .bg-stats-warning {
+    background-color: #FEF3C7;
+  }
+
+  .text-stats-accent {
+    color: #3B82F6;
+  }
+
+  .bg-stats-accent {
+    background-color: #DBEAFE;
+  }
+
+  .text-stats-success {
+    color: #16A34A;
+  }
+
+  .bg-stats-success {
+    background-color: #D1FADF;
+  }
+
   .text-balance {
     text-wrap: balance;
   }

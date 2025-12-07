@@ -10,8 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Link as LinkIcon, FileText, Check, AlertCircle } from 'lucide-react';
+import { Link as LinkIcon, Check, AlertCircle } from 'lucide-react';
 import { useParseJobPosting } from '@/hooks/use-job-postings';
 import { toast } from 'sonner';
 import type { JobPosting } from '@/types';
@@ -19,11 +18,6 @@ import type { JobPosting } from '@/types';
 // Validation schema for URL input
 const urlSchema = z.object({
   url: z.string().url('Bitte gebe eine gültige URL ein'),
-});
-
-// Validation schema for text input
-const textSchema = z.object({
-  text: z.string().min(10, 'Der Text muss mindestens 10 Zeichen lang sein'),
 });
 
 // Validation schema for editing parsed data
@@ -36,7 +30,6 @@ const editSchema = z.object({
 });
 
 type UrlFormData = z.infer<typeof urlSchema>;
-type TextFormData = z.infer<typeof textSchema>;
 type EditFormData = z.infer<typeof editSchema>;
 
 interface JobPostingParserProps {
@@ -46,15 +39,13 @@ interface JobPostingParserProps {
 /**
  * JobPostingParser Component
  * 
- * Allows users to parse job postings from URLs or manual text input.
+ * Allows users to parse job postings from URLs.
  * - URL input with validation
- * - Manual text input fallback
  * - Display parsed job data
  * - Edit capability before saving
  * - Error handling and user feedback
  */
 export function JobPostingParser({ onSave }: JobPostingParserProps) {
-  const [activeTab, setActiveTab] = useState<'url' | 'text'>('url');
   const [parsedData, setParsedData] = useState<JobPosting | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -68,14 +59,6 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
     },
   });
 
-  // Form for text input
-  const textForm = useForm<TextFormData>({
-    resolver: zodResolver(textSchema),
-    defaultValues: {
-      text: '',
-    },
-  });
-
   // Form for editing parsed data
   const editForm = useForm<EditFormData>({
     resolver: zodResolver(editSchema),
@@ -85,27 +68,6 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
   const handleUrlParse = async (data: UrlFormData) => {
     try {
       const result = await parseJobPosting.mutateAsync({ url: data.url });
-      setParsedData(result);
-      setIsEditing(false);
-      
-      // Populate edit form with parsed data
-      editForm.reset({
-        title: result.title,
-        company: result.company,
-        location: result.location || '',
-        description: result.description || '',
-        requirements: Array.isArray(result.requirements) ? result.requirements.join('\n') : (result.requirements || ''),
-      });
-    } catch (error) {
-      // Error toast is handled by the hook
-      console.error('Parse error:', error);
-    }
-  };
-
-  // Handle text parsing
-  const handleTextParse = async (data: TextFormData) => {
-    try {
-      const result = await parseJobPosting.mutateAsync({ text: data.text });
       setParsedData(result);
       setIsEditing(false);
       
@@ -150,7 +112,6 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
     setParsedData(null);
     setIsEditing(false);
     urlForm.reset();
-    textForm.reset();
     editForm.reset();
   };
 
@@ -160,86 +121,44 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
       {!parsedData && (
         <Card>
           <CardHeader>
-            <CardTitle>Stellenanzeige erfassen</CardTitle>
-            <CardDescription>
-              Füge eine Stellenanzeige per URL oder Textinput hinzu
-            </CardDescription>
+            <div className="flex items-center gap-2">
+              <LinkIcon className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <CardTitle>Von URL importieren</CardTitle>
+                <CardDescription>
+                  Füge eine Stellenanzeige per URL hinzu und lasse sie automatisch parsen
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'url' | 'text')}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="url">
-                  <LinkIcon className="mr-2 h-4 w-4" />
-                  URL
-                </TabsTrigger>
-                <TabsTrigger value="text">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Text
-                </TabsTrigger>
-              </TabsList>
-
-              {/* URL Input Tab */}
-              <TabsContent value="url" className="space-y-4">
-                <form onSubmit={urlForm.handleSubmit(handleUrlParse)} className="space-y-4">
-                  <div>
-                    <Label htmlFor="url">URL der Stellenanzeige</Label>
-                    <p className="text-sm text-gray-500 mb-2">
-                      Unterstützt werden LinkedIn, Indeed und weitere Jobportale
-                    </p>
-                    <Input
-                      id="url"
-                      type="text"
-                      placeholder="https://www.linkedin.com/jobs/view/..."
-                      {...urlForm.register('url')}
-                      className={urlForm.formState.errors.url ? 'border-red-500' : ''}
-                    />
-                    {urlForm.formState.errors.url && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {urlForm.formState.errors.url.message}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    type="submit"
-                    loading={parseJobPosting.isPending}
-                    className="w-full"
-                  >
-                    Stellenanzeige parsen
-                  </Button>
-                </form>
-              </TabsContent>
-
-              {/* Text Input Tab */}
-              <TabsContent value="text" className="space-y-4">
-                <form onSubmit={textForm.handleSubmit(handleTextParse)} className="space-y-4">
-                  <div>
-                    <Label htmlFor="text">Stellenbeschreibung</Label>
-                    <p className="text-sm text-gray-500 mb-2">
-                      Kopiere die Stellenbeschreibung direkt hier hinein
-                    </p>
-                    <Textarea
-                      id="text"
-                      placeholder="Senior Software Engineer bei Firma XYZ..."
-                      rows={10}
-                      {...textForm.register('text')}
-                      className={textForm.formState.errors.text ? 'border-red-500' : ''}
-                    />
-                    {textForm.formState.errors.text && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {textForm.formState.errors.text.message}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    type="submit"
-                    loading={parseJobPosting.isPending}
-                    className="w-full"
-                  >
-                    Stellenanzeige parsen
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <form onSubmit={urlForm.handleSubmit(handleUrlParse)} className="space-y-4">
+              <div>
+                <Label htmlFor="url">URL der Stellenanzeige</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Unterstützt werden LinkedIn, Indeed und weitere Jobportale
+                </p>
+                <Input
+                  id="url"
+                  type="text"
+                  placeholder="https://www.linkedin.com/jobs/view/..."
+                  {...urlForm.register('url')}
+                  className={urlForm.formState.errors.url ? 'border-red-500' : ''}
+                />
+                {urlForm.formState.errors.url && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {urlForm.formState.errors.url.message}
+                  </p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                loading={parseJobPosting.isPending}
+                className="w-full"
+              >
+                Stellenanzeige parsen
+              </Button>
+            </form>
           </CardContent>
         </Card>
       )}

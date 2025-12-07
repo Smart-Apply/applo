@@ -112,7 +112,7 @@ export default function JobsPage() {
               <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
                 <TabsTrigger value="parser">
                   <FileText className="mr-2 h-4 w-4" />
-                  Parser (URL/Text)
+                  Von URL importieren
                 </TabsTrigger>
                 <TabsTrigger value="manual">
                   <Edit className="mr-2 h-4 w-4" />

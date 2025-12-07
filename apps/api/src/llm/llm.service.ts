@@ -306,13 +306,12 @@ export class LLMService {
    * Validate AtsKeywordsOutputDto from LLM
    * Enforces max 20 keywords total across all categories
    * NOTE: Source field (job/both) is now determined separately by deterministic matching
+   * SIMPLIFIED: Only 2 categories now: hard_skills and soft_skills
    */
   private validateAtsKeywords(data: any): any {
     const validated = {
       hard_skills: Array.isArray(data.hard_skills) ? data.hard_skills : [],
-      tools_and_tech: Array.isArray(data.tools_and_tech) ? data.tools_and_tech : [],
-      domains: Array.isArray(data.domains) ? data.domains : [],
-      methodologies: Array.isArray(data.methodologies) ? data.methodologies : [],
+      soft_skills: Array.isArray(data.soft_skills) ? data.soft_skills : [],
     };
 
     // Validate each keyword has required fields (no source field, added later)
@@ -329,49 +328,37 @@ export class LLMService {
     };
 
     validated.hard_skills = validated.hard_skills.map(validateKeyword).filter(Boolean);
-    validated.tools_and_tech = validated.tools_and_tech.map(validateKeyword).filter(Boolean);
-    validated.domains = validated.domains.map(validateKeyword).filter(Boolean);
-    validated.methodologies = validated.methodologies.map(validateKeyword).filter(Boolean);
+    validated.soft_skills = validated.soft_skills.map(validateKeyword).filter(Boolean);
 
     // Count total keywords
-    const totalKeywords =
-      validated.hard_skills.length +
-      validated.tools_and_tech.length +
-      validated.domains.length +
-      validated.methodologies.length;
+    const totalKeywords = validated.hard_skills.length + validated.soft_skills.length;
 
-    // If over 20, truncate by priority
-    if (totalKeywords > 20) {
-      this.logger.warn(`LLM returned ${totalKeywords} keywords, truncating to 20 by priority`);
+    // If over 15, truncate by priority (STRICT LIMIT)
+    if (totalKeywords > 15) {
+      this.logger.warn(`LLM returned ${totalKeywords} keywords, truncating to 15 by priority`);
 
       // Flatten all keywords with category info
       const allKeywords: Array<{
         keyword: string;
-        source: string;
         priority: number;
         category: string;
       }> = [
         ...validated.hard_skills.map((kw) => ({ ...kw, category: 'hard_skills' })),
-        ...validated.tools_and_tech.map((kw) => ({ ...kw, category: 'tools_and_tech' })),
-        ...validated.domains.map((kw) => ({ ...kw, category: 'domains' })),
-        ...validated.methodologies.map((kw) => ({ ...kw, category: 'methodologies' })),
+        ...validated.soft_skills.map((kw) => ({ ...kw, category: 'soft_skills' })),
       ];
 
-      // Sort by priority (1 = highest), then by source ('both' > 'job' > 'profile')
-      const sourceScore = { both: 3, job: 2, profile: 1 };
+      // Sort by priority (1 = highest)
       allKeywords.sort((a, b) => {
         if (a.priority !== b.priority) return a.priority - b.priority;
-        return sourceScore[b.source] - sourceScore[a.source];
+        return 0;
       });
 
-      // Take top 20
-      const top20 = allKeywords.slice(0, 20);
+      // Take top 15 (STRICT LIMIT)
+      const top15 = allKeywords.slice(0, 15);
 
       // Rebuild categories
-      validated.hard_skills = top20.filter((kw) => kw.category === 'hard_skills');
-      validated.tools_and_tech = top20.filter((kw) => kw.category === 'tools_and_tech');
-      validated.domains = top20.filter((kw) => kw.category === 'domains');
-      validated.methodologies = top20.filter((kw) => kw.category === 'methodologies');
+      validated.hard_skills = top15.filter((kw) => kw.category === 'hard_skills');
+      validated.soft_skills = top15.filter((kw) => kw.category === 'soft_skills');
     }
 
     return validated;

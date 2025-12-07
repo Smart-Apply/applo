@@ -346,15 +346,15 @@ export function ProjectsManager({
                 name="technologies"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Verwendete Technologien</FormLabel>
+                    <FormLabel>Verwendete Technologien / Methoden</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="z.B. TypeScript, React, Node.js (durch Komma trennen)"
+                        placeholder="z.B. Projektmanagement, Budgetplanung, SAP, Scrum (durch Komma trennen)"
                         {...field}
                       />
                     </FormControl>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Technologien durch Komma trennen
+                      Relevante Methoden oder Tools durch Komma trennen
                     </p>
                     <FormMessage />
                   </FormItem>

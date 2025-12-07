@@ -26,11 +26,20 @@ Extract **ONLY** the technical keywords, skills, tools, and technologies that ar
 
 ---
 
-## CRITICAL CONSTRAINT
+## ⚠️ CRITICAL CONSTRAINT ⚠️
 
-**TOTAL KEYWORDS ACROSS ALL CATEGORIES: MAX 20**
+**ABSOLUTE MAXIMUM: 15 KEYWORDS TOTAL**
 
-If unsure whether a keyword is relevant, **OMIT IT**. Better to have 15 high-quality keywords than 20 mediocre ones.
+**YOU MUST NOT RETURN MORE THAN 15 KEYWORDS.**
+
+If you extract more than 15, the system will REJECT your response.
+
+Prioritize:
+1. Must-have skills from "Requirements" section
+2. Technical skills mentioned 2+ times
+3. Specific tools/platforms explicitly required
+
+**Quality over quantity.** 10-12 high-priority keywords is better than 15 mediocre ones.
 
 ---
 
@@ -104,23 +113,23 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
     {
       "keyword": "Python",
       "priority": 1
-    }
-  ],
-  "tools_and_tech": [
+    },
     {
       "keyword": "Docker",
       "priority": 2
-    }
-  ],
-  "domains": [
+    },
     {
       "keyword": "Machine Learning",
       "priority": 1
+    },
+    {
+      "keyword": "AWS",
+      "priority": 1
     }
   ],
-  "methodologies": [
+  "soft_skills": [
     {
-      "keyword": "Agile",
+      "keyword": "Team Leadership",
       "priority": 2
     }
   ]
@@ -147,55 +156,46 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
 
 ### hard_skills
 
-Core job-specific competencies and skills:
+All technical skills, tools, technologies, methodologies, and domain knowledge:
 
-- **IT:** Python, JavaScript, Machine Learning, Data Analysis
-- **Healthcare:** Patient Care, Diagnostic Imaging, Electronic Health Records
-- **Manufacturing:** CNC Programming, Quality Control, Lean Manufacturing
-- **Finance:** Financial Modeling, Risk Analysis, GAAP
-- **Design:** Adobe Creative Suite, UI/UX Design, 3D Modeling
+- **Programming Languages:** Python, JavaScript, Java, C#, TypeScript
+- **Frameworks & Libraries:** React, Node.js, .NET, Langchain, Semantic Kernel
+- **Tools & Platforms:** Docker, Kubernetes, AWS, Azure, GitHub Actions, Terraform
+- **Technologies:** Machine Learning, GenAI, Agentic AI, GPT models, Azure OpenAI
+- **Databases:** PostgreSQL, MySQL, MongoDB, Redis
+- **Methodologies:** Agile, Scrum, DevOps, CI/CD, Six Sigma, Lean
+- **Domain Knowledge:** Cloud Architecture, Microservices, RAG, Multi-Agent Frameworks
+- **Healthcare:** Epic EMR, Cerner, Patient Care, HIPAA
+- **Manufacturing:** CNC, CAD/CAM, Quality Control, ISO 9001
+- **Finance:** Bloomberg Terminal, SAP, GAAP, Financial Modeling
 
-### tools_and_tech
+**Include:** Anything technical, measurable, or verifiable (tools, languages, frameworks, platforms, certifications)
 
-Specific tools, platforms, software, equipment:
+### soft_skills
 
-- **IT:** Docker, Kubernetes, AWS, PostgreSQL
-- **Healthcare:** Epic Systems, Cerner, Medical imaging equipment
-- **Manufacturing:** CAD/CAM software, PLCs, Industrial robots
-- **Finance:** Bloomberg Terminal, QuickBooks, SAP
-- **Design:** Figma, Sketch, AutoCAD, Adobe Creative Suite
+Only include if **EXPLICITLY stated as critical requirements** in job posting:
 
-### domains
+- **Leadership:** "Must have experience leading teams of 5+ people"
+- **Communication:** "Excellent written and verbal communication required"
+- **Project Management:** "Proven project management experience required"
 
-Industry knowledge, specializations, or practice areas:
+**Do NOT include generic soft skills** like "teamwork", "motivated", "flexible", "Teamgeist", etc.
 
-- **IT:** Cloud Computing, DevOps, Microservices, Full-Stack Development
-- **Healthcare:** Emergency Medicine, Pediatrics, Clinical Research
-- **Manufacturing:** Supply Chain Management, Quality Assurance, Production Planning
-- **Finance:** Investment Banking, Risk Management, Regulatory Compliance
-- **Engineering:** Civil Engineering, Mechanical Design, Electrical Systems
-
-### methodologies
-
-Processes, practices, frameworks, or approaches specific to the industry:
+**Default: Leave soft_skills array EMPTY** unless job explicitly emphasizes specific soft skills as requirements.
 
 - **IT:** Agile, Scrum, CI/CD, Test-Driven Development
 - **Manufacturing:** Lean Manufacturing, Six Sigma, Kaizen, ISO 9001
 - **Finance:** GAAP, IFRS, SOX Compliance
-- **Healthcare:** Evidence-Based Practice, Patient-Centered Care
-- **Project Management:** Waterfall, Kanban, PRINCE2
-- CI/CD, Test-Driven Development (TDD)
-- RESTful API Design, Microservices Architecture
-
 ---
 
 ## Rules
 
-1. **Total Limit:** All categories combined ≤ 20 keywords
-2. **No Duplicates:** Each keyword appears only once across all categories
+1. **Total Limit:** ALL keywords combined ≤ 15 (STRICTLY ENFORCED)
+2. **No Duplicates:** Each keyword appears only once (case-insensitive)
 3. **No Synonyms:** "JS" and "JavaScript" → pick one (prefer full name)
 4. **Job Wording:** Use exact phrasing from job posting when possible
-5. **Evidence Required:** Only include keywords supported by tailored profile (unless priority 1 from job)
+5. **EXACT WORDING:** "GitHub Actions" not "GitHub", "Azure OpenAI" not "Azure"
+6. **Count Check:** Before returning, count your keywords. If >15, remove lowest priority ones.
 
 ---
 
@@ -204,55 +204,56 @@ Processes, practices, frameworks, or approaches specific to the industry:
 ### Example 1: Full-Stack Developer Role
 
 **Job mentions:** React, Node.js, TypeScript, AWS, Docker, Agile, REST APIs, CI/CD
-**Profile has:** React, Node.js, JavaScript, AWS, MongoDB
 
-**IMPORTANT:** Only extract keywords mentioned in the job posting above. Profile is for reference only.
-
-**Good Output (9 keywords - all from job posting):**
+**Good Output (8 technical keywords):**
 
 ```json
 {
   "hard_skills": [
-    {"keyword": "React", "source": "both", "priority": 1},
-    {"keyword": "Node.js", "source": "both", "priority": 1},
-    {"keyword": "TypeScript", "source": "job", "priority": 1}
+    {"keyword": "React", "priority": 1},
+    {"keyword": "Node.js", "priority": 1},
+    {"keyword": "TypeScript", "priority": 1},
+    {"keyword": "AWS", "priority": 1},
+    {"keyword": "Docker", "priority": 2},
+    {"keyword": "RESTful APIs", "priority": 1},
+    {"keyword": "Agile", "priority": 2},
+    {"keyword": "CI/CD", "priority": 2}
   ],
-  "tools_and_tech": [
-    {"keyword": "AWS", "source": "both", "priority": 1},
-    {"keyword": "Docker", "source": "job", "priority": 2}
-  ],
-  "domains": [
-    {"keyword": "Full-Stack Development", "source": "both", "priority": 1}
-  ],
-  "methodologies": [
-    {"keyword": "RESTful APIs", "source": "both", "priority": 1},
-    {"keyword": "Agile", "source": "job", "priority": 2},
-    {"keyword": "CI/CD", "source": "both", "priority": 2}
-  ]
+  "soft_skills": []
 }
 ```
 
 ### Example 2: What to EXCLUDE (IMPORTANT)
 
 ❌ **Bad Output (DO NOT DO THIS):**
+
 ```json
 {
-  "hard_skills": ["Teamgeist", "kommunikationsstark", "kundenorientiert", "Anerkennung"],
-  "tools_and_tech": ["Unterstützung", "Austausch"],
-  "domains": ["IT-Welt", "Expertise"],
-  "methodologies": ["respektvoller Umgang", "gegenseitige Wertschätzung", "mehrjährige Berufserfahrung"]
+  "hard_skills": [
+    {"keyword": "Teamgeist", "priority": 1},
+    {"keyword": "kommunikationsstark", "priority": 1},
+    {"keyword": "kundenorientiert", "priority": 2}
+  ],
+  "soft_skills": []
 }
 ```
 
 **Why Bad:** These are all generic soft skills, workplace culture terms, or vague competencies. They add NO value for ATS matching.
 
 ✅ **Good Output (DO THIS INSTEAD):**
+
 ```json
 {
-  "hard_skills": ["Azure", "Terraform", "PowerShell"],
-  "tools_and_tech": ["Azure DevOps", "Docker", "Kubernetes"],
-  "domains": ["Cloud Infrastructure", "DevOps"],
-  "methodologies": ["CI/CD", "Infrastructure as Code"]
+  "hard_skills": [
+    {"keyword": "Azure", "priority": 1},
+    {"keyword": "Terraform", "priority": 1},
+    {"keyword": "PowerShell", "priority": 2},
+    {"keyword": "Azure DevOps", "priority": 1},
+    {"keyword": "Docker", "priority": 2},
+    {"keyword": "Kubernetes", "priority": 2},
+    {"keyword": "CI/CD", "priority": 2}
+  ],
+  "soft_skills": []
 }
 ```
 
@@ -264,14 +265,13 @@ Processes, practices, frameworks, or approaches specific to the industry:
 
 Before generating, verify:
 
-- [ ] Total keywords ≤ 20
+- [ ] **Total keywords ≤ 15** (COUNT THEM - this is mandatory!)
 - [ ] **ZERO soft skills** (no "Teamgeist", "kommunikationsstark", "Anerkennung", "Unterstützung", etc.)
 - [ ] **ZERO generic workplace terms** (no "kundenorientiert", "respektvoller Umgang", "Austausch", etc.)
 - [ ] **ALL keywords are technical** (skills, tools, platforms, methodologies, certifications)
 - [ ] No duplicate concepts (JavaScript vs JS)
-- [ ] Priority 1 keywords are truly critical technical requirements
-- [ ] All keywords supported by evidence (in job or profile)
-- [ ] Source field accurately reflects where keyword appears
+- [ ] Priority 1 keywords are truly critical technical requirements from job posting
+- [ ] Each keyword appears EXACTLY ONCE in the job posting text
 
 ---
 

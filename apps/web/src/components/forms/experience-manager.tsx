@@ -287,21 +287,19 @@ export function ExperienceManager({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
+                <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Jobtitel *</FormLabel>
                     <FormControl>
-                      <Input placeholder="z.B. Senior Software Engineer" {...field} />
+                      <Input placeholder="z.B. Projektmanager, Krankenpfleger, Vertriebsleiter" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-
-              <div className="grid gap-4 sm:grid-cols-2">
+              />              <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="company"
@@ -309,7 +307,7 @@ export function ExperienceManager({
                     <FormItem>
                       <FormLabel>Firma *</FormLabel>
                       <FormControl>
-                        <Input placeholder="z.B. Tech GmbH" {...field} />
+                        <Input placeholder="z.B. Unternehmen GmbH, Klinikum Musterstadt" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -388,7 +386,7 @@ export function ExperienceManager({
                     <FormLabel>Beschreibung (optional)</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Beschreibe deine Hauptverantwortlichkeiten und Tätigkeiten (z.B. 'Entwicklung von Cloud-Lösungen mit Azure und React...')&#10;&#10;💡 Hinweis: Diese Beschreibung wird im Lebenslauf angezeigt. Wenn du dich auf englische Stellen bewirbst, schreibe die Beschreibung auf Englisch."
+                        placeholder="Beschreibe deine Hauptverantwortlichkeiten und Tätigkeiten&#10;&#10;💡 Hinweis: Diese Beschreibung wird im Lebenslauf angezeigt. Wenn du dich auf englische Stellen bewirbst, schreibe die Beschreibung auf Englisch."
                         className="min-h-[120px] resize-none"
                         {...field}
                       />

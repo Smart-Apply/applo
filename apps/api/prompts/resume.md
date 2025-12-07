@@ -48,24 +48,24 @@ Return a JSON object with the following structure:
   "summary": "2-3 sentence professional summary highlighting key qualifications and value proposition",
   "skillCategories": [
     {
+      "type": "Core Competencies",
+      "skills": ["Project Management", "Budget Planning", "Team Leadership"]
+    },
+    {
+      "type": "Technical Skills",
+      "skills": ["SAP", "Microsoft Office Suite", "CRM Systems"]
+    },
+    {
+      "type": "Methodologies",
+      "skills": ["Agile", "Six Sigma", "Lean Management"]
+    },
+    {
+      "type": "Soft Skills",
+      "skills": ["Communication", "Negotiation", "Problem Solving"]
+    },
+    {
       "type": "Languages",
-      "skills": ["TypeScript", "Python", "Java"]
-    },
-    {
-      "type": "Frameworks",
-      "skills": ["NestJS", "React", "Spring Boot"]
-    },
-    {
-      "type": "Cloud",
-      "skills": ["Azure", "AWS", "Docker"]
-    },
-    {
-      "type": "Databases",
-      "skills": ["PostgreSQL", "MongoDB", "Redis"]
-    },
-    {
-      "type": "Tools",
-      "skills": ["Git", "CI/CD", "Kubernetes"]
+      "skills": ["German (Native)", "English (Fluent)", "French (Basic)"]
     }
   ],
   "experiences": [

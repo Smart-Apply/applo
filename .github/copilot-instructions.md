@@ -6,6 +6,14 @@ Deliver a minimal yet production-grade application with:
 2) **Backend API (NestJS)**: Stores candidate profile (skills, certificates, experiences, projects), ingests job postings (text/URL/file → normalized), generates tailored cover letter + resume via LLM
 3) **PDF Generation**: Exports both as PDFs stored in Azure Blob and retrievable via signed URLs (SAS)
 
+## Domain-Agnostic Design Principles
+**Smart Apply is designed to work across ALL professions and industries**, not just IT/tech roles. When writing code, documentation, or examples:
+- ✅ **Use diverse profession examples**: Healthcare (Nurse, Doctor), Manufacturing (CNC Operator), Marketing (Content Manager), Sales (Account Executive), Education (Teacher), Finance (Financial Analyst)
+- ✅ **Generic terminology**: "Skills" (not "Technical Skills"), "Experience" (not "Development Experience"), "Projects" (not "Software Projects")
+- ✅ **Domain-neutral placeholders**: "z.B. Projektmanager, Krankenpfleger, Vertriebsleiter" (not "z.B. Senior Software Engineer")
+- ✅ **Inclusive skill categories**: "Core Competencies", "Technical Skills", "Methodologies", "Soft Skills" (not just programming languages/frameworks)
+- ❌ **Avoid IT-centric bias**: Don't default to React/TypeScript/Cloud examples in user-facing content
+
 ## Non-Goals
 - Rich document editing (basic Tiptap editor only)
 - Multi-tenant complexity (single-tenant users/roles for MVP)

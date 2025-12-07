@@ -792,10 +792,7 @@ Summary: ${resume.summary || 'Not provided'}
         atsKeywords = this.matchKeywordsAgainstProfile(extractedKeywords, profile);
 
         const totalKeywords =
-          (atsKeywords.hard_skills?.length || 0) +
-          (atsKeywords.tools_and_tech?.length || 0) +
-          (atsKeywords.domains?.length || 0) +
-          (atsKeywords.methodologies?.length || 0);
+          (atsKeywords.hard_skills?.length || 0) + (atsKeywords.soft_skills?.length || 0);
         const matchedCount = this.countMatchedKeywords(atsKeywords);
         this.logger.log(
           `Extracted ${totalKeywords} ATS keywords (${matchedCount} matched in profile)`,
@@ -975,24 +972,23 @@ Summary: ${resume.summary || 'Not provided'}
 
   /**
    * Convert new atsKeywords format (from single-LLM pipeline) to old ATSAgentOutput format
-   * New format: { hard_skills: [{keyword, source, priority}], tools_and_tech: [...], domains: [...], methodologies: [...] }
+   * New format (SIMPLIFIED): { hard_skills: [{keyword, source, priority}], soft_skills: [...] }
    * Old format: { technicalSkills: [], softSkills: [], toolsAndTechnologies: [], ... }
+   * IMPORTANT: Only populate ONE field to avoid duplicates in matchKeywords()
    */
   private convertAtsKeywordsToOldFormat(atsKeywords: any): ATSAgentOutput {
     const hardSkills = (atsKeywords.hard_skills || []).map((kw: any) => kw.keyword);
-    const toolsAndTech = (atsKeywords.tools_and_tech || []).map((kw: any) => kw.keyword);
-    const domains = (atsKeywords.domains || []).map((kw: any) => kw.keyword);
-    const methodologies = (atsKeywords.methodologies || []).map((kw: any) => kw.keyword);
+    const softSkills = (atsKeywords.soft_skills || []).map((kw: any) => kw.keyword);
 
     return {
-      technicalSkills: [...hardSkills, ...methodologies], // Programming languages + methodologies
-      softSkills: [], // Explicitly empty - new system doesn't extract soft skills
-      responsibilityKeywords: [], // Not used in new system
-      requirementKeywords: [...hardSkills, ...toolsAndTech], // Required technical skills + tools
-      toolsAndTechnologies: toolsAndTech,
-      industryKeywords: domains, // Industry/domain terms
-      senioritySignals: [], // Not used in new system
-      miscKeywords: [], // Not used in new system
+      technicalSkills: hardSkills, // All technical keywords go here ONLY
+      softSkills: softSkills, // Soft skills (usually empty)
+      responsibilityKeywords: [], // Empty to avoid duplicates
+      requirementKeywords: [], // Empty to avoid duplicates
+      toolsAndTechnologies: [], // Empty to avoid duplicates
+      industryKeywords: [], // Empty to avoid duplicates
+      senioritySignals: [], // Empty to avoid duplicates
+      miscKeywords: [], // Empty to avoid duplicates
     };
   }
 
@@ -1000,21 +996,26 @@ Summary: ${resume.summary || 'Not provided'}
    * Deterministically match extracted keywords against profile data
    * Returns keywords with "source" field: "job" (missing) or "both" (matched)
    * Also deduplicates keywords (case-insensitive)
+   * SIMPLIFIED: Only 2 categories now: hard_skills and soft_skills
    */
   private matchKeywordsAgainstProfile(extractedKeywords: any, profile: ProfileWithRelations): any {
     const matchKeyword = (kw: any): any => {
       const keyword = kw.keyword.toLowerCase();
 
-      // Check if keyword exists in profile skills
-      const inSkills = profile.skills.some((s) => s.name.toLowerCase().includes(keyword));
+      // Check if keyword exists in profile skills (exact or partial match)
+      const inSkills = profile.skills.some((s) => {
+        const skillName = s.name.toLowerCase();
+        // Exact match or keyword is part of skill name
+        return skillName === keyword || skillName.includes(keyword) || keyword.includes(skillName);
+      });
 
-      // Check if keyword exists in experience descriptions
+      // Check if keyword exists in experience descriptions or titles
       const inExperiences = profile.experiences.some(
         (e) =>
           e.description?.toLowerCase().includes(keyword) || e.title.toLowerCase().includes(keyword),
       );
 
-      // Check if keyword exists in project descriptions or technologies
+      // Check if keyword exists in project descriptions, technologies, or names
       const inProjects = profile.projects.some(
         (p) =>
           p.description?.toLowerCase().includes(keyword) ||
@@ -1035,7 +1036,7 @@ Summary: ${resume.summary || 'Not provided'}
       };
     };
 
-    // Deduplicate function (case-insensitive, preserves original casing)
+    // Deduplicate function (case-insensitive, preserves original casing, prefers "both" over "job")
     const deduplicateKeywords = (keywords: any[]): any[] => {
       const seen = new Map<string, any>();
       keywords.forEach((kw) => {
@@ -1053,51 +1054,35 @@ Summary: ${resume.summary || 'Not provided'}
       return Array.from(seen.values());
     };
 
-    const matched = {
-      hard_skills: (extractedKeywords.hard_skills || []).map(matchKeyword),
-      tools_and_tech: (extractedKeywords.tools_and_tech || []).map(matchKeyword),
-      domains: (extractedKeywords.domains || []).map(matchKeyword),
-      methodologies: (extractedKeywords.methodologies || []).map(matchKeyword),
-    };
+    // Match keywords against profile
+    const hard_skills = (extractedKeywords.hard_skills || []).map(matchKeyword);
+    const soft_skills = (extractedKeywords.soft_skills || []).map(matchKeyword);
 
-    // Deduplicate ACROSS all categories (not just within each category)
-    // This prevents "Azure" from appearing in both tools_and_tech AND domains
-    const allKeywords = [
-      ...matched.hard_skills.map((kw) => ({ ...kw, category: 'hard_skills' })),
-      ...matched.tools_and_tech.map((kw) => ({ ...kw, category: 'tools_and_tech' })),
-      ...matched.domains.map((kw) => ({ ...kw, category: 'domains' })),
-      ...matched.methodologies.map((kw) => ({ ...kw, category: 'methodologies' })),
-    ];
+    this.logger.debug(
+      `Before deduplication: ${hard_skills.length} hard_skills, ${soft_skills.length} soft_skills`,
+    );
+    this.logger.debug(`Hard skills: ${JSON.stringify(hard_skills.map((k) => k.keyword))}`);
 
-    const deduplicated = deduplicateKeywords(allKeywords);
+    // Deduplicate within each category (LLM might return duplicates)
+    const deduplicatedHard = deduplicateKeywords(hard_skills);
+    const deduplicatedSoft = deduplicateKeywords(soft_skills);
 
-    // Group back into categories
-    const result = {
-      hard_skills: deduplicated.filter((kw) => kw.category === 'hard_skills'),
-      tools_and_tech: deduplicated.filter((kw) => kw.category === 'tools_and_tech'),
-      domains: deduplicated.filter((kw) => kw.category === 'domains'),
-      methodologies: deduplicated.filter((kw) => kw.category === 'methodologies'),
-    };
+    this.logger.debug(
+      `After deduplication: ${deduplicatedHard.length} hard_skills, ${deduplicatedSoft.length} soft_skills`,
+    );
 
-    // Remove the category field before returning
     return {
-      hard_skills: result.hard_skills.map(({ category: _category, ...kw }) => kw),
-      tools_and_tech: result.tools_and_tech.map(({ category: _category, ...kw }) => kw),
-      domains: result.domains.map(({ category: _category, ...kw }) => kw),
-      methodologies: result.methodologies.map(({ category: _category, ...kw }) => kw),
+      hard_skills: deduplicatedHard,
+      soft_skills: deduplicatedSoft,
     };
   }
 
   /**
    * Count how many keywords are matched in profile
+   * SIMPLIFIED: Only 2 categories now: hard_skills and soft_skills
    */
   private countMatchedKeywords(keywords: any): number {
-    const allKeywords = [
-      ...(keywords.hard_skills || []),
-      ...(keywords.tools_and_tech || []),
-      ...(keywords.domains || []),
-      ...(keywords.methodologies || []),
-    ];
+    const allKeywords = [...(keywords.hard_skills || []), ...(keywords.soft_skills || [])];
     return allKeywords.filter((kw) => kw.source === 'both').length;
   }
 

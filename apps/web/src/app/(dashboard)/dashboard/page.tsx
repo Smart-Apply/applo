@@ -175,33 +175,29 @@ export default function DashboardPage() {
           title="Gesamt"
           value={stats.total}
           icon={FileText}
-          trend="+2 diese Woche"
-          color="text-blue-600"
-          bgColor="bg-blue-50"
+          iconColor="#1B2A49"
+          bgColor="#F5F6F8"
         />
         <StatsCard
           title="Aktiv"
           value={stats.active}
           icon={Clock}
-          trend="In Bearbeitung"
-          color="text-orange-600"
-          bgColor="bg-orange-50"
+          iconColor="#1B2A49"
+          bgColor="#F5F6F8"
         />
         <StatsCard
           title="Interviews"
           value={stats.interviews}
           icon={Calendar}
-          trend="Nächstes: Morgen"
-          color="text-purple-600"
-          bgColor="bg-purple-50"
+          iconColor="#1B2A49"
+          bgColor="#F5F6F8"
         />
         <StatsCard
           title="Angebote"
           value={stats.offers}
           icon={CheckCircle}
-          trend="1 Ausstehend"
-          color="text-green-600"
-          bgColor="bg-green-50"
+          iconColor="#1B2A49"
+          bgColor="#F5F6F8"
         />
       </div>
 
@@ -365,15 +361,13 @@ function StatsCard({
   title,
   value,
   icon: Icon,
-  trend,
-  color,
+  iconColor,
   bgColor,
 }: {
   title: string;
   value: number;
   icon: any;
-  trend: string;
-  color: string;
+  iconColor: string;
   bgColor: string;
 }) {
   return (
@@ -386,15 +380,12 @@ function StatsCard({
               <span className="text-3xl font-bold text-foreground">{value}</span>
             </div>
           </div>
-          <div className={`rounded-xl p-3 ${bgColor} ${color} group-hover:scale-110 transition-transform`}>
-            <Icon className="h-6 w-6" />
+          <div 
+            className="rounded-xl p-3 group-hover:scale-110 transition-transform"
+            style={{ backgroundColor: bgColor }}
+          >
+            <Icon className="h-6 w-6" style={{ color: iconColor }} />
           </div>
-        </div>
-        <div className="mt-4 flex items-center gap-2">
-          <span className="flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-            <TrendingUp className="mr-1 h-3 w-3" />
-            {trend}
-          </span>
         </div>
       </CardContent>
     </Card>

@@ -38,8 +38,8 @@ interface EducationManagerProps {
 
 // Validation schema for education form
 const educationSchema = z.object({
-  degree: z.string().min(1, 'Abschluss ist erforderlich'),
   institution: z.string().min(1, 'Institution ist erforderlich'),
+  degree: z.string().min(1, 'Abschluss ist erforderlich'),
   fieldOfStudy: z.string().optional(),
   startYear: z.number().min(1900, 'Ungültiges Jahr').max(new Date().getFullYear() + 10, 'Ungültiges Jahr').optional(),
   endYear: z.number().min(1900, 'Ungültiges Jahr').max(new Date().getFullYear() + 10, 'Ungültiges Jahr').optional().nullable(),
@@ -81,8 +81,8 @@ export function EducationManager({
     resolver: zodResolver(educationSchema),
     mode: 'onChange',
     defaultValues: {
-      degree: '',
       institution: '',
+      degree: '',
       fieldOfStudy: '',
       startYear: undefined,
       endYear: undefined,
@@ -101,8 +101,8 @@ export function EducationManager({
   const openAddDialog = () => {
     setEditingIndex(null);
     form.reset({
-      degree: '',
       institution: '',
+      degree: '',
       fieldOfStudy: '',
       startYear: undefined,
       endYear: undefined,
@@ -116,8 +116,8 @@ export function EducationManager({
     const edu = education[index];
     setEditingIndex(index);
     form.reset({
-      degree: edu.degree,
       institution: edu.institution,
+      degree: edu.degree,
       fieldOfStudy: edu.fieldOfStudy || '',
       startYear: edu.startYear || undefined,
       endYear: edu.endYear || undefined,
@@ -129,8 +129,8 @@ export function EducationManager({
 
   const handleSubmit = (data: EducationFormValues) => {
     const newEducation: Education = {
-      degree: data.degree,
       institution: data.institution,
+      degree: data.degree,
       fieldOfStudy: data.fieldOfStudy?.trim() || undefined,
       startYear: data.startYear || undefined,
       endYear: data.endYear || null,
@@ -204,8 +204,8 @@ export function EducationManager({
                       <div className="flex items-start gap-2">
                         <GraduationCap className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 truncate">{edu.degree}</h3>
-                          <p className="text-sm text-gray-700 truncate">{edu.institution}</p>
+                          <h3 className="font-semibold text-gray-900 truncate">{edu.institution}</h3>
+                          <p className="text-sm text-gray-700 truncate">{edu.degree}</p>
                           {edu.fieldOfStudy && (
                             <p className="text-sm text-gray-600 truncate">{edu.fieldOfStudy}</p>
                           )}
@@ -284,25 +284,6 @@ export function EducationManager({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              {/* Degree */}
-              <FormField<EducationFormValues>
-                control={form.control}
-                name="degree"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Abschluss *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="z.B. Bachelor of Science, Master of Arts"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {/* Institution */}
               <FormField<EducationFormValues>
                 control={form.control}
@@ -313,6 +294,25 @@ export function EducationManager({
                     <FormControl>
                       <Input
                         placeholder="z.B. Technische Universität München"
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Degree */}
+              <FormField<EducationFormValues>
+                control={form.control}
+                name="degree"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Abschluss *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="z.B. Bachelor of Science, Master of Arts"
                         {...field}
                         value={field.value || ''}
                       />

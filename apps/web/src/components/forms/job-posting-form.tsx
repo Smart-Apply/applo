@@ -17,10 +17,7 @@ const jobPostingSchema = z.object({
   company: z.string().min(1, 'Unternehmen ist erforderlich').max(200, 'Unternehmen darf maximal 200 Zeichen lang sein'),
   location: z.string().max(200, 'Standort darf maximal 200 Zeichen lang sein').optional().or(z.literal('')),
   url: z.string().url('Bitte gebe eine gültige URL ein').optional().or(z.literal('')),
-  description: z.string().min(1, 'Beschreibung ist erforderlich'),
-  requirements: z.string().optional(),
-  responsibilities: z.string().optional(),
-  niceToHave: z.string().optional(),
+  fullText: z.string().min(10, 'Stellenbeschreibung muss mindestens 10 Zeichen lang sein'),
   salary: z.string().max(100, 'Gehalt darf maximal 100 Zeichen lang sein').optional().or(z.literal('')),
   employmentType: z.string().max(50, 'Beschäftigungsart darf maximal 50 Zeichen lang sein').optional().or(z.literal('')),
 });
@@ -35,11 +32,10 @@ interface JobPostingFormProps {
 /**
  * JobPostingForm Component
  * 
- * Manual job posting form with all fields for creating job postings
- * - Title, Company, Location (required/optional)
- * - URL, Salary, Employment Type (optional)
- * - Description (required)
- * - Requirements, Responsibilities, Nice to Have (optional, one per line)
+ * Manual job posting form for creating job postings
+ * - Title, Company (required)
+ * - Location, URL, Salary, Employment Type (optional)
+ * - Full Text (required) - complete job posting text including description, requirements, responsibilities
  * - Validation with Zod
  * - Error handling and user feedback
  */
@@ -53,10 +49,7 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
       company: '',
       location: '',
       url: '',
-      description: '',
-      requirements: '',
-      responsibilities: '',
-      niceToHave: '',
+      fullText: '',
       salary: '',
       employmentType: '',
     },
@@ -64,31 +57,12 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
 
   const handleSubmit = async (data: JobPostingFormValues) => {
     try {
-      // Convert text fields to arrays (split by newline)
       const payload = {
         title: data.title,
         company: data.company,
         location: data.location || undefined,
         url: data.url || undefined,
-        description: data.description,
-        requirements: data.requirements
-          ? data.requirements
-              .split('\n')
-              .map((line) => line.trim())
-              .filter((line) => line.length > 0)
-          : undefined,
-        responsibilities: data.responsibilities
-          ? data.responsibilities
-              .split('\n')
-              .map((line) => line.trim())
-              .filter((line) => line.length > 0)
-          : undefined,
-        niceToHave: data.niceToHave
-          ? data.niceToHave
-              .split('\n')
-              .map((line) => line.trim())
-              .filter((line) => line.length > 0)
-          : undefined,
+        fullText: data.fullText,
         salary: data.salary || undefined,
         employmentType: data.employmentType || undefined,
       };
@@ -130,7 +104,7 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
                 <Input
                   id="title"
                   type="text"
-                  placeholder="z.B. Senior Frontend Developer"
+                  placeholder="z.B. Marketing Manager, Pflegefachkraft, Vertriebsmitarbeiter"
                   {...form.register('title')}
                   className={form.formState.errors.title ? 'border-red-500' : ''}
                 />
@@ -148,7 +122,7 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
                 <Input
                   id="company"
                   type="text"
-                  placeholder="z.B. Tech Corp GmbH"
+                  placeholder="z.B. Unternehmen GmbH"
                   {...form.register('company')}
                   className={form.formState.errors.company ? 'border-red-500' : ''}
                 />
@@ -229,89 +203,27 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
             </div>
           </div>
 
-          {/* Description Section */}
+          {/* Full Text Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-900">Stellenbeschreibung</h3>
             
             <div>
-              <Label htmlFor="description">
+              <Label htmlFor="fullText">
                 Beschreibung <span className="text-red-500">*</span>
               </Label>
               <p className="text-sm text-gray-500 mb-2">
                 Allgemeine Beschreibung der Stelle und des Unternehmens
               </p>
               <Textarea
-                id="description"
-                rows={6}
+                id="fullText"
+                rows={12}
                 placeholder="Beschreibe die Stelle, das Team und was das Unternehmen ausmacht..."
-                {...form.register('description')}
-                className={form.formState.errors.description ? 'border-red-500' : ''}
+                {...form.register('fullText')}
+                className={form.formState.errors.fullText ? 'border-red-500' : ''}
               />
-              {form.formState.errors.description && (
+              {form.formState.errors.fullText && (
                 <p className="text-sm text-red-500 mt-1">
-                  {form.formState.errors.description.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Details Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Details</h3>
-            
-            <div>
-              <Label htmlFor="requirements">Anforderungen</Label>
-              <p className="text-sm text-gray-500 mb-2">
-                Eine Anforderung pro Zeile (z.B. &quot;5+ Jahre React Erfahrung&quot;)
-              </p>
-              <Textarea
-                id="requirements"
-                rows={6}
-                placeholder="5+ Jahre React Erfahrung&#10;Sehr gute TypeScript Kenntnisse&#10;Erfahrung mit Next.js"
-                {...form.register('requirements')}
-                className={form.formState.errors.requirements ? 'border-red-500' : ''}
-              />
-              {form.formState.errors.requirements && (
-                <p className="text-sm text-red-500 mt-1">
-                  {form.formState.errors.requirements.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="responsibilities">Verantwortlichkeiten</Label>
-              <p className="text-sm text-gray-500 mb-2">
-                Eine Verantwortlichkeit pro Zeile (z.B. &quot;Entwicklung von Web-Apps&quot;)
-              </p>
-              <Textarea
-                id="responsibilities"
-                rows={6}
-                placeholder="Entwicklung von skalierbaren Web-Anwendungen&#10;Mentoring von Junior-Entwicklern&#10;Code Reviews durchführen"
-                {...form.register('responsibilities')}
-                className={form.formState.errors.responsibilities ? 'border-red-500' : ''}
-              />
-              {form.formState.errors.responsibilities && (
-                <p className="text-sm text-red-500 mt-1">
-                  {form.formState.errors.responsibilities.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="niceToHave">Nice-to-Have</Label>
-              <p className="text-sm text-gray-500 mb-2">
-                Optionale Qualifikationen, eine pro Zeile
-              </p>
-              <Textarea
-                id="niceToHave"
-                rows={4}
-                placeholder="Erfahrung mit GraphQL&#10;Beiträge zu Open Source Projekten&#10;UI/UX Design Kenntnisse"
-                {...form.register('niceToHave')}
-                className={form.formState.errors.niceToHave ? 'border-red-500' : ''}
-              />
-              {form.formState.errors.niceToHave && (
-                <p className="text-sm text-red-500 mt-1">
-                  {form.formState.errors.niceToHave.message}
+                  {form.formState.errors.fullText.message}
                 </p>
               )}
             </div>

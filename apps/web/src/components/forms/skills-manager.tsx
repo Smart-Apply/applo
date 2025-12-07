@@ -82,7 +82,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
           <Input
             id="skill-input"
             type="text"
-            placeholder="z.B. JavaScript, React, TypeScript..."
+            placeholder="z.B. Projektmanagement, SAP, Microsoft Excel, Verhandlungsführung..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}

@@ -117,19 +117,28 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
 
 ## Examples
 
-### Example 1: IT Job requires "React, TypeScript, AWS"
-- ✅ SELECT: React, TypeScript, AWS, JavaScript, Node.js (related technologies)
-- ❌ SKIP: Java, PHP, MongoDB (not mentioned in job)
+### Example 1: Healthcare Job requires "Patient Care, EMR Systems, CPR Certification"
 
-### Example 2: Healthcare Job requires "Patient Care, EMR Systems, CPR Certification"
 - ✅ SELECT: Patient Care, Epic EMR experience, CPR Certified, Clinical Documentation
 - ❌ SKIP: Laboratory skills, surgical experience (not mentioned in job)
 
-### Example 3: Manufacturing Job requires "CNC Programming, Quality Control, Lean Manufacturing"
+### Example 2: Manufacturing Job requires "CNC Programming, Quality Control, Lean Manufacturing"
+
 - ✅ SELECT: CNC machine operation, Six Sigma certification, Production optimization
 - ❌ SKIP: Warehouse management, logistics (not mentioned in job)
 
-### Example 4: Job mentions "excellent communication skills required"
+### Example 3: Marketing Job requires "SEO, Google Analytics, Content Strategy"
+
+- ✅ SELECT: SEO optimization, Google Analytics, Content Marketing, Social Media Strategy
+- ❌ SKIP: Print design, traditional advertising (not mentioned in job)
+
+### Example 4: IT Job requires "React, TypeScript, AWS"
+
+- ✅ SELECT: React, TypeScript, AWS, JavaScript, Node.js (related technologies)
+- ❌ SKIP: Java, PHP, MongoDB (not mentioned in job)
+
+### Example 5: Job mentions "excellent communication skills required"
+
 - ✅ INCLUDE: "Communication" in selected_soft_skills
 - If job doesn't mention it → ❌ SKIP
 

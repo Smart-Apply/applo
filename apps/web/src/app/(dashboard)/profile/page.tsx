@@ -362,14 +362,14 @@ export default function ProfilePage() {
                       <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full border-2 border-primary bg-background" />
 
                       <div className="mb-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                        <h3 className="text-lg font-semibold text-foreground">{edu.degree}</h3>
+                        <h3 className="text-lg font-semibold text-foreground">{edu.institution}</h3>
                         <span className="text-sm text-muted-foreground font-medium bg-muted px-2 py-0.5 rounded">
                           {edu.startYear ? new Date(edu.startYear).getFullYear() : ''} - {edu.endYear ? new Date(edu.endYear).getFullYear() : 'Heute'}
                         </span>
                       </div>
 
                       <div className="mb-2 text-base text-muted-foreground">
-                        <span className="font-medium text-foreground">{edu.institution}</span>
+                        <span className="font-medium text-foreground">{edu.degree}</span>
                         {edu.fieldOfStudy && <span> • {edu.fieldOfStudy}</span>}
                       </div>
 
