@@ -116,13 +116,32 @@ jobs:
             exit 1
           fi
           
-          # Update Container App with new image
+          # Export image URL for use in JSON patch
+          IMAGE_URL="${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "Image URL: $IMAGE_URL"
+          
+          # Get current container app configuration
+          echo "Fetching current configuration..."
+          az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --output json > /tmp/containerapp.json
+          
+          # Update both main container and init container images in JSON
+          echo "Updating container images..."
+          jq --arg image "$IMAGE_URL" \
+            '.properties.template.containers[0].image = $image | 
+             .properties.template.initContainers[0].image = $image' \
+            /tmp/containerapp.json > /tmp/containerapp-updated.json
+          
+          # Apply the updated configuration
+          echo "Applying updated configuration..."
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            --yaml /tmp/containerapp-updated.json
           
-          echo "✅ Container App updated successfully"
+          echo "✅ Container App and Init-Container updated successfully"
 
   migrate-database:
     name: Run Database Migrations
