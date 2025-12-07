@@ -148,9 +148,9 @@ jobs:
             --vault-name smartapply-dev-vault \
             --query value -o tsv)
           
-          # Install dependencies
+          # Install dependencies (including devDependencies for ts-node)
           cd apps/api
-          npm ci
+          npm ci --include=dev
           
           # Run migrations
           echo "Running database migrations..."

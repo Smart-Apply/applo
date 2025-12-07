@@ -108,7 +108,7 @@
     "baseline-browser-mapping": "^2.9.3"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed-all.ts"
+    "seed": "node --require ts-node/register --require tsconfig-paths/register prisma/seed-all.ts"
   },
   "jest": {
     "moduleFileExtensions": [
