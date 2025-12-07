@@ -144,6 +144,33 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ]
     }
     template: {
+      initContainers: [
+        {
+          name: 'migration'
+          image: containerImage
+          resources: {
+            cpu: json('0.5')
+            memory: '1Gi'
+          }
+          command: [
+            '/bin/sh'
+            '-c'
+          ]
+          args: [
+            'npx prisma migrate deploy && npx prisma db seed'
+          ]
+          env: [
+            {
+              name: 'DATABASE_URL'
+              secretRef: 'database-url'
+            }
+            {
+              name: 'NODE_ENV'
+              value: 'production'
+            }
+          ]
+        }
+      ]
       containers: [
         {
           name: 'api'
