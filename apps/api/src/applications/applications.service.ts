@@ -1324,6 +1324,52 @@ Summary: ${resume.summary || 'Not provided'}
       },
     });
 
+    // IMPORTANT: After saving resume, automatically re-match keywords against updated resume
+    // This ensures ATS score reflects the latest changes without requiring manual refresh
+    if (application.atsKeywords) {
+      this.logger.log(
+        `Resume updated for application ${applicationId}, re-matching keywords against new resume`,
+      );
+      try {
+        // Convert cached keywords to old format
+        const keywords = this.convertAtsKeywordsToOldFormat(application.atsKeywords as any);
+
+        // Extract keywords from the newly saved resume
+        const resumeKeywords = this.extractResumeKeywords(JSON.stringify(normalized));
+
+        // Match keywords
+        const { matchedKeywords, missingKeywords } = this.matchKeywords(keywords, resumeKeywords);
+        const matchAnalysis = this.calculateMatchAnalysis(
+          matchedKeywords,
+          missingKeywords,
+          keywords,
+        );
+
+        // Update the cached analysis data
+        const analysisData = {
+          keywords,
+          matchAnalysis,
+          matchedKeywords,
+          missingKeywords,
+          analyzedAt: new Date(),
+        };
+
+        await this.prisma.application.update({
+          where: { id: applicationId },
+          data: { keywordsData: JSON.stringify(analysisData) },
+        });
+
+        this.logger.log(
+          `ATS score updated for application ${applicationId}: ${matchAnalysis.overallScore}% match (${matchedKeywords.length}/${matchedKeywords.length + missingKeywords.length} keywords)`,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Failed to auto-update ATS score after resume save for application ${applicationId}`,
+          error,
+        );
+      }
+    }
+
     return this.mapToResponseDto(updated);
   }
 
