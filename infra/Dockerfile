@@ -88,6 +88,9 @@ RUN npm run shared:build
 # Build application
 RUN npm run api:build
 
+# Compile Prisma seed scripts to JavaScript (production-ready)
+RUN cd apps/api/prisma && npx tsc
+
 # Remove development dependencies and Web packages after build
 RUN npm prune --production && \
     rm -rf apps/web && \
@@ -145,7 +148,9 @@ COPY --from=builder /app/packages/shared/package.json ./node_modules/@smart-appl
 COPY --from=builder /app/dist ./dist
 
 # Copy necessary runtime files
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/apps/api/prisma/schema.prisma ./apps/api/prisma/schema.prisma
+COPY --from=builder /app/apps/api/prisma/migrations ./apps/api/prisma/migrations
+COPY --from=builder /app/apps/api/prisma/dist ./apps/api/prisma/dist
 COPY --from=builder /app/apps/api/prompts ./prompts
 COPY --from=builder /app/package.json ./package.json
 
