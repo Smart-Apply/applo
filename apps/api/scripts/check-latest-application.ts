@@ -44,7 +44,9 @@ async function checkLatestApplication() {
     console.log(`🌍 Language: ${resumeData.language || 'Not set'}\n`);
 
     if (resumeData.summary) {
-      console.log(`📝 Summary: "${resumeData.summary.substring(0, 100)}${resumeData.summary.length > 100 ? '...' : ''}"\n`);
+      console.log(
+        `📝 Summary: "${resumeData.summary.substring(0, 100)}${resumeData.summary.length > 100 ? '...' : ''}"\n`,
+      );
     }
 
     if (resumeData.experiences && resumeData.experiences.length > 0) {
@@ -54,16 +56,18 @@ async function checkLatestApplication() {
         const exp = resumeData.experiences[i];
         console.log(`   ${i + 1}. ${exp.title} @ ${exp.company}`);
         console.log(`      📅 ${exp.dateRange}`);
-        
+
         if (exp.description) {
-          console.log(`      ✅ Description: "${exp.description.substring(0, 100)}${exp.description.length > 100 ? '...' : ''}"`);
+          console.log(
+            `      ✅ Description: "${exp.description.substring(0, 100)}${exp.description.length > 100 ? '...' : ''}"`,
+          );
         } else {
           console.log(`      ❌ Description: MISSING!`);
         }
 
         if (exp.achievements && exp.achievements.length > 0) {
           console.log(`      ✅ Achievements: ${exp.achievements.length} items`);
-          exp.achievements.forEach((ach: string, idx: number) => {
+          exp.achievements.forEach((ach: string) => {
             console.log(`         - ${ach.substring(0, 80)}${ach.length > 80 ? '...' : ''}`);
           });
         } else {
@@ -82,7 +86,6 @@ async function checkLatestApplication() {
       });
       console.log('');
     }
-
   } catch (error) {
     console.error('❌ Error parsing resume data:', error);
   }
