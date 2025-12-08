@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Label } from '@/components/ui/label';
 import {
   Dialog,
@@ -218,9 +219,10 @@ export function ProjectsManager({
                           </div>
 
                           {project.description && (
-                            <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                              {project.description}
-                            </p>
+                            <div 
+                              className="mt-3 text-sm text-muted-foreground line-clamp-2 prose prose-sm max-w-none"
+                              dangerouslySetInnerHTML={{ __html: project.description }}
+                            />
                           )}
 
                           {project.technologies && project.technologies.length > 0 && (
@@ -330,16 +332,17 @@ export function ProjectsManager({
                   <FormItem>
                     <FormLabel>Beschreibung</FormLabel>
                     <FormControl>
-                      <Textarea
+                      <RichTextEditor
+                        value={field.value || ''}
+                        onChange={field.onChange}
                         placeholder="Beschreibe dein Projekt, deine Rolle und die Ergebnisse..."
-                        className="min-h-[120px] resize-none"
-                        {...field}
+                        minHeight="120px"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
+                )
+              }/>
 
               <FormField
                 control={form.control}

@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Label } from '@/components/ui/label';
 import {
   Dialog,
@@ -224,9 +225,10 @@ export function EducationManager({
                             <p className="mt-1 text-sm text-gray-600">GPA: {edu.gpa}</p>
                           )}
                           {edu.description && (
-                            <p className="mt-2 text-sm text-gray-700 line-clamp-2">
-                              {edu.description}
-                            </p>
+                            <div 
+                              className="mt-3 text-sm text-muted-foreground line-clamp-2 prose prose-sm max-w-none"
+                              dangerouslySetInnerHTML={{ __html: edu.description }}
+                            />
                           )}
                         </div>
                       </div>
@@ -421,17 +423,17 @@ export function EducationManager({
                   <FormItem>
                     <FormLabel>Beschreibung</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Relevante Kurse, Projekte oder Auszeichnungen..."
-                        className="min-h-[120px] resize-none"
-                        {...field}
+                      <RichTextEditor
                         value={field.value || ''}
+                        onChange={field.onChange}
+                        placeholder="Relevante Kurse, Projekte oder Auszeichnungen..."
+                        minHeight="120px"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
+                )
+              }/>
 
               <DialogFooter>
                 <Button

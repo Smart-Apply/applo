@@ -65,7 +65,7 @@ model Profile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Core info
-  summary       String?
+  summary       String? @db.Text // Rich text (HTML)
   phone         String?
   location      String?
   linkedinUrl   String?
@@ -140,7 +140,7 @@ model Education {
   startYear    DateTime?
   endYear      DateTime?
   gpa          String?
-  description  String?
+  description  String? @db.Text // Rich text (HTML)
   
   @@index([profileId])
   @@map("education")
@@ -157,7 +157,7 @@ model Experience {
   startDate   DateTime
   endDate     DateTime?
   isCurrent   Boolean @default(false)
-  description String? // Rich text / markdown
+  description String? @db.Text // Rich text (HTML)
   
   achievements String[] // Bullet points of achievements
   
@@ -171,7 +171,7 @@ model Project {
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   
   name        String
-  description String?
+  description String? @db.Text // Rich text (HTML)
   url         String?
   startDate   DateTime?
   endDate     DateTime?

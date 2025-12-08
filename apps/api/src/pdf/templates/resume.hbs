@@ -36,7 +36,7 @@
   {{#if summary}}
   <div class="summary-section no-break">
     <h2>{{t 'resume.summary'}}</h2>
-    <p>{{{summary}}}</p>
+    <div class="summary-text">{{{summary}}}</div>
   </div>
   {{/if}}
 
@@ -71,7 +71,7 @@
       </div>
       <div class="experience-company">{{company}}{{#if location}}, {{location}}{{/if}}</div>
       {{#if description}}
-      <div class="experience-description">{{nl2br description}}</div>
+      <div class="experience-description">{{{description}}}</div>
       {{/if}}
       {{#if achievements}}
       <ul>
@@ -98,7 +98,7 @@
         {{/if}}
       </div>
       {{#if description}}
-      <div class="project-description">{{description}}</div>
+      <div class="project-description">{{{description}}}</div>
       {{/if}}
       {{#if highlights}}
       <ul>
@@ -125,7 +125,7 @@
         <div class="education-gpa">GPA: {{gpa}}</div>
         {{/if}}
         {{#if description}}
-        <div class="education-description">{{description}}</div>
+        <div class="education-description">{{{description}}}</div>
         {{/if}}
       </div>
       <div class="education-date">{{year}}</div>

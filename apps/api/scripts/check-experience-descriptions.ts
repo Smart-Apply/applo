@@ -17,7 +17,7 @@ async function checkExperienceDescriptions() {
 
   for (const user of users) {
     console.log(`\n📧 User: ${user.email}`);
-    
+
     if (!user.profile) {
       console.log('   ❌ No profile found');
       continue;
@@ -33,10 +33,14 @@ async function checkExperienceDescriptions() {
     for (const exp of user.profile.experiences) {
       console.log(`   📌 ${exp.title} @ ${exp.company}`);
       console.log(`      Start: ${exp.startDate.toISOString().split('T')[0]}`);
-      console.log(`      End: ${exp.endDate ? exp.endDate.toISOString().split('T')[0] : 'Current'}`);
-      
+      console.log(
+        `      End: ${exp.endDate ? exp.endDate.toISOString().split('T')[0] : 'Current'}`,
+      );
+
       if (exp.description) {
-        console.log(`      ✅ Description: "${exp.description.substring(0, 100)}${exp.description.length > 100 ? '...' : ''}"`);
+        console.log(
+          `      ✅ Description: "${exp.description.substring(0, 100)}${exp.description.length > 100 ? '...' : ''}"`,
+        );
       } else {
         console.log(`      ❌ Description: NULL/Empty`);
       }
