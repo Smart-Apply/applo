@@ -70,3 +70,11 @@ out/
 # Uploaded files (disk storage)
 uploads/
 .vercel
+
+# Files
+*.localsettings.json
+*.bicepparam
+*.bicepstate
+*.tar.gz
+*.zip
+*.pem
