@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-config(); // Load .env before any imports
+config({ path: '.env.test' }); // Load .env.test before any imports
 
 import * as request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
