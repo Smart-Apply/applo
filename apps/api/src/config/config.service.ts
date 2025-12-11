@@ -193,4 +193,9 @@ export class ConfigService {
   get cspReportOnly(): boolean {
     return this.nestConfig.get('CSP_REPORT_ONLY', { infer: true });
   }
+
+  // Cron Jobs
+  get enableCronJobs(): boolean {
+    return this.nestConfig.get('ENABLE_CRON_JOBS', { infer: true });
+  }
 }

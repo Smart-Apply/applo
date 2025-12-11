@@ -92,6 +92,12 @@ const envSchema = z.object({
   // Rate Limiting - Auth endpoints (stricter)
   RATE_LIMIT_AUTH_TTL: z.string().default('900'), // 15 minutes in seconds
   RATE_LIMIT_AUTH_MAX: z.string().default('10'), // Increased from 5 to 10 for development
+
+  // Cron Jobs
+  ENABLE_CRON_JOBS: z
+    .string()
+    .default('true')
+    .transform((val) => val === 'true'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

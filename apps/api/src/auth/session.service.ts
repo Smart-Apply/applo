@@ -6,6 +6,8 @@ import {
   MAX_SESSIONS_PER_USER,
   SESSION_EXPIRATION_DAYS,
   REVOKED_SESSION_CLEANUP_DAYS,
+  OLD_SESSION_CLEANUP_DAYS,
+  REVOKED_REFRESH_TOKEN_CLEANUP_DAYS,
 } from './session.constants';
 
 @Injectable()
@@ -128,28 +130,60 @@ export class SessionService {
 
   /**
    * Cleanup expired sessions (run as cron job)
+   * Permanently deletes sessions that are:
+   * - Expired (past expiresAt date)
+   * - Revoked and older than REVOKED_SESSION_CLEANUP_DAYS
+   * - Older than OLD_SESSION_CLEANUP_DAYS (regardless of status)
    */
   async cleanupExpiredSessions(): Promise<number> {
-    const result = await this.prisma.session.updateMany({
+    const now = new Date();
+    const revokedCleanupDate = new Date(now.getTime() - REVOKED_SESSION_CLEANUP_DAYS * 24 * 60 * 60 * 1000);
+    const oldSessionCleanupDate = new Date(now.getTime() - OLD_SESSION_CLEANUP_DAYS * 24 * 60 * 60 * 1000);
+
+    const result = await this.prisma.session.deleteMany({
       where: {
         OR: [
-          { expiresAt: { lt: new Date() } },
+          // Delete expired sessions
+          { expiresAt: { lt: now } },
+          // Delete revoked sessions older than cleanup threshold
           {
             AND: [
               { isActive: false },
-              // Clean up revoked sessions older than configured days
-              {
-                revokedAt: {
-                  lt: new Date(Date.now() - REVOKED_SESSION_CLEANUP_DAYS * 24 * 60 * 60 * 1000),
-                },
-              },
+              { revokedAt: { lt: revokedCleanupDate } },
+            ],
+          },
+          // Delete all sessions older than OLD_SESSION_CLEANUP_DAYS (data retention policy)
+          { createdAt: { lt: oldSessionCleanupDate } },
+        ],
+      },
+    });
+
+    return result.count;
+  }
+
+  /**
+   * Cleanup expired and revoked refresh tokens (run as cron job)
+   * Permanently deletes refresh tokens that are:
+   * - Expired (past expiresAt date)
+   * - Revoked and older than REVOKED_REFRESH_TOKEN_CLEANUP_DAYS
+   */
+  async cleanupExpiredRefreshTokens(): Promise<number> {
+    const now = new Date();
+    const revokedCleanupDate = new Date(now.getTime() - REVOKED_REFRESH_TOKEN_CLEANUP_DAYS * 24 * 60 * 60 * 1000);
+
+    const result = await this.prisma.refreshToken.deleteMany({
+      where: {
+        OR: [
+          // Delete expired tokens
+          { expiresAt: { lt: now } },
+          // Delete revoked tokens older than cleanup threshold
+          {
+            AND: [
+              { isRevoked: true },
+              { createdAt: { lt: revokedCleanupDate } },
             ],
           },
         ],
-      },
-      data: {
-        isActive: false,
-        revokedAt: new Date(),
       },
     });
 

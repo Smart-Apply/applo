@@ -25,3 +25,15 @@ export const SESSION_EXPIRATION_DAYS = 30;
  * Revoked sessions older than this are permanently deleted
  */
 export const REVOKED_SESSION_CLEANUP_DAYS = 30;
+
+/**
+ * Cleanup period for expired/revoked refresh tokens in days
+ * Revoked tokens older than this are permanently deleted
+ */
+export const REVOKED_REFRESH_TOKEN_CLEANUP_DAYS = 7;
+
+/**
+ * Cleanup period for old sessions in days
+ * Sessions older than this are permanently deleted (even if not expired)
+ */
+export const OLD_SESSION_CLEANUP_DAYS = 90;
