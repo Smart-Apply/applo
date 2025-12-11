@@ -10,6 +10,7 @@ import { SessionCleanupCron } from './session-cleanup.cron';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '../config/config.service';
+import { ConfigModule } from '../config/config.module';
 
 @Module({
   imports: [
@@ -22,9 +23,10 @@ import { ConfigService } from '../config/config.service';
       }),
     }),
     ScheduleModule.forRoot(),
+    ConfigModule,
   ],
   controllers: [AuthController, SessionsController],
-  providers: [AuthService, SessionService, SessionCleanupCron, JwtStrategy, PrismaService],
+  providers: [AuthService, SessionService, SessionCleanupCron, JwtStrategy, PrismaService, ConfigService],
   exports: [AuthService, SessionService, JwtModule],
 })
 export class AuthModule {}
