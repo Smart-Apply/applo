@@ -1,5 +1,5 @@
-import { ApplicationStatus } from '@prisma/client';
 import { IsNumber, IsString, IsEnum, Min, Max } from 'class-validator';
+import { ApplicationStatus } from './application-response.dto';
 
 /**
  * DTO for application generation progress events (SSE)
