@@ -8,6 +8,8 @@ import { TextParser } from './parsers/text.parser';
 import { UrlParser } from './parsers/url.parser';
 import { PdfParser } from './parsers/pdf.parser';
 import { DocxParser } from './parsers/docx.parser';
+import { ErrorCode } from '../common/constants/error-codes';
+import { NotFoundWithCode } from '../common/exceptions/coded-http.exception';
 
 interface ParsedJobData {
   title: string;
@@ -265,7 +267,7 @@ export class JobPostingsService {
     });
 
     if (!jobPosting) {
-      throw new BadRequestException('Job posting not found');
+      throw new NotFoundWithCode(ErrorCode.JOB_POSTING_NOT_FOUND);
     }
 
     // Soft delete by setting deletedAt timestamp
@@ -293,7 +295,7 @@ export class JobPostingsService {
     });
 
     if (!jobPosting) {
-      throw new BadRequestException('Job posting not found in trash');
+      throw new NotFoundWithCode(ErrorCode.JOB_POSTING_NOT_FOUND);
     }
 
     // Restore by clearing deletedAt
@@ -318,7 +320,7 @@ export class JobPostingsService {
     });
 
     if (!jobPosting) {
-      throw new BadRequestException('Job posting not found');
+      throw new NotFoundWithCode(ErrorCode.JOB_POSTING_NOT_FOUND);
     }
 
     // Permanently delete (cascades to applications via Prisma schema)
