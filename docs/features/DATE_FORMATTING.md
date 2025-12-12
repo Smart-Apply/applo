@@ -131,10 +131,11 @@ import { formatDateSmart, formatDateFull } from '@/lib/format-date';
 
 ## Edge Cases Handled
 
-1. **Future Dates:** Shows as negative relative time (e.g., "in 5 Minuten") if < 1 hour
+1. **Future Dates (< 1 hour):** Not currently supported - will fall through to "Today" or date format
 2. **Invalid Dates:** Gracefully handled by `date-fns` (returns "Invalid Date")
-3. **Timezone Transitions:** Automatically adjusts for DST changes
+3. **Timezone Transitions:** Automatically adjusts for DST changes using `toZonedTime()`
 4. **Leap Years:** Correctly handles February 29th
+5. **Cross-timezone Year Comparison:** Uses timezone-converted dates for accurate year detection
 
 ---
 
@@ -171,9 +172,11 @@ formatDateSmart(new Date('2023-01-15T10:30:00Z'))
 
 ## Migration Notes
 
-- **No Breaking Changes:** All existing date formatting functions remain available
-- **`formatFullTimestamp()`:** Now returns `dd.MM.yyyy HH:mm` (previously `dd. MMMM yyyy, HH:mm`)
+- **Breaking Change:** `formatFullTimestamp()` format changed from `dd. MMMM yyyy, HH:mm` to `dd.MM.yyyy HH:mm`
+  - **Impact:** Existing code relying on the verbose format will see shorter dates
+  - **Fix:** Use `formatTooltipTimestamp()` if you need the detailed format with month names
+  - **Reason:** Consistency with `formatDateFull()` and German locale conventions
 - **`formatDateFull()`:** New function, same format as updated `formatFullTimestamp()`
-- **Backwards Compatible:** Existing code continues to work
-- **Minimal Impact:** Only 3 files updated, rest of codebase unchanged
-- **For detailed tooltips:** Use `formatTooltipTimestamp()` if you need seconds
+- **Backwards Compatible:** Existing functions remain available
+- **Minimal Impact:** Only 3 files updated in this PR
+- **For detailed tooltips:** Use `formatTooltipTimestamp()` for format with seconds and month names

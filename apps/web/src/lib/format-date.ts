@@ -49,6 +49,7 @@ export function formatDateSmart(date: string | Date): string {
   // Convert to user's timezone for accurate day comparisons
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const zonedDate = toZonedTime(targetDate, userTimezone);
+  const zonedNow = toZonedTime(now, userTimezone);
   
   // Today: "Heute um 14:30"
   if (isToday(zonedDate)) {
@@ -61,7 +62,7 @@ export function formatDateSmart(date: string | Date): string {
   }
   
   // This year: "15. Jan um 14:30"
-  if (zonedDate.getFullYear() === now.getFullYear()) {
+  if (zonedDate.getFullYear() === zonedNow.getFullYear()) {
     return format(zonedDate, 'dd. MMM um HH:mm', { locale: de });
   }
   
