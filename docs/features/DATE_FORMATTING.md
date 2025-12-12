@@ -64,7 +64,12 @@ Smart Apply uses a standardized, progressive date formatting system that provide
 
 All date displays include a tooltip showing the full timestamp:
 
-**Tooltip Format:** `dd. MMMM yyyy, HH:mm:ss`  
+**Tooltip Format:** `dd.MM.yyyy HH:mm`  
+**Example:** `15.01.2024 14:30`
+
+For more detailed tooltips with seconds, use `formatTooltipTimestamp()`:
+
+**Detailed Format:** `dd. MMMM yyyy, HH:mm:ss`  
 **Example:** `15. Januar 2024, 14:30:45`
 
 This provides detailed information on hover while keeping the UI clean.
@@ -73,7 +78,16 @@ This provides detailed information on hover while keeping the UI clean.
 
 ## Implementation
 
-### Function: `formatDateSmart(date: string | Date): string`
+### Functions Available
+
+1. **`formatDateSmart(date)`** - Progressive granularity (primary function)
+2. **`formatDateFull(date)`** - Full timestamp for tooltips (`dd.MM.yyyy HH:mm`)
+3. **`formatTooltipTimestamp(date)`** - Detailed tooltip with seconds (`dd. MMMM yyyy, HH:mm:ss`)
+4. **`formatFullTimestamp(date)`** - Backwards compatible, same as `formatDateFull()`
+5. **`formatRelativeTime(date)`** - Pure relative time (e.g., "vor 2 Stunden")
+6. **`formatDate(date, format?)`** - Custom format string
+
+### Usage Example
 
 ```typescript
 import { formatDateSmart, formatDateFull } from '@/lib/format-date';
@@ -158,5 +172,8 @@ formatDateSmart(new Date('2023-01-15T10:30:00Z'))
 ## Migration Notes
 
 - **No Breaking Changes:** All existing date formatting functions remain available
-- **Backwards Compatible:** `formatFullTimestamp()` still works (alias for `formatDateFull()`)
+- **`formatFullTimestamp()`:** Now returns `dd.MM.yyyy HH:mm` (previously `dd. MMMM yyyy, HH:mm`)
+- **`formatDateFull()`:** New function, same format as updated `formatFullTimestamp()`
+- **Backwards Compatible:** Existing code continues to work
 - **Minimal Impact:** Only 3 files updated, rest of codebase unchanged
+- **For detailed tooltips:** Use `formatTooltipTimestamp()` if you need seconds

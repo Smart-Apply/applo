@@ -37,33 +37,36 @@ export function formatRelativeTime(date: string | Date): string {
  * @returns Smart formatted string in German
  */
 export function formatDateSmart(date: string | Date): string {
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const targetDate = toZonedTime(new Date(date), userTimezone);
+  const targetDate = new Date(date);
   const now = new Date();
   
   // Less than 1 hour: relative time (e.g., "vor 5 Minuten", "vor 30 Minuten")
   const diffHours = (now.getTime() - targetDate.getTime()) / (1000 * 60 * 60);
   if (diffHours < 1 && diffHours >= 0) {
-    return formatDistanceToNow(targetDate, { addSuffix: true, locale: de });
+    return formatRelativeTime(date);
   }
   
+  // Convert to user's timezone for accurate day comparisons
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const zonedDate = toZonedTime(targetDate, userTimezone);
+  
   // Today: "Heute um 14:30"
-  if (isToday(targetDate)) {
-    return `Heute um ${format(targetDate, 'HH:mm')}`;
+  if (isToday(zonedDate)) {
+    return `Heute um ${format(zonedDate, 'HH:mm')}`;
   }
   
   // Yesterday: "Gestern um 14:30"
-  if (isYesterday(targetDate)) {
-    return `Gestern um ${format(targetDate, 'HH:mm')}`;
+  if (isYesterday(zonedDate)) {
+    return `Gestern um ${format(zonedDate, 'HH:mm')}`;
   }
   
   // This year: "15. Jan um 14:30"
-  if (targetDate.getFullYear() === now.getFullYear()) {
-    return format(targetDate, 'dd. MMM um HH:mm', { locale: de });
+  if (zonedDate.getFullYear() === now.getFullYear()) {
+    return format(zonedDate, 'dd. MMM um HH:mm', { locale: de });
   }
   
   // Older: "15.01.2023"
-  return format(targetDate, 'dd.MM.yyyy', { locale: de });
+  return format(zonedDate, 'dd.MM.yyyy', { locale: de });
 }
 
 /**
