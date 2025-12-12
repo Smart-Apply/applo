@@ -119,6 +119,30 @@ export class ApplicationsController {
     return this.applicationsService.generateWithSinglePipeline(id, user.id);
   }
 
+  @Post(':id/regenerate')
+  @ApiOperation({
+    summary: 'Retry failed PDF generation',
+    description:
+      'Retries PDF generation for a failed application. Only works if status is FAILED. Resets application state and re-enqueues the generation job.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Application regeneration started successfully',
+    type: ApplicationResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Application is not in FAILED status',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Application not found' })
+  async regenerate(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<ApplicationResponseDto> {
+    return this.applicationsService.regenerate(id, user.id);
+  }
+
   @Put(':id/resume')
   @ApiOperation({ summary: 'Lebenslauf-Daten aktualisieren' })
   @ApiResponse({ status: 200, type: ApplicationResponseDto })

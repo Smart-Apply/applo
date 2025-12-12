@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
 import { api } from '@/lib/api-client';
-import { useCreateApplication } from '@/hooks/use-applications';
+import { useCreateApplication, useRetryApplication } from '@/hooks/use-applications';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -90,6 +90,7 @@ export default function ApplicationDetailPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const applicationId = params.id as string;
   const createApplication = useCreateApplication();
+  const retryMutation = useRetryApplication();
   const [previewFile, setPreviewFile] = useState<{
     url: string;
     blob?: Blob;
@@ -472,6 +473,25 @@ export default function ApplicationDetailPage() {
                     </span>
                   )}
                 </p>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => retryMutation.mutate(application.id)}
+                  disabled={retryMutation.isPending}
+                  className="mt-2"
+                >
+                  {retryMutation.isPending ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Generiere erneut...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Erneut versuchen
+                    </>
+                  )}
+                </Button>
               </div>
             )}
           </div>
@@ -480,17 +500,6 @@ export default function ApplicationDetailPage() {
               <CheckCircle className="mr-1 h-3 w-3" />
               Fertig
             </Badge>
-          )}
-          {application.status === 'FAILED' && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleGenerateAgain}
-              loading={createApplication.isPending}
-              className="flex-shrink-0"
-            >
-              Erneut generieren
-            </Button>
           )}
         </div>
       </div>
