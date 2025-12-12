@@ -1660,6 +1660,61 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
+   * Retry PDF generation for failed applications
+   * 
+   * Only allows retry if application status is FAILED.
+   * Resets application state and re-enqueues the generation job.
+   */
+  async regenerate(
+    applicationId: string,
+    userId: string,
+  ): Promise<ApplicationResponseDto> {
+    this.logger.log(`Regenerating failed application ${applicationId} for user ${userId}`);
+
+    // 1. Verify ownership and get application
+    const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    // 2. Only allow retry if status is FAILED
+    if (application.status !== ApplicationStatus.FAILED) {
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_NOT_FAILED);
+    }
+
+    // 3. Verify we have resume data (required for export)
+    const resume = this.parseResume(application.resumeText);
+    if (!resume) {
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_RESUME);
+    }
+
+    // 4. Clean up any old files from failed attempt
+    await this.cleanupGeneratedFiles(application);
+
+    // 5. Reset status to GENERATING and clear error message
+    const updated = await this.prisma.application.update({
+      where: { id: applicationId },
+      data: {
+        status: ApplicationStatus.GENERATING,
+        coverLetterFileKey: null,
+        resumeFileKey: null,
+        errorMessage: null,
+      },
+      include: {
+        jobPosting: true,
+      },
+    });
+
+    // 6. Re-enqueue the generation job
+    await this.jobsService.publishJob(JobType.APPLICATION_GENERATE, {
+      applicationId,
+      userId,
+      jobPostingId: application.jobPostingId,
+    });
+
+    this.logger.log(`Application ${applicationId} re-enqueued for generation`);
+
+    return this.mapToResponseDto(updated);
+  }
+
+  /**
    * Get a single application by ID
    * 
    * Uses Prisma's `include` to prevent N+1 queries when job posting is requested

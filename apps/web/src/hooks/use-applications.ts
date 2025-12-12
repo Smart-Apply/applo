@@ -201,3 +201,23 @@ export function useKeywordsAnalysis(applicationId: string) {
     refetchOnWindowFocus: false,
   });
 }
+
+/**
+ * Hook to retry failed application generation
+ */
+export function useRetryApplication() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.applications.regenerate(id),
+    onSuccess: (updatedApplication) => {
+      // Update cache with new status (should be GENERATING)
+      queryClient.setQueryData(['applications', updatedApplication.id], updatedApplication);
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toastSuccess('Generierung wurde erneut gestartet');
+    },
+    onError: (error: unknown) => {
+      toastError(error, 'Fehler beim erneuten Generieren');
+    },
+  });
+}

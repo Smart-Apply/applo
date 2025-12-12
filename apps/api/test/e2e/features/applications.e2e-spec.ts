@@ -592,4 +592,112 @@ describe('ApplicationsController (e2e)', () => {
       expect(response.body.title.length).toBeLessThanOrEqual(60);
     });
   });
+
+  describe('POST /api/v1/applications/:id/regenerate', () => {
+    let failedApplicationId: string;
+    let readyApplicationId: string;
+    let pendingApplicationId: string;
+
+    beforeAll(async () => {
+      // Create a FAILED application
+      const failedApp = await prisma.application.create({
+        data: {
+          userId,
+          jobPostingId,
+          status: 'FAILED',
+          errorMessage: 'Test error',
+          resumeText: JSON.stringify({
+            contact: { name: 'Test User', email: 'test@example.com' },
+            summary: 'Test summary',
+          }),
+        },
+      });
+      failedApplicationId = failedApp.id;
+
+      // Create a READY application (should not be retryable)
+      const readyApp = await prisma.application.create({
+        data: {
+          userId,
+          jobPostingId,
+          status: 'READY',
+          resumeText: JSON.stringify({
+            contact: { name: 'Test User', email: 'test@example.com' },
+          }),
+        },
+      });
+      readyApplicationId = readyApp.id;
+
+      // Create a PENDING application (should not be retryable)
+      const pendingApp = await prisma.application.create({
+        data: {
+          userId,
+          jobPostingId,
+          status: 'PENDING',
+          resumeText: JSON.stringify({
+            contact: { name: 'Test User', email: 'test@example.com' },
+          }),
+        },
+      });
+      pendingApplicationId = pendingApp.id;
+    });
+
+    afterAll(async () => {
+      // Clean up test applications
+      await prisma.application.deleteMany({
+        where: {
+          id: { in: [failedApplicationId, readyApplicationId, pendingApplicationId] },
+        },
+      });
+    });
+
+    it('should retry failed application generation', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/api/v1/applications/${failedApplicationId}/regenerate`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        id: failedApplicationId,
+        userId,
+        status: 'GENERATING', // Status should be reset to GENERATING
+      });
+
+      // Error message should be cleared
+      expect(response.body.errorMessage).toBeNull();
+      // File keys should be cleared
+      expect(response.body.coverLetterFileKey).toBeNull();
+      expect(response.body.resumeFileKey).toBeNull();
+    });
+
+    it('should return 400 for non-failed application (READY)', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/api/v1/applications/${readyApplicationId}/regenerate`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(400);
+
+      expect(response.body.code).toBe('APPLICATION_NOT_FAILED');
+    });
+
+    it('should return 400 for non-failed application (PENDING)', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/api/v1/applications/${pendingApplicationId}/regenerate`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(400);
+
+      expect(response.body.code).toBe('APPLICATION_NOT_FAILED');
+    });
+
+    it('should return 404 for non-existent application', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/applications/550e8400-e29b-41d4-a716-446655440000/regenerate')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(404);
+    });
+
+    it('should return 401 without auth token', async () => {
+      await request(app.getHttpServer())
+        .post(`/api/v1/applications/${failedApplicationId}/regenerate`)
+        .expect(401);
+    });
+  });
 });
