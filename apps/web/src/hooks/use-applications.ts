@@ -49,12 +49,55 @@ export function useCreateApplication() {
   return useMutation({
     mutationFn: (data: { jobPostingId: string }) =>
       api.applications.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
+    
+    // Optimistic update: Add application to list immediately
+    onMutate: async (newApplication) => {
+      // Cancel outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['applications'] });
+      
+      // Snapshot previous value for rollback
+      const previousApplications = queryClient.getQueryData(['applications']);
+      
+      // Optimistically update cache with temporary application
+      queryClient.setQueryData(['applications'], (old: Application[] | undefined) => {
+        const tempApp: Application = {
+          id: 'temp-' + Date.now(),
+          userId: '', // Will be set by backend
+          jobPostingId: newApplication.jobPostingId,
+          status: 'PENDING' as const,
+          applicationStatus: 'CREATED' as const,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        return [tempApp, ...(old || [])];
+      });
+      
+      // Return context with snapshot for rollback
+      return { previousApplications };
+    },
+    
+    // Rollback on error
+    onError: (error: unknown, _variables, context) => {
+      if (context?.previousApplications) {
+        queryClient.setQueryData(['applications'], context.previousApplications);
+      }
+      toastError(error, 'Fehler beim Erstellen der Bewerbung');
+    },
+    
+    // Replace temp ID with real data on success
+    onSuccess: (newApplication) => {
+      queryClient.setQueryData(['applications'], (old: Application[] | undefined) => {
+        if (!old) return [newApplication];
+        return old.map(app => 
+          app.id.startsWith('temp-') ? newApplication : app
+        );
+      });
       toastSuccess('Bewerbung wird erstellt...');
     },
-    onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Erstellen der Bewerbung');
+    
+    // Always refetch after mutation for data consistency
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
     },
   });
 }
@@ -105,14 +148,50 @@ export function useDeleteApplication() {
   return useMutation({
     mutationFn: (id: string) =>
       api.applications.delete(id),
-    onSuccess: (_data, variables) => {
-      // Invalidate queries to trigger refetch from server
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-      queryClient.invalidateQueries({ queryKey: ['applications', variables] });
+    
+    // Optimistic update: Remove application from list immediately
+    onMutate: async (deletedId) => {
+      // Cancel outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['applications'] });
+      await queryClient.cancelQueries({ queryKey: ['applications', deletedId] });
+      
+      // Snapshot previous values for rollback
+      const previousApplications = queryClient.getQueryData(['applications']);
+      const previousApplication = queryClient.getQueryData(['applications', deletedId]);
+      
+      // Optimistically remove from list
+      queryClient.setQueryData(['applications'], (old: Application[] | undefined) => {
+        if (!old) return [];
+        return old.filter(app => app.id !== deletedId);
+      });
+      
+      // Remove from detail cache
+      queryClient.removeQueries({ queryKey: ['applications', deletedId] });
+      
+      // Return context with snapshots for rollback
+      return { previousApplications, previousApplication, deletedId };
+    },
+    
+    // Rollback on error
+    onError: (error: unknown, _variables, context) => {
+      if (context?.previousApplications) {
+        queryClient.setQueryData(['applications'], context.previousApplications);
+      }
+      if (context?.previousApplication && context?.deletedId) {
+        queryClient.setQueryData(['applications', context.deletedId], context.previousApplication);
+      }
+      toastError(error, 'Fehler beim Löschen der Bewerbung');
+    },
+    
+    // Show success message
+    onSuccess: () => {
       toastSuccess('Bewerbung wurde gelöscht');
     },
-    onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Löschen der Bewerbung');
+    
+    // Always refetch after mutation for data consistency
+    onSettled: (_data, _error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      queryClient.invalidateQueries({ queryKey: ['applications', variables] });
     },
   });
 }

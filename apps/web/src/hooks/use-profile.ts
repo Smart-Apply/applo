@@ -29,6 +29,44 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: (data: UpdateProfileDto) => api.profile.update(data),
+    
+    // Optimistic update: Apply changes immediately to cache
+    onMutate: async (updateData) => {
+      // Cancel outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['profile'] });
+      
+      // Snapshot previous value for rollback
+      const previousProfile = queryClient.getQueryData<Profile>(['profile']);
+      
+      // Optimistically update cache with new data
+      if (previousProfile) {
+        queryClient.setQueryData(['profile'], {
+          ...previousProfile,
+          ...updateData,
+          // Merge nested arrays if provided
+          skills: updateData.skills ?? previousProfile.skills,
+          experiences: updateData.experiences ?? previousProfile.experiences,
+          education: updateData.education ?? previousProfile.education,
+          certificates: updateData.certificates ?? previousProfile.certificates,
+          projects: updateData.projects ?? previousProfile.projects,
+          languages: updateData.languages ?? previousProfile.languages,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+      
+      // Return context with snapshot for rollback
+      return { previousProfile };
+    },
+    
+    // Rollback on error
+    onError: (error: unknown, _variables, context) => {
+      if (context?.previousProfile) {
+        queryClient.setQueryData(['profile'], context.previousProfile);
+      }
+      toastError(error, 'Fehler beim Aktualisieren des Profils');
+    },
+    
+    // Replace optimistic data with server response on success
     onSuccess: (updatedProfile, variables) => {
       // Update cache directly with the server response (no refetch)
       queryClient.setQueryData(['profile'], updatedProfile);
@@ -42,9 +80,6 @@ export function useUpdateProfile() {
       }
       
       toastSuccess('Profil erfolgreich aktualisiert');
-    },
-    onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Aktualisieren des Profils');
     },
   });
 }
