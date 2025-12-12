@@ -65,12 +65,12 @@ export function formatDateSmart(date: string | Date): string {
   }
   
   // Yesterday: "Gestern um 14:30"
-  // Calculate yesterday by subtracting 24 hours and comparing dates
-  const yesterdayTimestamp = zonedNow.getTime() - (24 * 60 * 60 * 1000);
-  const yesterday = new Date(yesterdayTimestamp);
-  if (targetYear === yesterday.getFullYear() && 
-      targetMonth === yesterday.getMonth() && 
-      targetDay === yesterday.getDate()) {
+  // Calculate yesterday using timezone-aware dates for DST/boundary safety
+  const yesterdayMs = zonedNow.getTime() - (24 * 60 * 60 * 1000);
+  const yesterdayDate = toZonedTime(new Date(yesterdayMs), userTimezone);
+  if (targetYear === yesterdayDate.getFullYear() && 
+      targetMonth === yesterdayDate.getMonth() && 
+      targetDay === yesterdayDate.getDate()) {
     return `Gestern um ${format(zonedDate, 'HH:mm')}`;
   }
   
