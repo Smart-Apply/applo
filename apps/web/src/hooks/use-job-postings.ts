@@ -49,12 +49,52 @@ export function useCreateJobPosting() {
       salary?: string;
       employmentType?: string;
     }) => api.jobPostings.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['job-postings'] });
+    
+    // Optimistic update: Add job posting to list immediately
+    onMutate: async (newJobPosting) => {
+      // Cancel outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['job-postings'] });
+      
+      // Snapshot previous value for rollback
+      const previousJobPostings = queryClient.getQueryData(['job-postings']);
+      
+      // Optimistically update cache with temporary job posting
+      queryClient.setQueryData(['job-postings'], (old: JobPosting[] | undefined) => {
+        const tempJobPosting: JobPosting = {
+          id: 'temp-' + Date.now(),
+          ...newJobPosting,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        return [tempJobPosting, ...(old || [])];
+      });
+      
+      // Return context with snapshot for rollback
+      return { previousJobPostings };
+    },
+    
+    // Rollback on error
+    onError: (error: unknown, _variables, context) => {
+      if (context?.previousJobPostings) {
+        queryClient.setQueryData(['job-postings'], context.previousJobPostings);
+      }
+      toastError(error, 'Fehler beim Erstellen der Stellenanzeige');
+    },
+    
+    // Replace temp ID with real data on success
+    onSuccess: (newJobPosting) => {
+      queryClient.setQueryData(['job-postings'], (old: JobPosting[] | undefined) => {
+        if (!old) return [newJobPosting];
+        return old.map(jp => 
+          jp.id.startsWith('temp-') ? newJobPosting : jp
+        );
+      });
       toastSuccess('Stellenanzeige erfolgreich erstellt');
     },
-    onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Erstellen der Stellenanzeige');
+    
+    // Always refetch after mutation for data consistency
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['job-postings'] });
     },
   });
 }
@@ -68,12 +108,55 @@ export function useParseJobPosting() {
   return useMutation({
     mutationFn: (data: { text?: string; url?: string; fileId?: string }) =>
       api.jobPostings.parse(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['job-postings'] });
+    
+    // Optimistic update: Add placeholder job posting while parsing
+    onMutate: async (parseData) => {
+      // Cancel outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['job-postings'] });
+      
+      // Snapshot previous value for rollback
+      const previousJobPostings = queryClient.getQueryData(['job-postings']);
+      
+      // Optimistically add placeholder (parsing indicator)
+      queryClient.setQueryData(['job-postings'], (old: JobPosting[] | undefined) => {
+        const tempJobPosting: JobPosting = {
+          id: 'temp-' + Date.now(),
+          title: parseData.url ? 'Lädt...' : 'Parsing...',
+          company: parseData.url || 'Unbekannt',
+          description: parseData.text || '',
+          sourceUrl: parseData.url,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        return [tempJobPosting, ...(old || [])];
+      });
+      
+      // Return context with snapshot for rollback
+      return { previousJobPostings };
+    },
+    
+    // Rollback on error
+    onError: (error: unknown, _variables, context) => {
+      if (context?.previousJobPostings) {
+        queryClient.setQueryData(['job-postings'], context.previousJobPostings);
+      }
+      toastError(error, 'Fehler beim Parsen der Stellenanzeige');
+    },
+    
+    // Replace temp ID with real data on success
+    onSuccess: (parsedJobPosting) => {
+      queryClient.setQueryData(['job-postings'], (old: JobPosting[] | undefined) => {
+        if (!old) return [parsedJobPosting];
+        return old.map(jp => 
+          jp.id.startsWith('temp-') ? parsedJobPosting : jp
+        );
+      });
       toastSuccess('Stellenanzeige erfolgreich geparst');
     },
-    onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Parsen der Stellenanzeige');
+    
+    // Always refetch after mutation for data consistency
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['job-postings'] });
     },
   });
 }
@@ -86,12 +169,49 @@ export function useDeleteJobPosting() {
 
   return useMutation({
     mutationFn: (id: string) => api.jobPostings.delete(id),
+    
+    // Optimistic update: Remove job posting from list immediately
+    onMutate: async (deletedId) => {
+      // Cancel outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['job-postings'] });
+      await queryClient.cancelQueries({ queryKey: ['job-postings', deletedId] });
+      
+      // Snapshot previous values for rollback
+      const previousJobPostings = queryClient.getQueryData(['job-postings']);
+      const previousJobPosting = queryClient.getQueryData(['job-postings', deletedId]);
+      
+      // Optimistically remove from list
+      queryClient.setQueryData(['job-postings'], (old: JobPosting[] | undefined) => {
+        if (!old) return [];
+        return old.filter(jp => jp.id !== deletedId);
+      });
+      
+      // Remove from detail cache
+      queryClient.removeQueries({ queryKey: ['job-postings', deletedId] });
+      
+      // Return context with snapshots for rollback
+      return { previousJobPostings, previousJobPosting, deletedId };
+    },
+    
+    // Rollback on error
+    onError: (error: unknown, _variables, context) => {
+      if (context?.previousJobPostings) {
+        queryClient.setQueryData(['job-postings'], context.previousJobPostings);
+      }
+      if (context?.previousJobPosting && context?.deletedId) {
+        queryClient.setQueryData(['job-postings', context.deletedId], context.previousJobPosting);
+      }
+      toastError(error, 'Fehler beim Löschen der Stellenanzeige');
+    },
+    
+    // Show success message
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['job-postings'] });
       toastSuccess('Stellenanzeige erfolgreich gelöscht');
     },
-    onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Löschen der Stellenanzeige');
+    
+    // Always refetch after mutation for data consistency
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['job-postings'] });
     },
   });
 }
