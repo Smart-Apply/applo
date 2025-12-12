@@ -18,7 +18,7 @@ export class CleanupCron {
 
   /**
    * Clean up soft-deleted applications older than 30 days
-   * Runs daily at 4 AM
+   * Runs daily at midnight
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanupDeletedApplications() {
@@ -57,9 +57,9 @@ export class CleanupCron {
 
   /**
    * Clean up soft-deleted job postings older than 30 days
-   * Runs daily at 4 AM (same as applications, combined cleanup)
+   * Runs daily at 12:05 AM (5 minutes after applications cleanup to avoid DB contention)
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron('5 0 * * *') // 00:05 every day
   async cleanupDeletedJobPostings() {
     // Skip if cron jobs are disabled (e.g., in local development)
     if (!this.configService.enableCronJobs) {

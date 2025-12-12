@@ -64,7 +64,8 @@ Creates:
 - `apps/api/src/common/cron/cleanup-cron.module.ts`
 
 **Features:**
-- Runs daily at midnight
+- Applications cleanup: Runs daily at midnight (12:00 AM)
+- Job postings cleanup: Runs daily at 12:05 AM (5 minutes after applications to avoid DB contention)
 - Hard deletes items soft-deleted more than 30 days ago
 - Respects `ENABLE_CRON_JOBS` environment variable
 - Separate methods for applications and job postings
@@ -113,7 +114,8 @@ Creates:
 - Used by cleanup cron or manual admin action
 
 ### Automatic Cleanup
-- Runs daily at midnight (cron schedule: `EVERY_DAY_AT_MIDNIGHT`)
+- Applications: Runs daily at midnight (12:00 AM)
+- Job postings: Runs daily at 12:05 AM (staggered to avoid DB contention)
 - Only processes items where `deletedAt < 30 days ago`
 - Disabled in development by default (`ENABLE_CRON_JOBS=false`)
 - Logs results: `Deleted ${count} applications older than 30 days in ${duration}ms`
