@@ -136,7 +136,7 @@ export function validateEnv(config: Record<string, unknown>): EnvConfig {
     hasDatabase: !!config?.DATABASE_URL,
     hasJwtSecret: !!config?.JWT_SECRET,
   });
-  
+
   try {
     return envSchema.parse(config);
   } catch (error) {

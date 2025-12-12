@@ -153,12 +153,13 @@ async function bootstrap() {
     origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'], // Allow CSRF header
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Cache-Control'], // Cache-Control needed for SSE
     exposedHeaders: [
       'X-RateLimit-Limit',
       'X-RateLimit-Remaining',
       'X-RateLimit-Reset',
       'Retry-After',
+      'Content-Type', // Expose Content-Type for SSE (text/event-stream)
     ], // Expose rate limit headers to frontend
   });
 
@@ -166,7 +167,9 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
+      // Allow extra properties in query params since some are extracted separately
+      // e.g., includeJobPosting is extracted via @Query() decorator before PaginationQueryDto
+      forbidNonWhitelisted: false,
       transform: true,
       disableErrorMessages: false,
       enableDebugMessages: true,
