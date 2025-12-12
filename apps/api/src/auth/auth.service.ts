@@ -15,6 +15,12 @@ import { AuditLoggerService } from '../common/audit-logger';
 import { SessionService } from './session.service';
 import { MAX_TOKENS_PER_USER } from './session.constants';
 import { Request } from 'express';
+import { ErrorCode } from '../common/constants/error-codes';
+import {
+  ConflictWithCode,
+  UnauthorizedWithCode,
+  BadRequestWithCode,
+} from '../common/exceptions/coded-http.exception';
 
 interface TokenPair {
   accessToken: string;
@@ -41,7 +47,7 @@ export class AuthService {
     });
 
     if (existing) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictWithCode(ErrorCode.USER_EXISTS);
     }
 
     // Hash password
@@ -101,7 +107,7 @@ export class AuthService {
       if (req) {
         this.auditLogger.logLoginAttempt(dto.email, false, req);
       }
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedWithCode(ErrorCode.INVALID_CREDENTIALS);
     }
 
     // Verify password
@@ -112,7 +118,7 @@ export class AuthService {
       if (req) {
         this.auditLogger.logLoginAttempt(dto.email, false, req, user.id);
       }
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedWithCode(ErrorCode.INVALID_CREDENTIALS);
     }
 
     // Log successful login
@@ -147,12 +153,12 @@ export class AuthService {
         secret: this.configService.jwtSecret,
       });
     } catch (error) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+      throw new UnauthorizedWithCode(ErrorCode.REFRESH_TOKEN_INVALID);
     }
 
     // Verify token type
     if (payload.type !== 'refresh') {
-      throw new UnauthorizedException('Invalid token type');
+      throw new UnauthorizedWithCode(ErrorCode.INVALID_TOKEN_TYPE);
     }
 
     // Find all non-revoked, non-expired refresh tokens for this user
@@ -165,7 +171,7 @@ export class AuthService {
     });
 
     if (storedTokens.length === 0) {
-      throw new UnauthorizedException('Refresh token not found or revoked');
+      throw new UnauthorizedWithCode(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
     }
 
     // Verify the provided token matches one of the stored hashes
@@ -184,7 +190,7 @@ export class AuthService {
     }
 
     if (!matchingToken) {
-      throw new UnauthorizedException('Refresh token not found or revoked');
+      throw new UnauthorizedWithCode(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
     }
 
     // Log refresh token usage
@@ -316,7 +322,7 @@ export class AuthService {
     });
 
     if (!user || !user.password) {
-      throw new BadRequestException('Cannot change password for OAuth accounts');
+      throw new BadRequestWithCode(ErrorCode.PASSWORD_CHANGE_OAUTH);
     }
 
     // Verify current password
@@ -328,12 +334,12 @@ export class AuthService {
           reason: 'Invalid current password',
         });
       }
-      throw new BadRequestException('Current password is incorrect');
+      throw new BadRequestWithCode(ErrorCode.PASSWORD_INCORRECT);
     }
 
     // Ensure new password is different from current
     if (dto.currentPassword === dto.newPassword) {
-      throw new BadRequestException('New password must be different from current password');
+      throw new BadRequestWithCode(ErrorCode.PASSWORD_SAME_AS_CURRENT);
     }
 
     // Hash new password
@@ -365,7 +371,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedWithCode(ErrorCode.USER_NOT_FOUND);
     }
 
     // For local accounts, verify password
@@ -378,7 +384,7 @@ export class AuthService {
             reason: 'Invalid password',
           });
         }
-        throw new BadRequestException('Password is incorrect');
+        throw new BadRequestWithCode(ErrorCode.PASSWORD_INCORRECT);
       }
     }
 

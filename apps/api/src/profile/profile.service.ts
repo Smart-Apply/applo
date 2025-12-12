@@ -5,6 +5,11 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
 import { AuditLoggerService } from '../common/audit-logger';
 import { KeywordsService } from '../keywords/keywords.service';
+import { ErrorCode } from '../common/constants/error-codes';
+import {
+  NotFoundWithCode,
+  InternalServerErrorWithCode,
+} from '../common/exceptions/coded-http.exception';
 
 @Injectable()
 export class ProfileService {
@@ -40,7 +45,7 @@ export class ProfileService {
     });
 
     if (!profile) {
-      throw new NotFoundException('Profile not found');
+      throw new NotFoundWithCode(ErrorCode.PROFILE_NOT_FOUND);
     }
 
     return this.mapToResponseDto(profile);
@@ -361,7 +366,7 @@ export class ProfileService {
       });
 
       if (!updatedProfile) {
-        throw new InternalServerErrorException('Failed to update profile');
+        throw new InternalServerErrorWithCode(ErrorCode.PROFILE_UPDATE_FAILED);
       }
 
       // Log profile update event
@@ -387,10 +392,10 @@ export class ProfileService {
 
       return this.mapToResponseDto(updatedProfile);
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundWithCode || error.name === 'NotFoundWithCode') {
         throw error;
       }
-      throw new InternalServerErrorException('Failed to update profile: ' + error.message);
+      throw new InternalServerErrorWithCode(ErrorCode.PROFILE_UPDATE_FAILED, error.message);
     }
   }
 
