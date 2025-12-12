@@ -37,6 +37,7 @@ import { EditableTitle } from '@/components/applications/editable-title';
 import { StatusDropdown } from '@/components/applications/status-dropdown';
 import { ATSAnalysisPanel } from '@/components/applications/ats-analysis-panel';
 import { formatFullTimestamp, formatDate } from '@/lib/format-date';
+import { LOADING_MESSAGES } from '@/lib/constants';
 
 // Dynamic import for PDF preview modal (saves ~300KB)
 // Only loaded when user clicks preview button
@@ -46,7 +47,7 @@ const PDFPreviewModal = dynamic(
     loading: () => (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-8">
-          <CenteredLoader message="Lädt PDF-Vorschau..." />
+          <CenteredLoader message={LOADING_MESSAGES.PDF_PREVIEW} />
         </div>
       </div>
     ),

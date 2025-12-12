@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 import path from "path";
 
 // Bundle analyzer for webpack analysis (ANALYZE=true npm run build)
+// Note: Using require() instead of import because @next/bundle-analyzer
+// is a CommonJS module that needs to wrap the config
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
