@@ -88,6 +88,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.APPLICATION_DUPLICATE]: 'Du hast bereits eine Bewerbung für diese Stelle erstellt. Bitte bearbeite die bestehende Bewerbung oder lösche sie zuerst.',
   [ErrorCode.APPLICATION_GENERATING]: 'Dokumente werden aktuell erstellt. Bitte warte einen Moment.',
   [ErrorCode.APPLICATION_GENERATION_FAILED]: 'Die Bewerbung konnte nicht erstellt werden. Bitte versuche es erneut.',
+  [ErrorCode.APPLICATION_NOT_FAILED]: 'Die Bewerbung ist nicht fehlgeschlagen. Erneutes Generieren ist nur bei fehlgeschlagenen Bewerbungen möglich.',
   [ErrorCode.APPLICATION_NO_RESUME]: 'Bitte speichere zuerst deinen Lebenslauf.',
   [ErrorCode.APPLICATION_NO_JOB]: 'Keine Stellenanzeige verknüpft. Bitte wähle eine Stelle aus.',
   [ErrorCode.APPLICATION_RESUME_CORRUPTED]: 'Gespeicherter Lebenslauf ist beschädigt. Bitte aktualisiere ihn.',
