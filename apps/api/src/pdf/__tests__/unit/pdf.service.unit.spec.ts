@@ -4,35 +4,48 @@ import { ConfigService } from '../../../config/config.service';
 import { TemplateRendererService } from '../../template-renderer.service';
 
 // Mock Puppeteer module
-const mockBrowser = {
-  newPage: jest.fn().mockResolvedValue({
-    setContent: jest.fn(),
-    addStyleTag: jest.fn(),
-    setDefaultNavigationTimeout: jest.fn(),
-    setDefaultTimeout: jest.fn(),
-    pdf: jest.fn().mockResolvedValue(Buffer.from('%PDF-1.4\nMock PDF content')),
-    close: jest.fn(),
-  }),
-  close: jest.fn(),
-  isConnected: jest.fn().mockReturnValue(true),
-  process: jest.fn().mockReturnValue({ pid: 12345 }),
-};
-
 jest.mock('puppeteer', () => ({
-  launch: jest.fn().mockResolvedValue(mockBrowser),
+  launch: jest.fn().mockResolvedValue({
+    newPage: jest.fn().mockResolvedValue({
+      setContent: jest.fn(),
+      addStyleTag: jest.fn(),
+      setDefaultNavigationTimeout: jest.fn(),
+      setDefaultTimeout: jest.fn(),
+      pdf: jest.fn().mockResolvedValue(Buffer.from('%PDF-1.4\nMock PDF content')),
+      close: jest.fn(),
+    }),
+    close: jest.fn(),
+    isConnected: jest.fn().mockReturnValue(true),
+    process: jest.fn().mockReturnValue({ pid: 12345 }),
+  }),
 }));
 
 // Mock generic-pool
 jest.mock('generic-pool', () => ({
-  createPool: jest.fn().mockReturnValue({
-    acquire: jest.fn().mockResolvedValue(mockBrowser),
-    release: jest.fn().mockResolvedValue(undefined),
-    drain: jest.fn().mockResolvedValue(undefined),
-    clear: jest.fn().mockResolvedValue(undefined),
-    size: 1,
-    available: 1,
-    borrowed: 0,
-    pending: 0,
+  createPool: jest.fn((factory, opts) => {
+    // Simple pool mock that just calls factory methods directly
+    let browserInstance: any = null;
+
+    return {
+      acquire: jest.fn(async () => {
+        if (!browserInstance) {
+          browserInstance = await factory.create();
+        }
+        return browserInstance;
+      }),
+      release: jest.fn().mockResolvedValue(undefined),
+      drain: jest.fn(async () => {
+        if (browserInstance && factory.destroy) {
+          await factory.destroy(browserInstance);
+          browserInstance = null;
+        }
+      }),
+      clear: jest.fn().mockResolvedValue(undefined),
+      size: 1,
+      available: 1,
+      borrowed: 0,
+      pending: 0,
+    };
   }),
 }));
 
