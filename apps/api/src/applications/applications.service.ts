@@ -28,6 +28,12 @@ import { CoverLetterDto } from './dto/cover-letter.dto';
 import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
 import { TailoredProfileDto } from './dto/tailored-profile.dto';
 import { AtsKeywordsOutputDto } from '../keywords/dto/ats-keywords.dto';
+import { ErrorCode } from '../common/constants/error-codes';
+import {
+  BadRequestWithCode,
+  NotFoundWithCode,
+  ConflictWithCode,
+} from '../common/exceptions/coded-http.exception';
 import { buildResumeTemplateData, ProfileWithRelations } from './resume-template.util';
 import { sanitizeRichText } from '../common/services/html-sanitizer';
 
@@ -66,7 +72,7 @@ export class ApplicationsService {
     });
 
     if (!profile) {
-      throw new BadRequestException('Bitte vervollständige dein Profil, bevor du fortfährst');
+      throw new BadRequestWithCode(ErrorCode.PROFILE_INCOMPLETE);
     }
 
     return profile;
@@ -251,9 +257,7 @@ export class ApplicationsService {
       return JSON.parse(resumeText);
     } catch (error) {
       this.logger.error('Failed to parse stored resume JSON', error as Error);
-      throw new BadRequestException(
-        'Gespeicherter Lebenslauf ist beschädigt. Bitte aktualisieren.',
-      );
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_RESUME_CORRUPTED);
     }
   }
 
@@ -273,7 +277,7 @@ export class ApplicationsService {
     });
 
     if (!application) {
-      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
     return application;
@@ -567,7 +571,7 @@ Summary: ${resume.summary || 'Not provided'}
 
   private ensureNotGenerating(application: Application) {
     if (application.status === ApplicationStatus.GENERATING) {
-      throw new BadRequestException('Dokumente werden aktuell erstellt. Bitte warte einen Moment.');
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_GENERATING);
     }
   }
 
@@ -713,10 +717,7 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     if (existingApplication) {
-      throw new ConflictException(
-        'Du hast bereits eine Bewerbung für diese Stelle erstellt. ' +
-          'Bitte bearbeite die bestehende Bewerbung oder lösche sie zuerst.',
-      );
+      throw new ConflictWithCode(ErrorCode.APPLICATION_DUPLICATE);
     }
 
     // 3. Prefill resume data from profile
@@ -770,10 +771,7 @@ Summary: ${resume.summary || 'Not provided'}
     } catch (error) {
       // Handle Prisma unique constraint violation (defense in depth)
       if (error.code === 'P2002') {
-        throw new ConflictException(
-          'Du hast bereits eine Bewerbung für diese Stelle erstellt. ' +
-            'Bitte bearbeite die bestehende Bewerbung oder lösche sie zuerst.',
-        );
+        throw new ConflictWithCode(ErrorCode.APPLICATION_DUPLICATE);
       }
       throw error;
     }
@@ -866,9 +864,7 @@ Summary: ${resume.summary || 'Not provided'}
     } catch (error) {
       // Handle Prisma unique constraint violation (defense in depth)
       if (error.code === 'P2002') {
-        throw new ConflictException(
-          'Du hast bereits eine Bewerbung für diese Stelle erstellt.',
-        );
+        throw new ConflictWithCode(ErrorCode.APPLICATION_DUPLICATE);
       }
       throw error;
     }
@@ -997,7 +993,7 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     if (!application) {
-      throw new NotFoundException(`Application ${applicationId} not found`);
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
     const jobPosting = application.jobPosting;
@@ -1549,12 +1545,12 @@ Summary: ${resume.summary || 'Not provided'}
 
     const resume = this.parseResume(application.resumeText);
     if (!resume) {
-      throw new BadRequestException('Bitte speichere zuerst deinen Lebenslauf.');
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_RESUME);
     }
 
     const jobPosting = application.jobPosting;
     if (!jobPosting) {
-      throw new BadRequestException('Keine Stellenanzeige verknüpft.');
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_JOB);
     }
 
     let content = dto.content;
@@ -1627,7 +1623,7 @@ Summary: ${resume.summary || 'Not provided'}
 
     const resume = this.parseResume(application.resumeText);
     if (!resume) {
-      throw new BadRequestException('Lebenslauf fehlt. Bitte speichere deine Änderungen.');
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_RESUME);
     }
 
     // Cover letter is optional - user may have opted out during creation
@@ -1685,7 +1681,7 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     if (!application) {
-      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
     return this.mapToResponseDto(application);
@@ -1746,7 +1742,7 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     if (!application) {
-      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
     if (application.status !== 'READY') {
@@ -1805,7 +1801,7 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     if (!application) {
-      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
     if (application.status !== 'READY') {
@@ -1818,7 +1814,7 @@ Summary: ${resume.summary || 'Not provided'}
       fileType === 'cover-letter' ? application.coverLetterFileKey : application.resumeFileKey;
 
     if (!fileKey) {
-      throw new BadRequestException(`${fileType} file not found`);
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
     // Get file from storage
@@ -1840,7 +1836,7 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     if (!application) {
-      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
     await this.cleanupGeneratedFiles(application);
@@ -1922,7 +1918,7 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     if (!application) {
-      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
     return {
@@ -2001,7 +1997,7 @@ Summary: ${resume.summary || 'Not provided'}
 
         if (!application) {
           this.logger.error(`SSE stream error: Application ${applicationId} not found`);
-          throw new NotFoundException(`Application with ID ${applicationId} not found`);
+          throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
         }
 
         this.logger.debug(`SSE emit: application ${applicationId} status=${application.status}`);
@@ -2146,7 +2142,7 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     if (!application) {
-      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
     if (!application.jobPosting) {
