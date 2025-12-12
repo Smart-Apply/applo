@@ -418,6 +418,11 @@ export const api = {
         body: JSON.stringify({ title }),
       }),
 
+    regenerate: (id: string) =>
+      apiRequest<Application>(`/applications/${id}/regenerate`, {
+        method: 'POST',
+      }),
+
     // ATS Keywords endpoints
     analyzeKeywords: (id: string) =>
       apiRequest<ApplicationKeywordsResponse>(`/applications/${id}/analyze-keywords`, {
