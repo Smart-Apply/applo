@@ -38,15 +38,21 @@ async function seedTemplates() {
   const coverLetterHTML = readTemplateFile('cover-letter-ats.hbs');
   const resumeHTML = readTemplateFile('resume-ats.hbs');
   
+  // Read two-column template files (Creative/Design focused)
+  const coverLetterModernMinimalHTML = readTemplateFile('cover-letter-modern-minimal.hbs');
+  const resumeTwoColumnHTML = readTemplateFile('resume-two-column.hbs');
+  
+  // Read Modern Clean multilingual template (German-style)
+  const resumeModernCleanHTML = readTemplateFile('resume-modern-clean.hbs');
+  
   // Read CSS files for different styles
   const modernProfessionalCSS = readCSSFile('modern-professional.css');
   const elegantMinimalCSS = readCSSFile('elegant-minimal.css');
   const techModernCSS = readCSSFile('tech-modern.css');
   const executiveClassicCSS = readCSSFile('executive-classic.css');
-  
-  // Legacy CSS for fallback
-  const baseCoverLetterCSS = readCombinedCSS(['base.css', 'cover-letter.css']);
-  const baseResumeCSS = readCombinedCSS(['base.css', 'resume.css']);
+  const harvardClassicCSS = readCSSFile('harvard-classic.css');
+  const modernMinimalTwoColumnCSS = readCSSFile('modern-minimal-two-column.css');
+  const modernCleanCSS = readCSSFile('modern-clean.css');
 
   // ==================================================
   // COVER LETTER TEMPLATES
@@ -132,7 +138,27 @@ async function seedTemplates() {
     },
   });
 
-  console.log('✅ Created 4 cover letter templates');
+  // 5. Harvard Classic Cover Letter
+  await prisma.template.upsert({
+    where: { id: 'harvard-classic-cover-letter' },
+    update: {
+      htmlTemplate: coverLetterHTML,
+      cssStyles: harvardClassicCSS,
+    },
+    create: {
+      id: 'harvard-classic-cover-letter',
+      name: 'Harvard Classic',
+      description: 'Traditional academic design with serif typography. Perfect for academia, research, and consulting roles.',
+      type: TemplateType.COVER_LETTER,
+      category: 'Academic',
+      htmlTemplate: coverLetterHTML,
+      cssStyles: harvardClassicCSS,
+      isActive: true,
+      isDefault: false,
+    },
+  });
+
+  console.log('✅ Created 5 cover letter templates');
 
   // ==================================================
   // RESUME TEMPLATES
@@ -218,7 +244,120 @@ async function seedTemplates() {
     },
   });
 
-  console.log('✅ Created 4 resume templates');
+  // 9. Harvard Classic Resume
+  await prisma.template.upsert({
+    where: { id: 'harvard-classic-resume' },
+    update: {
+      htmlTemplate: resumeHTML,
+      cssStyles: harvardClassicCSS,
+    },
+    create: {
+      id: 'harvard-classic-resume',
+      name: 'Harvard Classic',
+      description: 'Traditional academic design with Times New Roman. Ideal for academia, research, law, and consulting.',
+      type: TemplateType.RESUME,
+      category: 'Academic',
+      htmlTemplate: resumeHTML,
+      cssStyles: harvardClassicCSS,
+      isActive: true,
+      isDefault: false,
+    },
+  });
+
+  console.log('✅ Created 5 resume templates');
+
+  // ==================================================
+  // TWO-COLUMN TEMPLATES (Creative/Design Industries)
+  // WARNING: Not ATS-compatible - for direct submissions only
+  // ==================================================
+
+  // Modern Minimal Two-Column Cover Letter
+  await prisma.template.upsert({
+    where: { id: 'modern-minimal-two-column-cover-letter' },
+    update: {
+      htmlTemplate: coverLetterModernMinimalHTML,
+      cssStyles: modernMinimalTwoColumnCSS,
+    },
+    create: {
+      id: 'modern-minimal-two-column-cover-letter',
+      name: 'Modern Minimal',
+      description: '⚠️ NOT ATS-COMPATIBLE. Clean, modern design for creative industries. Use only for direct submissions.',
+      type: TemplateType.COVER_LETTER,
+      category: 'Creative',
+      htmlTemplate: coverLetterModernMinimalHTML,
+      cssStyles: modernMinimalTwoColumnCSS,
+      isActive: true,
+      isDefault: false,
+    },
+  });
+
+  // Modern Minimal Two-Column Resume
+  await prisma.template.upsert({
+    where: { id: 'modern-minimal-two-column-resume' },
+    update: {
+      htmlTemplate: resumeTwoColumnHTML,
+      cssStyles: modernMinimalTwoColumnCSS,
+    },
+    create: {
+      id: 'modern-minimal-two-column-resume',
+      name: 'Modern Minimal Two-Column',
+      description: '⚠️ NOT ATS-COMPATIBLE. Stylish two-column layout for designers, creatives, and direct submissions.',
+      type: TemplateType.RESUME,
+      category: 'Creative',
+      htmlTemplate: resumeTwoColumnHTML,
+      cssStyles: modernMinimalTwoColumnCSS,
+      isActive: true,
+      isDefault: false,
+    },
+  });
+
+  console.log('✅ Created 2 two-column templates (Creative)');
+
+  // ==================================================
+  // MULTILINGUAL TEMPLATES (German-style)
+  // ==================================================
+
+  // Modern Clean Resume (Multilingual - German Style)
+  await prisma.template.upsert({
+    where: { id: 'modern-clean-resume' },
+    update: {
+      htmlTemplate: resumeModernCleanHTML,
+      cssStyles: modernCleanCSS,
+    },
+    create: {
+      id: 'modern-clean-resume',
+      name: 'Modern Clean',
+      description: 'Clean single-column design inspired by German resume aesthetics. Supports multilingual content with translations object.',
+      type: TemplateType.RESUME,
+      category: 'Professional',
+      htmlTemplate: resumeModernCleanHTML,
+      cssStyles: modernCleanCSS,
+      isActive: true,
+      isDefault: false,
+    },
+  });
+
+  // Modern Clean Cover Letter (uses standard ATS template with Modern Clean styling)
+  await prisma.template.upsert({
+    where: { id: 'modern-clean-cover-letter' },
+    update: {
+      htmlTemplate: coverLetterHTML,
+      cssStyles: modernCleanCSS,
+    },
+    create: {
+      id: 'modern-clean-cover-letter',
+      name: 'Modern Clean',
+      description: 'Clean, minimalist cover letter design. Pairs well with Modern Clean Resume template.',
+      type: TemplateType.COVER_LETTER,
+      category: 'Professional',
+      htmlTemplate: coverLetterHTML,
+      cssStyles: modernCleanCSS,
+      isActive: true,
+      isDefault: false,
+    },
+  });
+
+  console.log('✅ Created 2 Modern Clean templates (Multilingual)');
 
   // Delete old templates that are no longer needed
   await prisma.template.deleteMany({

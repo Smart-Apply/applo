@@ -5,211 +5,279 @@ import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
-// Supported languages
-const LANGUAGES = ['de', 'en', 'fr', 'es', 'it'] as const;
-type Language = typeof LANGUAGES[number];
+// =============================================================================
+// DYNAMIC TEMPLATE DISCOVERY
+// =============================================================================
+// This seed script automatically discovers available templates and CSS files.
+// To add a new template:
+// 1. Create CSS file in src/pdf/styles/<name>.css
+// 2. Optionally create custom HBS in src/pdf/templates/<name>.hbs
+// 3. Add entry to TEMPLATE_CONFIGS below
+// =============================================================================
 
-// Template designs (categories)
-const TEMPLATE_DESIGNS = [
+interface TemplateConfig {
+  id: string;                    // Unique identifier (e.g., 'modern-professional')
+  name: string;                  // Display name
+  description: string;           // Description for users
+  category: string;              // Category (Professional, Minimal, etc.)
+  cssFile: string;               // CSS filename (e.g., 'modern-professional.css')
+  resumeHbs?: string;            // Optional: Custom resume HBS (defaults to 'resume-ats.hbs')
+  coverLetterHbs?: string;       // Optional: Custom cover letter HBS (defaults to 'cover-letter-ats.hbs')
+  isDefault?: boolean;           // Is this the default template?
+  isAtsOptimized?: boolean;      // ATS-friendly design (default: true)
+}
+
+// Template configurations - add new templates here
+const TEMPLATE_CONFIGS: TemplateConfig[] = [
   {
+    id: 'modern-professional',
+    name: 'Modern Professional',
+    description: 'Clean design with navy blue accents. ATS-optimized for corporate roles.',
     category: 'Professional',
-    name: { en: 'Modern Professional', de: 'Modern Professionell', fr: 'Professionnel Moderne', es: 'Profesional Moderno', it: 'Professionale Moderno' },
-    description: {
-      en: 'Clean design with navy blue accents. Perfect for corporate and professional roles.',
-      de: 'Sauberes Design mit marineblauen Akzenten. Perfekt für Unternehmens- und professionelle Rollen.',
-      fr: 'Design épuré avec des accents bleu marine. Parfait pour les rôles professionnels et d\'entreprise.',
-      es: 'Diseño limpio con acentos azul marino. Perfecto para roles corporativos y profesionales.',
-      it: 'Design pulito con accenti blu navy. Perfetto per ruoli aziendali e professionali.',
-    },
-    styleFolder: 'modern-professional',
+    cssFile: 'modern-professional.css',
     isDefault: true,
+    isAtsOptimized: true,
   },
   {
+    id: 'elegant-minimal',
+    name: 'Elegant Minimal',
+    description: 'Sophisticated, understated design with elegant typography.',
     category: 'Minimal',
-    name: { en: 'Elegant Minimal', de: 'Elegant Minimalistisch', fr: 'Minimaliste Élégant', es: 'Minimalista Elegante', it: 'Minimalista Elegante' },
-    description: {
-      en: 'Sophisticated, understated design with elegant typography and whitespace.',
-      de: 'Raffiniertes, dezentes Design mit eleganter Typografie und Weißraum.',
-      fr: 'Design sophistiqué et discret avec typographie élégante et espaces blancs.',
-      es: 'Diseño sofisticado y discreto con tipografía elegante y espacios en blanco.',
-      it: 'Design sofisticato e discreto con tipografia elegante e spazi bianchi.',
-    },
-    styleFolder: 'elegant-minimal',
-    isDefault: false,
+    cssFile: 'elegant-minimal.css',
+    isAtsOptimized: true,
   },
   {
+    id: 'tech-modern',
+    name: 'Tech Modern',
+    description: 'Developer-focused design with subtle tech aesthetics.',
     category: 'Technical',
-    name: { en: 'Tech Modern', de: 'Tech Modern', fr: 'Tech Moderne', es: 'Tech Moderno', it: 'Tech Moderno' },
-    description: {
-      en: 'Developer-focused design with subtle tech aesthetics. Great for software roles.',
-      de: 'Entwicklerorientiertes Design mit subtiler Tech-Ästhetik. Ideal für Software-Rollen.',
-      fr: 'Design axé sur les développeurs avec une esthétique tech subtile. Idéal pour les rôles logiciels.',
-      es: 'Diseño centrado en desarrolladores con estética tecnológica sutil. Ideal para roles de software.',
-      it: 'Design incentrato sugli sviluppatori con estetica tech sottile. Ideale per ruoli software.',
-    },
-    styleFolder: 'tech-modern',
-    isDefault: false,
+    cssFile: 'tech-modern.css',
+    isAtsOptimized: true,
   },
   {
+    id: 'executive-classic',
+    name: 'Executive Classic',
+    description: 'Traditional serif design for senior and executive positions.',
     category: 'Executive',
-    name: { en: 'Executive Classic', de: 'Exekutiv Klassisch', fr: 'Classique Exécutif', es: 'Clásico Ejecutivo', it: 'Classico Esecutivo' },
-    description: {
-      en: 'Traditional, authoritative design for senior and executive positions.',
-      de: 'Traditionelles, autoritäres Design für leitende und exekutive Positionen.',
-      fr: 'Design traditionnel et autoritaire pour les postes de direction et exécutifs.',
-      es: 'Diseño tradicional y autoritario para puestos directivos y ejecutivos.',
-      it: 'Design tradizionale e autorevole per posizioni dirigenziali ed esecutive.',
-    },
-    styleFolder: 'executive-classic',
-    isDefault: false,
+    cssFile: 'executive-classic.css',
+    isAtsOptimized: true,
   },
   {
-    category: 'Sidebar',
-    name: { en: 'Sidebar Profile', de: 'Seitenleiste Profil', fr: 'Profil Sidebar', es: 'Perfil Lateral', it: 'Profilo Sidebar' },
-    description: {
-      en: 'Two-column layout with dark sidebar and profile photo. Modern and professional.',
-      de: 'Zweispaltiges Layout mit dunkler Seitenleiste und Profilbild. Modern und professionell.',
-      fr: 'Mise en page à deux colonnes avec barre latérale sombre et photo de profil. Moderne et professionnel.',
-      es: 'Diseño de dos columnas con barra lateral oscura y foto de perfil. Moderno y profesional.',
-      it: 'Layout a due colonne con sidebar scura e foto profilo. Moderno e professionale.',
-    },
-    styleFolder: 'sidebar-profile',
-    isDefault: false,
+    id: 'harvard-classic',
+    name: 'Harvard Classic',
+    description: 'Academic style with Times New Roman, inspired by Ivy League formats.',
+    category: 'Academic',
+    cssFile: 'harvard-classic.css',
+    isAtsOptimized: true,
+  },
+  {
+    id: 'modern-minimal-two-column',
+    name: 'Modern Minimal Two-Column',
+    description: 'Creative two-column layout with sidebar. Not ATS-optimized.',
+    category: 'Creative',
+    cssFile: 'modern-minimal-two-column.css',
+    resumeHbs: 'resume-two-column.hbs',
+    coverLetterHbs: 'cover-letter-modern-minimal.hbs',
+    isAtsOptimized: false,
+  },
+  {
+    id: 'modern-clean',
+    name: 'Modern Clean',
+    description: 'German-style clean design with multilingual support.',
+    category: 'Professional',
+    cssFile: 'modern-clean.css',
+    resumeHbs: 'resume-modern-clean.hbs',
+    isAtsOptimized: true,
   },
 ];
 
-// Helper function to read template files
-function readTemplateFile(filename: string): string {
-  // Find the project root by looking for src directory
-  // Works both when running from prisma/ (dev) and prisma/dist/ (compiled)
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+function getBasePath(): string {
   let basePath = __dirname;
-  
-  // If we're in dist folder, go up one more level
   if (basePath.endsWith('dist')) {
     basePath = path.join(basePath, '..');
   }
-  
-  // Now resolve relative to apps/api root (two levels up from prisma/)
-  const filePath = path.join(basePath, '..', 'src', 'pdf', 'templates', filename);
+  return basePath;
+}
+
+function getTemplatesDir(): string {
+  return path.join(getBasePath(), '..', 'src', 'pdf', 'templates');
+}
+
+function getStylesDir(): string {
+  return path.join(getBasePath(), '..', 'src', 'pdf', 'styles');
+}
+
+function fileExists(filePath: string): boolean {
+  return fs.existsSync(filePath);
+}
+
+function readFileIfExists(filePath: string): string | null {
+  if (fileExists(filePath)) {
+    return fs.readFileSync(filePath, 'utf-8');
+  }
+  return null;
+}
+
+function readFileOrThrow(filePath: string, description: string): string {
+  if (!fileExists(filePath)) {
+    throw new Error(`Required file not found: ${filePath} (${description})`);
+  }
   return fs.readFileSync(filePath, 'utf-8');
 }
 
-// Helper function to read CSS file from language-specific folder
-function readCSSFile(styleFolder: string, language: Language): string {
-  // Find the project root
-  let basePath = __dirname;
-  
-  // If we're in dist folder, go up one more level
-  if (basePath.endsWith('dist')) {
-    basePath = path.join(basePath, '..');
-  }
-  
-  const filePath = path.join(basePath, '..', 'src', 'pdf', 'styles', styleFolder, `${language}.css`);
-  if (fs.existsSync(filePath)) {
-    return fs.readFileSync(filePath, 'utf-8');
-  }
-  // Fallback to English if language-specific CSS not found
-  const fallbackPath = path.join(basePath, '..', 'src', 'pdf', 'styles', styleFolder, 'en.css');
-  console.warn(`CSS file not found for ${styleFolder}/${language}.css, using fallback: en.css`);
-  return fs.readFileSync(fallbackPath, 'utf-8');
-}
+// =============================================================================
+// DYNAMIC TEMPLATE SEEDING
+// =============================================================================
 
-async function seedMultilingualTemplates() {
-  console.log('🎨 Seeding multilingual templates...');
+async function seedDynamicTemplates() {
+  console.log('🎨 Seeding templates dynamically...\n');
 
-  // Read HTML templates (shared across all languages)
-  const coverLetterHTML = readTemplateFile('cover-letter-ats.hbs');
-  const resumeHTML = readTemplateFile('resume-ats.hbs');
-  const sidebarResumeHTML = readTemplateFile('sidebar-profile-resume.hbs');
+  const templatesDir = getTemplatesDir();
+  const stylesDir = getStylesDir();
+
+  console.log(`📁 Templates directory: ${templatesDir}`);
+  console.log(`📁 Styles directory: ${stylesDir}\n`);
+
+  // Default HBS templates (fallbacks)
+  const defaultResumeHbs = 'resume-ats.hbs';
+  const defaultCoverLetterHbs = 'cover-letter-ats.hbs';
+
+  // Read default templates
+  const defaultResumeHTML = readFileOrThrow(
+    path.join(templatesDir, defaultResumeHbs),
+    'Default resume template'
+  );
+  const defaultCoverLetterHTML = readFileOrThrow(
+    path.join(templatesDir, defaultCoverLetterHbs),
+    'Default cover letter template'
+  );
 
   let totalCreated = 0;
+  let skipped = 0;
 
-  // ==================================================
-  // SEED TEMPLATES FOR EACH DESIGN AND LANGUAGE
-  // ==================================================
+  for (const config of TEMPLATE_CONFIGS) {
+    const cssPath = path.join(stylesDir, config.cssFile);
+    
+    // Check if CSS file exists
+    if (!fileExists(cssPath)) {
+      console.log(`⚠️  Skipping "${config.name}": CSS file not found (${config.cssFile})`);
+      skipped++;
+      continue;
+    }
 
-  for (const design of TEMPLATE_DESIGNS) {
-    // Generate separate base template IDs for each type (Cover Letter and Resume)
+    const cssStyles = fs.readFileSync(cssPath, 'utf-8');
+
+    // Get resume HTML (custom or default)
+    let resumeHTML = defaultResumeHTML;
+    if (config.resumeHbs) {
+      const customResumePath = path.join(templatesDir, config.resumeHbs);
+      const customResumeHTML = readFileIfExists(customResumePath);
+      if (customResumeHTML) {
+        resumeHTML = customResumeHTML;
+        console.log(`   📄 Using custom resume HBS: ${config.resumeHbs}`);
+      } else {
+        console.log(`   ⚠️  Custom resume HBS not found (${config.resumeHbs}), using default`);
+      }
+    }
+
+    // Get cover letter HTML (custom or default)
+    let coverLetterHTML = defaultCoverLetterHTML;
+    if (config.coverLetterHbs) {
+      const customCoverLetterPath = path.join(templatesDir, config.coverLetterHbs);
+      const customCoverLetterHTML = readFileIfExists(customCoverLetterPath);
+      if (customCoverLetterHTML) {
+        coverLetterHTML = customCoverLetterHTML;
+        console.log(`   📄 Using custom cover letter HBS: ${config.coverLetterHbs}`);
+      } else {
+        console.log(`   ⚠️  Custom cover letter HBS not found (${config.coverLetterHbs}), using default`);
+      }
+    }
+
+    // Generate unique base IDs for this design
     const coverLetterBaseId = uuidv4();
     const resumeBaseId = uuidv4();
 
-    console.log(`\n📁 Creating templates for design: ${design.category}`);
+    console.log(`\n✨ Creating "${config.name}" (${config.category}):`);
 
-    for (const language of LANGUAGES) {
-      const cssStyles = readCSSFile(design.styleFolder, language);
-      
-      // Use special HTML template for Sidebar design
-      const currentResumeHTML = design.category === 'Sidebar' ? sidebarResumeHTML : resumeHTML;
+    // 1. Create Resume Template
+    const resumeId = `${config.id}-resume`;
+    await prisma.template.upsert({
+      where: { id: resumeId },
+      update: {
+        htmlTemplate: resumeHTML,
+        cssStyles: cssStyles,
+        name: config.name,
+        description: config.description,
+        category: config.category,
+        baseTemplateId: resumeBaseId,
+      },
+      create: {
+        id: resumeId,
+        name: config.name,
+        description: config.description,
+        type: TemplateType.RESUME,
+        category: config.category,
+        baseTemplateId: resumeBaseId,
+        htmlTemplate: resumeHTML,
+        cssStyles: cssStyles,
+        isActive: true,
+        isDefault: config.isDefault ?? false,
+      },
+    });
+    console.log(`   ✓ Resume: ${resumeId}`);
+    totalCreated++;
 
-      // 1. Cover Letter Template
-      const coverLetterId = `${design.category.toLowerCase()}-cover-letter-${language}`;
-      await prisma.template.upsert({
-        where: { id: coverLetterId },
-        update: {
-          htmlTemplate: coverLetterHTML,
-          cssStyles: cssStyles,
-          name: design.name[language],
-          description: design.description[language],
-          language,
-          baseTemplateId: coverLetterBaseId,
-        },
-        create: {
-          id: coverLetterId,
-          name: design.name[language],
-          description: design.description[language],
-          type: TemplateType.COVER_LETTER,
-          category: design.category,
-          language,
-          baseTemplateId: coverLetterBaseId,
-          htmlTemplate: coverLetterHTML,
-          cssStyles: cssStyles,
-          isActive: true,
-          isDefault: design.isDefault && language === 'en', // Only English variant is default
-        },
-      });
-      totalCreated++;
-
-      // 2. Resume Template
-      const resumeId = `${design.category.toLowerCase()}-resume-${language}`;
-      await prisma.template.upsert({
-        where: { id: resumeId },
-        update: {
-          htmlTemplate: currentResumeHTML,
-          cssStyles: cssStyles,
-          name: design.name[language],
-          description: design.description[language],
-          language,
-          baseTemplateId: resumeBaseId,
-        },
-        create: {
-          id: resumeId,
-          name: design.name[language],
-          description: design.description[language],
-          type: TemplateType.RESUME,
-          category: design.category,
-          language,
-          baseTemplateId: resumeBaseId,
-          htmlTemplate: currentResumeHTML,
-          cssStyles: cssStyles,
-          isActive: true,
-          isDefault: design.isDefault && language === 'en', // Only English variant is default
-        },
-      });
-      totalCreated++;
-
-      console.log(`  ✓ Created ${language.toUpperCase()} templates for ${design.category}`);
-    }
+    // 2. Create Cover Letter Template
+    const coverLetterId = `${config.id}-cover-letter`;
+    await prisma.template.upsert({
+      where: { id: coverLetterId },
+      update: {
+        htmlTemplate: coverLetterHTML,
+        cssStyles: cssStyles,
+        name: config.name,
+        description: config.description,
+        category: config.category,
+        baseTemplateId: coverLetterBaseId,
+      },
+      create: {
+        id: coverLetterId,
+        name: config.name,
+        description: config.description,
+        type: TemplateType.COVER_LETTER,
+        category: config.category,
+        baseTemplateId: coverLetterBaseId,
+        htmlTemplate: coverLetterHTML,
+        cssStyles: cssStyles,
+        isActive: true,
+        isDefault: config.isDefault ?? false,
+      },
+    });
+    console.log(`   ✓ Cover Letter: ${coverLetterId}`);
+    totalCreated++;
   }
 
-  console.log(`\n✅ Successfully created ${totalCreated} templates (${TEMPLATE_DESIGNS.length} designs × ${LANGUAGES.length} languages × 2 types)`);
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`✅ Created: ${totalCreated} templates (${totalCreated / 2} designs × 2 types)`);
+  if (skipped > 0) {
+    console.log(`⚠️  Skipped: ${skipped} templates (missing CSS files)`);
+  }
+  console.log(`${'='.repeat(60)}`);
 }
 
-seedMultilingualTemplates()
+// =============================================================================
+// MAIN EXECUTION
+// =============================================================================
+
+seedDynamicTemplates()
   .then(() => {
-    console.log('🎉 Multilingual template seeding completed!');
+    console.log('\n🎉 Template seeding completed!');
   })
   .catch((error) => {
-    console.error('❌ Error seeding multilingual templates:', error);
+    console.error('❌ Error seeding templates:', error);
     process.exit(1);
   })
   .finally(async () => {
