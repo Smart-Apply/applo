@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import type { Application } from '@prisma/client';
 import { ApplicationTrackingStatus } from '@prisma/client';
-import { Observable, interval } from 'rxjs';
+import { Observable, timer } from 'rxjs';
 import { map, switchMap, takeWhile } from 'rxjs/operators';
 import { PrismaService } from '../prisma/prisma.service';
 import { JobsService } from '../jobs/jobs.service';
@@ -2123,7 +2123,7 @@ Summary: ${resume.summary || 'Not provided'}
 
   /**
    * Stream real-time status updates for an application via Server-Sent Events (SSE)
-   * Polls the database every 2 seconds and streams updates until application reaches a final state
+   * Polls the database every second and streams updates until application reaches a final state
    * @param userId - User ID (for authorization)
    * @param applicationId - Application ID to stream status for
    * @returns Observable that emits SSE MessageEvents with status updates
@@ -2144,8 +2144,9 @@ Summary: ${resume.summary || 'Not provided'}
       lastMessage = message;
     });
 
-    // Create SSE stream that polls status every 2 seconds
-    return interval(2000).pipe(
+    // Create SSE stream that polls status every second
+    // Using timer(0, 1000) to emit immediately on connect, then every 1 second
+    return timer(0, 1000).pipe(
       // Fetch latest application status
       switchMap(async () => {
         const application = await this.prisma.application.findFirst({
