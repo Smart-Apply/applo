@@ -68,8 +68,8 @@ const envSchema = z.object({
   PUPPETEER_EXECUTABLE_PATH: z.string().optional(),
   PUPPETEER_MAX_BROWSERS: z.string().default('5'), // Maximum concurrent browser instances
   PUPPETEER_MIN_BROWSERS: z.string().default('1'), // Minimum browser instances to keep alive
-  PUPPETEER_IDLE_TIMEOUT_MS: z.string().default('30000'), // Close idle browsers after 30s
-  PUPPETEER_EVICTION_INTERVAL_MS: z.string().default('10000'), // Check for idle browsers every 10s
+  PUPPETEER_IDLE_TIMEOUT_MS: z.string().default('300000'), // Close idle browsers after 5 minutes
+  PUPPETEER_EVICTION_INTERVAL_MS: z.string().default('60000'), // Check for idle browsers every 60s
 
   // File Upload
   MAX_FILE_SIZE_MB: z.string().default('10'),
