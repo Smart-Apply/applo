@@ -26,7 +26,14 @@ import { ConfigModule } from '../config/config.module';
     ConfigModule,
   ],
   controllers: [AuthController, SessionsController],
-  providers: [AuthService, SessionService, SessionCleanupCron, JwtStrategy, PrismaService, ConfigService],
+  providers: [
+    AuthService,
+    SessionService,
+    SessionCleanupCron,
+    JwtStrategy,
+    PrismaService,
+    ConfigService,
+  ],
   exports: [AuthService, SessionService, JwtModule],
 })
 export class AuthModule {}

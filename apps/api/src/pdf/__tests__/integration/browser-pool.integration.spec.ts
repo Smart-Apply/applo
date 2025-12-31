@@ -48,7 +48,7 @@ describe('PdfService - Browser Pool Integration', () => {
   describe('Concurrent PDF Generation', () => {
     it('should handle concurrent PDF generation requests', async () => {
       const html = '<html><body><h1>Test Document</h1><p>Content</p></body></html>';
-      
+
       // Generate 10 PDFs concurrently (pool max is 3, so some will queue)
       const promises = Array.from({ length: 10 }, (_, i) => {
         return service.generatePDF(`${html} <!-- Request ${i} -->`, {
@@ -69,7 +69,7 @@ describe('PdfService - Browser Pool Integration', () => {
 
     it('should reuse browsers from the pool', async () => {
       const html = '<html><body><h1>Test</h1></body></html>';
-      
+
       // Generate PDFs sequentially
       const pdf1 = await service.generatePDF(html);
       const pdf2 = await service.generatePDF(html);
@@ -83,7 +83,7 @@ describe('PdfService - Browser Pool Integration', () => {
 
     it('should handle errors gracefully without breaking the pool', async () => {
       const validHtml = '<html><body><h1>Valid</h1></body></html>';
-      
+
       // Generate a valid PDF first
       const pdf1 = await service.generatePDF(validHtml);
       expect(pdf1).toBeInstanceOf(Buffer);

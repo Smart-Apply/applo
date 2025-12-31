@@ -33,7 +33,8 @@ describe('JobPostingsService', () => {
     title: 'Senior Software Engineer',
     company: 'Google',
     location: 'Remote, USA',
-    fullText: 'We are looking for a talented Senior Software Engineer with 5+ years of experience and strong knowledge of Java. Docker and Kubernetes experience required. React and TypeScript skills are essential. GraphQL knowledge is a plus.',
+    fullText:
+      'We are looking for a talented Senior Software Engineer with 5+ years of experience and strong knowledge of Java. Docker and Kubernetes experience required. React and TypeScript skills are essential. GraphQL knowledge is a plus.',
     rawText: 'Full job posting text',
     sourceUrl: null,
     fileId: null,

@@ -97,7 +97,9 @@ async function bootstrap() {
         level: 6, // Balance between compression speed and ratio (0-9, where 6 is good default)
       }),
     );
-    logger.log('🗜️  Response compression enabled (gzip, level 6, threshold: 1KB, excludes /download/)');
+    logger.log(
+      '🗜️  Response compression enabled (gzip, level 6, threshold: 1KB, excludes /download/)',
+    );
   } else {
     logger.warn('⚠️  Response compression disabled (set ENABLE_COMPRESSION=true to enable)');
   }
@@ -154,7 +156,7 @@ async function bootstrap() {
   // Example: CORS_ORIGINS=https://smartapply.azurewebsites.net,https://www.smartapply.com
   const corsOrigins = configService.corsOrigins;
   logger.log(`🌐 CORS enabled for origins: ${JSON.stringify(corsOrigins)}`);
-  
+
   app.enableCors({
     origin: corsOrigins,
     credentials: true,

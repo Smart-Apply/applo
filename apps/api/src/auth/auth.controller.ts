@@ -16,7 +16,13 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto, UpdateUserProfileDto, ChangePasswordDto, DeleteAccountDto } from './dto';
+import {
+  RegisterDto,
+  LoginDto,
+  UpdateUserProfileDto,
+  ChangePasswordDto,
+  DeleteAccountDto,
+} from './dto';
 import { Public } from '../common/decorators/public.decorator';
 import { UseThrottler } from '../common/decorators/throttle.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';

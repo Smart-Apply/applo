@@ -47,19 +47,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // Extract detailed validation errors if available
     let message: any;
     let errors: any;
-    let additionalData: any = {};
+    const additionalData: any = {};
 
     if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
       // Extract error code (either from coded exception or custom code field)
       errorCode = (exceptionResponse as any).code || errorCode;
-      
+
       // Get message - prefer custom message, fallback to code-based message
       const customMessage = (exceptionResponse as any).message;
       message = customMessage || (errorCode ? getErrorMessage(errorCode) : exceptionResponse);
-      
+
       // Extract validation errors
       errors = (exceptionResponse as any).errors;
-      
+
       // Extract any additional metadata (e.g., applicationId for conflict errors)
       if (exception instanceof HttpException) {
         const exceptionObj = exception as any;
@@ -96,7 +96,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     const timestamp = new Date().toISOString();
-    
+
     const errorResponse = {
       statusCode: status,
       message,

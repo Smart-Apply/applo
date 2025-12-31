@@ -83,7 +83,10 @@ export class ChangePasswordDto {
 }
 
 export class DeleteAccountDto {
-  @ApiProperty({ example: 'SecurePass123!', description: 'Password confirmation for account deletion' })
+  @ApiProperty({
+    example: 'SecurePass123!',
+    description: 'Password confirmation for account deletion',
+  })
   @IsString()
   @IsNotEmpty({ message: 'Password is required to delete account' })
   password: string;

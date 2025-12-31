@@ -29,14 +29,12 @@ describe('Settings Endpoints (e2e)', () => {
 
     // Register a test user
     testEmail = `settings-test-${Date.now()}@example.com`;
-    const registerResponse = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        email: testEmail,
-        password: testPassword,
-        firstName: 'Test',
-        lastName: 'User',
-      });
+    const registerResponse = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
+      email: testEmail,
+      password: testPassword,
+      firstName: 'Test',
+      lastName: 'User',
+    });
 
     const setCookie = registerResponse.headers['set-cookie'];
     authCookies = Array.isArray(setCookie) ? setCookie : [setCookie];
@@ -222,9 +220,7 @@ describe('Settings Endpoints (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .get('/api/v1/user-preferences')
-        .expect(401);
+      await request(app.getHttpServer()).get('/api/v1/user-preferences').expect(401);
     });
   });
 

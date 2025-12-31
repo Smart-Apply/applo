@@ -25,7 +25,7 @@ jest.mock('mammoth', () => {
       value: 'Default DOCX content for testing with enough characters to pass validation',
     });
   });
-  
+
   return {
     default: { extractRawText },
     extractRawText,

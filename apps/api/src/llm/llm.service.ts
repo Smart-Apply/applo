@@ -42,9 +42,7 @@ export class LLMService {
     });
 
     this.circuitBreaker.on('close', () => {
-      this.logger.log(
-        '🟢 Circuit breaker CLOSED - LLM provider recovered and accepting requests.',
-      );
+      this.logger.log('🟢 Circuit breaker CLOSED - LLM provider recovered and accepting requests.');
     });
 
     this.circuitBreaker.on('timeout', () => {
@@ -94,7 +92,6 @@ export class LLMService {
       throw error;
     }
   }
-
 
   async generateCoverLetter(context: CoverLetterContext): Promise<string> {
     const template = await this.loadTemplate('cover-letter.md');

@@ -1,4 +1,10 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, StreamableFile } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+  StreamableFile,
+} from '@nestjs/common';
 import { Observable, isObservable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -22,7 +28,7 @@ function isMessageEvent(data: any): boolean {
 
 /**
  * TransformInterceptor - Standardizes all API responses
- * 
+ *
  * Wraps controller responses in a consistent format:
  * {
  *   data: <controller response>,
@@ -30,10 +36,10 @@ function isMessageEvent(data: any): boolean {
  *     timestamp: ISO 8601 timestamp
  *   }
  * }
- * 
+ *
  * This interceptor is applied globally to all endpoints.
  * Errors are handled separately by AllExceptionsFilter.
- * 
+ *
  * Note: StreamableFile responses (binary file downloads) and SSE MessageEvents
  * are passed through without transformation to preserve their format.
  */
@@ -43,7 +49,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, any> {
     // Check if this is an SSE endpoint by looking at response headers
     const response = context.switchToHttp().getResponse();
     const contentType = response.getHeader?.('Content-Type');
-    
+
     // SSE endpoints set Content-Type: text/event-stream - skip transformation
     if (contentType && String(contentType).includes('text/event-stream')) {
       return next.handle();

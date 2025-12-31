@@ -43,18 +43,22 @@ export class TemplatesService {
    */
   async findAll(type?: TemplateType): Promise<TemplateResponseDto[]> {
     const cacheKey = `templates:all:${type || 'all'}`;
-    
+
     // Check cache first (use !== undefined to properly handle null cached values)
     const cached = this.cache.get<TemplateResponseDto[]>(cacheKey);
     if (cached !== undefined) {
       this.cacheStats.hits++;
-      this.logger.debug(`Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+      this.logger.debug(
+        `Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+      );
       return cached;
     }
 
     // Cache miss - fetch from database
     this.cacheStats.misses++;
-    this.logger.debug(`Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+    this.logger.debug(
+      `Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+    );
 
     const allTemplates = await this.prisma.template.findMany({
       where: {
@@ -82,22 +86,26 @@ export class TemplatesService {
     // Group by baseTemplateId (or category if no baseTemplateId)
     // Return only one template per design family
     // Priority: 1. Has preview image, 2. English language, 3. First found
-    const templateMap = new Map<string, typeof allTemplates[0]>();
-    
+    const templateMap = new Map<string, (typeof allTemplates)[0]>();
+
     for (const template of allTemplates) {
       const groupKey = template.baseTemplateId || template.category;
       const existing = templateMap.get(groupKey);
-      
+
       if (!existing) {
         templateMap.set(groupKey, template);
       } else {
         // Prefer template with preview image
         const hasPreview = !!template.previewImageKey;
         const existingHasPreview = !!existing.previewImageKey;
-        
+
         if (hasPreview && !existingHasPreview) {
           templateMap.set(groupKey, template);
-        } else if (hasPreview === existingHasPreview && template.language === 'en' && existing.language !== 'en') {
+        } else if (
+          hasPreview === existingHasPreview &&
+          template.language === 'en' &&
+          existing.language !== 'en'
+        ) {
           // If same preview status, prefer English variant
           templateMap.set(groupKey, template);
         }
@@ -123,18 +131,22 @@ export class TemplatesService {
     type?: TemplateType,
   ): Promise<TemplateWithContentResponseDto | null> {
     const cacheKey = `templates:category:${category}:lang:${language}:type:${type || 'all'}`;
-    
+
     // Check cache first (use !== undefined to properly handle null cached values)
     const cached = this.cache.get<TemplateWithContentResponseDto | null>(cacheKey);
     if (cached !== undefined) {
       this.cacheStats.hits++;
-      this.logger.debug(`Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+      this.logger.debug(
+        `Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+      );
       return cached;
     }
 
     // Cache miss - fetch from database
     this.cacheStats.misses++;
-    this.logger.debug(`Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+    this.logger.debug(
+      `Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+    );
 
     const template = await this.prisma.template.findFirst({
       where: {
@@ -147,19 +159,23 @@ export class TemplatesService {
 
     if (!template) {
       // Fallback to English if specific language not found
-      this.logger.warn(`Template not found for category ${category} and language ${language}, falling back to English`);
-      
+      this.logger.warn(
+        `Template not found for category ${category} and language ${language}, falling back to English`,
+      );
+
       // Use a separate cache key for fallback to avoid confusion
       const fallbackCacheKey = `templates:category:${category}:lang:en:type:${type || 'all'}`;
-      const cachedFallback = this.cache.get<TemplateWithContentResponseDto | null>(fallbackCacheKey);
-      
+      const cachedFallback = this.cache.get<TemplateWithContentResponseDto | null>(
+        fallbackCacheKey,
+      );
+
       if (cachedFallback !== undefined) {
         this.cacheStats.hits++;
         this.logger.debug(`Cache HIT for fallback ${fallbackCacheKey}`);
         // Note: We do NOT cache under the original key to allow new templates to be found after cache expiry
         return cachedFallback;
       }
-      
+
       const fallback = await this.prisma.template.findFirst({
         where: {
           category,
@@ -188,18 +204,22 @@ export class TemplatesService {
    */
   async findLanguageVariants(baseTemplateId: string): Promise<TemplateResponseDto[]> {
     const cacheKey = `templates:variants:${baseTemplateId}`;
-    
+
     // Check cache first (use !== undefined to properly handle null cached values)
     const cached = this.cache.get<TemplateResponseDto[]>(cacheKey);
     if (cached !== undefined) {
       this.cacheStats.hits++;
-      this.logger.debug(`Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+      this.logger.debug(
+        `Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+      );
       return cached;
     }
 
     // Cache miss - fetch from database
     this.cacheStats.misses++;
-    this.logger.debug(`Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+    this.logger.debug(
+      `Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+    );
 
     const variants = await this.prisma.template.findMany({
       where: {
@@ -238,18 +258,22 @@ export class TemplatesService {
    */
   async findOne(id: string): Promise<TemplateWithContentResponseDto> {
     const cacheKey = `templates:id:${id}`;
-    
+
     // Check cache first (use !== undefined to properly handle null cached values)
     const cached = this.cache.get<TemplateWithContentResponseDto>(cacheKey);
     if (cached !== undefined) {
       this.cacheStats.hits++;
-      this.logger.debug(`Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+      this.logger.debug(
+        `Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+      );
       return cached;
     }
 
     // Cache miss - fetch from database
     this.cacheStats.misses++;
-    this.logger.debug(`Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+    this.logger.debug(
+      `Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+    );
 
     const template = await this.prisma.template.findUnique({
       where: { id },
@@ -271,18 +295,22 @@ export class TemplatesService {
    */
   async findDefault(type: TemplateType): Promise<TemplateWithContentResponseDto> {
     const cacheKey = `templates:default:${type}`;
-    
+
     // Check cache first (use !== undefined to properly handle null cached values)
     const cached = this.cache.get<TemplateWithContentResponseDto>(cacheKey);
     if (cached !== undefined) {
       this.cacheStats.hits++;
-      this.logger.debug(`Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+      this.logger.debug(
+        `Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+      );
       return cached;
     }
 
     // Cache miss - fetch from database
     this.cacheStats.misses++;
-    this.logger.debug(`Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`);
+    this.logger.debug(
+      `Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
+    );
 
     const template = await this.prisma.template.findFirst({
       where: {
@@ -308,7 +336,7 @@ export class TemplatesService {
       }
 
       this.logger.warn(`No default template for ${type}, using fallback: ${fallback.id}`);
-      
+
       // Cache the fallback
       this.cache.set(cacheKey, fallback);
       return fallback;
@@ -339,9 +367,10 @@ export class TemplatesService {
   getCacheStats() {
     return {
       ...this.cacheStats,
-      hitRate: this.cacheStats.hits + this.cacheStats.misses > 0
-        ? (this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses)) * 100
-        : 0,
+      hitRate:
+        this.cacheStats.hits + this.cacheStats.misses > 0
+          ? (this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses)) * 100
+          : 0,
       keys: this.cache.keys().length,
       stats: this.cache.getStats(),
     };
@@ -554,7 +583,7 @@ export class TemplatesService {
    */
   private async generatePreviewImage(html: string): Promise<Buffer> {
     return this.pdfService.generateScreenshot(html, {
-      width: 595,  // A4 width at 72 DPI
+      width: 595, // A4 width at 72 DPI
       height: 842, // A4 height at 72 DPI
       fullPage: false,
     });

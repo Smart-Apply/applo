@@ -82,7 +82,7 @@ describe('PdfService', () => {
     }).compile();
 
     service = module.get<PdfService>(PdfService);
-    
+
     // Initialize the service (triggers pool creation)
     await service.onModuleInit();
   }, 30000);

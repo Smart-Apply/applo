@@ -1,4 +1,12 @@
-import { Controller, Get, Delete, Param, Query, UseGuards, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Delete,
+  Param,
+  Query,
+  UseGuards,
+  NotFoundException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { SessionService } from './session.service';

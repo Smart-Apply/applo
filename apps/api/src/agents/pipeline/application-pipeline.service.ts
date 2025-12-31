@@ -157,7 +157,9 @@ export class ApplicationPipelineService {
         company: jobPosting.company,
         location: jobPosting.location || null,
         fullText: jobPosting.fullText,
-        language: jobPosting.language ? (jobPosting.language as 'de' | 'en') : this.detectLanguage(jobPosting.fullText),
+        language: jobPosting.language
+          ? (jobPosting.language as 'de' | 'en')
+          : this.detectLanguage(jobPosting.fullText),
       },
     };
 
@@ -258,7 +260,9 @@ export class ApplicationPipelineService {
         .filter((k) => !cv.keywordMatches.some((m) => m.keyword === k && m.found))
         .slice(0, 3);
       if (missingTech.length > 0) {
-        suggestions.push(`Relevante Qualifikationen könnten ergänzt werden: ${missingTech.join(', ')}`);
+        suggestions.push(
+          `Relevante Qualifikationen könnten ergänzt werden: ${missingTech.join(', ')}`,
+        );
         weaknesses.push('Einige Kernkompetenzen nicht gefunden');
       }
     }
@@ -339,26 +343,120 @@ export class ApplicationPipelineService {
    */
   private detectLanguage(text: string): 'de' | 'en' | null {
     const lowerText = text.toLowerCase();
-    
+
     // Expanded German indicators (very common German words/patterns)
     const germanIndicators = [
-      'und', 'oder', 'für', 'mit', 'bei', 'wir', 'ihre', 'ihr', 'den', 'der', 'die', 'das',
-      'eine', 'einen', 'einem', 'einer', 'deine', 'deinen', 'deiner', 'unsere', 'unseren',
-      'sie', 'sind', 'haben', 'können', 'werden', 'möchten', 'sollten', 'dich', 'dein',
-      'entwicklung', 'erfahrung', 'kenntnisse', 'aufgaben', 'verantwortung',
-      'deutsch', 'englisch', 'umfeld', 'zusammenarbeit', 'über', 'nach'
+      'und',
+      'oder',
+      'für',
+      'mit',
+      'bei',
+      'wir',
+      'ihre',
+      'ihr',
+      'den',
+      'der',
+      'die',
+      'das',
+      'eine',
+      'einen',
+      'einem',
+      'einer',
+      'deine',
+      'deinen',
+      'deiner',
+      'unsere',
+      'unseren',
+      'sie',
+      'sind',
+      'haben',
+      'können',
+      'werden',
+      'möchten',
+      'sollten',
+      'dich',
+      'dein',
+      'entwicklung',
+      'erfahrung',
+      'kenntnisse',
+      'aufgaben',
+      'verantwortung',
+      'deutsch',
+      'englisch',
+      'umfeld',
+      'zusammenarbeit',
+      'über',
+      'nach',
     ];
-    
+
     // Expanded English indicators (MORE common words - heavily weighted)
     const englishIndicators = [
-      'the', 'and', 'or', 'for', 'with', 'at', 'in', 'on', 'of', 'to', 'from', 'by', 'as',
-      'we', 'you', 'your', 'our', 'their', 'them', 'they',
-      'are', 'is', 'will', 'have', 'has', 'had', 'can', 'would', 'should', 'must',
-      'this', 'that', 'these', 'those', 'who', 'what', 'where', 'when', 'how', 'why',
-      'development', 'experience', 'knowledge', 'responsibilities', 'tasks',
-      'skills', 'requirements', 'team', 'work', 'build', 'design', 'implement',
-      'role', 'position', 'company', 'looking', 'join', 'apply', 'about', 'mission',
-      'proven', 'strong', 'familiarity', 'understanding', 'fluency', 'collaborative'
+      'the',
+      'and',
+      'or',
+      'for',
+      'with',
+      'at',
+      'in',
+      'on',
+      'of',
+      'to',
+      'from',
+      'by',
+      'as',
+      'we',
+      'you',
+      'your',
+      'our',
+      'their',
+      'them',
+      'they',
+      'are',
+      'is',
+      'will',
+      'have',
+      'has',
+      'had',
+      'can',
+      'would',
+      'should',
+      'must',
+      'this',
+      'that',
+      'these',
+      'those',
+      'who',
+      'what',
+      'where',
+      'when',
+      'how',
+      'why',
+      'development',
+      'experience',
+      'knowledge',
+      'responsibilities',
+      'tasks',
+      'skills',
+      'requirements',
+      'team',
+      'work',
+      'build',
+      'design',
+      'implement',
+      'role',
+      'position',
+      'company',
+      'looking',
+      'join',
+      'apply',
+      'about',
+      'mission',
+      'proven',
+      'strong',
+      'familiarity',
+      'understanding',
+      'fluency',
+      'collaborative',
     ];
 
     let germanScore = 0;
@@ -370,14 +468,16 @@ export class ApplicationPipelineService {
       const matches = lowerText.match(regex);
       if (matches) germanScore += matches.length;
     }
-    
+
     for (const word of englishIndicators) {
       const regex = new RegExp(`\\b${word}\\b`, 'gi');
       const matches = lowerText.match(regex);
       if (matches) englishScore += matches.length;
     }
 
-    this.logger.log(`🌍 Language detection: German score=${germanScore}, English score=${englishScore}`);
+    this.logger.log(
+      `🌍 Language detection: German score=${germanScore}, English score=${englishScore}`,
+    );
 
     // Require significant difference (at least 50% more) - higher threshold
     const threshold = 1.5;
@@ -389,7 +489,7 @@ export class ApplicationPipelineService {
       this.logger.log('🇬🇧 Detected language: ENGLISH');
       return 'en';
     }
-    
+
     // Default to English if scores are too close
     this.logger.log('🇬🇧 Language unclear, defaulting to: ENGLISH');
     return 'en';

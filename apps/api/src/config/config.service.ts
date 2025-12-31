@@ -183,7 +183,10 @@ export class ConfigService {
 
   // Security
   get corsOrigins(): string[] {
-    return this.nestConfig.get('CORS_ORIGINS', { infer: true }).split(',').map(origin => origin.trim());
+    return this.nestConfig
+      .get('CORS_ORIGINS', { infer: true })
+      .split(',')
+      .map((origin) => origin.trim());
   }
 
   get enableCsrf(): boolean {
@@ -240,7 +243,10 @@ export class ConfigService {
   }
 
   get llmCircuitBreakerErrorThreshold(): number {
-    return parseInt(this.nestConfig.get('LLM_CIRCUIT_BREAKER_ERROR_THRESHOLD', { infer: true }), 10);
+    return parseInt(
+      this.nestConfig.get('LLM_CIRCUIT_BREAKER_ERROR_THRESHOLD', { infer: true }),
+      10,
+    );
   }
 
   get llmCircuitBreakerResetTimeout(): number {
@@ -248,11 +254,17 @@ export class ConfigService {
   }
 
   get llmCircuitBreakerRollingCountTimeout(): number {
-    return parseInt(this.nestConfig.get('LLM_CIRCUIT_BREAKER_ROLLING_COUNT_TIMEOUT', { infer: true }), 10);
+    return parseInt(
+      this.nestConfig.get('LLM_CIRCUIT_BREAKER_ROLLING_COUNT_TIMEOUT', { infer: true }),
+      10,
+    );
   }
 
   get llmCircuitBreakerRollingCountBuckets(): number {
-    return parseInt(this.nestConfig.get('LLM_CIRCUIT_BREAKER_ROLLING_COUNT_BUCKETS', { infer: true }), 10);
+    return parseInt(
+      this.nestConfig.get('LLM_CIRCUIT_BREAKER_ROLLING_COUNT_BUCKETS', { infer: true }),
+      10,
+    );
   }
 
   // Global Request Timeout

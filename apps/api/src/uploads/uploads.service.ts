@@ -21,10 +21,7 @@ export class UploadsService {
     private readonly configService: ConfigService,
   ) {
     // Get max file size from env (in MB) and convert to bytes
-    const maxSizeMB = parseInt(
-      this.configService.get<string>('MAX_FILE_SIZE_MB', '10'),
-      10,
-    );
+    const maxSizeMB = parseInt(this.configService.get<string>('MAX_FILE_SIZE_MB', '10'), 10);
     this.MAX_FILE_SIZE = maxSizeMB * 1024 * 1024;
     this.logger.log(`Max file size configured: ${maxSizeMB}MB`);
   }

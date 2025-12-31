@@ -98,7 +98,9 @@ describe('Session and Refresh Token Cleanup (e2e)', () => {
       });
 
       // Create a revoked session older than cleanup threshold
-      const oldRevokedDate = new Date(Date.now() - (REVOKED_SESSION_CLEANUP_DAYS + 1) * 24 * 60 * 60 * 1000);
+      const oldRevokedDate = new Date(
+        Date.now() - (REVOKED_SESSION_CLEANUP_DAYS + 1) * 24 * 60 * 60 * 1000,
+      );
       const revokedSession = await prisma.session.create({
         data: {
           userId: user.id,
@@ -268,7 +270,9 @@ describe('Session and Refresh Token Cleanup (e2e)', () => {
       });
 
       // Create a revoked token older than cleanup threshold
-      const oldDate = new Date(Date.now() - (REVOKED_REFRESH_TOKEN_CLEANUP_DAYS + 1) * 24 * 60 * 60 * 1000);
+      const oldDate = new Date(
+        Date.now() - (REVOKED_REFRESH_TOKEN_CLEANUP_DAYS + 1) * 24 * 60 * 60 * 1000,
+      );
       const revokedToken = await prisma.refreshToken.create({
         data: {
           token: 'test-token-revoked-refresh',

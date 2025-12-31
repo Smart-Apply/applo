@@ -29,7 +29,7 @@ export class SessionCleanupCron {
     try {
       const count = await this.sessionService.cleanupExpiredRefreshTokens();
       const duration = Date.now() - startTime;
-      
+
       this.logger.log(
         `Refresh token cleanup completed. Deleted ${count} expired/revoked tokens in ${duration}ms`,
       );
@@ -55,7 +55,7 @@ export class SessionCleanupCron {
     try {
       const count = await this.sessionService.cleanupExpiredSessions();
       const duration = Date.now() - startTime;
-      
+
       this.logger.log(
         `Session cleanup completed. Deleted ${count} expired/revoked/old sessions in ${duration}ms`,
       );

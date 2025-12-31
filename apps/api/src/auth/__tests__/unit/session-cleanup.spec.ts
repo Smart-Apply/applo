@@ -45,7 +45,9 @@ describe('SessionCleanupCron', () => {
       const expiredDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day ago
 
       // Mock prisma.session.deleteMany
-      const deleteManyMock = jest.spyOn(prisma.session, 'deleteMany').mockResolvedValue({ count: 5 });
+      const deleteManyMock = jest
+        .spyOn(prisma.session, 'deleteMany')
+        .mockResolvedValue({ count: 5 });
 
       const result = await service.cleanupExpiredSessions();
 
@@ -55,10 +57,7 @@ describe('SessionCleanupCron', () => {
           OR: expect.arrayContaining([
             { expiresAt: { lt: expect.any(Date) } },
             {
-              AND: [
-                { isActive: false },
-                { revokedAt: { lt: expect.any(Date) } },
-              ],
+              AND: [{ isActive: false }, { revokedAt: { lt: expect.any(Date) } }],
             },
             { createdAt: { lt: expect.any(Date) } },
           ]),
@@ -68,9 +67,13 @@ describe('SessionCleanupCron', () => {
 
     it('should delete revoked sessions older than REVOKED_SESSION_CLEANUP_DAYS', async () => {
       const now = new Date();
-      const oldRevokedDate = new Date(now.getTime() - (REVOKED_SESSION_CLEANUP_DAYS + 1) * 24 * 60 * 60 * 1000);
+      const oldRevokedDate = new Date(
+        now.getTime() - (REVOKED_SESSION_CLEANUP_DAYS + 1) * 24 * 60 * 60 * 1000,
+      );
 
-      const deleteManyMock = jest.spyOn(prisma.session, 'deleteMany').mockResolvedValue({ count: 3 });
+      const deleteManyMock = jest
+        .spyOn(prisma.session, 'deleteMany')
+        .mockResolvedValue({ count: 3 });
 
       await service.cleanupExpiredSessions();
 
@@ -79,13 +82,15 @@ describe('SessionCleanupCron', () => {
 
       // Check that one of the OR conditions is for revoked sessions
       const revokedCondition = orConditions.find(
-        (cond: any) => cond.AND && cond.AND.find((c: any) => c.isActive === false)
+        (cond: any) => cond.AND && cond.AND.find((c: any) => c.isActive === false),
       );
       expect(revokedCondition).toBeDefined();
     });
 
     it('should delete sessions older than OLD_SESSION_CLEANUP_DAYS', async () => {
-      const deleteManyMock = jest.spyOn(prisma.session, 'deleteMany').mockResolvedValue({ count: 10 });
+      const deleteManyMock = jest
+        .spyOn(prisma.session, 'deleteMany')
+        .mockResolvedValue({ count: 10 });
 
       await service.cleanupExpiredSessions();
 
@@ -106,7 +111,9 @@ describe('SessionCleanupCron', () => {
 
   describe('cleanupExpiredRefreshTokens', () => {
     it('should delete expired refresh tokens', async () => {
-      const deleteManyMock = jest.spyOn(prisma.refreshToken, 'deleteMany').mockResolvedValue({ count: 8 });
+      const deleteManyMock = jest
+        .spyOn(prisma.refreshToken, 'deleteMany')
+        .mockResolvedValue({ count: 8 });
 
       const result = await service.cleanupExpiredRefreshTokens();
 
@@ -116,10 +123,7 @@ describe('SessionCleanupCron', () => {
           OR: expect.arrayContaining([
             { expiresAt: { lt: expect.any(Date) } },
             {
-              AND: [
-                { isRevoked: true },
-                { createdAt: { lt: expect.any(Date) } },
-              ],
+              AND: [{ isRevoked: true }, { createdAt: { lt: expect.any(Date) } }],
             },
           ]),
         },
@@ -127,7 +131,9 @@ describe('SessionCleanupCron', () => {
     });
 
     it('should delete revoked tokens older than REVOKED_REFRESH_TOKEN_CLEANUP_DAYS', async () => {
-      const deleteManyMock = jest.spyOn(prisma.refreshToken, 'deleteMany').mockResolvedValue({ count: 5 });
+      const deleteManyMock = jest
+        .spyOn(prisma.refreshToken, 'deleteMany')
+        .mockResolvedValue({ count: 5 });
 
       await service.cleanupExpiredRefreshTokens();
 
@@ -136,7 +142,7 @@ describe('SessionCleanupCron', () => {
 
       // Check that one of the OR conditions is for revoked tokens
       const revokedCondition = orConditions.find(
-        (cond: any) => cond.AND && cond.AND.find((c: any) => c.isRevoked === true)
+        (cond: any) => cond.AND && cond.AND.find((c: any) => c.isRevoked === true),
       );
       expect(revokedCondition).toBeDefined();
     });

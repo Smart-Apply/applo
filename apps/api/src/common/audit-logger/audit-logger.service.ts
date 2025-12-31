@@ -195,7 +195,7 @@ export class AuditLoggerService {
   ) {
     // Map string event types to enum values
     const eventTypeEnum = AuditEventType[eventType as keyof typeof AuditEventType] || eventType;
-    
+
     // Determine severity based on event type
     const failedEvents = ['PASSWORD_CHANGE_FAILED', 'ACCOUNT_DELETE_FAILED'];
     const severity = failedEvents.includes(eventType) ? 'warning' : 'info';

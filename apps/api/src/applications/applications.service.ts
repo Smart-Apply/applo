@@ -34,7 +34,12 @@ import {
   NotFoundWithCode,
   ConflictWithCode,
 } from '../common/exceptions/coded-http.exception';
-import { buildResumeTemplateData, ProfileWithRelations, sanitizeUrl, formatDateRange } from './resume-template.util';
+import {
+  buildResumeTemplateData,
+  ProfileWithRelations,
+  sanitizeUrl,
+  formatDateRange,
+} from './resume-template.util';
 import { sanitizeRichText } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -1372,6 +1377,9 @@ Summary: ${resume.summary || 'Not provided'}
     // Build skill categories from selected hard skills AND tools
     const skillCategories: any[] = [];
 
+    // Create a Set of valid profile skills for validation (case-insensitive)
+    const validProfileSkills = new Set(profile.skills.map((s) => s.name.toLowerCase()));
+
     // Combine hard skills and tools into one array, removing duplicates
     const allSkills: string[] = [];
 
@@ -1391,15 +1399,31 @@ Summary: ${resume.summary || 'Not provided'}
       );
     }
 
+    // Filter skills to only include those that exist in the user's profile (prevents LLM hallucination)
+    const validatedSkills = allSkills.filter((skill) => {
+      const isValid = validProfileSkills.has(skill.toLowerCase());
+      return isValid;
+    });
+
+    // Log warning for hallucinated skills (skills returned by LLM but not in profile)
+    const hallucinatedSkills = allSkills.filter(
+      (skill) => !validProfileSkills.has(skill.toLowerCase()),
+    );
+    if (hallucinatedSkills.length > 0) {
+      this.logger.warn(
+        `LLM returned ${hallucinatedSkills.length} skills not found in profile: ${hallucinatedSkills.join(', ')}`,
+      );
+    }
+
     // Remove duplicates (case-insensitive)
-    const uniqueSkills = Array.from(new Set(allSkills.map((s) => s.toLowerCase()))).map(
-      (lower) => allSkills.find((s) => s.toLowerCase() === lower) || lower,
+    const uniqueSkills = Array.from(new Set(validatedSkills.map((s) => s.toLowerCase()))).map(
+      (lower) => validatedSkills.find((s) => s.toLowerCase() === lower) || lower,
     );
 
     if (uniqueSkills.length > 0) {
       skillCategories.push({
         id: 'skills-' + Date.now(),
-        type: 'Skills',
+        type: '',
         skills: uniqueSkills,
       });
     }
@@ -1491,7 +1515,8 @@ Summary: ${resume.summary || 'Not provided'}
         degree: edu.degree,
         institution: edu.institution,
         fieldOfStudy: edu.fieldOfStudy ?? undefined,
-        year: edu.endYear?.getFullYear()?.toString() || edu.startYear?.getFullYear()?.toString() || '',
+        year:
+          edu.endYear?.getFullYear()?.toString() || edu.startYear?.getFullYear()?.toString() || '',
         gpa: edu.gpa ?? undefined,
         description: edu.description ?? undefined,
       }));
@@ -1797,14 +1822,11 @@ Summary: ${resume.summary || 'Not provided'}
 
   /**
    * Retry PDF generation for failed applications
-   * 
+   *
    * Only allows retry if application status is FAILED.
    * Resets application state and re-enqueues the generation job.
    */
-  async regenerate(
-    applicationId: string,
-    userId: string,
-  ): Promise<ApplicationResponseDto> {
+  async regenerate(applicationId: string, userId: string): Promise<ApplicationResponseDto> {
     this.logger.log(`Regenerating failed application ${applicationId} for user ${userId}`);
 
     // 1. Verify ownership and get application
@@ -1852,7 +1874,7 @@ Summary: ${resume.summary || 'Not provided'}
 
   /**
    * Get a single application by ID
-   * 
+   *
    * Uses Prisma's `include` to prevent N+1 queries when job posting is requested
    */
   async findOne(
@@ -1880,12 +1902,12 @@ Summary: ${resume.summary || 'Not provided'}
 
   /**
    * Get all applications for a user with pagination
-   * 
+   *
    * Uses Prisma's `include` to prevent N+1 query problems:
    * - Eager loads job posting when requested (single JOIN query)
    * - Uses Promise.all for parallel count query
    * - Results in 2 queries total (1 for data + 1 for count), not 1+N
-   * 
+   *
    * Supports soft delete filtering via includeDeleted parameter
    */
   async findAll(
@@ -2300,7 +2322,9 @@ Summary: ${resume.summary || 'Not provided'}
           throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
         }
 
-        this.logger.debug(`SSE emit: application ${applicationId} status=${application.status} progress=${lastProgress}%`);
+        this.logger.debug(
+          `SSE emit: application ${applicationId} status=${application.status} progress=${lastProgress}%`,
+        );
         return { application, progress: lastProgress, message: lastMessage };
       }),
       // Transform to SSE MessageEvent format
@@ -2737,7 +2761,7 @@ Summary: ${resume.summary || 'Not provided'}
       } else {
         // For 'job' source or legacy path: compute match dynamically
         // This allows detecting keywords added to resume AFTER initial generation
-        
+
         // Strategy 1: Exact match (case-insensitive)
         found = profileKeywords.has(normalized);
         confidence = 1.0;

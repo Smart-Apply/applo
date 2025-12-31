@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -481,48 +486,54 @@ export class ProfileService {
         email: user?.email || '',
         phone: profile.phone || undefined,
         summary: profile.summary || undefined,
-        skills: profile.skills?.map((s: any) => ({
-          id: s.id,
-          name: s.name,
-          level: s.level || undefined,
-        })) || [],
-        experiences: profile.experiences?.map((e: any) => ({
-          id: e.id,
-          title: e.title,
-          company: e.company,
-          location: e.location || undefined,
-          startDate: e.startDate?.toISOString() || '',
-          endDate: e.endDate?.toISOString() || undefined,
-          current: e.isCurrent,
-          description: e.description || undefined,
-        })) || [],
-        education: profile.education?.map((e: any) => ({
-          id: e.id,
-          degree: e.degree,
-          institution: e.institution,
-          fieldOfStudy: e.fieldOfStudy || undefined,
-          startDate: e.startYear?.toISOString() || undefined,
-          endDate: e.endYear?.toISOString() || undefined,
-        })) || [],
-        certificates: profile.certificates?.map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          issuer: c.issuer,
-          issueDate: c.issueDate?.toISOString() || undefined,
-          expiryDate: c.expiryDate?.toISOString() || undefined,
-        })) || [],
-        projects: profile.projects?.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          description: p.description || undefined,
-          url: p.url || undefined,
-          technologies: p.technologies || [],
-        })) || [],
-        languages: profile.languages?.map((l: any) => ({
-          id: l.id,
-          name: l.name,
-          level: l.level,
-        })) || [],
+        skills:
+          profile.skills?.map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            level: s.level || undefined,
+          })) || [],
+        experiences:
+          profile.experiences?.map((e: any) => ({
+            id: e.id,
+            title: e.title,
+            company: e.company,
+            location: e.location || undefined,
+            startDate: e.startDate?.toISOString() || '',
+            endDate: e.endDate?.toISOString() || undefined,
+            current: e.isCurrent,
+            description: e.description || undefined,
+          })) || [],
+        education:
+          profile.education?.map((e: any) => ({
+            id: e.id,
+            degree: e.degree,
+            institution: e.institution,
+            fieldOfStudy: e.fieldOfStudy || undefined,
+            startDate: e.startYear?.toISOString() || undefined,
+            endDate: e.endYear?.toISOString() || undefined,
+          })) || [],
+        certificates:
+          profile.certificates?.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            issuer: c.issuer,
+            issueDate: c.issueDate?.toISOString() || undefined,
+            expiryDate: c.expiryDate?.toISOString() || undefined,
+          })) || [],
+        projects:
+          profile.projects?.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description || undefined,
+            url: p.url || undefined,
+            technologies: p.technologies || [],
+          })) || [],
+        languages:
+          profile.languages?.map((l: any) => ({
+            id: l.id,
+            name: l.name,
+            level: l.level,
+          })) || [],
       };
 
       // Extract keywords using LLM

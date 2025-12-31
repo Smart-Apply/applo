@@ -37,7 +37,9 @@ describe('LLMService - Summary Translation', () => {
 
       expect(result).toBe(englishTranslation);
       expect(mockProvider.generateText).toHaveBeenCalledWith(
-        expect.stringContaining('Translate the following professional summary from German to English'),
+        expect.stringContaining(
+          'Translate the following professional summary from German to English',
+        ),
         expect.objectContaining({
           temperature: 0.3,
           maxTokens: 500,
@@ -57,7 +59,9 @@ describe('LLMService - Summary Translation', () => {
 
       expect(result).toBe(germanTranslation);
       expect(mockProvider.generateText).toHaveBeenCalledWith(
-        expect.stringContaining('Translate the following professional summary from English to German'),
+        expect.stringContaining(
+          'Translate the following professional summary from English to German',
+        ),
         expect.any(Object),
       );
     });

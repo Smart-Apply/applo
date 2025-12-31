@@ -38,7 +38,7 @@ export class CleanupCron {
       // Hard delete applications that were soft-deleted more than 30 days ago
       const result = await this.prisma.application.deleteMany({
         where: {
-          deletedAt: { 
+          deletedAt: {
             not: null,
             lt: thirtyDaysAgo,
           },
@@ -46,7 +46,7 @@ export class CleanupCron {
       });
 
       const duration = Date.now() - startTime;
-      
+
       this.logger.log(
         `Application cleanup completed. Deleted ${result.count} applications older than 30 days in ${duration}ms`,
       );
@@ -77,7 +77,7 @@ export class CleanupCron {
       // Hard delete job postings that were soft-deleted more than 30 days ago
       const result = await this.prisma.jobPosting.deleteMany({
         where: {
-          deletedAt: { 
+          deletedAt: {
             not: null,
             lt: thirtyDaysAgo,
           },
@@ -85,7 +85,7 @@ export class CleanupCron {
       });
 
       const duration = Date.now() - startTime;
-      
+
       this.logger.log(
         `Job postings cleanup completed. Deleted ${result.count} job postings older than 30 days in ${duration}ms`,
       );

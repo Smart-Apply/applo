@@ -6,7 +6,7 @@ import { ConfigService } from '../../../config/config.service';
 
 /**
  * Unit tests for TimeoutMiddleware
- * 
+ *
  * Tests verify that:
  * 1. Middleware sets timeout for all requests
  * 2. Timeout is cleared when response finishes successfully

@@ -151,7 +151,7 @@
                     <li class="experience-item">
                         <div class="item-header">
                             <h3 class="item-title">{{this.title}}</h3>
-                            <span class="item-period">{{formatDate this.startDate}} - {{#if this.endDate}}{{formatDate this.endDate}}{{else}}Present{{/if}}</span>
+                            <span class="item-period">{{this.dateRange}}</span>
                         </div>
                         <div class="item-company">{{this.company}}{{#if this.location}} · {{this.location}}{{/if}}</div>
                         {{#if this.description}}

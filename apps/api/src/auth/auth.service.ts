@@ -9,7 +9,13 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
-import { RegisterDto, LoginDto, UpdateUserProfileDto, ChangePasswordDto, DeleteAccountDto } from './dto';
+import {
+  RegisterDto,
+  LoginDto,
+  UpdateUserProfileDto,
+  ChangePasswordDto,
+  DeleteAccountDto,
+} from './dto';
 import { ConfigService } from '../config/config.service';
 import { AuditLoggerService } from '../common/audit-logger';
 import { SessionService } from './session.service';
@@ -307,7 +313,9 @@ export class AuthService {
     // Log profile update event
     if (req) {
       this.auditLogger.logProfileUpdate(userId, req, {
-        updatedFields: Object.keys(dto).filter((key) => dto[key as keyof UpdateUserProfileDto] !== undefined),
+        updatedFields: Object.keys(dto).filter(
+          (key) => dto[key as keyof UpdateUserProfileDto] !== undefined,
+        ),
       });
     }
 

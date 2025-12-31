@@ -9,15 +9,7 @@ export class KeywordMatchDto {
 
   @ApiProperty({
     description: 'Category of the keyword',
-    enum: [
-      'core',
-      'soft',
-      'experience',
-      'industry',
-      'methodology',
-      'education',
-      'certification',
-    ],
+    enum: ['core', 'soft', 'experience', 'industry', 'methodology', 'education', 'certification'],
   })
   category:
     | 'core'

@@ -140,9 +140,10 @@ export class JobPostingsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Soft delete job posting',
-    description: 'Soft deletes a job posting (sets deletedAt timestamp). Can be restored within 30 days.',
+    description:
+      'Soft deletes a job posting (sets deletedAt timestamp). Can be restored within 30 days.',
   })
   @ApiResponse({
     status: 204,

@@ -2,7 +2,7 @@ import type { Profile, ResumeData, ResumeExperience, ResumeSkillCategory } from 
 import { isHtml } from './markdown';
 import { htmlToPlainText, plainTextToHtml, sanitizeHtml } from './sanitize';
 
-const DEFAULT_CATEGORY = 'Kompetenzen';
+const DEFAULT_CATEGORY = '';
 const monthFormatter = new Intl.DateTimeFormat('de-DE', {
   month: 'short',
   year: 'numeric',
@@ -20,12 +20,19 @@ function formatRange(start?: string | number | null, end?: string | number | nul
     return 'Aktuell';
   }
 
-  const parseDate = (value?: string | number | null) => {
+  const parseDate = (value?: string | number | null): Date | undefined => {
     if (!value) return undefined;
+    let date: Date;
     if (typeof value === 'number') {
-      return new Date(`${value}`);
+      date = new Date(`${value}`);
+    } else {
+      date = new Date(value);
     }
-    return new Date(value);
+    // Return undefined for invalid dates to prevent "-present" or "Invalid Date" output
+    if (isNaN(date.getTime())) {
+      return undefined;
+    }
+    return date;
   };
 
   const startDate = parseDate(start);
@@ -154,7 +161,6 @@ function toHtmlSafe(value?: string): string | undefined {
 }
 
 function withDateRange(experience: ResumeExperience): ResumeExperience {
-  const trim = (value?: string) => value?.trim() || undefined;
   const trimPreservingNewlines = (value?: string) => {
     if (!value) return undefined;
     // Trim each line individually but preserve newlines
@@ -169,7 +175,9 @@ function withDateRange(experience: ResumeExperience): ResumeExperience {
   };
   return {
     ...experience,
-    dateRange: experience.dateRange || formatRange(experience.startDate, experience.endDate),
+    // Use ?? instead of || to preserve existing dateRange (even empty strings)
+    // Only recalculate when dateRange is null/undefined
+    dateRange: experience.dateRange ?? formatRange(experience.startDate, experience.endDate),
     description: toHtml(experience.description),
     achievements: experience.achievements?.filter(Boolean),
   };

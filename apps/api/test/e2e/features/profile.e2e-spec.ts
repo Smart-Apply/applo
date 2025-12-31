@@ -202,10 +202,10 @@ describe('ProfileController (e2e)', () => {
 
     it('should accept valid phone numbers', async () => {
       const validPhones = [
-        '+49123456789',    // Germany
-        '+1234567890',     // US
-        '+441234567890',   // UK
-        '',                // Empty string (optional field)
+        '+49123456789', // Germany
+        '+1234567890', // US
+        '+441234567890', // UK
+        '', // Empty string (optional field)
       ];
 
       for (const phone of validPhones) {

@@ -7,7 +7,7 @@ import { PrismaService } from '../../../src/prisma/prisma.service';
 
 /**
  * E2E tests for user-friendly error messages (Issue #213)
- * 
+ *
  * Validates that:
  * 1. All errors include a 'code' field
  * 2. Error messages are in German
@@ -121,9 +121,7 @@ describe('Error Messages (e2e)', () => {
     });
 
     it('should return UNAUTHORIZED code for missing auth token', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/v1/profile')
-        .expect(401);
+      const response = await request(app.getHttpServer()).get('/api/v1/profile').expect(401);
 
       expect(response.body).toHaveProperty('code', 'UNAUTHORIZED');
       expect(response.body.message).toContain('Bitte melde dich an');
@@ -303,12 +301,10 @@ describe('Error Messages (e2e)', () => {
       const promises = [];
       for (let i = 0; i < 6; i++) {
         promises.push(
-          request(app.getHttpServer())
-            .post('/api/v1/auth/login')
-            .send({
-              email: 'rate-limit@example.com',
-              password: 'Test123!',
-            }),
+          request(app.getHttpServer()).post('/api/v1/auth/login').send({
+            email: 'rate-limit@example.com',
+            password: 'Test123!',
+          }),
         );
       }
 
@@ -325,9 +321,7 @@ describe('Error Messages (e2e)', () => {
 
   describe('Generic Error Codes', () => {
     it('should include code field in all error responses', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/v1/profile')
-        .expect(401);
+      const response = await request(app.getHttpServer()).get('/api/v1/profile').expect(401);
 
       expect(response.body).toHaveProperty('code');
       expect(response.body).toHaveProperty('message');
@@ -354,7 +348,7 @@ describe('Error Messages (e2e)', () => {
 
       // Message should be in German
       expect(response.body.message).toMatch(/[äöüÄÖÜß]/);
-      
+
       // Message should be actionable (contains instructions)
       expect(response.body.message).toContain('Bitte');
     });
@@ -367,7 +361,7 @@ describe('Error Messages (e2e)', () => {
 
       // Should explain what went wrong
       expect(response.body.message).toContain('nicht gefunden');
-      
+
       // Should provide context
       expect(response.body.message).toContain('Bewerbung');
     });

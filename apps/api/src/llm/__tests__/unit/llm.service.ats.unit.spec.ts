@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LLMService, ATSCoverLetterContext, ATSResumeContext, KeywordMatch } from '../../llm.service';
+import {
+  LLMService,
+  ATSCoverLetterContext,
+  ATSResumeContext,
+  KeywordMatch,
+} from '../../llm.service';
 
 describe('LLMService - ATS Methods', () => {
   let service: LLMService;

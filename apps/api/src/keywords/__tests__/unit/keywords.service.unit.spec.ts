@@ -51,7 +51,8 @@ describe('KeywordsService', () => {
     title: 'Senior Developer',
     company: 'TechCorp',
     location: 'Berlin',
-    fullText: 'Looking for senior developer with TypeScript and React experience. Responsibilities include developing apps. AWS knowledge is a nice to have.',
+    fullText:
+      'Looking for senior developer with TypeScript and React experience. Responsibilities include developing apps. AWS knowledge is a nice to have.',
     rawText: undefined, // Changed from null to undefined
     sourceUrl: undefined, // Changed from null to undefined
     fileId: undefined, // Changed from null to undefined

@@ -106,16 +106,16 @@ export class HealthController {
     return this.health.check([
       // Database check
       () => this.prismaHealth.pingCheck('database', this.prisma),
-      
+
       // Storage check
       () => this.storageIndicator.isHealthy(),
-      
+
       // Queue check
       () => this.queueIndicator.isHealthy(),
-      
+
       // Templates check
       () => this.templatesIndicator.isHealthy(),
-      
+
       // LLM check (basic availability check)
       async () => {
         try {

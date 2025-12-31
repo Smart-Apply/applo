@@ -3,7 +3,7 @@ import { ErrorCode } from '../constants/error-codes';
 
 /**
  * Custom exception class that includes an error code for better error handling
- * 
+ *
  * Usage:
  * throw new CodedHttpException(HttpStatus.NOT_FOUND, ErrorCode.PROFILE_NOT_FOUND);
  * throw new CodedHttpException(HttpStatus.BAD_REQUEST, ErrorCode.PROFILE_INCOMPLETE, 'Additional context');

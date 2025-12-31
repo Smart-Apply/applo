@@ -25,7 +25,7 @@ export type ProfileWithRelations = Profile & {
   lastKeywordsExtractedAt?: Date | null;
 };
 
-const DEFAULT_CATEGORY = 'Skills';
+const DEFAULT_CATEGORY = '';
 
 /**
  * Sanitize URL by removing duplicate protocol prefixes.
@@ -65,7 +65,11 @@ function formatDate(date: Date | null | undefined): string {
   });
 }
 
-export function formatDateRange(start?: Date | null, end?: Date | null, isCurrent?: boolean): string {
+export function formatDateRange(
+  start?: Date | null,
+  end?: Date | null,
+  isCurrent?: boolean,
+): string {
   const startLabel = formatDate(start) || 'Start';
   const endLabel = isCurrent ? 'Aktuell' : formatDate(end) || 'Heute';
   return `${startLabel} – ${endLabel}`;

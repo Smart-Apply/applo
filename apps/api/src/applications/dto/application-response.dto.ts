@@ -106,9 +106,7 @@ export class ApplicationResponseDto {
         { keyword: 'TypeScript', source: 'job', priority: 1 },
       ],
       tools_and_tech: [{ keyword: 'Docker', source: 'both', priority: 2 }],
-      domains: [
-        { keyword: 'Web Development', source: 'both', priority: 1 },
-      ],
+      domains: [{ keyword: 'Web Development', source: 'both', priority: 1 }],
       methodologies: [{ keyword: 'Agile', source: 'job', priority: 2 }],
     },
   })
@@ -128,8 +126,7 @@ export class ApplicationResponseDto {
   };
 
   @ApiPropertyOptional({
-    description:
-      'Tailored profile data (selected skills/experiences relevant to this job)',
+    description: 'Tailored profile data (selected skills/experiences relevant to this job)',
     example: {
       target_role: 'Full-Stack Developer',
       target_company: 'Acme Corp',

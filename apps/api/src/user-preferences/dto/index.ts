@@ -3,12 +3,20 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserPreferencesDto {
   // Notifications
-  @ApiProperty({ example: true, required: false, description: 'Receive application update notifications' })
+  @ApiProperty({
+    example: true,
+    required: false,
+    description: 'Receive application update notifications',
+  })
   @IsOptional()
   @IsBoolean()
   applicationUpdates?: boolean;
 
-  @ApiProperty({ example: false, required: false, description: 'Receive new job posting notifications' })
+  @ApiProperty({
+    example: false,
+    required: false,
+    description: 'Receive new job posting notifications',
+  })
   @IsOptional()
   @IsBoolean()
   newJobPostings?: boolean;
@@ -19,13 +27,21 @@ export class UpdateUserPreferencesDto {
   marketingEmails?: boolean;
 
   // Preferences
-  @ApiProperty({ example: 'de', required: false, description: 'Preferred language (de, en, fr, es)' })
+  @ApiProperty({
+    example: 'de',
+    required: false,
+    description: 'Preferred language (de, en, fr, es)',
+  })
   @IsOptional()
   @IsString()
   @IsIn(['de', 'en', 'fr', 'es'], { message: 'Language must be one of: de, en, fr, es' })
   language?: string;
 
-  @ApiProperty({ example: 'system', required: false, description: 'Theme preference (light, dark, system)' })
+  @ApiProperty({
+    example: 'system',
+    required: false,
+    description: 'Theme preference (light, dark, system)',
+  })
   @IsOptional()
   @IsString()
   @IsIn(['light', 'dark', 'system'], { message: 'Theme must be one of: light, dark, system' })

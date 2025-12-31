@@ -125,8 +125,6 @@ export class JobPostingsService {
     return this.mapToResponseDto(jobPosting);
   }
 
-
-
   /**
    * Parse file content based on file type
    * @param fileId Storage key of uploaded file
@@ -170,12 +168,16 @@ export class JobPostingsService {
     const secondLine = lines[1] || 'Unknown Company';
 
     // Simple title detection (first line with job keywords)
-    const title = firstLine.match(/engineer|developer|manager|analyst|specialist|consultant|designer|architect/i)
+    const title = firstLine.match(
+      /engineer|developer|manager|analyst|specialist|consultant|designer|architect/i,
+    )
       ? firstLine.trim()
       : 'Unknown Position';
 
     // Simple company detection (second line or look for "at Company")
-    const companyMatch = text.match(/(?:at|@)\s+([A-Z][a-zA-Z0-9\s&]+(?:Inc|LLC|Ltd|GmbH|AG|Corp)?)/);
+    const companyMatch = text.match(
+      /(?:at|@)\s+([A-Z][a-zA-Z0-9\s&]+(?:Inc|LLC|Ltd|GmbH|AG|Corp)?)/,
+    );
     const company = companyMatch ? companyMatch[1].trim() : secondLine.trim() || 'Unknown Company';
 
     // Simple location detection
@@ -259,8 +261,8 @@ export class JobPostingsService {
    */
   async deleteJobPosting(userId: string, id: string): Promise<void> {
     const jobPosting = await this.prisma.jobPosting.findFirst({
-      where: { 
-        id, 
+      where: {
+        id,
         userId,
         deletedAt: null, // Can only soft delete non-deleted postings
       },
@@ -287,8 +289,8 @@ export class JobPostingsService {
    */
   async restoreJobPosting(userId: string, id: string): Promise<JobPostingResponseDto> {
     const jobPosting = await this.prisma.jobPosting.findFirst({
-      where: { 
-        id, 
+      where: {
+        id,
         userId,
         deletedAt: { not: null }, // Can only restore deleted postings
       },

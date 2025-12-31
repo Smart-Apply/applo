@@ -244,7 +244,8 @@ export class ApplicationsController {
   @Get()
   @ApiOperation({
     summary: 'Get all applications',
-    description: 'Returns paginated applications for the authenticated user (default: 20 per page, max: 100)',
+    description:
+      'Returns paginated applications for the authenticated user (default: 20 per page, max: 100)',
   })
   @ApiQuery({
     name: 'includeJobPosting',
@@ -495,7 +496,8 @@ export class ApplicationsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Soft delete application',
-    description: 'Soft deletes an application (sets deletedAt timestamp). Can be restored within 30 days.',
+    description:
+      'Soft deletes an application (sets deletedAt timestamp). Can be restored within 30 days.',
   })
   @ApiResponse({
     status: 204,

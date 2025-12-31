@@ -177,8 +177,12 @@ export class SessionService {
    */
   async cleanupExpiredSessions(): Promise<number> {
     const now = new Date();
-    const revokedCleanupDate = new Date(now.getTime() - REVOKED_SESSION_CLEANUP_DAYS * 24 * 60 * 60 * 1000);
-    const oldSessionCleanupDate = new Date(now.getTime() - OLD_SESSION_CLEANUP_DAYS * 24 * 60 * 60 * 1000);
+    const revokedCleanupDate = new Date(
+      now.getTime() - REVOKED_SESSION_CLEANUP_DAYS * 24 * 60 * 60 * 1000,
+    );
+    const oldSessionCleanupDate = new Date(
+      now.getTime() - OLD_SESSION_CLEANUP_DAYS * 24 * 60 * 60 * 1000,
+    );
 
     const result = await this.prisma.session.deleteMany({
       where: {
@@ -187,10 +191,7 @@ export class SessionService {
           { expiresAt: { lt: now } },
           // Delete revoked sessions older than cleanup threshold
           {
-            AND: [
-              { isActive: false },
-              { revokedAt: { lt: revokedCleanupDate } },
-            ],
+            AND: [{ isActive: false }, { revokedAt: { lt: revokedCleanupDate } }],
           },
           // Delete all sessions older than OLD_SESSION_CLEANUP_DAYS (data retention policy)
           { createdAt: { lt: oldSessionCleanupDate } },
@@ -209,7 +210,9 @@ export class SessionService {
    */
   async cleanupExpiredRefreshTokens(): Promise<number> {
     const now = new Date();
-    const revokedCleanupDate = new Date(now.getTime() - REVOKED_REFRESH_TOKEN_CLEANUP_DAYS * 24 * 60 * 60 * 1000);
+    const revokedCleanupDate = new Date(
+      now.getTime() - REVOKED_REFRESH_TOKEN_CLEANUP_DAYS * 24 * 60 * 60 * 1000,
+    );
 
     const result = await this.prisma.refreshToken.deleteMany({
       where: {
@@ -218,10 +221,7 @@ export class SessionService {
           { expiresAt: { lt: now } },
           // Delete revoked tokens older than cleanup threshold
           {
-            AND: [
-              { isRevoked: true },
-              { createdAt: { lt: revokedCleanupDate } },
-            ],
+            AND: [{ isRevoked: true }, { createdAt: { lt: revokedCleanupDate } }],
           },
         ],
       },

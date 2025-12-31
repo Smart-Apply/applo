@@ -49,10 +49,7 @@ describe('Resume Template Util - Experience Description', () => {
           isCurrent: true,
           description:
             'Verantwortlich für die Entwicklung von Cloud-nativen Anwendungen mit React und Node.js. Leitung des Teams bei der Migration zu Microservices-Architektur.',
-          achievements: [
-            'Implementierte CI/CD Pipeline',
-            'Reduzierte Deployment-Zeit um 50%',
-          ],
+          achievements: ['Implementierte CI/CD Pipeline', 'Reduzierte Deployment-Zeit um 50%'],
         },
         {
           id: 'exp-2',

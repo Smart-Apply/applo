@@ -117,14 +117,14 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
     try {
       this.poolMetrics.totalAcquires++;
       this.poolMetrics.currentlyAcquired++;
-      
+
       const browser = await this.browserPool.acquire();
-      
+
       // Log pool metrics after acquire
       if (this.configService.isDevelopment) {
         this.logPoolMetrics();
       }
-      
+
       return browser;
     } catch (error) {
       this.poolMetrics.totalErrors++;
@@ -137,9 +137,9 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
     try {
       this.poolMetrics.totalReleases++;
       this.poolMetrics.currentlyAcquired--;
-      
+
       await this.browserPool.release(browser);
-      
+
       // Log pool metrics after release
       if (this.configService.isDevelopment) {
         this.logPoolMetrics();
@@ -223,10 +223,10 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
    */
   async generatePDF(html: string, options: PdfGenerationOptions = {}): Promise<Buffer> {
     const browser = await this.acquireBrowser();
-    
+
     try {
       const page = await browser.newPage();
-      
+
       // Increase navigation timeout
       page.setDefaultNavigationTimeout(120000); // 2 minutes
       page.setDefaultTimeout(120000); // 2 minutes

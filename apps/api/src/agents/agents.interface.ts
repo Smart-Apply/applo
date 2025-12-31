@@ -34,11 +34,11 @@ export interface ATSAgentInput {
  * Extracted keywords from ATS Agent
  */
 export interface ATSAgentOutput {
-  coreCompetencies: string[];      // Core skills (profession-specific)
+  coreCompetencies: string[]; // Core skills (profession-specific)
   softSkills: string[];
   responsibilityKeywords: string[];
   requirementKeywords: string[];
-  methodologies: string[];         // Methods, tools, frameworks
+  methodologies: string[]; // Methods, tools, frameworks
   industryKeywords: string[];
   senioritySignals: string[];
   miscKeywords: string[];

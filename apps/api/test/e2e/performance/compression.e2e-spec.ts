@@ -9,9 +9,9 @@ import { PrismaService } from '../../../src/prisma/prisma.service';
 
 /**
  * E2E Tests for Response Compression
- * 
+ *
  * Tests the compression middleware that reduces bandwidth usage for large JSON responses.
- * 
+ *
  * Features tested:
  * - Gzip compression for large responses (> 1KB)
  * - Respect for Accept-Encoding header

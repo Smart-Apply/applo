@@ -9,7 +9,7 @@ import { PrismaService } from '../../../src/prisma/prisma.service';
 
 /**
  * E2E tests to verify N+1 query problems are fixed
- * 
+ *
  * N+1 Problem: When fetching N applications, we should NOT execute N+1 queries
  * (1 for applications + N for job postings). We should execute 1 or 2 queries total
  * using Prisma's `include` for eager loading.
@@ -19,8 +19,8 @@ describe('Applications N+1 Query Prevention (e2e)', () => {
   let prisma: PrismaService;
   let authToken: string;
   let userId: string;
-  let jobPostingIds: string[] = [];
-  let applicationIds: string[] = [];
+  const jobPostingIds: string[] = [];
+  const applicationIds: string[] = [];
 
   // Track database queries
   let queryCount = 0;
@@ -94,7 +94,9 @@ describe('Applications N+1 Query Prevention (e2e)', () => {
       applicationIds.push(application.id);
     }
 
-    console.log(`✅ Created ${jobPostingIds.length} job postings and ${applicationIds.length} applications`);
+    console.log(
+      `✅ Created ${jobPostingIds.length} job postings and ${applicationIds.length} applications`,
+    );
   });
 
   afterAll(async () => {
@@ -120,13 +122,15 @@ describe('Applications N+1 Query Prevention (e2e)', () => {
         .expect(200);
 
       console.log(`\n📊 Query Count: ${queryCount}`);
-      console.log(`📦 Applications returned: ${response.body.items?.length || response.body.length}`);
+      console.log(
+        `📦 Applications returned: ${response.body.items?.length || response.body.length}`,
+      );
 
       // Expected queries:
       // 1. SELECT applications with JOIN job_postings (or separate SELECT with IN clause)
       // 2. COUNT applications
       // Total: 2-3 queries maximum
-      
+
       expect(queryCount).toBeLessThanOrEqual(3);
       expect(queryCount).toBeGreaterThan(0);
 
@@ -134,7 +138,7 @@ describe('Applications N+1 Query Prevention (e2e)', () => {
       const items = response.body.items || response.body;
       expect(Array.isArray(items)).toBe(true);
       expect(items.length).toBeGreaterThan(0);
-      
+
       if (items[0]) {
         expect(items[0].jobPosting).toBeDefined();
         expect(items[0].jobPosting.title).toBeDefined();
@@ -150,10 +154,10 @@ describe('Applications N+1 Query Prevention (e2e)', () => {
         .expect(200);
 
       const items = response.body.items || response.body;
-      
+
       // Should return all 10 applications
       expect(items.length).toBe(10);
-      
+
       // Each should have job posting data
       items.forEach((app: any, index: number) => {
         expect(app.jobPosting).toBeDefined();
@@ -168,7 +172,7 @@ describe('Applications N+1 Query Prevention (e2e)', () => {
 
     it('should use fewer queries than N+1 (performance benchmark)', async () => {
       const n = applicationIds.length; // 10 applications
-      
+
       await request(app.getHttpServer())
         .get('/api/v1/applications?includeJobPosting=true&limit=100')
         .set('Authorization', `Bearer ${authToken}`)
@@ -201,7 +205,7 @@ describe('Applications N+1 Query Prevention (e2e)', () => {
 
       const items = response.body.items || response.body;
       expect(items.length).toBeGreaterThan(0);
-      
+
       // Should NOT include job posting
       if (items[0]) {
         expect(items[0].jobPosting).toBeUndefined();

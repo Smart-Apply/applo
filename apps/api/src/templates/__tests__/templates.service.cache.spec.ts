@@ -88,7 +88,11 @@ describe('TemplatesService - Cache Behavior', () => {
 
     it('should cache results separately by type', async () => {
       const resumeTemplate = { ...mockTemplate, type: TemplateType.RESUME };
-      const coverLetterTemplate = { ...mockTemplate, id: 'template-2', type: TemplateType.COVER_LETTER };
+      const coverLetterTemplate = {
+        ...mockTemplate,
+        id: 'template-2',
+        type: TemplateType.COVER_LETTER,
+      };
 
       prisma.template.findMany
         .mockResolvedValueOnce([resumeTemplate])
@@ -170,9 +174,7 @@ describe('TemplatesService - Cache Behavior', () => {
     it('should cache fallback templates when no default exists', async () => {
       // First findFirst returns null (no default)
       // Second findFirst returns fallback template
-      prisma.template.findFirst
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(mockTemplate);
+      prisma.template.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(mockTemplate);
 
       // First call - should query twice (default + fallback)
       const result1 = await service.findDefault(TemplateType.RESUME);
@@ -202,17 +204,23 @@ describe('TemplatesService - Cache Behavior', () => {
     it('should cache null results for missing templates', async () => {
       // First findFirst returns null (no template for 'de')
       // Second findFirst returns English fallback
-      prisma.template.findFirst
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(mockTemplate);
+      prisma.template.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(mockTemplate);
 
       // First call - should query twice (German + English fallback)
-      const result1 = await service.findByCategoryAndLanguage('modern-professional', 'de', TemplateType.RESUME);
+      const result1 = await service.findByCategoryAndLanguage(
+        'modern-professional',
+        'de',
+        TemplateType.RESUME,
+      );
       expect(prisma.template.findFirst).toHaveBeenCalledTimes(2);
       expect(result1).toEqual(mockTemplate);
 
       // Second call - should use cached result
-      const result2 = await service.findByCategoryAndLanguage('modern-professional', 'de', TemplateType.RESUME);
+      const result2 = await service.findByCategoryAndLanguage(
+        'modern-professional',
+        'de',
+        TemplateType.RESUME,
+      );
       expect(prisma.template.findFirst).toHaveBeenCalledTimes(2); // Still 2
       expect(result2).toEqual(mockTemplate);
     });
@@ -220,10 +228,7 @@ describe('TemplatesService - Cache Behavior', () => {
 
   describe('findLanguageVariants', () => {
     it('should cache language variants by baseTemplateId', async () => {
-      const variants = [
-        mockTemplate,
-        { ...mockTemplate, id: 'template-2', language: 'de' },
-      ];
+      const variants = [mockTemplate, { ...mockTemplate, id: 'template-2', language: 'de' }];
       prisma.template.findMany.mockResolvedValue(variants);
 
       // First call - cache miss

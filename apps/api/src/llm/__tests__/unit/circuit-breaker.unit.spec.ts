@@ -6,7 +6,7 @@ import { LLMProvider } from '../../llm.interface';
 
 /**
  * Unit tests for LLM Circuit Breaker
- * 
+ *
  * Tests verify that:
  * 1. Circuit breaker wraps all LLM provider calls
  * 2. Circuit opens after error threshold is exceeded
@@ -174,10 +174,10 @@ describe('LLMService - Circuit Breaker', () => {
 
       // Second request succeeds (circuit may be open, so we need to wait for reset)
       mockProvider.generateText.mockResolvedValue('Success');
-      
+
       // Wait for circuit to potentially reset
       await new Promise((resolve) => setTimeout(resolve, 600));
-      
+
       const result = await service.generateText('Test prompt');
       expect(result).toBe('Success');
     }, 10000);

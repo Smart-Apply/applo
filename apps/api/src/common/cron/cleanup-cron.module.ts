@@ -6,10 +6,7 @@ import { ConfigService } from '../../config/config.service';
 import { ConfigModule } from '../../config/config.module';
 
 @Module({
-  imports: [
-    ScheduleModule.forRoot(),
-    ConfigModule,
-  ],
+  imports: [ScheduleModule.forRoot(), ConfigModule],
   providers: [CleanupCron, PrismaService, ConfigService],
   exports: [CleanupCron],
 })

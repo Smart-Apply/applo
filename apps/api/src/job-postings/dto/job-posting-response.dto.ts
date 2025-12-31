@@ -16,7 +16,10 @@ export class JobPostingResponseDto {
   @ApiPropertyOptional({ description: 'Detected language (ISO 639-1 code)' })
   language?: string;
 
-  @ApiProperty({ description: 'Full job posting text (description, requirements, responsibilities, benefits, etc.)' })
+  @ApiProperty({
+    description:
+      'Full job posting text (description, requirements, responsibilities, benefits, etc.)',
+  })
   fullText: string;
 
   @ApiPropertyOptional({ description: 'Raw HTML/scraped content for debugging' })

@@ -250,14 +250,14 @@ export class UpdateProfileDto {
   @IsString()
   lastName?: string;
 
-  @ApiProperty({ 
-    example: '+49123456789', 
+  @ApiProperty({
+    example: '+49123456789',
     required: false,
-    description: 'Phone number in international E.164 format (e.g., +49123456789)'
+    description: 'Phone number in international E.164 format (e.g., +49123456789)',
   })
   @IsOptional()
-  @IsPhoneNumber(undefined, { 
-    message: 'Phone number must be in international format (e.g., +49123456789)' 
+  @IsPhoneNumber(undefined, {
+    message: 'Phone number must be in international format (e.g., +49123456789)',
   })
   @Sanitize()
   @IsString()

@@ -26,7 +26,10 @@ export class UserPreferencesService {
     return this.mapToResponseDto(preferences);
   }
 
-  async updatePreferences(userId: string, dto: UpdateUserPreferencesDto): Promise<UserPreferencesResponseDto> {
+  async updatePreferences(
+    userId: string,
+    dto: UpdateUserPreferencesDto,
+  ): Promise<UserPreferencesResponseDto> {
     // Build update data from DTO
     const updateData = this.buildUpdateData(dto);
 

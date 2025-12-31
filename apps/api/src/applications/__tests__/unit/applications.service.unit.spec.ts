@@ -137,8 +137,22 @@ describe('ApplicationsService', () => {
           createdAt: new Date(),
         },
         skills: [
-          { id: 'skill-1', profileId: 'profile-123', name: 'TypeScript', level: 'Expert', createdAt: new Date(), updatedAt: new Date() },
-          { id: 'skill-2', profileId: 'profile-123', name: 'React', level: 'Advanced', createdAt: new Date(), updatedAt: new Date() },
+          {
+            id: 'skill-1',
+            profileId: 'profile-123',
+            name: 'TypeScript',
+            level: 'Expert',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: 'skill-2',
+            profileId: 'profile-123',
+            name: 'React',
+            level: 'Advanced',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
         ],
         experiences: [
           {

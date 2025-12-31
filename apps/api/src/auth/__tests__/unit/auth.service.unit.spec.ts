@@ -34,7 +34,7 @@ describe('AuthService (Unit)', () => {
   beforeEach(async () => {
     const mockPrisma = MockHelper.createMockPrismaService();
     mockPrisma.refreshToken.findMany = jest.fn().mockResolvedValue([]);
-    
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -277,7 +277,12 @@ describe('AuthService (Unit)', () => {
       await service.login(loginDto, 'test-agent', '127.0.0.1', mockRequest);
 
       // Assert
-      expect(auditLogger.logLoginAttempt).toHaveBeenCalledWith(mockUser.email, true, mockRequest, mockUser.id);
+      expect(auditLogger.logLoginAttempt).toHaveBeenCalledWith(
+        mockUser.email,
+        true,
+        mockRequest,
+        mockUser.id,
+      );
     });
 
     it('should log failed login attempt', async () => {
@@ -291,7 +296,12 @@ describe('AuthService (Unit)', () => {
         UnauthorizedException,
       );
 
-      expect(auditLogger.logLoginAttempt).toHaveBeenCalledWith(loginDto.email, false, mockRequest, mockUser.id);
+      expect(auditLogger.logLoginAttempt).toHaveBeenCalledWith(
+        loginDto.email,
+        false,
+        mockRequest,
+        mockUser.id,
+      );
     });
   });
 
@@ -358,7 +368,13 @@ describe('AuthService (Unit)', () => {
       } as any;
 
       // Act
-      await service['generateTokens'](mockUser.id, mockUser.email, 'test-agent', '127.0.0.1', mockReq);
+      await service['generateTokens'](
+        mockUser.id,
+        mockUser.email,
+        'test-agent',
+        '127.0.0.1',
+        mockReq,
+      );
 
       // Assert
       // createSession is called with (userId, refreshTokenId, req)

@@ -33,7 +33,10 @@ export class CreateJobPostingDto {
   @IsUrl()
   url?: string;
 
-  @ApiProperty({ description: 'Full job posting text (description, requirements, responsibilities, benefits, etc.)' })
+  @ApiProperty({
+    description:
+      'Full job posting text (description, requirements, responsibilities, benefits, etc.)',
+  })
   @IsString()
   @Sanitize()
   fullText: string;
