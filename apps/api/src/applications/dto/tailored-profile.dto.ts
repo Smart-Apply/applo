@@ -29,6 +29,52 @@ export interface SelectedProject {
 }
 
 /**
+ * Selected certificate from candidate profile
+ */
+export interface SelectedCertificate {
+  /** Maps to Certificate.id in DB (null if synthesized) */
+  profileCertificateId: string | null;
+  /** Certificate name */
+  name: string;
+  /** Issuing organization */
+  issuer: string;
+  /** Date issued (ISO string or year) */
+  issueDate?: string | null;
+}
+
+/**
+ * Selected education from candidate profile
+ */
+export interface SelectedEducation {
+  /** Maps to Education.id in DB (null if synthesized) */
+  profileEducationId: string | null;
+  /** Degree name */
+  degree: string;
+  /** Institution name */
+  institution: string;
+  /** Field of study */
+  fieldOfStudy?: string | null;
+  /** Start year */
+  startYear?: string | null;
+  /** End year or 'Present' */
+  endYear?: string | null;
+  /** GPA if notable */
+  gpa?: string | null;
+  /** Relevant coursework or achievements */
+  description?: string | null;
+}
+
+/**
+ * Selected language from candidate profile
+ */
+export interface SelectedLanguage {
+  /** Language name (e.g., Deutsch, English) */
+  name: string;
+  /** Proficiency level (e.g., Native, Fluent, Advanced, Basic) */
+  level?: string;
+}
+
+/**
  * Tailored profile output from skill-selector LLM
  * Contains only relevant profile data selected for a specific job posting
  */
@@ -49,8 +95,10 @@ export interface TailoredProfileDto {
   selected_experiences: SelectedExperience[];
   /** Selected relevant projects (max 5) */
   selected_projects: SelectedProject[];
-  /** Selected relevant certificate names */
-  selected_certificates: string[];
-  /** All education entries (no filtering) */
-  selected_education: string[];
+  /** Selected relevant certificates */
+  selected_certificates: (string | SelectedCertificate)[];
+  /** All education entries */
+  selected_education: (string | SelectedEducation)[];
+  /** Selected languages */
+  selected_languages?: (string | SelectedLanguage)[];
 }

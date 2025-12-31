@@ -90,7 +90,7 @@
     <h2>{{t 'resume.education'}}</h2>
     {{#each education}}
     <div class="education-item no-break">
-      <p class="education-degree">{{degree}}{{#if fieldOfStudy}} - {{fieldOfStudy}}{{/if}}</p>
+      <p class="education-degree">{{degree}}{{#if fieldOfStudy}} {{fieldOfStudy}}{{/if}}</p>
       <p class="education-institution">{{institution}}</p>
       <p class="education-date">{{year}}</p>
       {{#if gpa}}

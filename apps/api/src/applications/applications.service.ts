@@ -1443,40 +1443,154 @@ Summary: ${resume.summary || 'Not provided'}
         };
       });
 
-    // Map selected education
-    const education = (tailoredProfile.selected_education || [])
-      .filter((edu: any) => edu.degree && edu.institution)
+    // Map selected education - Handle both string[] (legacy) and object[] (new)
+    let education = (tailoredProfile.selected_education || [])
       .map((edu: any) => {
-        // Calculate year from startYear/endYear
-        const year = edu.endYear || edu.startYear || new Date().getFullYear().toString();
+        // Handle string format (legacy LLM output)
+        if (typeof edu === 'string') {
+          // Try to match with profile education by degree or institution name
+          const matchedEdu = profile.education.find(
+            (e) =>
+              edu.toLowerCase().includes(e.degree.toLowerCase()) ||
+              edu.toLowerCase().includes(e.institution.toLowerCase()),
+          );
+          if (matchedEdu) {
+            return {
+              id: matchedEdu.id,
+              degree: matchedEdu.degree,
+              institution: matchedEdu.institution,
+              fieldOfStudy: matchedEdu.fieldOfStudy ?? undefined,
+              year: matchedEdu.endYear?.getFullYear()?.toString() || '',
+              gpa: matchedEdu.gpa ?? undefined,
+              description: matchedEdu.description ?? undefined,
+            };
+          }
+          // Fallback: parse "Degree at Institution" format
+          const parts = edu.split(/\s+at\s+|\s+-\s+|\s+from\s+/i).map((s: string) => s.trim());
+          return {
+            id: 'edu-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+            degree: parts[0] || edu,
+            institution: parts[1] || 'Unknown',
+            year: new Date().getFullYear().toString(),
+          };
+        }
+        // Handle object format (new LLM output)
+        if (!edu.degree && !edu.institution) return null;
+        // Find original education from profile by ID to enrich data
+        const originalEdu = profile.education.find((e) => e.id === edu.profileEducationId);
+        const year =
+          edu.endYear ||
+          edu.startYear ||
+          originalEdu?.endYear?.getFullYear()?.toString() ||
+          new Date().getFullYear().toString();
         return {
-          id: edu.id || 'edu-' + Date.now(),
-          degree: edu.degree,
-          institution: edu.institution,
-          fieldOfStudy: edu.fieldOfStudy || undefined,
+          id: edu.profileEducationId || 'edu-' + Date.now(),
+          degree: originalEdu?.degree || edu.degree,
+          institution: originalEdu?.institution || edu.institution,
+          fieldOfStudy: originalEdu?.fieldOfStudy || edu.fieldOfStudy || undefined,
           year: year.toString(),
-          gpa: edu.gpa || undefined,
-          description: edu.description || undefined,
+          gpa: originalEdu?.gpa || edu.gpa || undefined,
+          description: originalEdu?.description || edu.description || undefined,
         };
-      });
+      })
+      .filter(Boolean);
 
-    // Map selected certifications
-    const certifications = (tailoredProfile.selected_certifications || [])
-      .filter((cert: any) => cert.name && cert.issuer)
-      .map((cert: any) => ({
-        id: cert.id || 'cert-' + Date.now(),
+    // Fallback: If no education from LLM, use all profile education
+    if (education.length === 0 && profile.education.length > 0) {
+      education = profile.education.map((edu) => ({
+        id: edu.id,
+        degree: edu.degree,
+        institution: edu.institution,
+        fieldOfStudy: edu.fieldOfStudy ?? undefined,
+        year: edu.endYear?.getFullYear()?.toString() || edu.startYear?.getFullYear()?.toString() || '',
+        gpa: edu.gpa ?? undefined,
+        description: edu.description ?? undefined,
+      }));
+    }
+
+    // Map selected certifications - Handle both string[] (legacy) and object[] (new)
+    let certifications = (tailoredProfile.selected_certificates || [])
+      .map((cert: any) => {
+        // Handle string format (legacy LLM output)
+        if (typeof cert === 'string') {
+          // Find matching certificate in profile by name
+          const matchedCert = profile.certificates.find(
+            (c) => c.name.toLowerCase() === cert.toLowerCase(),
+          );
+          if (matchedCert) {
+            return {
+              id: matchedCert.id,
+              name: matchedCert.name,
+              issuer: matchedCert.issuer,
+              date: matchedCert.issueDate?.toISOString() || undefined,
+            };
+          }
+          // Fallback: use string as name with unknown issuer
+          return {
+            id: 'cert-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+            name: cert,
+            issuer: 'Unknown',
+          };
+        }
+        // Handle object format (new LLM output)
+        if (!cert.name) return null;
+        // Find original certificate from profile by ID to enrich data
+        const originalCert = profile.certificates.find((c) => c.id === cert.profileCertificateId);
+        return {
+          id: cert.profileCertificateId || 'cert-' + Date.now(),
+          name: originalCert?.name || cert.name,
+          issuer: originalCert?.issuer || cert.issuer || 'Unknown',
+          date: originalCert?.issueDate?.toISOString() || cert.issueDate || undefined,
+        };
+      })
+      .filter(Boolean);
+
+    // Fallback: If no certifications from LLM, use all profile certificates
+    if (certifications.length === 0 && profile.certificates.length > 0) {
+      certifications = profile.certificates.map((cert) => ({
+        id: cert.id,
         name: cert.name,
         issuer: cert.issuer,
-        date: cert.issueDate || undefined,
+        date: cert.issueDate?.toISOString() || undefined,
       }));
+    }
 
-    // Map languages
-    const languages = (tailoredProfile.selected_languages || [])
-      .filter((lang: any) => lang.name)
-      .map((lang: any) => ({
+    // Map languages - Handle both string[] (legacy) and object[] (new)
+    // Also include all profile languages if LLM didn't return any
+    let languages = (tailoredProfile.selected_languages || [])
+      .map((lang: any) => {
+        // Handle string format (legacy LLM output, e.g., "German (Native)" or just "German")
+        if (typeof lang === 'string') {
+          // Try to parse "Language (Level)" format
+          const match = lang.match(/^(.+?)\s*\((.+?)\)$/);
+          if (match) {
+            return { name: match[1].trim(), level: match[2].trim() };
+          }
+          // Find matching language in profile by name
+          const matchedLang = profile.languages.find(
+            (l) => l.name.toLowerCase() === lang.toLowerCase(),
+          );
+          return {
+            name: lang,
+            level: matchedLang?.level || undefined,
+          };
+        }
+        // Handle object format (new LLM output)
+        if (!lang.name) return null;
+        return {
+          name: lang.name,
+          level: lang.level || undefined,
+        };
+      })
+      .filter(Boolean);
+
+    // Fallback: If no languages from LLM, use all profile languages
+    if (languages.length === 0 && profile.languages.length > 0) {
+      languages = profile.languages.map((lang) => ({
         name: lang.name,
         level: lang.level || undefined,
       }));
+    }
 
     return {
       candidateName,

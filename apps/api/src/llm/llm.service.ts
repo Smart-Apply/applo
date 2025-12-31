@@ -345,6 +345,7 @@ export class LLMService {
         ? data.selected_certificates
         : [],
       selected_education: Array.isArray(data.selected_education) ? data.selected_education : [],
+      selected_languages: Array.isArray(data.selected_languages) ? data.selected_languages : [],
     };
 
     // Enforce max limits with truncation

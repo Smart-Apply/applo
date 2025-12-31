@@ -88,8 +88,79 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
       "why_relevant": "string - Why selected for THIS specific job"
     }
   ],
-  "selected_certificates": ["string - certificate names only"],
-  "selected_education": ["string - all education entries"]
+  "selected_certificates": [
+    {
+      "profileCertificateId": "string or null - ID from profile.certificates",
+      "name": "string - Certificate name",
+      "issuer": "string - Issuing organization",
+      "issueDate": "string or null - Date issued (YYYY or YYYY-MM-DD)"
+    }
+  ],
+  "selected_education": [
+    {
+      "profileEducationId": "string or null - ID from profile.education",
+      "degree": "string - Degree name (e.g., Bachelor of Science, Master of Arts)",
+      "institution": "string - School/University name",
+      "fieldOfStudy": "string or null - Field of study (e.g., Computer Science, Nursing)",
+      "startYear": "string or null - Start year (e.g., 2015)",
+      "endYear": "string or null - End year or Present (e.g., 2019, Present)",
+      "gpa": "string or null - GPA if notable (e.g., 3.8/4.0)",
+      "description": "string or null - Relevant coursework or achievements"
+    }
+  ],
+  "selected_languages": [
+    {
+      "name": "string - Language name (e.g., Deutsch, English, Spanish)",
+      "level": "string - Proficiency level (e.g., Native, Fluent, Advanced, Intermediate, Basic)"
+    }
+  ]
+}
+```
+
+### Example Output (Healthcare Role)
+
+```json
+{
+  "target_role": "Registered Nurse",
+  "target_company": "City Hospital",
+  "reasoning_short": "Strong candidate with 5+ years of patient care experience and EMR proficiency. CPR certified with expertise in emergency care.",
+  "selected_hard_skills": ["Patient Care", "Vital Signs Monitoring", "IV Administration", "Wound Care"],
+  "selected_soft_skills": ["Communication", "Empathy"],
+  "selected_tools": ["Epic EMR", "Meditech", "Patient Monitoring Systems"],
+  "selected_experiences": [
+    {
+      "profileExperienceId": "exp-123",
+      "title": "Staff Nurse",
+      "company": "Memorial Hospital",
+      "summary": "Provided direct patient care in 30-bed medical-surgical unit.",
+      "why_relevant": "Direct experience with patient care and EMR systems required for this role."
+    }
+  ],
+  "selected_projects": [],
+  "selected_certificates": [
+    {
+      "profileCertificateId": "cert-456",
+      "name": "CPR Certification",
+      "issuer": "American Heart Association",
+      "issueDate": "2024"
+    }
+  ],
+  "selected_education": [
+    {
+      "profileEducationId": "edu-789",
+      "degree": "Bachelor of Science in Nursing",
+      "institution": "State University",
+      "fieldOfStudy": "Nursing",
+      "startYear": "2015",
+      "endYear": "2019",
+      "gpa": "3.7/4.0",
+      "description": "Clinical rotations in ICU, Emergency, and Pediatrics"
+    }
+  ],
+  "selected_languages": [
+    { "name": "English", "level": "Native" },
+    { "name": "Spanish", "level": "Intermediate" }
+  ]
 }
 ```
 
