@@ -444,6 +444,45 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
+    generateSummary: (id: string, data: { instructions: string; currentSummary?: string; regenerate?: boolean }) =>
+      apiRequest<{ summary: string }>(`/applications/${id}/summary`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    generateExperienceDescription: (
+      id: string,
+      data: {
+        instructions: string;
+        experienceIndex: number;
+        currentDescription?: string;
+        experienceTitle: string;
+        experienceCompany: string;
+        experienceDateRange?: string;
+        regenerate?: boolean;
+      },
+    ) =>
+      apiRequest<{ description: string }>(`/applications/${id}/experience-description`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    generateProjectDescription: (
+      id: string,
+      data: {
+        instructions: string;
+        projectIndex: number;
+        currentDescription?: string;
+        projectName: string;
+        projectDate?: string;
+        regenerate?: boolean;
+      },
+    ) =>
+      apiRequest<{ description: string }>(`/applications/${id}/project-description`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
     export: (id: string, language?: 'de' | 'en' | 'fr' | 'es' | 'it') =>
       apiRequest<Application>(`/applications/${id}/export`, {
         method: 'POST',

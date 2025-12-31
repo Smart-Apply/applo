@@ -36,6 +36,9 @@ import { UpdateTargetJobTitleDto } from './dto/update-target-job-title.dto';
 import { UseThrottler } from '../common/decorators/throttle.decorator';
 import { UpdateResumeDto } from './dto/update-resume.dto';
 import { CoverLetterDto } from './dto/cover-letter.dto';
+import { SummaryDto } from './dto/summary.dto';
+import { ExperienceDescriptionDto } from './dto/experience-description.dto';
+import { ProjectDescriptionDto } from './dto/project-description.dto';
 import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
 
 @ApiTags('applications')
@@ -164,6 +167,87 @@ export class ApplicationsController {
     @Body() dto: CoverLetterDto,
   ): Promise<ApplicationResponseDto> {
     return this.applicationsService.upsertCoverLetter(user.id, id, dto);
+  }
+
+  @Post(':id/summary')
+  @ApiOperation({
+    summary: 'Professionelle Zusammenfassung mit AI generieren',
+    description:
+      'Generiert oder modifiziert die professionelle Zusammenfassung basierend auf Benutzeranweisungen und Job-Kontext. Gibt die generierte Zusammenfassung zurück (nicht gespeichert).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Zusammenfassung erfolgreich generiert',
+    schema: {
+      type: 'object',
+      properties: {
+        summary: { type: 'string', description: 'Generierte Zusammenfassung im Markdown-Format' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Ungültige Anfrage' })
+  @ApiResponse({ status: 401, description: 'Nicht autorisiert' })
+  @ApiResponse({ status: 404, description: 'Bewerbung nicht gefunden' })
+  async generateSummary(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: SummaryDto,
+  ): Promise<{ summary: string }> {
+    return this.applicationsService.generateSummary(user.id, id, dto);
+  }
+
+  @Post(':id/experience-description')
+  @ApiOperation({
+    summary: 'Berufserfahrung-Beschreibung mit AI generieren',
+    description:
+      'Generiert oder modifiziert die Beschreibung einer Berufserfahrung basierend auf Benutzeranweisungen und Job-Kontext. Gibt HTML-formatierte Bullet-Points zurück.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Beschreibung erfolgreich generiert',
+    schema: {
+      type: 'object',
+      properties: {
+        description: { type: 'string', description: 'Generierte Beschreibung als HTML-Bullets' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Ungültige Anfrage' })
+  @ApiResponse({ status: 401, description: 'Nicht autorisiert' })
+  @ApiResponse({ status: 404, description: 'Bewerbung nicht gefunden' })
+  async generateExperienceDescription(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: ExperienceDescriptionDto,
+  ): Promise<{ description: string }> {
+    return this.applicationsService.generateExperienceDescription(user.id, id, dto);
+  }
+
+  @Post(':id/project-description')
+  @ApiOperation({
+    summary: 'Projekt-Beschreibung mit AI generieren',
+    description:
+      'Generiert oder modifiziert die Beschreibung eines Projekts basierend auf Benutzeranweisungen und Job-Kontext. Gibt HTML-formatierte Bullet-Points zurück.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Beschreibung erfolgreich generiert',
+    schema: {
+      type: 'object',
+      properties: {
+        description: { type: 'string', description: 'Generierte Beschreibung als HTML-Bullets' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Ungültige Anfrage' })
+  @ApiResponse({ status: 401, description: 'Nicht autorisiert' })
+  @ApiResponse({ status: 404, description: 'Bewerbung nicht gefunden' })
+  async generateProjectDescription(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: ProjectDescriptionDto,
+  ): Promise<{ description: string }> {
+    return this.applicationsService.generateProjectDescription(user.id, id, dto);
   }
 
   @Post(':id/export')

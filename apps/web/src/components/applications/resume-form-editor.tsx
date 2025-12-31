@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Trash2 } from 'lucide-react';
 import type { ResumeData } from '@/types';
 import { DescriptionEditor } from './description-editor';
+import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
 
 /**
  * Textarea that converts comma-separated text to array only on blur
@@ -95,11 +96,144 @@ interface ResumeFormEditorProps {
   value: ResumeData;
   onChange: (resume: ResumeData) => void;
   disabled?: boolean;
+  /** Application ID for AI summary generation */
+  applicationId?: string;
+  /** Callback to generate summary with AI (returns generated summary text) */
+  onAiSummaryRequest?: (instructions: string, currentSummary: string) => Promise<string>;
+  /** Whether AI summary generation is in progress */
+  isAiSummaryLoading?: boolean;
+  /** Callback to generate experience description with AI (returns generated HTML) */
+  onAiExperienceRequest?: (
+    instructions: string,
+    experienceIndex: number,
+    currentDescription: string,
+    experienceTitle: string,
+    experienceCompany: string,
+    experienceDateRange: string,
+  ) => Promise<string>;
+  /** Index of experience entry where AI generation is in progress (-1 if none) */
+  experienceAiLoadingIndex?: number;
+  /** Callback to generate project description with AI (returns generated HTML) */
+  onAiProjectRequest?: (
+    instructions: string,
+    projectIndex: number,
+    currentDescription: string,
+    projectName: string,
+    projectDate: string,
+  ) => Promise<string>;
+  /** Index of project entry where AI generation is in progress (-1 if none) */
+  projectAiLoadingIndex?: number;
 }
 
-export function ResumeFormEditor({ value, onChange, disabled }: ResumeFormEditorProps) {
+export function ResumeFormEditor({ 
+  value, 
+  onChange, 
+  disabled, 
+  applicationId,
+  onAiSummaryRequest,
+  isAiSummaryLoading = false,
+  onAiExperienceRequest,
+  experienceAiLoadingIndex = -1,
+  onAiProjectRequest,
+  projectAiLoadingIndex = -1,
+}: ResumeFormEditorProps) {
   // Section navigation state
   const [activeSection, setActiveSection] = useState<string>('personal');
+  
+  // AI Summary Assistant state
+  const [summaryAiOpen, setSummaryAiOpen] = useState(false);
+  const [summaryInstructions, setSummaryInstructions] = useState('');
+
+  // AI Experience Description Assistant state (per-entry)
+  const [experienceAiOpenIndex, setExperienceAiOpenIndex] = useState<number>(-1);
+  const [experienceInstructions, setExperienceInstructions] = useState('');
+
+  // AI Project Description Assistant state (per-entry)
+  const [projectAiOpenIndex, setProjectAiOpenIndex] = useState<number>(-1);
+  const [projectInstructions, setProjectInstructions] = useState('');
+
+  // Handler for AI summary generation
+  const handleApplySummaryAI = useCallback(async () => {
+    if (!onAiSummaryRequest || !summaryInstructions.trim()) return;
+    
+    try {
+      const generatedSummary = await onAiSummaryRequest(
+        summaryInstructions.trim(),
+        value.summary || ''
+      );
+      
+      // Update the summary field with generated content
+      onChange({ ...value, summary: generatedSummary });
+      
+      // Clear instructions and close popover
+      setSummaryInstructions('');
+      setSummaryAiOpen(false);
+    } catch (error) {
+      // Error handling is done in the parent component
+      console.error('AI summary generation failed:', error);
+    }
+  }, [onAiSummaryRequest, summaryInstructions, value, onChange]);
+
+  // Handler for AI experience description generation
+  const handleApplyExperienceAI = useCallback(async (index: number) => {
+    if (!onAiExperienceRequest || !experienceInstructions.trim()) return;
+    
+    const exp = value.experiences[index];
+    if (!exp) return;
+
+    try {
+      const generatedDescription = await onAiExperienceRequest(
+        experienceInstructions.trim(),
+        index,
+        exp.description || '',
+        exp.title,
+        exp.company,
+        exp.dateRange || '',
+      );
+      
+      // Update the experience description with generated content
+      const updated = [...value.experiences];
+      updated[index] = { ...updated[index], description: generatedDescription };
+      onChange({ ...value, experiences: updated });
+      
+      // Clear instructions and close popover
+      setExperienceInstructions('');
+      setExperienceAiOpenIndex(-1);
+    } catch (error) {
+      // Error handling is done in the parent component
+      console.error('AI experience description generation failed:', error);
+    }
+  }, [onAiExperienceRequest, experienceInstructions, value, onChange]);
+
+  // Handler for AI project description generation
+  const handleApplyProjectAI = useCallback(async (index: number) => {
+    if (!onAiProjectRequest || !projectInstructions.trim()) return;
+    
+    const project = (value.projects || [])[index];
+    if (!project) return;
+
+    try {
+      const generatedDescription = await onAiProjectRequest(
+        projectInstructions.trim(),
+        index,
+        project.description || '',
+        project.name,
+        project.date || '',
+      );
+      
+      // Update the project description with generated content
+      const updated = [...(value.projects || [])];
+      updated[index] = { ...updated[index], description: generatedDescription };
+      onChange({ ...value, projects: updated });
+      
+      // Clear instructions and close popover
+      setProjectInstructions('');
+      setProjectAiOpenIndex(-1);
+    } catch (error) {
+      // Error handling is done in the parent component
+      console.error('AI project description generation failed:', error);
+    }
+  }, [onAiProjectRequest, projectInstructions, value, onChange]);
 
   const updateField = <K extends keyof ResumeData>(field: K, newValue: ResumeData[K]) => {
     onChange({ ...value, [field]: newValue });
@@ -302,7 +436,23 @@ export function ResumeFormEditor({ value, onChange, disabled }: ResumeFormEditor
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="summary">Zusammenfassung</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="summary">Zusammenfassung</Label>
+              {onAiSummaryRequest && applicationId && (
+                <AiAssistantPopover
+                  open={summaryAiOpen}
+                  onOpenChange={setSummaryAiOpen}
+                  instructions={summaryInstructions}
+                  onInstructionsChange={setSummaryInstructions}
+                  onApply={handleApplySummaryAI}
+                  isLoading={isAiSummaryLoading}
+                  placeholder="Z.B.: Betone meine Projektmanagement-Erfahrung und Führungsqualitäten..."
+                  title="Zusammenfassung optimieren"
+                  description="Beschreibe, wie die Zusammenfassung angepasst werden soll (3-5 Sätze)."
+                  warningMessage="Die AI generiert eine neue Zusammenfassung. Danach musst du manuell speichern."
+                />
+              )}
+            </div>
             <DescriptionEditor
               value={value.summary || ''}
               onChange={(html) => updateField('summary', html)}
@@ -423,7 +573,30 @@ export function ResumeFormEditor({ value, onChange, disabled }: ResumeFormEditor
                     />
                   </div>
                   <div>
-                    <Label htmlFor={`exp-description-${index}`}>Beschreibung</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor={`exp-description-${index}`}>Beschreibung</Label>
+                      {onAiExperienceRequest && exp.title && exp.company && (
+                        <AiAssistantPopover
+                          open={experienceAiOpenIndex === index}
+                          onOpenChange={(open) => {
+                            if (open) {
+                              setExperienceAiOpenIndex(index);
+                              setExperienceInstructions('');
+                            } else {
+                              setExperienceAiOpenIndex(-1);
+                            }
+                          }}
+                          instructions={experienceInstructions}
+                          onInstructionsChange={setExperienceInstructions}
+                          onApply={() => handleApplyExperienceAI(index)}
+                          isLoading={experienceAiLoadingIndex === index}
+                          placeholder="z.B. Betone messbare Erfolge und Teamführung"
+                          title="Beschreibung mit AI verbessern"
+                          description="Die KI generiert aussagekräftige Bullet-Points mit Aktionsverben und quantifizierbaren Erfolgen."
+                          warningMessage="Geben Sie Anweisungen ein, um die Beschreibung zu generieren."
+                        />
+                      )}
+                    </div>
                     <DescriptionEditor
                       value={exp.description || ''}
                       onChange={(html) => updateExperience(index, 'description', html)}
@@ -490,13 +663,39 @@ export function ResumeFormEditor({ value, onChange, disabled }: ResumeFormEditor
                       placeholder="Zeitraum"
                     />
                   </div>
-                  <DescriptionEditor
-                    value={project.description || ''}
-                    onChange={(html) => updateProject(index, 'description', html)}
-                    disabled={disabled}
-                    placeholder="Beschreiben Sie das Projekt, Ihre Rolle und erreichte Ergebnisse. Nutzen Sie - + Leerzeichen für Aufzählungen."
-                    minHeight="120px"
-                  />
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor={`project-description-${index}`}>Beschreibung</Label>
+                      {onAiProjectRequest && project.name && (
+                        <AiAssistantPopover
+                          open={projectAiOpenIndex === index}
+                          onOpenChange={(open) => {
+                            if (open) {
+                              setProjectAiOpenIndex(index);
+                              setProjectInstructions('');
+                            } else {
+                              setProjectAiOpenIndex(-1);
+                            }
+                          }}
+                          instructions={projectInstructions}
+                          onInstructionsChange={setProjectInstructions}
+                          onApply={() => handleApplyProjectAI(index)}
+                          isLoading={projectAiLoadingIndex === index}
+                          placeholder="z.B. Betone die verwendeten Technologien und den Business-Impact"
+                          title="Beschreibung mit AI verbessern"
+                          description="Die KI generiert aussagekräftige Bullet-Points mit Technologie-Fokus und messbaren Ergebnissen."
+                          warningMessage="Geben Sie Anweisungen ein, um die Beschreibung zu generieren."
+                        />
+                      )}
+                    </div>
+                    <DescriptionEditor
+                      value={project.description || ''}
+                      onChange={(html) => updateProject(index, 'description', html)}
+                      disabled={disabled}
+                      placeholder="Beschreiben Sie das Projekt, Ihre Rolle und erreichte Ergebnisse. Nutzen Sie - + Leerzeichen für Aufzählungen."
+                      minHeight="120px"
+                    />
+                  </div>
                   <NewlineSeparatedTextarea
                     value={project.highlights || []}
                     onChange={(highlights) => updateProject(index, 'highlights', highlights)}

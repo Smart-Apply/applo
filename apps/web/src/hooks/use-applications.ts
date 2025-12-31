@@ -235,6 +235,64 @@ export function useUpsertCoverLetter(applicationId: string) {
   });
 }
 
+/**
+ * Hook to generate/modify professional summary using AI
+ * Returns the generated summary text (not persisted - user applies in editor)
+ */
+export function useGenerateSummary(applicationId: string) {
+  return useMutation({
+    mutationFn: (data: { instructions: string; currentSummary?: string; regenerate?: boolean }) =>
+      api.applications.generateSummary(applicationId, data),
+    // Note: No onSuccess toast - handled in component with streaming effect
+    onError: (error: unknown) => {
+      toastError(error, 'Zusammenfassung konnte nicht generiert werden');
+    },
+  });
+}
+
+/**
+ * Generate or modify experience description using AI
+ * Returns the generated HTML description (not persisted - user applies in editor)
+ */
+export function useGenerateExperienceDescription(applicationId: string) {
+  return useMutation({
+    mutationFn: (data: {
+      instructions: string;
+      experienceIndex: number;
+      currentDescription?: string;
+      experienceTitle: string;
+      experienceCompany: string;
+      experienceDateRange?: string;
+      regenerate?: boolean;
+    }) => api.applications.generateExperienceDescription(applicationId, data),
+    // Note: No onSuccess toast - handled in component with streaming effect
+    onError: (error: unknown) => {
+      toastError(error, 'Beschreibung konnte nicht generiert werden');
+    },
+  });
+}
+
+/**
+ * Generate or modify project description using AI
+ * Returns the generated HTML description (not persisted - user applies in editor)
+ */
+export function useGenerateProjectDescription(applicationId: string) {
+  return useMutation({
+    mutationFn: (data: {
+      instructions: string;
+      projectIndex: number;
+      currentDescription?: string;
+      projectName: string;
+      projectDate?: string;
+      regenerate?: boolean;
+    }) => api.applications.generateProjectDescription(applicationId, data),
+    // Note: No onSuccess toast - handled in component with streaming effect
+    onError: (error: unknown) => {
+      toastError(error, 'Beschreibung konnte nicht generiert werden');
+    },
+  });
+}
+
 export function useExportApplication(applicationId: string) {
   const queryClient = useQueryClient();
 

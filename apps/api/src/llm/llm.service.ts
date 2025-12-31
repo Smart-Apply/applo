@@ -627,6 +627,219 @@ Geändertes Anschreiben:`;
     });
   }
 
+  /**
+   * Modify or generate professional summary based on user instructions
+   * Tailors summary to job requirements while keeping it concise (3-5 sentences)
+   */
+  async modifySummaryContent(
+    currentSummary: string | undefined,
+    instructions: string,
+    context: {
+      jobTitle: string;
+      companyName: string;
+      jobDescription?: string;
+      skills?: string[];
+      experiences?: Array<{ title: string; company: string; description?: string }>;
+    },
+  ): Promise<string> {
+    this.logger.log(
+      `Modifying summary for ${context.jobTitle} at ${context.companyName} with instructions: ${instructions.substring(0, 50)}...`,
+    );
+
+    // Format skills and experiences for context
+    const skillsList = context.skills?.length ? context.skills.join(', ') : 'Keine angegeben';
+    const experiencesList = context.experiences?.length
+      ? context.experiences
+          .map((exp) => `- ${exp.title} bei ${exp.company}${exp.description ? `: ${exp.description.substring(0, 100)}...` : ''}`)
+          .join('\n')
+      : 'Keine angegeben';
+
+    const hasExistingSummary = currentSummary && currentSummary.trim().length > 0;
+
+    const prompt = `Du bist ein professioneller Karriereberater und hilfst einem Kandidaten, seine berufliche Zusammenfassung für den Lebenslauf zu ${hasExistingSummary ? 'verbessern' : 'erstellen'}.
+
+${hasExistingSummary ? `Aktuelle Zusammenfassung:
+${currentSummary}
+
+` : ''}**Zielposition:** ${context.jobTitle}
+**Unternehmen:** ${context.companyName}
+${context.jobDescription ? `**Stellenbeschreibung (Auszug):**
+${context.jobDescription.substring(0, 500)}...
+` : ''}
+**Kandidaten-Skills:** ${skillsList}
+
+**Relevante Berufserfahrung:**
+${experiencesList}
+
+**Anweisungen des Kandidaten:**
+${instructions}
+
+**Aufgabe:**
+1. ${hasExistingSummary ? 'Wende die gewünschten Änderungen präzise an' : 'Erstelle eine neue professionelle Zusammenfassung'}
+2. **Halte dich strikt an 3-5 Sätze** (absolutes Maximum)
+3. Beginne mit der aktuellen Rolle/Erfahrung und Kernkompetenz
+4. Hebe 2-3 relevante Fähigkeiten oder Erfolge hervor, die zur Stelle passen
+5. Zeige Motivation für die Zielposition (optional, wenn Platz)
+6. Behalte professionellen, selbstbewussten Ton
+7. **Gib NUR die Zusammenfassung zurück** (kein Markdown, keine Erklärungen, kein "Zusammenfassung:" Prefix)
+
+Professionelle Zusammenfassung:`;
+
+    return this.callProvider(prompt, {
+      temperature: 0.7,
+      maxTokens: 500, // Limit output for concise summary
+      systemMessage:
+        'Du bist ein Experte für Lebenslauf-Optimierung und ATS-konforme Zusammenfassungen. Du schreibst prägnante, wirkungsvolle Zusammenfassungen in 3-5 Sätzen, die relevant für die Zielposition sind.',
+    });
+  }
+
+  /**
+   * Modify or generate experience description using AI
+   * Tailors bullet points to job requirements with action verbs and quantifiable achievements
+   * Returns HTML formatted bullets for Tiptap editor
+   */
+  async modifyExperienceDescription(
+    currentDescription: string | undefined,
+    instructions: string,
+    context: {
+      experienceTitle: string;
+      experienceCompany: string;
+      experienceDateRange?: string;
+      jobTitle: string;
+      companyName: string;
+      jobDescription?: string;
+      skills?: string[];
+    },
+  ): Promise<string> {
+    this.logger.log(
+      `Modifying experience description for ${context.experienceTitle} at ${context.experienceCompany} with instructions: ${instructions.substring(0, 50)}...`,
+    );
+
+    const skillsList = context.skills?.length ? context.skills.join(', ') : 'Keine angegeben';
+    const hasExistingDescription = currentDescription && currentDescription.trim().length > 0;
+
+    const prompt = `Du bist ein professioneller Karriereberater und hilfst einem Kandidaten, die Beschreibung seiner Berufserfahrung für den Lebenslauf zu ${hasExistingDescription ? 'verbessern' : 'erstellen'}.
+
+**BERUFSERFAHRUNG DIE BEARBEITET WIRD:**
+- Position: ${context.experienceTitle}
+- Unternehmen: ${context.experienceCompany}
+${context.experienceDateRange ? `- Zeitraum: ${context.experienceDateRange}` : ''}
+
+${hasExistingDescription ? `**Aktuelle Beschreibung:**
+${currentDescription}
+
+` : ''}**ZIELSTELLE (für Relevanz):**
+- Position: ${context.jobTitle}
+- Unternehmen: ${context.companyName}
+${context.jobDescription ? `- Stellenbeschreibung (Auszug):
+${context.jobDescription.substring(0, 600)}...
+` : ''}
+**Relevante Skills des Kandidaten:** ${skillsList}
+
+**Anweisungen des Kandidaten:**
+${instructions}
+
+**WICHTIGE REGELN:**
+1. ${hasExistingDescription ? 'Wende die gewünschten Änderungen präzise an' : 'Erstelle 3-5 aussagekräftige Bullet-Points'}
+2. **Jeder Bullet-Point MUSS mit einem starken Aktionsverb beginnen** (Entwickelte, Führte, Implementierte, Steigerte, Optimierte, Koordinierte, etc.)
+3. **Quantifiziere Erfolge wo möglich** (%, €, Anzahl, Zeit, etc.) - z.B. "Steigerte Conversion-Rate um 25%"
+4. **Fokussiere auf Erfolge und Impact**, nicht nur Aufgaben
+5. **Priorisiere Punkte nach Relevanz zur Zielstelle**
+6. Halte jeden Punkt auf 1-2 Zeilen (maximal 20 Wörter pro Punkt)
+7. **Gib die Antwort als HTML-Aufzählung zurück** (KEIN Markdown!)
+
+**OUTPUT FORMAT (HTML):**
+<ul>
+<li>Erster Bullet-Point mit Aktionsverb und messbarem Erfolg</li>
+<li>Zweiter Bullet-Point...</li>
+<li>Dritter Bullet-Point...</li>
+</ul>
+
+**WICHTIG:** Gib NUR das <ul>...</ul> HTML zurück, keine Erklärungen, kein Markdown!
+
+HTML-Aufzählung:`;
+
+    return this.callProvider(prompt, {
+      temperature: 0.7,
+      maxTokens: 800,
+      systemMessage:
+        'Du bist ein Experte für ATS-optimierte Lebensläufe. Du schreibst prägnante, wirkungsvolle Bullet-Points mit Aktionsverben und quantifizierbaren Erfolgen. Du gibst nur HTML-formatierte Listen zurück, kein Markdown.',
+    });
+  }
+
+  /**
+   * Modify or generate project description using AI
+   * Tailors bullet points to highlight technologies, outcomes, and impact
+   * Returns HTML formatted bullets for Tiptap editor
+   */
+  async modifyProjectDescription(
+    currentDescription: string | undefined,
+    instructions: string,
+    context: {
+      projectName: string;
+      projectDate?: string;
+      jobTitle: string;
+      companyName: string;
+      jobDescription?: string;
+      skills?: string[];
+    },
+  ): Promise<string> {
+    this.logger.log(
+      `Modifying project description for ${context.projectName} with instructions: ${instructions.substring(0, 50)}...`,
+    );
+
+    const skillsList = context.skills?.length ? context.skills.join(', ') : 'Keine angegeben';
+    const hasExistingDescription = currentDescription && currentDescription.trim().length > 0;
+
+    const prompt = `Du bist ein professioneller Karriereberater und hilfst einem Kandidaten, die Beschreibung seines Projekts für den Lebenslauf zu ${hasExistingDescription ? 'verbessern' : 'erstellen'}.
+
+**PROJEKT DAS BEARBEITET WIRD:**
+- Name: ${context.projectName}
+${context.projectDate ? `- Zeitraum: ${context.projectDate}` : ''}
+
+${hasExistingDescription ? `**Aktuelle Beschreibung:**
+${currentDescription}
+
+` : ''}**ZIELSTELLE (für Relevanz):**
+- Position: ${context.jobTitle}
+- Unternehmen: ${context.companyName}
+${context.jobDescription ? `- Stellenbeschreibung (Auszug):
+${context.jobDescription.substring(0, 600)}...
+` : ''}
+**Relevante Skills des Kandidaten:** ${skillsList}
+
+**Anweisungen des Kandidaten:**
+${instructions}
+
+**WICHTIGE REGELN:**
+1. ${hasExistingDescription ? 'Wende die gewünschten Änderungen präzise an' : 'Erstelle 3-5 aussagekräftige Bullet-Points'}
+2. **Jeder Bullet-Point MUSS mit einem starken Aktionsverb beginnen** (Entwickelte, Implementierte, Konzipierte, Optimierte, Automatisierte, etc.)
+3. **Betone verwendete Technologien und Tools** wo relevant
+4. **Quantifiziere Ergebnisse und Impact** (%, Anzahl User, Performance-Verbesserung, etc.)
+5. **Fokussiere auf Problemlösung und Ergebnisse**, nicht nur Features
+6. **Priorisiere Punkte nach Relevanz zur Zielstelle**
+7. Halte jeden Punkt auf 1-2 Zeilen (maximal 20 Wörter pro Punkt)
+8. **Gib die Antwort als HTML-Aufzählung zurück** (KEIN Markdown!)
+
+**OUTPUT FORMAT (HTML):**
+<ul>
+<li>Erster Bullet-Point mit Technologie und messbarem Ergebnis</li>
+<li>Zweiter Bullet-Point...</li>
+<li>Dritter Bullet-Point...</li>
+</ul>
+
+**WICHTIG:** Gib NUR das <ul>...</ul> HTML zurück, keine Erklärungen, kein Markdown!
+
+HTML-Aufzählung:`;
+
+    return this.callProvider(prompt, {
+      temperature: 0.7,
+      maxTokens: 800,
+      systemMessage:
+        'Du bist ein Experte für ATS-optimierte Lebensläufe. Du schreibst prägnante, wirkungsvolle Projekt-Beschreibungen mit Technologie-Fokus und quantifizierbaren Ergebnissen. Du gibst nur HTML-formatierte Listen zurück, kein Markdown.',
+    });
+  }
+
   private async loadTemplate(fileName: string): Promise<string> {
     const templatePath = path.join(process.cwd(), 'prompts', fileName);
     try {

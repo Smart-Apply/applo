@@ -14,7 +14,8 @@ import { CenteredLoader } from '@/components/shared/loading';
 import { ResumeTemplatePreview, CoverLetterTemplatePreview } from '@/components/applications/template-preview';
 import { ATSScoreSidebar } from '@/components/applications/ats-score-sidebar';
 import { EditableTargetJobTitle } from '@/components/applications/editable-target-job-title';
-import { useApplication, useExportApplication, useUpdateApplicationResume, useUpsertCoverLetter } from '@/hooks/use-applications';
+import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
+import { useApplication, useExportApplication, useUpdateApplicationResume, useUpsertCoverLetter, useGenerateSummary, useGenerateExperienceDescription, useGenerateProjectDescription } from '@/hooks/use-applications';
 import { parseResumeDraft, normalizeResumeForSave } from '@/lib/resume';
 import type { ResumeData } from '@/types';
 import { toast } from 'sonner';
@@ -74,6 +75,14 @@ export default function ApplicationResumeEditorPage() {
 
   const { data: application, isLoading, error } = useApplication(applicationId);
   const updateResume = useUpdateApplicationResume(applicationId);
+  const generateSummary = useGenerateSummary(applicationId);
+  const generateExperienceDescription = useGenerateExperienceDescription(applicationId);
+  const generateProjectDescription = useGenerateProjectDescription(applicationId);
+
+  // Track which experience entry is loading AI generation
+  const [experienceAiLoadingIndex, setExperienceAiLoadingIndex] = useState<number>(-1);
+  // Track which project entry is loading AI generation
+  const [projectAiLoadingIndex, setProjectAiLoadingIndex] = useState<number>(-1);
 
   const [parsedResume, setParsedResume] = useState<ResumeData | null>(null);
   const [lastSavedResume, setLastSavedResume] = useState<ResumeData | null>(null);
@@ -314,6 +323,108 @@ export default function ApplicationResumeEditorPage() {
       toast.error('AI-Generierung fehlgeschlagen: ' + (err as Error).message);
     }
   };
+
+  /**
+   * Handle AI summary generation for resume
+   * Calls the API and applies a streaming effect to the result
+   */
+  const handleAiSummaryRequest = useCallback(async (
+    instructions: string,
+    currentSummary: string
+  ): Promise<string> => {
+    toast.info('AI generiert Zusammenfassung...');
+    
+    const result = await generateSummary.mutateAsync({
+      instructions,
+      currentSummary: currentSummary || undefined,
+      regenerate: true,
+    });
+
+    if (!result.summary) {
+      throw new Error('Keine Zusammenfassung vom Server erhalten');
+    }
+
+    // Convert to Tiptap HTML (handles markdown formatting)
+    const sanitized = toTiptapHtml(result.summary);
+    
+    toast.success('Zusammenfassung generiert. Bitte speichern.');
+    
+    return sanitized;
+  }, [generateSummary]);
+
+  /**
+   * Handle AI experience description generation for resume
+   * Calls the API and returns HTML-formatted bullet points
+   */
+  const handleAiExperienceRequest = useCallback(async (
+    instructions: string,
+    experienceIndex: number,
+    currentDescription: string,
+    experienceTitle: string,
+    experienceCompany: string,
+    experienceDateRange: string,
+  ): Promise<string> => {
+    setExperienceAiLoadingIndex(experienceIndex);
+    toast.info('AI generiert Beschreibung...');
+    
+    try {
+      const result = await generateExperienceDescription.mutateAsync({
+        instructions,
+        experienceIndex,
+        currentDescription: currentDescription || undefined,
+        experienceTitle,
+        experienceCompany,
+        experienceDateRange: experienceDateRange || undefined,
+        regenerate: true,
+      });
+
+      if (!result.description) {
+        throw new Error('Keine Beschreibung vom Server erhalten');
+      }
+
+      toast.success('Beschreibung generiert. Bitte speichern.');
+      
+      return result.description;
+    } finally {
+      setExperienceAiLoadingIndex(-1);
+    }
+  }, [generateExperienceDescription]);
+
+  /**
+   * Handle AI project description generation for resume
+   * Calls the API and returns HTML-formatted bullet points
+   */
+  const handleAiProjectRequest = useCallback(async (
+    instructions: string,
+    projectIndex: number,
+    currentDescription: string,
+    projectName: string,
+    projectDate: string,
+  ): Promise<string> => {
+    setProjectAiLoadingIndex(projectIndex);
+    toast.info('AI generiert Beschreibung...');
+    
+    try {
+      const result = await generateProjectDescription.mutateAsync({
+        instructions,
+        projectIndex,
+        currentDescription: currentDescription || undefined,
+        projectName,
+        projectDate: projectDate || undefined,
+        regenerate: true,
+      });
+
+      if (!result.description) {
+        throw new Error('Keine Beschreibung vom Server erhalten');
+      }
+
+      toast.success('Beschreibung generiert. Bitte speichern.');
+      
+      return result.description;
+    } finally {
+      setProjectAiLoadingIndex(-1);
+    }
+  }, [generateProjectDescription]);
 
   // Keyboard shortcut: Cmd/Ctrl+S to save
   const handleKeyboardSave = useCallback((e: KeyboardEvent) => {
@@ -611,6 +722,13 @@ export default function ApplicationResumeEditorPage() {
                       value={parsedResume}
                       onChange={(resume) => setParsedResume(resume)}
                       disabled={updateResume.isPending}
+                      applicationId={applicationId}
+                      onAiSummaryRequest={handleAiSummaryRequest}
+                      isAiSummaryLoading={generateSummary.isPending}
+                      onAiExperienceRequest={handleAiExperienceRequest}
+                      experienceAiLoadingIndex={experienceAiLoadingIndex}
+                      onAiProjectRequest={handleAiProjectRequest}
+                      projectAiLoadingIndex={projectAiLoadingIndex}
                     />
                   )}
                 </div>
@@ -647,55 +765,17 @@ export default function ApplicationResumeEditorPage() {
                         </CardDescription>
                       </div>
                       {/* AI Assistant Popover Button */}
-                      <Popover open={aiPopoverOpen} onOpenChange={setAiPopoverOpen}>
-                        <PopoverTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 px-3 text-xs border-primary/30 hover:border-primary/50 hover:bg-primary/5"
-                          >
-                            <Sparkles className="h-3.5 w-3.5 mr-1.5 text-primary" />
-                            AI-Assistent
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent side="bottom" align="end" className="w-80">
-                          <div className="space-y-3">
-                            <div className="space-y-1">
-                              <h4 className="font-medium text-sm flex items-center gap-2">
-                                <Sparkles className="h-4 w-4 text-primary" />
-                                AI-Anweisungen
-                              </h4>
-                              <p className="text-xs text-muted-foreground">
-                                Beschreibe, wie das Anschreiben angepasst werden soll.
-                              </p>
-                            </div>
-                            <Textarea
-                              value={instructions}
-                              onChange={(event) => setInstructions(event.target.value)}
-                              placeholder="Z.B.: Betone meine React-Erfahrung stärker..."
-                              rows={3}
-                              disabled={coverMutationPending}
-                              className="resize-none text-sm"
-                            />
-                            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                              <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                              <span>Die AI passt den Inhalt an. Danach musst du manuell speichern.</span>
-                            </div>
-                            <SubmitButton 
-                              variant="default" 
-                              size="sm" 
-                              onClick={handleApplyAIChanges} 
-                              isLoading={coverMutationPending}
-                              loadingText="AI arbeitet..."
-                              disabled={coverMutationPending || !instructions.trim()} 
-                              className="w-full"
-                            >
-                              <Sparkles className="h-3.5 w-3.5 mr-2" />
-                              Anwenden
-                            </SubmitButton>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                      <AiAssistantPopover
+                        open={aiPopoverOpen}
+                        onOpenChange={setAiPopoverOpen}
+                        instructions={instructions}
+                        onInstructionsChange={setInstructions}
+                        onApply={handleApplyAIChanges}
+                        isLoading={coverMutationPending}
+                        placeholder="Z.B.: Betone meine React-Erfahrung stärker..."
+                        title="AI-Anweisungen"
+                        description="Beschreibe, wie das Anschreiben angepasst werden soll."
+                      />
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 min-h-0 flex flex-col">

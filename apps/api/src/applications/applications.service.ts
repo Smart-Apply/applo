@@ -1770,6 +1770,170 @@ Summary: ${resume.summary || 'Not provided'}
     return this.mapToResponseDto(updated);
   }
 
+  /**
+   * Generate or modify professional summary using AI
+   * Uses job posting and profile context to tailor the summary
+   * Returns generated summary (not persisted - user applies manually in editor)
+   */
+  async generateSummary(
+    userId: string,
+    applicationId: string,
+    dto: { instructions: string; currentSummary?: string; regenerate?: boolean },
+  ): Promise<{ summary: string }> {
+    this.logger.log(`Generating summary for application ${applicationId}`);
+
+    const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    const jobPosting = application.jobPosting;
+    if (!jobPosting) {
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_JOB);
+    }
+
+    // Load profile with relations for context
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      include: {
+        skills: true,
+        experiences: true,
+      },
+    });
+
+    // Build context from profile
+    const skills = profile?.skills?.map((s) => s.name) || [];
+    const experiences = profile?.experiences?.map((exp) => ({
+      title: exp.title,
+      company: exp.company,
+      description: exp.description || undefined,
+    })) || [];
+
+    // Generate/modify summary with LLM
+    const summary = await this.llmService.modifySummaryContent(
+      dto.currentSummary,
+      dto.instructions,
+      {
+        jobTitle: jobPosting.title,
+        companyName: jobPosting.company || 'Unknown Company',
+        jobDescription: jobPosting.fullText || undefined,
+        skills,
+        experiences,
+      },
+    );
+
+    return { summary };
+  }
+
+  /**
+   * Generate or modify experience description using AI
+   * Uses job posting context to tailor bullet points with action verbs and metrics
+   * Returns generated HTML description (not persisted - user applies manually in editor)
+   */
+  async generateExperienceDescription(
+    userId: string,
+    applicationId: string,
+    dto: {
+      instructions: string;
+      experienceIndex: number;
+      currentDescription?: string;
+      experienceTitle: string;
+      experienceCompany: string;
+      experienceDateRange?: string;
+      regenerate?: boolean;
+    },
+  ): Promise<{ description: string }> {
+    this.logger.log(
+      `Generating experience description for application ${applicationId}, experience index ${dto.experienceIndex}`,
+    );
+
+    const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    const jobPosting = application.jobPosting;
+    if (!jobPosting) {
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_JOB);
+    }
+
+    // Load profile for skills context
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      include: {
+        skills: true,
+      },
+    });
+
+    const skills = profile?.skills?.map((s) => s.name) || [];
+
+    // Generate/modify experience description with LLM
+    const description = await this.llmService.modifyExperienceDescription(
+      dto.currentDescription,
+      dto.instructions,
+      {
+        experienceTitle: dto.experienceTitle,
+        experienceCompany: dto.experienceCompany,
+        experienceDateRange: dto.experienceDateRange,
+        jobTitle: jobPosting.title,
+        companyName: jobPosting.company || 'Unknown Company',
+        jobDescription: jobPosting.fullText || undefined,
+        skills,
+      },
+    );
+
+    return { description };
+  }
+
+  /**
+   * Generate or modify project description using AI
+   * Uses job posting context to tailor bullet points with technologies and impact
+   * Returns generated HTML description (not persisted - user applies manually in editor)
+   */
+  async generateProjectDescription(
+    userId: string,
+    applicationId: string,
+    dto: {
+      instructions: string;
+      projectIndex: number;
+      currentDescription?: string;
+      projectName: string;
+      projectDate?: string;
+      regenerate?: boolean;
+    },
+  ): Promise<{ description: string }> {
+    this.logger.log(
+      `Generating project description for application ${applicationId}, project index ${dto.projectIndex}`,
+    );
+
+    const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    const jobPosting = application.jobPosting;
+    if (!jobPosting) {
+      throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_JOB);
+    }
+
+    // Load profile for skills context
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      include: {
+        skills: true,
+      },
+    });
+
+    const skills = profile?.skills?.map((s) => s.name) || [];
+
+    // Generate/modify project description with LLM
+    const description = await this.llmService.modifyProjectDescription(
+      dto.currentDescription,
+      dto.instructions,
+      {
+        projectName: dto.projectName,
+        projectDate: dto.projectDate,
+        jobTitle: jobPosting.title,
+        companyName: jobPosting.company || 'Unknown Company',
+        jobDescription: jobPosting.fullText || undefined,
+        skills,
+      },
+    );
+
+    return { description };
+  }
+
   async requestExport(
     userId: string,
     applicationId: string,
