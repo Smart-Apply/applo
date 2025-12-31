@@ -27,11 +27,18 @@ function registerHandlebarsHelpers() {
       return text.toLowerCase().replace(/\s+/g, '-');
     });
 
-    // Helper to convert newlines to <br> tags for HTML rendering
+    // Helper to convert newlines to <br> tags while preserving existing HTML
     Handlebars.registerHelper('nl2br', (text: unknown) => {
       if (!text) return '';
-      // Handle SafeString or other objects
-      const str = typeof text === 'string' ? text : (text as { toString(): string }).toString();
+      // Handle SafeString - get the raw HTML string without escaping
+      let str: string;
+      if (text instanceof Handlebars.SafeString) {
+        str = text.toString();
+      } else if (typeof text === 'string') {
+        str = text;
+      } else {
+        str = (text as { toString(): string }).toString();
+      }
       // Convert newlines to <br> tags and return as SafeString (allows HTML)
       const html = str.replace(/\n/g, '<br>');
       return new Handlebars.SafeString(html);
@@ -220,6 +227,9 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
       company: exp.company,
       location: exp.location,
       dateRange: exp.dateRange,
+      // Include startDate and endDate for templates that use formatDate helper
+      startDate: exp.startDate,
+      endDate: exp.endDate,
       // Wrap description in SafeString to render HTML formatting
       description: exp.description ? new Handlebars.SafeString(exp.description) : undefined,
       achievements: exp.achievements,
@@ -244,6 +254,12 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
       name: cert.name,
       issuer: cert.issuer,
       date: cert.date,
+    })),
+    // Include languages with both 'level' and 'proficiency' for template compatibility
+    languages: resume.languages?.map(lang => ({
+      name: lang.name,
+      level: lang.level,
+      proficiency: lang.level, // Alias for templates that use 'proficiency'
     })),
   }), [resume, language]);
 
@@ -290,6 +306,12 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
               overflow-x: hidden;
             }
             
+            /* Handle long strings without spaces */
+            .preview-scale-wrapper * {
+              word-break: break-word;
+              overflow-wrap: anywhere;
+            }
+            
             /* A4 page simulation */
             .preview-scale-wrapper > * {
               background: white;
@@ -309,20 +331,17 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
               // Use actual iframe container width (the full width available in the right panel)
               const availableWidth = document.body.clientWidth - 32;
               
-              // Available height: window height minus minimal spacing
-              const availableHeight = window.innerHeight - 60;
-
-              const scaleWidth = availableWidth / ${A4_WIDTH_PX};
-              const scaleHeight = availableHeight / ${A4_HEIGHT_PX};
-
-              const scale = Math.min(scaleWidth, scaleHeight, 1.2);
+              // Scale only based on width - allow content to flow naturally for multiple pages
+              const scale = Math.min(availableWidth / ${A4_WIDTH_PX}, 1.0);
 
               wrapper.style.setProperty('--scale', String(scale));
-              // Adjust body height to account for scaled content
+              // Adjust body height to account for scaled content (full height, not constrained)
               document.body.style.minHeight = (wrapper.scrollHeight * scale + 32) + 'px';
             }
             updateScale();
             window.addEventListener('resize', updateScale);
+            // Re-calculate after fonts and images load
+            setTimeout(updateScale, 100);
           </script>
         </body>
         </html>
@@ -335,12 +354,20 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
         doc.write(fullHtml);
         doc.close();
 
-        // Adjust iframe height to content
-        setTimeout(() => {
+        // Adjust iframe height to content - multiple checks for accurate height
+        const updateIframeHeight = () => {
           if (doc.body) {
-            iframe.style.height = `${doc.body.scrollHeight + 40}px`;
+            const wrapper = doc.querySelector('.preview-scale-wrapper') as HTMLElement;
+            const scale = parseFloat(wrapper?.style.getPropertyValue('--scale') || '1');
+            const contentHeight = wrapper ? wrapper.scrollHeight * scale : doc.body.scrollHeight;
+            // Add extra padding for multi-page content
+            iframe.style.height = `${Math.max(contentHeight + 80, doc.body.scrollHeight + 60)}px`;
           }
-        }, 100);
+        };
+        // Run multiple times to catch dynamic content
+        setTimeout(updateIframeHeight, 100);
+        setTimeout(updateIframeHeight, 300);
+        setTimeout(updateIframeHeight, 600);
       }
     } catch (err) {
       console.error('Template rendering failed:', err);
@@ -544,6 +571,12 @@ export function CoverLetterTemplatePreview({
               background: #f8fafc;
               padding: 16px;
               overflow-x: hidden;
+            }
+            
+            /* Handle long strings without spaces */
+            .preview-scale-wrapper * {
+              word-break: break-word;
+              overflow-wrap: anywhere;
             }
             
             /* A4 page simulation */

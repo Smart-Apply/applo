@@ -3,7 +3,10 @@
 import { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { Bold, Italic, List, ListOrdered } from 'lucide-react';
+import { FontSize } from '@/lib/tiptap';
+import { FontSizeDropdown } from './font-size-dropdown';
 import { cn } from '@/lib/utils';
 
 interface DescriptionEditorProps {
@@ -69,6 +72,8 @@ export function DescriptionEditor({
             },
           },
         }),
+        TextStyle,
+        FontSize,
       ],
       content: value || '<p></p>',
       editable: !disabled,
@@ -77,7 +82,8 @@ export function DescriptionEditor({
         attributes: {
           class: cn(
             'tiptap-editor max-w-none px-3 py-2 text-sm focus:outline-none prose prose-sm',
-            'prose-ul:list-disc prose-ol:list-decimal prose-li:ml-0'
+            'prose-ul:list-disc prose-ol:list-decimal prose-li:ml-0',
+            'break-words [overflow-wrap:anywhere] [word-break:break-word]'
           ),
           style: `min-height: ${minHeight}`,
         },
@@ -120,7 +126,9 @@ export function DescriptionEditor({
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-1.5 rounded-t-lg border border-b-0 border-slate-200 bg-slate-50 p-1.5">
+      <div className="flex flex-wrap items-center gap-1.5 rounded-t-lg border border-b-0 border-slate-200 bg-slate-50 p-1.5">
+        <FontSizeDropdown editor={editor} disabled={disabled} className="h-7 w-[70px]" />
+        <div className="mx-0.5 h-5 w-px bg-slate-200" />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')}
@@ -150,7 +158,7 @@ export function DescriptionEditor({
           disabled={disabled}
         />
       </div>
-      <div className="rounded-b-lg border border-slate-200 bg-white">
+      <div className="rounded-b-lg border border-slate-200 bg-white overflow-hidden">
         <EditorContent editor={editor} />
       </div>
     </div>

@@ -273,6 +273,15 @@
 
 /* Tiptap Editor Styles - Typography for rich text content */
 .tiptap-editor {
+  /* Handle long strings without spaces */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+
+  /* Hide font-size styling in editor view - only visible in PDF output */
+  [style*="font-size"] {
+    font-size: inherit !important;
+  }
+
   ul {
     list-style-type: disc;
     padding-left: 1.5rem;
@@ -295,6 +304,9 @@
 
   p {
     margin: 0.5rem 0;
+    /* Handle long strings without spaces in paragraphs */
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   blockquote {
@@ -331,4 +343,11 @@
   h3 {
     font-size: 1.125rem;
   }
+}
+
+/* ProseMirror (TipTap internal) - ensure word wrap */
+.ProseMirror {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }

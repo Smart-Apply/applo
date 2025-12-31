@@ -3,7 +3,10 @@
 import { useEffect, type ReactNode } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { Bold, Italic, List, ListOrdered, Quote } from 'lucide-react';
+import { FontSize } from '@/lib/tiptap';
+import { FontSizeDropdown } from './font-size-dropdown';
 import { cn } from '@/lib/utils';
 
 interface CoverLetterEditorProps {
@@ -47,6 +50,8 @@ export function CoverLetterEditor({ value, onChange, disabled }: CoverLetterEdit
           bulletList: { keepMarks: true },
           orderedList: { keepMarks: true },
         }),
+        TextStyle,
+        FontSize,
       ],
       content: value || '<p></p>',
       editable: !disabled,
@@ -106,7 +111,9 @@ export function CoverLetterEditor({ value, onChange, disabled }: CoverLetterEdit
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white p-2">
+        <FontSizeDropdown editor={editor} disabled={disabled} />
+        <div className="mx-1 h-6 w-px bg-slate-200" />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')}

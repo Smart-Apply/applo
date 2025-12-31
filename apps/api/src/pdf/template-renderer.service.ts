@@ -216,11 +216,20 @@ export class TemplateRendererService {
       return str ? str.toLowerCase().replace(/\s+/g, '-') : '';
     });
 
-    // Helper to convert newlines to <br> tags for HTML rendering
-    Handlebars.registerHelper('nl2br', (text: string) => {
+    // Helper to convert newlines to <br> tags while preserving existing HTML
+    Handlebars.registerHelper('nl2br', (text: unknown) => {
       if (!text) return '';
+      // Handle SafeString - get the raw HTML string without escaping
+      let str: string;
+      if (text instanceof Handlebars.SafeString) {
+        str = text.toString();
+      } else if (typeof text === 'string') {
+        str = text;
+      } else {
+        str = (text as { toString(): string }).toString();
+      }
       // Convert newlines to <br> tags and return as SafeString (allows HTML)
-      const html = text.replace(/\n/g, '<br>');
+      const html = str.replace(/\n/g, '<br>');
       return new Handlebars.SafeString(html);
     });
 
@@ -463,8 +472,11 @@ export class TemplateRendererService {
         language = defaultTemplate.language || 'en'; // Use template's language
       }
 
+      // Use language from data (passed from export request) or template language
+      const effectiveLanguage = data.language || language;
+
       // Add language to template data for 't' helper
-      const templateData = { ...data, language };
+      const templateData = { ...data, language: effectiveLanguage };
       const compiledTemplate = Handlebars.compile(template);
       const html = compiledTemplate(templateData);
 

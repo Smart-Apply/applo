@@ -34,7 +34,7 @@ import {
   NotFoundWithCode,
   ConflictWithCode,
 } from '../common/exceptions/coded-http.exception';
-import { buildResumeTemplateData, ProfileWithRelations, sanitizeUrl } from './resume-template.util';
+import { buildResumeTemplateData, ProfileWithRelations, sanitizeUrl, formatDateRange } from './resume-template.util';
 import { sanitizeRichText } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -1404,44 +1404,33 @@ Summary: ${resume.summary || 'Not provided'}
       });
     }
 
-    // Map selected experiences to JSON format
-    // Use original profile data for descriptions, not LLM summaries
-    const experiences = (tailoredProfile.selected_experiences || [])
-      .filter((exp: any) => exp.title && exp.company)
-      .map((exp: any) => {
-        // Find original experience from profile by ID
-        const originalExp = profile.experiences.find((e) => e.id === exp.profileExperienceId);
-        return {
-          id: exp.profileExperienceId || 'exp-' + Date.now(),
-          title: exp.title,
-          company: exp.company,
-          dateRange: exp.dateRange || '',
-          startDate: originalExp?.startDate?.toISOString() || undefined,
-          endDate: originalExp?.endDate?.toISOString() || undefined,
-          location: originalExp?.location || undefined,
-          // Use original description from profile, not LLM summary
-          description: originalExp?.description || undefined,
-          achievements: originalExp?.achievements || [],
-        };
-      });
+    // Include ALL profile experiences (not just LLM-selected ones)
+    // Users can remove unwanted ones in the editor; sorted by start date (most recent first)
+    const experiences = profile.experiences
+      .slice() // Create copy to avoid mutating original
+      .sort((a, b) => b.startDate.getTime() - a.startDate.getTime())
+      .map((exp) => ({
+        id: exp.id,
+        title: exp.title,
+        company: exp.company,
+        dateRange: formatDateRange(exp.startDate, exp.endDate, exp.isCurrent),
+        startDate: exp.startDate?.toISOString() || undefined,
+        endDate: exp.endDate?.toISOString() || undefined,
+        location: exp.location || undefined,
+        description: exp.description || undefined,
+        achievements: exp.achievements || [],
+      }));
 
-    // Map selected projects
-    // Use original profile data for descriptions, not LLM summaries
-    const projects = (tailoredProfile.selected_projects || [])
-      .filter((proj: any) => proj.name)
-      .map((proj: any) => {
-        // Find original project from profile by ID
-        const originalProj = profile.projects.find((p) => p.id === proj.profileProjectId);
-        return {
-          id: proj.profileProjectId || 'proj-' + Date.now(),
-          name: proj.name,
-          // Use original description from profile, not LLM summary
-          description: originalProj?.description || undefined,
-          date: originalProj?.startDate || proj.date || undefined,
-          // Map technologies to highlights (frontend expects this)
-          highlights: originalProj?.technologies || [],
-        };
-      });
+    // Include ALL profile projects (not just LLM-selected ones)
+    // Users can remove unwanted ones in the editor
+    const projects = profile.projects.map((proj) => ({
+      id: proj.id,
+      name: proj.name,
+      description: proj.description || undefined,
+      date: proj.startDate?.toISOString() || undefined,
+      // Map technologies to highlights (frontend expects this)
+      highlights: proj.technologies || [],
+    }));
 
     // Map selected education - Handle both string[] (legacy) and object[] (new)
     let education = (tailoredProfile.selected_education || [])
