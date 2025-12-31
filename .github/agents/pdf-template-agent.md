@@ -332,14 +332,10 @@ html, body {
   </div>
   {{/if}}
 
-  {{! Recipient Info }}
-  {{#if recipientName}}
-  <div class="recipient">
-    <p>{{recipientName}}</p>
-    {{#if companyName}}<p>{{companyName}}</p>{{/if}}
-    {{#if companyAddress}}<p>{{companyAddress}}</p>{{/if}}
-  </div>
-  {{/if}}
+  {{! IMPORTANT: Do NOT add a recipient/company block here!
+      The LLM-generated content already includes the salutation with
+      company reference (e.g., "Sehr geehrtes BCG Recruiting-Team,").
+      Adding a separate company name block creates redundancy. }}
 
   {{! Letter Body - IMPORTANT: Use triple braces for HTML content }}
   <div class="cover-letter-body">
