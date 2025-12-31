@@ -12,6 +12,7 @@
 **Status:** ✅ Vollständig implementiert
 
 Health Endpoints bereits vorhanden unter `apps/api/src/health/`:
+
 - `GET /api/v1/health` - Umfassender Health Check aller Services
 - `GET /api/v1/health/live` - Kubernetes Liveness Probe
 - `GET /api/v1/health/ready` - Kubernetes Readiness Probe
@@ -282,6 +283,7 @@ touch tests/e2e/application-flow.spec.ts
 **Was zu tun ist:**
 
 Benutzer sollen die Möglichkeit haben, nur ein Anschreiben ohne Lebenslauf zu generieren. Nützlich wenn:
+
 - Der Benutzer bereits einen aktuellen Lebenslauf hat
 - Nur schnell ein Anschreiben für eine Bewerbung benötigt wird
 - Kosten/Zeit bei der Generierung gespart werden sollen
@@ -289,6 +291,7 @@ Benutzer sollen die Möglichkeit haben, nur ein Anschreiben ohne Lebenslauf zu g
 **Backend Änderungen:**
 
 1. **Application DTO erweitern:**
+
    ```typescript
    // create-application.dto.ts
    export class CreateApplicationDto {
