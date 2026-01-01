@@ -1,8 +1,9 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { FileText, Sparkles, Zap, ArrowRight, Shield, Clock } from 'lucide-react';
+import { Sparkles, Zap, ArrowRight, Shield, Clock } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 
@@ -36,9 +37,15 @@ export default function Home() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <FileText className="h-6 w-6 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">Smart Apply</span>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
+              alt="Smart Apply"
+              width={120}
+              height={24}
+              className="h-6 w-auto"
+              priority
+            />
           </Link>
           <nav className="flex items-center space-x-4">
             <Button variant="ghost" onClick={() => router.push('/login')}>
@@ -125,8 +132,15 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container text-center text-sm text-gray-600">
-          © {new Date().getFullYear()} Smart Apply. Alle Rechte vorbehalten.
+        <div className="container flex flex-col items-center justify-center gap-3 text-sm text-gray-600">
+          <Image
+            src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
+            alt="Smart Apply"
+            width={100}
+            height={20}
+            className="h-5 w-auto"
+          />
+          <span>© {new Date().getFullYear()} Smart Apply. Alle Rechte vorbehalten.</span>
         </div>
       </footer>
     </div>

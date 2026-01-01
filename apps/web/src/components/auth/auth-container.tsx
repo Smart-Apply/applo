@@ -3,6 +3,7 @@
 import { useState, useEffect, JSX } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import Image from 'next/image';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { api, resetAuthRedirectFlag } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
@@ -187,25 +188,14 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                 className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-300 ${isLogin && !isAnimating ? 'opacity-100' : 'opacity-0'
                   }`}
               >
-                {/* SVG Logo */}
-                <svg
-                  className="mb-8 h-40 w-40 text-primary-foreground"
-                  viewBox="0 0 100 100"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect x="20" y="25" width="60" height="55" rx="8" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <circle cx="35" cy="15" r="6" stroke="currentColor" strokeWidth="3" fill="none" />
-                  <circle cx="65" cy="15" r="6" stroke="currentColor" strokeWidth="3" fill="none" />
-                  <line x1="35" y1="21" x2="35" y2="25" stroke="currentColor" strokeWidth="3" />
-                  <line x1="65" y1="21" x2="65" y2="25" stroke="currentColor" strokeWidth="3" />
-                  <line x1="32" y1="45" x2="68" y2="45" stroke="currentColor" strokeWidth="3" />
-                  <line x1="32" y1="55" x2="68" y2="55" stroke="currentColor" strokeWidth="3" />
-                  <polyline points="35,65 42,72 55,58" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <h2 className="font-poppins text-[48px] font-bold leading-normal text-primary-foreground">
-                  SmartApply
-                </h2>
+                <Image
+                  src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
+                  alt="Smart Apply"
+                  width={320}
+                  height={160}
+                  className="h-40 w-auto brightness-0 invert"
+                  priority
+                />
               </div>
 
               {/* Register Branding (Motto) */}
@@ -213,9 +203,15 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                 className={`absolute inset-0 flex flex-col justify-center px-4 transition-opacity duration-300 ${!isLogin && !isAnimating ? 'opacity-100' : 'opacity-0'
                   }`}
               >
-                <h2 className="mb-16 text-center font-poppins text-[64px] font-bold leading-normal text-primary-foreground">
-                  SmartApply
-                </h2>
+                <div className="mb-16 flex justify-center">
+                  <Image
+                    src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
+                    alt="Smart Apply"
+                    width={400}
+                    height={80}
+                    className="h-20 w-auto brightness-0 invert"
+                  />
+                </div>
                 <div className="space-y-1">
                   <div className="w-[321px] text-left">
                     <p className="font-poppins text-[45px] font-extrabold leading-normal text-primary-foreground">

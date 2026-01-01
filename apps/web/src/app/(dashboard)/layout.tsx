@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { api } from '@/lib/api-client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
@@ -14,8 +15,7 @@ import {
   LogOut,
   Menu,
   Home,
-  Settings,
-  ChevronRight,
+  Settings
 } from 'lucide-react';
 
 const navigation = [
@@ -77,15 +77,19 @@ export default function DashboardLayout({
     <div className="flex min-h-screen bg-muted/30">
       {/* Desktop Sidebar - Hidden in edit mode */}
       {!isEditMode && (
-        <aside className="hidden w-72 border-r border-border/50 bg-card/50 backdrop-blur-xl md:block text-foreground shadow-soft z-20">
+        <aside className="hidden w-80 border-r border-border/50 bg-card/50 backdrop-blur-xl md:block text-foreground shadow-soft z-20">
           <div className="flex h-full flex-col">
-            <div className="flex h-16 items-center px-6 border-b border-border/50">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                  S
-                </div>
-                <h1 className="text-lg font-bold tracking-tight text-foreground">Smart Apply</h1>
-              </div>
+            <div className="flex h-16 items-center px-4 border-b border-border/50">
+              <Link href="/dashboard" className="flex items-center">
+                <Image
+                  src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
+                  alt="Smart Apply"
+                  width={200}
+                  height={40}
+                  className="w-[180px] h-auto"
+                  priority
+                />
+              </Link>
             </div>
 
             <nav className="flex-1 space-y-1 px-4 py-6">
@@ -147,12 +151,16 @@ export default function DashboardLayout({
       {/* Mobile Header */}
       <div className="flex flex-1 flex-col md:hidden">
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-md px-4">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
-              S
-            </div>
-            <h1 className="text-lg font-bold tracking-tight text-foreground">Smart Apply</h1>
-          </div>
+          <Link href="/dashboard" className="flex items-center">
+            <Image
+              src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
+              alt="Smart Apply"
+              width={200}
+              height={40}
+              className="w-[180px] h-auto"
+              priority
+            />
+          </Link>
 
           <Sheet>
             <SheetTrigger asChild>
@@ -160,15 +168,18 @@ export default function DashboardLayout({
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 bg-card border-r border-border">
+            <SheetContent side="left" className="w-80 p-0 bg-card border-r border-border">
               <div className="flex h-full flex-col">
-                <div className="flex h-16 items-center px-6 border-b border-border/50">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                      S
-                    </div>
-                    <h1 className="text-lg font-bold tracking-tight text-foreground">Smart Apply</h1>
-                  </div>
+                <div className="flex h-16 items-center px-4 border-b border-border/50">
+                  <Link href="/dashboard" className="flex items-center">
+                    <Image
+                      src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
+                      alt="Smart Apply"
+                      width={250}
+                      height={50}
+                      className="w-[220px] h-auto"
+                    />
+                  </Link>
                 </div>
 
                 <nav className="flex-1 space-y-1 px-4 py-6">
