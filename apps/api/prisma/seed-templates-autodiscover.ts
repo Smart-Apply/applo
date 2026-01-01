@@ -406,6 +406,61 @@ async function seedTemplates() {
         totalCreated++;
       }
     }
+
+    // Cleanup: Remove orphaned color variants for this template
+    // This handles the case where color variants were removed from config.json
+    const validResumeIds = colorVariants.map(v => {
+      const variantSuffix = v.id ? `-${v.id}` : '';
+      return `${template.config.id}${variantSuffix}-resume`;
+    });
+    const validCoverLetterIds = colorVariants.map(v => {
+      const variantSuffix = v.id ? `-${v.id}` : '';
+      return `${template.config.id}${variantSuffix}-cover-letter`;
+    });
+
+    // Find and delete orphaned resume templates for this design
+    const orphanedResumes = await prisma.template.findMany({
+      where: {
+        id: {
+          startsWith: `${template.config.id}-`,
+          endsWith: '-resume',
+        },
+        NOT: {
+          id: { in: validResumeIds },
+        },
+      },
+    });
+
+    // Find and delete orphaned cover letter templates for this design
+    const orphanedCoverLetters = await prisma.template.findMany({
+      where: {
+        id: {
+          startsWith: `${template.config.id}-`,
+          endsWith: '-cover-letter',
+        },
+        NOT: {
+          id: { in: validCoverLetterIds },
+        },
+      },
+    });
+
+    if (orphanedResumes.length > 0 || orphanedCoverLetters.length > 0) {
+      const orphanedIds = [
+        ...orphanedResumes.map(t => t.id),
+        ...orphanedCoverLetters.map(t => t.id),
+      ];
+      
+      await prisma.template.deleteMany({
+        where: {
+          id: { in: orphanedIds },
+        },
+      });
+      
+      console.log(`   🗑️  Removed ${orphanedIds.length} orphaned color variants`);
+      for (const id of orphanedIds) {
+        console.log(`      - ${id}`);
+      }
+    }
   }
 
   // Summary
