@@ -41,9 +41,9 @@ export default function Home() {
             <Image
               src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
               alt="Smart Apply"
-              width={120}
-              height={24}
-              className="h-6 w-auto"
+              width={200}
+              height={40}
+              className="w-[180px] h-auto"
               priority
             />
           </Link>
