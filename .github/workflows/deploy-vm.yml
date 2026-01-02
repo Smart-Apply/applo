@@ -1,0 +1,101 @@
+name: Deploy to Azure VM
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+# Only allow one deployment at a time
+concurrency:
+  group: deployment
+  cancel-in-progress: false
+
+env:
+  VM_HOST: smartapplymvp.swedencentral.cloudapp.azure.com
+  VM_USER: azureuser
+  APP_DIR: /home/azureuser/smart-apply
+
+jobs:
+  # Build and test first
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build --workspace=@smart-apply/shared
+
+      - name: Build API
+        run: npm run build --workspace=apps/api
+
+      - name: Build Web
+        run: npm run build --workspace=apps/web
+
+      - name: Run API tests
+        run: npm run test --workspace=apps/api --if-present
+
+  # Deploy only on push to main (not on PR)
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.VM_HOST }}
+          username: ${{ env.VM_USER }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            
+            echo "📦 Pulling latest code..."
+            cd ${{ env.APP_DIR }}
+            git fetch origin main
+            git reset --hard origin/main
+            
+            echo "📥 Installing dependencies..."
+            npm ci --omit=dev
+            
+            echo "🔨 Building shared package..."
+            npm run build --workspace=@smart-apply/shared
+            
+            echo "🔨 Building API..."
+            npm run build --workspace=apps/api
+            
+            echo "🔨 Building Web..."
+            npm run build --workspace=apps/web
+            
+            echo "🗃️ Running database migrations..."
+            cd apps/api
+            npx prisma generate
+            npx prisma db push --skip-generate
+            cd ../..
+            
+            echo "🔄 Restarting services..."
+            pm2 restart all
+            
+            echo "✅ Deployment complete!"
+            pm2 status
+
+      - name: Health Check
+        run: |
+          sleep 10
+          curl -f https://${{ env.VM_HOST }}/api/v1/health || exit 1
+          echo "✅ Health check passed!"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "❌ Deployment failed! Check the logs above."
