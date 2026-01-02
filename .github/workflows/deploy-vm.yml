@@ -56,8 +56,9 @@ jobs:
           username: ${{ env.VM_USER }}
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           port: 22
-          timeout: 60s
+          timeout: 120s
           command_timeout: 30m
+          debug: true
           script: |
             set -e
             
