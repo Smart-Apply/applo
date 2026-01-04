@@ -261,7 +261,7 @@ export default function Home() {
                 {/* Most Popular Badge - always visible on APPLY */}
                 <div className="absolute -top-2 -right-2 md:top-0 md:right-0 overflow-hidden w-[150px] h-[150px]">
                   <div className="absolute top-[40px] right-[-35px] bg-[#E5EEFD] text-black font-poppins font-bold text-sm py-2 px-10 transform rotate-45 shadow-md">
-                    Beliebteste
+                    Am beliebtesten
                   </div>
                 </div>
                 
