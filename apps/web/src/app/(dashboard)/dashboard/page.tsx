@@ -51,12 +51,6 @@ const STATUS_CONFIG: Record<
     bgColor: 'bg-purple-100',
     icon: Calendar,
   },
-  OFFER: {
-    label: 'Angebot',
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
-    icon: CheckCircle,
-  },
   ACCEPTED: {
     label: 'Angenommen',
     color: 'text-green-600',
@@ -67,12 +61,6 @@ const STATUS_CONFIG: Record<
     label: 'Abgesagt',
     color: 'text-red-600',
     bgColor: 'bg-red-100',
-    icon: XCircle,
-  },
-  WITHDRAWN: {
-    label: 'Zurückgezogen',
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
     icon: XCircle,
   },
 };

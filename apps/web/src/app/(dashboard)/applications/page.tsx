@@ -312,10 +312,8 @@ export default function ApplicationsPage() {
     CREATED: applications?.filter((app) => app.applicationStatus === 'CREATED').length || 0,
     APPLIED: applications?.filter((app) => app.applicationStatus === 'APPLIED').length || 0,
     INTERVIEW: applications?.filter((app) => app.applicationStatus === 'INTERVIEW').length || 0,
-    OFFER: applications?.filter((app) => app.applicationStatus === 'OFFER').length || 0,
     ACCEPTED: applications?.filter((app) => app.applicationStatus === 'ACCEPTED').length || 0,
     REJECTED: applications?.filter((app) => app.applicationStatus === 'REJECTED').length || 0,
-    WITHDRAWN: applications?.filter((app) => app.applicationStatus === 'WITHDRAWN').length || 0,
   }), [applications]);
 
   // Manual refresh handler

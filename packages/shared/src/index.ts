@@ -197,10 +197,8 @@ export type ApplicationTrackingStatus =
   | 'CREATED'
   | 'APPLIED'
   | 'INTERVIEW'
-  | 'OFFER'
   | 'ACCEPTED'
-  | 'REJECTED'
-  | 'WITHDRAWN';
+  | 'REJECTED';
 export type ApplicationStatus = ApplicationGenerationStatus;
 
 export interface Application {
