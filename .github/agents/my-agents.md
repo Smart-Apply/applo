@@ -1,13 +1,13 @@
 ---
 name: Smart-Apply-Full-Stack-Agent
-description: AI-powered job application assistant - NestJS backend + Next.js 14 frontend with Azure integration for generating tailored cover letters and resumes
+description: AI-powered job application assistant - NestJS backend + Next.js 16 frontend with Azure integration for generating tailored cover letters and resumes
 ---
 
 # Smart Apply Full-Stack Agent
 
 This agent assists in building and maintaining the Smart Apply MVP - a full-stack application consisting of:
 - **Backend:** Production-grade NestJS REST API with Azure OpenAI, Blob Storage, and Service Bus
-- **Frontend:** Next.js 14 with TypeScript, Tailwind CSS, shadcn/ui for user-facing features
+- **Frontend:** Next.js 16 with React 19, TypeScript, Tailwind CSS, shadcn/ui for user-facing features
 
 The application follows Azure-first architecture patterns with multi-provider abstractions for storage, LLM, and queue services.
 
@@ -23,14 +23,15 @@ The application follows Azure-first architecture patterns with multi-provider ab
 - **Documentation:** Swagger/OpenAPI (Port 3000)
 
 ### Frontend (apps/web)
-- **Framework:** Next.js 14 with App Router
-- **Language:** TypeScript
+- **Framework:** Next.js 16.0.1 with App Router
+- **React:** 19.2.0
+- **Language:** TypeScript (strict mode)
 - **Styling:** Tailwind CSS v4
 - **UI Library:** shadcn/ui (Radix UI)
-- **State Management:** Zustand + React Query
-- **Forms:** React Hook Form + Zod
-- **PDF Handling:** react-pdf + pdfjs-dist
-- **Rich Text:** Tiptap
+- **State Management:** Zustand 5 + React Query 5
+- **Forms:** React Hook Form 7 + Zod 4
+- **PDF Handling:** react-pdf 10 + pdfjs-dist
+- **Rich Text:** Tiptap 3
 - **Icons:** Lucide React
 - **Notifications:** Sonner (Port 3001)
 
@@ -66,10 +67,19 @@ Multi-provider architecture for different environments:
    - `ApplicationPipelineService` - Orchestrates all agents with EventEmitter progress updates
    - Configuration via `ATS_AGENT_ID`, `CV_WRITER_AGENT_ID`, `CL_WRITER_AGENT_ID` env vars
 
-4. **JobsService** (TODO: `src/jobs/`)
+4. **JobsService** (`src/jobs/`)
    - `InMemoryQueueProvider` (dev)
    - `AzureServiceBusProvider` (prod)
    - Configuration via `JOBS_DRIVER` env var
+
+5. **TemplatesModule** (`src/templates/`)
+   - Resume and Cover Letter templates with multilingual support
+   - Color variants and base template grouping
+   - Preview image generation
+
+6. **UserPreferencesModule** (`src/user-preferences/`)
+   - Notification settings, language, theme preferences
+   - Privacy and analytics settings
 
 **Important:** All providers implement a common interface. New providers should follow the same pattern.
 
@@ -97,14 +107,17 @@ npm run prisma:seed
 
 ## Key Directories
 
-- `apps/api/src/` - Backend modules (auth, profile, applications, etc.)
+- `apps/api/src/` - Backend modules (auth, profile, applications, templates, user-preferences, etc.)
 - `apps/api/src/agents/` - Azure AI Foundry agents (ATS, CV Writer, CL Writer)
 - `apps/api/src/keywords/` - Keyword extraction service
+- `apps/api/src/templates/` - Resume/Cover Letter template management
+- `apps/api/src/user-preferences/` - User settings (notifications, language, theme)
 - `apps/api/prisma/` - Schema, migrations, seed
-- `apps/web/src/app/` - Next.js pages (auth, dashboard)
+- `apps/web/src/app/` - Next.js pages (auth, dashboard, settings)
 - `apps/web/src/components/` - UI components (shadcn/ui)
-- `apps/web/src/components/applications/` - ATS analysis components
-- `apps/web/src/lib/` - API client, utils
+- `apps/web/src/components/applications/` - ATS analysis & PDF editor components
+- `apps/web/src/components/templates/` - Template selection & preview
+- `apps/web/src/lib/` - API client, utils, pdf-utils
 - `prompts/` - LLM templates (cover-letter.md, resume.md)
 
 ## Quick Start
@@ -118,23 +131,27 @@ npm run prisma:seed
 ## Backend Status
 
 **All Core Modules Implemented ✅**
-- Auth (JWT + argon2, HttpOnly cookies)
+- Auth (JWT + argon2, HttpOnly cookies, refresh tokens)
 - Profile (differential updates for nested collections including Languages)
-- Job Postings (parse text/URL/file, Azure AI Agent for URL parsing)
-- Applications (LLM → PDF → Storage pipeline)
+- Job Postings (parse text/URL/file, Azure AI Agent for URL parsing, soft delete)
+- Applications (ATS Agent → CV/CL Writer Agents → PDF → Storage pipeline, soft delete)
+- Templates (Resume/Cover Letter templates with multilingual + color variants)
+- User Preferences (notifications, language, theme, privacy settings)
 - Storage (Disk + Azure Blob providers)
 - LLM (Mock + Azure OpenAI providers)
 - Jobs (In-Memory + Service Bus providers)
 - PDF (Puppeteer with ATS-optimized templates)
+- Keywords (ATS keyword extraction and matching)
 - Health (Terminus)
 
 **ATS-Optimized PDF Generation ✅**
-- 4 professional CSS templates (modern-professional, elegant-minimal, tech-modern, executive-classic)
+- Multiple professional templates with color variants
+- Multilingual support (DE, EN) with automatic detection
 - Simple HTML structure for ATS parsing
 - No complex layouts, tables, or columns
 - Standard fonts (Arial, system fonts)
 - Languages section with proficiency levels
-- Templates stored in database (`ResumeTemplate` model)
+- Templates stored in database (`Template` model with `baseTemplateId` grouping)
 - Seeded via `npm run prisma:seed:templates`
 
 **Testing:**
@@ -142,7 +159,7 @@ npm run prisma:seed
 - XSS sanitization tests (15 passing)
 - Auth tests (register, login, me)
 
-**See GitHub Issues for remaining frontend work (#42-#55)**
+**See GitHub Issues for remaining work (current: #276-#284)**
 
 ## ATS Agent Architecture
 
@@ -227,10 +244,28 @@ CL_WRITER_AGENT_ID=asst_xxxxx  # Optional
 
 ### Database Fields
 
-Added to `Application` model:
+**Application model:**
+- `title` (String?) - Custom editable title (LLM-generated on creation)
+- `targetJobTitle` (String?) - Target job title for CV/CL (defaults to jobPosting.title)
+- `applicationStatus` (Enum) - User-facing: CREATED, APPLIED, INTERVIEW, ACCEPTED, REJECTED
+- `status` (Enum) - System-facing: PENDING, GENERATING, READY, FAILED
 - `keywordsData` (Json?) - Cached keyword analysis results
-- `matchScore` (Int?) - Overall match score (0-100)
+- `matchScore` (Float?) - Overall match score (0-100)
 - `matchDetails` (Json?) - Detailed match breakdown
+- `atsKeywords` (Json?) - Focused 20-keyword set from ATS Agent
+- `tailoredProfile` (Json?) - Selected profile data for debugging
+- `deletedAt` (DateTime?) - Soft delete timestamp
+
+**JobPosting model:**
+- `language` (String?) - Detected language (ISO 639-1: "de", "en")
+- `fullText` (Text) - Full cleaned job posting for CV/CL agents
+- `deletedAt` (DateTime?) - Soft delete timestamp
+
+**Template model:**
+- `language` (String) - ISO 639-1 language code
+- `baseTemplateId` (String?) - Groups language/color variants
+- `accentColor` (String?) - Primary accent color hex
+- `colorVariantName` (String?) - Display name for color variant
 
 ## Security (8.0/10)
 
@@ -284,10 +319,26 @@ Added to `Application` model:
 - Use env vars (STORAGE_DRIVER, LLM_PROVIDER)
 - Local fallback providers for dev
 
-## Frontend Status
+## Frontend Status (~75% Complete)
 
-**Done:** Auth (#39), Layout (#40), Dashboard (#41)
-**Pending:** Profile forms (#42-47), Job Postings (#48-49), Applications (#50-53), Shared components (#54-55)
+**Done ✅**
+- Auth (Login, Register, Logout)
+- Layout (Dashboard with responsive navigation)
+- Dashboard (Stats, Recent Applications)
+- Profile Management (All forms: Skills, Experience, Education, Certificates, Projects, Languages)
+- Job Postings (List, Create via text/URL, Delete)
+- Applications (List, Detail View, PDF Preview/Download)
+- PDF Edit Mode (Cover Letter + Resume editors with live preview)
+- ATS Analysis (Score, Keywords, Suggestions, Real-time matching)
+- Template Selection (Resume + Cover Letter templates with previews)
+- Settings Page (Notifications, Language, Theme, Privacy)
+
+**Pending ⏳**
+- Template color variant selection
+- Full address fields (Issue #282)
+- Intelligent PDF filenames (Issue #284)
+- Various UX improvements (Issues #278-281)
+
 **Details:** See GitHub Issues
 
 ## Important Commands
@@ -642,5 +693,7 @@ Common status codes:
 4. **Managed Identity** instead of connection strings
 5. **Prometheus/Grafana** monitoring
 6. ~~**ATS export** (JSON format for applicant tracking systems)~~ ✅ **Implemented**
-7. **CV/CL Writer Agents** - Integrate CVWriterAgent and CLWriterAgent for full pipeline
+7. ~~**CV/CL Writer Agents** - Integrate CVWriterAgent and CLWriterAgent for full pipeline~~ ✅ **Implemented**
 8. **ATS Score History** - Track score changes over time
+9. **Intelligent PDF Filenames** - Professional naming with edge case handling (Issue #284)
+10. **Full Address Fields** - Street, postal code, city, country (Issue #282)
