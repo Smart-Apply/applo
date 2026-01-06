@@ -33,14 +33,14 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-[#FFFFFE]">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-        <div className="container flex h-[140px] items-center justify-between px-4 md:px-8">
+        <div className="container flex h-[80px] items-center justify-between px-4 md:px-8">
           <Link href="/" className="flex items-center">
             <Image
               src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
               alt="SmartApply"
               width={241}
               height={247}
-              className="w-[180px] md:w-[241px] h-auto"
+              className="w-[120px] md:w-[160px] h-auto"
               priority
             />
           </Link>
@@ -193,20 +193,24 @@ export default function Home() {
 
         {/* Pricing Section */}
         <section id="pricing" className="relative py-16 md:py-24 overflow-hidden">
-          {/* Background Wave */}
-          <div className="absolute inset-0 z-0">
-            <svg className="absolute bottom-0 w-full" viewBox="0 0 1440 328" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-              <path d="M0 328V100C200 180 400 0 720 100C1040 200 1240 50 1440 100V328H0Z" fill="#E5EEFD" fillOpacity="0.3"/>
+          {/* SVG Background - Behind the cards */}
+          <div className="absolute inset-0 z-0 flex items-center justify-center">
+            <svg width="1440" height="328" viewBox="0 0 1440 328" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
+              <path d="M1440 327.692L1405.6 324.051C1371.2 320.41 1302.4 313.128 1233.92 296.088C1165.28 279.194 1097.12 252.396 1028.48 239.143C960 225.744 891.2 225.744 822.72 241.036C754.08 256.328 685.92 286.913 617.28 291.282C548.8 295.651 480 273.805 411.52 271.621C342.88 269.436 274.72 286.913 206.08 299.001C137.6 311.235 68.7999 317.934 34.4 321.43L0 324.78V9.15527e-05H34.4C68.7999 9.15527e-05 137.6 9.15527e-05 206.08 9.15527e-05C274.72 9.15527e-05 342.88 9.15527e-05 411.52 9.15527e-05C480 9.15527e-05 548.8 9.15527e-05 617.28 9.15527e-05C685.92 9.15527e-05 754.08 9.15527e-05 822.72 9.15527e-05C891.2 9.15527e-05 960 9.15527e-05 1028.48 9.15527e-05C1097.12 9.15527e-05 1165.28 9.15527e-05 1233.92 9.15527e-05C1302.4 9.15527e-05 1371.2 9.15527e-05 1405.6 9.15527e-05H1440V327.692Z" fill="#1B2A49"/>
+              <path d="M1440 240.308L1405.6 239.58C1371.2 238.851 1302.4 237.395 1233.92 229.093C1165.28 220.938 1097.12 205.791 1028.48 196.179C960 186.421 891.2 182.051 822.72 183.508C754.08 184.964 685.92 192.246 617.28 195.887C548.8 199.528 480 199.528 411.52 203.898C342.88 208.267 274.72 217.005 206.08 222.831C137.6 228.657 68.7999 231.569 34.4 233.026L0 234.482V0.000167847H34.4C68.7999 0.000167847 137.6 0.000167847 206.08 0.000167847C274.72 0.000167847 342.88 0.000167847 411.52 0.000167847C480 0.000167847 548.8 0.000167847 617.28 0.000167847C685.92 0.000167847 754.08 0.000167847 822.72 0.000167847C891.2 0.000167847 960 0.000167847 1028.48 0.000167847C1097.12 0.000167847 1165.28 0.000167847 1233.92 0.000167847C1302.4 0.000167847 1371.2 0.000167847 1405.6 0.000167847H1440V240.308Z" fill="#495573"/>
+              <path d="M1440 166.031L1405.6 161.953C1371.2 157.729 1302.4 149.574 1233.92 155.108C1165.28 160.642 1097.12 180.158 1028.48 185.401C960 190.79 891.2 182.052 822.72 177.974C754.08 173.75 685.92 174.333 617.28 175.061C548.8 175.789 480 176.663 411.52 185.401C342.88 194.14 274.72 210.743 206.08 209.723C137.6 208.704 68.7999 190.353 34.4 181.032L0 171.857V0.000244141H34.4C68.7999 0.000244141 137.6 0.000244141 206.08 0.000244141C274.72 0.000244141 342.88 0.000244141 411.52 0.000244141C480 0.000244141 548.8 0.000244141 617.28 0.000244141C685.92 0.000244141 754.08 0.000244141 822.72 0.000244141C891.2 0.000244141 960 0.000244141 1028.48 0.000244141C1097.12 0.000244141 1165.28 0.000244141 1233.92 0.000244141C1302.4 0.000244141 1371.2 0.000244141 1405.6 0.000244141H1440V166.031Z" fill="#7A859F"/>
+              <path d="M1440 167.487L1405.6 162.827C1371.2 158.312 1302.4 148.991 1233.92 137.339C1165.28 125.688 1097.12 111.707 1028.48 106.609C960 101.512 891.2 105.298 822.72 114.62C754.08 123.795 685.92 138.359 617.28 143.456C548.8 148.554 480 144.185 411.52 138.796C342.88 133.553 274.72 127.145 206.08 120.591C137.6 114.037 68.7999 107.337 34.4 103.842L0 100.492V0H34.4C68.7999 0 137.6 0 206.08 0C274.72 0 342.88 0 411.52 0C480 0 548.8 0 617.28 0C685.92 0 754.08 0 822.72 0C891.2 0 960 0 1028.48 0C1097.12 0 1165.28 0 1233.92 0C1302.4 0 1371.2 0 1405.6 0H1440V167.487Z" fill="#AEB8CD"/>
+              <path d="M1440 53.8872L1405.6 58.6933C1371.2 63.6451 1302.4 73.2575 1233.92 82.5785C1165.28 91.7539 1097.12 100.492 1028.48 95.6862C960 90.7344 891.2 72.3836 822.72 64.8103C754.08 57.2369 685.92 60.7323 617.28 68.0144C548.8 75.2964 480 86.3651 411.52 82.7241C342.88 79.0831 274.72 60.7323 206.08 61.4605C137.6 62.1888 68.7999 81.9959 34.4 92.0452L0 101.949V1.52588e-05H34.4C68.7999 1.52588e-05 137.6 1.52588e-05 206.08 1.52588e-05C274.72 1.52588e-05 342.88 1.52588e-05 411.52 1.52588e-05C480 1.52588e-05 548.8 1.52588e-05 617.28 1.52588e-05C685.92 1.52588e-05 754.08 1.52588e-05 822.72 1.52588e-05C891.2 1.52588e-05 960 1.52588e-05 1028.48 1.52588e-05C1097.12 1.52588e-05 1165.28 1.52588e-05 1233.92 1.52588e-05C1302.4 1.52588e-05 1371.2 1.52588e-05 1405.6 1.52588e-05H1440V53.8872Z" fill="#FFFFFD" fillOpacity="0.992157"/>
             </svg>
           </div>
-          
+
           <div className="container relative z-10 px-4 md:px-8">
             <div className="flex flex-col lg:flex-row gap-8 justify-center items-stretch">
               {/* PREPARE Plan */}
               <div 
                 onClick={() => setSelectedPlan('prepare')}
-                className={`relative rounded-3xl p-8 w-full max-w-[420px] mx-auto lg:mx-0 shadow-[5px_10px_4px_rgba(27,42,73,0.25)] flex flex-col min-h-[680px] cursor-pointer transition-all duration-300 ${
-                  selectedPlan === 'prepare' ? 'bg-[#1B2A49]' : 'bg-[#E5EEFD]'
+                className={`relative rounded-3xl p-8 w-full max-w-[420px] mx-auto lg:mx-0 flex flex-col min-h-[680px] cursor-pointer transition-all duration-300 ${
+                  selectedPlan === 'prepare' ? 'bg-[#1B2A49]' : 'bg-[#E5EEFD] shadow-[5px_10px_4px_rgba(27,42,73,0.25)]'
                 }`}
               >
                 <div className="text-center mb-8">
@@ -259,9 +263,11 @@ export default function Home() {
                 }`}
               >
                 {/* Most Popular Badge - always visible on APPLY */}
-                <div className="absolute -top-2 -right-2 md:top-0 md:right-0 overflow-hidden w-[150px] h-[150px]">
-                  <div className="absolute top-[40px] right-[-35px] bg-[#E5EEFD] text-black font-poppins font-bold text-sm py-2 px-10 transform rotate-45 shadow-md">
-                    Am beliebtesten
+                <div className="absolute top-0 right-0 overflow-hidden w-[140px] h-[140px]">
+                  <div className={`absolute top-[32px] right-[-38px] font-poppins font-bold text-xs py-1.5 px-[52px] transform rotate-45 shadow-md whitespace-nowrap transition-colors duration-300 ${
+                    selectedPlan === 'apply' ? 'bg-[#E5EEFD] text-black' : 'bg-[#1B2A49] text-[#E5EEFD]'
+                  }`}>
+                    Most Popular
                   </div>
                 </div>
                 
