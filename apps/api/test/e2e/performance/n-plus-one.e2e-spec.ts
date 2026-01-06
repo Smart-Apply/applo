@@ -71,10 +71,7 @@ describe('Applications N+1 Query Prevention (e2e)', () => {
           userId,
           title: `Test Job ${i + 1}`,
           company: `Company ${i + 1}`,
-          description: `Description for job ${i + 1}`,
-          requirements: ['Requirement 1', 'Requirement 2'],
-          responsibilities: ['Responsibility 1', 'Responsibility 2'],
-          niceToHave: ['Nice to have 1'],
+          fullText: `Description for job ${i + 1}. Requirements: Requirement 1, Requirement 2. Responsibilities: Responsibility 1, Responsibility 2. Nice to have: Nice to have 1.`,
         },
       });
       jobPostingIds.push(jobPosting.id);

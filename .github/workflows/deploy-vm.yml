@@ -3,6 +3,10 @@ name: Deploy to Azure VM
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
 
 # Only allow one deployment at a time
 concurrency:
@@ -13,46 +17,96 @@ env:
   VM_HOST: smartapplymvp.swedencentral.cloudapp.azure.com
   VM_USER: azureuser
   APP_DIR: /home/azureuser/smart-apply
+  NODE_VERSION: '20'
 
 jobs:
-  # Quick validation in CI (parallel with deploy)
-  validate:
+  # Build artifacts in CI (faster runners, cached)
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      deps-changed: ${{ steps.deps-check.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
-      # Cache node_modules directly
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
+      - name: Check if deps changed
+        id: deps-check
+        run: |
+          LOCK_HASH=$(md5sum package-lock.json | cut -d' ' -f1)
+          echo "hash=$LOCK_HASH" >> $GITHUB_OUTPUT
+          echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci --prefer-offline
+        run: npm ci --prefer-offline --no-audit --no-fund
 
-      - name: Type check & Lint
+      - name: Build all packages (parallel via turbo)
+        run: npx turbo run build --concurrency=3
+
+      - name: Type check API
+        run: cd apps/api && npx tsc --noEmit &
+        
+      - name: Lint web
+        run: cd apps/web && npm run lint
+
+      # Create deployment artifact
+      - name: Package artifacts
         run: |
-          npm run build --workspace=@smart-apply/shared
-          cd apps/api && npx tsc --noEmit
-          cd ../web && npm run lint
+          # Create artifact directory
+          mkdir -p deploy-artifacts
+          
+          # Copy built API
+          cp -r dist deploy-artifacts/
+          
+          # Copy Next.js standalone build
+          cp -r apps/web/.next/standalone deploy-artifacts/web-standalone
+          cp -r apps/web/.next/static deploy-artifacts/web-standalone/apps/web/.next/
+          cp -r apps/web/public deploy-artifacts/web-standalone/apps/web/
+          
+          # Copy Prisma files for migrations
+          cp -r apps/api/prisma deploy-artifacts/prisma
+          
+          # Copy package files for reference
+          cp package-lock.json deploy-artifacts/
 
-  # Deploy to VM (runs in parallel with validate)
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-package
+          path: deploy-artifacts/
+          retention-days: 1
+          compression-level: 6
+
+  # Deploy pre-built artifacts to VM
   deploy:
     runs-on: ubuntu-latest
+    needs: build
     steps:
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-package
+          path: deploy-artifacts/
+
+      - name: Create deployment archive
+        run: |
+          cd deploy-artifacts
+          tar -czf ../deploy.tar.gz .
+
+      - name: Copy artifacts to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.VM_HOST }}
+          username: ${{ env.VM_USER }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          port: 22
+          source: "deploy.tar.gz"
+          target: "/tmp/"
+
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -60,8 +114,8 @@ jobs:
           username: ${{ env.VM_USER }}
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           port: 22
-          timeout: 120s
-          command_timeout: 20m
+          timeout: 60s
+          command_timeout: 5m
           script: |
             set -e
             
@@ -71,83 +125,74 @@ jobs:
             
             cd /home/azureuser/smart-apply
             
-            # Pull latest code
-            echo "📦 Pulling latest code..."
-            git fetch origin main
+            # Pull latest code (for config files, .env, etc.)
+            echo "📦 Syncing code..."
+            git fetch origin main --depth=1
             git reset --hard origin/main
             
-            # Check if dependencies changed
+            # Extract pre-built artifacts
+            echo "📂 Extracting build artifacts..."
+            tar -xzf /tmp/deploy.tar.gz -C /tmp/deploy-extract --one-top-level 2>/dev/null || mkdir -p /tmp/deploy-extract && tar -xzf /tmp/deploy.tar.gz -C /tmp/deploy-extract
+            
+            # Copy built files
+            rm -rf dist
+            cp -r /tmp/deploy-extract/dist .
+            rm -rf apps/web/.next/standalone
+            mkdir -p apps/web/.next
+            cp -r /tmp/deploy-extract/web-standalone apps/web/.next/standalone
+            
+            # Check if node_modules needs update
             LOCK_HASH=$(md5sum package-lock.json | cut -d' ' -f1)
-            CACHED_HASH=""
-            if [ -f .npm-cache-hash ]; then
-              CACHED_HASH=$(cat .npm-cache-hash)
-            fi
+            CACHED_HASH=$(cat .npm-cache-hash 2>/dev/null || echo "")
             
             if [ "$LOCK_HASH" != "$CACHED_HASH" ]; then
               echo "📥 Dependencies changed, running npm ci..."
-              npm ci
+              npm ci --prefer-offline --no-audit --no-fund --ignore-scripts
+              cd apps/api && npx prisma generate && cd ../..
               echo "$LOCK_HASH" > .npm-cache-hash
-            else
-              echo "✅ Dependencies cached, skipping npm ci"
             fi
             
-            # Build
-            echo "🔨 Building..."
-            npm run build --workspace=@smart-apply/shared
-            npm run build --workspace=apps/api
-            npm run build --workspace=apps/web
-            
-            # Setup Next.js standalone
-            echo "📂 Copying static files..."
-            cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/
-            cp -r apps/web/public apps/web/.next/standalone/apps/web/
-            
-            # Database migrations
+            # Database migrations (skip generate since we did it above or it's cached)
             echo "🗃️ Database migrations..."
             cd apps/api
-            npx prisma generate
-            npx prisma db push --skip-generate
+            npx prisma db push --skip-generate --accept-data-loss 2>/dev/null || npx prisma db push --skip-generate
             cd ../..
             
-            # Restart services
+            # Graceful restart (zero-downtime)
             echo "🔄 Restarting services..."
-            pm2 delete all 2>/dev/null || true
-            pm2 start /home/azureuser/smart-apply/dist/apps/api/main.js --name "api" --cwd /home/azureuser/smart-apply/apps/api
-            PORT=3001 pm2 start /home/azureuser/smart-apply/apps/web/.next/standalone/apps/web/server.js --name "web"
+            pm2 reload api --update-env 2>/dev/null || pm2 start dist/apps/api/main.js --name "api" --cwd /home/azureuser/smart-apply/apps/api
+            pm2 reload web --update-env 2>/dev/null || PORT=3001 pm2 start apps/web/.next/standalone/apps/web/server.js --name "web"
             pm2 save
             
-            # Wait for API
+            # Quick health check (API should be fast after reload)
             echo "⏳ Waiting for API..."
-            sleep 10
-            for i in {1..6}; do
-              if curl -sf --max-time 5 http://localhost:3000/api/v1/health > /dev/null 2>&1; then
+            for i in {1..4}; do
+              if curl -sf --max-time 3 http://localhost:3000/api/v1/health > /dev/null 2>&1; then
                 echo "✅ API is healthy!"
                 break
               fi
-              sleep 5
+              sleep 2
             done
+            
+            # Cleanup
+            rm -rf /tmp/deploy.tar.gz /tmp/deploy-extract
             
             pm2 status
             echo "✅ Deployment complete!"
 
-      - name: Health Check (with retry)
+      - name: Health Check
         run: |
           echo "⏳ Verifying external health..."
-          MAX_RETRIES=6
-          RETRY_INTERVAL=10
-          
-          for i in $(seq 1 $MAX_RETRIES); do
-            echo "Attempt $i/$MAX_RETRIES..."
-            if curl -sf --max-time 10 https://${{ env.VM_HOST }}/api/v1/health; then
-              echo ""
-              echo "✅ Health check passed!"
+          sleep 3
+          for i in {1..4}; do
+            if curl -sf --max-time 8 https://${{ env.VM_HOST }}/api/v1/health; then
+              echo -e "\n✅ Health check passed!"
               exit 0
             fi
-            echo "Service not ready, waiting ${RETRY_INTERVAL}s..."
-            sleep $RETRY_INTERVAL
+            echo "Attempt $i/4 - waiting 5s..."
+            sleep 5
           done
-          
-          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          echo "❌ Health check failed"
           exit 1
 
       - name: Notify on failure

@@ -167,12 +167,12 @@ describe('LLMService - ATS Methods', () => {
   describe('KeywordMatch interface', () => {
     it('should support all category types', () => {
       const categories: KeywordMatch['category'][] = [
-        'technical',
+        'core',
         'soft',
-        'tool',
+        'requirement',
+        'methodology',
         'industry',
         'seniority',
-        'requirement',
         'misc',
       ];
 

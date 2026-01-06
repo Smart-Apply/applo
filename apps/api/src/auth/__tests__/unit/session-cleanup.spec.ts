@@ -77,11 +77,11 @@ describe('SessionCleanupCron', () => {
 
       await service.cleanupExpiredSessions();
 
-      const callArg = deleteManyMock.mock.calls[0][0];
-      const orConditions = callArg.where.OR;
+      const callArg = deleteManyMock.mock.calls[0]?.[0];
+      const orConditions = callArg?.where?.OR;
 
       // Check that one of the OR conditions is for revoked sessions
-      const revokedCondition = orConditions.find(
+      const revokedCondition = orConditions?.find(
         (cond: any) => cond.AND && cond.AND.find((c: any) => c.isActive === false),
       );
       expect(revokedCondition).toBeDefined();
@@ -94,11 +94,11 @@ describe('SessionCleanupCron', () => {
 
       await service.cleanupExpiredSessions();
 
-      const callArg = deleteManyMock.mock.calls[0][0];
-      const orConditions = callArg.where.OR;
+      const callArg = deleteManyMock.mock.calls[0]?.[0];
+      const orConditions = callArg?.where?.OR;
 
       // Check that one of the OR conditions is for old sessions by createdAt
-      const oldSessionCondition = orConditions.find((cond: any) => cond.createdAt);
+      const oldSessionCondition = orConditions?.find((cond: any) => cond.createdAt);
       expect(oldSessionCondition).toBeDefined();
     });
 
@@ -137,11 +137,11 @@ describe('SessionCleanupCron', () => {
 
       await service.cleanupExpiredRefreshTokens();
 
-      const callArg = deleteManyMock.mock.calls[0][0];
-      const orConditions = callArg.where.OR;
+      const callArg = deleteManyMock.mock.calls[0]?.[0];
+      const orConditions = callArg?.where?.OR;
 
       // Check that one of the OR conditions is for revoked tokens
-      const revokedCondition = orConditions.find(
+      const revokedCondition = orConditions?.find(
         (cond: any) => cond.AND && cond.AND.find((c: any) => c.isRevoked === true),
       );
       expect(revokedCondition).toBeDefined();

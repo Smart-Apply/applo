@@ -215,7 +215,7 @@ describe('Session and Refresh Token Cleanup (e2e)', () => {
       });
 
       expect(session).not.toBeNull();
-      expect(session.id).toBe(activeSession.id);
+      expect(session?.id).toBe(activeSession.id);
 
       // Cleanup test user
       await prisma.user.delete({ where: { id: user.id } });
@@ -328,7 +328,7 @@ describe('Session and Refresh Token Cleanup (e2e)', () => {
       });
 
       expect(token).not.toBeNull();
-      expect(token.id).toBe(activeToken.id);
+      expect(token?.id).toBe(activeToken.id);
 
       // Cleanup test user
       await prisma.user.delete({ where: { id: user.id } });

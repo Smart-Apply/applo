@@ -63,7 +63,7 @@ describe('AgentUrlParser', () => {
 
       expect(result.title).toBeDefined();
       expect(result.company).toBeDefined();
-      expect(result.requirements).toBeInstanceOf(Array);
+      expect(result.fullText).toBeDefined();
     });
   });
 });

@@ -234,7 +234,7 @@ describe('Response Compression (e2e)', () => {
 
   describe('Performance Impact', () => {
     it('should not significantly impact response time for small responses', async () => {
-      const measurements = [];
+      const measurements: number[] = [];
 
       // Run 5 requests and measure average time
       for (let i = 0; i < 5; i++) {

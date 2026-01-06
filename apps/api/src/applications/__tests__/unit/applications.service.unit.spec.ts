@@ -113,6 +113,7 @@ describe('ApplicationsService', () => {
         language: 'en',
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       jest.spyOn(prisma.profile, 'findUnique').mockResolvedValue({

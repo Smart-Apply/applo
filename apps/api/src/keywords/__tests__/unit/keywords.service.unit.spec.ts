@@ -11,11 +11,11 @@ describe('KeywordsService', () => {
   let prisma: jest.Mocked<PrismaService>;
 
   const mockATSOutput: ATSAgentOutput = {
-    technicalSkills: ['TypeScript', 'React', 'Node.js', 'PostgreSQL'],
+    coreCompetencies: ['TypeScript', 'React', 'Node.js', 'PostgreSQL'],
     softSkills: ['Teamarbeit', 'Kommunikation', 'Problemlösung'],
     responsibilityKeywords: ['entwickeln', 'implementieren', 'optimieren'],
     requirementKeywords: ['3+ Jahre Erfahrung', 'Agile Methoden'],
-    toolsAndTechnologies: ['Git', 'Docker', 'AWS'],
+    methodologies: ['Git', 'Docker', 'AWS'],
     industryKeywords: ['SaaS', 'Fintech'],
     senioritySignals: ['Senior', 'Lead'],
     miscKeywords: ['Remote-friendly'],
@@ -107,16 +107,16 @@ describe('KeywordsService', () => {
 
       expect(atsAgent.execute).toHaveBeenCalled();
       expect(result).toEqual(mockATSOutput);
-      expect(result.technicalSkills).toContain('TypeScript');
+      expect(result.coreCompetencies).toContain('TypeScript');
     });
 
     it('should handle empty arrays in job posting', async () => {
       atsAgent.execute.mockResolvedValueOnce({
-        technicalSkills: [],
+        coreCompetencies: [],
         softSkills: [],
         responsibilityKeywords: [],
         requirementKeywords: [],
-        toolsAndTechnologies: [],
+        methodologies: [],
         industryKeywords: [],
         senioritySignals: [],
         miscKeywords: [],
@@ -124,7 +124,7 @@ describe('KeywordsService', () => {
 
       const result = await service.extractKeywords(mockJobPosting);
 
-      expect(result.technicalSkills).toHaveLength(0);
+      expect(result.coreCompetencies).toHaveLength(0);
     });
   });
 
@@ -132,10 +132,10 @@ describe('KeywordsService', () => {
     it('should convert ATSAgentOutput to legacy format', () => {
       const result = service.convertToLegacyFormat(mockATSOutput);
 
-      expect(result).toHaveProperty('technical');
+      expect(result).toHaveProperty('core');
       expect(result).toHaveProperty('soft');
       expect(result).toHaveProperty('experience');
-      expect(result.technical).toContain('TypeScript');
+      expect(result.core).toContain('TypeScript');
       expect(result.soft).toContain('Teamarbeit');
     });
   });

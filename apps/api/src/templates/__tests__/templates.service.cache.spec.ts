@@ -8,8 +8,15 @@ import { ConfigService } from '../../config/config.service';
 
 describe('TemplatesService - Cache Behavior', () => {
   let service: TemplatesService;
-  let prisma: jest.Mocked<PrismaService>;
-  let config: jest.Mocked<ConfigService>;
+  let prisma: PrismaService;
+
+  // Create typed mock functions
+  const mockFindMany = jest.fn();
+  const mockFindFirst = jest.fn();
+  const mockFindUnique = jest.fn();
+  const mockCreate = jest.fn();
+  const mockUpdate = jest.fn();
+  const mockDelete = jest.fn();
 
   const mockTemplate = {
     id: 'template-1',
@@ -30,6 +37,14 @@ describe('TemplatesService - Cache Behavior', () => {
   };
 
   beforeEach(async () => {
+    // Reset mocks before each test
+    mockFindMany.mockReset();
+    mockFindFirst.mockReset();
+    mockFindUnique.mockReset();
+    mockCreate.mockReset();
+    mockUpdate.mockReset();
+    mockDelete.mockReset();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TemplatesService,
@@ -37,12 +52,12 @@ describe('TemplatesService - Cache Behavior', () => {
           provide: PrismaService,
           useValue: {
             template: {
-              findMany: jest.fn(),
-              findFirst: jest.fn(),
-              findUnique: jest.fn(),
-              create: jest.fn(),
-              update: jest.fn(),
-              delete: jest.fn(),
+              findMany: mockFindMany,
+              findFirst: mockFindFirst,
+              findUnique: mockFindUnique,
+              create: mockCreate,
+              update: mockUpdate,
+              delete: mockDelete,
             },
           },
         },
@@ -63,8 +78,7 @@ describe('TemplatesService - Cache Behavior', () => {
     }).compile();
 
     service = module.get<TemplatesService>(TemplatesService);
-    prisma = module.get(PrismaService) as jest.Mocked<PrismaService>;
-    config = module.get(ConfigService) as jest.Mocked<ConfigService>;
+    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -73,16 +87,16 @@ describe('TemplatesService - Cache Behavior', () => {
 
   describe('findAll', () => {
     it('should cache results on first call', async () => {
-      prisma.template.findMany.mockResolvedValue([mockTemplate]);
+      mockFindMany.mockResolvedValue([mockTemplate]);
 
       // First call - should query database
       const result1 = await service.findAll();
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(1);
+      expect(mockFindMany).toHaveBeenCalledTimes(1);
       expect(result1).toHaveLength(1);
 
       // Second call - should use cache (no additional DB query)
       const result2 = await service.findAll();
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(1); // Still 1
+      expect(mockFindMany).toHaveBeenCalledTimes(1); // Still 1
       expect(result2).toEqual(result1);
     });
 
@@ -94,29 +108,29 @@ describe('TemplatesService - Cache Behavior', () => {
         type: TemplateType.COVER_LETTER,
       };
 
-      prisma.template.findMany
+      mockFindMany
         .mockResolvedValueOnce([resumeTemplate])
         .mockResolvedValueOnce([coverLetterTemplate]);
 
       // First call for RESUME type
       await service.findAll(TemplateType.RESUME);
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(1);
+      expect(mockFindMany).toHaveBeenCalledTimes(1);
 
       // First call for COVER_LETTER type (different cache key)
       await service.findAll(TemplateType.COVER_LETTER);
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(2);
+      expect(mockFindMany).toHaveBeenCalledTimes(2);
 
       // Second call for RESUME type - should use cache
       await service.findAll(TemplateType.RESUME);
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(2); // Still 2
+      expect(mockFindMany).toHaveBeenCalledTimes(2); // Still 2
 
       // Second call for COVER_LETTER type - should use cache
       await service.findAll(TemplateType.COVER_LETTER);
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(2); // Still 2
+      expect(mockFindMany).toHaveBeenCalledTimes(2); // Still 2
     });
 
     it('should track cache hits and misses', async () => {
-      prisma.template.findMany.mockResolvedValue([mockTemplate]);
+      mockFindMany.mockResolvedValue([mockTemplate]);
 
       // First call - cache miss
       await service.findAll();
@@ -140,19 +154,19 @@ describe('TemplatesService - Cache Behavior', () => {
 
   describe('findOne', () => {
     it('should cache individual templates by ID', async () => {
-      prisma.template.findUnique.mockResolvedValue(mockTemplate);
+      mockFindUnique.mockResolvedValue(mockTemplate);
 
       // First call - cache miss
       await service.findOne('template-1');
-      expect(prisma.template.findUnique).toHaveBeenCalledTimes(1);
+      expect(mockFindUnique).toHaveBeenCalledTimes(1);
 
       // Second call - cache hit
       await service.findOne('template-1');
-      expect(prisma.template.findUnique).toHaveBeenCalledTimes(1); // Still 1
+      expect(mockFindUnique).toHaveBeenCalledTimes(1); // Still 1
     });
 
     it('should throw NotFoundException for missing template', async () => {
-      prisma.template.findUnique.mockResolvedValue(null);
+      mockFindUnique.mockResolvedValue(null);
 
       await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
     });
@@ -160,51 +174,51 @@ describe('TemplatesService - Cache Behavior', () => {
 
   describe('findDefault', () => {
     it('should cache default templates by type', async () => {
-      prisma.template.findFirst.mockResolvedValue(mockTemplate);
+      mockFindFirst.mockResolvedValue(mockTemplate);
 
       // First call - cache miss
       await service.findDefault(TemplateType.RESUME);
-      expect(prisma.template.findFirst).toHaveBeenCalledTimes(1);
+      expect(mockFindFirst).toHaveBeenCalledTimes(1);
 
       // Second call - cache hit
       await service.findDefault(TemplateType.RESUME);
-      expect(prisma.template.findFirst).toHaveBeenCalledTimes(1); // Still 1
+      expect(mockFindFirst).toHaveBeenCalledTimes(1); // Still 1
     });
 
     it('should cache fallback templates when no default exists', async () => {
       // First findFirst returns null (no default)
       // Second findFirst returns fallback template
-      prisma.template.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(mockTemplate);
+      mockFindFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(mockTemplate);
 
       // First call - should query twice (default + fallback)
       const result1 = await service.findDefault(TemplateType.RESUME);
-      expect(prisma.template.findFirst).toHaveBeenCalledTimes(2);
+      expect(mockFindFirst).toHaveBeenCalledTimes(2);
       expect(result1).toEqual(mockTemplate);
 
       // Second call - should use cached fallback
       const result2 = await service.findDefault(TemplateType.RESUME);
-      expect(prisma.template.findFirst).toHaveBeenCalledTimes(2); // Still 2
+      expect(mockFindFirst).toHaveBeenCalledTimes(2); // Still 2
       expect(result2).toEqual(mockTemplate);
     });
   });
 
   describe('findByCategoryAndLanguage', () => {
     it('should cache templates by category, language, and type', async () => {
-      prisma.template.findFirst.mockResolvedValue(mockTemplate);
+      mockFindFirst.mockResolvedValue(mockTemplate);
 
       // First call - cache miss
       await service.findByCategoryAndLanguage('modern-professional', 'en', TemplateType.RESUME);
-      expect(prisma.template.findFirst).toHaveBeenCalledTimes(1);
+      expect(mockFindFirst).toHaveBeenCalledTimes(1);
 
       // Second call - cache hit
       await service.findByCategoryAndLanguage('modern-professional', 'en', TemplateType.RESUME);
-      expect(prisma.template.findFirst).toHaveBeenCalledTimes(1); // Still 1
+      expect(mockFindFirst).toHaveBeenCalledTimes(1); // Still 1
     });
 
     it('should cache null results for missing templates', async () => {
       // First findFirst returns null (no template for 'de')
       // Second findFirst returns English fallback
-      prisma.template.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(mockTemplate);
+      mockFindFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(mockTemplate);
 
       // First call - should query twice (German + English fallback)
       const result1 = await service.findByCategoryAndLanguage(
@@ -212,7 +226,7 @@ describe('TemplatesService - Cache Behavior', () => {
         'de',
         TemplateType.RESUME,
       );
-      expect(prisma.template.findFirst).toHaveBeenCalledTimes(2);
+      expect(mockFindFirst).toHaveBeenCalledTimes(2);
       expect(result1).toEqual(mockTemplate);
 
       // Second call - should use cached result
@@ -221,7 +235,7 @@ describe('TemplatesService - Cache Behavior', () => {
         'de',
         TemplateType.RESUME,
       );
-      expect(prisma.template.findFirst).toHaveBeenCalledTimes(2); // Still 2
+      expect(mockFindFirst).toHaveBeenCalledTimes(2); // Still 2
       expect(result2).toEqual(mockTemplate);
     });
   });
@@ -229,26 +243,26 @@ describe('TemplatesService - Cache Behavior', () => {
   describe('findLanguageVariants', () => {
     it('should cache language variants by baseTemplateId', async () => {
       const variants = [mockTemplate, { ...mockTemplate, id: 'template-2', language: 'de' }];
-      prisma.template.findMany.mockResolvedValue(variants);
+      mockFindMany.mockResolvedValue(variants);
 
       // First call - cache miss
       await service.findLanguageVariants('base-template-1');
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(1);
+      expect(mockFindMany).toHaveBeenCalledTimes(1);
 
       // Second call - cache hit
       await service.findLanguageVariants('base-template-1');
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(1); // Still 1
+      expect(mockFindMany).toHaveBeenCalledTimes(1); // Still 1
     });
   });
 
   describe('cache invalidation', () => {
     it('should clear cache after create', async () => {
-      prisma.template.findMany.mockResolvedValue([mockTemplate]);
-      prisma.template.create.mockResolvedValue(mockTemplate);
+      mockFindMany.mockResolvedValue([mockTemplate]);
+      mockCreate.mockResolvedValue(mockTemplate);
 
       // Populate cache
       await service.findAll();
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(1);
+      expect(mockFindMany).toHaveBeenCalledTimes(1);
 
       // Create new template - should invalidate cache
       await service.create({
@@ -265,45 +279,45 @@ describe('TemplatesService - Cache Behavior', () => {
 
       // Next call should query database again (cache was cleared)
       await service.findAll();
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(2);
+      expect(mockFindMany).toHaveBeenCalledTimes(2);
     });
 
     it('should clear cache after update', async () => {
-      prisma.template.findUnique.mockResolvedValue(mockTemplate);
-      prisma.template.update.mockResolvedValue(mockTemplate);
+      mockFindUnique.mockResolvedValue(mockTemplate);
+      mockUpdate.mockResolvedValue(mockTemplate);
 
       // Populate cache
       await service.findOne('template-1');
-      expect(prisma.template.findUnique).toHaveBeenCalledTimes(1);
+      expect(mockFindUnique).toHaveBeenCalledTimes(1);
 
       // Update template - should invalidate cache
       await service.update('template-1', { name: 'Updated Name' });
 
       // Next call should query database again (cache was cleared)
       await service.findOne('template-1');
-      expect(prisma.template.findUnique).toHaveBeenCalledTimes(2);
+      expect(mockFindUnique).toHaveBeenCalledTimes(2);
     });
 
     it('should clear cache after delete', async () => {
-      prisma.template.findMany.mockResolvedValue([mockTemplate]);
-      prisma.template.delete.mockResolvedValue(mockTemplate);
+      mockFindMany.mockResolvedValue([mockTemplate]);
+      mockDelete.mockResolvedValue(mockTemplate);
 
       // Populate cache
       await service.findAll();
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(1);
+      expect(mockFindMany).toHaveBeenCalledTimes(1);
 
       // Delete template - should invalidate cache
       await service.delete('template-1');
 
       // Next call should query database again (cache was cleared)
       await service.findAll();
-      expect(prisma.template.findMany).toHaveBeenCalledTimes(2);
+      expect(mockFindMany).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('cache statistics', () => {
     it('should calculate hit rate correctly', async () => {
-      prisma.template.findMany.mockResolvedValue([mockTemplate]);
+      mockFindMany.mockResolvedValue([mockTemplate]);
 
       // Make 1 miss + 3 hits = 75% hit rate
       await service.findAll(); // miss
@@ -325,8 +339,8 @@ describe('TemplatesService - Cache Behavior', () => {
     });
 
     it('should return cache key count', async () => {
-      prisma.template.findMany.mockResolvedValue([mockTemplate]);
-      prisma.template.findUnique.mockResolvedValue(mockTemplate);
+      mockFindMany.mockResolvedValue([mockTemplate]);
+      mockFindUnique.mockResolvedValue(mockTemplate);
 
       // Add 2 different cache entries
       await service.findAll();

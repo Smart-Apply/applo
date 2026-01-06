@@ -13,16 +13,16 @@ describe('KeywordsService - Weighted Score Calculation', () => {
   let service: KeywordsService;
 
   const createMockATSOutput = (
-    technical: string[],
+    core: string[],
     soft: string[],
     seniority: string[],
     misc: string[],
   ): ATSAgentOutput => ({
-    technicalSkills: technical,
+    coreCompetencies: core,
     softSkills: soft,
     responsibilityKeywords: [],
     requirementKeywords: [],
-    toolsAndTechnologies: [],
+    methodologies: [],
     industryKeywords: [],
     senioritySignals: seniority,
     miscKeywords: misc,
@@ -113,7 +113,7 @@ describe('KeywordsService - Weighted Score Calculation', () => {
       const result = service.performAnalysis(profile, keywords);
 
       // All categories should have 100% match
-      expect(result.categoryBreakdown.technical.percentage).toBe(100);
+      expect(result.categoryBreakdown.core.percentage).toBe(100);
       expect(result.categoryBreakdown.soft.percentage).toBe(100);
       expect(result.categoryBreakdown.experience.percentage).toBe(100);
       expect(result.categoryBreakdown.other.percentage).toBe(100);
@@ -154,7 +154,7 @@ describe('KeywordsService - Weighted Score Calculation', () => {
       const result = service.performAnalysis(profile, keywords);
 
       // Technical should be 100%, others 0%
-      expect(result.categoryBreakdown.technical.percentage).toBe(100);
+      expect(result.categoryBreakdown.core.percentage).toBe(100);
       expect(result.categoryBreakdown.soft.percentage).toBe(0);
       expect(result.categoryBreakdown.experience.percentage).toBe(0);
       expect(result.categoryBreakdown.other.percentage).toBe(0);
@@ -177,7 +177,7 @@ describe('KeywordsService - Weighted Score Calculation', () => {
 
       const result = service.performAnalysis(profile, keywords);
 
-      expect(result.categoryBreakdown.technical.percentage).toBe(0);
+      expect(result.categoryBreakdown.core.percentage).toBe(0);
       expect(result.categoryBreakdown.soft.percentage).toBe(100);
 
       // Weighted score with normalization:
@@ -217,7 +217,7 @@ describe('KeywordsService - Weighted Score Calculation', () => {
 
       const result = service.performAnalysis(profile, keywords);
 
-      expect(result.categoryBreakdown.technical.percentage).toBe(50);
+      expect(result.categoryBreakdown.core.percentage).toBe(50);
       expect(result.categoryBreakdown.soft.percentage).toBe(33);
       expect(result.categoryBreakdown.experience.percentage).toBe(100);
 

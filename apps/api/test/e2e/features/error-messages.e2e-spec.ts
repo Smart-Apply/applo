@@ -55,7 +55,8 @@ describe('Error Messages (e2e)', () => {
       })
       .expect(201);
 
-    authCookie = registerResponse.headers['set-cookie'];
+    const cookie = registerResponse.headers['set-cookie'];
+    authCookie = Array.isArray(cookie) ? cookie : cookie ? [cookie] : [];
   });
 
   afterAll(async () => {
@@ -298,17 +299,20 @@ describe('Error Messages (e2e)', () => {
   describe('Rate Limiting', () => {
     it('should return RATE_LIMIT_EXCEEDED code when limit exceeded', async () => {
       // Make multiple requests to trigger rate limit (strict auth limit: 5/15min)
-      const promises = [];
-      for (let i = 0; i < 6; i++) {
-        promises.push(
-          request(app.getHttpServer()).post('/api/v1/auth/login').send({
-            email: 'rate-limit@example.com',
-            password: 'Test123!',
-          }),
-        );
-      }
+      const makeRequest = () =>
+        request(app.getHttpServer()).post('/api/v1/auth/login').send({
+          email: 'rate-limit@example.com',
+          password: 'Test123!',
+        });
 
-      const responses = await Promise.all(promises);
+      const responses = await Promise.all([
+        makeRequest(),
+        makeRequest(),
+        makeRequest(),
+        makeRequest(),
+        makeRequest(),
+        makeRequest(),
+      ]);
       const rateLimited = responses.find((r) => r.status === 429);
 
       if (rateLimited) {

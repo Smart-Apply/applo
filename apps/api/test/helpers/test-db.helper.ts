@@ -16,7 +16,7 @@ export class TestDbHelper {
       // Clear in correct order (child → parent)
       this.prisma.application.deleteMany(),
       this.prisma.jobPosting.deleteMany(),
-      this.prisma.resumeTemplate.deleteMany(),
+      this.prisma.template.deleteMany(),
       this.prisma.language.deleteMany(),
       this.prisma.project.deleteMany(),
       this.prisma.certificate.deleteMany(),
@@ -58,11 +58,11 @@ export class TestDbHelper {
           create: [
             {
               company: 'Tech Corp',
-              position: 'Senior Developer',
+              title: 'Senior Developer',
               startDate: new Date('2020-01-01'),
               endDate: new Date('2023-12-31'),
               description: 'Built amazing things',
-              current: false,
+              isCurrent: false,
             },
           ],
         },
@@ -72,8 +72,8 @@ export class TestDbHelper {
               institution: 'University of Tech',
               degree: 'Bachelor of Science',
               fieldOfStudy: 'Computer Science',
-              startDate: new Date('2015-09-01'),
-              endDate: new Date('2019-06-30'),
+              startYear: new Date('2015-09-01'),
+              endYear: new Date('2019-06-30'),
             },
           ],
         },
@@ -86,16 +86,18 @@ export class TestDbHelper {
         title: 'Senior TypeScript Developer',
         company: 'Example Inc',
         location: 'Remote',
-        description: 'We are looking for a skilled TypeScript developer',
-        requirements: 'TypeScript, React, Node.js',
+        fullText: 'We are looking for a skilled TypeScript developer. Requirements: TypeScript, React, Node.js',
       },
     });
 
-    const template = await this.prisma.resumeTemplate.create({
+    const template = await this.prisma.template.create({
       data: {
         name: 'Modern Professional',
         description: 'ATS-optimized modern template',
-        cssFile: 'modern-professional.css',
+        type: 'RESUME',
+        category: 'professional',
+        htmlTemplate: '<html></html>',
+        cssStyles: 'body {}',
         isDefault: true,
         language: 'en',
       },
@@ -117,8 +119,8 @@ export interface TestData {
   user: {
     id: string;
     email: string;
-    firstName: string;
-    lastName: string;
+    firstName: string | null;
+    lastName: string | null;
   };
   profile: {
     id: string;
