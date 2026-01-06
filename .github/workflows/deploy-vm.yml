@@ -23,8 +23,6 @@ jobs:
   # Build artifacts in CI (faster runners, cached)
   build:
     runs-on: ubuntu-latest
-    outputs:
-      deps-changed: ${{ steps.deps-check.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
 
@@ -33,13 +31,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-
-      - name: Check if deps changed
-        id: deps-check
-        run: |
-          LOCK_HASH=$(md5sum package-lock.json | cut -d' ' -f1)
-          echo "hash=$LOCK_HASH" >> $GITHUB_OUTPUT
-          echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --no-fund
@@ -168,8 +159,18 @@ jobs:
             
             # Graceful restart (zero-downtime)
             echo "🔄 Restarting services..."
-            pm2 reload api --update-env 2>/dev/null || pm2 start dist/apps/api/main.js --name "api" --cwd /home/azureuser/smart-apply/apps/api
-            pm2 reload web --update-env 2>/dev/null || PORT=3001 pm2 start apps/web/.next/standalone/apps/web/server.js --name "web"
+            
+            # API restart
+            if pm2 describe api > /dev/null 2>&1; then
+              pm2 reload api --update-env
+            else
+              pm2 start dist/apps/api/main.js --name "api" --cwd /home/azureuser/smart-apply/apps/api
+            fi
+            
+            # Web restart - delete if errored, then start fresh
+            pm2 delete web 2>/dev/null || true
+            PORT=3001 pm2 start apps/web/.next/standalone/apps/web/server.js --name "web"
+            
             pm2 save
             
             # Quick health check (API should be fast after reload)
