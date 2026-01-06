@@ -57,6 +57,7 @@ These keywords are in the job posting but not explicitly in the profile. Include
    - Reinforce top 2-3 keywords one more time
    - Express enthusiasm for the company
    - Include a confident call to action
+   - **DO NOT include closing phrase** (e.g., "Mit freundlichen Grüßen", "Best regards") - it's added automatically by the template
 
 ### Keyword Placement Rules
 
@@ -118,9 +119,7 @@ Return the cover letter as **clean HTML** (no markdown).
 
 <p>Body paragraph 2 with more achievements IN GERMAN...</p>
 
-<p>Closing paragraph reinforcing fit IN GERMAN...</p>
-
-<p>Mit freundlichen Grüßen</p>
+<p>Closing paragraph reinforcing fit IN GERMAN - end here, NO closing phrase!</p>
 ```
 
 **If language is "en" (English):**
@@ -133,9 +132,7 @@ Return the cover letter as **clean HTML** (no markdown).
 
 <p>Body paragraph 2 with more achievements IN ENGLISH...</p>
 
-<p>Closing paragraph reinforcing fit IN ENGLISH...</p>
-
-<p>Best regards,</p>
+<p>Closing paragraph reinforcing fit IN ENGLISH - end here, NO closing phrase!</p>
 ```
 
 ## Important Rules
@@ -147,34 +144,34 @@ Return the cover letter as **clean HTML** (no markdown).
 5. **No signature:** End with the greeting only (name added by template)
 6. **Keyword focus:** First paragraph is most important for ATS
 
-## ⚠️ CRITICAL: Closing Format - NO NAME!
+## ⚠️ CRITICAL: NO Closing Phrase AND NO Name!
 
-**The candidate's name is AUTOMATICALLY added by the template!**
+**Both the closing phrase AND candidate's name are AUTOMATICALLY added by the template!**
 
-❌ **WRONG** (NEVER output this):
+❌ **WRONG** (NEVER include closing phrase):
 ```html
+<p>I look forward to hearing from you.</p>
 <p>Sincerely,</p>
+```
+
+❌ **WRONG** (NEVER include name):
+```html
+<p>Best regards,</p>
 <p>John Smith</p>
 ```
 
-❌ **WRONG** (NEVER use placeholders):
+✅ **CORRECT** (End with last content paragraph):
 ```html
-<p>Best regards,</p>
-<p>[Your Name]</p>
+<p>I am excited about the opportunity to contribute to your team and would welcome the chance to discuss my qualifications further.</p>
 ```
 
-✅ **CORRECT** (ONLY the closing phrase):
+✅ **CORRECT** (German - end with last content paragraph):
 ```html
-<p>Best regards,</p>
-```
-
-✅ **CORRECT** (German):
-```html
-<p>Mit freundlichen Grüßen</p>
+<p>Ich freue mich auf die Möglichkeit, meine Qualifikationen in einem persönlichen Gespräch zu besprechen.</p>
 ```
 
 ## Output
 
-Return ONLY the HTML content in {{languageName}}, starting with the appropriate salutation and ending with the appropriate closing phrase. **NO NAME AFTER THE CLOSING!**
+Return ONLY the HTML content in {{languageName}}, starting with the appropriate salutation and ending with the last content paragraph. **NO closing phrase (like "Mit freundlichen Grüßen" or "Best regards") AND NO NAME!**
 
 Generate a compelling, keyword-optimized cover letter that will pass ATS screening while impressing human reviewers.

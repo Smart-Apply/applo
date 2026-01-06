@@ -60,12 +60,6 @@ Erstelle ein professionelles Anschreiben mit folgender Struktur:
 - Sei proaktiv aber nicht aufdringlich
 - Bedanke dich für die Prüfung deiner Bewerbung
 
-### 6. Schlussformel
-
-- Deutsch: "Mit freundlichen Grüßen" oder "Beste Grüße"
-- Englisch: "Best regards," oder "Sincerely,"
-- **KEIN Name am Ende** (wird automatisch vom Template hinzugefügt)
-
 ---
 
 ## Formatierung
@@ -82,8 +76,6 @@ Gib das Anschreiben als **sauberes HTML** zurück (KEIN Markdown):
 <p>Besonders begeistert mich an Ihrem Unternehmen...</p>
 
 <p>Ich freue mich auf die Gelegenheit, in einem persönlichen Gespräch...</p>
-
-<p>Mit freundlichen Grüßen</p>
 ```
 
 ## Wichtige Regeln
@@ -95,34 +87,34 @@ Gib das Anschreiben als **sauberes HTML** zurück (KEIN Markdown):
 5. **Keine Bullet-Points** im Haupttext - fließender Text
 6. **Personalisierung**: Beziehe dich auf konkrete Aspekte der Stelle/des Unternehmens
 
-## ⚠️ KRITISCH: Schlussformel OHNE Namen
+## ⚠️ KRITISCH: KEINE Schlussformel und KEIN Name!
 
-**Der Kandidatenname wird AUTOMATISCH vom Template hinzugefügt!**
+**Schlussformel UND Kandidatenname werden AUTOMATISCH vom Template hinzugefügt!**
 
-❌ **FALSCH** (NIEMALS so ausgeben):
+❌ **FALSCH** (NIEMALS Schlussformel ausgeben):
 ```html
+<p>Ich freue mich auf ein Gespräch.</p>
 <p>Mit freundlichen Grüßen</p>
+```
+
+❌ **FALSCH** (NIEMALS Name ausgeben):
+```html
+<p>Best regards,</p>
 <p>Max Mustermann</p>
 ```
 
-❌ **FALSCH** (NIEMALS Platzhalter verwenden):
+✅ **RICHTIG** (Ende mit letztem Absatz des Textes):
 ```html
-<p>Sincerely,</p>
-<p>[Your Name]</p>
-```
-
-✅ **RICHTIG** (NUR die Schlussformel):
-```html
-<p>Mit freundlichen Grüßen</p>
+<p>Ich freue mich auf die Gelegenheit, in einem persönlichen Gespräch meine Eignung zu besprechen.</p>
 ```
 
 ✅ **RICHTIG** (Englisch):
 ```html
-<p>Best regards,</p>
+<p>I look forward to discussing how I can contribute to your team.</p>
 ```
 
 ## Output
 
-Gib NUR den HTML-Inhalt zurück, beginnend mit der Anrede `<p>Sehr geehrte...</p>` und endend mit der Schlussformel `<p>Mit freundlichen Grüßen</p>` oder `<p>Best regards,</p>`. **KEIN Name danach!**
+Gib NUR den HTML-Inhalt zurück, beginnend mit der Anrede `<p>Sehr geehrte...</p>` und endend mit dem letzten inhaltlichen Absatz. **KEINE Schlussformel wie "Mit freundlichen Grüßen" oder "Best regards," und KEIN Name!**
 
 Erstelle jetzt ein überzeugendes Anschreiben, das den Kandidaten von der Masse abhebt.
