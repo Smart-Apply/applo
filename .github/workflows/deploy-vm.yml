@@ -76,7 +76,7 @@ jobs:
           name: deploy-package
           path: deploy-artifacts/
           retention-days: 1
-          compression-level: 6
+          compression-level: 9
 
   # Deploy pre-built artifacts to VM
   deploy:
@@ -89,20 +89,34 @@ jobs:
           name: deploy-package
           path: deploy-artifacts/
 
-      - name: Create deployment archive
-        run: |
-          cd deploy-artifacts
-          tar -czf ../deploy.tar.gz .
-
-      - name: Copy artifacts to VM
-        uses: appleboy/scp-action@v0.1.7
+      - name: Stream artifacts to VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.VM_HOST }}
           username: ${{ env.VM_USER }}
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           port: 22
-          source: "deploy.tar.gz"
-          target: "/tmp/"
+          timeout: 60s
+          command_timeout: 5m
+          script: |
+            # Create temp directory on VM
+            mkdir -p /tmp/deploy-extract
+            rm -rf /tmp/deploy-extract/*
+
+      - name: Copy artifacts using rsync over SSH
+        run: |
+          # Setup SSH key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # Use rsync for efficient transfer (compressed, delta transfer)
+          rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            deploy-artifacts/ \
+            ${{ env.VM_USER }}@${{ env.VM_HOST }}:/tmp/deploy-extract/
+          
+          # Cleanup key
+          rm -f ~/.ssh/deploy_key
 
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
@@ -127,11 +141,8 @@ jobs:
             git fetch origin main --depth=1
             git reset --hard origin/main
             
-            # Extract pre-built artifacts
-            echo "📂 Extracting build artifacts..."
-            tar -xzf /tmp/deploy.tar.gz -C /tmp/deploy-extract --one-top-level 2>/dev/null || mkdir -p /tmp/deploy-extract && tar -xzf /tmp/deploy.tar.gz -C /tmp/deploy-extract
-            
-            # Copy built files
+            # Copy pre-built artifacts from temp location
+            echo "📂 Copying build artifacts..."
             rm -rf dist
             cp -r /tmp/deploy-extract/dist .
             rm -rf apps/web/.next/standalone
@@ -172,7 +183,7 @@ jobs:
             done
             
             # Cleanup
-            rm -rf /tmp/deploy.tar.gz /tmp/deploy-extract
+            rm -rf /tmp/deploy-extract
             
             pm2 status
             echo "✅ Deployment complete!"
