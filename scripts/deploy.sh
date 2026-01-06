@@ -37,5 +37,18 @@ pm2 start /home/azureuser/smart-apply/dist/apps/api/main.js --name "api" --cwd /
 PORT=3001 pm2 start /home/azureuser/smart-apply/apps/web/.next/standalone/apps/web/server.js --name "web"
 pm2 save
 
+echo "⏳ Waiting for services to be ready..."
+sleep 15
+
+# Local health check
+for i in {1..6}; do
+  if curl -sf --max-time 5 http://localhost:3000/api/v1/health > /dev/null 2>&1; then
+    echo "✅ API is healthy!"
+    break
+  fi
+  echo "Waiting for API... attempt $i/6"
+  sleep 5
+done
+
 echo "✅ Deployment complete!"
 pm2 status

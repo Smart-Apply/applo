@@ -92,11 +92,25 @@ jobs:
             cd /home/azureuser/smart-apply
             bash scripts/deploy.sh
 
-      - name: Health Check
+      - name: Health Check (with retry)
         run: |
-          sleep 10
-          curl -f https://${{ env.VM_HOST }}/api/v1/health || exit 1
-          echo "✅ Health check passed!"
+          echo "⏳ Waiting for services to start..."
+          MAX_RETRIES=12
+          RETRY_INTERVAL=10
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i/$MAX_RETRIES..."
+            if curl -sf --max-time 10 https://${{ env.VM_HOST }}/api/v1/health; then
+              echo ""
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            echo "Service not ready, waiting ${RETRY_INTERVAL}s..."
+            sleep $RETRY_INTERVAL
+          done
+          
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
 
       - name: Notify on failure
         if: failure()
