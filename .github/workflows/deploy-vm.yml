@@ -169,16 +169,18 @@ jobs:
             fi
             
             # Web restart - verify server.js exists first
-            WEB_SERVER_PATH="apps/web/.next/standalone/apps/web/server.js"
+            WEB_SERVER_PATH="/home/azureuser/smart-apply/apps/web/.next/standalone/apps/web/server.js"
+            WEB_CWD="/home/azureuser/smart-apply/apps/web/.next/standalone/apps/web"
+            
             if [ ! -f "$WEB_SERVER_PATH" ]; then
               echo "❌ Error: server.js not found at $WEB_SERVER_PATH"
               echo "Directory listing:"
-              ls -la apps/web/.next/standalone/apps/web/ 2>/dev/null || echo "Directory does not exist"
+              ls -la "$WEB_CWD" 2>/dev/null || echo "Directory does not exist"
               exit 1
             fi
             
             pm2 delete web 2>/dev/null || true
-            PORT=3001 pm2 start "$WEB_SERVER_PATH" --name "web" --cwd "$(pwd)/apps/web/.next/standalone/apps/web"
+            PORT=3001 pm2 start "$WEB_SERVER_PATH" --name "web" --cwd "$WEB_CWD"
             
             pm2 save
             
