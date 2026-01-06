@@ -93,22 +93,32 @@ jobs:
           tar -czf deploy.tar.gz -C deploy-package .
           ls -lh deploy.tar.gz
 
-      # Setup SSH key
+      # Setup SSH with webfactory/ssh-agent (more reliable)
       - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ env.VM_HOST }} >> ~/.ssh/known_hosts
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
 
-      # Transfer and deploy (rsync is faster than scp for updates)
-      - name: Deploy to VM
+      - name: Add VM to known hosts
+        run: ssh-keyscan -H ${{ env.VM_HOST }} >> ~/.ssh/known_hosts
+
+      # Transfer deployment package
+      - name: Transfer to VM
         run: |
           echo "📦 Transferring deployment package..."
-          scp -o StrictHostKeyChecking=no deploy.tar.gz ${{ env.VM_USER }}@${{ env.VM_HOST }}:/tmp/
-          
-          echo "🚀 Deploying on VM..."
-          ssh -o StrictHostKeyChecking=no ${{ env.VM_USER }}@${{ env.VM_HOST }} << 'DEPLOY_SCRIPT'
+          scp deploy.tar.gz ${{ env.VM_USER }}@${{ env.VM_HOST }}:/tmp/
+
+      # Deploy on VM
+      - name: Deploy on VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.VM_HOST }}
+          username: ${{ env.VM_USER }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 10m
+          script: |
             set -e
             cd /home/azureuser/smart-apply
             
@@ -155,7 +165,6 @@ jobs:
             
             pm2 status
             echo "✅ Deployment complete!"
-          DEPLOY_SCRIPT
 
       - name: Health Check (with retry)
         run: |
