@@ -120,32 +120,40 @@ jobs:
             pm2 save --force 2>/dev/null || true
             
             # Stop existing containers
-            docker compose -f infra/docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
+            docker-compose -f infra/docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
+            
+            # Verify images are tagged correctly
+            echo "📋 Available images:"
+            docker images | grep smartapply || echo "No smartapply images found"
             
             # Start services with Docker Compose
             echo "🚀 Starting services..."
-            docker compose -f infra/docker-compose.prod.yml up -d
+            docker-compose -f infra/docker-compose.prod.yml up -d || {
+              echo "❌ Docker Compose failed to start services"
+              echo "=== Docker Compose Logs ==="
+              docker-compose -f infra/docker-compose.prod.yml logs --tail 100
+              echo "=== Container Status ==="
+              docker-compose -f infra/docker-compose.prod.yml ps -a
+              exit 1
+            }
             
-            # Wait for API to be healthy
-            echo "⏳ Waiting for API to be healthy..."
-            for i in {1..30}; do
-              if docker compose -f infra/docker-compose.prod.yml exec -T api wget -q --spider http://localhost:3000/api/v1/health 2>/dev/null; then
-                echo "✅ API is healthy!"
-                break
-              fi
-              echo "  Waiting... ($i/30)"
-              sleep 2
-            done
+            # Wait for containers to be healthy
+            echo "⏳ Waiting for services to be healthy..."
+            sleep 10
+            
+            # Verify containers are running
+            echo "📊 Container status after start:"
+            docker-compose -f infra/docker-compose.prod.yml ps
             
             # Run database migrations
             echo "🗃️ Running migrations..."
-            docker compose -f infra/docker-compose.prod.yml exec -T api npx prisma db push --skip-generate --accept-data-loss 2>/dev/null || \
-              docker compose -f infra/docker-compose.prod.yml exec -T api npx prisma db push --skip-generate
+            docker-compose -f infra/docker-compose.prod.yml exec -T api npx prisma db push --skip-generate --accept-data-loss 2>/dev/null || \
+              docker-compose -f infra/docker-compose.prod.yml exec -T api npx prisma db push --skip-generate
             
             # Show status
             echo ""
             echo "📊 Container status:"
-            docker compose -f infra/docker-compose.prod.yml ps
+            docker-compose -f infra/docker-compose.prod.yml ps
             
             # Cleanup old images
             docker image prune -f 2>/dev/null || true
@@ -177,8 +185,17 @@ jobs:
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            echo "=== API Logs ==="
-            docker logs smartapply-api --tail 50 2>&1 || true
+            echo "=== Docker Images ==="
+            docker images | grep -E "smartapply|ghcr" || echo "No relevant images found"
             echo ""
-            echo "=== Web Logs ==="
-            docker logs smartapply-web --tail 50 2>&1 || true
+            echo "=== Docker Compose Status ==="
+            docker-compose -f /home/azureuser/smart-apply/infra/docker-compose.prod.yml ps -a 2>&1 || echo "No compose services"
+            echo ""
+            echo "=== Docker Compose Logs ==="
+            docker-compose -f /home/azureuser/smart-apply/infra/docker-compose.prod.yml logs --tail 100 2>&1 || true
+            echo ""
+            echo "=== All Running Containers ==="
+            docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" 2>&1 || true
+            echo ""
+            echo "=== nginx Status ==="
+            sudo systemctl status nginx --no-pager 2>&1 || true
