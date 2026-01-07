@@ -44,6 +44,7 @@ import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
 @ApiTags('applications')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@SkipThrottle() // Applications are called frequently, skip rate limiting
 @Controller('applications')
 export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}

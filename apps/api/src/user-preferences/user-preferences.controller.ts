@@ -1,6 +1,7 @@
 import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { SkipThrottle } from '@nestjs/throttler';
 import { UserPreferencesService } from './user-preferences.service';
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from './dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -9,6 +10,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @Controller('user-preferences')
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
+@SkipThrottle() // User preferences are called frequently, skip rate limiting
 export class UserPreferencesController {
   constructor(private readonly userPreferencesService: UserPreferencesService) {}
 

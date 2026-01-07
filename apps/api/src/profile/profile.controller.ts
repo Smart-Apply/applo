@@ -1,6 +1,7 @@
 import { Controller, Get, Put, Body, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
+import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ProfileService } from './profile.service';
@@ -11,6 +12,7 @@ import { ProfileResponseDto } from './dto/profile-response.dto';
 @Controller('profile')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@SkipThrottle() // Profile is called frequently, skip rate limiting
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 

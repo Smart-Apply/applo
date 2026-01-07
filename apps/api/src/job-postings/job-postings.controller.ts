@@ -14,6 +14,7 @@ import {
   ParseBoolPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PaginationQueryDto } from '../common/dto';
@@ -25,6 +26,7 @@ import { KeywordsService, MatchAnalysisResponseDto } from '../keywords';
 @Controller('job-postings')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@SkipThrottle() // Job postings are called frequently, skip rate limiting
 export class JobPostingsController {
   constructor(
     private readonly jobPostingsService: JobPostingsService,
