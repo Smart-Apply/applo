@@ -30,9 +30,6 @@ services:
       PORT: 3000
       # Override DATABASE_URL to use the db service
       DATABASE_URL: postgresql://postgres:postgres@db:5432/smartapply
-      # Chromium path for Puppeteer/Playwright PDF generation
-      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
-      CHROMIUM_EXECUTABLE_PATH: /usr/bin/chromium-browser
     ports:
       - "3000:3000"
     volumes:
