@@ -8,6 +8,7 @@ import {
 } from '@nestjs/terminus';
 import { Injectable } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { JobsService } from '../jobs/jobs.service';
@@ -77,6 +78,7 @@ class TemplatesHealthIndicator extends HealthIndicator {
 
 @ApiTags('health')
 @Controller('health')
+@SkipThrottle() // Health checks should never be rate limited
 export class HealthController {
   private storageIndicator: StorageHealthIndicator;
   private queueIndicator: QueueHealthIndicator;
