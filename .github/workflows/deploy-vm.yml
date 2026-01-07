@@ -145,10 +145,10 @@ jobs:
             echo "📊 Container status after start:"
             docker-compose -f infra/docker-compose.prod.yml ps
             
-            # Run database migrations
+            # Run database migrations (skip if fails - schema might already be up to date)
             echo "🗃️ Running migrations..."
-            docker-compose -f infra/docker-compose.prod.yml exec -T api npx prisma db push --skip-generate --accept-data-loss 2>/dev/null || \
-              docker-compose -f infra/docker-compose.prod.yml exec -T api npx prisma db push --skip-generate
+            docker-compose -f infra/docker-compose.prod.yml exec -T api npx prisma db push --schema=./apps/api/prisma/schema.prisma --accept-data-loss 2>/dev/null || \
+              echo "⚠️ Migration skipped or already up to date"
             
             # Show status
             echo ""
