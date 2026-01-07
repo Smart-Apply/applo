@@ -1,15 +1,24 @@
 import { Injectable, ExecutionContext, Inject } from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerException } from '@nestjs/throttler';
 import { Reflector } from '@nestjs/core';
+import { SkipThrottle } from '@nestjs/throttler';
 import { THROTTLER_NAME_KEY } from '../decorators/throttle.decorator';
 import { AuditLoggerService } from '../audit-logger';
+
+// NestJS Throttler internal constants
+const THROTTLER_SKIP = 'THROTTLER:SKIP';
 
 /**
  * Custom ThrottlerGuard that:
  * 1. Skips rate limiting in development (NODE_ENV === 'development')
- * 2. Supports named throttlers via @UseThrottler('name') decorator
+ * 2. Uses ONLY ONE throttler per request (default or named via @UseThrottler)
  * 3. Logs rate limit violations for audit purposes
  * 4. Exposes comprehensive rate limit headers (X-RateLimit-*)
+ *
+ * IMPORTANT: Unlike the default ThrottlerGuard which applies ALL throttlers,
+ * this guard applies only the DEFAULT throttler unless @UseThrottler('name')
+ * explicitly specifies a different one. This prevents the strict 'auth' throttler
+ * from being applied to all endpoints.
  *
  * Note: @nestjs/throttler v5 changed the storage API - it only has increment(),
  * not get(). We override handleRequest to track hits and set headers.
@@ -26,7 +35,12 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
   }
 
   /**
-   * Override canActivate to skip rate limiting in development and for health checks
+   * Override canActivate to:
+   * 1. Skip rate limiting in development
+   * 2. Skip for health checks
+   * 3. Apply ONLY the selected throttler (default or named)
+   * 
+   * This is a complete override to avoid the parent's behavior of applying ALL throttlers.
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Skip rate limiting entirely in development for easier testing
@@ -41,8 +55,30 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
       return true;
     }
 
-    // Call parent implementation which calls handleRequest for each throttler
-    return super.canActivate(context);
+    // Check if @SkipThrottle() is applied at handler or class level
+    const handler = context.getHandler();
+    const classRef = context.getClass();
+    const shouldSkip = this.reflector.getAllAndOverride<boolean>(THROTTLER_SKIP, [
+      handler,
+      classRef,
+    ]);
+
+    if (shouldSkip) {
+      return true;
+    }
+
+    // Get the single throttler to use (default or named via @UseThrottler)
+    const throttlers = await this.getThrottlers(context);
+    if (throttlers.length === 0) {
+      return true;
+    }
+
+    // Apply only the selected throttler
+    const throttler = throttlers[0];
+    const limit = throttler.limit;
+    const ttl = throttler.ttl;
+
+    return this.handleRequest(context, limit, ttl, throttler);
   }
 
   /**
