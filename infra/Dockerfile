@@ -94,6 +94,7 @@ RUN cd apps/api && npx tsc \
       prisma/seed.ts \
       prisma/seed-all.ts \
       prisma/seed-multilingual-templates.ts \
+      prisma/seed-templates-autodiscover.ts \
       --module commonjs \
       --target ES2021 \
       --outDir prisma/dist \
@@ -164,6 +165,7 @@ COPY --from=builder /app/apps/api/prisma/schema.prisma ./apps/api/prisma/schema.
 COPY --from=builder /app/apps/api/prisma/migrations ./apps/api/prisma/migrations
 COPY --from=builder /app/apps/api/prisma/dist ./apps/api/prisma/dist
 COPY --from=builder /app/apps/api/prompts ./prompts
+COPY --from=builder /app/apps/api/src/pdf/templates ./apps/api/src/pdf/templates
 COPY --from=builder /app/package.json ./package.json
 
 # Clean up any remaining unnecessary files
