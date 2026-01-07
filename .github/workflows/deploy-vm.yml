@@ -67,6 +67,17 @@ jobs:
           mkdir -p deploy-artifacts/web-standalone
           cp -r apps/web/.next/standalone/* deploy-artifacts/web-standalone/
           
+          # Copy static assets and public folder into standalone structure
+          mkdir -p deploy-artifacts/web-standalone/apps/web/.next/static
+          cp -r apps/web/.next/static/* deploy-artifacts/web-standalone/apps/web/.next/static/
+          mkdir -p deploy-artifacts/web-standalone/apps/web/public
+          cp -r apps/web/public/* deploy-artifacts/web-standalone/apps/web/public/
+          
+          # Verify structure
+          echo "Verifying Next.js standalone structure:"
+          ls -la deploy-artifacts/web-standalone/apps/web/
+          ls -la deploy-artifacts/web-standalone/apps/web/.next/
+          
           # Copy Prisma files for migrations
           cp -r apps/api/prisma deploy-artifacts/prisma
           
