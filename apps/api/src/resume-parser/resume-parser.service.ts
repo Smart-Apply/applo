@@ -39,7 +39,6 @@ export class ResumeParserService {
     }
 
     this.logger.log(`Extracted ${resumeText.length} characters from resume`);
-    
     // Debug: Log first 500 chars of extracted text
     this.logger.debug(`Resume text preview: ${resumeText.substring(0, 500)}...`);
 
