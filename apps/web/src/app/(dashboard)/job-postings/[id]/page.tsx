@@ -20,7 +20,6 @@ import {
   Star,
   ExternalLink
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { formatDate } from '@/lib/format-date';
 
 export default function JobPostingDetailPage() {
