@@ -264,6 +264,37 @@ export class ApplicationsService {
     return sanitizeRichText(stripped);
   }
 
+  /**
+   * Convert Markdown cover letter to HTML
+   * The LLM generates Markdown but the PDF template expects HTML with <p> tags
+   */
+  private convertCoverLetterToHtml(content: string | null): string | null {
+    if (!content || content.trim() === '') {
+      return content;
+    }
+
+    // If content already has <p> tags, it's already HTML (was edited and saved)
+    if (/<p[^>]*>/i.test(content)) {
+      return content;
+    }
+
+    // Simple Markdown to HTML conversion for paragraphs
+    // Split by double newlines (paragraph breaks) and wrap each in <p> tags
+    const paragraphs = content
+      .split(/\n\n+/)
+      .map(p => p.trim())
+      .filter(p => p.length > 0);
+
+    if (paragraphs.length === 0) {
+      return '<p></p>';
+    }
+
+    // Convert each paragraph, preserving single newlines as <br> within paragraphs
+    return paragraphs
+      .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+      .join('\n');
+  }
+
   private parseResume(resumeText?: string | null) {
     if (!resumeText) {
       return null;
@@ -995,11 +1026,14 @@ Summary: ${resume.summary || 'Not provided'}
 
       // Step 4: Update application with generated content
       // Note: resumeText stores JSON for editor, Markdown can be regenerated from tailoredProfile
+      // Convert cover letter Markdown to HTML for proper PDF rendering
+      const coverLetterHtml = this.convertCoverLetterToHtml(coverLetterMarkdown);
+
       const updatedApplication = await this.prisma.application.update({
         where: { id: application.id },
         data: {
           resumeText: JSON.stringify(resumeJson), // Store JSON for editor
-          coverLetterText: coverLetterMarkdown,
+          coverLetterText: coverLetterHtml,
           atsKeywords: atsKeywords as any,
           tailoredProfile: tailoredProfile as any,
           status: ApplicationStatus.READY,
@@ -1172,12 +1206,15 @@ Summary: ${resume.summary || 'Not provided'}
       }
 
       // 7. Persist results
+      // Convert cover letter Markdown to HTML for proper PDF rendering
+      const coverLetterHtml = this.convertCoverLetterToHtml(coverLetterMarkdown);
+
       emitProgress(95, 'Speichere Ergebnisse...');
       const updated = await this.prisma.application.update({
         where: { id: applicationId },
         data: {
           resumeText: resumeMarkdown,
-          coverLetterText: coverLetterMarkdown,
+          coverLetterText: coverLetterHtml,
           atsKeywords: atsKeywords as any,
           tailoredProfile: tailoredProfile as any,
           status: ApplicationStatus.READY,
