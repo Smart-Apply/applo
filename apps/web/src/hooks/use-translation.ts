@@ -42,11 +42,7 @@ export function useTranslateApplication(applicationId: string) {
   const [lastError, setLastError] = useState<Error | null>(null);
 
   const mutation = useMutation({
-    mutationFn: async (data: { 
-      targetLanguage: string; 
-      force?: boolean; 
-      sections?: string[];
-    }) => {
+    mutationFn: async (data: { targetLanguage: string; force?: boolean; sections?: string[] }) => {
       return api.applications.translate(applicationId, data);
     },
     onSuccess: () => {
@@ -61,7 +57,7 @@ export function useTranslateApplication(applicationId: string) {
     },
     onError: (error: Error) => {
       setLastError(error);
-      
+
       // Only show toast on final failure (after all retries)
       if (retryCount >= MAX_RETRIES - 1) {
         toastError(error, 'Übersetzung fehlgeschlagen');
@@ -75,7 +71,7 @@ export function useTranslateApplication(applicationId: string) {
   const translateWithRetry = useCallback(
     async (
       targetLanguage: string,
-      options?: { force?: boolean; sections?: string[] }
+      options?: { force?: boolean; sections?: string[] },
     ): Promise<TranslationResponse | null> => {
       setRetryCount(0);
       setLastError(null);
@@ -91,7 +87,7 @@ export function useTranslateApplication(applicationId: string) {
           return result;
         } catch (error) {
           setLastError(error as Error);
-          
+
           // Don't retry on certain errors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -118,7 +114,7 @@ export function useTranslateApplication(applicationId: string) {
       toastError(lastError, 'Übersetzung nach 3 Versuchen fehlgeschlagen');
       return null;
     },
-    [mutation, lastError]
+    [mutation, lastError],
   );
 
   /**
@@ -128,7 +124,7 @@ export function useTranslateApplication(applicationId: string) {
     (targetLanguage: string, options?: { force?: boolean }) => {
       return translateWithRetry(targetLanguage, { ...options, force: true });
     },
-    [translateWithRetry]
+    [translateWithRetry],
   );
 
   return {
@@ -158,30 +154,42 @@ export function useApplicationTranslation(applicationId: string) {
       if (!cacheStatus.data) return false;
       return cacheStatus.data.cachedLanguages.includes(language);
     },
-    [cacheStatus.data]
+    [cacheStatus.data],
   );
 
   /**
-   * Check if a language is the source language (no translation needed)
+   * Check if a language is the original source language (fixed at creation)
    */
   const isSourceLanguage = useCallback(
     (language: string): boolean => {
       if (!cacheStatus.data) return false;
       return cacheStatus.data.sourceLanguage === language;
     },
-    [cacheStatus.data]
+    [cacheStatus.data],
   );
 
   /**
-   * Smart translate - skips if source language or uses cache if available
+   * Check if a language matches the current DB content language
+   * This determines if translation is actually needed
+   */
+  const isContentLanguage = useCallback(
+    (language: string): boolean => {
+      if (!cacheStatus.data) return false;
+      return cacheStatus.data.contentLanguage === language;
+    },
+    [cacheStatus.data],
+  );
+
+  /**
+   * Smart translate - skips if content language or uses cache if available
    */
   const smartTranslate = useCallback(
     async (
       targetLanguage: string,
-      currentContent: { resume: ResumeData; coverLetter: string }
+      currentContent: { resume: ResumeData; coverLetter: string },
     ): Promise<{ resume: ResumeData; coverLetter: string } | null> => {
-      // If target is source language, return current content
-      if (isSourceLanguage(targetLanguage)) {
+      // If target is current content language, return current content (no translation needed)
+      if (isContentLanguage(targetLanguage)) {
         return currentContent;
       }
 
@@ -193,13 +201,14 @@ export function useApplicationTranslation(applicationId: string) {
         coverLetter: result.coverLetterText,
       };
     },
-    [translation, isSourceLanguage]
+    [translation, isContentLanguage],
   );
 
   return {
     // Cache status
     cachedLanguages: cacheStatus.data?.cachedLanguages ?? [],
     sourceLanguage: cacheStatus.data?.sourceLanguage ?? 'de',
+    contentLanguage: cacheStatus.data?.contentLanguage ?? cacheStatus.data?.sourceLanguage ?? 'de',
     isLoadingCacheStatus: cacheStatus.isLoading,
     cacheStatusError: cacheStatus.error,
     refetchCacheStatus: cacheStatus.refetch,
@@ -217,5 +226,6 @@ export function useApplicationTranslation(applicationId: string) {
     // Helpers
     isLanguageCached,
     isSourceLanguage,
+    isContentLanguage,
   };
 }

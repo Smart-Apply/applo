@@ -41,10 +41,7 @@ import {
   formatDateRange,
   normalizeProficiencyLevel,
 } from './resume-template.util';
-import {
-  sanitizeRichText,
-  stripLLMPlaceholders,
-} from '../common/services/html-sanitizer';
+import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
 export type ProgressCallback = (progress: number, message: string) => void;
@@ -823,7 +820,9 @@ Summary: ${resume.summary || 'Not provided'}
     // 3. Detect language (prioritize user selection, then job posting, then auto-detect, default to German)
     const detectedLanguage =
       dto.language || jobPosting.language || this.detectLanguage(jobPosting.fullText) || 'de';
-    this.logger.log(`Using language: ${detectedLanguage} (source: ${dto.language ? 'user selection' : jobPosting.language ? 'job posting' : 'auto-detected/default'})`);
+    this.logger.log(
+      `Using language: ${detectedLanguage} (source: ${dto.language ? 'user selection' : jobPosting.language ? 'job posting' : 'auto-detected/default'})`,
+    );
 
     // 4. Check if application already exists (prevent duplicates BEFORE generation)
     // Note: Only check non-deleted applications (deletedAt: null)
@@ -919,7 +918,9 @@ Summary: ${resume.summary || 'Not provided'}
       );
 
       // Step 2: Parallel generation - Cover letter + Resume rewrite + ATS keywords
-      this.logger.log('Step 2: Parallel generation (cover letter, resume rewrite, ATS keywords)...');
+      this.logger.log(
+        'Step 2: Parallel generation (cover letter, resume rewrite, ATS keywords)...',
+      );
 
       // Prepare parallel promises
       const coverLetterPromise = shouldGenerateCoverLetter
@@ -1745,12 +1746,23 @@ Summary: ${resume.summary || 'Not provided'}
     const coverLetter = application.coverLetterText || '';
     const newContentHash = await calculateContentHash(normalized, coverLetter);
 
+    // Determine contentLanguage: use provided value or detect from content
+    const contentLanguage =
+      dto.contentLanguage ||
+      application.contentLanguage ||
+      application.sourceLanguage ||
+      application.language ||
+      'de';
+
+    this.logger.log(`Saving resume with contentLanguage: ${contentLanguage}`);
+
     const updated = await this.prisma.application.update({
       where: { id: applicationId },
       data: {
         resumeText: JSON.stringify(normalized),
-        // Update content hash and clear stale translations (they'll be regenerated on demand)
+        // Update content hash and content language for proper translation tracking
         contentHash: newContentHash,
+        contentLanguage: contentLanguage,
       },
       include: {
         jobPosting: true,
@@ -1758,8 +1770,9 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     // Trigger async prewarming for opposite language (non-blocking)
-    this.triggerTranslationPrewarming(applicationId, application.sourceLanguage || application.language || 'de').catch(
-      (err) => this.logger.warn(`Prewarming failed for ${applicationId}`, err),
+    // Use the new contentLanguage as the source for prewarming
+    this.triggerTranslationPrewarming(applicationId, contentLanguage).catch((err) =>
+      this.logger.warn(`Prewarming failed for ${applicationId}`, err),
     );
 
     // IMPORTANT: After saving resume, automatically re-match keywords against updated resume
@@ -1892,9 +1905,10 @@ Summary: ${resume.summary || 'Not provided'}
     });
 
     // Trigger async prewarming for opposite language (non-blocking)
-    this.triggerTranslationPrewarming(applicationId, application.sourceLanguage || application.language || 'de').catch(
-      (err) => this.logger.warn(`Prewarming failed for ${applicationId}`, err),
-    );
+    this.triggerTranslationPrewarming(
+      applicationId,
+      application.sourceLanguage || application.language || 'de',
+    ).catch((err) => this.logger.warn(`Prewarming failed for ${applicationId}`, err));
 
     return this.mapToResponseDto(updated);
   }
@@ -1929,11 +1943,12 @@ Summary: ${resume.summary || 'Not provided'}
 
     // Build context from profile
     const skills = profile?.skills?.map((s) => s.name) || [];
-    const experiences = profile?.experiences?.map((exp) => ({
-      title: exp.title,
-      company: exp.company,
-      description: exp.description || undefined,
-    })) || [];
+    const experiences =
+      profile?.experiences?.map((exp) => ({
+        title: exp.title,
+        company: exp.company,
+        description: exp.description || undefined,
+      })) || [];
 
     // Generate/modify summary with LLM
     const summary = await this.llmService.modifySummaryContent(
@@ -3257,19 +3272,29 @@ Summary: ${resume.summary || 'Not provided'}
     const resume = this.parseResume(application.resumeText);
     const coverLetter = application.coverLetterText || '';
 
-    // Get source language (from application or default to 'de')
-    const sourceLanguage = application.sourceLanguage || application.language || 'de';
+    // Get the original source language (fixed at creation time)
+    const originalSourceLanguage = application.sourceLanguage || application.language || 'de';
 
-    // If target equals source, return current content (no translation needed)
-    if (dto.targetLanguage === sourceLanguage && !dto.force) {
-      this.logger.log(`Target language ${dto.targetLanguage} matches source, returning original`);
+    // Get the ACTUAL current language of the content in the database
+    // This may differ from originalSourceLanguage if user edited while viewing a translation
+    const contentLanguage = application.contentLanguage || originalSourceLanguage;
+
+    this.logger.log(
+      `Content language: ${contentLanguage}, Original source: ${originalSourceLanguage}, Target: ${dto.targetLanguage}`,
+    );
+
+    // If target equals the CURRENT content language, return current content (no translation needed)
+    if (dto.targetLanguage === contentLanguage && !dto.force) {
+      this.logger.log(
+        `Target language ${dto.targetLanguage} matches current content language, returning current content`,
+      );
       return {
         resumeText: resume,
         coverLetterText: coverLetter,
         cached: true,
         translatedSections: [],
         fromCache: ['all'],
-        sourceLanguage,
+        sourceLanguage: originalSourceLanguage,
         targetLanguage: dto.targetLanguage,
       };
     }
@@ -3284,12 +3309,70 @@ Summary: ${resume.summary || 'Not provided'}
       prewarmFailures: {},
     };
 
+    // DEBUG: Log current cache state
+    this.logger.debug(`📦 Cache state BEFORE processing:`);
+    this.logger.debug(
+      `   - Available cached languages: ${Object.keys(cache.languages || {}).join(', ') || 'none'}`,
+    );
+    this.logger.debug(`   - Content hash: ${contentHash}`);
+    this.logger.debug(`   - Current content language (DB): ${contentLanguage}`);
+    this.logger.debug(`   - Target language: ${dto.targetLanguage}`);
+
+    // Log details of each cached language
+    for (const [lang, langCache] of Object.entries(cache.languages || {})) {
+      const lc = langCache as any;
+      this.logger.debug(
+        `   - Cache[${lang}]: hash=${lc.hash}, hasResume=${!!lc.resume}, hasCoverLetter=${!!lc.coverLetter}, cachedAt=${lc.cachedAt}`,
+      );
+      if (lc.resume?.summary) {
+        this.logger.debug(
+          `     Resume summary preview: "${lc.resume.summary.substring(0, 100)}..."`,
+        );
+      }
+    }
+
+    // IMPORTANT: Cache the current content language BEFORE translating to another language
+    // This ensures we can switch back to the original language later
+    const currentLangCache = cache.languages?.[contentLanguage];
+    const currentLangCacheValid = isCacheValid(currentLangCache, contentHash);
+
+    this.logger.debug(`📝 Current language cache check:`);
+    this.logger.debug(`   - Has cache for ${contentLanguage}: ${!!currentLangCache}`);
+    this.logger.debug(`   - Cache valid: ${currentLangCacheValid}`);
+    this.logger.debug(`   - Current lang cache hash: ${currentLangCache?.hash || 'N/A'}`);
+
+    if (!currentLangCacheValid) {
+      this.logger.log(
+        `✅ Caching current ${contentLanguage} content before translating to ${dto.targetLanguage}`,
+      );
+      this.logger.debug(`   - Resume summary to cache: "${resume.summary?.substring(0, 100)}..."`);
+      cache.languages = cache.languages || {};
+      cache.languages[contentLanguage] = {
+        resume,
+        coverLetter,
+        hash: contentHash,
+        cachedAt: new Date().toISOString(),
+        sourceSnapshot: { resume, coverLetter }, // Same as content since it's the source
+      };
+    } else {
+      this.logger.debug(`⏭️ Skipping cache of ${contentLanguage} - already valid`);
+    }
+
     // Check if we have a valid cached translation
     const cachedTranslation = cache.languages?.[dto.targetLanguage];
     const cacheIsValid = !dto.force && isCacheValid(cachedTranslation, contentHash);
 
+    this.logger.debug(`🎯 Target language cache check:`);
+    this.logger.debug(`   - Has cache for ${dto.targetLanguage}: ${!!cachedTranslation}`);
+    this.logger.debug(`   - Cache valid: ${cacheIsValid}`);
+    this.logger.debug(`   - Force: ${dto.force}`);
+    this.logger.debug(`   - Cached hash: ${cachedTranslation?.hash || 'N/A'}`);
+
     if (cacheIsValid && cachedTranslation) {
-      this.logger.log(`Cache hit for ${dto.targetLanguage}, returning cached translation`);
+      this.logger.log(`🎉 Cache hit for ${dto.targetLanguage}, returning cached translation`);
+      this.logger.debug(
+        `   - Cached resume summary: "${cachedTranslation.resume?.summary?.substring(0, 100)}..."`,
+      );
 
       // Update LRU
       cache = evictOldLanguages(cache, dto.targetLanguage, 2);
@@ -3304,46 +3387,58 @@ Summary: ${resume.summary || 'Not provided'}
         cached: true,
         translatedSections: [],
         fromCache: ['all'],
-        sourceLanguage,
+        sourceLanguage: originalSourceLanguage,
         targetLanguage: dto.targetLanguage,
       };
     }
+
+    this.logger.log(
+      `❌ No valid cache for ${dto.targetLanguage}, will translate from ${contentLanguage}`,
+    );
 
     // Determine which sections need translation
     let sectionsToTranslate = dto.sections || [];
 
     // If no specific sections provided, check what changed from cached version
     if (sectionsToTranslate.length === 0 && cachedTranslation) {
-      // Compare current content hash with cached hash to find changed sections
-      const cachedResume = cachedTranslation.resume;
+      // Use sourceSnapshot if available, otherwise fall back to translated content (less accurate)
+      // sourceSnapshot stores the original source content that was used when creating the cached translation
+      const cachedSource = cachedTranslation.sourceSnapshot?.resume || cachedTranslation.resume;
+      const cachedSourceCoverLetter =
+        cachedTranslation.sourceSnapshot?.coverLetter || cachedTranslation.coverLetter;
+
       sectionsToTranslate = identifyChangedSections(
-        cachedResume,
+        cachedSource,
         resume,
-        cachedTranslation.coverLetter,
+        cachedSourceCoverLetter,
         coverLetter,
       );
-      this.logger.log(`Identified ${sectionsToTranslate.length} changed sections for partial translation`);
+      this.logger.log(
+        `Identified ${sectionsToTranslate.length} changed sections for partial translation`,
+      );
     }
 
     // If still empty (no cache or full translation needed), translate all
     const translateAll = sectionsToTranslate.length === 0;
 
     try {
-      // Call LLM to translate content
+      // Call LLM to translate content using ACTUAL content language as source
       const translated = await this.llmService.translateFullContent(
         resume,
         coverLetter,
-        sourceLanguage,
+        contentLanguage, // Use actual content language, not original source
         dto.targetLanguage,
         translateAll ? undefined : sectionsToTranslate,
       );
 
       // Merge with existing cache if partial translation
+      // Pass current source as snapshot for future change detection
       const mergedTranslation = mergeCachedTranslations(
         cachedTranslation,
         translated,
-        sectionsToTranslate,
+        translateAll ? [] : sectionsToTranslate,
         contentHash,
+        { resume, coverLetter }, // Store source snapshot
       );
 
       // Update cache with LRU eviction
@@ -3375,7 +3470,7 @@ Summary: ${resume.summary || 'Not provided'}
         cached: false,
         translatedSections: translateAll ? ['all'] : sectionsToTranslate,
         fromCache: translateAll ? [] : this.getSectionsFromCache(sectionsToTranslate, resume),
-        sourceLanguage,
+        sourceLanguage: originalSourceLanguage,
         targetLanguage: dto.targetLanguage,
       };
     } catch (error) {
@@ -3405,6 +3500,7 @@ Summary: ${resume.summary || 'Not provided'}
     cachedLanguages: string[];
     contentHash: string;
     sourceLanguage: string;
+    contentLanguage: string;
   }> {
     const { calculateContentHash, getCachedLanguages } = await import('./utils/translation.util');
 
@@ -3417,16 +3513,21 @@ Summary: ${resume.summary || 'Not provided'}
     const cache = application.cachedTranslations as any;
     const cachedLanguages = getCachedLanguages(cache, contentHash);
 
-    // Always include source language as "cached" (no translation needed)
+    // Original source language (fixed at creation)
     const sourceLanguage = application.sourceLanguage || application.language || 'de';
-    if (!cachedLanguages.includes(sourceLanguage)) {
-      cachedLanguages.push(sourceLanguage);
+    // Current content language (what language is the DB content actually in)
+    const contentLanguage = application.contentLanguage || sourceLanguage;
+
+    // Always include content language as "cached" (no translation needed - it's what's in DB)
+    if (!cachedLanguages.includes(contentLanguage)) {
+      cachedLanguages.push(contentLanguage);
     }
 
     return {
       cachedLanguages,
       contentHash,
       sourceLanguage,
+      contentLanguage,
     };
   }
 
@@ -3435,7 +3536,7 @@ Summary: ${resume.summary || 'Not provided'}
    */
   private getSectionsFromCache(translatedSections: string[], resume: any): string[] {
     const allSections: string[] = ['summary', 'coverLetter'];
-    
+
     if (resume?.experiences) {
       resume.experiences.forEach((_: any, i: number) => allSections.push(`experience.${i}`));
     }
@@ -3513,7 +3614,7 @@ Summary: ${resume.summary || 'Not provided'}
 
       // Fire and forget - don't block the main request
       this.logger.log(`Prewarming translation to ${targetLang} for application ${applicationId}`);
-      
+
       // Use setImmediate to defer execution
       setImmediate(async () => {
         try {
@@ -3521,7 +3622,10 @@ Summary: ${resume.summary || 'Not provided'}
           await this.translateApplicationInternal(applicationId, targetLang);
           this.logger.log(`Prewarm to ${targetLang} completed for application ${applicationId}`);
         } catch (error) {
-          this.logger.warn(`Prewarm to ${targetLang} failed for application ${applicationId}`, error);
+          this.logger.warn(
+            `Prewarm to ${targetLang} failed for application ${applicationId}`,
+            error,
+          );
         }
       });
     }
@@ -3534,11 +3638,9 @@ Summary: ${resume.summary || 'Not provided'}
     applicationId: string,
     targetLanguage: string,
   ): Promise<void> {
-    const {
-      calculateContentHash,
-      isCacheValid,
-      evictOldLanguages,
-    } = await import('./utils/translation.util');
+    const { calculateContentHash, isCacheValid, evictOldLanguages } = await import(
+      './utils/translation.util'
+    );
 
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
@@ -3579,13 +3681,18 @@ Summary: ${resume.summary || 'Not provided'}
         targetLanguage,
       );
 
-      // Store in cache
+      // Store in cache with source snapshot for future change detection
       cache.languages = cache.languages || {};
       cache.languages[targetLanguage] = {
         resume: translated.resume,
         coverLetter: translated.coverLetter,
-        contentHash,
-        translatedAt: new Date().toISOString(),
+        hash: contentHash,
+        cachedAt: new Date().toISOString(),
+        // Store source snapshot so we can detect changes when translating back
+        sourceSnapshot: {
+          resume: JSON.parse(JSON.stringify(resume)),
+          coverLetter,
+        },
       };
 
       // Apply LRU eviction

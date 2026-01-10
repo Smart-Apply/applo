@@ -246,7 +246,8 @@ export default function ApplicationResumeEditorPage() {
 
     try {
       const normalized = normalizeResumeForSave(parsedResume);
-      await updateResume.mutateAsync(normalized);
+      // Pass the current viewing language so backend knows what language the content is in
+      await updateResume.mutateAsync({ resume: normalized, contentLanguage: selectedLanguage });
 
       // Simply mark the current state as saved - no complex re-parsing
       setLastSavedResume(normalized);

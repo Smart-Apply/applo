@@ -48,7 +48,7 @@ interface LanguageSelectorProps {
 
 /**
  * Language Selector with translation support and cache badges
- * 
+ *
  * Features:
  * - Cache status badges (✓ for cached languages)
  * - Translation overlay during processing
@@ -69,6 +69,7 @@ export function LanguageSelector({
   const {
     cachedLanguages,
     sourceLanguage,
+    contentLanguage,
     isLoadingCacheStatus,
     translate,
     isTranslating,
@@ -78,6 +79,7 @@ export function LanguageSelector({
     canRetry,
     retryManually,
     isSourceLanguage,
+    isContentLanguage,
   } = useApplicationTranslation(applicationId);
 
   const handleLanguageChange = useCallback(
@@ -85,8 +87,9 @@ export function LanguageSelector({
       // If same language, do nothing
       if (newLanguage === value) return;
 
-      // If source language, just change without translation
-      if (isSourceLanguage(newLanguage)) {
+      // If content language (what's currently in DB), just change without translation
+      // The editor already has this content loaded
+      if (isContentLanguage(newLanguage)) {
         onChange(newLanguage);
         return;
       }
@@ -97,7 +100,7 @@ export function LanguageSelector({
       // If we have content handlers, translate
       if (onContentTranslated && currentContent) {
         const result = await translate(newLanguage);
-        
+
         if (result) {
           // Translation successful
           onContentTranslated({
@@ -116,7 +119,7 @@ export function LanguageSelector({
         setPendingLanguage(null);
       }
     },
-    [value, translate, onChange, onContentTranslated, currentContent, isSourceLanguage]
+    [value, translate, onChange, onContentTranslated, currentContent, isSourceLanguage],
   );
 
   const handleRetry = useCallback(async () => {
@@ -143,10 +146,7 @@ export function LanguageSelector({
     setPendingLanguage(null);
   }, []);
 
-  const isCached = useCallback(
-    (lang: string) => cachedLanguages.includes(lang),
-    [cachedLanguages]
-  );
+  const isCached = useCallback((lang: string) => cachedLanguages.includes(lang), [cachedLanguages]);
 
   return (
     <>
@@ -157,7 +157,8 @@ export function LanguageSelector({
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
             <h3 className="font-semibold mb-2">Übersetze Inhalte...</h3>
             <p className="text-sm text-muted-foreground">
-              {pendingLanguage && `Übersetzung nach ${LANGUAGES.find(l => l.value === pendingLanguage)?.label || pendingLanguage}`}
+              {pendingLanguage &&
+                `Übersetzung nach ${LANGUAGES.find((l) => l.value === pendingLanguage)?.label || pendingLanguage}`}
             </p>
             {retryCount > 0 && (
               <p className="text-xs text-muted-foreground mt-2">
@@ -180,7 +181,7 @@ export function LanguageSelector({
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
               <span className="flex items-center gap-1.5">
-                {LANGUAGES.find(l => l.value === value)?.flag}
+                {LANGUAGES.find((l) => l.value === value)?.flag}
                 <span className="uppercase">{value}</span>
               </span>
             )}
@@ -199,13 +200,13 @@ export function LanguageSelector({
                   <Badge
                     variant="outline"
                     className={cn(
-                      "h-4 px-1.5 text-[10px] ml-2",
-                      lang.value === sourceLanguage
-                        ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
-                        : "bg-green-500/10 text-green-600 border-green-500/20"
+                      'h-4 px-1.5 text-[10px] ml-2',
+                      lang.value === contentLanguage
+                        ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                        : 'bg-green-500/10 text-green-600 border-green-500/20',
                     )}
                   >
-                    {lang.value === sourceLanguage ? (
+                    {lang.value === contentLanguage ? (
                       <Globe className="h-2.5 w-2.5" />
                     ) : (
                       <Check className="h-2.5 w-2.5" />
@@ -227,7 +228,9 @@ export function LanguageSelector({
               Übersetzung fehlgeschlagen
             </DialogTitle>
             <DialogDescription>
-              Die Übersetzung nach {LANGUAGES.find(l => l.value === pendingLanguage)?.label || pendingLanguage} konnte nicht durchgeführt werden.
+              Die Übersetzung nach{' '}
+              {LANGUAGES.find((l) => l.value === pendingLanguage)?.label || pendingLanguage} konnte
+              nicht durchgeführt werden.
               {lastError && (
                 <span className="block mt-2 text-xs text-destructive">
                   Fehler: {lastError.message}

@@ -86,6 +86,15 @@ export interface CachedLanguageContent {
   coverLetter: string;
   hash: string; // xxHash-64 of source content when cached
   cachedAt: string; // ISO timestamp
+  /**
+   * Snapshot of the source content used to create this translation.
+   * Used for partial translation: compare current source with this snapshot
+   * to identify which sections actually changed.
+   */
+  sourceSnapshot?: {
+    resume: ResumeDataForCache;
+    coverLetter: string;
+  };
 }
 
 /**
@@ -214,6 +223,8 @@ export function identifyChangedSections(
  * @param existingCache - Current cached translations for target language
  * @param freshTranslation - Newly translated content
  * @param translatedSections - Which sections were translated
+ * @param newHash - Hash of current source content
+ * @param sourceSnapshot - Current source content (to store for future change detection)
  * @returns Merged cache content
  */
 export function mergeCachedTranslations(
@@ -221,6 +232,7 @@ export function mergeCachedTranslations(
   freshTranslation: { resume: ResumeDataForCache; coverLetter: string },
   translatedSections: string[],
   newHash: string,
+  sourceSnapshot?: { resume: ResumeDataForCache; coverLetter: string },
 ): CachedLanguageContent {
   // If no existing cache or all sections translated, use fresh translation
   if (!existingCache) {
@@ -229,15 +241,34 @@ export function mergeCachedTranslations(
       coverLetter: freshTranslation.coverLetter,
       hash: newHash,
       cachedAt: new Date().toISOString(),
+      sourceSnapshot: sourceSnapshot
+        ? {
+            resume: JSON.parse(JSON.stringify(sourceSnapshot.resume)),
+            coverLetter: sourceSnapshot.coverLetter,
+          }
+        : undefined,
     };
   }
 
-  // Start with existing cache
+  // Start with existing cache, preserving sourceSnapshot
   const merged: CachedLanguageContent = {
     resume: { ...existingCache.resume },
     coverLetter: existingCache.coverLetter,
     hash: newHash,
     cachedAt: new Date().toISOString(),
+    // Update sourceSnapshot with the new source for changed sections
+    sourceSnapshot: sourceSnapshot
+      ? {
+          resume: mergeSourceSnapshots(
+            existingCache.sourceSnapshot?.resume,
+            sourceSnapshot.resume,
+            translatedSections,
+          ),
+          coverLetter: translatedSections.includes('coverLetter')
+            ? sourceSnapshot.coverLetter
+            : existingCache.sourceSnapshot?.coverLetter || sourceSnapshot.coverLetter,
+        }
+      : existingCache.sourceSnapshot,
   };
 
   // Apply fresh translations for changed sections only
@@ -269,6 +300,48 @@ export function mergeCachedTranslations(
       }
       if (freshTranslation.resume.education?.[index]) {
         merged.resume.education[index] = freshTranslation.resume.education[index];
+      }
+    }
+  }
+
+  return merged;
+}
+
+/**
+ * Merge source snapshots for partial updates
+ * Keeps unchanged sections from old snapshot, updates changed sections from new source
+ */
+function mergeSourceSnapshots(
+  oldSnapshot: ResumeDataForCache | undefined,
+  newSource: ResumeDataForCache,
+  changedSections: string[],
+): ResumeDataForCache {
+  if (!oldSnapshot) {
+    return JSON.parse(JSON.stringify(newSource));
+  }
+
+  const merged = JSON.parse(JSON.stringify(oldSnapshot));
+
+  for (const section of changedSections) {
+    if (section === 'summary') {
+      merged.summary = newSource.summary;
+    } else if (section.startsWith('experience.')) {
+      const index = parseInt(section.split('.')[1], 10);
+      if (!merged.experiences) merged.experiences = [];
+      if (newSource.experiences?.[index]) {
+        merged.experiences[index] = JSON.parse(JSON.stringify(newSource.experiences[index]));
+      }
+    } else if (section.startsWith('project.')) {
+      const index = parseInt(section.split('.')[1], 10);
+      if (!merged.projects) merged.projects = [];
+      if (newSource.projects?.[index]) {
+        merged.projects[index] = JSON.parse(JSON.stringify(newSource.projects[index]));
+      }
+    } else if (section.startsWith('education.')) {
+      const index = parseInt(section.split('.')[1], 10);
+      if (!merged.education) merged.education = [];
+      if (newSource.education?.[index]) {
+        merged.education[index] = JSON.parse(JSON.stringify(newSource.education[index]));
       }
     }
   }
