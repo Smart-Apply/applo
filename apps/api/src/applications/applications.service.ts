@@ -985,6 +985,14 @@ Summary: ${resume.summary || 'Not provided'}
         rewrittenProfile,
       );
 
+      // Debug: Log the first experience achievements to verify German content is saved
+      const firstExp = resumeJson.experiences?.[0];
+      if (firstExp) {
+        this.logger.debug(
+          `Saving resumeJson - First experience "${firstExp.title}": achievements=[${firstExp.achievements?.slice(0, 2).map((a: string) => a.substring(0, 40) + '...').join(' | ')}]`,
+        );
+      }
+
       // Step 4: Update application with generated content
       // Note: resumeText stores JSON for editor, Markdown can be regenerated from tailoredProfile
       const updatedApplication = await this.prisma.application.update({
@@ -1475,6 +1483,23 @@ Summary: ${resume.summary || 'Not provided'}
       (rewrittenProfile?.rewritten_projects || []).map((proj) => [proj.profileProjectId, proj]),
     );
 
+    // Debug: Log the IDs to check if they match
+    this.logger.debug(
+      `Profile experience IDs: ${profile.experiences.map((e) => e.id).join(', ')}`,
+    );
+    this.logger.debug(
+      `Rewritten experience IDs: ${Array.from(rewrittenExperienceMap.keys()).join(', ')}`,
+    );
+    // Debug: Log what the LLM returned for each experience
+    rewrittenExperienceMap.forEach((rewritten, id) => {
+      const originalExp = profile.experiences.find((e) => e.id === id);
+      this.logger.debug(
+        `Experience "${originalExp?.title}" (${id}): ` +
+          `desc="${(rewritten.rewritten_description || '').substring(0, 50)}...", ` +
+          `achievements=[${rewritten.rewritten_achievements?.length || 0} items: ${(rewritten.rewritten_achievements || []).map((a) => a.substring(0, 30) + '...').join(' | ')}]`,
+      );
+    });
+
     // Build skill categories from selected hard skills AND tools
     const skillCategories: any[] = [];
 
@@ -1537,6 +1562,11 @@ Summary: ${resume.summary || 'Not provided'}
       .sort((a, b) => b.startDate.getTime() - a.startDate.getTime())
       .map((exp) => {
         const rewritten = rewrittenExperienceMap.get(exp.id);
+        if (!rewritten) {
+          this.logger.warn(
+            `No rewritten content found for experience "${exp.title}" (ID: ${exp.id}) - using original text`,
+          );
+        }
         return {
           id: exp.id,
           title: exp.title,

@@ -42,24 +42,27 @@ function mergeAchievementsIntoDescription(
     return hasAchievements ? achievementsToHtml(achievements) : undefined;
   }
 
-  // Check if description already has bullet points (HTML or Markdown-style)
-  const hasBulletPoints = /<(ul|ol|li)/i.test(description) || /^[\s]*[-•*]\s/m.test(description);
+  // PRIORITY: If we have achievements (from LLM rewrite), use them as bullet points
+  // The achievements array contains the NEW translated/tailored content and should
+  // replace any existing bullet points in the description
+  if (hasAchievements) {
+    // Check if description already has bullet points (HTML or Markdown-style)
+    const hasBulletPoints = /<(ul|ol|li)/i.test(description) || /^[\s]*[-•*]\s/m.test(description);
 
-  if (hasBulletPoints) {
-    // Description already contains bullet points, don't duplicate
-    return description;
+    if (hasBulletPoints) {
+      // Description has old bullet points - replace them with new achievements
+      // The achievements contain the LLM-generated (translated/tailored) content
+      return achievementsToHtml(achievements);
+    }
+
+    // Description is a paragraph (no bullets) - combine with achievements
+    const htmlDescription = isHtml(description) ? description : `<p>${description}</p>`;
+    const htmlAchievements = achievementsToHtml(achievements);
+    return `${htmlDescription}${htmlAchievements}`;
   }
 
-  // Merge: description paragraph + achievements as bullet points
-  if (!hasAchievements) {
-    return description;
-  }
-
-  // Ensure description is wrapped in HTML if it's plain text
-  const htmlDescription = isHtml(description) ? description : `<p>${description}</p>`;
-  const htmlAchievements = achievementsToHtml(achievements);
-
-  return `${htmlDescription}${htmlAchievements}`;
+  // No achievements - return description as-is
+  return description;
 }
 const monthFormatter = new Intl.DateTimeFormat('de-DE', {
   month: 'short',

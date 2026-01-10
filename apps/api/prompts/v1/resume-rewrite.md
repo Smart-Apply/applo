@@ -166,6 +166,26 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
 
 ---
 
+## ⚠️ CRITICAL: ID PRESERVATION ⚠️
+
+**The `profileExperienceId` and `profileProjectId` values MUST be copied EXACTLY from the input.**
+
+- Input: `tailoredProfile.selected_experiences[].profileExperienceId`
+- Output: `rewritten_experiences[].profileExperienceId` → **MUST BE IDENTICAL**
+
+**Example:**
+- Input has: `"profileExperienceId": "cmj19kbvn000f4oy76d3c0c5k"`
+- Output MUST have: `"profileExperienceId": "cmj19kbvn000f4oy76d3c0c5k"` (EXACT SAME)
+
+**DO NOT:**
+- ❌ Generate new IDs
+- ❌ Shorten IDs (e.g., `"exp-1"`)
+- ❌ Modify any characters
+
+**If you return a different ID, the translation will be LOST and English text will appear in the final resume.**
+
+---
+
 ## Language-Specific Guidelines
 
 ### German (if `language` is `de`):
@@ -304,7 +324,7 @@ If the input contains English text and target language is German → TRANSLATE I
 ### Example Input (Experience):
 ```json
 {
-  "profileExperienceId": "exp-123",
+  "profileExperienceId": "cmj19kbvn000f4oy76d3c0c5k",
   "title": "Software Engineer",
   "company": "TechCorp",
   "summary": "Worked on web applications using React and Node.js",
@@ -315,7 +335,7 @@ If the input contains English text and target language is German → TRANSLATE I
 ### Example Output (English):
 ```json
 {
-  "profileExperienceId": "exp-123",
+  "profileExperienceId": "cmj19kbvn000f4oy76d3c0c5k",
   "rewritten_description": "Designed and developed scalable web applications using React and Node.js, delivering features that enhanced user engagement.",
   "rewritten_achievements": [
     "Developed responsive React components that improved page load performance",
@@ -328,7 +348,7 @@ If the input contains English text and target language is German → TRANSLATE I
 ### Example Output (German):
 ```json
 {
-  "profileExperienceId": "exp-123",
+  "profileExperienceId": "cmj19kbvn000f4oy76d3c0c5k",
   "rewritten_description": "Entwicklung skalierbarer Webanwendungen mit React und Node.js zur Steigerung der Nutzerinteraktion.",
   "rewritten_achievements": [
     "Entwicklung responsiver React-Komponenten mit Verbesserung der Ladegeschwindigkeit um 40%",
@@ -341,7 +361,7 @@ If the input contains English text and target language is German → TRANSLATE I
 ### Example Output (Empty Description):
 ```json
 {
-  "profileExperienceId": "exp-456",
+  "profileExperienceId": "cmj19abc456def789ghi012",
   "rewritten_description": "",
   "rewritten_achievements": []
 }

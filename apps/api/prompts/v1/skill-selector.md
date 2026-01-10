@@ -38,16 +38,23 @@ Analyze the job requirements and candidate profile to select the **most relevant
 
 ## Selection Constraints
 
-### STRICT LIMITS (DO NOT EXCEED):
+### STRICT LIMITS:
 - **Hard Skills/Technologies:** MAX 12 (programming languages, frameworks, methodologies - e.g., TypeScript, React, Agile)
 - **Soft Skills:** MAX 6 (ONLY if explicitly required in job posting - e.g., Leadership, Communication)
 - **Tools/Platforms:** MAX 8 (cloud platforms, development tools, software - e.g., Azure, Docker, Microsoft 365 Copilot, GitHub)
-- **Experiences:** Include ALL experiences (no filtering - every job shows career progression)
+- **Experiences:** ⚠️ **INCLUDE ALL** - Return EVERY experience from profile (no filtering, no skipping)
 - **Projects:** MAX 5 (ONLY directly relevant ones)
 - **Certificates:** Only relevant certificates
 - **Education:** Include ALL education (no filtering)
 
-### Selection Criteria:
+### ⚠️ CRITICAL: ALL EXPERIENCES MUST BE INCLUDED
+**You MUST include EVERY single experience from the profile in `selected_experiences`.**
+- Count the experiences in the input profile
+- Your output `selected_experiences` array MUST have the SAME count
+- Do NOT skip any experience, even if it seems unrelated to the job
+- Every job shows career progression - recruiters expect to see the full work history
+
+### Selection Criteria (for skills, NOT experiences):
 1. **Exact Match Priority:** If job mentions "Microsoft 365 Copilot", "Azure", "Docker" etc. and candidate has these EXACT skills → ALWAYS include them
 2. **Explicit > Implicit:** Prefer skills/experiences explicitly mentioned in job description over those merely implied
 3. **Quantified > Generic:** Prioritize experiences with measurable achievements over generic responsibilities
@@ -66,6 +73,25 @@ Analyze the job requirements and candidate profile to select the **most relevant
   - Job description explicitly mentions them (e.g., "leadership required", "team player needed")
   - They are critical for the role (e.g., "Communication" for Customer Success Manager)
 - Generic soft skills like "teamwork" without specific job requirement → SKIP
+
+---
+
+## ⚠️ CRITICAL: ID PRESERVATION ⚠️
+
+**You MUST copy the EXACT `id` value from each input item to the corresponding output field.**
+
+| Input Field | Output Field | Example |
+|-------------|--------------|--------|
+| `profile.experiences[].id` | `selected_experiences[].profileExperienceId` | `"cmj19kbvn000f4oy76d3c0c5k"` |
+| `profile.projects[].id` | `selected_projects[].profileProjectId` | `"cmj19abc123def456ghi789"` |
+| `profile.certificates[].id` | `selected_certificates[].profileCertificateId` | `"cmj19xyz987wvu654tsr321"` |
+| `profile.education[].id` | `selected_education[].profileEducationId` | `"cmj19edu456abc789def012"` |
+
+**Rules:**
+- IDs are long alphanumeric strings (25+ characters) like `cmj19kbvn000f4oy76d3c0c5k`
+- **DO NOT** shorten, modify, or generate new IDs
+- **DO NOT** use placeholder IDs like `"exp-123"` or `"id-1"`
+- **COPY the exact string** from the input `id` field
 
 ---
 
@@ -139,7 +165,7 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
   "selected_tools": ["Epic EMR", "Meditech", "Patient Monitoring Systems"],
   "selected_experiences": [
     {
-      "profileExperienceId": "exp-123",
+      "profileExperienceId": "cmj19kbvn000f4oy76d3c0c5k",
       "title": "Staff Nurse",
       "company": "Memorial Hospital",
       "summary": "Provided direct patient care in 30-bed medical-surgical unit.",
@@ -149,7 +175,7 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
   "selected_projects": [],
   "selected_certificates": [
     {
-      "profileCertificateId": "cert-456",
+      "profileCertificateId": "cmj19cert456abc789def012",
       "name": "CPR Certification",
       "issuer": "American Heart Association",
       "issueDate": "2024"
@@ -157,7 +183,7 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
   ],
   "selected_education": [
     {
-      "profileEducationId": "edu-789",
+      "profileEducationId": "cmj19edu789xyz321wvu654",
       "degree": "Bachelor of Science in Nursing",
       "institution": "State University",
       "fieldOfStudy": "Nursing",
@@ -240,3 +266,5 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
 ## Begin Selection
 
 Analyze the job and profile above, then return your JSON response.
+
+**⚠️ FINAL CHECK: Count the experiences in the input profile. Your `selected_experiences` array MUST contain ALL of them. If input has 4 experiences → output MUST have 4 experiences.**
