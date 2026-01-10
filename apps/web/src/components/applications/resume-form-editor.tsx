@@ -98,6 +98,16 @@ interface ResumeFormEditorProps {
   disabled?: boolean;
   /** Application ID for AI summary generation */
   applicationId?: string;
+  /** Target job title for the application (editable in Stellendetails section) */
+  targetJobTitle?: string;
+  /** Company name from job posting (read-only display in Stellendetails section) */
+  company?: string;
+  /** Callback when target job title is changed */
+  onTargetJobTitleChange?: (title: string) => void;
+  /** Callback when target job title input loses focus (for saving) */
+  onTargetJobTitleBlur?: (title: string) => void;
+  /** Whether target job title update is in progress */
+  isTargetJobTitleLoading?: boolean;
   /** Callback to generate summary with AI (returns generated summary text) */
   onAiSummaryRequest?: (instructions: string, currentSummary: string) => Promise<string>;
   /** Whether AI summary generation is in progress */
@@ -130,6 +140,11 @@ export function ResumeFormEditor({
   onChange, 
   disabled, 
   applicationId,
+  targetJobTitle,
+  company,
+  onTargetJobTitleChange,
+  onTargetJobTitleBlur,
+  isTargetJobTitleLoading = false,
   onAiSummaryRequest,
   isAiSummaryLoading = false,
   onAiExperienceRequest,
@@ -372,6 +387,7 @@ export function ResumeFormEditor({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="personal">Persönliche Daten</SelectItem>
+            <SelectItem value="job-details">Stellendetails</SelectItem>
             <SelectItem value="skills">Fähigkeiten</SelectItem>
             <SelectItem value="experience">Berufserfahrung</SelectItem>
             <SelectItem value="projects">Projekte</SelectItem>
@@ -507,6 +523,46 @@ export function ResumeFormEditor({
               placeholder="Kurze Zusammenfassung deiner Qualifikationen und wichtigsten Fähigkeiten. Nutzen Sie - + Leerzeichen für Aufzählungen."
               minHeight="140px"
             />
+          </div>
+        </CardContent>
+      </Card>
+      )}
+
+      {/* Job Details */}
+      {activeSection === 'job-details' && (
+      <Card>
+        <CardHeader>
+          <CardTitle>Stellendetails</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="targetJobTitle">Zielposition *</Label>
+              <Input
+                id="targetJobTitle"
+                value={targetJobTitle || ''}
+                onChange={(e) => onTargetJobTitleChange?.(e.target.value)}
+                onBlur={(e) => onTargetJobTitleBlur?.(e.target.value)}
+                disabled={disabled || isTargetJobTitleLoading}
+                placeholder="z.B. Senior Software Engineer"
+                maxLength={100}
+              />
+              <p className="text-xs text-muted-foreground">
+                Der Jobtitel, der auf deinem Lebenslauf erscheint
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company">Unternehmen</Label>
+              <Input
+                id="company"
+                value={company || ''}
+                disabled
+                className="bg-muted"
+              />
+              <p className="text-xs text-muted-foreground">
+                Das Unternehmen aus der Stellenanzeige (nicht editierbar)
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

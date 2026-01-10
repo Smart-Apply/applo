@@ -27,7 +27,6 @@ import {
   CoverLetterTemplatePreview,
 } from '@/components/applications/template-preview';
 import { ATSScoreSidebar } from '@/components/applications/ats-score-sidebar';
-import { EditableTargetJobTitle } from '@/components/applications/editable-target-job-title';
 import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
 import { LanguageSelector } from '@/components/applications/language-selector';
 import {
@@ -42,6 +41,8 @@ import {
 import { parseResumeDraft, normalizeResumeForSave } from '@/lib/resume';
 import type { ResumeData } from '@/types';
 import { toast } from 'sonner';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
 import { stripHtml } from '@/lib/sanitize';
 import { toTiptapHtml } from '@/lib/markdown';
 import { cn } from '@/lib/utils';
@@ -135,10 +136,44 @@ export default function ApplicationResumeEditorPage() {
   // Trigger ATS score refresh after saving
   const [atsRefreshTrigger, setAtsRefreshTrigger] = useState(0);
 
+  // Target job title state (for Stellendetails section)
+  const [targetJobTitle, setTargetJobTitle] = useState<string>('');
+  const [targetJobTitleInitialized, setTargetJobTitleInitialized] = useState(false);
+  const queryClient = useQueryClient();
+
   const upsertCoverLetter = useUpsertCoverLetter(applicationId);
   const exportApplication = useExportApplication(applicationId);
   const resumeText = application?.resumeText ?? null;
   const coverLetterText = application ? (application.coverLetterText ?? '') : null;
+
+  // Mutation for updating target job title
+  const updateTargetJobTitleMutation = useMutation({
+    mutationFn: (newTitle: string) => api.applications.updateTargetJobTitle(applicationId, newTitle),
+    onSuccess: (updatedApp) => {
+      queryClient.setQueryData(['applications', applicationId], updatedApp);
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('Zielposition aktualisiert');
+    },
+    onError: (error: Error) => {
+      toast.error(`Fehler beim Aktualisieren: ${error.message}`);
+    },
+  });
+
+  // Initialize target job title from application
+  useEffect(() => {
+    if (application && !targetJobTitleInitialized) {
+      setTargetJobTitle(application.targetJobTitle || application.jobPosting?.title || '');
+      setTargetJobTitleInitialized(true);
+    }
+  }, [application, targetJobTitleInitialized]);
+
+  // Save target job title on blur
+  const handleTargetJobTitleSave = useCallback((title: string) => {
+    const trimmedTitle = title.trim();
+    if (trimmedTitle.length >= 2 && trimmedTitle.length <= 100) {
+      updateTargetJobTitleMutation.mutate(trimmedTitle);
+    }
+  }, [updateTargetJobTitleMutation]);
 
   // Initialize language from application when it loads
   useEffect(() => {
@@ -617,7 +652,7 @@ export default function ApplicationResumeEditorPage() {
       <div className="flex flex-col h-[calc(100vh-2rem)] animate-in fade-in duration-300">
         {/* Compact Toolbar */}
         <div className="flex items-center justify-between gap-4 px-2 py-3 border-b border-border/50 bg-background/80 backdrop-blur-sm shrink-0">
-          {/* Left: Back + Job Info */}
+          {/* Left: Back */}
           <div className="flex items-center gap-4 min-w-0">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -632,33 +667,6 @@ export default function ApplicationResumeEditorPage() {
               </TooltipTrigger>
               <TooltipContent>Zurück zur Übersicht</TooltipContent>
             </Tooltip>
-
-            <div className="h-5 w-px bg-border/50 shrink-0" />
-
-            {application.jobPosting && (
-              <div className="flex items-center gap-2 min-w-0">
-                <EditableTargetJobTitle
-                  applicationId={application.id}
-                  initialTargetJobTitle={application.targetJobTitle}
-                  fallbackTitle={application.jobPosting.title || 'Unbekannte Position'}
-                />
-                {application.jobPosting.company && (
-                  <>
-                    <span className="text-muted-foreground text-sm shrink-0">@</span>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground truncate">
-                      <Building2 className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{application.jobPosting.company}</span>
-                    </div>
-                  </>
-                )}
-                {application.jobPosting.location && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground truncate">
-                    <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{application.jobPosting.location}</span>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Center: Tabs */}
@@ -806,6 +814,11 @@ export default function ApplicationResumeEditorPage() {
                       onChange={(resume) => setParsedResume(resume)}
                       disabled={updateResume.isPending}
                       applicationId={applicationId}
+                      targetJobTitle={targetJobTitle}
+                      company={application?.jobPosting?.company}
+                      onTargetJobTitleChange={setTargetJobTitle}
+                      onTargetJobTitleBlur={handleTargetJobTitleSave}
+                      isTargetJobTitleLoading={updateTargetJobTitleMutation.isPending}
                       onAiSummaryRequest={handleAiSummaryRequest}
                       isAiSummaryLoading={generateSummary.isPending}
                       onAiExperienceRequest={handleAiExperienceRequest}
@@ -823,7 +836,7 @@ export default function ApplicationResumeEditorPage() {
                   <ResumeTemplatePreview
                     resume={{
                       ...parsedResume,
-                      targetJobTitle: application?.targetJobTitle || application?.jobPosting?.title,
+                      targetJobTitle: targetJobTitle || application?.jobPosting?.title,
                     }}
                     templateId={application?.resumeTemplateId}
                     language={selectedLanguage}
