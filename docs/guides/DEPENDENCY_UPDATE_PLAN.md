@@ -1,8 +1,8 @@
 # Dependency Update Plan (Issue #276)
 
 > **Created:** 24. Januar 2026  
-> **Updated:** 24. Januar 2026  
-> **Current Status:** ✅ **3 moderate vulnerabilities** (all lodash - transitive, low risk)  
+> **Completed:** 24. Januar 2026 ✅  
+> **Final Status:** **0 vulnerabilities** 🎉  
 > **Original Status:** 29 vulnerabilities (1 critical, 18 high, 5 moderate, 5 low)
 
 ---
@@ -279,11 +279,11 @@ npm run dev
 
 ## Remaining Vulnerabilities
 
-| Severity | Count | Packages | Risk Level |
-|----------|-------|----------|------------|
-| Moderate | 3 | lodash (transitive via @nestjs/config, @nestjs/swagger) | **Low** |
+**✅ NONE - All vulnerabilities resolved!**
 
-**Note:** These lodash vulnerabilities are in transitive dependencies and relate to `_.unset` and `_.omit` functions which are not used in this project. The risk is minimal.
+### Solution Applied
+- Added `overrides` in root `package.json` to force `lodash@4.17.23`
+- Used `npm install --legacy-peer-deps` to resolve Tiptap peer dependency conflicts
 
 ---
 

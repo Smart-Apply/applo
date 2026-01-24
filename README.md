@@ -4,6 +4,8 @@ Production-grade full-stack MVP built with **TypeScript**, **NestJS**, **Next.js
 
 > **🆕 New: npm Workspaces Monorepo Structure** - Clean separation of backend and frontend with optimized dependency management.
 
+> **🔒 Security: 0 Vulnerabilities** - All dependencies modernized (Node.js 24, NestJS 11, Puppeteer 24, Next.js 16.1)
+
 ## 📦 What's New in This Version
 
 The project has been restructured as a proper **npm Workspaces monorepo**:
@@ -43,22 +45,22 @@ Smart Apply is an intelligent job application assistant that:
 
 #### Backend (apps/api - Port 3000)
 
-- **Framework**: NestJS (TypeScript)
+- **Framework**: NestJS 11 (TypeScript)
 - **Database**: PostgreSQL (Docker for dev, Azure Database for PostgreSQL in prod)
-- **ORM**: Prisma
+- **ORM**: Prisma 5.22
 - **Caching**: In-memory (node-cache) for templates, Redis-ready for production scaling
 - **Storage**: Azure Blob Storage (disk in dev)
 - **Queue/Jobs**: Azure Service Bus
 - **LLM**: Azure AI Foundry Agents, Azure OpenAI, Hugging Face (with mock provider for tests)
 - **Job Parsing**: Playwright + Cheerio (agent-based URL parsing for dynamic sites)
-- **PDF**: Puppeteer (Chromium)
+- **PDF**: Puppeteer 24 (Chromium)
 - **Auth**: JWT + optional OAuth (Microsoft Entra ID, Google)
 - **Secrets**: Azure Key Vault (dev via `.env`)
 - **Container Runtime**: Docker, Azure Container Apps (or App Service)
 
 #### Frontend (apps/web - Port 3001)
 
-- **Framework**: Next.js 14 with App Router
+- **Framework**: Next.js 16.1 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
 - **UI Library**: shadcn/ui (Radix UI primitives)
@@ -176,9 +178,9 @@ smart-apply/
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+ (recommended) or 20.19+
 - Docker & Docker Compose
-- npm or yarn
+- npm 11+ or yarn
 
 ### Quick Start
 
@@ -755,7 +757,7 @@ Access Swagger documentation at `/docs` when running locally.
 
 For detailed security procedures including JWT secret rotation, incident response, and production deployment checklist, see **[docs/SECURITY.md](./docs/SECURITY.md)**.
 
-**Current Security Score: 7.5/10** - See [MVP_FEATURES.md](./MVP_FEATURES.md) for remaining security todos before production deployment.
+**Current Security Score: 9/10** - All known vulnerabilities resolved. See [MVP_FEATURES.md](./MVP_FEATURES.md) for remaining security todos before production deployment.
 
 ## 📦 Database Schema
 
