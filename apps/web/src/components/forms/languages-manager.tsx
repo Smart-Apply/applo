@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { X, Plus, Languages } from 'lucide-react';
 import { toast } from 'sonner';
+import { getLanguageLevelLabel } from '@/lib/translations';
 import type { Language } from '@/types';
 
 interface LanguagesManagerProps {
@@ -22,14 +23,13 @@ interface LanguagesManagerProps {
   disabled?: boolean;
 }
 
+// Enum values match backend LanguageProficiency enum
 const LANGUAGE_LEVELS = [
-  { value: 'Muttersprache', label: 'Muttersprache' },
-  { value: 'Fließend', label: 'Fließend (C2)' },
-  { value: 'Verhandlungssicher', label: 'Verhandlungssicher (C1)' },
-  { value: 'Fortgeschritten', label: 'Fortgeschritten (B2)' },
-  { value: 'Gute Kenntnisse', label: 'Gute Kenntnisse (B1)' },
-  { value: 'Grundkenntnisse', label: 'Grundkenntnisse (A2)' },
-  { value: 'Anfänger', label: 'Anfänger (A1)' },
+  { value: 'NATIVE', label: 'Muttersprache' },
+  { value: 'FLUENT', label: 'Fließend (C2)' },
+  { value: 'ADVANCED', label: 'Fortgeschritten (B2/C1)' },
+  { value: 'INTERMEDIATE', label: 'Gute Kenntnisse (B1)' },
+  { value: 'BASIC', label: 'Grundkenntnisse (A1/A2)' },
 ];
 
 /**
@@ -47,7 +47,7 @@ export function LanguagesManager({
   disabled = false
 }: LanguagesManagerProps) {
   const [languageName, setLanguageName] = useState('');
-  const [languageLevel, setLanguageLevel] = useState('Fließend');
+  const [languageLevel, setLanguageLevel] = useState('FLUENT'); // Default to FLUENT enum value
 
   const addLanguage = () => {
     const name = languageName.trim();
@@ -93,14 +93,21 @@ export function LanguagesManager({
   };
 
   const getLevelBadgeColor = (level?: string) => {
-    switch (level) {
-      case 'Muttersprache':
+    // Normalize to handle both enum values and legacy strings
+    const normalized = level?.toUpperCase();
+    switch (normalized) {
+      case 'NATIVE':
+      case 'MUTTERSPRACHE':
         return 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200';
-      case 'Fließend':
-      case 'Verhandlungssicher':
+      case 'FLUENT':
+      case 'FLIESSEND':
+      case 'FLIESSEND (C2)':
+      case 'VERHANDLUNGSSICHER':
         return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200';
-      case 'Fortgeschritten':
-      case 'Gute Kenntnisse':
+      case 'ADVANCED':
+      case 'INTERMEDIATE':
+      case 'FORTGESCHRITTEN':
+      case 'GUTE KENNTNISSE':
         return 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200';
       default:
         return 'bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200';
@@ -171,7 +178,7 @@ export function LanguagesManager({
               >
                 <span className="font-medium">{lang.name}</span>
                 {lang.level && (
-                  <span className="text-xs opacity-80">• {lang.level}</span>
+                  <span className="text-xs opacity-80">• {getLanguageLevelLabel(lang.level)}</span>
                 )}
                 <button
                   type="button"

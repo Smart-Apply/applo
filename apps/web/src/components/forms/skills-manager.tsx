@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { X, Plus, Code } from 'lucide-react';
 import { toast } from 'sonner';
+import { getSkillLevelLabel } from '@/lib/translations';
 import type { Skill } from '@/types';
 
 interface SkillsManagerProps {
@@ -116,7 +117,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
               >
                 <span>{skill.name}</span>
                 {skill.level && (
-                  <span className="text-xs opacity-70">({skill.level})</span>
+                  <span className="text-xs opacity-70">({getSkillLevelLabel(skill.level)})</span>
                 )}
                 <button
                   type="button"

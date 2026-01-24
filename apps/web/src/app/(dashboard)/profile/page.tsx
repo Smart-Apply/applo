@@ -3,6 +3,7 @@
 import { useProfile } from '@/hooks/use-profile';
 import { useAuthStore } from '@/stores/auth-store';
 import { calculateProfileStrength } from '@/lib/profile-utils';
+import { getLanguageLevelLabel } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -255,7 +256,7 @@ export default function ProfilePage() {
                   {profile.languages?.map((lang, index) => (
                     <div key={index} className="flex items-center justify-between text-sm">
                       <span className="font-medium">{lang.name}</span>
-                      <span className="text-muted-foreground text-xs">{lang.level}</span>
+                      <span className="text-muted-foreground text-xs">{getLanguageLevelLabel(lang.level)}</span>
                     </div>
                   ))}
                 </div>
