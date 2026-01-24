@@ -14,7 +14,7 @@ const A4_HEIGHT_PX = 1123;
 /**
  * Normalize proficiency level to translation key
  * Maps various user input formats to standardized translation keys (e.g., "level.native")
- * @param level - User input level string (e.g., "Muttersprache", "Native", "fließend")
+ * @param level - User input level string (e.g., "Muttersprache", "Native", "fließend", "NATIVE", "FLUENT")
  * @returns Normalized translation key (e.g., "level.native") or original value if no match
  */
 function normalizeProficiencyLevel(level: string | undefined): string | undefined {
@@ -25,10 +25,10 @@ function normalizeProficiencyLevel(level: string | undefined): string | undefine
 
   const normalized = level.toLowerCase().trim();
 
-  // Native language variants
+  // Native language variants (includes enum value NATIVE)
   if (
-    normalized === 'muttersprache' ||
     normalized === 'native' ||
+    normalized === 'muttersprache' ||
     normalized === 'native speaker' ||
     normalized === 'muttersprachlich' ||
     normalized === 'langue maternelle' ||
@@ -38,11 +38,11 @@ function normalizeProficiencyLevel(level: string | undefined): string | undefine
     return 'level.native';
   }
 
-  // Fluent variants
+  // Fluent variants (includes enum value FLUENT)
   if (
+    normalized === 'fluent' ||
     normalized === 'fließend' ||
     normalized === 'fliessend' ||
-    normalized === 'fluent' ||
     normalized === 'verhandlungssicher' ||
     normalized === 'courant' ||
     normalized === 'fluido' ||
@@ -51,10 +51,10 @@ function normalizeProficiencyLevel(level: string | undefined): string | undefine
     return 'level.fluent';
   }
 
-  // Advanced variants
+  // Advanced variants (includes enum value ADVANCED)
   if (
-    normalized === 'fortgeschritten' ||
     normalized === 'advanced' ||
+    normalized === 'fortgeschritten' ||
     normalized === 'avancé' ||
     normalized === 'avanzado' ||
     normalized === 'avanzato'
@@ -62,7 +62,7 @@ function normalizeProficiencyLevel(level: string | undefined): string | undefine
     return 'level.advanced';
   }
 
-  // Good variants
+  // Good variants (includes legacy German strings)
   if (
     normalized === 'gut' ||
     normalized === 'good' ||
@@ -76,10 +76,10 @@ function normalizeProficiencyLevel(level: string | undefined): string | undefine
     return 'level.good';
   }
 
-  // Intermediate variants
+  // Intermediate variants (includes enum value INTERMEDIATE)
   if (
-    normalized === 'mittelstufe' ||
     normalized === 'intermediate' ||
+    normalized === 'mittelstufe' ||
     normalized === 'mittel' ||
     normalized === 'intermédiaire' ||
     normalized === 'intermedio'
@@ -98,10 +98,10 @@ function normalizeProficiencyLevel(level: string | undefined): string | undefine
     return 'level.conversational';
   }
 
-  // Basic variants
+  // Basic variants (includes enum value BASIC)
   if (
-    normalized === 'grundkenntnisse' ||
     normalized === 'basic' ||
+    normalized === 'grundkenntnisse' ||
     normalized === 'basics' ||
     normalized === 'notions de base' ||
     normalized === 'básico' ||
