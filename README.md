@@ -16,13 +16,13 @@ AI-Powered Job Application Assistant - Generate tailored cover letters and resum
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | Next.js 16, React 19, Tailwind v4, shadcn/ui |
-| **Backend** | NestJS 11, Prisma 5, PostgreSQL 16 |
-| **AI** | Azure AI Foundry, Azure OpenAI (GPT-4o) |
-| **PDF** | Puppeteer 24, Handlebars Templates |
-| **Infrastructure** | Docker, Azure Container Apps |
+| Layer              | Technology                                      |
+| ------------------ | ----------------------------------------------- |
+| **Frontend**       | Next.js 16, React 19, Tailwind v4, shadcn/ui    |
+| **Backend**        | NestJS 11, Prisma 5, PostgreSQL 16              |
+| **AI**             | Azure AI Foundry, Azure OpenAI (GPT-4o)         |
+| **PDF**            | Puppeteer 24, Handlebars Templates              |
+| **Infrastructure** | Docker, Azure Container Apps                    |
 
 ## 🚀 Quick Start
 
@@ -52,11 +52,11 @@ npm run dev
 
 ### Access
 
-| Service | URL |
-|---------|-----|
-| **Frontend** | http://localhost:3001 |
-| **API** | http://localhost:3000 |
-| **Swagger Docs** | http://localhost:3000/docs |
+| Service          | URL                           |
+| ---------------- | ----------------------------- |
+| **Frontend**     | <http://localhost:3001>       |
+| **API**          | <http://localhost:3000>       |
+| **Swagger Docs** | <http://localhost:3000/docs>  |
 
 ### Demo Login
 
@@ -65,7 +65,7 @@ npm run dev
 
 ## 📁 Project Structure
 
-```
+```text
 smart-apply/
 ├── apps/
 │   ├── api/          # NestJS Backend (Port 3000)
@@ -107,11 +107,11 @@ npm run test:unit     # Run unit tests
 
 ## 📖 Documentation
 
-| Document | Description |
-|----------|-------------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture |
-| [QUICKSTART.md](QUICKSTART.md) | Detailed setup guide |
-| [docs/](docs/) | Full documentation |
+| Document                             | Description          |
+| ------------------------------------ | -------------------- |
+| [ARCHITECTURE.md](ARCHITECTURE.md)   | System architecture  |
+| [QUICKSTART.md](QUICKSTART.md)       | Detailed setup guide |
+| [docs/](docs/)                       | Full documentation   |
 
 ## 🌐 Deployment
 

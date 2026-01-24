@@ -42,16 +42,17 @@ npm run dev
 ```
 
 This starts both:
-- **API** on http://localhost:3000
-- **Frontend** on http://localhost:3001
+
+- **API** on <http://localhost:3000>
+- **Frontend** on <http://localhost:3001>
 
 ## Verify Installation
 
-| Check | URL |
-|-------|-----|
-| Frontend loads | http://localhost:3001 |
-| API responds | http://localhost:3000/api/v1/health |
-| Swagger Docs | http://localhost:3000/docs |
+| Check          | URL                                     |
+| -------------- | --------------------------------------- |
+| Frontend loads | <http://localhost:3001>                 |
+| API responds   | <http://localhost:3000/api/v1/health>   |
+| Swagger Docs   | <http://localhost:3000/docs>            |
 
 ## Demo Login
 
@@ -114,17 +115,17 @@ npm install
 
 ## What's Included
 
-| Feature | Status |
-|---------|--------|
-| User Registration & Login | ✅ |
-| Profile Management | ✅ |
-| Job URL Parsing | ✅ |
-| AI Cover Letter Generation | ✅ |
-| AI Resume Generation | ✅ |
-| PDF Export | ✅ |
-| Real-time Status Updates | ✅ |
-| Template Selection | ✅ |
-| Session Management | ✅ |
+| Feature                     | Status |
+| --------------------------- | ------ |
+| User Registration & Login   | ✅     |
+| Profile Management          | ✅     |
+| Job URL Parsing             | ✅     |
+| AI Cover Letter Generation  | ✅     |
+| AI Resume Generation        | ✅     |
+| PDF Export                  | ✅     |
+| Real-time Status Updates    | ✅     |
+| Template Selection          | ✅     |
+| Session Management          | ✅     |
 
 ## Next Steps
 

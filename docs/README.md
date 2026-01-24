@@ -53,10 +53,10 @@ Anleitungen
 
 ## 🚀 Quick Links
 
-| Kategorie | Link | Beschreibung |
-|-----------|------|--------------|
+| Kategorie      | Link                                                              | Beschreibung           |
+| -------------- | ----------------------------------------------------------------- | ---------------------- |
 | **MVP Status** | [MVP_EVALUATION_DEC_2025.md](./guides/MVP_EVALUATION_DEC_2025.md) | Aktueller Projektstand |
-| **Sicherheit** | [SECURITY.md](./security/SECURITY.md) | Sicherheitsübersicht |
-| **Templates** | [TEMPLATE_GUIDE.md](./guides/TEMPLATE_GUIDE.md) | Template System |
-| **Testing** | [TESTING_GUIDE.md](./guides/TESTING_GUIDE.md) | Test Anleitungen |
-| **Azure** | [AZURE_DEPLOYMENT.md](./guides/AZURE_DEPLOYMENT.md) | Deployment Guide |
+| **Sicherheit** | [SECURITY.md](./security/SECURITY.md)                             | Sicherheitsübersicht   |
+| **Templates**  | [TEMPLATE_GUIDE.md](./guides/TEMPLATE_GUIDE.md)                   | Template System        |
+| **Testing**    | [TESTING_GUIDE.md](./guides/TESTING_GUIDE.md)                     | Test Anleitungen       |
+| **Azure**      | [AZURE_DEPLOYMENT.md](./guides/AZURE_DEPLOYMENT.md)               | Deployment Guide       |
