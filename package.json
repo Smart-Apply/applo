@@ -44,9 +44,13 @@
     "prisma:studio": "cd apps/api && npm run prisma:studio"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.2.1",
+    "@nestjs/cli": "^11.0.16",
+    "@nestjs/common": "^11.1.12",
+    "@nestjs/core": "^11.1.12",
+    "@nestjs/platform-express": "^11.1.12",
     "@nestjs/schematics": "^10.0.3",
-    "@nestjs/testing": "^10.3.0",
+    "@nestjs/testing": "^11.1.12",
+    "@nestjs/throttler": "^6.5.0",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.19.25",
     "@types/supertest": "^6.0.2",
@@ -69,6 +73,9 @@
     "tsconfig-paths": "^4.2.0",
     "turbo": "^2.7.2",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "lodash": "4.17.23"
   },
   "engines": {
     "node": ">=20.0.0",
