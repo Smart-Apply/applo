@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TierGuard } from '../common/guards/tier.guard';
@@ -11,7 +11,9 @@ import {
   PremiumFeature,
 } from '../common/decorators/tier.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { SubscriptionService, TIER_LIMITS } from './subscription.service';
+import { CheckActionDto } from './dto/check-action.dto';
 
 @ApiTags('Subscription')
 @Controller('subscription')
@@ -83,38 +85,90 @@ export class SubscriptionController {
   }
 
   /**
-   * Get all available tiers and their limits
+   * Get all available tiers with features (Public - for pricing page)
    * Useful for displaying upgrade options
    */
   @Get('tiers')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all available tiers and limits' })
+  @Public()
+  @ApiOperation({ summary: 'Get all available tiers with features' })
   @ApiResponse({
     status: 200,
-    description: 'Returns all subscription tiers with their limits and features',
+    description: 'Returns all subscription tiers with their limits, features, and pricing',
   })
-  async getAllTiers(@CurrentUser('id') userId: string) {
-    const currentTier = await this.subscriptionService.getUserTier(userId);
+  async getTiers() {
     return {
-      currentTier,
-      tiers: TIER_LIMITS,
+      tiers: [
+        {
+          id: 'FREE',
+          name: 'Free',
+          price: 0,
+          features: [
+            '5 Bewerbungen pro Monat',
+            'Basis-KI',
+            'E-Mail Support',
+          ],
+          limits: this.subscriptionService.getTierLimits('FREE'),
+        },
+        {
+          id: 'PREMIUM',
+          name: 'Premium',
+          price: 999, // cents
+          features: [
+            '50 Bewerbungen pro Monat',
+            'Premium-KI (GPT-4o)',
+            '20 Interview-Sessions',
+            'Prioritäts-Support',
+          ],
+          limits: this.subscriptionService.getTierLimits('PREMIUM'),
+        },
+        {
+          id: 'PREMIUM_PLUS',
+          name: 'Premium+',
+          price: 2499, // cents
+          features: [
+            'Unbegrenzte Bewerbungen',
+            'Premium-KI (GPT-4o)',
+            'Unbegrenzte Interview-Sessions',
+            'Prioritäts-Verarbeitung',
+            'Premium-Support mit Rückruf',
+          ],
+          limits: this.subscriptionService.getTierLimits('PREMIUM_PLUS'),
+        },
+      ],
     };
   }
 
   /**
-   * Check if user can perform a specific action
+   * Check if user can perform a specific action (GET - legacy)
    */
   @Get('can-perform/:action')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Check if user can perform action' })
+  @ApiOperation({ summary: 'Check if user can perform action (legacy)' })
   @ApiParam({ name: 'action', enum: ['application', 'interview'] })
-  async canPerformAction(
+  async canPerformActionGet(
     @CurrentUser('id') userId: string,
     @Param('action') action: 'application' | 'interview',
   ) {
     return this.subscriptionService.canPerformAction(userId, action);
+  }
+
+  /**
+   * Check if user can perform a specific action (POST - recommended)
+   */
+  @Post('check-action')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Check if action is allowed' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns whether the action is allowed and remaining quota',
+  })
+  async checkAction(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CheckActionDto,
+  ) {
+    return this.subscriptionService.canPerformAction(userId, dto.action);
   }
 
   // ============================================
