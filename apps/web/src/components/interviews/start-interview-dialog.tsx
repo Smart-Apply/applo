@@ -77,7 +77,23 @@ export function StartInterviewDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onStart(formData);
+    // Clean up the data: remove empty strings and undefined values
+    // Backend expects UUID or undefined, not empty string
+    const cleanedData: StartInterviewDto = {
+      ...formData,
+    };
+    
+    // Remove applicationId if not in application mode or if empty
+    if (mode !== 'application' || !formData.applicationId) {
+      delete cleanedData.applicationId;
+    }
+    
+    // Remove empty string fields (jobTitle, company, industry)
+    if (!cleanedData.jobTitle) delete cleanedData.jobTitle;
+    if (!cleanedData.company) delete cleanedData.company;
+    if (!cleanedData.industry) delete cleanedData.industry;
+    
+    onStart(cleanedData);
   };
 
   const updateField = <K extends keyof StartInterviewDto>(

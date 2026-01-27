@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsOptional, IsInt, Min, Max, IsUUID } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsInt, Min, Max } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { InterviewType, InterviewDifficulty } from '../../generated/prisma/client';
 
@@ -8,10 +8,10 @@ import { InterviewType, InterviewDifficulty } from '../../generated/prisma/clien
 export class StartInterviewDto {
   @ApiPropertyOptional({
     description: 'Application ID to base the interview on (for context)',
-    example: 'clxyz123...',
+    example: 'cmku5ebra000vffy1byj2ahog',
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   applicationId?: string;
 
   @ApiPropertyOptional({
