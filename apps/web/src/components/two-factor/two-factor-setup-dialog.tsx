@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Loader2, Copy, Check, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +20,7 @@ interface TwoFactorSetupDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type Step = 'intro' | 'scan' | 'verify' | 'backup';
+type Step = 'intro' | 'scan' | 'backup';
 
 export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialogProps) {
   const [step, setStep] = useState<Step>('intro');
@@ -34,23 +33,31 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
   const verifyMutation = useVerify2FASetup();
 
   const handleStartSetup = async () => {
-    const result = await setupMutation.mutateAsync();
-    if (result) {
-      setStep('scan');
+    try {
+      const result = await setupMutation.mutateAsync();
+      if (result) {
+        setStep('scan');
+      }
+    } catch {
+      // Error is handled by the mutation's onError callback
     }
   };
 
   const handleVerify = async () => {
     if (!setupMutation.data?.tempSecret) return;
 
-    const result = await verifyMutation.mutateAsync({
-      code,
-      tempSecret: setupMutation.data.tempSecret,
-    });
+    try {
+      const result = await verifyMutation.mutateAsync({
+        code,
+        tempSecret: setupMutation.data.tempSecret,
+      });
 
-    if (result) {
-      setBackupCodes(result.backupCodes);
-      setStep('backup');
+      if (result?.backupCodes) {
+        setBackupCodes(result.backupCodes);
+        setStep('backup');
+      }
+    } catch {
+      // Error is handled by the mutation's onError callback
     }
   };
 
@@ -72,7 +79,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
   };
 
   const handleDownloadBackupCodes = () => {
-    const codesText = `Smart Apply - Backup-Codes für 2FA\n${'='.repeat(40)}\n\nDiese Codes können jeweils einmal verwendet werden.\nBewahre sie an einem sicheren Ort auf.\n\n${backupCodes.map((code, i) => `${i + 1}. ${code}`).join('\n')}\n\nGeneriert am: ${new Date().toLocaleString('de-DE')}`;
+    const codesText = `Smart Apply - Backup-Codes für 2FA\n${'='.repeat(40)}\n\nDiese Codes können jeweils einmal verwendet werden.\nBewahre sie an einem sicheren Ort auf.\n\n${backupCodes.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nGeneriert am: ${new Date().toLocaleString('de-DE')}`;
     const blob = new Blob([codesText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -85,8 +92,8 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
     toast.success('Backup-Codes heruntergeladen');
   };
 
-  const handleClose = (open: boolean) => {
-    if (!open) {
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen) {
       // Reset state when closing
       setStep('intro');
       setCode('');
@@ -94,7 +101,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
       setupMutation.reset();
       verifyMutation.reset();
     }
-    onOpenChange(open);
+    onOpenChange(isOpen);
   };
 
   return (
@@ -104,13 +111,11 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
           <DialogTitle>
             {step === 'intro' && '2FA aktivieren'}
             {step === 'scan' && 'Authenticator einrichten'}
-            {step === 'verify' && 'Code verifizieren'}
             {step === 'backup' && 'Backup-Codes sichern'}
           </DialogTitle>
           <DialogDescription>
             {step === 'intro' && 'Erhöhe die Sicherheit deines Kontos mit Zwei-Faktor-Authentifizierung.'}
-            {step === 'scan' && 'Scanne den QR-Code mit deiner Authenticator-App.'}
-            {step === 'verify' && 'Gib den 6-stelligen Code aus deiner Authenticator-App ein.'}
+            {step === 'scan' && 'Scanne den QR-Code und gib dann den 6-stelligen Code ein.'}
             {step === 'backup' && 'Speichere diese Codes an einem sicheren Ort. Du benötigst sie, falls du keinen Zugriff auf deine Authenticator-App hast.'}
           </DialogDescription>
         </DialogHeader>
@@ -152,8 +157,8 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
                   <img
                     src={setupMutation.data.qrCodeDataUrl}
                     alt="QR Code für 2FA"
-                    width={200}
-                    height={200}
+                    width={180}
+                    height={180}
                   />
                 </div>
               </div>
@@ -178,16 +183,8 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
                 </div>
               </div>
 
-              <Button onClick={() => setStep('verify')} className="w-full">
-                Code eingeben
-              </Button>
-            </>
-          )}
-
-          {step === 'verify' && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="code">6-stelliger Code</Label>
+              <div className="space-y-2 pt-2 border-t">
+                <Label htmlFor="code">6-stelliger Code aus der App</Label>
                 <Input
                   id="code"
                   value={code}
@@ -199,29 +196,20 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep('scan')}
-                  className="flex-1"
-                >
-                  Zurück
-                </Button>
-                <Button
-                  onClick={handleVerify}
-                  disabled={code.length !== 6 || verifyMutation.isPending}
-                  className="flex-1"
-                >
-                  {verifyMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Prüfen...
-                    </>
-                  ) : (
-                    'Verifizieren'
-                  )}
-                </Button>
-              </div>
+              <Button
+                onClick={handleVerify}
+                disabled={code.length !== 6 || verifyMutation.isPending}
+                className="w-full"
+              >
+                {verifyMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Wird aktiviert...
+                  </>
+                ) : (
+                  'Aktivieren'
+                )}
+              </Button>
             </>
           )}
 
@@ -229,9 +217,9 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
             <>
               <div className="rounded-lg border p-4 bg-muted/50">
                 <div className="grid grid-cols-2 gap-2 font-mono text-sm">
-                  {backupCodes.map((code, index) => (
+                  {backupCodes.map((backupCode, index) => (
                     <div key={index} className="px-2 py-1 bg-background rounded">
-                      {code}
+                      {backupCode}
                     </div>
                   ))}
                 </div>
