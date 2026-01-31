@@ -375,20 +375,30 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   @ApiOperation({ summary: 'Google OAuth callback' })
-  async googleCallback(@CurrentUser() user: any, @Res({ passthrough: true }) res: Response, @Req() req: Request) {
-    // User is already validated by GoogleStrategy
-    const userAgent = req.headers['user-agent'];
-    const ipAddress = req.ip || req.socket.remoteAddress;
+  async googleCallback(@CurrentUser() user: any, @Res() res: Response, @Req() req: Request) {
+    const frontendUrl = this.configService.appUrl || 'http://localhost:3001';
+    
+    try {
+      // User is already validated by GoogleStrategy
+      if (!user) {
+        return res.redirect(`${frontendUrl}/login?oauth=error&message=authentication_failed`);
+      }
 
-    // Generate JWT tokens
-    const tokens = await this.authService.generateTokens(user.id, user.email, userAgent, ipAddress, req);
+      const userAgent = req.headers['user-agent'];
+      const ipAddress = req.ip || req.socket.remoteAddress;
 
-    // Set HttpOnly cookies for both tokens
-    this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+      // Generate JWT tokens
+      const tokens = await this.authService.generateTokens(user.id, user.email, userAgent, ipAddress, req);
 
-    // Redirect to frontend dashboard
-    const frontendUrl = this.configService.corsOrigins[0] || 'http://localhost:3001';
-    res.redirect(`${frontendUrl}/dashboard?oauth=success`);
+      // Set HttpOnly cookies for both tokens
+      this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+
+      // Redirect to frontend dashboard
+      return res.redirect(`${frontendUrl}/dashboard?oauth=success`);
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      return res.redirect(`${frontendUrl}/login?oauth=error&message=server_error`);
+    }
   }
 
   /**
@@ -412,20 +422,30 @@ export class AuthController {
   @Get('microsoft/callback')
   @UseGuards(AuthGuard('microsoft'))
   @ApiOperation({ summary: 'Microsoft OAuth callback' })
-  async microsoftCallback(@CurrentUser() user: any, @Res({ passthrough: true }) res: Response, @Req() req: Request) {
-    // User is already validated by MicrosoftStrategy
-    const userAgent = req.headers['user-agent'];
-    const ipAddress = req.ip || req.socket.remoteAddress;
+  async microsoftCallback(@CurrentUser() user: any, @Res() res: Response, @Req() req: Request) {
+    const frontendUrl = this.configService.appUrl || 'http://localhost:3001';
+    
+    try {
+      // User is already validated by MicrosoftStrategy
+      if (!user) {
+        return res.redirect(`${frontendUrl}/login?oauth=error&message=authentication_failed`);
+      }
 
-    // Generate JWT tokens
-    const tokens = await this.authService.generateTokens(user.id, user.email, userAgent, ipAddress, req);
+      const userAgent = req.headers['user-agent'];
+      const ipAddress = req.ip || req.socket.remoteAddress;
 
-    // Set HttpOnly cookies for both tokens
-    this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+      // Generate JWT tokens
+      const tokens = await this.authService.generateTokens(user.id, user.email, userAgent, ipAddress, req);
 
-    // Redirect to frontend dashboard
-    const frontendUrl = this.configService.corsOrigins[0] || 'http://localhost:3001';
-    res.redirect(`${frontendUrl}/dashboard?oauth=success`);
+      // Set HttpOnly cookies for both tokens
+      this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+
+      // Redirect to frontend dashboard
+      return res.redirect(`${frontendUrl}/dashboard?oauth=success`);
+    } catch (error) {
+      console.error('Microsoft OAuth callback error:', error);
+      return res.redirect(`${frontendUrl}/login?oauth=error&message=server_error`);
+    }
   }
 
   /**

@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { api } from '@/lib/api-client';
 import Link from 'next/link';
@@ -37,7 +37,9 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, user, clearAuth, hasHydrated } = useAuthStore();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, user, clearAuth, hasHydrated, setAuth } = useAuthStore();
+  const [isLoadingOAuth, setIsLoadingOAuth] = useState(false);
 
   // Auto-collapse sidebar in edit mode
   const isEditMode = pathname?.includes('/edit');
@@ -46,10 +48,32 @@ export default function DashboardLayout({
     // Wait for auth store to hydrate from localStorage before checking auth
     if (!hasHydrated) return;
 
-    if (!isAuthenticated) {
+    // Handle OAuth success - fetch user data from cookies
+    const oauthParam = searchParams.get('oauth');
+    if (oauthParam === 'success' && !isAuthenticated && !isLoadingOAuth) {
+      setIsLoadingOAuth(true);
+      
+      // Fetch user data using the HttpOnly cookie set by OAuth callback
+      api.auth.me()
+        .then((userData) => {
+          setAuth(userData);
+          // Remove oauth query param from URL
+          router.replace(pathname);
+        })
+        .catch((error) => {
+          console.error('OAuth authentication failed:', error);
+          router.push('/login?oauth=error');
+        })
+        .finally(() => {
+          setIsLoadingOAuth(false);
+        });
+      return;
+    }
+
+    if (!isAuthenticated && !isLoadingOAuth) {
       router.push('/login');
     }
-  }, [isAuthenticated, hasHydrated, router]);
+  }, [isAuthenticated, hasHydrated, router, searchParams, pathname, setAuth, isLoadingOAuth]);
 
   const handleLogout = async () => {
     try {
@@ -65,13 +89,15 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
-  // Show loading while hydrating or if not authenticated (redirect pending)
-  if (!hasHydrated || !isAuthenticated) {
+  // Show loading while hydrating, loading OAuth, or if not authenticated (redirect pending)
+  if (!hasHydrated || isLoadingOAuth || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/30">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Laden...</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {isLoadingOAuth ? 'Anmeldung wird abgeschlossen...' : 'Laden...'}
+          </p>
         </div>
       </div>
     );
