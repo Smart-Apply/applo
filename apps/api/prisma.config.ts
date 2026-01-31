@@ -1,4 +1,8 @@
 import { defineConfig } from '@prisma/config';
+import { config } from 'dotenv';
+
+// Load .env file for Prisma CLI commands
+config();
 
 /**
  * Prisma Configuration for Smart Apply API
