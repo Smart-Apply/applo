@@ -7,6 +7,8 @@ on:
       - '**.md'
       - 'docs/**'
       - '.github/ISSUE_TEMPLATE/**'
+  # Allow manual triggers from the Actions tab
+  workflow_dispatch:
 
 # Only allow one deployment at a time
 concurrency:

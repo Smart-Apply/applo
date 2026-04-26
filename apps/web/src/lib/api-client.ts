@@ -1,6 +1,6 @@
 /**
  * API Client for Smart Apply Backend
- * Base URL: http://localhost:3000/api/v1
+ * Base URL is resolved at runtime via getApiBaseUrl() (NEXT_PUBLIC_API_URL).
  */
 
 import type {
