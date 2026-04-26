@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger, type Provider } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -15,6 +15,42 @@ import { MicrosoftStrategy } from './strategies/microsoft.strategy';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '../config/config.service';
 import { ConfigModule } from '../config/config.module';
+
+/**
+ * OAuth strategies (Google, Microsoft) crash on instantiation when their
+ * client IDs are missing or empty. Wrap them as conditional providers so
+ * they're only registered when the necessary env vars are configured.
+ * This lets the API boot cleanly even if no OAuth provider is configured.
+ */
+const oauthLogger = new Logger('AuthModule');
+
+const googleStrategyProvider: Provider = {
+  provide: GoogleStrategy,
+  inject: [AuthService, ConfigService],
+  useFactory: (authService: AuthService, config: ConfigService) => {
+    if (!config.googleClientId || !config.googleClientSecret) {
+      oauthLogger.warn(
+        'Google OAuth disabled — set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable',
+      );
+      return null;
+    }
+    return new GoogleStrategy(authService, config);
+  },
+};
+
+const microsoftStrategyProvider: Provider = {
+  provide: MicrosoftStrategy,
+  inject: [AuthService, ConfigService],
+  useFactory: (authService: AuthService, config: ConfigService) => {
+    if (!config.azureAdClientId || !config.azureAdClientSecret) {
+      oauthLogger.warn(
+        'Microsoft OAuth disabled — set AZURE_AD_CLIENT_ID and AZURE_AD_CLIENT_SECRET to enable',
+      );
+      return null;
+    }
+    return new MicrosoftStrategy(authService, config);
+  },
+};
 
 @Module({
   imports: [
@@ -36,8 +72,8 @@ import { ConfigModule } from '../config/config.module';
     TwoFactorService,
     SessionCleanupCron,
     JwtStrategy,
-    GoogleStrategy,
-    MicrosoftStrategy,
+    googleStrategyProvider,
+    microsoftStrategyProvider,
     PrismaService,
     ConfigService,
   ],
