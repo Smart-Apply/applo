@@ -1,7 +1,14 @@
 // This file configures the initialization of Sentry on the BROWSER side.
 // Bundled into the client JS, runs in the user's browser.
-// Loaded automatically by `withSentryConfig` in next.config.ts.
+//
+// Filename `instrumentation-client.ts` is required by Next.js 15+ / Turbopack
+// (the legacy `sentry.client.config.ts` only works under Webpack).
+// See: https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation-client
 import * as Sentry from '@sentry/nextjs';
+
+// Re-export Sentry's router-transition hook so SDK can capture navigation spans.
+// Required since Sentry SDK v9+ in App Router projects.
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 

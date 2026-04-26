@@ -61,20 +61,6 @@ jobs:
           echo "sha_tag=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "date_tag=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
-      - name: Debug build-time variables
-        run: |
-          echo "PUBLIC_API_URL length: ${#PUBLIC_API_URL}"
-          echo "SENTRY_DSN_WEB length:  ${#SENTRY_DSN_WEB}"
-          echo "sha_tag:                ${{ steps.meta.outputs.sha_tag }}"
-          if [ -n "${SENTRY_DSN_WEB}" ]; then
-            echo "✅ SENTRY_DSN_WEB starts with: $(echo \"$SENTRY_DSN_WEB\" | cut -c1-15)..."
-          else
-            echo "❌ SENTRY_DSN_WEB is empty"
-          fi
-        env:
-          PUBLIC_API_URL: ${{ env.PUBLIC_API_URL }}
-          SENTRY_DSN_WEB: ${{ vars.SENTRY_DSN_WEB }}
-
       - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
@@ -94,10 +80,6 @@ jobs:
           context: .
           file: infra/Dockerfile.web
           push: true
-          # Disable build cache for this run so the ARG values actually
-          # get into the bundled JS (cache-from would reuse a layer
-          # whose ENV/ARG values were stamped at the previous build).
-          no-cache: true
           tags: |
             ${{ env.WEB_IMAGE }}:latest
             ${{ env.WEB_IMAGE }}:${{ steps.meta.outputs.sha_tag }}
