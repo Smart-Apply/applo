@@ -116,6 +116,13 @@ if [[ -L "/etc/nginx/sites-enabled/default" ]]; then
     $SUDO rm /etc/nginx/sites-enabled/default
 fi
 
+# Disable the legacy single-host nginx config (the new config in this repo
+# replaces it AND keeps the Azure FQDN working as a rollback path).
+if [[ -L "/etc/nginx/sites-enabled/smartapply" ]]; then
+    log "Disabling legacy /etc/nginx/sites-enabled/smartapply (its server block now lives in our config)"
+    $SUDO rm /etc/nginx/sites-enabled/smartapply
+fi
+
 log "Testing nginx config..."
 $SUDO nginx -t
 
