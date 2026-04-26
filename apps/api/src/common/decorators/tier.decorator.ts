@@ -10,12 +10,19 @@ export const REQUIRED_FEATURE_KEY = 'requiredFeature';
 
 /**
  * Usage action types
- * - coverLetter: KI cover letter generation
- * - resume: KI resume generation
- * - jobParsing: URL/text job parsing
- * - interview: Interview coaching sessions
+ * - application: Full application generation (cover-letter + resume), counted against
+ *   the rolling 24h cap (cost protection for free tier).
+ * - coverLetter: KI cover letter generation (monthly counter only).
+ * - resume: KI resume generation (monthly counter only).
+ * - jobParsing: URL/text job parsing.
+ * - interview: Interview coaching sessions.
  */
-export type UsageAction = 'coverLetter' | 'resume' | 'jobParsing' | 'interview';
+export type UsageAction =
+  | 'application'
+  | 'coverLetter'
+  | 'resume'
+  | 'jobParsing'
+  | 'interview';
 
 /**
  * Feature flags that can be checked

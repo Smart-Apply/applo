@@ -663,7 +663,11 @@ model SubscriptionUsage {
   resumesGenerated        Int          @default(0) // KI-Lebensläufe count
   jobParsingUsed          Int          @default(0) // URL/text parsing count
   interviewSessionsUsed   Int          @default(0) // Interview Coach sessions
-  
+
+  // Rolling 24h window (cost-protection cap, independent of monthly period)
+  dailyApplicationsUsed   Int          @default(0)
+  dailyWindowStart        DateTime     @default(now())
+
   // Period
   periodStart             DateTime
   periodEnd               DateTime

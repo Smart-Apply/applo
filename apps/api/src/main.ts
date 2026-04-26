@@ -288,7 +288,7 @@ async function bootstrap() {
     .addTag('security', 'Security endpoints (CSP violation reporting)')
     // Server URLs
     .addServer('http://localhost:3000', 'Local Development')
-    .addServer('https://api.smartapply.com', 'Production')
+    .addServer('https://api.smart-apply.io', 'Production')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig, {

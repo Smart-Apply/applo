@@ -527,19 +527,19 @@ export default function Home() {
           <div className="container px-4 md:px-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-white">
               <p className="font-poppins font-semibold text-sm md:text-xl">
-                Copyright © 2025 SmartApply
+                Copyright © {new Date().getFullYear()} SmartApply
               </p>
               
               <div className="flex items-center gap-6 md:gap-12">
-                <a href="#" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
+                <Link href="/datenschutz" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
                   Datenschutz
-                </a>
-                <a href="#" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
+                </Link>
+                <Link href="/agb" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
                   AGB
-                </a>
-                <a href="#" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
+                </Link>
+                <Link href="/impressum" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
                   Impressum
-                </a>
+                </Link>
               </div>
               
               <div className="flex items-center gap-2">

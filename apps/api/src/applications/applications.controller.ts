@@ -22,6 +22,8 @@ import { Response } from 'express';
 import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { UsageLimitGuard } from '../common/guards/usage-limit.guard';
+import { CheckUsage } from '../common/decorators/tier.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PaginationQueryDto } from '../common/dto';
 import { ApplicationsService } from './applications.service';
@@ -50,6 +52,8 @@ export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
   @Post()
+  @UseGuards(UsageLimitGuard)
+  @CheckUsage('application')
   @ApiOperation({
     summary: 'Create a new application',
     description:
@@ -77,6 +81,8 @@ export class ApplicationsController {
   }
 
   @Post('create-with-generation')
+  @UseGuards(UsageLimitGuard)
+  @CheckUsage('application')
   @ApiOperation({
     summary: 'Create application with immediate LLM generation',
     description:

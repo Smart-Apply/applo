@@ -97,10 +97,13 @@ const envSchema = z.object({
     .transform((val) => val === 'true'),
 
   // Rate Limiting - Default (general API endpoints)
+  // PRODUCTION RECOMMENDATION: set RATE_LIMIT_TTL=900 (15min) and RATE_LIMIT_MAX=300
+  // The dev defaults below are intentionally permissive to avoid blocking during local testing.
   RATE_LIMIT_TTL: z.string().default('60'), // 1 minute in seconds (shorter window for development)
   RATE_LIMIT_MAX: z.string().default('5000'), // Very high for development to avoid blocking during testing (lower in production)
 
   // Rate Limiting - Auth endpoints (stricter)
+  // PRODUCTION RECOMMENDATION: keep TTL=900 and set MAX=5
   RATE_LIMIT_AUTH_TTL: z.string().default('900'), // 15 minutes in seconds
   RATE_LIMIT_AUTH_MAX: z.string().default('10'), // Increased from 5 to 10 for development
 
@@ -144,6 +147,10 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('noreply@example.com'),
   APP_URL: z.string().default('http://localhost:3001'), // Frontend URL for email links
+
+  // Public base URL of the API (used for OAuth callback URLs in production)
+  // In dev, defaults to http://localhost:${PORT}; in prod, set to https://api.<your-domain>
+  API_BASE_URL: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

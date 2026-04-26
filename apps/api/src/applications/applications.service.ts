@@ -19,6 +19,7 @@ import { LLMService, KeywordMatch } from '../llm/llm.service';
 import { TitleGeneratorService } from './title-generator.service';
 import { KeywordsService } from '../keywords/keywords.service';
 import { TemplatesService } from '../templates/templates.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { ATSAgentOutput } from '../agents/agents.interface';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
@@ -68,6 +69,7 @@ export class ApplicationsService {
     private readonly titleGenerator: TitleGeneratorService,
     private readonly keywordsService: KeywordsService,
     private readonly templatesService: TemplatesService,
+    private readonly subscriptionService: SubscriptionService,
   ) {}
 
   private async getProfileWithRelations(userId: string): Promise<ProfileWithRelations> {
@@ -1046,6 +1048,17 @@ Summary: ${resume.summary || 'Not provided'}
       this.logger.log(
         `Application ${application.id} generated successfully in ${duration}ms (coverLetter: ${shouldGenerateCoverLetter})`,
       );
+
+      // Record usage AFTER success so failed generations don't burn the cap.
+      // Best-effort: a failure here must not break the user-facing response.
+      try {
+        await this.subscriptionService.recordUsage(userId, 'application');
+      } catch (usageError) {
+        this.logger.warn(
+          `Failed to record usage for user ${userId} (application ${application.id})`,
+          usageError,
+        );
+      }
 
       return this.mapToResponseDto(updatedApplication);
     } catch (error) {

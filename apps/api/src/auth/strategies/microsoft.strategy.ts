@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-microsoft';
 import { ConfigService } from '../../config/config.service';
@@ -12,6 +12,8 @@ import { OAuthProviderType } from '../dto/oauth.dto';
  */
 @Injectable()
 export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
+  private readonly logger = new Logger(MicrosoftStrategy.name);
+
   constructor(
     private authService: AuthService,
     private configService: ConfigService,
@@ -41,23 +43,23 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
     done: (error: any, user?: any) => void,
   ): Promise<any> {
     try {
-      console.log('Microsoft profile received:', JSON.stringify(profile, null, 2));
-      
+      this.logger.debug(`Microsoft profile received: id=${profile?.id}`);
+
       // passport-microsoft profile structure:
       // { id, displayName, name: { familyName, givenName }, emails: [{ type, value }], _json: {...} }
       const id = profile.id;
       const displayName = profile.displayName;
       const firstName = profile.name?.givenName || profile._json?.givenName;
       const lastName = profile.name?.familyName || profile._json?.surname;
-      
+
       // Email can be in emails array or in _json
       let email = profile.emails?.[0]?.value;
       if (!email && profile._json) {
         email = profile._json.mail || profile._json.userPrincipalName;
       }
-      
+
       if (!email) {
-        console.error('No email found in Microsoft profile:', profile);
+        this.logger.error(`No email found in Microsoft profile (id=${profile?.id})`);
         return done(new Error('Email not provided by Microsoft'), false);
       }
 
@@ -74,7 +76,7 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
 
       return done(null, user);
     } catch (error) {
-      console.error('Microsoft OAuth validation error:', error);
+      this.logger.error('Microsoft OAuth validation error', error as Error);
       return done(error as Error, false);
     }
   }

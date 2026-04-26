@@ -517,6 +517,33 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
+    /**
+     * Export all personal data as a JSON file (GDPR Art. 15 / Art. 20).
+     * Triggers a browser download via a temporary anchor element.
+     */
+    exportData: async (): Promise<void> => {
+      const baseUrl = await getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/auth/export`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        throw new ApiError(res.status, res.statusText, {
+          message: 'Failed to export data',
+        });
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const date = new Date().toISOString().split('T')[0];
+      a.download = `smart-apply-export-${date}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+
     // Email verification
     sendVerificationEmail: () =>
       apiRequest<{ message: string }>('/auth/send-verification-email', {

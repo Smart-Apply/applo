@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionTier, SubscriptionStatus } from '../generated/prisma/client';
+import type { SubscriptionUsage } from '../generated/prisma/client';
 
 /**
  * Tier limits configuration
@@ -17,6 +18,10 @@ export interface TierLimits {
   resumesPerMonth: number; // -1 = unlimited
   jobParsingPerMonth: number; // URL parsing limit
   interviewSessionsPerMonth: number;
+
+  // Cost-protection cap (rolling 24h window): one "application" =
+  // create-with-generation call. -1 = unlimited.
+  applicationsPerDay: number;
 
   // Queue priority
   priority: 'low' | 'normal' | 'high';
@@ -56,10 +61,11 @@ export interface TierLimits {
 
 export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
   FREE: {
-    coverLettersPerMonth: 3,
-    resumesPerMonth: 3,
-    jobParsingPerMonth: 10,
+    coverLettersPerMonth: 30,
+    resumesPerMonth: 30,
+    jobParsingPerMonth: 30,
     interviewSessionsPerMonth: 0,
+    applicationsPerDay: 5,
     priority: 'low',
     features: {
       pdfExport: false,
@@ -86,6 +92,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: -1, // Unlimited
     jobParsingPerMonth: -1, // Unlimited
     interviewSessionsPerMonth: 0, // Not included in Pro
+    applicationsPerDay: -1,
     priority: 'normal',
     features: {
       pdfExport: true,
@@ -112,6 +119,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: -1, // Unlimited
     jobParsingPerMonth: -1, // Unlimited
     interviewSessionsPerMonth: -1, // Unlimited
+    applicationsPerDay: -1,
     priority: 'high',
     features: {
       pdfExport: true,
@@ -233,19 +241,28 @@ export class SubscriptionService {
    */
   async canPerformAction(
     userId: string,
-    action: 'coverLetter' | 'resume' | 'jobParsing' | 'interview',
+    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview',
   ): Promise<CanPerformActionResult> {
     const subscription = await this.getOrCreateSubscription(userId);
     const limits = this.getTierLimits(subscription.tier);
 
-    // Ensure usage period is current
-    const usage = await this.ensureCurrentUsagePeriod(subscription.id);
+    // Ensure usage period is current (monthly window)
+    let usage = await this.ensureCurrentUsagePeriod(subscription.id);
+    // Roll the rolling 24h daily window if needed
+    usage = await this.ensureCurrentDailyWindow(usage);
 
     let used: number;
     let limit: number;
     let actionName: string;
+    let isDaily = false;
 
     switch (action) {
+      case 'application':
+        used = usage.dailyApplicationsUsed;
+        limit = limits.applicationsPerDay;
+        actionName = 'Bewerbungen';
+        isDaily = true;
+        break;
       case 'coverLetter':
         used = usage.coverLettersGenerated;
         limit = limits.coverLettersPerMonth;
@@ -280,9 +297,10 @@ export class SubscriptionService {
     const remaining = Math.max(0, limit - used);
 
     if (remaining <= 0) {
+      const window = isDaily ? 'tägliches' : 'monatliches';
       return {
         allowed: false,
-        reason: `Du hast dein monatliches Limit von ${limit} ${actionName} erreicht. Upgrade für mehr.`,
+        reason: `Du hast dein ${window} Limit von ${limit} ${actionName} erreicht. Bitte versuche es später erneut.`,
         remaining: 0,
         limit,
       };
@@ -301,14 +319,22 @@ export class SubscriptionService {
    */
   async recordUsage(
     userId: string,
-    action: 'coverLetter' | 'resume' | 'jobParsing' | 'interview',
+    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview',
   ): Promise<void> {
     const subscription = await this.getOrCreateSubscription(userId);
-    const usage = await this.ensureCurrentUsagePeriod(subscription.id);
+    let usage = await this.ensureCurrentUsagePeriod(subscription.id);
+    usage = await this.ensureCurrentDailyWindow(usage);
 
     const updateData: Record<string, { increment: number }> = {};
 
     switch (action) {
+      case 'application':
+        // One full "application generated" event — increments the daily
+        // cost-protection counter only. Per-document monthly counters are
+        // bumped separately by 'coverLetter' / 'resume' calls when those
+        // sub-steps actually run.
+        updateData.dailyApplicationsUsed = { increment: 1 };
+        break;
       case 'coverLetter':
         updateData.coverLettersGenerated = { increment: 1 };
         updateData.applicationsUsed = { increment: 1 }; // Also increment combined counter
@@ -338,7 +364,8 @@ export class SubscriptionService {
    */
   async getUsageStats(userId: string) {
     const subscription = await this.getOrCreateSubscription(userId);
-    const usage = await this.ensureCurrentUsagePeriod(subscription.id);
+    let usage = await this.ensureCurrentUsagePeriod(subscription.id);
+    usage = await this.ensureCurrentDailyWindow(usage);
     const limits = this.getTierLimits(subscription.tier);
 
     return {
@@ -375,6 +402,16 @@ export class SubscriptionService {
           limits.interviewSessionsPerMonth === -1
             ? -1
             : Math.max(0, limits.interviewSessionsPerMonth - usage.interviewSessionsUsed),
+      },
+      // Daily application cap (rolling 24h window, cost protection)
+      applicationsToday: {
+        used: usage.dailyApplicationsUsed,
+        limit: limits.applicationsPerDay,
+        remaining:
+          limits.applicationsPerDay === -1
+            ? -1
+            : Math.max(0, limits.applicationsPerDay - usage.dailyApplicationsUsed),
+        windowStart: usage.dailyWindowStart,
       },
       // Combined applications (cover letters + resumes for legacy compatibility)
       applications: {
@@ -460,5 +497,24 @@ export class SubscriptionService {
     const periodEnd = new Date(from);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
     return periodEnd;
+  }
+
+  /**
+   * Roll the rolling 24-hour daily window. If the existing window is older
+   * than 24 hours, reset the daily counter and stamp a fresh window start.
+   * Returns the (possibly updated) usage row.
+   */
+  private async ensureCurrentDailyWindow(usage: SubscriptionUsage): Promise<SubscriptionUsage> {
+    const ageMs = Date.now() - new Date(usage.dailyWindowStart).getTime();
+    if (ageMs < 24 * 60 * 60 * 1000) {
+      return usage;
+    }
+    return this.prisma.subscriptionUsage.update({
+      where: { id: usage.id },
+      data: {
+        dailyApplicationsUsed: 0,
+        dailyWindowStart: new Date(),
+      },
+    });
   }
 }

@@ -111,7 +111,7 @@ export class ConfigService {
   }
 
   get llmMaxTokensDefault(): number {
-    return parseInt(this.nestConfig.get('LLM_MAX_TOKENS_DEFAULT', { infer: true }) || '3000', 10);
+    return parseInt(this.nestConfig.get('LLM_MAX_TOKENS_DEFAULT', { infer: true }) || '2000', 10);
   }
 
   get logLlmCalls(): boolean {
@@ -186,19 +186,20 @@ export class ConfigService {
     return this.nestConfig.get('GOOGLE_CLIENT_SECRET', { infer: true });
   }
 
-  // OAuth Callback URLs (dynamically generated based on environment)
+  // Public base URL of the API (used for OAuth callbacks)
+  // Falls back to http://localhost:${PORT} when API_BASE_URL is not set (dev)
+  get apiBaseUrl(): string {
+    const fromEnv = this.nestConfig.get('API_BASE_URL', { infer: true });
+    return fromEnv || `http://localhost:${this.port}`;
+  }
+
+  // OAuth Callback URLs (built from API_BASE_URL, must match the URL registered with the provider)
   get googleCallbackUrl(): string {
-    const baseUrl = this.isProduction 
-      ? 'https://smartapply.app' // TODO: Replace with actual production URL
-      : `http://localhost:${this.port}`;
-    return `${baseUrl}/api/v1/auth/google/callback`;
+    return `${this.apiBaseUrl}/api/v1/auth/google/callback`;
   }
 
   get microsoftCallbackUrl(): string {
-    const baseUrl = this.isProduction
-      ? 'https://smartapply.app' // TODO: Replace with actual production URL
-      : `http://localhost:${this.port}`;
-    return `${baseUrl}/api/v1/auth/microsoft/callback`;
+    return `${this.apiBaseUrl}/api/v1/auth/microsoft/callback`;
   }
 
   // Security

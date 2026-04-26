@@ -546,6 +546,21 @@ export default function ApplicationResumeEditorPage() {
     return () => document.removeEventListener('keydown', handleKeyboardSave);
   }, [handleKeyboardSave]);
 
+  // Warn before tab close / refresh / external navigation when there are
+  // unsaved edits. Does not fire on Next.js soft navigations, but covers
+  // the most common data-loss scenarios.
+  useEffect(() => {
+    const hasUnsaved = hasResumeChanges || hasCoverChanges;
+    if (!hasUnsaved) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Required for Chrome to show the prompt
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasResumeChanges, hasCoverChanges]);
+
   if (isLoading) {
     return <CenteredLoader message="Lädt Bewerbungsdaten..." />;
   }

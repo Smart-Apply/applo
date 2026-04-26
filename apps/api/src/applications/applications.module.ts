@@ -6,6 +6,7 @@ import { LLMModule } from '../llm/llm.module';
 import { KeywordsModule } from '../keywords/keywords.module';
 import { AgentsModule } from '../agents/agents.module';
 import { TemplatesModule } from '../templates/templates.module';
+import { SubscriptionModule } from '../subscription/subscription.module';
 import { ApplicationsController } from './applications.controller';
 import { ApplicationsService } from './applications.service';
 import { TitleGeneratorService } from './title-generator.service';
@@ -19,6 +20,7 @@ import { TitleGeneratorService } from './title-generator.service';
     KeywordsModule,
     AgentsModule,
     TemplatesModule,
+    SubscriptionModule,
   ],
   controllers: [ApplicationsController],
   providers: [ApplicationsService, TitleGeneratorService],

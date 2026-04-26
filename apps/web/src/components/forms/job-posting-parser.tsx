@@ -39,6 +39,7 @@ interface JobPostingParserProps {
 export function JobPostingParser({ onSave }: JobPostingParserProps) {
   const [parsedData, setParsedData] = useState<JobPosting | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [urlParseFailed, setUrlParseFailed] = useState(false);
 
   const parseJobPosting = useParseJobPosting();
 
@@ -59,6 +60,7 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
 
   // Handle URL parsing
   const handleUrlParse = async (data: UrlFormData) => {
+    setUrlParseFailed(false);
     try {
       const result = await parseJobPosting.mutateAsync({ url: data.url });
       setParsedData(result);
@@ -72,9 +74,10 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
         description: result.description || '',
         requirements: Array.isArray(result.requirements) ? result.requirements.join('\n') : (result.requirements || ''),
       });
-    } catch (error) {
-      // Error toast is handled by the hook
-      console.error('Parse error:', error);
+    } catch {
+      // Toast handled by the mutation hook; surface a persistent inline
+      // fallback so the user knows the manual tab is available.
+      setUrlParseFailed(true);
     }
   };
 
@@ -126,6 +129,23 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
           </CardHeader>
           <CardContent>
             <form onSubmit={urlForm.handleSubmit(handleUrlParse)} className="space-y-4">
+              {urlParseFailed && (
+                <div
+                  role="alert"
+                  className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div>
+                      <p className="font-medium">Diese Stellenanzeige konnten wir nicht automatisch lesen.</p>
+                      <p className="mt-1">
+                        Manche Jobportale blockieren das Auslesen. Bitte wechsle
+                        zum Tab &bdquo;Manuell&ldquo; und kopiere den Text der Anzeige hinein.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div>
                 <Label htmlFor="url">Link zur Stellenanzeige</Label>
                 <p className="text-sm text-muted-foreground mb-2">

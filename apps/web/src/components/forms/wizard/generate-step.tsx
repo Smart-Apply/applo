@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { useProfile } from '@/hooks/use-profile';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCreateApplicationWithGeneration } from '@/hooks/use-applications';
 import { useCoverLetterTemplates, useResumeTemplates, getDefaultTemplate } from '@/hooks/use-templates';
+import { useUsage } from '@/hooks/use-usage';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -22,6 +23,7 @@ import {
   User,
   Briefcase,
   Loader2,
+  Check,
 } from 'lucide-react';
 import type { JobPosting, Template } from '@/types';
 
@@ -89,12 +91,29 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
   const createApplication = useCreateApplicationWithGeneration();
   const { data: coverLetterTemplates, isLoading: clLoading } = useCoverLetterTemplates();
   const { data: resumeTemplates, isLoading: rtLoading } = useResumeTemplates();
+  const dailyUsage = useUsage('applicationsToday');
 
   const [selectedResumeTemplateId, setSelectedResumeTemplateId] = useState<string | null>(null);
   const [generateCoverLetter, setGenerateCoverLetter] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState<ApplicationLanguage>('de');
   const [showAllTemplates, setShowAllTemplates] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Elapsed-time counter for the loading UI. Starts when generation begins
+  // and resets when the component unmounts or generation finishes.
+  const isGenerating = createApplication.isPending || isRedirecting;
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  useEffect(() => {
+    if (!isGenerating) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const start = Date.now();
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - start) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
   const resumeTemplateGroups = resumeTemplates ? groupTemplatesByBase(resumeTemplates) : [];
 
@@ -181,37 +200,89 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
 
   // ── Generating or redirecting: show loading UI ──
   if (createApplication.isPending || isRedirecting) {
+    // Estimated step durations (cumulative seconds). Heuristic only — the
+    // actual timing depends on the LLM. Tuned so users see steady progress
+    // for a typical 30–60s generation.
+    const STEPS: { label: string; doneAt: number }[] = [
+      { label: 'Profil und Stellenanzeige werden analysiert', doneAt: 6 },
+      { label: 'Anschreiben wird mit KI generiert', doneAt: 28 },
+      { label: 'Lebenslauf wird auf die Stelle zugeschnitten', doneAt: 50 },
+      { label: 'Dokumente werden gespeichert', doneAt: 60 },
+    ];
+
+    const currentStepIndex = STEPS.findIndex((s) => elapsedSeconds < s.doneAt);
+    const activeIndex = currentStepIndex === -1 ? STEPS.length - 1 : currentStepIndex;
+    const isOverdue = elapsedSeconds > 75;
+
     return (
       <Card className="shadow-soft border-border/50">
         <CardHeader>
           <CardTitle>Bewerbung wird erstellt...</CardTitle>
+          <CardDescription>
+            {isOverdue
+              ? 'Dauert länger als gewöhnlich, einen Moment noch …'
+              : 'Das dauert üblicherweise 30–60 Sekunden. Bitte schließ dieses Fenster nicht.'}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <p className="text-sm font-medium">Deine Bewerbung wird mit KI erstellt...</p>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <p className="text-sm font-medium">
+                  Deine Bewerbung wird mit KI erstellt...
+                </p>
+              </div>
+              <span
+                className="font-mono text-xs text-muted-foreground tabular-nums"
+                aria-live="polite"
+              >
+                {String(Math.floor(elapsedSeconds / 60)).padStart(1, '0')}:
+                {String(elapsedSeconds % 60).padStart(2, '0')}
+              </span>
             </div>
             <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full animate-progress" />
             </div>
-            <div className="space-y-1 text-sm text-muted-foreground">
-              <p className="flex items-center gap-2">
-                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                Lebenslauf wird vorbereitet
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:200ms]" />
-                Anschreiben wird mit KI generiert
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:400ms]" />
-                Dokumente werden gespeichert
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Dies kann bis zu 30 Sekunden dauern...
-            </p>
+            <ul className="space-y-2 text-sm">
+              {STEPS.map((step, i) => {
+                const isDone = i < activeIndex;
+                const isActive = i === activeIndex;
+                return (
+                  <li
+                    key={step.label}
+                    className={cn(
+                      'flex items-center gap-3 transition-colors',
+                      isDone
+                        ? 'text-foreground'
+                        : isActive
+                          ? 'text-foreground font-medium'
+                          : 'text-muted-foreground/70',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors',
+                        isDone
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : isActive
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-muted-foreground/30 text-muted-foreground/50',
+                      )}
+                    >
+                      {isDone ? (
+                        <Check className="h-3 w-3" />
+                      ) : isActive ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                      )}
+                    </span>
+                    {step.label}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </CardContent>
       </Card>
@@ -357,12 +428,29 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
       </Card>
 
       {/* Submit */}
-      <div className="flex justify-end">
+      <div className="flex flex-col items-end gap-2">
+        {!dailyUsage.isUnlimited && !dailyUsage.isLoading && (
+          <p
+            className={cn(
+              'text-xs',
+              dailyUsage.isExhausted
+                ? 'text-destructive font-medium'
+                : dailyUsage.isLow
+                  ? 'text-amber-600 font-medium'
+                  : 'text-muted-foreground',
+            )}
+          >
+            {dailyUsage.isExhausted
+              ? `Tageslimit erreicht (${dailyUsage.used}/${dailyUsage.limit}). Bitte komm in 24 Stunden wieder.`
+              : `Heute noch ${dailyUsage.remaining} von ${dailyUsage.limit} Bewerbungen möglich`}
+          </p>
+        )}
         <SubmitButton
           onClick={handleSubmit}
           isLoading={createApplication.isPending}
           loadingText="Erstelle Bewerbung..."
           size="lg"
+          disabled={dailyUsage.isExhausted}
           className="shadow-lg hover:shadow-xl transition-all"
         >
           Bewerbung erstellen

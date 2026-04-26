@@ -12,6 +12,7 @@ import {
   UnauthorizedException,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -35,6 +36,8 @@ import { ConfigService } from '../config/config.service';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private authService: AuthService,
     private configService: ConfigService,
@@ -297,6 +300,25 @@ export class AuthController {
     return { message: 'Account deleted successfully' };
   }
 
+  /**
+   * GDPR Art. 15 / Art. 20 — Export all personal data as a downloadable JSON file.
+   * Sensitive credentials (password hashes, raw tokens, encrypted 2FA secrets)
+   * are excluded from the export for security.
+   */
+  @Get('export')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Export all personal data as a JSON file (GDPR Art. 15 / Art. 20)' })
+  async exportData(@CurrentUser() user: any, @Res() res: Response) {
+    const data = await this.authService.exportUserData(user.id);
+    const date = new Date().toISOString().split('T')[0];
+    const filename = `smart-apply-export-${date}.json`;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(JSON.stringify(data, null, 2));
+  }
+
   // ==========================================
   // Email Verification Endpoints
   // ==========================================
@@ -393,10 +415,10 @@ export class AuthController {
       // Set HttpOnly cookies for both tokens
       this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
 
-      // Redirect to frontend dashboard
-      return res.redirect(`${frontendUrl}/dashboard?oauth=success`);
+      // Redirect to onboarding (which auto-bounces to dashboard if profile already exists)
+      return res.redirect(`${frontendUrl}/onboarding?oauth=success`);
     } catch (error) {
-      console.error('Google OAuth callback error:', error);
+      this.logger.error('Google OAuth callback error', error as Error);
       return res.redirect(`${frontendUrl}/login?oauth=error&message=server_error`);
     }
   }
@@ -440,10 +462,10 @@ export class AuthController {
       // Set HttpOnly cookies for both tokens
       this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
 
-      // Redirect to frontend dashboard
-      return res.redirect(`${frontendUrl}/dashboard?oauth=success`);
+      // Redirect to onboarding (which auto-bounces to dashboard if profile already exists)
+      return res.redirect(`${frontendUrl}/onboarding?oauth=success`);
     } catch (error) {
-      console.error('Microsoft OAuth callback error:', error);
+      this.logger.error('Microsoft OAuth callback error', error as Error);
       return res.redirect(`${frontendUrl}/login?oauth=error&message=server_error`);
     }
   }

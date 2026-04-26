@@ -28,6 +28,7 @@ export function JobStep({ onJobCreated }: JobStepProps) {
   const [parsedData, setParsedData] = useState<JobPosting | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('url');
+  const [urlParseFailed, setUrlParseFailed] = useState(false);
 
   const parseJobPosting = useParseJobPosting();
   const createJobPosting = useCreateJobPosting();
@@ -55,13 +56,16 @@ export function JobStep({ onJobCreated }: JobStepProps) {
   });
 
   const handleUrlParse = async (data: JobPostingUrlFormValues) => {
+    setUrlParseFailed(false);
     try {
       const result = await parseJobPosting.mutateAsync({ url: data.url });
       setParsedData(result);
       // The parse endpoint already saves the job posting
       onJobCreated(result);
     } catch {
-      // Error handled by hook
+      // The hook already shows a toast; surface a persistent inline
+      // fallback so the user knows they can switch to the text tab.
+      setUrlParseFailed(true);
     }
   };
 
@@ -170,6 +174,28 @@ export function JobStep({ onJobCreated }: JobStepProps) {
 
           {/* URL Tab */}
           <TabsContent value="url" className="space-y-4">
+            {urlParseFailed && (
+              <div
+                role="alert"
+                className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
+              >
+                <p className="font-medium">Diese Stellenanzeige konnten wir nicht automatisch lesen.</p>
+                <p className="mt-1">
+                  Manche Jobportale blockieren das Auslesen. Bitte kopiere den Text
+                  der Anzeige und füge ihn im Tab &bdquo;Text einfügen&ldquo; ein.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('text');
+                    setUrlParseFailed(false);
+                  }}
+                  className="mt-2 inline-flex font-medium text-amber-900 underline underline-offset-2 hover:text-amber-950"
+                >
+                  Zum Text-Tab wechseln →
+                </button>
+              </div>
+            )}
             <form onSubmit={urlForm.handleSubmit(handleUrlParse)} className="space-y-4">
               <div>
                 <Label htmlFor="url">Link zur Stellenanzeige</Label>

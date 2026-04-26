@@ -38,7 +38,7 @@ interface UsageResult {
  * }
  * ```
  */
-export function useUsage(action: 'application' | 'interview'): UsageResult {
+export function useUsage(action: 'application' | 'interview' | 'applicationsToday'): UsageResult {
   const { usage, isLoading } = useSubscription();
 
   const result = useMemo(() => {
@@ -56,7 +56,27 @@ export function useUsage(action: 'application' | 'interview'): UsageResult {
       };
     }
 
-    const stats = action === 'application' ? usage.applications : usage.interviewSessions;
+    const stats =
+      action === 'application'
+        ? usage.applications
+        : action === 'applicationsToday'
+          ? usage.applicationsToday
+          : usage.interviewSessions;
+
+    if (!stats) {
+      // Field not yet available from backend (e.g. older API version)
+      return {
+        used: 0,
+        limit: -1,
+        remaining: -1,
+        percentage: 0,
+        isUnlimited: true,
+        isExhausted: false,
+        isLow: false,
+        isLoading,
+      };
+    }
+
     const { used, limit, remaining } = stats;
 
     // -1 means unlimited

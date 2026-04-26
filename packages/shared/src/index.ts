@@ -55,11 +55,18 @@ export interface UsageStat {
   remaining: number;
 }
 
+export interface DailyUsageStat extends UsageStat {
+  /** Start of the rolling 24h window (ISO timestamp) */
+  windowStart: string;
+}
+
 export interface SubscriptionUsageStats {
   tier: SubscriptionTier;
   status: SubscriptionStatus;
   applications: UsageStat;
   interviewSessions: UsageStat;
+  /** Rolling 24h cap on full application generations (cost protection) */
+  applicationsToday?: DailyUsageStat;
   periodStart: string;
   periodEnd: string;
   features: TierFeatures;

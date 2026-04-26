@@ -97,6 +97,7 @@ export function useSubscription() {
       ? {
           applications: subscription.applications,
           interviewSessions: subscription.interviewSessions,
+          applicationsToday: subscription.applicationsToday,
           periodStart: subscription.periodStart,
           periodEnd: subscription.periodEnd,
         }

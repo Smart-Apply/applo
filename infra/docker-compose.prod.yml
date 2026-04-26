@@ -34,7 +34,9 @@ services:
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
       CHROMIUM_EXECUTABLE_PATH: /usr/bin/chromium-browser
     ports:
-      - "3000:3000"
+      # Bind only to localhost — nginx on the VM proxies public traffic to it.
+      # Prevents direct internet access to the API port (Cloudflare-bypass attacks).
+      - "127.0.0.1:3000:3000"
     volumes:
       - /home/azureuser/smart-apply/storage:/app/storage
       - /home/azureuser/smart-apply/uploads:/app/uploads
@@ -57,7 +59,8 @@ services:
       PORT: 3001
       HOSTNAME: "0.0.0.0"
     ports:
-      - "3001:3001"
+      # Bind only to localhost — nginx on the VM proxies public traffic to it.
+      - "127.0.0.1:3001:3001"
     depends_on:
       - api
     healthcheck:

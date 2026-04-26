@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Shield, Bell, Palette, Trash2, ChevronRight, Loader2 } from 'lucide-react';
+import { User, Shield, Bell, Palette, Trash2, ChevronRight, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -41,6 +41,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoadingPreferences, setIsLoadingPreferences] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Form states
   const [firstName, setFirstName] = useState(user?.firstName || '');
@@ -548,6 +549,43 @@ export default function SettingsPage() {
                       onClick={() => handleUpdatePreference('analyticsEnabled', !preferences?.analyticsEnabled)}
                     >
                       {preferences?.analyticsEnabled ? 'Aktiviert' : 'Deaktiviert'}
+                    </Button>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <Label>Meine Daten exportieren</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Lade alle deine bei uns gespeicherten Daten als JSON-Datei herunter (DSGVO Art. 15 / 20).
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isExporting}
+                      onClick={async () => {
+                        setIsExporting(true);
+                        try {
+                          await api.auth.exportData();
+                          toast.success('Datenexport heruntergeladen');
+                        } catch {
+                          toast.error('Datenexport fehlgeschlagen. Bitte versuche es erneut.');
+                        } finally {
+                          setIsExporting(false);
+                        }
+                      }}
+                    >
+                      {isExporting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Wird vorbereitet...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-4 w-4" />
+                          Herunterladen
+                        </>
+                      )}
                     </Button>
                   </div>
                 </>

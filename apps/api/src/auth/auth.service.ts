@@ -1142,4 +1142,77 @@ export class AuthService {
       orderBy: { lastUsedAt: 'desc' },
     });
   }
+
+  // ==========================================
+  // GDPR Data Export (Art. 15 / Art. 20 DSGVO)
+  // ==========================================
+
+  /**
+   * Build a structured, machine-readable JSON export of all data we hold
+   * for the given user. Sensitive credential material (password hashes,
+   * raw tokens, encrypted 2FA secrets, OAuth tokens) is intentionally
+   * excluded — GDPR access right does not require disclosure of security
+   * material that would compromise the account if leaked.
+   */
+  async exportUserData(userId: string): Promise<Record<string, unknown>> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: {
+          include: {
+            skills: true,
+            certificates: true,
+            education: true,
+            experiences: true,
+            projects: true,
+            languages: true,
+          },
+        },
+        preferences: true,
+        jobPostings: true,
+        applications: true,
+        sessions: true,
+        auditLogs: { orderBy: { createdAt: 'desc' }, take: 500 },
+        subscription: { include: { usage: true } },
+        interviewSessions: { include: { questions: true, feedback: true } },
+        oauthProviders: {
+          select: {
+            provider: true,
+            email: true,
+            displayName: true,
+            avatarUrl: true,
+            lastUsedAt: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundWithCode(ErrorCode.USER_NOT_FOUND);
+    }
+
+    // Strip sensitive credential fields before returning
+    const {
+      password: _pw,
+      emailVerificationToken: _evt,
+      passwordResetToken: _prt,
+      ...userPublic
+    } = user as Record<string, unknown> & {
+      password?: unknown;
+      emailVerificationToken?: unknown;
+      passwordResetToken?: unknown;
+    };
+
+    return {
+      meta: {
+        format: 'smart-apply.user-export.v1',
+        exportedAt: new Date().toISOString(),
+        notice:
+          'This file contains your personal data exported from Smart Apply per GDPR Art. 15 / Art. 20. ' +
+          'Sensitive credentials (password hashes, raw security tokens, encrypted 2FA secrets) are intentionally omitted.',
+      },
+      user: userPublic,
+    };
+  }
 }

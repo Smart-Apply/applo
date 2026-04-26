@@ -14,7 +14,16 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  VM_HOST: smartapplymvp.swedencentral.cloudapp.azure.com
+  # Override these via Repository Variables (Settings → Secrets and variables → Actions → Variables):
+  #   VM_HOST          — SSH target. Cloudflare cannot proxy SSH, so this stays
+  #                      pointed at the Azure FQDN even after domain cutover.
+  #   PUBLIC_API_URL   — baked into the web image at build time. Switch from
+  #                      the Azure FQDN to https://api.smart-apply.io/api/v1
+  #                      to migrate.
+  #   HEALTH_CHECK_HOST— hostname used for the post-deploy curl health check.
+  VM_HOST: ${{ vars.VM_HOST || 'smartapplymvp.swedencentral.cloudapp.azure.com' }}
+  HEALTH_CHECK_HOST: ${{ vars.HEALTH_CHECK_HOST || 'smartapplymvp.swedencentral.cloudapp.azure.com' }}
+  PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL || 'https://smartapplymvp.swedencentral.cloudapp.azure.com/api/v1' }}
   VM_USER: azureuser
   APP_DIR: /home/azureuser/smart-apply
   REGISTRY: ghcr.io
@@ -73,7 +82,7 @@ jobs:
             ${{ env.WEB_IMAGE }}:latest
             ${{ env.WEB_IMAGE }}:${{ steps.meta.outputs.sha_tag }}
           build-args: |
-            NEXT_PUBLIC_API_URL=https://smartapplymvp.swedencentral.cloudapp.azure.com/api/v1
+            NEXT_PUBLIC_API_URL=${{ env.PUBLIC_API_URL }}
           cache-from: type=registry,ref=${{ env.WEB_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.WEB_IMAGE }}:buildcache,mode=max
 
@@ -168,10 +177,10 @@ jobs:
 
       - name: Health Check
         run: |
-          echo "⏳ Verifying external health..."
+          echo "⏳ Verifying external health at ${{ env.HEALTH_CHECK_HOST }}..."
           sleep 5
           for i in {1..6}; do
-            if curl -sf --max-time 10 https://${{ env.VM_HOST }}/api/v1/health; then
+            if curl -sf --max-time 10 https://${{ env.HEALTH_CHECK_HOST }}/api/v1/health; then
               echo -e "\n✅ Health check passed!"
               exit 0
             fi
