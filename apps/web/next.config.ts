@@ -11,12 +11,23 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
-  
+
   // Standalone output for Docker deployment
   output: 'standalone',
-  
+
   // Monorepo file tracing
   outputFileTracingRoot: path.join(__dirname, "../../"),
+
+  // Explicitly forward NEXT_PUBLIC_* vars to the build.
+  // Required under Next 15+/Turbopack: unlike Webpack, Turbopack does NOT
+  // automatically inline shell env vars into the client bundle. Without
+  // this block, instrumentation-client.ts sees `process.env.NEXT_PUBLIC_*`
+  // as undefined → Sentry init becomes a no-op.
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? '',
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
+    NEXT_PUBLIC_SENTRY_RELEASE: process.env.NEXT_PUBLIC_SENTRY_RELEASE ?? '',
+  },
 
   // Enable gzip compression for production builds (default: true in production)
   // This compresses static assets and API responses, reducing bandwidth usage

@@ -84,12 +84,6 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
 WORKDIR /app
 RUN npm run shared:build
 
-# Sanity check: print which NEXT_PUBLIC_* vars are visible to the build.
-# Values are not printed (only lengths) to avoid logging the DSN.
-RUN echo "[build-args] NEXT_PUBLIC_API_URL length: ${#NEXT_PUBLIC_API_URL}" && \
-    echo "[build-args] NEXT_PUBLIC_SENTRY_DSN length: ${#NEXT_PUBLIC_SENTRY_DSN}" && \
-    echo "[build-args] NEXT_PUBLIC_SENTRY_RELEASE: ${NEXT_PUBLIC_SENTRY_RELEASE:-<empty>}"
-
 # Build the Next.js app
 WORKDIR /app/apps/web
 RUN npm run build
