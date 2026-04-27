@@ -14,12 +14,17 @@ const THROTTLER_SKIP = 'THROTTLER:SKIP';
  * 3. Logs rate limit violations for audit purposes
  * 4. Exposes comprehensive rate limit headers (X-RateLimit-*)
  *
- * IMPORTANT: Unlike the default ThrottlerGuard which applies ALL throttlers,
- * this guard applies only the DEFAULT throttler unless @UseThrottler('name')
- * explicitly specifies a different one. This prevents the strict 'auth' throttler
- * from being applied to all endpoints.
+ * IMPORTANT: Unlike the default ThrottlerGuard which applies ALL throttlers
+ * configured in the module, this guard runs exactly ONE throttler per
+ * request — the 'default' throttler, unless `@UseThrottler('name')` selects
+ * a different one. This is what prevents the strict 'auth' / 'email' /
+ * 'resume-parser' throttlers from being applied to every endpoint they
+ * weren't intended for. (A previous version only documented this behavior
+ * but never actually overrode `getThrottlers()`, which silently capped
+ * every endpoint at the smallest configured limit.)
  *
- * Note: @nestjs/throttler v6 changed the handleRequest signature to use ThrottlerRequest
+ * Note: @nestjs/throttler v6 changed the handleRequest signature to use
+ * ThrottlerRequest.
  */
 @Injectable()
 export class CustomThrottlerGuard extends ThrottlerGuard {
@@ -27,6 +32,44 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
 
   @Inject(AuditLoggerService)
   private readonly auditLogger: AuditLoggerService;
+
+  /**
+   * Restrict the throttlers that run on this request to exactly one.
+   *
+   * The base class iterates over every entry returned here and calls
+   * `handleRequest` once per throttler — meaning the strictest configured
+   * throttler always wins, even on routes that should be unaffected by it.
+   * By filtering down to a single entry we get true per-route isolation:
+   * the route picks its bucket via @UseThrottler('name'), and other
+   * buckets (e.g. 'email' with limit=3) are completely untouched.
+   */
+  protected async getThrottlers(context: ExecutionContext): Promise<any[]> {
+    const allThrottlers = await super.getThrottlers(context);
+
+    const handler = context.getHandler();
+    const classRef = context.getClass();
+    const requestedName =
+      this.reflector.getAllAndOverride<string>(THROTTLER_NAME_KEY, [handler, classRef]) ||
+      'default';
+
+    const match = allThrottlers.find((t) => (t.name || 'default') === requestedName);
+
+    // Fall back to the default throttler if the requested one isn't
+    // configured. Last resort: first entry, so we never run zero
+    // throttlers on a misconfigured route (which would silently disable
+    // rate limiting).
+    if (match) return [match];
+
+    const fallback = allThrottlers.find((t) => (t.name || 'default') === 'default');
+    if (fallback) {
+      this.logger.warn(
+        `Throttler '${requestedName}' not found, falling back to 'default' for ${context.getClass().name}.${context.getHandler().name}`,
+      );
+      return [fallback];
+    }
+
+    return allThrottlers.slice(0, 1);
+  }
 
   /**
    * Override canActivate to:
