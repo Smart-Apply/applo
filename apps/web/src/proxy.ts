@@ -46,16 +46,22 @@ export function proxy(_request: NextRequest) {
     ? `'self' ${apiOriginList} ws://localhost:3001 ws://localhost:3000`
     : `'self' ${apiOriginList}`;
 
+  // Cloudflare Turnstile (CAPTCHA on /register) loads its widget script
+  // and iframe from challenges.cloudflare.com. Without these allow-lists
+  // the CSP blocks both.
+  const turnstileOrigin = 'https://challenges.cloudflare.com';
+
   // Set CSP header dynamically based on runtime environment
   // Note: 'unsafe-eval' is required for Handlebars template compilation in the browser
   // This is needed for the template preview feature which renders Handlebars templates client-side
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+    `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${turnstileOrigin}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: https: ${apiOriginList}`,
     "font-src 'self' data:",
-    `connect-src ${connectSrc}`,
+    `connect-src ${connectSrc} ${turnstileOrigin}`,
+    `frame-src ${turnstileOrigin}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

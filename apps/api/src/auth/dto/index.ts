@@ -38,6 +38,16 @@ export class RegisterDto {
   @Sanitize()
   @IsString()
   lastName?: string;
+
+  @ApiProperty({
+    example: '0.XXXX...',
+    required: false,
+    description:
+      'Cloudflare Turnstile token from the frontend widget. Required in production when TURNSTILE_SECRET_KEY is configured; optional otherwise so local dev keeps working.',
+  })
+  @IsOptional()
+  @IsString()
+  turnstileToken?: string;
 }
 
 export class LoginDto {

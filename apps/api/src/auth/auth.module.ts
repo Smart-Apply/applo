@@ -12,6 +12,7 @@ import { SessionCleanupCron } from './session-cleanup.cron';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { MicrosoftStrategy } from './strategies/microsoft.strategy';
+import { CloudflareTurnstileService } from './services/cloudflare-turnstile.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '../config/config.service';
 import { ConfigModule } from '../config/config.module';
@@ -74,6 +75,7 @@ const microsoftStrategyProvider: Provider = {
     JwtStrategy,
     googleStrategyProvider,
     microsoftStrategyProvider,
+    CloudflareTurnstileService,
     PrismaService,
     ConfigService,
   ],

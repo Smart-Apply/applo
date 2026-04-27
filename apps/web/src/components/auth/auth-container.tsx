@@ -9,6 +9,7 @@ import { api, resetAuthRedirectFlag } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 import { TwoFactorChallengeForm } from '@/components/two-factor';
+import { TurnstileWidget, resetTurnstile } from '@/components/auth/turnstile-widget';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
 import {
@@ -40,6 +41,11 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [show2FAChallenge, setShow2FAChallenge] = useState(false);
   const [challengeToken, setChallengeToken] = useState<string | null>(null);
+  // Cloudflare Turnstile token for the registration form. The widget
+  // sets this asynchronously when the user (invisibly) passes the
+  // challenge. Cleared after a failed submit so the next attempt
+  // requires a fresh token.
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { setAuth, isAuthenticated, hasHydrated } = useAuthStore();
@@ -153,6 +159,10 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
         password: registerData.password,
         firstName: registerData.firstName || '',
         lastName: registerData.lastName || '',
+        // Optional — backend accepts unset (e.g. Turnstile not configured
+        // on this environment). When configured, missing/expired token
+        // is rejected with `code: 'CAPTCHA_FAILED'`.
+        turnstileToken: turnstileToken ?? undefined,
       });
       resetAuthRedirectFlag();
       setAuth(response.user);
@@ -160,8 +170,19 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       router.push('/onboarding');
     } catch (error: unknown) {
       const { ApiError, getErrorMessage } = await import('@/lib/errors');
+      // Reset the widget so the user can solve a fresh challenge —
+      // Cloudflare rejects reused tokens as "timeout-or-duplicate".
+      resetTurnstile();
+      setTurnstileToken(null);
+
       if (ApiError.isApiError(error)) {
-        if (error.status === 400 || error.status === 409) {
+        // Captcha-specific failure surfaces a tailored message.
+        if (error.data?.code === 'CAPTCHA_FAILED') {
+          toast.error(
+            error.data?.message ||
+              'Bot-Schutz fehlgeschlagen. Bitte aktualisiere die Seite und versuche es erneut.',
+          );
+        } else if (error.status === 400 || error.status === 409) {
           toast.error('Diese E-Mail-Adresse ist bereits registriert.');
         } else if (error.status === 429) {
           toast.error('Zu viele Registrierungsversuche. Bitte warte 15 Minuten.', {
@@ -569,6 +590,16 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                     Registrieren
                   </SubmitButton>
                 </div>
+
+                {/* Cloudflare Turnstile (invisible CAPTCHA). Renders nothing
+                    in dev when NEXT_PUBLIC_TURNSTILE_SITE_KEY is unset. In
+                    production it usually doesn't display visible chrome
+                    (interaction-only mode) — only when Cloudflare deems the
+                    visitor suspicious. The token feeds into onRegisterSubmit. */}
+                <TurnstileWidget
+                  className="mt-2 flex justify-center"
+                  onToken={setTurnstileToken}
+                />
               </form>
             </Form>
 

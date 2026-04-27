@@ -94,6 +94,7 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ env.PUBLIC_API_URL }}
             NEXT_PUBLIC_SENTRY_DSN=${{ vars.SENTRY_DSN_WEB }}
             NEXT_PUBLIC_SENTRY_RELEASE=${{ steps.meta.outputs.sha_tag }}
+            NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.TURNSTILE_SITE_KEY }}
           cache-from: type=registry,ref=${{ env.WEB_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.WEB_IMAGE }}:buildcache,mode=max
 

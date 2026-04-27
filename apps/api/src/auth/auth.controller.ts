@@ -10,6 +10,7 @@ import {
   Res,
   Req,
   UnauthorizedException,
+  ForbiddenException,
   HttpCode,
   HttpStatus,
   Logger,
@@ -18,6 +19,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
+import { CloudflareTurnstileService } from './services/cloudflare-turnstile.service';
 import {
   RegisterDto,
   LoginDto,
@@ -41,6 +43,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private configService: ConfigService,
+    private turnstileService: CloudflareTurnstileService,
   ) {}
 
   @Public()
@@ -52,6 +55,21 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    // Bot protection: verify Cloudflare Turnstile token before doing
+    // any work. Returns true if Turnstile isn't configured (dev/local).
+    const captchaOk = await this.turnstileService.verify(
+      dto.turnstileToken,
+      req.ip || req.socket.remoteAddress,
+    );
+    if (!captchaOk) {
+      throw new ForbiddenException({
+        message:
+          'Bot-Schutz fehlgeschlagen. Bitte aktualisiere die Seite und versuche es erneut.',
+        error: 'CAPTCHA_FAILED',
+        code: 'CAPTCHA_FAILED',
+      });
+    }
+
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip || req.socket.remoteAddress;
 

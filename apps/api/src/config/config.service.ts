@@ -321,4 +321,13 @@ export class ConfigService {
   get supportEmail(): string {
     return this.nestConfig.get('SUPPORT_EMAIL', { infer: true }) || this.emailFrom;
   }
+
+  /**
+   * Cloudflare Turnstile secret key. When unset, registration skips
+   * captcha verification (handy for local dev). Production must set this
+   * to actually block bot signups.
+   */
+  get turnstileSecretKey(): string | undefined {
+    return this.nestConfig.get('TURNSTILE_SECRET_KEY', { infer: true });
+  }
 }

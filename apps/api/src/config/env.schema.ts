@@ -153,6 +153,13 @@ const envSchema = z.object({
   // user messages.
   SUPPORT_EMAIL: z.string().optional(),
 
+  // Cloudflare Turnstile (invisible CAPTCHA) — protects /auth/register
+  // against bot signups that would drain the LLM budget.
+  // Get keys from https://dash.cloudflare.com/?to=/:account/turnstile
+  // When TURNSTILE_SECRET_KEY is unset, the backend skips verification
+  // and just logs a warning — useful for local dev without keys.
+  TURNSTILE_SECRET_KEY: z.string().optional(),
+
   // Public base URL of the API (used for OAuth callback URLs in production)
   // In dev, defaults to http://localhost:${PORT}; in prod, set to https://api.<your-domain>
   API_BASE_URL: z.string().optional(),
