@@ -25,26 +25,12 @@ interface AuthState {
 }
 
 /**
- * Tag the current Sentry scope with the logged-in user's id (and only the
- * id — never email or name, to keep PII out of the issue tracker).
- *
- * Loaded lazily so this module doesn't pull in @sentry/nextjs at the top
- * of every render path. Silently no-ops if Sentry isn't initialised
- * (e.g. local dev without DSN).
+ * Sentry-free no-op kept to preserve the call sites below. Restore the
+ * lazy `import('@sentry/nextjs').then(...)` here if frontend Sentry is
+ * re-enabled (see next.config.ts for context).
  */
-function setSentryUser(userId: string | null) {
-  if (typeof window === 'undefined') return;
-  import('@sentry/nextjs')
-    .then((Sentry) => {
-      if (userId) {
-        Sentry.setUser({ id: userId });
-      } else {
-        Sentry.setUser(null);
-      }
-    })
-    .catch(() => {
-      // Sentry not loaded — fine.
-    });
+function setSentryUser(_userId: string | null) {
+  // intentionally empty
 }
 
 export const useAuthStore = create<AuthState>()(

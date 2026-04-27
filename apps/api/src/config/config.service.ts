@@ -54,7 +54,7 @@ export class ConfigService {
   }
 
   // Storage
-  get storageDriver(): 'disk' | 'azure' {
+  get storageDriver(): 'disk' | 'azure' | 'r2' {
     return this.nestConfig.get('STORAGE_DRIVER', { infer: true });
   }
 
@@ -68,6 +68,41 @@ export class ConfigService {
 
   get azureStorageConnectionString(): string | undefined {
     return this.nestConfig.get('AZURE_STORAGE_CONNECTION_STRING', { infer: true });
+  }
+
+  // Cloudflare R2 (S3-compatible)
+  get r2AccountId(): string | undefined {
+    return this.nestConfig.get('R2_ACCOUNT_ID', { infer: true });
+  }
+
+  get r2AccessKeyId(): string | undefined {
+    return this.nestConfig.get('R2_ACCESS_KEY_ID', { infer: true });
+  }
+
+  get r2SecretAccessKey(): string | undefined {
+    return this.nestConfig.get('R2_SECRET_ACCESS_KEY', { infer: true });
+  }
+
+  get r2Bucket(): string {
+    return this.nestConfig.get('R2_BUCKET', { infer: true });
+  }
+
+  get r2Endpoint(): string | undefined {
+    return this.nestConfig.get('R2_ENDPOINT', { infer: true });
+  }
+
+  // Throttler storage backend
+  get throttlerStorage(): 'memory' | 'upstash' {
+    return this.nestConfig.get('THROTTLER_STORAGE', { infer: true });
+  }
+
+  // Upstash Redis (REST)
+  get upstashRedisRestUrl(): string | undefined {
+    return this.nestConfig.get('UPSTASH_REDIS_REST_URL', { infer: true });
+  }
+
+  get upstashRedisRestToken(): string | undefined {
+    return this.nestConfig.get('UPSTASH_REDIS_REST_TOKEN', { infer: true });
   }
 
   // Service Bus

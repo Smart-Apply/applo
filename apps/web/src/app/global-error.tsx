@@ -1,29 +1,19 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
-import { useEffect } from 'react';
 import NextError from 'next/error';
 
 /**
  * Next.js App Router global error boundary.
  * Catches errors that escape every other boundary (errors in the root layout,
- * top-level providers, etc.). Forwards them to Sentry, then renders a minimal
- * error page.
+ * top-level providers, etc.) and renders a minimal fallback page.
  *
- * Required by @sentry/nextjs to capture the rare class of errors that bubble
- * up past all other boundaries.
+ * Sentry was removed from the frontend (see next.config.ts). If you re-enable
+ * it, restore the `Sentry.captureException(error)` call inside a useEffect.
  */
-export default function GlobalError({
-  error,
-  reset,
-}: {
+export default function GlobalError(_: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
-
   return (
     <html lang="de">
       <body>

@@ -13,8 +13,15 @@ function safeOrigin(url: string | undefined): string | null {
   }
 }
 
-// Next.js 16 requires "proxy" named export instead of "middleware"
-export function proxy(_request: NextRequest) {
+// Edge Middleware (runs on Cloudflare Workers via OpenNext, and on the
+// Next.js Edge runtime when self-hosted).
+//
+// Why `middleware.ts` and not `proxy.ts`?
+//   Next.js 16 introduced `proxy.ts` which always runs on Node.js. The
+//   Cloudflare Workers runtime is V8-only and cannot run Node middleware,
+//   so we keep the legacy `middleware.ts` (Edge runtime) for portability.
+//   This file does no Node-specific work — just response header writes.
+export function middleware(_request: NextRequest) {
   const response = NextResponse.next();
 
   // ---- Build the list of allowed API origins for CSP ----
@@ -72,14 +79,8 @@ export function proxy(_request: NextRequest) {
   return response;
 }
 
-// Apply proxy to all routes.
-//
-// Runtime note: Next.js 16's `proxy` defaults to the Node.js runtime, but
-// Cloudflare Workers (OpenNext) only supports edge middleware. Since this
-// proxy only manipulates response headers (no Node APIs, no fs / crypto /
-// etc.), it converts cleanly to edge.
-export const runtime = 'edge';
-
+// Apply middleware to all routes. Edge runtime is the default for
+// `middleware.ts`, so no explicit `runtime` export is needed.
 export const config = {
   matcher: '/:path*',
 };

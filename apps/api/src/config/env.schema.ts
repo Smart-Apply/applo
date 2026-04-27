@@ -25,10 +25,25 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('15m'),
 
   // Storage
-  STORAGE_DRIVER: z.enum(['disk', 'azure']).default('disk'),
+  STORAGE_DRIVER: z.enum(['disk', 'azure', 'r2']).default('disk'),
   AZURE_STORAGE_ACCOUNT: z.string().optional(),
   AZURE_STORAGE_CONTAINER: z.string().default('smartapply'),
   AZURE_STORAGE_CONNECTION_STRING: z.string().optional(),
+
+  // Cloudflare R2 (S3-compatible) — used when STORAGE_DRIVER=r2
+  R2_ACCOUNT_ID: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET: z.string().default('smart-apply-prod'),
+  // Optional explicit endpoint override; otherwise built from R2_ACCOUNT_ID.
+  R2_ENDPOINT: z.string().optional(),
+
+  // Throttler storage backend (in-memory by default; "upstash" for distributed)
+  THROTTLER_STORAGE: z.enum(['memory', 'upstash']).default('memory'),
+
+  // Upstash Redis (REST) — used by THROTTLER_STORAGE=upstash and other features
+  UPSTASH_REDIS_REST_URL: z.string().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
   // Jobs / Queue
   JOBS_DRIVER: z.enum(['in-memory', 'service-bus']).default('in-memory'),

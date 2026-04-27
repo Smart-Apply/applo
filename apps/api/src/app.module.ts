@@ -27,6 +27,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
 import { InterviewsModule } from './interviews/interviews.module';
 import { EmailModule } from './email/email.module';
 import { ContactModule } from './contact/contact.module';
+import { UpstashThrottlerStorage } from './common/throttler/upstash-throttler-storage';
 
 @Module({
   imports: [
@@ -44,7 +45,16 @@ import { ContactModule } from './contact/contact.module';
         const developmentLimit = 10000000; // 10 million requests per minute in development
         const defaultLimit = isDevelopment ? developmentLimit : config.rateLimitMax;
 
+        // Distributed rate-limit storage when configured. Falls back to the
+        // built-in in-memory storage otherwise — fine for single-instance
+        // deployments or local dev.
+        const storage =
+          config.throttlerStorage === 'upstash'
+            ? new UpstashThrottlerStorage(config)
+            : undefined;
+
         return {
+          storage,
           throttlers: [
             {
               name: 'default',
