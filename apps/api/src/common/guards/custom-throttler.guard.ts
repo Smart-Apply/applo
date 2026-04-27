@@ -1,6 +1,5 @@
 import { Injectable, ExecutionContext, Inject, Logger } from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerException, ThrottlerRequest } from '@nestjs/throttler';
-import { Reflector } from '@nestjs/core';
 import { THROTTLER_NAME_KEY } from '../decorators/throttle.decorator';
 import { AuditLoggerService } from '../audit-logger';
 
@@ -14,14 +13,16 @@ const THROTTLER_SKIP = 'THROTTLER:SKIP';
  * 3. Logs rate limit violations for audit purposes
  * 4. Exposes comprehensive rate limit headers (X-RateLimit-*)
  *
- * IMPORTANT: Unlike the default ThrottlerGuard which applies ALL throttlers
- * configured in the module, this guard runs exactly ONE throttler per
- * request — the 'default' throttler, unless `@UseThrottler('name')` selects
- * a different one. This is what prevents the strict 'auth' / 'email' /
- * 'resume-parser' throttlers from being applied to every endpoint they
- * weren't intended for. (A previous version only documented this behavior
- * but never actually overrode `getThrottlers()`, which silently capped
- * every endpoint at the smallest configured limit.)
+ * IMPORTANT: The base ThrottlerGuard iterates over `this.throttlers` and
+ * calls `handleRequest` once PER THROTTLER. That means if you configure
+ * throttlers `default=100000`, `auth=5`, `email=3`, every endpoint is
+ * effectively capped at 3 — because the email bucket is incremented on
+ * every request too. ThrottlerGuard doesn't expose a `getThrottlers()`
+ * hook, so we intercept inside `handleRequest`: if the throttler being
+ * processed isn't the one this route asked for via `@UseThrottler('name')`
+ * (default: 'default'), we short-circuit and return `true` without
+ * touching storage. Only the requested throttler accounts for the
+ * request — yielding true per-route isolation.
  *
  * Note: @nestjs/throttler v6 changed the handleRequest signature to use
  * ThrottlerRequest.
@@ -32,44 +33,6 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
 
   @Inject(AuditLoggerService)
   private readonly auditLogger: AuditLoggerService;
-
-  /**
-   * Restrict the throttlers that run on this request to exactly one.
-   *
-   * The base class iterates over every entry returned here and calls
-   * `handleRequest` once per throttler — meaning the strictest configured
-   * throttler always wins, even on routes that should be unaffected by it.
-   * By filtering down to a single entry we get true per-route isolation:
-   * the route picks its bucket via @UseThrottler('name'), and other
-   * buckets (e.g. 'email' with limit=3) are completely untouched.
-   */
-  protected async getThrottlers(context: ExecutionContext): Promise<any[]> {
-    const allThrottlers = await super.getThrottlers(context);
-
-    const handler = context.getHandler();
-    const classRef = context.getClass();
-    const requestedName =
-      this.reflector.getAllAndOverride<string>(THROTTLER_NAME_KEY, [handler, classRef]) ||
-      'default';
-
-    const match = allThrottlers.find((t) => (t.name || 'default') === requestedName);
-
-    // Fall back to the default throttler if the requested one isn't
-    // configured. Last resort: first entry, so we never run zero
-    // throttlers on a misconfigured route (which would silently disable
-    // rate limiting).
-    if (match) return [match];
-
-    const fallback = allThrottlers.find((t) => (t.name || 'default') === 'default');
-    if (fallback) {
-      this.logger.warn(
-        `Throttler '${requestedName}' not found, falling back to 'default' for ${context.getClass().name}.${context.getHandler().name}`,
-      );
-      return [fallback];
-    }
-
-    return allThrottlers.slice(0, 1);
-  }
 
   /**
    * Override canActivate to:
@@ -102,20 +65,38 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
       return true;
     }
 
-    // Call parent's canActivate which will call handleRequest
+    // Call parent's canActivate which will call handleRequest for every
+    // configured throttler. We filter inside handleRequest below.
     return super.canActivate(context);
   }
 
   /**
-   * Override handleRequest with the new v6 signature (ThrottlerRequest)
-   * This is called by the parent's canActivate method for each throttler
+   * Override handleRequest with the v6 signature (ThrottlerRequest).
+   *
+   * Skips storage accounting for any throttler that isn't the one this
+   * route selected via @UseThrottler('name'). Without this filter, the
+   * strictest configured throttler caps every endpoint (see class-level
+   * comment).
    */
   protected async handleRequest(requestProps: ThrottlerRequest): Promise<boolean> {
     const { context, limit, ttl, throttler, blockDuration } = requestProps;
+
+    const handler = context.getHandler();
+    const classRef = context.getClass();
+    const requestedName =
+      this.reflector.getAllAndOverride<string>(THROTTLER_NAME_KEY, [handler, classRef]) ||
+      'default';
+
+    const currentName = throttler.name || 'default';
+    if (currentName !== requestedName) {
+      // Not the throttler this route asked for — skip without counting.
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
     const tracker = await this.getTracker(request);
-    const key = this.generateKey(context, tracker, throttler.name || 'default');
+    const key = this.generateKey(context, tracker, currentName);
 
     // Convert ttl to milliseconds if it's in seconds
     const ttlMs = ttl < 1000 ? ttl * 1000 : ttl;
@@ -127,7 +108,7 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
         ttlMs,
         limit,
         blockDuration,
-        throttler.name || 'default',
+        currentName,
       );
 
       // Check if limit exceeded
@@ -137,7 +118,7 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
         // Log rate limit violation
         this.logger.warn(
           `Rate limit exceeded - endpoint: ${request.url}, method: ${request.method}, ` +
-            `throttler: ${throttler.name}, limit: ${limit}, ttl: ${ttlMs}ms, ` +
+            `throttler: ${currentName}, limit: ${limit}, ttl: ${ttlMs}ms, ` +
             `tracker: ${tracker}, userId: ${user?.userId || 'anonymous'}, totalHits: ${totalHits}`,
         );
 
@@ -178,8 +159,8 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
    *
    * IMPORTANT: behind nginx + Cloudflare, `req.ip` only equals the real
    * client IP if `app.set('trust proxy', ...)` is enabled in main.ts.
-   * Without that, every connection looks like it comes from 127.0.0.1
-   * (nginx loopback) and ALL anonymous users would share one bucket.
+   * Without that, every connection looks like it comes from the proxy IP
+   * and ALL anonymous users would share one bucket.
    *
    * As a defense in depth, this method also reads the forwarded headers
    * directly so a misconfiguration of `trust proxy` doesn't immediately
