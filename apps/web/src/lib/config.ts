@@ -36,75 +36,84 @@ function saveCachedUrl(url: string): void {
 }
 
 /**
- * Fetch config from server
+ * Fetch config from server.
+ *
+ * Always hits `/api/config` (no HTTP cache) so a deploy that changes the
+ * API URL takes effect immediately on the next page load. The previous
+ * implementation used `cache: 'force-cache'` plus a permanent localStorage
+ * cache, which meant a stale API URL from a previous deploy would keep
+ * being used forever — and would then be blocked by CSP after we switched
+ * domains. See: CSP "Refused to connect" errors on the legacy Azure FQDN.
  */
 async function fetchConfig(): Promise<string> {
   try {
     const response = await fetch('/api/config', {
-      cache: 'force-cache', // Browser caches the response
+      cache: 'no-store',
     });
-    
+
     if (!response.ok) {
       throw new Error(`Config endpoint returned ${response.status}`);
     }
-    
+
     const config = await response.json();
     const url = config.apiUrl || defaultUrl;
-    
-    // Cache for future sessions
+
+    // Refresh cache for offline/fallback use only.
     saveCachedUrl(url);
     API_BASE_URL = url;
-    
+
     return url;
   } catch (error) {
     console.warn('Failed to fetch runtime config, using default:', error);
-    
+
     // Use cached URL as fallback
     const cached = loadCachedUrl();
     const fallbackUrl = cached || defaultUrl;
-    
+
     API_BASE_URL = fallbackUrl;
     return fallbackUrl;
   }
 }
 
 /**
- * Get API base URL with singleton pattern and caching
- * - First call: checks localStorage cache
- * - If no cache: fetches from /api/config endpoint
- * - Subsequent calls: returns in-memory cached value
+ * Get API base URL.
+ *
+ * - First call: kicks off a singleton fetch to `/api/config` (the source of
+ *   truth at runtime) and returns its result.
+ * - Subsequent calls: return the in-memory cached value.
+ *
+ * The localStorage cache is no longer trusted up front — it is only used as
+ * an offline fallback inside `fetchConfig()`. This prevents a stale cached
+ * URL from a previous deploy / domain from being used after a redeploy.
  */
 export async function getApiBaseUrl(): Promise<string> {
   // Return in-memory cached value immediately
   if (API_BASE_URL) return API_BASE_URL;
-  
-  // Check localStorage cache first (from previous session)
-  const cached = loadCachedUrl();
-  if (cached) {
-    API_BASE_URL = cached;
-    return cached;
-  }
-  
+
   // Singleton pattern: only one fetch request per session
   if (!configPromise) {
     configPromise = fetchConfig();
   }
-  
+
   return configPromise;
 }
 
 /**
  * Get API base URL synchronously (for OAuth redirects and other sync contexts)
- * Returns cached value or default URL - never waits for async fetch
+ * Returns cached value or default URL - never waits for async fetch.
+ *
+ * Note: this still consults localStorage because sync callers (e.g. OAuth
+ * redirects) cannot await `/api/config`. Async callers should prefer
+ * `getApiBaseUrl()` so they always get the live runtime value.
  */
 export function getApiBaseUrlSync(): string {
   if (API_BASE_URL) return API_BASE_URL;
-  
+
   const cached = loadCachedUrl();
   if (cached) {
     API_BASE_URL = cached;
     return cached;
   }
-  
+
   return defaultUrl;
 }

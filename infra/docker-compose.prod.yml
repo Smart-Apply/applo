@@ -58,6 +58,15 @@ services:
       NODE_ENV: production
       PORT: 3001
       HOSTNAME: "0.0.0.0"
+      # Runtime API URL surfaced to the browser via /api/config.
+      # The browser fetches this at page-load and uses it for all API calls,
+      # so this can be changed without rebuilding the image.
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.smart-apply.io/api/v1}
+      # Runtime CSP allow-list (comma-separated origins). Read by proxy.ts at
+      # request time, so it does NOT require a rebuild. List every origin the
+      # browser may call from this web app — current API domain plus any
+      # legacy hostnames still in use during a domain migration.
+      CSP_API_ORIGINS: ${CSP_API_ORIGINS:-https://api.smart-apply.io,https://smartapplymvp.swedencentral.cloudapp.azure.com}
     ports:
       # Bind only to localhost — nginx on the VM proxies public traffic to it.
       - "127.0.0.1:3001:3001"
