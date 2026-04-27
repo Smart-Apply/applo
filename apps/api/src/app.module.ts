@@ -26,6 +26,7 @@ import { TimeoutMiddleware, RequestIdMiddleware } from './common/middleware';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { InterviewsModule } from './interviews/interviews.module';
 import { EmailModule } from './email/email.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { EmailModule } from './email/email.module';
     UserPreferencesModule,
     InterviewsModule,
     EmailModule,
+    ContactModule,
     HealthModule,
   ],
   controllers: [CSPViolationController],

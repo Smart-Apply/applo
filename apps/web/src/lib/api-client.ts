@@ -948,4 +948,13 @@ export const api = {
         body: JSON.stringify(data),
       }),
   },
+
+  // Public landing-page contact form
+  contact: {
+    submit: (data: { name: string; email: string; message: string }) =>
+      apiRequest<{ ok: boolean; message: string }>('/contact', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
 };

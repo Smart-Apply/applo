@@ -34,7 +34,7 @@ export default function AgbPage() {
       <p>
         Diese Allgemeinen Geschäftsbedingungen (&bdquo;AGB&rdquo;) gelten für
         die Nutzung der Plattform &bdquo;Smart Apply&rdquo;, betrieben von
-        [BITTE EINFÜGEN: Vor- und Nachname], [BITTE EINFÜGEN: Anschrift]
+        Arianit Sheholli, [BITTE EINFÜGEN: Anschrift]
         (&bdquo;Anbieter&rdquo;), durch registrierte Nutzerinnen und Nutzer
         (&bdquo;Nutzer&rdquo;).
       </p>

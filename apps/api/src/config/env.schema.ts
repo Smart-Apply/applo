@@ -148,6 +148,11 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().default('noreply@example.com'),
   APP_URL: z.string().default('http://localhost:3001'), // Frontend URL for email links
 
+  // Inbox the public contact form forwards to. Defaults to EMAIL_FROM
+  // when not explicitly set so misconfiguration never silently drops
+  // user messages.
+  SUPPORT_EMAIL: z.string().optional(),
+
   // Public base URL of the API (used for OAuth callback URLs in production)
   // In dev, defaults to http://localhost:${PORT}; in prod, set to https://api.<your-domain>
   API_BASE_URL: z.string().optional(),

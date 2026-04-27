@@ -312,4 +312,13 @@ export class ConfigService {
   get appUrl(): string {
     return this.nestConfig.get('APP_URL', { infer: true });
   }
+
+  /**
+   * Inbox that the public /contact form forwards user submissions to.
+   * Falls back to `EMAIL_FROM` so we never silently drop messages on a
+   * partial deploy.
+   */
+  get supportEmail(): string {
+    return this.nestConfig.get('SUPPORT_EMAIL', { infer: true }) || this.emailFrom;
+  }
 }

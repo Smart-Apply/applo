@@ -165,12 +165,29 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
     } catch (error: unknown) {
       let message = 'Ein unbekannter Fehler ist aufgetreten';
       let applicationId: string | null = null;
+      let errorCode: string | undefined;
       if (error && typeof error === 'object') {
         const err = error as Record<string, unknown>;
         const errData = err.data as Record<string, unknown> | undefined;
         if (errData?.message) message = String(errData.message);
         else if (err.message) message = String(err.message);
         if (errData?.applicationId) applicationId = String(errData.applicationId);
+        if (errData?.code) errorCode = String(errData.code);
+        else if (errData?.error) errorCode = String(errData.error);
+      }
+
+      // Special-case: backend rejected because the user hasn't verified
+      // their email yet. Surface a tailored CTA pointing to the resend
+      // action in settings instead of a generic "Forbidden" toast.
+      if (errorCode === 'EMAIL_NOT_VERIFIED') {
+        toast.error(message, {
+          duration: 10000,
+          action: {
+            label: 'E-Mail erneut senden',
+            onClick: () => router.push('/settings?verify=resend'),
+          },
+        });
+        return;
       }
 
       if (applicationId) {

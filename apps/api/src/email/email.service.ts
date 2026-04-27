@@ -156,4 +156,50 @@ export class EmailService {
       },
     });
   }
+
+  /**
+   * Send a plain HTML email without going through the template registry.
+   *
+   * Used by flows that don't have a pre-registered Handlebars template,
+   * e.g. forwarding a contact-form submission to support. Same logging
+   * and "no API key configured → log-only" semantics as `sendEmail`.
+   */
+  async sendRawHtml(options: {
+    to: string;
+    subject: string;
+    html: string;
+    replyTo?: string;
+  }): Promise<boolean> {
+    const { to, subject, html, replyTo } = options;
+
+    if (!this.resend) {
+      this.logger.warn(
+        `[email-not-sent] No RESEND_API_KEY configured. Would have sent raw email to ${to}: "${subject}"`,
+      );
+      return true;
+    }
+
+    try {
+      const result = await this.resend.emails.send({
+        from: this.configService.emailFrom,
+        to,
+        subject,
+        html,
+        ...(replyTo ? { replyTo } : {}),
+      });
+
+      if (result.error) {
+        this.logger.error(
+          `Resend rejected raw email to ${to}: ${result.error.message ?? JSON.stringify(result.error)}`,
+        );
+        return false;
+      }
+
+      this.logger.log(`Raw email sent to ${to} (id=${result.data?.id ?? 'unknown'})`);
+      return true;
+    } catch (error) {
+      this.logger.error(`Network error sending raw email to ${to}`, error as Error);
+      return false;
+    }
+  }
 }

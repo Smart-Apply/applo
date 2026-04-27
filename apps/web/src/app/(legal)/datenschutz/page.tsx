@@ -36,14 +36,12 @@ export default function DatenschutzPage() {
       <p>
         Verantwortlich für die Datenverarbeitung auf dieser Website ist:
         <br />
-        [BITTE EINFÜGEN: Vor- und Nachname]
+        Arianit Sheholli
         <br />
         [BITTE EINFÜGEN: Straße, PLZ, Ort]
         <br />
         E-Mail:{" "}
-        <a href="mailto:[BITTE EINFÜGEN: support@deine-domain.de]">
-          [BITTE EINFÜGEN: support@deine-domain.de]
-        </a>
+        <a href="mailto:support@smart-apply.io">support@smart-apply.io</a>
       </p>
 
       <h2>2. Allgemeine Hinweise</h2>

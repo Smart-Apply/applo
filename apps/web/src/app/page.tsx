@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Linkedin, Globe, ChevronDown } from 'lucide-react';
+import { api } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 export default function Home() {
   const router = useRouter();
@@ -14,12 +16,42 @@ export default function Home() {
     email: '',
     message: '',
   });
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'pro' | 'premium'>('pro');
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Contact form submitted:', contactForm);
+
+    // Lightweight client-side guards. The backend re-validates with
+    // class-validator (length, email shape) and throttles per IP, so
+    // these only exist to give immediate feedback.
+    const name = contactForm.name.trim();
+    const email = contactForm.email.trim();
+    const message = contactForm.message.trim();
+    if (!name || !email || message.length < 10) {
+      toast.error('Bitte fülle alle Felder aus (Nachricht mindestens 10 Zeichen).');
+      return;
+    }
+
+    setIsSubmittingContact(true);
+    try {
+      const response = await api.contact.submit({ name, email, message });
+      if (response.ok) {
+        toast.success(response.message);
+        setContactForm({ name: '', email: '', message: '' });
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      const { ApiError, getErrorMessage } = await import('@/lib/errors');
+      if (ApiError.isApiError(error)) {
+        toast.error(getErrorMessage(error));
+      } else {
+        toast.error('Nachricht konnte nicht gesendet werden. Bitte versuche es später erneut.');
+      }
+    } finally {
+      setIsSubmittingContact(false);
+    }
   };
 
   const scrollToSection = (id: string) => {
@@ -471,7 +503,11 @@ export default function Home() {
                     placeholder="Dein Name"
                     value={contactForm.name}
                     onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                    className="w-full bg-transparent border-2 border-[#E5EEFD] rounded-xl px-4 py-2 text-white placeholder-white/70 font-poppins focus:outline-none focus:border-white"
+                    required
+                    minLength={1}
+                    maxLength={100}
+                    disabled={isSubmittingContact}
+                    className="w-full bg-transparent border-2 border-[#E5EEFD] rounded-xl px-4 py-2 text-white placeholder-white/70 font-poppins focus:outline-none focus:border-white disabled:opacity-60"
                   />
                 </div>
                 
@@ -482,7 +518,10 @@ export default function Home() {
                     placeholder="Deine E-Mail"
                     value={contactForm.email}
                     onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    className="w-full bg-transparent border-2 border-[#E5EEFD] rounded-xl px-4 py-2 text-white placeholder-white/70 font-poppins focus:outline-none focus:border-white"
+                    required
+                    maxLength={254}
+                    disabled={isSubmittingContact}
+                    className="w-full bg-transparent border-2 border-[#E5EEFD] rounded-xl px-4 py-2 text-white placeholder-white/70 font-poppins focus:outline-none focus:border-white disabled:opacity-60"
                   />
                 </div>
                 
@@ -493,16 +532,21 @@ export default function Home() {
                     rows={4}
                     value={contactForm.message}
                     onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                    className="w-full bg-transparent border-2 border-[#E5EEFD] rounded-xl px-4 py-2 text-white placeholder-white/70 font-poppins focus:outline-none focus:border-white resize-none"
+                    required
+                    minLength={10}
+                    maxLength={5000}
+                    disabled={isSubmittingContact}
+                    className="w-full bg-transparent border-2 border-[#E5EEFD] rounded-xl px-4 py-2 text-white placeholder-white/70 font-poppins focus:outline-none focus:border-white resize-none disabled:opacity-60"
                   />
                 </div>
                 
                 <div className="flex justify-end">
                   <Button 
                     type="submit"
-                    className="bg-white text-[#1B2A49] font-poppins font-semibold text-lg md:text-xl px-12 py-6 rounded-xl shadow-[0px_4px_4px_rgba(0,0,0,0.25)] hover:bg-gray-100 transition-colors"
+                    disabled={isSubmittingContact}
+                    className="bg-white text-[#1B2A49] font-poppins font-semibold text-lg md:text-xl px-12 py-6 rounded-xl shadow-[0px_4px_4px_rgba(0,0,0,0.25)] hover:bg-gray-100 transition-colors disabled:opacity-70"
                   >
-                    Senden
+                    {isSubmittingContact ? 'Senden…' : 'Senden'}
                   </Button>
                 </div>
               </form>
@@ -531,6 +575,9 @@ export default function Home() {
               </p>
               
               <div className="flex items-center gap-6 md:gap-12">
+                <Link href="/faq" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
+                  FAQ
+                </Link>
                 <Link href="/datenschutz" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
                   Datenschutz
                 </Link>

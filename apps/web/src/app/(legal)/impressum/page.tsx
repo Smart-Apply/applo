@@ -23,7 +23,7 @@ export default function ImpressumPage() {
 
       <h2>Angaben gemäß § 5 DDG</h2>
       <p>
-        [BITTE EINFÜGEN: Vor- und Nachname]
+        Arianit Sheholli
         <br />
         [BITTE EINFÜGEN: Straße und Hausnummer]
         <br />
@@ -35,16 +35,14 @@ export default function ImpressumPage() {
       <h2>Kontakt</h2>
       <p>
         E-Mail:{" "}
-        <a href="mailto:[BITTE EINFÜGEN: support@deine-domain.de]">
-          [BITTE EINFÜGEN: support@deine-domain.de]
-        </a>
+        <a href="mailto:support@smart-apply.io">support@smart-apply.io</a>
       </p>
 
       <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
       <p>
-        [BITTE EINFÜGEN: Vor- und Nachname]
+        Arianit Sheholli
         <br />
-        [BITTE EINFÜGEN: Adresse wie oben]
+        Adresse wie oben
       </p>
 
       <h2>EU-Streitschlichtung</h2>

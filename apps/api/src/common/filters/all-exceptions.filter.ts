@@ -137,6 +137,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
             method: request.method,
             url: request.url,
           });
+
+          // Tag with the authenticated user id (when present) so issues
+          // in Sentry can be attributed to a real account. We only send
+          // the id — never email or other PII — to keep the issue
+          // tracker clean of personal data.
+          const requestUser = (request as Request & { user?: { id?: string; userId?: string } })
+            .user;
+          const uid = requestUser?.id || requestUser?.userId;
+          if (uid) scope.setUser({ id: uid });
+
           if (exception instanceof Error) {
             Sentry.captureException(exception);
           } else {
