@@ -9,11 +9,10 @@ export const metadata: Metadata = {
 /**
  * Terms of Service (AGB) — MVP-friendly template for a free service.
  *
- * IMPORTANT — before going public:
- *   1. Fill in [BITTE EINFÜGEN] placeholders.
- *   2. If you ever introduce paid tiers, add a Widerrufsbelehrung
- *      (right of withdrawal) and update the liability/payment sections —
- *      consult a lawyer.
+ * IMPORTANT:
+ *   If you ever introduce paid tiers, add a Widerrufsbelehrung
+ *   (right of withdrawal) and update the liability/payment sections —
+ *   consult a lawyer.
  */
 export default function AgbPage() {
   return (
@@ -34,9 +33,9 @@ export default function AgbPage() {
       <p>
         Diese Allgemeinen Geschäftsbedingungen (&bdquo;AGB&rdquo;) gelten für
         die Nutzung der Plattform &bdquo;Smart Apply&rdquo;, betrieben von
-        Arianit Sheholli, [BITTE EINFÜGEN: Anschrift]
-        (&bdquo;Anbieter&rdquo;), durch registrierte Nutzerinnen und Nutzer
-        (&bdquo;Nutzer&rdquo;).
+        Arianit Sheholli, c/o IP-Management #9916, Ludwig-Erhard-Straße 18,
+        20459 Hamburg (&bdquo;Anbieter&rdquo;), durch registrierte Nutzerinnen
+        und Nutzer (&bdquo;Nutzer&rdquo;).
       </p>
 
       <h2>§ 2 Leistungsbeschreibung</h2>

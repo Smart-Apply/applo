@@ -10,11 +10,10 @@ export const metadata: Metadata = {
 /**
  * Privacy Policy (DSGVO Art. 13 / 14).
  *
- * IMPORTANT — before going public on Reddit:
- *   1. Fill in [BITTE EINFÜGEN] placeholders (responsible person, contact).
- *   2. Verify the list of sub-processors below matches what you actually
+ * IMPORTANT:
+ *   1. Verify the list of sub-processors below matches what you actually
  *      use in production. If you disable a service, remove its section.
- *   3. Have the final text reviewed by a lawyer or use a generator
+ *   2. Have the final text reviewed by a lawyer or use a generator
  *      such as e-recht24.de or datenschutz-generator.de for legal certainty.
  */
 export default function DatenschutzPage() {
@@ -38,7 +37,13 @@ export default function DatenschutzPage() {
         <br />
         Arianit Sheholli
         <br />
-        [BITTE EINFÜGEN: Straße, PLZ, Ort]
+        c/o IP-Management #9916
+        <br />
+        Ludwig-Erhard-Straße 18
+        <br />
+        20459 Hamburg
+        <br />
+        Deutschland
         <br />
         E-Mail:{" "}
         <a href="mailto:support@smart-apply.io">support@smart-apply.io</a>

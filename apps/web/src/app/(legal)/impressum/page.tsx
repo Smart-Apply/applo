@@ -9,12 +9,12 @@ export const metadata: Metadata = {
 /**
  * Impressum (TMG § 5 / DDG § 5).
  *
- * IMPORTANT — before going public on Reddit:
- *   1. Fill in EVERY [BITTE EINFÜGEN] placeholder below with real data.
- *   2. If you do not want to publish your private address, use an
- *      Impressum service (e.g. impressumspflicht.de, IT-Recht Kanzlei,
- *      Trusted Shops) and paste their provided address here instead.
- *   3. Have the final text reviewed by a lawyer if you offer paid services.
+ * Address provided by IP-Management Impressum service
+ * (https://www.impressum-privatschutz.de/) to keep the operator's private
+ * address out of the public registry. Renew the service subscription
+ * to keep the address valid; otherwise update this file.
+ *
+ * Have the final text reviewed by a lawyer if you offer paid services.
  */
 export default function ImpressumPage() {
   return (
@@ -25,9 +25,11 @@ export default function ImpressumPage() {
       <p>
         Arianit Sheholli
         <br />
-        [BITTE EINFÜGEN: Straße und Hausnummer]
+        c/o IP-Management #9916
         <br />
-        [BITTE EINFÜGEN: PLZ Ort]
+        Ludwig-Erhard-Straße 18
+        <br />
+        20459 Hamburg
         <br />
         Deutschland
       </p>
@@ -36,6 +38,15 @@ export default function ImpressumPage() {
       <p>
         E-Mail:{" "}
         <a href="mailto:support@smart-apply.io">support@smart-apply.io</a>
+        <br />
+        Telefon: <a href="tel:+4915159051609">+49 151 59051609</a>
+      </p>
+
+      <h2>Berufsbezeichnung und berufsrechtliche Regelungen</h2>
+      <p>
+        Berufsbezeichnung: Cloud Solution Architect
+        <br />
+        Verliehen in: Deutschland
       </p>
 
       <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
