@@ -22,10 +22,17 @@ env:
   #   PUBLIC_API_URL   — baked into the web image at build time. Switch from
   #                      the Azure FQDN to https://api.smart-apply.io/api/v1
   #                      to migrate.
+  #   CSP_API_ORIGINS  — comma-separated allow-list for the browser's CSP
+  #                      connect-src. Read at REQUEST time by proxy.ts (no
+  #                      rebuild needed). MUST list every API origin the web
+  #                      app will fetch from — current + legacy domains
+  #                      during migration. Example:
+  #                        https://api.smart-apply.io,https://smartapplymvp.swedencentral.cloudapp.azure.com
   #   HEALTH_CHECK_HOST— hostname used for the post-deploy curl health check.
   VM_HOST: ${{ vars.VM_HOST || 'smartapplymvp.swedencentral.cloudapp.azure.com' }}
   HEALTH_CHECK_HOST: ${{ vars.HEALTH_CHECK_HOST || 'smartapplymvp.swedencentral.cloudapp.azure.com' }}
   PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL || 'https://smartapplymvp.swedencentral.cloudapp.azure.com/api/v1' }}
+  CSP_API_ORIGINS: ${{ vars.CSP_API_ORIGINS || 'https://api.smart-apply.io,https://smartapplymvp.swedencentral.cloudapp.azure.com' }}
   VM_USER: azureuser
   APP_DIR: /home/azureuser/smart-apply
   REGISTRY: ghcr.io
@@ -106,9 +113,19 @@ jobs:
           port: 22
           timeout: 60s
           command_timeout: 10m
+          # Pass runtime env vars over SSH so docker-compose variable
+          # substitution (${NEXT_PUBLIC_API_URL:-...}, ${CSP_API_ORIGINS:-...})
+          # picks up the values configured in repo variables. These are
+          # consumed by the `web` service and read at request time by
+          # apps/web/src/proxy.ts — no image rebuild required to change them.
+          envs: PUBLIC_API_URL,CSP_API_ORIGINS
           script: |
             set -e
-            
+
+            # Map workflow env names → the names docker-compose.prod.yml expects.
+            export NEXT_PUBLIC_API_URL="$PUBLIC_API_URL"
+            export CSP_API_ORIGINS="$CSP_API_ORIGINS"
+
             cd /home/azureuser/smart-apply
             
             # Pull latest code (for docker-compose.prod.yml)
