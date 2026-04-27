@@ -3,6 +3,10 @@
 //
 // Filename `instrumentation-client.ts` is required by Next.js 15+ / Turbopack
 // (the legacy `sentry.client.config.ts` only works under Webpack).
+//
+// IMPORTANT: When the project uses a `src/` folder layout, this file MUST
+// live at `src/instrumentation-client.ts`. Next.js will silently ignore it
+// if it's at the project root while a `src/` folder exists.
 // See: https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation-client
 import * as Sentry from '@sentry/nextjs';
 
