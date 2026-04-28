@@ -46,7 +46,17 @@ const envSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
   // Jobs / Queue
-  JOBS_DRIVER: z.enum(['in-memory', 'service-bus']).default('in-memory'),
+  JOBS_DRIVER: z.enum(['in-memory', 'service-bus', 'qstash']).default('in-memory'),
+
+  // Upstash QStash — used when JOBS_DRIVER=qstash
+  // Get values at https://console.upstash.com/qstash
+  QSTASH_URL: z.string().optional(),
+  QSTASH_TOKEN: z.string().optional(),
+  QSTASH_CURRENT_SIGNING_KEY: z.string().optional(),
+  QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
+  // Public URL the QStash service should POST job webhooks to.
+  // Falls back to API_BASE_URL + '/api/v1/jobs/qstash-webhook' when unset.
+  QSTASH_WEBHOOK_URL: z.string().optional(),
 
   // Azure Service Bus
   SERVICE_BUS_CONNECTION_STRING: z.string().optional(),

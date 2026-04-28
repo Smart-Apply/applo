@@ -51,6 +51,11 @@ KEYS_TO_SYNC=(
   UPSTASH_REDIS_REST_TOKEN
   AZURE_OPENAI_API_VERSION
   CORS_ORIGINS
+  JOBS_DRIVER
+  QSTASH_URL
+  QSTASH_TOKEN
+  QSTASH_CURRENT_SIGNING_KEY
+  QSTASH_NEXT_SIGNING_KEY
 )
 
 # Keys forced to a specific production value (overrides whatever the local
@@ -59,6 +64,7 @@ KEYS_TO_SYNC=(
 FORCE_KV=(
   "STORAGE_DRIVER=r2"
   "THROTTLER_STORAGE=upstash"
+  "JOBS_DRIVER=qstash"
   # Production CORS allowlist — includes the Cloudflare Worker frontend
   # (default workers.dev URL) alongside the existing custom domains.
   # Update this when you switch the Worker to a custom domain.

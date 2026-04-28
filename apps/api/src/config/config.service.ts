@@ -175,8 +175,30 @@ export class ConfigService {
   }
 
   // Jobs
-  get jobsDriver(): 'in-memory' | 'service-bus' {
+  get jobsDriver(): 'in-memory' | 'service-bus' | 'qstash' {
     return this.nestConfig.get('JOBS_DRIVER', { infer: true });
+  }
+
+  // Upstash QStash (managed job queue, push-based)
+  get qstashUrl(): string | undefined {
+    return this.nestConfig.get('QSTASH_URL', { infer: true });
+  }
+
+  get qstashToken(): string | undefined {
+    return this.nestConfig.get('QSTASH_TOKEN', { infer: true });
+  }
+
+  get qstashCurrentSigningKey(): string | undefined {
+    return this.nestConfig.get('QSTASH_CURRENT_SIGNING_KEY', { infer: true });
+  }
+
+  get qstashNextSigningKey(): string | undefined {
+    return this.nestConfig.get('QSTASH_NEXT_SIGNING_KEY', { infer: true });
+  }
+
+  get qstashWebhookUrl(): string {
+    const explicit = this.nestConfig.get('QSTASH_WEBHOOK_URL', { infer: true });
+    return explicit || `${this.apiBaseUrl}/api/v1/jobs/qstash-webhook`;
   }
 
   // PDF

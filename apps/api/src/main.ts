@@ -33,6 +33,10 @@ async function bootstrap() {
   // This ensures logs are captured even during early bootstrap phase
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
+    // Enable per-request rawBody capture so the QStash webhook controller
+    // can verify Upstash-Signature against the unparsed payload bytes.
+    // Has near-zero overhead for routes that don't read req.rawBody.
+    rawBody: true,
   });
 
   // Use Pino logger as the global logger
