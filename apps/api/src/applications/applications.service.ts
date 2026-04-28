@@ -2361,7 +2361,10 @@ Summary: ${resume.summary || 'Not provided'}
     };
 
     // Generate SAS URLs for files (1 hour expiry)
-    const expiresIn = 60 * 60; // 1 hour in seconds
+    const expiresIn = 15 * 60; // 15 minutes in seconds (was 1h — reduced
+    // to limit the window of risk if a download URL leaks via chat,
+    // browser history, or email forwarding. 15 min covers the
+    // "click-download" use case comfortably.
 
     if (application.coverLetterFileKey) {
       const url = await this.storageService.getSignedUrl(application.coverLetterFileKey, expiresIn);
