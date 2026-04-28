@@ -21,7 +21,7 @@
   // — set them as build env in the GitHub Actions / Cloudflare build UI.
   "vars": {
     // Public, safe to commit. Override in dashboard for staging vs. prod.
-    "NEXT_PUBLIC_API_URL": "https://api.smart-apply.io"
+    "NEXT_PUBLIC_API_URL": "https://api.smart-apply.io/api/v1"
   },
   // Sentry, etc. should be added as secrets:
   //   wrangler secret put SENTRY_AUTH_TOKEN

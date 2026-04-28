@@ -7,10 +7,12 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint",
-    "cf:build": "OPEN_NEXT=true opennextjs-cloudflare build",
-    "cf:preview": "OPEN_NEXT=true opennextjs-cloudflare preview",
-    "cf:deploy": "OPEN_NEXT=true opennextjs-cloudflare deploy",
-    "cf:upload": "OPEN_NEXT=true opennextjs-cloudflare upload"
+    "cf:build": "npm run cf:hide-local-env && (NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.smart-apply.io/api/v1} OPEN_NEXT=true opennextjs-cloudflare build); status=$?; npm run cf:restore-local-env; exit $status",
+    "cf:preview": "npm run cf:build && OPEN_NEXT=true opennextjs-cloudflare preview",
+    "cf:deploy": "npm run cf:build && OPEN_NEXT=true opennextjs-cloudflare deploy",
+    "cf:upload": "npm run cf:build && OPEN_NEXT=true opennextjs-cloudflare upload",
+    "cf:hide-local-env": "test ! -f .env.local || mv .env.local .env.local.bak",
+    "cf:restore-local-env": "test ! -f .env.local.bak || mv .env.local.bak .env.local"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

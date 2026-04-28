@@ -1,4 +1,6 @@
-import 'dotenv/config';
+import { config as dotenvConfig } from 'dotenv';
+import path from 'path';
+dotenvConfig({ path: path.join(__dirname, '..', '.env') });
 import {
   S3Client,
   PutObjectCommand,
@@ -54,20 +56,30 @@ async function tryEndpoint(endpoint: string, label: string) {
 }
 
 (async () => {
-  // Try global endpoint first
+  // If R2_ENDPOINT is explicitly set in .env (e.g. EU jurisdiction), use it
+  // directly — that's what the production provider will do.
+  const explicit = process.env.R2_ENDPOINT;
+  if (explicit) {
+    console.log(`Using explicit R2_ENDPOINT from .env: ${explicit}`);
+    if (await tryEndpoint(explicit, 'configured').catch(() => false)) {
+      return;
+    }
+    console.error('\n❌ Explicit endpoint failed.');
+    process.exit(1);
+  }
+
+  // Otherwise, probe known jurisdictions in order.
   const globalEndpoint = `https://${accountId}.r2.cloudflarestorage.com`;
   if (await tryEndpoint(globalEndpoint, 'global').catch(() => false)) {
     return;
   }
 
-  // Then EU jurisdiction
   const euEndpoint = `https://${accountId}.eu.r2.cloudflarestorage.com`;
   if (await tryEndpoint(euEndpoint, 'EU jurisdiction').catch(() => false)) {
     console.log('\n→ Set R2_ENDPOINT in .env to:', euEndpoint);
     return;
   }
 
-  // Then FedRAMP (US)
   const fedrampEndpoint = `https://${accountId}.fedramp.r2.cloudflarestorage.com`;
   if (await tryEndpoint(fedrampEndpoint, 'FedRAMP').catch(() => false)) {
     console.log('\n→ Set R2_ENDPOINT in .env to:', fedrampEndpoint);

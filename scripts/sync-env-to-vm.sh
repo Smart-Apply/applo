@@ -45,10 +45,12 @@ KEYS_TO_SYNC=(
   R2_ACCESS_KEY_ID
   R2_SECRET_ACCESS_KEY
   R2_BUCKET
+  R2_ENDPOINT
   THROTTLER_STORAGE
   UPSTASH_REDIS_REST_URL
   UPSTASH_REDIS_REST_TOKEN
   AZURE_OPENAI_API_VERSION
+  CORS_ORIGINS
 )
 
 # Keys forced to a specific production value (overrides whatever the local
@@ -57,6 +59,10 @@ KEYS_TO_SYNC=(
 FORCE_KV=(
   "STORAGE_DRIVER=r2"
   "THROTTLER_STORAGE=upstash"
+  # Production CORS allowlist — includes the Cloudflare Worker frontend
+  # (default workers.dev URL) alongside the existing custom domains.
+  # Update this when you switch the Worker to a custom domain.
+  "CORS_ORIGINS=https://smart-apply.io,https://www.smart-apply.io,https://smart-apply-web.ari41dev.workers.dev"
 )
 
 # Returns forced value for $1, or empty string if not in FORCE_KV.

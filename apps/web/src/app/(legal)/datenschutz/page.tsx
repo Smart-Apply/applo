@@ -116,8 +116,22 @@ export default function DatenschutzPage() {
         <li>
           <strong>Microsoft Azure</strong> (Microsoft Ireland Operations Ltd.,
           Region Sweden Central / EU): Hosting der Datenbank
-          (Azure Database for PostgreSQL), Datei-Speicherung
-          (Azure Blob Storage) und Job-Queue (Azure Service Bus).
+          (Azure Database for PostgreSQL) und der Anwendungsserver.
+        </li>
+        <li>
+          <strong>Cloudflare R2</strong> (Cloudflare Inc., USA &ndash;
+          Datenspeicherung in der EU-Jurisdiktion): Datei-Speicherung der
+          generierten Anschreiben, Lebensläufe und hochgeladenen Dokumente.
+          Die Speicherung erfolgt ausschließlich in EU-Rechenzentren von
+          Cloudflare; ein Verlassen der EU-Jurisdiktion ist vertraglich und
+          technisch ausgeschlossen.
+        </li>
+        <li>
+          <strong>Upstash</strong> (Upstash Inc., USA &ndash; Region EU):
+          Verteiltes Rate-Limiting (Schutz vor Brute-Force- und
+          Missbrauchsversuchen). Verarbeitet werden lediglich Zähler je
+          IP-Adresse bzw. Nutzerkennung mit kurzer Aufbewahrungsdauer
+          (max. 1&nbsp;Stunde).
         </li>
         <li>
           <strong>Azure OpenAI Service</strong> (Microsoft, EU/US): Generierung
@@ -135,9 +149,9 @@ export default function DatenschutzPage() {
         </li>
         <li>
           <strong>Sentry</strong> (Functional Software Inc., USA):
-          Fehler-Monitoring; übermittelt anonymisierte Stack-Traces. Wir
-          filtern personenbezogene Daten (E-Mails, Namen, Tokens) vor dem
-          Versand.
+          Server-seitiges Fehler-Monitoring; übermittelt anonymisierte
+          Stack-Traces. Wir filtern personenbezogene Daten (E-Mails, Namen,
+          Tokens) vor dem Versand. Im Browser ist Sentry nicht aktiv.
         </li>
         <li>
           <strong>Cloudflare Turnstile</strong>: Bot-Schutz bei Registrierung
