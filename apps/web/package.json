@@ -7,12 +7,12 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint",
+    "cf:hide-local-env": "test ! -f .env.local || mv .env.local .env.local.bak",
+    "cf:restore-local-env": "test ! -f .env.local.bak || mv .env.local.bak .env.local",
     "cf:build": "npm run cf:hide-local-env && (NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.smart-apply.io/api/v1} OPEN_NEXT=true opennextjs-cloudflare build); status=$?; npm run cf:restore-local-env; exit $status",
     "cf:preview": "npm run cf:build && OPEN_NEXT=true opennextjs-cloudflare preview",
     "cf:deploy": "npm run cf:build && OPEN_NEXT=true opennextjs-cloudflare deploy",
-    "cf:upload": "npm run cf:build && OPEN_NEXT=true opennextjs-cloudflare upload",
-    "cf:hide-local-env": "test ! -f .env.local || mv .env.local .env.local.bak",
-    "cf:restore-local-env": "test ! -f .env.local.bak || mv .env.local.bak .env.local"
+    "cf:upload": "npm run cf:build && OPEN_NEXT=true opennextjs-cloudflare upload"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -28,6 +28,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@sentry/nextjs": "^10.50.0",
     "@smart-apply/shared": "1.0.0",
     "@tanstack/react-query": "^5.90.7",
     "@tiptap/extension-text-style": "^3.14.0",
