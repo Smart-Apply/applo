@@ -78,12 +78,22 @@ COPY apps/api/src ./apps/api/src
 COPY apps/api/test ./apps/api/test
 COPY apps/api/tsconfig*.json ./apps/api/
 COPY apps/api/nest-cli.json ./apps/api/
+COPY apps/api/scripts ./apps/api/scripts
 
 # Copy prompts directory (needed at runtime)
 COPY apps/api/prompts ./apps/api/prompts
 
 # Build shared package first (required by API)
 RUN npm run shared:build
+
+# Re-generate Prisma client AFTER scripts/ is copied so the post-generate
+# sanitizer can run. The earlier postinstall during `npm ci` runs before
+# scripts/ exists in the image, so its sanitizer step is silently skipped
+# (swallowed by `|| true`). Without this, the build compiles the unsanitized
+# client (which contains either `import.meta.url` or `.ts` extensions in
+# requires depending on Prisma version skew) and the container crashes on
+# boot under Node 24. See apps/api/scripts/sanitize-prisma-client.js.
+RUN cd apps/api && npm run prisma:generate
 
 # Build application
 RUN npm run api:build
