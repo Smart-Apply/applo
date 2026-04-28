@@ -5,13 +5,8 @@
 // The PrismaClient requires an adapter (PrismaPg) passed during initialization
 
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/generated/prisma"
-  // Force CommonJS output. The default ESM output uses `import.meta.url`,
-  // which Node 24's auto module-detection picks up and loads as ESM, but
-  // the rest of the file (and the consuming NestJS app) is CJS — causing
-  // "exports is not defined in ES module scope" at runtime.
-  moduleFormat = "cjs"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {

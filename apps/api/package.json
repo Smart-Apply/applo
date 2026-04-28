@@ -6,7 +6,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "postinstall": "npx prisma generate --schema=./prisma/schema.prisma || true",
+    "postinstall": "npx prisma generate --schema=./prisma/schema.prisma && node scripts/sanitize-prisma-client.js || true",
     "build": "nest build && npm run copy:assets",
     "copy:assets": "mkdir -p ../../dist/templates ../../dist/styles && cp -r src/pdf/templates/*.hbs ../../dist/templates/ && cp -r src/pdf/styles/*.css ../../dist/styles/ 2>/dev/null || true",
     "start": "nest start",
@@ -30,7 +30,7 @@
     "test:all:cov": "npm run test:unit:cov && npm run test:integration:cov && npm run test:e2e",
     "test:setup": "../../scripts/setup-tests.sh",
     "test:cleanup": "../../scripts/cleanup-tests.sh",
-    "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema=./prisma/schema.prisma && node scripts/sanitize-prisma-client.js",
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
     "prisma:seed": "dotenv -e .env -- ts-node -r tsconfig-paths/register prisma/seed.ts",
     "prisma:seed:templates": "dotenv -e .env -- ts-node -r tsconfig-paths/register prisma/seed-templates-autodiscover.ts",
