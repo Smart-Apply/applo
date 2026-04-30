@@ -1,15 +1,29 @@
 # Smart Apply — Full-Stack MVP (Azure)
 
 ## Goal
-Deliver a minimal yet production-grade application with:
-1) **Frontend (Next.js 14)**: User authentication, profile management, job posting input, application dashboard with PDF preview/editing
-2) **Backend API (NestJS)**: Stores candidate profile (skills, certificates, experiences, projects), ingests job postings (text/URL/file → normalized), generates tailored cover letter + resume via LLM
-3) **PDF Generation**: Exports both as PDFs stored in Azure Blob and retrievable via signed URLs (SAS)
+Deliver a production-grade, multi-provider application with:
+1) **Frontend (Next.js 16 + React 19)**: Auth (email/password + OAuth + 2FA), profile management, job-posting ingestion, application dashboard with PDF preview/editing, deployed to **Cloudflare Workers** via OpenNext.
+2) **Backend API (NestJS 11)**: Candidate profile (skills, experiences, education, certificates, projects, languages), ingests job postings (text/URL/file → normalized), generates tailored cover letter + resume via **LangChain + LangGraph** on Azure OpenAI / Hugging Face / mock.
+3) **PDF Generation**: Puppeteer + Handlebars (50 templates, ATS-optimized), stored via pluggable storage (Azure Blob / AWS S3 / disk) and retrieved via signed URLs.
 
 ## Agent Instructions
 For specific tasks, refer to these specialized instruction files:
 - **PDF Templates**: See `apps/api/src/pdf/templates/.copilot-instructions.md` for creating/modifying resume and cover letter templates
 - **Template Agent**: See `apps/api/src/pdf/templates/AGENT.md` for the template creation agent workflow
+
+## Documentation Sync (MANDATORY)
+**Whenever the architecture changes, you MUST update both `README.md` and `ARCHITECTURE.md` in the same change set.** This includes (but is not limited to):
+- Adding/removing/renaming a backend module or frontend route group
+- Adding/removing a Prisma model or significant schema change
+- Adding/changing a pluggable provider (`STORAGE_DRIVER`, `JOBS_PROVIDER`, `LLM_PROVIDER`, cache, email)
+- Changing the application generation pipeline (LLM orchestration, PDF, queueing, SSE)
+- Adding/removing third-party services (Sentry, Resend, Upstash, Cloudflare, Azure resources)
+- Major dependency upgrades that affect the stack (Next.js, NestJS, Prisma, React, Tailwind)
+- New auth flows (OAuth providers, 2FA, refresh-token strategy, sessions)
+- New API endpoints or breaking changes to existing ones
+- Deployment topology changes (ACA, Cloudflare Workers, CI/CD pipelines)
+
+Also update this `copilot-instructions.md` file (Tech Stack, Backend Modules, Data Model, API Endpoints, Env Variables sections) to keep agent context accurate. Treat doc drift as a bug — never ship architecture changes without the corresponding doc updates.
 
 ## Domain-Agnostic Design Principles
 **Smart Apply is designed to work across ALL professions and industries**, not just IT/tech roles. When writing code, documentation, or examples:
@@ -20,62 +34,83 @@ For specific tasks, refer to these specialized instruction files:
 - ❌ **Avoid IT-centric bias**: Don't default to React/TypeScript/Cloud examples in user-facing content
 
 ## Non-Goals
-- Rich document editing (basic Tiptap editor only)
-- Multi-tenant complexity (single-tenant users/roles for MVP)
-- Mobile app (responsive web only)
+- Rich document editing beyond Tiptap StarterKit
+- Multi-tenant org hierarchy (single-tenant users/subscriptions for MVP)
+- Native mobile app (responsive web only)
 
-## Azure-first Tech Stack
+## Tech Stack
 
-### Backend (Port 3000)
-- **NestJS v10 (TypeScript)**, **Prisma v7.3.0 + PostgreSQL**
-  - Dev: Docker Postgres
-  - Prod: **Azure Database for PostgreSQL – Flexible Server**
-  - **Prisma 7 Changes:**
-    - Client generated to `apps/api/src/generated/prisma`
-    - Requires `prisma.config.ts` for datasource configuration
-    - Uses PrismaPg adapter with connection pooling
-    - Node.js >= 20.19 required (using 24.13.0 LTS)
-- **Containers/Runtime:** Docker; deploy to **Azure Container Apps (ACA)** (alt: App Service Linux)
-- **Storage:** **Azure Blob Storage** (SAS for downloads)
-- **Queues/Jobs:** **Azure Service Bus** for pipeline orchestration
-- **Secrets:** **Azure Key Vault** (dev via `.env`)
-- **LLM:** **Azure OpenAI** (pluggable provider + mock)
-- **PDF:** Puppeteer/Chromium
-- **Observability:** pino logs, `/health` endpoint (Nest Terminus)
-- **Security:** argon2, Helmet, CORS whitelist, rate limit, JwtAuthGuard
+### Monorepo
+- **npm workspaces** + **Turborepo 2.8** (`apps/api`, `apps/web`, `packages/shared`)
+- Node **24** (>= 20.19), TypeScript 5.9 strict
 
-### Frontend (Port 3001)
-- **Next.js 16.0.1** (v14 architecture with App Router, Server Components, React Compiler)
-- **React 19.2.0** with TypeScript (strict mode)
-- **Tailwind CSS 3.4.0** (v4 with PostCSS)
-- **shadcn/ui** (13 components: Button, Input, Card, Form, Label, Textarea, Select, Badge, Separator, Sheet, Dialog, Tabs, Table)
-- **State Management:**
-  - Zustand 4.5.0 (auth state with localStorage persistence)
-  - @tanstack/react-query 5.28.0 (server state, caching, refetching)
-- **Forms & Validation:**
-  - react-hook-form 7.51.0 (performant uncontrolled forms)
-  - zod 3.23.0 (runtime validation schemas)
-- **PDF Handling:**
-  - react-pdf 7.7.0 (PDF rendering)
-  - pdfjs-dist 5.4.394 (Mozilla PDF.js)
-  - @tiptap/react 2.2.0 (rich text editor for cover letter/resume editing)
-- **UI/UX:**
-  - lucide-react (1000+ icons)
-  - sonner 1.4.0 (toast notifications)
-  - 450 total packages, 0 vulnerabilities
+### Backend (`apps/api`, Port 3000)
+- **NestJS 11** (TypeScript)
+- **Prisma 6.19** with `@prisma/adapter-pg` 7.3 (PrismaPg + connection pool)
+  - Schema in `apps/api/prisma/schema.prisma`; client generated via `prisma.config.ts`
+  - Dev: Docker Postgres 16 · Prod: **Azure Database for PostgreSQL Flexible Server**
+- **Auth:** passport-jwt, passport-google-oauth20, passport-microsoft, passport-azure-ad, argon2id, **otplib + qrcode + speakeasy** (TOTP 2FA)
+- **Refresh tokens:** dual-token rotation, device tracking, max 5/user
+- **Sessions:** multi-device, IP/UA, remote logout, cron cleanup
+- **Storage (pluggable via `STORAGE_DRIVER`):** `disk` | `azure-blob` | `s3` (`@azure/storage-blob`, `@aws-sdk/client-s3`)
+- **Queue (pluggable via `JOBS_PROVIDER`):** `in-memory` | `service-bus` | `qstash` (`@upstash/qstash`)
+- **Cache:** Upstash Redis (`@upstash/redis`) + `node-cache`
+- **LLM (pluggable via `LLM_PROVIDER`):** `azure-openai` | `huggingface` | `mock`
+  - Orchestration via **LangChain 1.2 + LangGraph 1.0** (`@langchain/openai`, `@langchain/community`)
+  - Azure AI Foundry agents (`@azure/ai-agents`) for URL parsing
+  - **opossum** circuit breaker around LLM calls
+- **PDF:** Puppeteer 24 + Playwright 1.56 + Handlebars + pdf-lib + pdf-parse + mammoth (DOCX); browser instance pool via `generic-pool`
+- **Email:** Resend (`resend`) for transactional mail
+- **Logging:** Pino (request logs) + Winston with daily rotation (audit, 90-day retention)
+- **Monitoring:** Sentry (`@sentry/node` + `@sentry/profiling-node`)
+- **Security:** Helmet, CORS whitelist, `@nestjs/throttler` 6.5 (dual-tier), `csrf-csrf` 4.0 (optional), `sanitize-html`, `isomorphic-dompurify`, `@Sanitize()` decorator
+- **Health:** `@nestjs/terminus` (`/health`)
+- **Scheduling:** `@nestjs/schedule` for cron jobs (session cleanup, etc.)
+- **Containers:** Docker (multi-stage); deploy to **Azure Container Apps (ACA)**
 
-## Backend Modules
-- `auth` (JWT authentication with argon2 password hashing)
-- `profile` (CRUD with Skills, Experiences, Education, Certificates, Projects, Languages)
-- `uploads` (file → Blob in prod)
-- `job-postings` (parse text/URL/file → normalized JobPosting, Azure AI Agent for URL parsing)
-- `applications` (pipeline orchestration: profile + job → LLM → PDF → Blob)
-- `llm` (Azure OpenAI + Hugging Face + mock providers, **automatic language detection**)
-- `pdf` (Puppeteer + Handlebars templates, ATS-optimized PDFs with selectable templates)
-- `storage` (disk | azure-blob providers)
-- `jobs` (in-memory | service-bus providers)
-- `config` (Zod env schema), `common` (filters/guards/decorators)
-- `keywords` (ATS keyword extraction and matching with language detection)
+### Frontend (`apps/web`, Port 3001)
+- **Next.js 16.1** (App Router, Server Components, React Compiler)
+- **React 19.2** with TypeScript strict
+- **Tailwind CSS v4** + PostCSS
+- **shadcn/ui** (Radix primitives) + lucide-react icons
+- **State:**
+  - Zustand **5.0** (auth store)
+  - **TanStack Query 5.90** (server state, caching, optimistic updates)
+- **Forms:** react-hook-form 7.66 + Zod 3.25 (`@hookform/resolvers`)
+- **PDF:** react-pdf 10 + pdfjs-dist 5
+- **Editor:** Tiptap 3.10 (StarterKit + TextStyle)
+- **Sanitization:** isomorphic-dompurify
+- **Files:** react-dropzone, jszip
+- **Markdown:** marked, turndown
+- **Toast:** sonner
+- **Deployment:** **Cloudflare Workers** via `@opennextjs/cloudflare` 1.19 + `wrangler` 4.85
+
+## Backend Modules (`apps/api/src/`)
+- `admin` — admin dashboard endpoints
+- `agents` — Azure AI Foundry agents (URL parsing, etc.)
+- `applications` — generation pipeline (profile + job → LLM → PDF → storage), SSE status stream
+- `auth` — JWT, refresh-token rotation, OAuth (Google/Microsoft/Azure AD), TOTP 2FA, password reset
+- `common` — guards, filters, decorators (`@Sanitize()`)
+- `config` — Zod env schema
+- `contact` — contact form
+- `email` — Resend transactional email
+- `health` — Terminus health checks
+- `interviews` — AI mock-interview Q&A generator
+- `job-postings` — parse text/URL/file → normalized JobPosting
+- `jobs` — pluggable queue providers (`in-memory` | `service-bus` | `qstash`)
+- `keywords` — ATS keyword extraction & matching with language detection
+- `linkedin-jobs` — LinkedIn job search
+- `llm` — pluggable providers (`azure-openai` | `huggingface` | `mock`) with automatic language detection, LangChain/LangGraph orchestration, opossum circuit breaker
+- `logger` — Pino + Winston audit logger
+- `pdf` — Puppeteer + Handlebars (50 templates), ATS-optimized; browser pool via `generic-pool`
+- `prisma` — PrismaService
+- `profile` — CRUD with **differential updates** (Skills, Experiences, Education, Certificates, Projects, Languages)
+- `resume-parser` — PDF/DOCX → Profile bootstrap (pdf-parse + mammoth)
+- `storage` — pluggable providers (`disk` | `azure-blob` | `s3`)
+- `subscription` — plans & usage limits
+- `templates` — template catalog
+- `uploads` — file uploads
+- `user-preferences` — per-user settings
 
 ## Frontend Structure
 - `app/` (App Router with route groups)
@@ -98,8 +133,13 @@ For specific tasks, refer to these specialized instruction files:
 - `types/`
   - `index.ts` - TypeScript types (User, Profile, JobPosting, Application)
 
-## Data Model
-Use the previously defined Prisma models: **User**, **Profile**, **JobPosting**, **Application**.
+## Data Model (Prisma 6)
+16 models in `apps/api/prisma/schema.prisma`:
+- **User**, **Profile**, **Skill**, **Experience**, **Education**, **Certificate**, **Project**, **Language**
+- **JobPosting**, **Application**, **ResumeTemplate**, **Interview**
+- **RefreshToken**, **Session** (auth/security)
+- **Subscription** (plans & usage)
+- **AuditLog** (security events)
 
 ## API Endpoints (v1)
 
@@ -108,16 +148,26 @@ All endpoints are prefixed with `/api/v1` and documented at `http://localhost:30
 ### Authentication Endpoints (Public)
 
 **POST /api/v1/auth/register**
-- Register new user with email/password (argon2 hashed)
+- Register new user with email/password (argon2id hashed)
 - Rate limit: 5 attempts / 15 minutes (strict)
-- Sets HttpOnly cookie: `access_token` (Secure in prod, SameSite=strict, 7 days)
-- Returns: `{ user: { id, email, firstName, lastName } }` (token in cookie only)
+- Sets HttpOnly cookies: `access_token` (~15 min) + `refresh_token` (7 days, rotated)
+- Returns: `{ user: { id, email, firstName, lastName } }`
 
 **POST /api/v1/auth/login**
-- Login with email/password credentials
+- Login with email/password (TOTP challenge if 2FA enabled)
 - Rate limit: 5 attempts / 15 minutes (strict)
-- Sets HttpOnly cookie: `access_token` (Secure in prod, SameSite=strict, 7 days)
-- Returns: `{ user: { id, email, firstName, lastName } }` (token in cookie only)
+- Sets HttpOnly cookies: `access_token` + `refresh_token`
+- Returns: `{ user: { id, email, firstName, lastName }, requires2FA?: true }`
+
+**POST /api/v1/auth/refresh**
+- Rotate refresh token → new access + refresh cookies
+- Reuse of an already-used refresh token revokes the entire session chain
+
+**GET /api/v1/auth/oauth/google**, **/auth/oauth/microsoft**, **/auth/oauth/azure-ad**
+- OAuth 2.0 login flows; on success sets the same auth cookies
+
+**POST /api/v1/auth/password-reset/request** / **/password-reset/confirm**
+- Email-based password reset (Resend)
 
 **GET /api/v1/auth/csrf-token**
 - Get CSRF token for state-changing requests (optional, only if `ENABLE_CSRF=true`)
@@ -131,11 +181,45 @@ All endpoints are prefixed with `/api/v1` and documented at `http://localhost:30
 - Returns: `{ id, email, firstName, lastName, createdAt }`
 
 **GET /api/v1/auth/logout**
-- Logout user (clear auth cookie)
+- Logout user (clear auth cookies, revoke refresh token)
 - Protected: Requires JWT in HttpOnly cookie
-- Clears: `access_token` cookie
 - Returns: `{ message: "Logged out successfully" }`
-- Note: Changed from POST to GET to avoid CSRF validation
+- Note: GET to avoid CSRF validation
+
+**POST /api/v1/auth/2fa/setup** / **/2fa/verify** / **/2fa/disable**
+- TOTP enrollment (returns QR), verification, and disable flows (otplib)
+
+### Resume Parser (Protected)
+
+**POST /api/v1/resume-parser/parse**
+- Upload PDF/DOCX → extract structured profile data (pdf-parse + mammoth + LLM)
+- Returns: parsed profile suggestion (user reviews before saving)
+
+### Sessions (Protected)
+
+**GET /api/v1/sessions** — list active sessions (device, IP, geolocation)
+**DELETE /api/v1/sessions/:id** — remote logout for a specific session
+
+### Subscription (Protected)
+
+**GET /api/v1/subscription** — current plan + usage counters
+
+### User Preferences (Protected)
+
+**GET/PUT /api/v1/user-preferences** — per-user settings
+
+### Interviews (Protected)
+
+**POST /api/v1/interviews** — generate AI mock-interview Q&A for a job posting
+**GET /api/v1/interviews/:id** — fetch saved interview
+
+### LinkedIn Jobs (Protected)
+
+**GET /api/v1/linkedin-jobs/search** — search LinkedIn job postings
+
+### Templates (Protected)
+
+**GET /api/v1/templates** — list available PDF templates (50 variants, by language × design)
 
 ### Profile Endpoints (Protected)
 
@@ -215,6 +299,9 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
 - Direct download of resume PDF (alternative to SAS URLs)
 - Returns: PDF file stream with Content-Disposition: attachment
 
+**GET /api/v1/applications/:id/stream**
+- **SSE** stream of pipeline status updates (PENDING → GENERATING → READY/FAILED)
+
 ### Rate Limiting
 
 - **Auth endpoints** (register, login): 5 attempts / 15 minutes (strict)
@@ -266,13 +353,14 @@ PUT /api/v1/profile
 ```
 
 ### Application Pipeline
-1. Load Profile + JobPosting  
-2. Render prompt templates (`prompts/cover-letter.md`, `prompts/resume.md`)  
-3. Call **Azure OpenAI** (provider interface) → Markdown/HTML  
-4. HTML → PDF (Puppeteer)  
-5. Store PDFs in **Blob**; persist keys in `Application`  
-6. Status: `PENDING → GENERATING → READY | FAILED`  
-7. Background work via **Service Bus** (submit → worker)
+1. Load Profile + JobPosting; enforce subscription usage limits
+2. Detect language (DE/EN), select template (lang × design), extract ATS keywords
+3. Render prompt templates (`prompts/cover-letter.md`, `prompts/resume.md`)
+4. Call LLM via LangChain/LangGraph (provider abstraction) wrapped in **opossum** circuit breaker → Markdown/HTML
+5. HTML → PDF via Puppeteer **browser pool** (`generic-pool`); pdf-lib post-processing
+6. Upload PDFs via storage provider (Blob/S3/disk); persist keys + signed URLs
+7. Status: `PENDING → GENERATING → READY | FAILED` (pushed to client via **SSE**)
+8. Background work via pluggable queue (`qstash` | `service-bus` | `in-memory`)
 
 ## Prompt Templates
 - **cover-letter.md**: concise, 1 page, intro → fit (3–5 bullets) → motivation → closing
@@ -343,66 +431,106 @@ PUT /api/v1/profile
 - Frontend security headers (Issue #144) - CSP, X-Frame-Options, HSTS
 - Session management (Issue #146) - Multi-device tracking, remote logout, max 5 sessions
 
+**Shipped Since Original MVP ✅**
+- ✅ **Two-factor authentication (2FA)** — TOTP via otplib + qrcode + speakeasy
+- ✅ **OAuth login** — Google, Microsoft, Azure AD
+- ✅ **Sentry monitoring** — `@sentry/node` + profiling
+- ✅ **Refresh token rotation** with reuse-detection
+
 **Future Enhancements 🟢 (Post-MVP)**
-- Two-factor authentication (2FA) - TOTP-based
-- **Key Vault** for secrets in prod - Azure Key Vault integration
-- Short-TTL **SAS** for file downloads - 15-minute expiry
-- GDPR-friendly deletion - Data export and deletion workflows
-- Enhanced audit logging - Real-time alerts, SIEM integration
+- **Azure Key Vault** for secrets in prod
+- Short-TTL **SAS** for file downloads (15-minute expiry)
+- GDPR-friendly deletion (data export + erase workflows)
+- Enhanced audit logging (real-time alerts, SIEM integration)
+- WebAuthn/passkeys
 
 **Security Roadmap**
 See `MVP_FEATURES.md` for detailed security tasks with priorities and estimates.
 
 ## Environment Variables
 
-### Backend (apps/api/.env)
+### Backend (`apps/api/.env`)
 ```bash
+# Database
 DATABASE_URL=postgresql://postgres:postgres@db:5432/smartapply
 
-# Security - JWT (CRITICAL: Generate with: openssl rand -base64 64)
+# JWT (CRITICAL: openssl rand -base64 64)
 JWT_SECRET=REPLACE_WITH_SECURE_RANDOM_SECRET_MINIMUM_64_CHARACTERS
+JWT_REFRESH_SECRET=REPLACE_WITH_DIFFERENT_64_CHAR_SECRET
 
-# Security - CORS (Production: Set to your frontend domain)
+# CORS
 CORS_ORIGINS=http://localhost:3000,http://localhost:3001
 
-# Security - Rate Limiting
-RATE_LIMIT_TTL=900           # 15 minutes in seconds
-RATE_LIMIT_MAX=1000          # Standard endpoints: 1000 requests per 15 min (dev: 1000, prod: 300-500)
-RATE_LIMIT_AUTH_TTL=900      # Auth endpoints: 15 minutes
-RATE_LIMIT_AUTH_MAX=5        # Auth endpoints: 5 attempts per 15 min (STRICT)
+# Rate Limiting
+RATE_LIMIT_TTL=900           # 15 min
+RATE_LIMIT_MAX=1000          # Standard endpoints (prod: 300-500)
+RATE_LIMIT_AUTH_TTL=900
+RATE_LIMIT_AUTH_MAX=5        # Auth endpoints (STRICT)
 
-# Security - CSRF Protection (Optional)
-ENABLE_CSRF=false            # Set to 'true' to enable CSRF protection (recommended for production)
-                              # When enabled, all POST/PUT/DELETE/PATCH requests require X-CSRF-Token header
-                              # GET requests are exempt (safe operations)
-                              # Frontend automatically handles token fetch and injection
+# CSRF (optional)
+ENABLE_CSRF=false
 
-# Storage
-STORAGE_DRIVER=disk # or azure
-AZURE_STORAGE_ACCOUNT=<dev-account>
+# Storage (pluggable)
+STORAGE_DRIVER=disk          # disk | azure-blob | s3
+AZURE_STORAGE_ACCOUNT=<account>
 AZURE_STORAGE_CONTAINER=smartapply
-AZURE_STORAGE_CONNECTION_STRING=<dev-conn-string>
+AZURE_STORAGE_CONNECTION_STRING=<conn-string>
+AWS_S3_BUCKET=<bucket>
+AWS_S3_REGION=eu-central-1
+AWS_ACCESS_KEY_ID=<key>
+AWS_SECRET_ACCESS_KEY=<secret>
 
-# Jobs/Queue
-SERVICE_BUS_CONNECTION_STRING=<sb-conn-string>
-JOBS_PROVIDER=in-memory # or service-bus
+# Queue (pluggable)
+JOBS_PROVIDER=in-memory      # in-memory | service-bus | qstash
+SERVICE_BUS_CONNECTION_STRING=<sb-conn>
+QSTASH_TOKEN=<upstash-qstash-token>
+QSTASH_CURRENT_SIGNING_KEY=<key>
+QSTASH_NEXT_SIGNING_KEY=<key>
 
-# Azure Services
-KEY_VAULT_URI=https://your-kv.vault.azure.net/
+# Cache
+UPSTASH_REDIS_REST_URL=<url>
+UPSTASH_REDIS_REST_TOKEN=<token>
+
+# LLM (pluggable)
+LLM_PROVIDER=mock            # azure-openai | huggingface | mock
 AZURE_OPENAI_ENDPOINT=https://your-aoai.openai.azure.com/
 AZURE_OPENAI_API_KEY=<key>
 AZURE_OPENAI_DEPLOYMENT_NAME=<deployment>
+HUGGINGFACE_API_KEY=<key>
+
+# Azure AI Foundry (URL parsing agents)
+AZURE_AI_FOUNDRY_ENDPOINT=<endpoint>
+AZURE_AI_FOUNDRY_API_KEY=<key>
+
+# OAuth
+GOOGLE_CLIENT_ID=<id>
+GOOGLE_CLIENT_SECRET=<secret>
+MICROSOFT_CLIENT_ID=<id>
+MICROSOFT_CLIENT_SECRET=<secret>
+AZURE_AD_CLIENT_ID=<id>
+AZURE_AD_CLIENT_SECRET=<secret>
+AZURE_AD_TENANT_ID=<tenant>
+
+# Email (Resend)
+RESEND_API_KEY=<key>
+RESEND_FROM=noreply@smartapply.com
+
+# Monitoring (Sentry)
+SENTRY_DSN=<dsn>
+SENTRY_ENVIRONMENT=development
+
+# Azure Key Vault (prod)
+KEY_VAULT_URI=https://your-kv.vault.azure.net/
 
 # PDF Generation
 PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
-# LLM Provider
-LLM_PROVIDER=mock # or azure-openai or huggingface
 ```
 
-### Frontend (apps/web/.env.local)
+### Frontend (`apps/web/.env.local`)
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+NEXT_PUBLIC_SENTRY_DSN=<dsn>
+# Cloudflare Workers deploy uses wrangler.jsonc + .dev.vars
 ```
 
 
@@ -415,21 +543,32 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
+### Turborepo (root)
+```bash
+npm run dev              # API + Web in parallel
+npm run build            # Build all workspaces
+npm run lint             # Lint all workspaces
+npm run test             # Test all workspaces
+```
+
 ### Backend (Terminal 1)
 ```bash
 cd apps/api
-npm run start:dev        # Start API at http://localhost:3000
-npm run test:e2e         # Run E2E tests
-npm run prisma:studio    # Open Prisma Studio GUI
+npm run start:dev        # NestJS at http://localhost:3000
+npm run test:e2e         # E2E tests
+npm run prisma:studio    # Prisma Studio GUI
+npm run prisma:migrate   # Run migrations
 ```
 
 ### Frontend (Terminal 2)
 ```bash
 cd apps/web
-npm run dev              # Start Next.js at http://localhost:3001
-npm run build            # Production build (validates TypeScript)
+npm run dev              # Next.js at http://localhost:3001
+npm run build            # Production build (validates TS)
 npm run lint             # ESLint check
-npx shadcn@latest add <component>  # Add new shadcn/ui component
+npm run cf:preview       # Local Cloudflare Workers preview (OpenNext)
+npm run cf:deploy        # Deploy to Cloudflare Workers
+npx shadcn@latest add <component>  # Add shadcn/ui component
 ```
 
 ### Access URLs
@@ -442,20 +581,14 @@ npx shadcn@latest add <component>  # Add new shadcn/ui component
 - **Email:** demo@smartapply.com
 - **Password:** Demo123!
 
-## CI/CD (GitHub Actions with Azure OIDC)
-- Build Docker image → push to **ACR**
-- Deploy to **ACA** with container image
-- Inject env via **Key Vault** references
-- Post-deploy: run DB migrations (job/init container)
+## CI/CD (GitHub Actions)
+- **API**: Build & test (Turborepo cache) → Build Docker (`apps/api`) → push to **ACR** → deploy to **ACA** with Azure **OIDC**; env via **Key Vault** references; DB migrations via init container
+- **Web**: Build with OpenNext → `wrangler deploy` to **Cloudflare Workers**
 
-## Minimal Azure Resources (MVP)
-- Resource Group, VNet (optional)
-- **ACR**, **ACA**
-- **Azure Database for PostgreSQL – Flexible Server**
-- **Storage Account** (Blob)
-- **Service Bus**
-- **Key Vault**
-- **Azure OpenAI** (deployment name in env)
+## Minimal Cloud Resources (MVP)
+- **Azure**: Resource Group, ACR, ACA, Postgres Flexible Server, Storage Account (Blob), Service Bus (or QStash), Key Vault, Azure OpenAI (+ optional AI Foundry)
+- **Cloudflare**: Workers (web app), DNS, CDN
+- **Third-party**: Resend (email), Sentry (monitoring), Upstash (Redis + QStash)
 
 ## Tests
 **Backend (apps/api)**
@@ -466,89 +599,3 @@ npx shadcn@latest add <component>  # Add new shadcn/ui component
 - ESLint validation (TypeScript strict mode, no `any` types)
 - Production build test (validates all pages compile)
 - Run: `cd apps/web && npm run lint && npm run build`
-
-## Current Status
-
-### Backend (95% Complete) ✅
-- Authentication with JWT + argon2 ✅
-- Profile CRUD with all relations (Skills, Experiences, Education, Certificates, Projects, Languages) ✅
-- Storage abstraction (Disk + Azure Blob providers) ✅
-- LLM abstraction (Mock + Azure OpenAI + Hugging Face providers) ✅
-- PDF generation (Puppeteer + Handlebars templates) ✅
-- **ATS-optimized PDF generation** with selectable CSS templates ✅
-- Jobs queue (In-Memory + Azure Service Bus providers) ✅
-- Applications pipeline (create → queue → generate → upload → ready) ✅
-- Security (Helmet, CORS, rate limiting, validation) ✅
-- **Remaining:** File uploads endpoint, Health checks
-
-### ATS-Optimized PDF Templates ✅
-- **4 Professional CSS Templates:**
-  - `modern-professional` - Clean, modern design with blue accents
-  - `elegant-minimal` - Minimalist with subtle styling
-  - `tech-modern` - Tech-focused with gradient accents
-  - `executive-classic` - Traditional, serif-based professional look
-- **ATS Compliance:**
-  - Simple, parseable HTML structure
-  - No tables, columns, or complex layouts
-  - Standard fonts (Arial, system fonts)
-  - Plain text skills (comma-separated, no badges)
-  - Clear section headers (H2 tags)
-  - Languages section with proficiency levels
-- **Template Management:**
-  - Templates stored in database (`ResumeTemplate` model)
-  - Seeded via `npm run prisma:seed:templates`
-  - User can select template per application
-
-### Automatic Language Detection ✅
-- **Intelligent Language Recognition:**
-  - Analyzes job posting text for language markers (German/English keywords)
-  - Scoring algorithm counts frequency of language-specific words
-  - Detects 'de' (German) or 'en' (English) with fallback to English
-- **Adaptive Content Generation:**
-  - Cover letters automatically generated in detected language
-  - Resumes adapt section headers and descriptions to match language
-  - Technical terms (React, Docker, etc.) remain in English
-- **Template Integration:**
-  - Language code passed to LLM prompts as `{{language}}` and `{{languageName}}`
-  - Templates include language-specific instructions and examples
-  - Formal address adapts to language (Sie/du vs. you)
-- **Testing:** Unit tests verify detection accuracy across various text samples
-- **Documentation:** See `docs/features/AUTOMATIC_LANGUAGE_DETECTION.md`
-
-### Frontend (35% Complete) 🔄
-- **Implemented ✅**
-  - Project setup (Next.js 14, 450 packages, 0 vulnerabilities)
-  - Authentication pages (login, register with validation)
-  - Dashboard layout (responsive navigation, mobile menu)
-  - Dashboard page (stats cards, recent applications)
-  - Landing page (hero, features, CTA)
-  - API client (typed endpoints for all backend routes)
-  - Auth store (Zustand with localStorage persistence)
-  - React Query provider (server state management)
-  - Custom hooks (useProfile, useApplications)
-
-- **In Development ⏳**
-  - Profile management forms (Issues #42-#47)
-  - Job postings UI (Issues #48-#49)
-  - Applications UI (Issues #50-#52)
-  - PDF preview & editing (Issue #53)
-  - Loading states & error handling (Issues #54-#55)
-
-### Security (60% Complete) ⚠️
-- **Critical:** JWT secret, CORS whitelist, HttpOnly cookies
-- **High:** Password strength, rate limiting, CSRF, XSS, refresh tokens
-- **Medium/Low:** CSP, security headers, audit logs, session management, 2FA
-- See `MVP_FEATURES.md` for detailed security todos
-
-## Roadmap (Post-MVP)
-- **Security Hardening:** Fix critical issues (JWT secret, HttpOnly cookies, CSRF protection)
-- **Frontend Completion:** Profile forms, Job postings UI, Applications UI, PDF preview/editing
-- **Testing:** E2E tests for critical frontend flows
-- **Deployment:** Azure Container Apps (backend) + Vercel/Azure SWA (frontend)
-- **Future Features:**
-  - SSE/Webhooks for real-time progress updates
-  - Multi-tenant (organizations/workspaces)
-  - Version history + manual edit blocks pre-PDF
-  - Managed Identity instead of connection strings
-  - Prometheus/Grafana via Dapr/ACA add-ons
-  - ATS JSON export format

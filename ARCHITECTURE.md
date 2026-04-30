@@ -1,90 +1,97 @@
-# Smart Apply - System Architecture
+# Smart Apply — System Architecture
 
 ## 🏗️ High-Level Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│                      Next.js Frontend                           │
-│                  (React 19, Tailwind, shadcn/ui)                │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             │ HTTPS (Port 3001)
+┌──────────────────────────────────────────────────────────────────┐
+│                       Next.js 16 Frontend                        │
+│       (React 19 · Tailwind v4 · shadcn/ui · TanStack Query)      │
+│              Cloudflare Workers (OpenNext) · Port 3001           │
+└────────────────────────────┬─────────────────────────────────────┘
+                             │ HTTPS · HttpOnly cookies
                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Azure Container Apps                         │
-│                    (Load Balanced, Auto-Scale)                   │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │                    NestJS API (Port 3000)                  │  │
-│  │  ┌───────┬──────────┬────────┬────────┬────────┬───────┐  │  │
-│  │  │ Auth  │ Profile  │  Jobs  │  LLM   │Storage │  PDF  │  │  │
-│  │  └───────┴──────────┴────────┴────────┴────────┴───────┘  │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└────────────┬────────────┬────────────┬────────────┬─────────────┘
-             │            │            │            │
-    ┌────────┴────┐  ┌────┴────┐  ┌───┴────┐  ┌───┴──────┐
-    ▼             ▼  ▼         ▼  ▼        ▼  ▼          ▼
-┌────────┐  ┌─────────────┐  ┌──────────┐  ┌────────────────┐
-│ Azure  │  │   Azure     │  │  Azure   │  │ Azure Blob     │
-│PostgreSQL│ │ Key Vault  │  │ Service  │  │ Storage        │
-│ Flexible│  │            │  │   Bus    │  │                │
-│ Server │  │ (Secrets)   │  │ (Queue)  │  │ (PDFs/Files)   │
-└────────┘  └─────────────┘  └──────────┘  └────────────────┘
-                                                    │
-                             ┌──────────────────────┘
-                             ▼
-                    ┌─────────────────┐
-                    │ Azure AI Foundry│
-                    │  + Azure OpenAI │
-                    │  (GPT-4o)       │
-                    └─────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                       NestJS 11 API (Port 3000)                  │
+│                      Azure Container Apps (auto-scale)           │
+│  ┌────────────┬───────────┬───────────┬──────────┬────────────┐  │
+│  │   Auth     │  Profile  │   Jobs    │   LLM    │    PDF     │  │
+│  │ (JWT/OAuth)│  (CRUD)   │ (parsing) │(LangChain│(Puppeteer) │  │
+│  └────────────┴───────────┴───────────┴──────────┴────────────┘  │
+│  ┌────────────┬───────────┬───────────┬──────────┬────────────┐  │
+│  │  Resume    │ Interviews│ Templates │  Email   │Subscription│  │
+│  │  Parser    │   (AI)    │ (50 PDFs) │ (Resend) │  (Limits)  │  │
+│  └────────────┴───────────┴───────────┴──────────┴────────────┘  │
+└────┬──────────┬──────────┬──────────┬──────────┬─────────┬──────┘
+     │          │          │          │          │         │
+     ▼          ▼          ▼          ▼          ▼         ▼
+┌─────────┐ ┌────────┐ ┌─────────┐ ┌────────┐ ┌──────┐ ┌────────┐
+│Postgres │ │ Azure  │ │Upstash  │ │ Azure  │ │Sentry│ │Resend  │
+│  16     │ │ Blob / │ │ QStash /│ │   AI   │ │      │ │ (mail) │
+│(pg pool)│ │ AWS S3 │ │SvcBus   │ │Foundry │ │(APM) │ │        │
+│         │ │ / disk │ │ / mem   │ │+OpenAI │ │      │ │        │
+└─────────┘ └────────┘ └─────────┘ └────────┘ └──────┘ └────────┘
+                                       │
+                                       ▼
+                              ┌────────────────┐
+                              │ GPT-4o agents  │
+                              │ (LangGraph)    │
+                              └────────────────┘
 ```
 
-## 📦 Monorepo Structure (npm Workspaces)
+> **Pluggable providers:** Storage (Blob/S3/disk), Queue (QStash/Service Bus/in-memory),
+> LLM (Azure OpenAI/Hugging Face/mock), and Cache (Upstash Redis/node-cache) are all selected via env.
+
+## 📦 Monorepo Structure (npm Workspaces + Turborepo)
 
 ```text
 smart-apply/
-├── package.json              # Workspace Root
-├── turbo.json                # Turborepo Config
+├── package.json              # Workspace root
+├── turbo.json                # Turborepo pipeline
 ├── apps/
-│   ├── api/                  # @smart-apply/api (NestJS)
+│   ├── api/                  # @smart-apply/api (NestJS 11)
 │   │   ├── src/
-│   │   │   ├── admin/        # Admin Module
-│   │   │   ├── agents/       # Azure AI Agents
-│   │   │   ├── applications/ # Application Pipeline
-│   │   │   ├── auth/         # JWT + Sessions
-│   │   │   ├── common/       # Guards, Filters
-│   │   │   ├── config/       # Env Config (Zod)
-│   │   │   ├── health/       # Health Checks
-│   │   │   ├── job-postings/ # Job Parser
-│   │   │   ├── jobs/         # Queue Processing
-│   │   │   ├── keywords/     # ATS Keywords
-│   │   │   ├── llm/          # LLM Providers
-│   │   │   ├── pdf/          # PDF Generation
-│   │   │   ├── prisma/       # Database Client
-│   │   │   ├── profile/      # Profile CRUD
-│   │   │   ├── resume-parser/# Resume Parser
-│   │   │   ├── storage/      # File Storage
-│   │   │   ├── templates/    # Template System
-│   │   │   ├── uploads/      # File Uploads
-│   │   │   └── user-preferences/
-│   │   ├── prisma/           # Schema + Migrations
-│   │   └── test/             # E2E + Unit Tests
+│   │   │   ├── admin/             # Admin dashboard endpoints
+│   │   │   ├── agents/            # Azure AI Foundry agents
+│   │   │   ├── applications/      # Generation pipeline
+│   │   │   ├── auth/              # JWT, OAuth, 2FA, sessions, refresh tokens
+│   │   │   ├── common/            # Guards, filters, decorators (@Sanitize)
+│   │   │   ├── config/            # Zod env schema
+│   │   │   ├── contact/           # Contact form
+│   │   │   ├── email/             # Resend transactional email
+│   │   │   ├── health/            # Terminus health checks
+│   │   │   ├── interviews/        # AI mock interview generator
+│   │   │   ├── job-postings/      # Text/URL/file parsers
+│   │   │   ├── jobs/              # Queue providers (QStash / SB / mem)
+│   │   │   ├── keywords/          # ATS keyword extraction & matching
+│   │   │   ├── linkedin-jobs/     # LinkedIn job search
+│   │   │   ├── llm/               # LLM provider abstraction
+│   │   │   ├── logger/            # Pino + Winston audit
+│   │   │   ├── pdf/               # Puppeteer + Handlebars (50 templates)
+│   │   │   ├── prisma/            # PrismaService (pg adapter)
+│   │   │   ├── profile/           # Profile CRUD (differential updates)
+│   │   │   ├── resume-parser/     # PDF/DOCX → Profile bootstrap
+│   │   │   ├── storage/           # Blob / S3 / disk providers
+│   │   │   ├── subscription/      # Plans & usage limits
+│   │   │   ├── templates/         # Template catalog
+│   │   │   ├── uploads/           # Upload endpoints
+│   │   │   └── user-preferences/  # Per-user settings
+│   │   ├── prisma/                # Schema, migrations, seeds
+│   │   └── test/                  # Unit / integration / e2e
 │   │
-│   └── web/                  # @smart-apply/web (Next.js)
+│   └── web/                  # @smart-apply/web (Next.js 16)
 │       ├── src/
-│       │   ├── app/          # App Router Pages
-│       │   ├── components/   # UI Components
-│       │   ├── hooks/        # Custom Hooks
-│       │   ├── lib/          # API Client, Utils
-│       │   ├── stores/       # Zustand Stores
-│       │   └── types/        # TypeScript Types
-│       └── public/           # Static Assets
+│       │   ├── app/               # App Router (route groups)
+│       │   ├── components/        # UI + shadcn/ui + pdf
+│       │   ├── hooks/             # Custom React hooks
+│       │   ├── lib/               # api-client, providers, utils
+│       │   ├── stores/            # Zustand
+│       │   └── types/             # Shared TS types
+│       └── public/                # Static assets
 │
-├── packages/
-│   └── shared/               # Shared Types/Utils
-│
-├── docs/                     # Documentation
-└── infra/                    # Docker, Deployment
+├── packages/shared/          # Shared types/utils
+├── docs/                     # Feature, guide, security, implementation docs
+├── infra/                    # Dockerfiles, docker-compose, nginx
+└── scripts/                  # Deploy & maintenance
 ```
 
 ## 🔄 Application Generation Pipeline
@@ -94,89 +101,89 @@ User → Frontend (Next.js)
         │
         │ POST /api/v1/applications
         ▼
-┌──────────────────────────────┐
-│ ApplicationsService          │
-│ 1. Validate job posting      │
-│ 2. Create record (PENDING)   │
-│ 3. Publish to queue          │
-└──────────────────────────────┘
+┌──────────────────────────────────────┐
+│ ApplicationsService                  │
+│ 1. Validate job posting              │
+│ 2. Enforce subscription limits       │
+│ 3. Create record (PENDING)           │
+│ 4. Publish to queue                  │
+└──────────────────────────────────────┘
         │
         ▼
-┌──────────────────────────────┐
-│ Service Bus Queue            │
-│ "application-jobs"           │
-└──────────────────────────────┘
+┌──────────────────────────────────────┐
+│ Queue (QStash / Service Bus / mem)   │
+└──────────────────────────────────────┘
         │
         ▼
-┌──────────────────────────────┐
-│ Job Processor                │
-│ 1. Update status → GENERATING│
-│ 2. Load Profile + Job        │
-│ 3. Detect Language           │
-│ 4. Select Template           │
-└──────────────────────────────┘
+┌──────────────────────────────────────┐
+│ Job Processor                        │
+│ 1. Status → GENERATING (SSE push)    │
+│ 2. Load Profile + JobPosting         │
+│ 3. Detect language (DE/EN)           │
+│ 4. Select template (lang × design)   │
+│ 5. Extract ATS keywords              │
+└──────────────────────────────────────┘
         │
         ▼
-┌──────────────────────────────┐
-│ LLM Service (Azure OpenAI)   │
-│ 1. Generate Cover Letter     │
-│ 2. Generate Resume           │
-└──────────────────────────────┘
+┌──────────────────────────────────────┐
+│ LLM Service (LangChain + LangGraph)  │
+│ Provider: Azure OpenAI (GPT-4o) /    │
+│           Hugging Face / mock        │
+│ Circuit-breaker + retries (opossum)  │
+│ 1. Generate cover letter             │
+│ 2. Generate resume                   │
+└──────────────────────────────────────┘
         │
         ▼
-┌──────────────────────────────┐
-│ PDF Service (Puppeteer)      │
-│ 1. Render Handlebars Template│
-│ 2. Generate PDFs             │
-│ 3. ATS-optimized Output      │
-└──────────────────────────────┘
+┌──────────────────────────────────────┐
+│ PDF Service (Puppeteer pool)         │
+│ 1. Render Handlebars template        │
+│ 2. Generate ATS-optimized PDFs       │
+│ 3. Apply pdf-lib post-processing     │
+└──────────────────────────────────────┘
         │
         ▼
-┌──────────────────────────────┐
-│ Storage Service (Azure Blob) │
-│ 1. Upload PDFs               │
-│ 2. Generate SAS URLs         │
-│ 3. Update status → READY     │
-└──────────────────────────────┘
-        │
-        ▼
-┌──────────────────────────────┐
-│ SSE (Real-time Updates)      │
-│ Push status to Frontend      │
-└──────────────────────────────┘
+┌──────────────────────────────────────┐
+│ Storage (Azure Blob / S3 / disk)     │
+│ 1. Upload PDFs                       │
+│ 2. Generate SAS / pre-signed URLs    │
+│ 3. Persist keys in Application       │
+│ 4. Status → READY (SSE push)         │
+└──────────────────────────────────────┘
 ```
 
-## 🗄️ Database Schema (Prisma)
+## 🗄️ Database Schema (Prisma 6)
 
 ### Core Models
 
-| Model             | Description                            |
-| ----------------- | -------------------------------------- |
-| **User**          | Authentication, email, password        |
-| **Profile**       | Personal info, contact details         |
-| **Skill**         | Skills with level                      |
-| **Experience**    | Work history                           |
-| **Education**     | Education history                      |
-| **Certificate**   | Certifications                         |
-| **Project**       | Portfolio projects                     |
-| **Language**      | Language proficiency                   |
-| **JobPosting**    | Parsed job listings                    |
-| **Application**   | Generated applications                 |
-| **ResumeTemplate**| PDF templates                          |
-| **RefreshToken**  | Token rotation                         |
-| **Session**       | Device tracking                        |
+| Model              | Description                            |
+| ------------------ | -------------------------------------- |
+| **User**           | Auth, OAuth identities, 2FA secrets    |
+| **Profile**        | Personal info, contact, summary        |
+| **Skill**          | Skills with level & category           |
+| **Experience**     | Work history                           |
+| **Education**      | Education history                      |
+| **Certificate**    | Certifications                         |
+| **Project**        | Portfolio projects                     |
+| **Language**       | Language proficiency                   |
+| **JobPosting**     | Parsed job listings                    |
+| **Application**    | Generated applications + PDFs          |
+| **ResumeTemplate** | PDF templates (50 variants)            |
+| **Interview**      | AI-generated interview Q&A             |
+| **RefreshToken**   | Rotated refresh tokens                 |
+| **Session**        | Device/IP/UA tracking                  |
+| **Subscription**   | Plan & usage counters                  |
+| **AuditLog**       | Security event log                     |
 
 ### Key Relations
 
 ```text
 User 1:1 Profile
 Profile 1:N Skills, Experiences, Education, Certificates, Projects, Languages
-User 1:N JobPostings
-User 1:N Applications
+User 1:N JobPostings, Applications, RefreshTokens, Sessions, Interviews
 Application N:1 JobPosting
 Application N:1 ResumeTemplate
-User 1:N RefreshTokens
-User 1:N Sessions
+User 1:1 Subscription
 ```
 
 ## 🔐 Security Architecture
@@ -184,132 +191,163 @@ User 1:N Sessions
 ### Authentication Flow
 
 ```text
-1. Login → JWT Access Token (HttpOnly Cookie, 15min)
-         → Refresh Token (HttpOnly Cookie, 7 days)
-2. Access Token expires → Auto-refresh via /auth/refresh
-3. Refresh Token rotation on each use
-4. Max 5 concurrent sessions per user
-5. Remote logout capability
+1. Login (email/password OR OAuth: Google / Microsoft / Azure AD)
+   → Optional 2FA challenge (TOTP via otplib)
+   → Access token (HttpOnly cookie, ~15 min)
+   → Refresh token (HttpOnly cookie, 7 days, rotated)
+2. Access token expires → silent refresh via /auth/refresh
+3. Refresh token rotation on every use; reuse triggers session revoke
+4. Max 5 concurrent sessions/user (oldest evicted)
+5. Remote logout per session (cron cleanup of expired)
 ```
 
 ### Security Layers
 
-| Layer          | Implementation                         |
-| -------------- | -------------------------------------- |
-| **Transport**  | HTTPS, HSTS                            |
-| **Headers**    | Helmet, CSP, X-Frame-Options           |
-| **Auth**       | JWT + HttpOnly Cookies                 |
-| **Rate Limit** | 5/15min (auth), 100/15min (standard)   |
-| **Input**      | class-validator, @Sanitize() decorator |
-| **XSS**        | DOMPurify, CSP                         |
-| **CSRF**       | Optional csrf-csrf                     |
-| **Passwords**  | argon2, strength validation            |
-| **Audit**      | Winston logging, 90-day retention      |
+| Layer          | Implementation                                     |
+| -------------- | -------------------------------------------------- |
+| **Transport**  | HTTPS, HSTS                                        |
+| **Headers**    | Helmet, CSP, X-Frame-Options, X-Content-Type-Opts  |
+| **Auth**       | JWT (HttpOnly cookies) + refresh rotation + 2FA    |
+| **OAuth**      | Google, Microsoft, Azure AD (passport)             |
+| **Rate Limit** | 5/15min auth · 100/15min standard (`@nestjs/throttler`) |
+| **Input**      | class-validator DTOs, `@Sanitize()` + DOMPurify    |
+| **CSRF**       | csrf-csrf (Double Submit Cookie, optional)         |
+| **Passwords**  | argon2id, strength regex                           |
+| **Audit**      | Winston daily-rotated logs (90-day retention)      |
+| **Monitoring** | Sentry (errors + performance)                      |
 
 ## 🔧 Technology Stack
 
 ### Backend (NestJS 11)
 
-| Category   | Technology                       |
-| ---------- | -------------------------------- |
-| Runtime    | Node.js 24                       |
-| Framework  | NestJS 11                        |
-| Database   | PostgreSQL 16                    |
-| ORM        | Prisma 5.22                      |
-| Auth       | JWT (jsonwebtoken) + argon2      |
-| Queue      | Azure Service Bus                |
-| Storage    | Azure Blob Storage               |
-| LLM        | Azure AI Foundry + Azure OpenAI  |
-| PDF        | Puppeteer 24 + Handlebars        |
-| Validation | class-validator, Zod             |
+| Category    | Technology                                           |
+| ----------- | ---------------------------------------------------- |
+| Runtime     | Node.js 24 (>= 20.19)                                |
+| Framework   | NestJS 11                                            |
+| Database    | PostgreSQL 16                                        |
+| ORM         | Prisma 6.19 (`@prisma/adapter-pg` + connection pool) |
+| Auth        | passport-jwt · passport-google · passport-microsoft · passport-azure-ad · argon2 · otplib (2FA) |
+| Queue       | Upstash QStash · Azure Service Bus · in-memory       |
+| Cache       | Upstash Redis · node-cache                           |
+| Storage     | Azure Blob · AWS S3 · local disk                     |
+| LLM         | Azure AI Foundry · Azure OpenAI · LangChain · LangGraph · Hugging Face |
+| PDF         | Puppeteer 24 + Playwright · Handlebars · pdf-lib · pdf-parse · mammoth (DOCX) |
+| Email       | Resend                                               |
+| Logging     | Pino (req logs) + Winston (audit, daily rotation)    |
+| Monitoring  | Sentry (`@sentry/node` + profiling)                  |
+| Validation  | class-validator · Zod · sanitize-html                |
+| Resilience  | opossum (circuit breaker) · generic-pool (browser pool) |
+| Scheduling  | `@nestjs/schedule` (cron jobs)                       |
+| Health      | `@nestjs/terminus`                                   |
 
 ### Frontend (Next.js 16)
 
-| Category   | Technology                       |
-| ---------- | -------------------------------- |
-| Framework  | Next.js 16.1 (App Router)        |
-| Language   | TypeScript (strict)              |
-| UI         | React 19 + shadcn/ui + Tailwind  |
-| State      | Zustand (auth) + React Query     |
-| Forms      | React Hook Form + Zod            |
-| PDF Viewer | react-pdf                        |
-| Editor     | Tiptap                           |
-| Toast      | Sonner                           |
+| Category    | Technology                                           |
+| ----------- | ---------------------------------------------------- |
+| Framework   | Next.js 16.1 (App Router, React Compiler enabled)    |
+| Language    | TypeScript (strict)                                  |
+| UI          | React 19.2 · shadcn/ui (Radix) · Tailwind v4         |
+| State       | Zustand 5 · TanStack Query 5                         |
+| Forms       | react-hook-form 7 · Zod (`@hookform/resolvers`)      |
+| PDF Viewer  | react-pdf · pdfjs-dist                               |
+| Editor      | Tiptap 3 (StarterKit + TextStyle)                    |
+| Toast       | Sonner                                               |
+| Files       | react-dropzone · jszip                               |
+| Sanitize    | isomorphic-dompurify                                 |
+| Markdown    | marked · turndown                                    |
+| Bundle      | Cloudflare Workers (OpenNext) · `@next/bundle-analyzer` |
 
 ### Infrastructure
 
-| Category   | Technology                       |
-| ---------- | -------------------------------- |
-| Container  | Docker (multi-stage)             |
-| Hosting    | Azure Container Apps             |
-| CI/CD      | GitHub Actions (OIDC)            |
-| Secrets    | Azure Key Vault                  |
-| Monitoring | Winston logs                     |
+| Category   | Technology                                    |
+| ---------- | --------------------------------------------- |
+| Container  | Docker (multi-stage)                          |
+| API host   | Azure Container Apps                          |
+| Web host   | Cloudflare Workers via `@opennextjs/cloudflare` |
+| Registry   | Azure Container Registry (ACR)                |
+| CI/CD      | GitHub Actions + Azure OIDC                   |
+| Secrets    | Azure Key Vault (prod) · `.env` (dev)         |
+| Database   | Azure Database for PostgreSQL Flexible Server |
+| DNS/CDN    | Cloudflare                                    |
 
-## 📊 API Endpoints
+## 📊 API Endpoints (selection)
 
-### Public Endpoints
+All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>.
 
-| Method | Endpoint         | Description        |
-| ------ | ---------------- | ------------------ |
-| POST   | `/auth/register` | User registration  |
-| POST   | `/auth/login`    | User login         |
-| POST   | `/auth/refresh`  | Token refresh      |
-| GET    | `/health`        | Health check       |
+### Public
 
-### Protected Endpoints
+| Method | Endpoint                | Description           |
+| ------ | ----------------------- | --------------------- |
+| POST   | `/auth/register`        | Register              |
+| POST   | `/auth/login`           | Email/password login  |
+| POST   | `/auth/refresh`         | Rotate access token   |
+| GET    | `/auth/oauth/google`    | OAuth (Google)        |
+| GET    | `/auth/oauth/microsoft` | OAuth (Microsoft)     |
+| GET    | `/auth/csrf-token`      | CSRF token (optional) |
+| GET    | `/health`               | Health check          |
+| POST   | `/contact`              | Contact form          |
 
-| Method   | Endpoint                  | Description         |
-| -------- | ------------------------- | ------------------- |
-| GET      | `/auth/me`                | Current user        |
-| GET      | `/auth/logout`            | Logout              |
-| GET/PUT  | `/profile`                | Profile CRUD        |
-| GET/POST | `/job-postings`           | Job management      |
-| POST     | `/job-postings/parse`     | Parse job URL       |
-| GET/POST | `/applications`           | Applications        |
-| GET      | `/applications/:id/files` | PDF downloads       |
-| GET      | `/templates`              | Available templates |
-| GET      | `/sessions`               | Active sessions     |
+### Protected
+
+| Method   | Endpoint                       | Description              |
+| -------- | ------------------------------ | ------------------------ |
+| GET      | `/auth/me`                     | Current user             |
+| GET      | `/auth/logout`                 | Logout                   |
+| POST     | `/auth/2fa/setup`              | TOTP enrollment          |
+| POST     | `/auth/2fa/verify`             | TOTP verification        |
+| GET/PUT  | `/profile`                     | Profile (differential)   |
+| POST     | `/resume-parser/parse`         | Resume → profile         |
+| GET/POST | `/job-postings`                | Job CRUD                 |
+| POST     | `/job-postings/parse`          | Parse text/URL/file      |
+| GET      | `/linkedin-jobs/search`        | LinkedIn job search      |
+| GET/POST | `/applications`                | Application pipeline     |
+| GET      | `/applications/:id/files`      | SAS download URLs        |
+| GET      | `/applications/:id/stream`     | SSE status stream        |
+| POST     | `/interviews`                  | Generate mock interview  |
+| GET      | `/templates`                   | Template catalog         |
+| GET      | `/sessions`                    | Active sessions          |
+| DELETE   | `/sessions/:id`                | Remote logout            |
+| GET      | `/subscription`                | Plan & usage             |
+| GET/PUT  | `/user-preferences`            | Settings                 |
 
 ## 🚀 Deployment
 
 ### Development
 
 ```bash
-# Start everything
-npm run dev
-
-# Or individually
-npm run api:dev    # Backend on :3000
-npm run web:dev    # Frontend on :3001
+npm run dev          # API + Web in parallel (Turborepo)
+npm run api:dev      # NestJS on :3000
+npm run web:dev      # Next.js on :3001
 ```
 
-### Production (Azure)
+### Production
 
 ```text
-GitHub Actions → Build Docker → Push ACR → Deploy ACA
-                                              │
-                                              ├── API Container
-                                              ├── PostgreSQL Flexible
-                                              ├── Blob Storage
-                                              ├── Service Bus
-                                              └── Key Vault
+GitHub Actions
+  ├── Build & test (Turborepo cache)
+  ├── Build Docker image (apps/api) → push to ACR
+  └── Deploy
+       ├── API → Azure Container Apps (rolling, OIDC)
+       │        └─ env from Azure Key Vault
+       │        └─ Postgres Flexible · Blob · Service Bus
+       └── Web → Cloudflare Workers (OpenNext)
+                └─ wrangler deploy
 ```
 
-## 📈 Performance Optimizations
+## 📈 Performance & Resilience
 
-| Feature            | Implementation                |
-| ------------------ | ----------------------------- |
-| **Template Cache** | In-memory cache (5min TTL)    |
-| **Browser Pool**   | Puppeteer instance pooling    |
-| **Circuit Breaker**| LLM failure protection        |
-| **DB Indexes**     | Optimized query performance   |
-| **Compression**    | gzip middleware               |
-| **Pagination**     | Cursor-based pagination       |
-| **SSE**            | Real-time status updates      |
+| Feature             | Implementation                              |
+| ------------------- | ------------------------------------------- |
+| **Template cache**  | In-memory cache (TTL)                       |
+| **Browser pool**    | Puppeteer instance pool (`generic-pool`)    |
+| **Circuit breaker** | `opossum` around LLM calls                  |
+| **DB indexes**      | Targeted indexes; cursor-based pagination   |
+| **Compression**     | gzip middleware                             |
+| **Soft delete**     | Logical deletion across user data           |
+| **SSE**             | Real-time pipeline status                   |
+| **N+1 prevention**  | Prisma `include`/select tuning              |
+| **CDN**             | Cloudflare in front of Workers              |
 
 ---
 
-**Current Status:** 96% Complete - Ready for Beta Testing
-
-See [docs/guides/MVP_EVALUATION_DEC_2025.md](docs/guides/MVP_EVALUATION_DEC_2025.md) for detailed status.
+See [docs/](docs/) for feature specs, security notes, and implementation guides.
