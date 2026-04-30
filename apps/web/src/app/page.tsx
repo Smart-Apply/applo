@@ -397,10 +397,6 @@ export default function Home() {
                   </li>
                   <li className="flex items-start gap-3">
                     <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Premium-Templates & Custom Branding</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
                     <span>KI Interview-Coach</span>
                   </li>
                   <li className="flex items-start gap-3">
@@ -413,15 +409,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-start gap-3">
                     <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Semantische Keyword-Erkennung</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
                     <span>Advanced Analytics & Trends</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Alle Sprachen verfügbar</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
