@@ -24,15 +24,30 @@ docker compose -f infra/docker-compose.yml up -d db
 
 ### 3. Configure Environment
 
+The repo ships with two committed templates — one per app — that you copy
+to a local `.env` (gitignored):
+
 ```bash
-cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
 ```
+
+The defaults run **fully offline** (Docker Postgres, `disk` storage,
+`in-memory` job queue, `mock` LLM). To exercise real services, flip the
+matching `*_DRIVER` / `LLM_PROVIDER` variable in `apps/api/.env` and
+uncomment the credential block beneath it. See the comments in
+`apps/api/.env.example` for the full menu.
+
+> **Note:** Staging & production secrets live in Fly Secrets and
+> Cloudflare Worker secrets — never in a committed file. See
+> [docs/guides/DEVOPS_ROADMAP.md](docs/guides/DEVOPS_ROADMAP.md).
 
 ### 4. Setup Database
 
 ```bash
-npm run prisma:migrate
-npm run prisma:seed
+npm run prisma:migrate           # apply migrations
+npm run prisma:seed              # seed demo user + sample data
+npm run prisma:seed:templates    # seed PDF resume / cover-letter templates
 ```
 
 ### 5. Start Development Servers
@@ -71,8 +86,8 @@ npm run prisma:studio # GUI for database
 npm run prisma:seed   # Re-seed demo data
 
 # Testing
-npm run test:e2e      # E2E tests
-npm run test:unit     # Unit tests
+npm run test:unit     # Unit tests (fast, no DB)
+npm run test:e2e      # E2E tests (requires test DB)
 ```
 
 ## Troubleshooting
@@ -113,6 +128,14 @@ rm -rf node_modules apps/api/node_modules apps/web/node_modules
 npm install
 ```
 
+### Real LLM / R2 / QStash needed
+
+Each pluggable provider in `apps/api/.env.example` has a commented
+credential block beneath the driver setting. Flip the driver
+(e.g. `LLM_PROVIDER=azure-openai`), uncomment the block, paste your
+keys, and restart `npm run start:dev`. QStash additionally requires a
+public webhook URL — use `ngrok` or `cloudflared tunnel` locally.
+
 ## What's Included
 
 | Feature                     | Status |
@@ -129,12 +152,13 @@ npm install
 
 ## Next Steps
 
-1. **Create a profile** - Add your skills, experience, education
-2. **Add a job posting** - Paste a URL from Indeed, LinkedIn, etc.
-3. **Generate application** - Select a template and create your documents
+1. **Create a profile** — add your skills, experience, education
+2. **Add a job posting** — paste a URL from Indeed, LinkedIn, etc.
+3. **Generate application** — select a template and create your documents
 
 ## Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
-- [docs/](docs/) - Full documentation
-- [docs/guides/TEMPLATE_GUIDE.md](docs/guides/TEMPLATE_GUIDE.md) - Template system guide
+- [ARCHITECTURE.md](ARCHITECTURE.md) — system architecture overview
+- [docs/guides/DEVOPS_ROADMAP.md](docs/guides/DEVOPS_ROADMAP.md) — multi-stage env, secrets, releases
+- [docs/guides/TEMPLATE_GUIDE.md](docs/guides/TEMPLATE_GUIDE.md) — template system guide
+- [docs/](docs/) — full documentation

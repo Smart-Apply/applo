@@ -1,7 +1,13 @@
 # Dependencies
 node_modules/
 .pnp
+.pnp.*
 .pnp.js
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
 # Testing
 coverage/
@@ -73,6 +79,12 @@ temp/
 # Next.js
 .next/
 out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Cloudflare / OpenNext build output and local state
+.open-next/
+.wrangler/
 
 # Turborepo
 .turbo/
