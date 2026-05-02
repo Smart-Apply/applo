@@ -126,6 +126,19 @@ export class AuthService {
       this.auditLogger.logRegistration(user.email, user.id, req);
     }
 
+    // Send the verification email straight away. We deliberately await
+    // it here (rather than fire-and-forget) so the audit log accurately
+    // records EMAIL_VERIFICATION_SENT in the same trace, but we swallow
+    // failures so a transient Resend outage can never block account
+    // creation — the user can still trigger "Erneut senden" from the UI.
+    try {
+      await this.sendVerificationEmail(user.id, req);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send verification email after registration for ${user.email}: ${(error as Error).message}`,
+      );
+    }
+
     // Generate tokens and create session
     const tokens = await this.generateTokens(user.id, user.email, userAgent, ipAddress, req);
 
