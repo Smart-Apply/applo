@@ -34,6 +34,30 @@ const MAX_CONTENT_LENGTH = 12000; // Character limit for LLM processing
 const LLM_TEMPERATURE = 0; // Deterministic — no creative rewriting/translation
 const LLM_MAX_TOKENS = 16000; // High limit for long job postings
 
+/**
+ * Hard wall-clock cap for the entire agent parse pipeline (browser launch +
+ * navigation + LLM extraction). The global Express TimeoutMiddleware excludes
+ * this route, so without this cap a hung Playwright page or stuck Azure
+ * OpenAI request would tie up the single Fly worker indefinitely.
+ */
+const AGENT_PARSE_HARD_TIMEOUT_MS = 90_000; // 90s
+
+/**
+ * Per-call timeout for the Azure OpenAI HTTP request. Independent of the
+ * pipeline cap above — a stuck network connection would otherwise leak fetch
+ * sockets even after the parse caller gives up.
+ */
+const AZURE_OPENAI_FETCH_TIMEOUT_MS = 45_000; // 45s
+
+/**
+ * Concurrency gate. The agent parser launches a fresh Chromium via Playwright
+ * AND the Puppeteer PDF pool can be holding up to 2 more browsers — on a
+ * 1 GB shared-cpu-1x Fly VM that means a second concurrent agent parse
+ * reliably OOM-kills the worker (kernel SIGKILL, no CORS headers on the
+ * in-flight responses). Serialising the agent path keeps RSS bounded.
+ */
+let inFlightParse: Promise<unknown> | null = null;
+
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -72,20 +96,75 @@ export class AgentUrlParser {
 
   /**
    * Parse job posting from URL using a headless browser + Azure OpenAI extraction.
+  /**
+   * Parse job posting from URL using a headless browser + Azure OpenAI extraction.
+   *
+   * Wrapped in:
+   *   1. A single-flight gate (`inFlightParse`) so concurrent callers queue
+   *      instead of OOM-killing the worker by launching parallel Chromiums.
+   *   2. A hard wall-clock cap (`AGENT_PARSE_HARD_TIMEOUT_MS`) so a stuck
+   *      Playwright page or Azure OpenAI request can't tie up the worker
+   *      forever now that the route is excluded from the global Express
+   *      timeout middleware.
+   *
    * @param url The job posting URL
    * @returns Structured job posting data
    */
   async parse(url: string): Promise<JobPostingExtraction> {
+    // Serialise concurrent parses (see comment on `inFlightParse`).
+    if (inFlightParse) {
+      this.logger.warn(
+        `Another agent parse is already in flight; queueing request for ${url}`,
+      );
+      try {
+        await inFlightParse;
+      } catch {
+        // Previous parse's failure is irrelevant — we just waited for the slot.
+      }
+    }
+
+    const run = this.parseInternal(url);
+    inFlightParse = run.finally(() => {
+      if (inFlightParse === run) {
+        inFlightParse = null;
+      }
+    });
+    return run;
+  }
+
+  private async parseInternal(url: string): Promise<JobPostingExtraction> {
     this.logger.log(`Starting agent-based parsing for URL: ${url}`);
     const startTime = Date.now();
 
+    // Hard wall-clock cap for the whole pipeline. Implemented as a
+    // Promise.race so we surface a friendly error instead of letting the
+    // request hang indefinitely.
+    let timeoutHandle: NodeJS.Timeout | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutHandle = setTimeout(() => {
+        reject(
+          new Error(
+            `Agent parser exceeded hard timeout of ${AGENT_PARSE_HARD_TIMEOUT_MS / 1000}s. ` +
+              `Please copy the job description text directly into the form.`,
+          ),
+        );
+      }, AGENT_PARSE_HARD_TIMEOUT_MS);
+      // Don't keep the event loop alive purely for this timer.
+      timeoutHandle.unref?.();
+    });
+
     try {
-      await this.initBrowser();
-      const page = await this.navigateToUrl(url);
-      const pageContent = await this.extractPageContent(page);
-      this.detectBotProtection(pageContent, url);
-      const extracted = await this.extractStructuredData(pageContent, url);
-      this.validateExtraction(extracted);
+      const work = (async () => {
+        await this.initBrowser();
+        const page = await this.navigateToUrl(url);
+        const pageContent = await this.extractPageContent(page);
+        this.detectBotProtection(pageContent, url);
+        const extracted = await this.extractStructuredData(pageContent, url);
+        this.validateExtraction(extracted);
+        return extracted;
+      })();
+
+      const extracted = await Promise.race([work, timeoutPromise]);
 
       const duration = Date.now() - startTime;
       this.logger.log(`Successfully parsed URL in ${duration}ms`);
@@ -95,6 +174,7 @@ export class AgentUrlParser {
       this.logger.error(`Agent parsing failed for ${url}: ${error.message}`);
       throw error;
     } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle);
       await this.closeBrowser();
     }
   }
@@ -552,6 +632,10 @@ export class AgentUrlParser {
   /**
    * Direct HTTP call to Azure OpenAI chat completions endpoint.
    * Replaces the previous LangChain `AzureChatOpenAI.invoke()` dependency.
+   *
+   * Uses an AbortController so a stuck connection can't leak sockets.
+   * Independent of the outer pipeline timeout in `parseInternal()` — that one
+   * gives up the response, this one actually closes the underlying socket.
    */
   private async callAzureOpenAI(messages: ChatMessage[]): Promise<string> {
     const url =
@@ -559,18 +643,39 @@ export class AgentUrlParser {
       `/openai/deployments/${this.azureDeployment}/chat/completions` +
       `?api-version=${this.azureApiVersion}`;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'api-key': this.azureApiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messages,
-        temperature: LLM_TEMPERATURE,
-        max_tokens: LLM_MAX_TOKENS,
-      }),
-    });
+    const controller = new AbortController();
+    const abortTimer = setTimeout(
+      () => controller.abort(),
+      AZURE_OPENAI_FETCH_TIMEOUT_MS,
+    );
+    abortTimer.unref?.();
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'api-key': this.azureApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages,
+          temperature: LLM_TEMPERATURE,
+          max_tokens: LLM_MAX_TOKENS,
+        }),
+        signal: controller.signal,
+      });
+    } catch (err) {
+      const e = err as Error & { name?: string };
+      if (e.name === 'AbortError') {
+        throw new Error(
+          `Azure OpenAI request timed out after ${AZURE_OPENAI_FETCH_TIMEOUT_MS / 1000}s`,
+        );
+      }
+      throw err;
+    } finally {
+      clearTimeout(abortTimer);
+    }
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => '');
