@@ -3,43 +3,50 @@
 ## 🏗️ High-Level Architecture
 
 ```text
-┌──────────────────────────────────────────────────────────────────┐
-│                       Next.js 16 Frontend                        │
-│       (React 19 · Tailwind v4 · shadcn/ui · TanStack Query)      │
-│              Cloudflare Workers (OpenNext) · Port 3001           │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │ HTTPS · HttpOnly cookies
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                       NestJS 11 API (Port 3000)                  │
-│                      Azure Container Apps (auto-scale)           │
-│  ┌────────────┬───────────┬───────────┬──────────┬────────────┐  │
-│  │   Auth     │  Profile  │   Jobs    │   LLM    │    PDF     │  │
-│  │ (JWT/OAuth)│  (CRUD)   │ (parsing) │ (Azure   │(Puppeteer) │  │
-│  └────────────┴───────────┴───────────┴──────────┴────────────┘  │
-│  ┌────────────┬───────────┬───────────┬──────────┬────────────┐  │
-│  │  Resume    │ Interviews│ Templates │  Email   │Subscription│  │
-│  │  Parser    │   (AI)    │ (50 PDFs) │ (Resend) │  (Limits)  │  │
-│  └────────────┴───────────┴───────────┴──────────┴────────────┘  │
-└────┬──────────┬──────────┬──────────┬──────────┬─────────┬──────┘
-     │          │          │          │          │         │
-     ▼          ▼          ▼          ▼          ▼         ▼
-┌─────────┐ ┌────────┐ ┌─────────┐ ┌────────┐ ┌──────┐ ┌────────┐
-│  Neon   │ │  R2 /  │ │Upstash  │ │ Azure  │ │Sentry│ │Resend  │
-│Postgres │ │  disk  │ │ QStash /│ │   AI   │ │      │ │ (mail) │
-│(pg pool)│ │        │ │  mem    │ │Foundry │ │(APM) │ │        │
-│         │ │        │ │         │ │+OpenAI │ │      │ │        │
-└─────────┘ └────────┘ └─────────┘ └────────┘ └──────┘ └────────┘
-                                       │
-                                       ▼
-                              ┌────────────────┐
-                              │ Azure OpenAI   │
-                              │ + Foundry agts │
-                              └────────────────┘
+                                  ┌─────────────────────────────┐
+         Browser  ───────────────▶│   Cloudflare Edge / DNS     │
+                                  │   (WAF · CDN · Proxy 🟧)    │
+                                  └─────┬──────────────┬────────┘
+                                        │              │
+                  smart-apply.io        │              │  api.smart-apply.io
+                  www.smart-apply.io    │              │
+                                        ▼              ▼
+┌──────────────────────────────────────────────┐  ┌─────────────────────────────────┐
+│        Next.js 16 Frontend (Worker)          │  │     NestJS 11 API (Fly.io)      │
+│  React 19 · Tailwind v4 · shadcn/ui          │  │  Region: fra · auto-scale 1..N  │
+│  Cloudflare Workers (OpenNext)               │  │  Let's Encrypt cert via Fly     │
+│  Runtime API URL via /api/config             │  │                                 │
+└──────────────────────┬───────────────────────┘  │  ┌──────┬───────┬──────┬─────┐  │
+                       │ HTTPS · HttpOnly cookies │  │ Auth │Profile│ Jobs │ LLM │  │
+                       │   (CSRF Double-Submit)   │  └──────┴───────┴──────┴─────┘  │
+                       └─────────────────────────▶│  ┌──────┬───────┬──────┬─────┐  │
+                                                  │  │ PDF  │Resume │Inter │Email│  │
+                                                  │  │ pool │parser │views │     │  │
+                                                  │  └──────┴───────┴──────┴─────┘  │
+                                                  └────┬────┬────┬────┬────┬───┬───┘
+                                                       │    │    │    │    │   │
+                                                       ▼    ▼    ▼    ▼    ▼   ▼
+                                            ┌─────────┐ ┌────────┐ ┌─────────┐ ┌────────┐ ┌──────┐ ┌────────┐
+                                            │  Neon   │ │  CF R2 │ │ Upstash │ │ Azure  │ │Sentry│ │Resend  │
+                                            │Postgres │ │ (EU)   │ │ QStash /│ │   AI   │ │      │ │ (mail) │
+                                            │ EU/Frkft│ │        │ │  Redis  │ │Foundry │ │(APM) │ │        │
+                                            │ pooled+ │ │        │ │         │ │+OpenAI │ │      │ │        │
+                                            │ direct  │ │        │ │         │ │        │ │      │ │        │
+                                            └─────────┘ └────────┘ └─────────┘ └────────┘ └──────┘ └────────┘
 ```
 
 > **Pluggable providers:** Storage (Cloudflare R2 / disk), Queue (QStash / in-memory),
 > LLM (Azure OpenAI / Azure AI Foundry / mock), and Cache (Upstash Redis / node-cache) are all selected via env.
+
+### Production hostnames
+
+| Hostname                    | Origin                                                | Notes                                              |
+| --------------------------- | ----------------------------------------------------- | -------------------------------------------------- |
+| `smart-apply.io` (apex)     | Cloudflare Worker `smart-apply-web` (Custom Domain)   | Universal Edge Cert (Cloudflare)                   |
+| `www.smart-apply.io`        | Cloudflare Worker `smart-apply-web` (Custom Domain)   | Same Worker; redirect rule TBD for canonical host  |
+| `api.smart-apply.io`        | CNAME → `93ke51y.smart-apply-api.fly.dev` (Proxied 🟧) | Let's Encrypt cert issued by Fly via DNS-01        |
+| `_acme-challenge.api.…`     | CNAME → `api.smart-apply.io.93ke51y.flydns.net` (DNS-only) | Required for Fly cert renewal behind CF proxy |
+| `_fly-ownership.api.…`      | TXT `app-93ke51y`                                     | Required when traffic is proxied via Cloudflare    |
 
 ## 📦 Monorepo Structure (npm Workspaces + Turborepo)
 
@@ -261,14 +268,14 @@ User 1:1 Subscription
 
 | Category   | Technology                                    |
 | ---------- | --------------------------------------------- |
-| Container  | Docker (multi-stage)                          |
-| API host   | Azure Container Apps                          |
-| Web host   | Cloudflare Workers via `@opennextjs/cloudflare` |
-| Registry   | Azure Container Registry (ACR)                |
-| CI/CD      | GitHub Actions + Azure OIDC                   |
-| Secrets    | Azure Key Vault (prod) · `.env` (dev)         |
-| Database   | Neon Postgres (serverless; `DATABASE_URL` pooled, `DIRECT_URL` for migrations) |
-| DNS/CDN    | Cloudflare                                    |
+| Container  | Docker (multi-stage, `infra/Dockerfile`)      |
+| API host   | **Fly.io** (`smart-apply-api`, region `fra`, shared-cpu-1x / 1 GB) |
+| Web host   | Cloudflare Workers via `@opennextjs/cloudflare` (`smart-apply-web`) |
+| CI/CD      | GitHub Actions → `flyctl deploy` (API) + `wrangler deploy` (Web) |
+| Secrets    | Fly Secrets (API) · Cloudflare Worker vars/secrets (Web) · `.env` (dev) |
+| Database   | Neon Postgres (serverless, EU/Frankfurt; `DATABASE_URL` pooled, `DIRECT_URL` for migrations) |
+| DNS/CDN    | Cloudflare (proxied for all hostnames; ACME challenge DNS-only) |
+| Migrations | `prisma migrate deploy` runs as a Fly **release command** before machines start serving traffic |
 
 ## 📊 API Endpoints (selection)
 
@@ -325,14 +332,23 @@ npm run web:dev      # Next.js on :3001
 ```text
 GitHub Actions
   ├── Build & test (Turborepo cache)
-  ├── Build Docker image (apps/api) → push to ACR
   └── Deploy
-       ├── API → Azure Container Apps (rolling, OIDC)
-       │        └─ env from Azure Key Vault
-       │        └─ Neon Postgres · Cloudflare R2 · QStash
+       ├── API → Fly.io (flyctl deploy, infra/Dockerfile)
+       │        ├─ Release command: prisma migrate deploy (Neon DIRECT_URL)
+       │        ├─ Secrets via `flyctl secrets set` (CORS_ORIGINS, JWT_*, R2_*, …)
+       │        ├─ HTTPS terminated by Fly (Let's Encrypt for api.smart-apply.io)
+       │        └─ Backed by Neon Postgres · Cloudflare R2 · Upstash QStash/Redis
        └── Web → Cloudflare Workers (OpenNext)
+                ├─ Build with NEXT_PUBLIC_API_URL injected from PUBLIC_API_URL env
+                ├─ Runtime config served at /api/config (single source of truth)
                 └─ wrangler deploy
 ```
+
+> ⚠️ **PUBLIC_API_URL trap:** the GitHub Actions workflow honours the
+> `PUBLIC_API_URL` repo Variable as an override. Leave it **unset** in
+> production so the workflow default (`https://api.smart-apply.io/api/v1`)
+> wins. Setting it to a `*.fly.dev` URL bakes the wrong origin into the
+> Worker and breaks CORS / cookies. See [docs/guides/DOMAIN_CLOUDFLARE_SETUP.md](docs/guides/DOMAIN_CLOUDFLARE_SETUP.md).
 
 ## 📈 Performance & Resilience
 

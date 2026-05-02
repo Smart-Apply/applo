@@ -21,7 +21,7 @@ For specific tasks, refer to these specialized instruction files:
 - Major dependency upgrades that affect the stack (Next.js, NestJS, Prisma, React, Tailwind)
 - New auth flows (OAuth providers, 2FA, refresh-token strategy, sessions)
 - New API endpoints or breaking changes to existing ones
-- Deployment topology changes (ACA, Cloudflare Workers, CI/CD pipelines)
+- Deployment topology changes (Fly.io, Cloudflare Workers, CI/CD pipelines)
 
 Also update this `copilot-instructions.md` file (Tech Stack, Backend Modules, Data Model, API Endpoints, Env Variables sections) to keep agent context accurate. Treat doc drift as a bug — never ship architecture changes without the corresponding doc updates.
 
@@ -69,7 +69,7 @@ Also update this `copilot-instructions.md` file (Tech Stack, Backend Modules, Da
 - **Security:** Helmet, CORS whitelist, `@nestjs/throttler` 6.5 (dual-tier), `csrf-csrf` 4.0 (optional), `sanitize-html`, `isomorphic-dompurify`, `@Sanitize()` decorator
 - **Health:** `@nestjs/terminus` (`/health`)
 - **Scheduling:** `@nestjs/schedule` for cron jobs (session cleanup, etc.)
-- **Containers:** Docker (multi-stage); deploy to **Azure Container Apps (ACA)**
+- **Containers:** Docker (multi-stage, `infra/Dockerfile`); deploy to **Fly.io** (`smart-apply-api`, region `fra`)
 
 ### Frontend (`apps/web`, Port 3001)
 - **Next.js 16.1** (App Router, Server Components, React Compiler)
@@ -590,13 +590,17 @@ npx shadcn@latest add <component>  # Add shadcn/ui component
 - **Password:** Demo123!
 
 ## CI/CD (GitHub Actions)
-- **API**: Build & test (Turborepo cache) → Build Docker (`apps/api`) → push to **ACR** → deploy to **ACA** with Azure **OIDC**; env via **Key Vault** references; DB migrations via init container
-- **Web**: Build with OpenNext → `wrangler deploy` to **Cloudflare Workers**
+- **API**: Build & test (Turborepo cache) → `flyctl deploy` (uses `infra/Dockerfile`); `prisma migrate deploy` runs as a Fly **release command** against Neon `DIRECT_URL` before machines start serving traffic; secrets managed via `flyctl secrets set`
+- **Web**: Build with OpenNext (`NEXT_PUBLIC_API_URL` baked from `PUBLIC_API_URL` env) → `wrangler deploy` to **Cloudflare Workers** (`smart-apply-web`)
+  - ⚠️ Leave the `PUBLIC_API_URL` GitHub repo Variable **unset** in prod so the workflow default `https://api.smart-apply.io/api/v1` wins. Setting it to a `*.fly.dev` URL bakes the wrong origin into the Worker.
 
 ## Minimal Cloud Resources (MVP)
-- **Azure**: Resource Group, ACR, ACA, Postgres Flexible Server, Storage Account (Blob), Service Bus (or QStash), Key Vault, Azure OpenAI (+ optional AI Foundry)
-- **Cloudflare**: Workers (web app), DNS, CDN
-- **Third-party**: Resend (email), Sentry (monitoring), Upstash (Redis + QStash)
+- **Fly.io**: `smart-apply-api` app (region `fra`), Let's Encrypt cert for `api.smart-apply.io` issued via DNS-01
+- **Cloudflare**: Worker `smart-apply-web` (Custom Domains: apex + `www`), DNS zone `smart-apply.io`, R2 bucket (EU jurisdiction), Universal SSL
+- **Neon**: Postgres project (EU/Frankfurt), pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) connection strings
+- **Upstash**: QStash (queue) + Redis (cache/throttler)
+- **Azure**: OpenAI (+ optional AI Foundry) for LLM/agents
+- **Third-party**: Resend (email), Sentry (monitoring)
 
 ## Tests
 **Backend (apps/api)**

@@ -2,6 +2,8 @@
 
 AI-powered job application assistant — generate tailored, ATS-optimized cover letters and resumes from your profile and any job posting.
 
+**🌐 Live:** <https://smart-apply.io> · **API:** <https://api.smart-apply.io/api/v1> · **Health:** <https://api.smart-apply.io/api/v1/health>
+
 ## ✨ Features
 
 - **Profile management** — Skills, Experience, Education, Certificates, Projects, Languages
@@ -28,7 +30,7 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 | **Queue**      | Upstash QStash · in-memory (pluggable)                                     |
 | **Cache**      | Upstash Redis · node-cache                                                  |
 | **Monorepo**   | npm workspaces · Turborepo                                                  |
-| **Deployment** | Docker · Azure Container Apps (API; Fly.io migration planned) · Cloudflare Workers / OpenNext (Web) |
+| **Deployment** | Docker · **Fly.io** (API, region `fra`) · Cloudflare Workers / OpenNext (Web) · Cloudflare DNS+CDN |
 | **Monitoring** | Sentry · Winston (audit logs, daily rotation)                               |
 
 ## 🚀 Quick Start
@@ -165,9 +167,42 @@ See [docs/security/](docs/security/) for details.
 
 ## 🌐 Deployment
 
-- **API** → Azure Container Apps — see [docs/guides/AZURE_DEPLOYMENT.md](docs/guides/AZURE_DEPLOYMENT.md)
-- **Web** → Cloudflare Workers via OpenNext (`npm run cf:deploy` in `apps/web`)
-- **CI/CD** → GitHub Actions with Azure OIDC
+**API → Fly.io** (`smart-apply-api`, region `fra`):
+
+```bash
+flyctl deploy                    # builds infra/Dockerfile + runs prisma migrate deploy
+flyctl secrets list -a smart-apply-api
+flyctl logs -a smart-apply-api
+```
+
+Deploys are also triggered automatically by `.github/workflows/deploy.yml` on pushes to `main`.
+
+**Web → Cloudflare Workers** (via OpenNext):
+
+```bash
+cd apps/web
+npm run cf:deploy                # builds + wrangler deploy
+```
+
+**Custom domain (`smart-apply.io`):**
+
+| Hostname              | Type  | Target                                      | Proxy   |
+| --------------------- | ----- | ------------------------------------------- | ------- |
+| `smart-apply.io`      | —     | Cloudflare Worker (Custom Domain binding)   | 🟧      |
+| `www.smart-apply.io`  | —     | Cloudflare Worker (Custom Domain binding)   | 🟧      |
+| `api.smart-apply.io`  | CNAME | `93ke51y.smart-apply-api.fly.dev`           | 🟧      |
+| `_acme-challenge.api` | CNAME | `api.smart-apply.io.93ke51y.flydns.net`     | DNS only |
+| `_fly-ownership.api`  | TXT   | `app-93ke51y`                               | —       |
+
+Full walkthrough (Fly cert issuance, Cloudflare proxy gotchas, runtime API URL
+via `/api/config`, the `PUBLIC_API_URL` GitHub Variable trap) lives in
+[docs/guides/DOMAIN_CLOUDFLARE_SETUP.md](docs/guides/DOMAIN_CLOUDFLARE_SETUP.md).
+
+**CI/CD** → GitHub Actions (`.github/workflows/deploy.yml`)
+
+- Builds the Turborepo + runs tests with cache
+- `flyctl deploy` for the API (Neon migrations run as a Fly release command)
+- `wrangler deploy` for the Worker (with `NEXT_PUBLIC_API_URL` baked in at build)
 
 ## 📖 Documentation
 
