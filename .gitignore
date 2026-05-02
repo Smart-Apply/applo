@@ -12,14 +12,14 @@ dist/
 build/
 
 # Environment
+# Only `.env` and `.env.example` are used. `.env` is local-only (real
+# secrets / service URLs); `.env.example` is the committed template.
+# Staging & prod read their values from Fly Secrets / CF Worker secrets,
+# never from a committed file.
 .env
 .env.local
 .env.*.local
-.env.dev
-.env.int
-.env.prod
-!.env.stage.example
-!**/.env.stage.example
+.env.bak
 
 # IDE
 .vscode/
