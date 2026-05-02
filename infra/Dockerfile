@@ -139,6 +139,15 @@ WORKDIR /app
 # Copy ONLY production dependencies from deps stage (no dev deps)
 COPY --from=deps /app/node_modules ./node_modules
 
+# Copy the workspace-local node_modules for apps/api. npm-workspaces install
+# (`npm ci --workspace=apps/api --omit=dev`) hoists shared deps to /app/node_modules
+# but leaves workspace-specific packages under /app/apps/api/node_modules — most
+# notably the `prisma` CLI binary (6.19.2) and `tsx` runtime, both required at
+# release-command time to run `prisma migrate deploy` against Neon.
+# Without this COPY, the release_command in fly.toml fails with
+# `MODULE_NOT_FOUND` on /app/apps/api/node_modules/prisma/build/index.js.
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+
 # Copy Prisma client from builder stage (Prisma 7 generates to src/generated/prisma)
 COPY --from=builder /app/apps/api/src/generated ./apps/api/src/generated
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma

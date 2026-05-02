@@ -19,19 +19,22 @@ primary_region = 'fra'
 # never generates new ones, never prompts. Idempotent: a no-op when the
 # DB is already at HEAD.
 #
-# - We invoke the locally-installed CLI via `node_modules/.bin/prisma`
-#   (NOT `npx prisma`) because npx with no version pin pulls the newest
-#   Prisma from the registry, which currently rejects schemas that still
-#   declare `url = env("DATABASE_URL")` in the datasource block.
-#   The pinned 6.19.x in node_modules accepts both schema-block and
-#   prisma.config.ts datasources.
+# Implementation notes:
+# - We invoke the prisma JS entrypoint directly via `node` rather than the
+#   `node_modules/.bin/prisma` symlink. The official node:24-alpine
+#   docker-entrypoint.sh auto-prepends `node` to the release command when
+#   it doesn't recognize an executable, then tries to `require()` the bin
+#   wrapper — which fails because npm workspaces put the actual bin
+#   under apps/api/node_modules/.bin/ rather than the root .bin/. Going
+#   directly to `node node_modules/prisma/build/index.js` sidesteps the
+#   bin-resolution layer entirely.
 # - `prisma` and `tsx` are runtime dependencies in apps/api/package.json
 #   so they survive `npm prune --production` in the Docker build. `tsx`
-#   is required by Prisma to load the TypeScript config file.
+#   is required by the Prisma CLI to load prisma.config.ts (TypeScript).
 # - prisma.config.ts prefers DIRECT_URL over DATABASE_URL, which is the
 #   correct path for migrations against Neon's pgbouncer.
 [deploy]
-  release_command = 'node_modules/.bin/prisma migrate deploy --schema=apps/api/prisma/schema.prisma'
+  release_command = 'node apps/api/node_modules/prisma/build/index.js migrate deploy --schema=apps/api/prisma/schema.prisma'
 
 [env]
   JOBS_DRIVER = 'qstash'
