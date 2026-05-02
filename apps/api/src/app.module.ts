@@ -1,4 +1,4 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from './config/config.module';
@@ -137,7 +137,16 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // Apply request ID middleware first for request tracing
     consumer.apply(RequestIdMiddleware).forRoutes('*');
-    // Apply global request timeout middleware to all routes
-    consumer.apply(TimeoutMiddleware).forRoutes('*');
+    // Apply global request timeout middleware to all routes EXCEPT a small
+    // allow-list of legitimately long-running endpoints. The 30s default is
+    // too aggressive for these:
+    //   - job-postings/parse: Playwright + Azure OpenAI extraction on dynamic
+    //     job boards (LinkedIn, Indeed, Workwise…) can take 60–90s.
+    // If you add another long-running synchronous endpoint, exclude it here
+    // (or — better — push the work onto the QStash queue).
+    consumer
+      .apply(TimeoutMiddleware)
+      .exclude({ path: 'job-postings/parse', method: RequestMethod.POST })
+      .forRoutes('*');
   }
 }

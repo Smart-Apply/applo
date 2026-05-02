@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RequestTimeoutException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { TimeoutMiddleware } from '../timeout.middleware';
 import { ConfigService } from '../../../config/config.service';
@@ -8,9 +7,10 @@ import { ConfigService } from '../../../config/config.service';
  * Unit tests for TimeoutMiddleware
  *
  * Tests verify that:
- * 1. Middleware sets timeout for all requests
- * 2. Timeout is cleared when response finishes successfully
- * 3. RequestTimeoutException is thrown for slow requests
+ * 1. Middleware sets a timeout for all requests
+ * 2. Timeout is cleared when the response finishes / closes / errors
+ * 3. A 408 response is sent (NOT thrown) when the timeout fires — throwing
+ *    would become an uncaughtException and crash the Node process
  * 4. Timeout value is configurable via ConfigService
  */
 describe('TimeoutMiddleware', () => {
@@ -41,11 +41,12 @@ describe('TimeoutMiddleware', () => {
   });
 
   describe('successful requests', () => {
-    it('should call next() and set timeout', () => {
+    it('should call next() and register response listeners', () => {
       const mockReq = {} as Request;
       const mockRes = {
         on: jest.fn(),
         headersSent: false,
+        writableEnded: false,
       } as any as Response;
       const mockNext = jest.fn() as NextFunction;
 
@@ -53,173 +54,155 @@ describe('TimeoutMiddleware', () => {
 
       expect(mockNext).toHaveBeenCalled();
       expect(mockRes.on).toHaveBeenCalledWith('finish', expect.any(Function));
+      expect(mockRes.on).toHaveBeenCalledWith('close', expect.any(Function));
       expect(mockRes.on).toHaveBeenCalledWith('error', expect.any(Function));
     });
 
-    it('should clear timeout when response finishes', (done) => {
+    it('should clear timeout when response finishes', () => {
       jest.useFakeTimers();
 
-      const mockReq = {} as Request;
+      const status = jest.fn().mockReturnThis();
+      const json = jest.fn().mockReturnThis();
+      const mockReq = { method: 'GET', path: '/api/test' } as Request;
       const mockRes = {
         on: jest.fn((event, callback) => {
           if (event === 'finish') {
-            // Simulate response finish
             callback();
           }
         }),
+        status,
+        json,
         headersSent: false,
+        writableEnded: false,
       } as any as Response;
       const mockNext = jest.fn() as NextFunction;
 
       middleware.use(mockReq, mockRes, mockNext);
 
-      // Advance time to after timeout would have triggered
+      // Advance time past the timeout — the cleared timer must NOT fire.
       jest.advanceTimersByTime(2000);
 
-      // No exception should be thrown because response finished
-      expect(mockNext).toHaveBeenCalledTimes(1);
-      expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
+      expect(status).not.toHaveBeenCalled();
+      expect(json).not.toHaveBeenCalled();
 
       jest.useRealTimers();
-      done();
     });
 
-    it('should clear timeout on response error', (done) => {
+    it('should clear timeout when the socket closes early', () => {
       jest.useFakeTimers();
 
-      const mockReq = {} as Request;
+      const status = jest.fn().mockReturnThis();
+      const json = jest.fn().mockReturnThis();
       const mockRes = {
         on: jest.fn((event, callback) => {
-          if (event === 'error') {
-            // Simulate response error
-            callback(new Error('Response error'));
+          if (event === 'close') {
+            callback();
           }
         }),
+        status,
+        json,
         headersSent: false,
+        writableEnded: false,
       } as any as Response;
       const mockNext = jest.fn() as NextFunction;
 
-      middleware.use(mockReq, mockRes, mockNext);
+      middleware.use({} as Request, mockRes, mockNext);
 
-      // Advance time to after timeout would have triggered
       jest.advanceTimersByTime(2000);
 
-      // No timeout exception should be thrown
-      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(status).not.toHaveBeenCalled();
 
       jest.useRealTimers();
-      done();
     });
   });
 
   describe('timeout behavior', () => {
-    it('should throw RequestTimeoutException when timeout is exceeded', (done) => {
+    it('should send a 408 response (NOT throw) when the timeout fires', () => {
       jest.useFakeTimers();
 
-      const mockReq = {
-        method: 'GET',
-        path: '/api/test',
-      } as Request;
+      const json = jest.fn().mockReturnThis();
+      const status = jest.fn().mockReturnValue({ json });
+      const mockReq = { method: 'POST', path: '/api/slow' } as Request;
       const mockRes = {
         on: jest.fn(),
+        status,
         headersSent: false,
+        writableEnded: false,
       } as any as Response;
       const mockNext = jest.fn() as NextFunction;
 
       middleware.use(mockReq, mockRes, mockNext);
 
-      // Advance time to trigger timeout
-      try {
-        jest.advanceTimersByTime(1100);
-        // If we get here without exception, the test should fail
-        fail('Expected RequestTimeoutException to be thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(RequestTimeoutException);
-        expect(error.message).toContain('Request timeout');
-      }
+      // Advancing past the timeout MUST NOT throw — throwing inside a
+      // setTimeout becomes uncaughtException and kills the worker.
+      expect(() => jest.advanceTimersByTime(1100)).not.toThrow();
+
+      expect(status).toHaveBeenCalledWith(408);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 408,
+          error: 'Request Timeout',
+          message: expect.stringContaining('1s'),
+        }),
+      );
 
       jest.useRealTimers();
-      done();
     });
 
-    it('should not throw if headers already sent', (done) => {
+    it('should not send a response if headers are already sent', () => {
       jest.useFakeTimers();
 
-      const mockReq = {
-        method: 'GET',
-        path: '/api/test',
-      } as Request;
+      const json = jest.fn().mockReturnThis();
+      const status = jest.fn().mockReturnValue({ json });
+      const mockReq = { method: 'GET', path: '/api/test' } as Request;
       const mockRes = {
         on: jest.fn(),
-        headersSent: true, // Headers already sent
+        status,
+        headersSent: true, // e.g. SSE stream already opened
+        writableEnded: false,
       } as any as Response;
       const mockNext = jest.fn() as NextFunction;
 
       middleware.use(mockReq, mockRes, mockNext);
-
-      // Advance time to trigger timeout
       jest.advanceTimersByTime(1100);
 
-      // No exception should be thrown because headers were already sent
-      expect(mockNext).toHaveBeenCalledTimes(1);
-      expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
+      expect(status).not.toHaveBeenCalled();
+      expect(json).not.toHaveBeenCalled();
 
       jest.useRealTimers();
-      done();
     });
 
-    it('should include timeout duration in error message', (done) => {
+    it('should not send a response if writableEnded is true', () => {
       jest.useFakeTimers();
 
-      const mockReq = {
-        method: 'POST',
-        path: '/api/slow-endpoint',
-      } as Request;
+      const json = jest.fn().mockReturnThis();
+      const status = jest.fn().mockReturnValue({ json });
       const mockRes = {
         on: jest.fn(),
+        status,
         headersSent: false,
+        writableEnded: true,
       } as any as Response;
       const mockNext = jest.fn() as NextFunction;
 
-      middleware.use(mockReq, mockRes, mockNext);
+      middleware.use({} as Request, mockRes, mockNext);
+      jest.advanceTimersByTime(1100);
 
-      try {
-        jest.advanceTimersByTime(1100);
-        fail('Expected RequestTimeoutException');
-      } catch (error: any) {
-        expect(error.message).toContain('1s'); // Timeout in seconds
-      }
+      expect(status).not.toHaveBeenCalled();
 
       jest.useRealTimers();
-      done();
     });
   });
 
   describe('configuration', () => {
     it('should use timeout from ConfigService', () => {
       const customConfigService = {
-        requestTimeoutMs: 5000, // 5s timeout
+        requestTimeoutMs: 5000,
       } as any;
 
       const customMiddleware = new TimeoutMiddleware(customConfigService);
 
       expect(customMiddleware['timeoutMs']).toBe(5000);
-    });
-
-    it('should log timeout configuration on initialization', () => {
-      const customConfigService = {
-        requestTimeoutMs: 2000, // 2s timeout
-      } as any;
-
-      const customMiddleware = new TimeoutMiddleware(customConfigService);
-      const logSpy = jest.spyOn(customMiddleware['logger'], 'log');
-
-      // Create a new instance to trigger the log
-      new TimeoutMiddleware(customConfigService);
-
-      // Note: Logger is called in constructor, so the spy must be created before instantiation
-      // This test just verifies the middleware can be constructed
-      expect(customMiddleware['timeoutMs']).toBe(2000);
     });
   });
 });
