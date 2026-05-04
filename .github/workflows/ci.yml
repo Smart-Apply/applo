@@ -1,0 +1,82 @@
+name: CI
+
+# Runs on every pull request targeting main. Catches lint errors, broken
+# unit tests, and out-of-sync lockfiles BEFORE they can be merged.
+#
+# This file is intentionally minimal — heavy integration / e2e tests
+# require a real Postgres + Redis and are run elsewhere (or before
+# release). The goal here is "fast enough that nobody bypasses it."
+
+on:
+  pull_request:
+    branches: [main]
+  # Manual trigger lets you re-run checks on demand without pushing.
+  workflow_dispatch:
+
+# Cancel in-flight runs on the same PR when a new commit is pushed.
+# Saves CI minutes and avoids confusing "out of date" status checks.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────
+  # lint-and-typecheck — fast feedback on style/type errors.
+  # No DB needed, runs in <2 min.
+  # ─────────────────────────────────────────────────────────────────────
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Verify lockfile is in sync with package.json files
+        # If a contributor edited package.json without running `npm install`,
+        # `npm ci` succeeds but the lockfile drifts. Catch that here so it
+        # doesn't break a downstream `fly deploy` that uses `npm ci` too.
+        run: |
+          npm install --package-lock-only --legacy-peer-deps
+          if ! git diff --quiet package-lock.json; then
+            echo "::error::package-lock.json is out of sync with package.json. Run 'npm install --legacy-peer-deps' locally, commit, and push."
+            git diff package-lock.json | head -100
+            exit 1
+          fi
+          echo "✅ Lockfile in sync"
+
+      - name: Build shared package (required by api + web)
+        run: npm run shared:build
+
+      - name: Lint
+        run: npm run lint
+
+  # ─────────────────────────────────────────────────────────────────────
+  # unit-tests — backend unit tests (no DB, no external services).
+  # ─────────────────────────────────────────────────────────────────────
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build shared package
+        run: npm run shared:build
+
+      - name: Run unit tests
+        run: npm run test:unit
