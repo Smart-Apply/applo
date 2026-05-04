@@ -284,7 +284,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .setContact(
       'Smart Apply Team',
-      'https://github.com/Ar1anit/smart-apply',
+      'https://github.com/Smart-Apply/smart-apply',
       'support@smartapply.com',
     )
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')

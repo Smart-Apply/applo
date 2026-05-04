@@ -271,7 +271,7 @@ A: ~1MB for 100 templates. Negligible compared to Node.js baseline (~50MB).
 
 ## Related Documentation
 
-- [Issue #220: Add caching strategy](https://github.com/Ar1anit/smart-apply/issues/220)
+- [Issue #220: Add caching strategy](https://github.com/Smart-Apply/smart-apply/issues/220)
 - [node-cache Documentation](https://www.npmjs.com/package/node-cache)
 - [NestJS Caching](https://docs.nestjs.com/techniques/caching)
 
