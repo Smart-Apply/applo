@@ -265,4 +265,4 @@ async generatePDF() {
 
 - [generic-pool Documentation](https://github.com/coopernurse/node-pool)
 - [Puppeteer Best Practices](https://pptr.dev/)
-- [Issue #199: Browser Pooling Implementation](https://github.com/Ar1anit/smart-apply/issues/199)
+- [Issue #199: Browser Pooling Implementation](https://github.com/Smart-Apply/smart-apply/issues/199)

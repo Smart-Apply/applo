@@ -435,7 +435,7 @@ get googleCallbackUrl(): string {
 ## Support
 
 For issues or questions:
-- Check GitHub Issues: https://github.com/Ar1anit/smart-apply/issues
+- Check GitHub Issues: https://github.com/Smart-Apply/smart-apply/issues
 - Review Swagger docs: http://localhost:3000/docs
 - Check logs: `apps/api/logs/`
 
