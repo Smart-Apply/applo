@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0](https://github.com/Smart-Apply/smart-apply/compare/v1.0.0...v1.1.0) (2026-05-04)
+
+
+### Features
+
+* add Dependabot configuration for automated dependency updates ([3c26d3a](https://github.com/Smart-Apply/smart-apply/commit/3c26d3aaafddfd92c20369808f8ea4e0a423dc6f))
+
 ## 1.0.0 (2026-05-04)
 
 
