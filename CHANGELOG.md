@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1](https://github.com/Smart-Apply/smart-apply/compare/v1.5.0...v1.5.1) (2026-05-05)
+
+
+### Bug Fixes
+
+* **web:** stop service worker from serving stale 404 chunks ([#375](https://github.com/Smart-Apply/smart-apply/issues/375)) ([d8b908e](https://github.com/Smart-Apply/smart-apply/commit/d8b908e5a0e855512c8ef1e66cfe1ee81b052a60))
+
 ## [1.5.0](https://github.com/Smart-Apply/smart-apply/compare/v1.4.0...v1.5.0) (2026-05-05)
 
 
