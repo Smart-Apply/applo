@@ -46,6 +46,7 @@ import type {
   LinkedInJob,
   LinkedInJobSearchFilters,
   LinkedInJobSearchResponse,
+  AnalyticsOverview,
 } from '@/types';
 import {
   ApiError,
@@ -983,5 +984,15 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+  },
+
+  // Premium analytics dashboard
+  analytics: {
+    /**
+     * Returns the full /analytics page payload in one round-trip.
+     * Backend gates this with @RequiresFeature('advancedAnalytics') —
+     * non-premium users get a 403 which the page handles via useFeatureGate.
+     */
+    getOverview: () => apiRequest<AnalyticsOverview>('/analytics/overview'),
   },
 };

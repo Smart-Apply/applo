@@ -31,6 +31,7 @@ import { EmailModule } from './email/email.module';
 import { ContactModule } from './contact/contact.module';
 import { UpstashThrottlerStorage } from './common/throttler/upstash-throttler-storage';
 import { AdminModule } from './admin/admin.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { AdminModule } from './admin/admin.module';
     EmailModule,
     ContactModule,
     AdminModule,
+    AnalyticsModule,
     HealthModule,
   ],
   controllers: [CSPViolationController],

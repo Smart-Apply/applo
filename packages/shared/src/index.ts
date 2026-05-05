@@ -94,6 +94,55 @@ export interface CanPerformActionResult {
 }
 
 // ============================================
+// Analytics Types (Premium feature)
+// ============================================
+
+/**
+ * Aggregate dashboard payload returned by `GET /analytics/overview`.
+ * Mirror of the backend `AnalyticsOverviewDto` — keep in sync.
+ */
+export interface AnalyticsOverview {
+  generatedAt: string;
+  totals: {
+    applications: number;
+    applied: number;
+    interviews: number;
+    accepted: number;
+    rejected: number;
+    activelyTracked: number;
+  };
+  funnel: Array<{
+    stage: 'CREATED' | 'APPLIED' | 'INTERVIEW' | 'ACCEPTED';
+    count: number;
+    conversionFromPrevious: number | null;
+  }>;
+  responseRate: number;
+  interviewRate: number;
+  offerRate: number;
+  averageAtsScore: number | null;
+  timeseries30d: Array<{
+    date: string;
+    created: number;
+    applied: number;
+    interview: number;
+    accepted: number;
+    rejected: number;
+  }>;
+  scoreBuckets: Array<{
+    bucket: string;
+    applications: number;
+    interviews: number;
+    interviewRate: number;
+  }>;
+  topTemplates: Array<{
+    templateId: string;
+    templateName: string;
+    usageCount: number;
+    interviewRate: number;
+  }>;
+}
+
+// ============================================
 // Profile Types
 // ============================================
 
