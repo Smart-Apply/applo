@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0](https://github.com/Smart-Apply/smart-apply/compare/v1.4.0...v1.5.0) (2026-05-05)
+
+
+### Features
+
+* add Auto-Apply Agent feature with settings and email digest template ([#372](https://github.com/Smart-Apply/smart-apply/issues/372)) ([00cf616](https://github.com/Smart-Apply/smart-apply/commit/00cf6165508818f49d7d51cc520ae2d9efcb05e8))
+* add interactive script for admin user tier changes ([0ac3661](https://github.com/Smart-Apply/smart-apply/commit/0ac3661ca9505cd55218051fbd438c825e2c6ff4))
+
+
+### Bug Fixes
+
+* update release command in fly configuration to include --config for Prisma migrations ([eac40a9](https://github.com/Smart-Apply/smart-apply/commit/eac40a95dbf4976799b046d2f084b4d1458ad672))
+
 ## [1.4.0](https://github.com/Smart-Apply/smart-apply/compare/v1.3.0...v1.4.0) (2026-05-05)
 
 
