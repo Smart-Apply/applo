@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0](https://github.com/Smart-Apply/smart-apply/compare/v1.1.1...v1.2.0) (2026-05-05)
+
+
+### Features
+
+* **deploy:** add CLOUDFLARE_ACCOUNT_ID to production and staging workflows ([8386df6](https://github.com/Smart-Apply/smart-apply/commit/8386df63dcd5280f184e60b024eac8ce09daf946))
+
+
+### Bug Fixes
+
+* **subscription:** update pricing and limits for subscription tiers ([017d74e](https://github.com/Smart-Apply/smart-apply/commit/017d74ef91630721b0b531317dbd3fca202c60a7))
+
 ## [1.1.1](https://github.com/Smart-Apply/smart-apply/compare/v1.1.0...v1.1.1) (2026-05-05)
 
 
