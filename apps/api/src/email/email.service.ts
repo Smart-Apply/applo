@@ -169,8 +169,13 @@ export class EmailService {
     subject: string;
     html: string;
     replyTo?: string;
+    /**
+     * Optional Resend tags. Useful for filtering / priority routing in the
+     * Resend dashboard (e.g. `[{ name: 'priority', value: 'premium' }]`).
+     */
+    tags?: Array<{ name: string; value: string }>;
   }): Promise<boolean> {
-    const { to, subject, html, replyTo } = options;
+    const { to, subject, html, replyTo, tags } = options;
 
     if (!this.resend) {
       this.logger.warn(
@@ -186,6 +191,7 @@ export class EmailService {
         subject,
         html,
         ...(replyTo ? { replyTo } : {}),
+        ...(tags && tags.length > 0 ? { tags } : {}),
       });
 
       if (result.error) {

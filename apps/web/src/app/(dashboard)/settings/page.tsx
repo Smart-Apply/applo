@@ -34,6 +34,7 @@ import {
 import type { UserPreferences } from '@/types';
 import { ApiError } from '@/lib/errors';
 import { TwoFactorStatusCard } from '@/components/two-factor';
+import { PremiumSupportCard } from '@/components/subscription/premium-support-card';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -298,6 +299,8 @@ export default function SettingsPage() {
               </AlertDialog>
             </CardContent>
           </Card>
+
+          <PremiumSupportCard />
         </TabsContent>
 
         {/* Security Tab */}
