@@ -1,9 +1,8 @@
 name: release-please
 # Auto-generates a "Release PR" that bumps the root package.json version
 # and updates CHANGELOG.md based on Conventional Commits since the last
-# release. Merging that PR creates a Git tag (e.g. `v1.5.0`) which the
-# regular Deploy workflow can later be wired to (Phase 4 of the DevOps
-# roadmap).
+# release. Merging that PR creates a Git tag (e.g. `v1.5.0`) which then
+# triggers `deploy-prod.yml` (gated on the `production` environment).
 #
 # Conventional Commits cheat sheet:
 #   feat:        → minor bump (1.4.0 → 1.5.0)
@@ -12,6 +11,20 @@ name: release-please
 #   chore/docs:  → no bump (still appears in CHANGELOG under "Other")
 #
 # This workflow does NOT deploy. It only manages versioning + changelog.
+#
+# REQUIRED SECRET: RELEASE_PLEASE_TOKEN
+# ────────────────────────────────────
+# A Personal Access Token (classic) with `repo` + `workflow` scopes, OR a
+# fine-grained PAT with: contents:write + pull-requests:write + actions:write.
+# Stored as a repo-level secret (Settings → Secrets and variables → Actions).
+#
+# Why a PAT instead of GITHUB_TOKEN:
+# Tags pushed using the default GITHUB_TOKEN do NOT trigger downstream
+# workflows (anti-recursion safety). That means `deploy-prod.yml`, which
+# fires on tag pushes, never runs when release-please creates the tag.
+# Pushing the tag as a real user (via PAT) bypasses this restriction.
+#
+# Rotate annually, or immediately if a contributor leaves.
 
 on:
   push:
@@ -27,6 +40,7 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v5
         with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           # Single-package monorepo: use one version for the whole repo.
           # Switch to `manifest` mode later if packages/shared needs
           # independent versioning. The package name is read from the
