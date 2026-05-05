@@ -4,7 +4,7 @@
 Deliver a production-grade, multi-provider application with:
 1) **Frontend (Next.js 16 + React 19)**: Auth (email/password + OAuth + 2FA), profile management, job-posting ingestion, application dashboard with PDF preview/editing, deployed to **Cloudflare Workers** via OpenNext.
 2) **Backend API (NestJS 11)**: Candidate profile (skills, experiences, education, certificates, projects, languages), ingests job postings (text/URL/file → normalized), generates tailored cover letter + resume on Azure OpenAI / mock.
-3) **PDF Generation**: Puppeteer + Handlebars (50 templates, ATS-optimized), stored via pluggable storage (Azure Blob / AWS S3 / disk) and retrieved via signed URLs.
+3) **PDF Generation**: Puppeteer + Handlebars (50 templates, ATS-optimized), stored via pluggable storage (Cloudflare R2 / disk) and retrieved via signed URLs.
 
 ## Agent Instructions
 For specific tasks, refer to these specialized instruction files:
@@ -32,6 +32,81 @@ Also update this `copilot-instructions.md` file (Tech Stack, Backend Modules, Da
 - ✅ **Domain-neutral placeholders**: "z.B. Projektmanager, Krankenpfleger, Vertriebsleiter" (not "z.B. Senior Software Engineer")
 - ✅ **Inclusive skill categories**: "Core Competencies", "Technical Skills", "Methodologies", "Soft Skills" (not just programming languages/frameworks)
 - ❌ **Avoid IT-centric bias**: Don't default to React/TypeScript/Cloud examples in user-facing content
+
+## Repository Conventions & DevOps Discipline
+
+**Read this section before generating ANY change.** These rules are not suggestions — they encode how the repo is actually run. See [CONTRIBUTING.md](../CONTRIBUTING.md) for the human-facing version.
+
+### Branching model
+- **Trunk-based** — there is one long-lived branch: `main`. Never propose adding `develop`, `staging`, `release/*`, or other long-lived branches.
+- All work happens on **short-lived feature branches** (hours to 2 days max).
+- Branch naming: `feat/<thing>` · `fix/<thing>` · `chore/<thing>` · `docs/<thing>` · `ci/<thing>` · `test/<thing>`.
+
+### Commit messages
+- **Always use [Conventional Commits](https://www.conventionalcommits.org/)**. `release-please` parses these to bump SemVer + generate the CHANGELOG.
+- Format: `<type>(<scope>): <summary>` — e.g. `feat(profile): add languages section`, `fix(auth): refresh token race`.
+- `feat:` → minor bump, `fix:` → patch, `feat!:` or `BREAKING CHANGE:` footer → major.
+- `chore:`, `docs:`, `ci:`, `refactor:`, `test:`, `perf:` — no version bump but appear in CHANGELOG.
+- Squash-merge collapses all commits into one — the **PR title** must follow the same format.
+- **NEVER** suggest commits like `wip`, `update`, `fixed bug`, or grab-bag PRs covering multiple concerns.
+
+### PR + merge flow
+- All changes go through a PR — **never** propose `git push origin main` or any direct push to `main`.
+- CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs on every PR: lint + lockfile sync + unit tests (currently non-blocking) + per-PR Neon migration dry-run (only when schema changes).
+- Wait for green checks before merging. Always **squash-merge**, never merge-commit (linear history is required for `release-please`).
+- Delete the branch after merge.
+- **NEVER** propose `git push --force` or `--no-verify` to main.
+
+### Deployment flow
+This project has **two environments** wired up:
+- **Staging** (`smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev`) — auto-deploys on every push to `main` via [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml). No approval gate.
+- **Prod** (`api.smart-apply.io` + `smart-apply.io`) — deploys only on `v*.*.*` tag pushes via [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml). Tags are created by `release-please` when its Release PR is merged. Gated by the `production` GitHub Environment (manual approval).
+
+Resulting flow: PR → merge to main → staging deploys + Release PR opens/updates → you merge the Release PR → tag pushed via PAT → prod deploys after approval click.
+
+### When you change `apps/api/prisma/schema.prisma`
+- **Generate a migration** with `npx prisma migrate dev --name <descriptive_name>` — commit the resulting `migration.sql`.
+- Migrations are **forward-only** — we don't write `down` migrations. Rollback is via Neon point-in-time-restore. See [docs/security/MIGRATION_ROLLBACK.md](../docs/security/MIGRATION_ROLLBACK.md).
+- For destructive changes (DROP, RENAME, type change), use **expand → migrate → contract** across two releases. Never DROP a column in the same release as the code that stopped using it.
+- **NEVER** suggest `prisma migrate reset` for any environment other than your local dev DB.
+
+### When you change `package.json`
+- Run `npm install --legacy-peer-deps` immediately after, and commit the resulting `package-lock.json` change in the same PR. The `lint-and-typecheck` CI job blocks on lockfile drift (only fails on real package/version changes, not cosmetic metadata).
+- For dependency upgrades: minor/patch bumps are handled by Dependabot's grouped weekly PRs. Major bumps for `next`, `react`, `react-dom`, `prisma`, `@prisma/*`, `@nestjs/*`, `puppeteer`, `playwright`, `tailwindcss`, `typescript`, `turbo`, `lucide-react`, `eslint`, `eslint-config-next`, `@types/node` are **explicitly ignored** in [`.github/dependabot.yml`](../.github/dependabot.yml) — those need a deliberate, hand-tested PR.
+
+### When architecture changes
+- **MANDATORY**: update `README.md` + `ARCHITECTURE.md` in the same PR. See "Documentation Sync" above.
+- If you change [`fly.prod.toml`](../fly.prod.toml) / [`fly.staging.toml`](../fly.staging.toml), env defaults, or pluggable provider behavior — also update this file's Tech Stack / Env Variables sections.
+- If you add a new secret — add it to `apps/api/.env.example` (placeholder), document the local source in [docs/security/SECRETS_ROTATION.md](../docs/security/SECRETS_ROTATION.md), and tell the user to set it via `fly secrets set --app smart-apply-api[-staging]`.
+
+### Secrets handling
+- **Never** commit secrets. `.env`, `.env.local`, `*-secrets.env`, and `*.bak` are all gitignored.
+- Local development reads from `apps/api/.env` (gitignored) and `apps/web/.env` (gitignored).
+- Staging + prod read secrets from **Fly Secrets** (`flyctl secrets set --app <app>`) and **Cloudflare Worker secrets** (`wrangler secret put`) — never from a committed file.
+- See [docs/security/SECRETS_ROTATION.md](../docs/security/SECRETS_ROTATION.md) for rotation procedures (10 secret types covered).
+
+### Code style
+- TypeScript strict mode is on. **Never** use `any` to silence the compiler — use `unknown` + a type guard.
+- Don't add docstrings, comments, or annotations to code you didn't change.
+- Backend: validate DTOs with `class-validator` (`whitelist: true, forbidNonWhitelisted: true` on the controller pipe). Sanitize string inputs from users with the existing `@Sanitize()` decorator.
+- Frontend: App Router only (no Pages Router). Server components by default; mark client with `'use client'`. Forms use `react-hook-form` + Zod. Server state via TanStack Query with the existing `apiClient` wrapper — no raw `fetch()` in components. UI from shadcn/ui (`npx shadcn@latest add <name>`).
+
+### Test suite status
+- The existing unit tests (`apps/api/test/unit/**`) are **out of sync with the codebase**. CI marks `unit-tests` as `continue-on-error: true` so failures don't block PRs.
+- E2E tests (`apps/api/test/e2e/**`) work but require a real DB — not run in CI.
+- When adding new functionality, **don't be required to add new tests** to match — the test infrastructure debt is explicit. If you do write tests, make them small and focused.
+
+### Things to never propose
+- Direct `git push origin main` or `--force` to main
+- Commits without a Conventional Commit prefix
+- `prisma migrate reset` against any non-local DB
+- DROP/RENAME column in the same release as the code change
+- Adding a `staging`, `develop`, `release/*`, or `hotfix/*` long-lived branch
+- Bypassing `@Sanitize()`, DTO whitelist, or JWT guards without explicit justification in the PR description
+- Catch-and-ignore error handling (`try { ... } catch {}`)
+- Lockfile changes without the matching `package.json` change in the same PR (or vice versa)
+- Adding to `node_modules/` directly, or hand-editing `package-lock.json`
+- Pasting real secrets in PR descriptions, issue comments, or chat
 
 ## Non-Goals
 - Rich document editing beyond Tiptap StarterKit
@@ -544,21 +619,41 @@ ADMIN_EMAILS=you@example.com,coworker@example.com
 PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ```
 
-### Frontend (`apps/web/.env.local`)
+### Frontend (`apps/web/.env`)
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
-NEXT_PUBLIC_SENTRY_DSN=<dsn>
-# Cloudflare Workers deploy uses wrangler.jsonc + .dev.vars
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=<public CF Turnstile site key>
+NEXT_PUBLIC_SENTRY_DSN=<public DSN, leave empty locally>
+# Cloudflare Workers staging/prod set NEXT_PUBLIC_* via wrangler env.staging
+# block + GitHub Actions build env (NOT this file).
 ```
+
+> See [`apps/api/.env.example`](../apps/api/.env.example) and [`apps/web/.env.example`](../apps/web/.env.example) for the authoritative env-var list. The snippets in this file are illustrative — the example files are kept in sync with the actual schema.
 
 
 ## Local Dev Commands
 
 ### Initial Setup
 ```bash
-# Run setup script (installs deps, creates .env files, starts DB, runs migrations & seed)
-chmod +x setup.sh
-./setup.sh
+# 1. Install workspaces
+npm install --legacy-peer-deps
+
+# 2. Local Postgres (or skip and use a Neon dev branch)
+docker compose -f infra/docker-compose.yml up -d db
+
+# 3. Per-app env files (root .env.example was removed)
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+# Edit apps/api/.env: paste real Azure OpenAI / OAuth / Resend keys.
+# Defaults run fully offline (Docker Postgres, mock LLM, disk storage).
+
+# 4. Migrate + seed
+npm --workspace @smart-apply/api run prisma:migrate
+npm --workspace @smart-apply/api run prisma:seed
+npm --workspace @smart-apply/api run prisma:seed:templates
+
+# 5. Run both apps in parallel (Turborepo)
+npm run dev
 ```
 
 ### Turborepo (root)
@@ -600,16 +695,33 @@ npx shadcn@latest add <component>  # Add shadcn/ui component
 - **Password:** Demo123!
 
 ## CI/CD (GitHub Actions)
-- **API**: Build & test (Turborepo cache) → `flyctl deploy` (uses `infra/Dockerfile`); `prisma migrate deploy` runs as a Fly **release command** against Neon `DIRECT_URL` before machines start serving traffic; secrets managed via `flyctl secrets set`
-- **Web**: Build with OpenNext (`NEXT_PUBLIC_API_URL` baked from `PUBLIC_API_URL` env) → `wrangler deploy` to **Cloudflare Workers** (`smart-apply-web`)
-  - ⚠️ Leave the `PUBLIC_API_URL` GitHub repo Variable **unset** in prod so the workflow default `https://api.smart-apply.io/api/v1` wins. Setting it to a `*.fly.dev` URL bakes the wrong origin into the Worker.
 
-## Minimal Cloud Resources (MVP)
-- **Fly.io**: `smart-apply-api` app (region `fra`), Let's Encrypt cert for `api.smart-apply.io` issued via DNS-01
-- **Cloudflare**: Worker `smart-apply-web` (Custom Domains: apex + `www`), DNS zone `smart-apply.io`, R2 bucket (EU jurisdiction), Universal SSL
-- **Neon**: Postgres project (EU/Frankfurt), pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) connection strings
-- **Upstash**: QStash (queue) + Redis (cache/throttler)
-- **Azure**: OpenAI (+ optional AI Foundry) for LLM/agents
+Four workflows, each with a single purpose. **Never propose adding a fifth that overlaps in scope.**
+
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| [`ci.yml`](../.github/workflows/ci.yml) | PR opened | Lint + lockfile sync check + unit tests (non-blocking) + per-PR Neon migration dry-run (only when `schema.prisma` or `migrations/**` changes) |
+| [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) | Push to `main` | Auto-deploy to `smart-apply-api-staging` (Fly, `fly.staging.toml`) + `smart-apply-web-staging` (Worker, `env.staging` block). No approval. Reads from `staging` GitHub Environment. |
+| [`release-please.yml`](../.github/workflows/release-please.yml) | Push to `main` | Maintains a Release PR + creates `v*.*.*` tags from Conventional Commits. Uses a PAT (`RELEASE_PLEASE_TOKEN`) so tag pushes trigger downstream workflows (default `GITHUB_TOKEN` doesn't). |
+| [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml) | Tag `v*.*.*` push | Deploys to `smart-apply-api` (Fly, `fly.prod.toml`) + `smart-apply-web` (Worker, default env). Gated by `production` GitHub Environment (manual approval). |
+
+**Migrations** run as a Fly **release command** (`prisma migrate deploy`) before machines start serving traffic — same command on staging and prod, against each env's `DIRECT_URL` secret.
+
+⚠️ **`PUBLIC_API_URL` trap**: leave the GitHub repo Variable **unset** in prod so the workflow default (`https://api.smart-apply.io/api/v1`) wins. Setting it to a `*.fly.dev` URL bakes the wrong origin into the Worker bundle and breaks CORS / cookies.
+
+⚠️ **PAT requirement**: `release-please` needs a fine-grained PAT with `contents:write` + `pull-requests:write` + `workflows:write`, scoped to the Smart-Apply org and the smart-apply repo only. Stored as `RELEASE_PLEASE_TOKEN` repo secret. Without it, tags don't trigger `deploy-prod.yml`.
+
+## Minimal Cloud Resources (production + staging)
+- **Fly.io**: two apps in region `fra` —
+  - `smart-apply-api` (prod, 2x2GB, `min_machines_running = 2`, Let's Encrypt cert for `api.smart-apply.io` via DNS-01)
+  - `smart-apply-api-staging` (staging, 1x1GB, `min_machines_running = 0` — suspend on idle)
+- **Cloudflare**: two Workers —
+  - `smart-apply-web` (prod, Custom Domains: apex + `www.smart-apply.io`)
+  - `smart-apply-web-staging` (staging, `*.workers.dev` URL)
+  - Plus DNS zone `smart-apply.io`, two R2 buckets (`smart-apply-prod` + `smart-apply-staging`, both EU jurisdiction), Universal SSL
+- **Neon**: one Postgres project (EU/Frankfurt) with two branches — `main` (prod) + `staging` (cow off `main`). Each branch has its own pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) URLs.
+- **Upstash**: QStash (queue, shared between envs — staging gets its own webhook URL) + Redis (prod throttler only; staging uses `THROTTLER_STORAGE=memory` since it runs single-instance)
+- **Azure**: OpenAI resource with three deployments — `gpt-4.1` (prod, 200K TPM), `gpt-4.1-staging` (staging), `gpt-4.1-local` (your laptop)
 - **Third-party**: Resend (email), Sentry (monitoring)
 
 ## Tests
