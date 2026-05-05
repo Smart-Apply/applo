@@ -16,13 +16,15 @@ export const REQUIRED_FEATURE_KEY = 'requiredFeature';
  * - resume: KI resume generation (monthly counter only).
  * - jobParsing: URL/text job parsing.
  * - interview: Interview coaching sessions.
+ * - autoApply: Auto-Apply suggestion approvals (Premium-only, monthly cap).
  */
 export type UsageAction =
   | 'application'
   | 'coverLetter'
   | 'resume'
   | 'jobParsing'
-  | 'interview';
+  | 'interview'
+  | 'autoApply';
 
 /**
  * Feature flags that can be checked

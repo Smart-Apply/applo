@@ -47,6 +47,11 @@ import type {
   LinkedInJobSearchFilters,
   LinkedInJobSearchResponse,
   AnalyticsOverview,
+  AutoApplyConfig,
+  UpsertAutoApplyConfigPayload,
+  AutoApplySuggestionsResponse,
+  AutoApplySuggestionStatus,
+  ApproveAutoApplySuggestionResponse,
 } from '@/types';
 import {
   ApiError,
@@ -994,5 +999,61 @@ export const api = {
      * non-premium users get a 403 which the page handles via useFeatureGate.
      */
     getOverview: () => apiRequest<AnalyticsOverview>('/analytics/overview'),
+  },
+
+  // Auto-Apply Agent (Premium feature)
+  autoApply: {
+    getConfig: () => apiRequest<AutoApplyConfig | null>('/auto-apply/config'),
+
+    upsertConfig: (payload: UpsertAutoApplyConfigPayload) =>
+      apiRequest<AutoApplyConfig>('/auto-apply/config', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      }),
+
+    pause: () =>
+      apiRequest<AutoApplyConfig>('/auto-apply/config/pause', { method: 'POST' }),
+
+    resume: () =>
+      apiRequest<AutoApplyConfig>('/auto-apply/config/resume', { method: 'POST' }),
+
+    deleteConfig: () =>
+      apiRequest<void>('/auto-apply/config', { method: 'DELETE' }),
+
+    /** Manually trigger one recommendation run (1/hour). */
+    runNow: () =>
+      apiRequest<{ ok: boolean; suggestionsCreated: number }>(
+        '/auto-apply/config/run-now',
+        { method: 'POST' },
+      ),
+
+    listSuggestions: (opts?: {
+      status?: AutoApplySuggestionStatus;
+      page?: number;
+      pageSize?: number;
+    }) => {
+      const qs = new URLSearchParams();
+      if (opts?.status) qs.set('status', opts.status);
+      if (opts?.page) qs.set('page', String(opts.page));
+      if (opts?.pageSize) qs.set('pageSize', String(opts.pageSize));
+      const suffix = qs.toString() ? `?${qs.toString()}` : '';
+      return apiRequest<AutoApplySuggestionsResponse>(`/auto-apply/suggestions${suffix}`);
+    },
+
+    approve: (suggestionId: string) =>
+      apiRequest<ApproveAutoApplySuggestionResponse>(
+        `/auto-apply/suggestions/${suggestionId}/approve`,
+        { method: 'POST' },
+      ),
+
+    skip: (suggestionId: string) =>
+      apiRequest<void>(`/auto-apply/suggestions/${suggestionId}/skip`, {
+        method: 'POST',
+      }),
+
+    block: (suggestionId: string) =>
+      apiRequest<void>(`/auto-apply/suggestions/${suggestionId}/block`, {
+        method: 'POST',
+      }),
   },
 };

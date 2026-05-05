@@ -15,36 +15,38 @@ datasource db {
 }
 
 model User {
-  id    String @id @default(cuid())
-  email String @unique
-  password String?
+  id        String  @id @default(cuid())
+  email     String  @unique
+  password  String?
   firstName String? // User's first name
   lastName  String? // User's last name
   avatarUrl String? // Profile picture URL (from OAuth or uploaded)
 
   // Email Verification
-  emailVerified             Boolean   @default(false)
-  emailVerificationToken    String?   // Hashed token
-  emailVerificationExpires  DateTime?
+  emailVerified            Boolean   @default(false)
+  emailVerificationToken   String? // Hashed token
+  emailVerificationExpires DateTime?
 
   // Password Reset
-  passwordResetToken        String?   // Hashed token
-  passwordResetExpires      DateTime?
+  passwordResetToken   String? // Hashed token
+  passwordResetExpires DateTime?
 
   // OAuth fields (for future Microsoft Entra integration)
   provider   String? // e.g., "microsoft", "google"
   providerId String? // External OAuth ID
 
-  profile   Profile?
-  preferences UserPreferences?
-  jobPostings JobPosting[]
-  applications Application[]
-  refreshTokens RefreshToken[]
-  sessions Session[]
-  auditLogs AuditLog[]
-  subscription Subscription?
-  interviewSessions InterviewSession[]
-  oauthProviders OAuthProvider[] // OAuth providers linked to this user
+  profile              Profile?
+  preferences          UserPreferences?
+  jobPostings          JobPosting[]
+  applications         Application[]
+  refreshTokens        RefreshToken[]
+  sessions             Session[]
+  auditLogs            AuditLog[]
+  subscription         Subscription?
+  interviewSessions    InterviewSession[]
+  oauthProviders       OAuthProvider[] // OAuth providers linked to this user
+  autoApplyConfig      AutoApplyConfig?
+  autoApplySuggestions AutoApplySuggestion[]
 
   // Two-Factor Authentication
   twoFactorAuth  TwoFactorAuth?
@@ -66,23 +68,23 @@ enum Theme {
 
 // User preferences for settings (notifications, language, theme, privacy)
 model UserPreferences {
-  id                  String   @id @default(cuid())
-  userId              String   @unique
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Notifications
-  applicationUpdates  Boolean  @default(true)
-  newJobPostings      Boolean  @default(false)
-  marketingEmails     Boolean  @default(false)
-  
+  applicationUpdates Boolean @default(true)
+  newJobPostings     Boolean @default(false)
+  marketingEmails    Boolean @default(false)
+
   // Preferences
-  language            String   @default("de")
-  theme               Theme    @default(SYSTEM)
-  profilePublic       Boolean  @default(false)
-  analyticsEnabled    Boolean  @default(true)
-  
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  language         String  @default("de")
+  theme            Theme   @default(SYSTEM)
+  profilePublic    Boolean @default(false)
+  analyticsEnabled Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("user_preferences")
 }
@@ -91,43 +93,43 @@ model Profile {
   id     String @id @default(cuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   // Core info
-  summary       String? @db.Text // Rich text (HTML)
-  phone         String?
-  
+  summary String? @db.Text // Rich text (HTML)
+  phone   String?
+
   // Address fields (replaces old 'location' field)
-  street        String? // Street + house number (e.g., "Musterstraße 123")
-  postalCode    String? // Postal code (e.g., "47057" for German PLZ)
-  city          String? // City name (e.g., "Duisburg")
-  country       String? // Country (e.g., "Deutschland")
-  
-  linkedinUrl   String?
-  githubUrl     String?
-  portfolioUrl  String?
-  
+  street     String? // Street + house number (e.g., "Musterstraße 123")
+  postalCode String? // Postal code (e.g., "47057" for German PLZ)
+  city       String? // City name (e.g., "Duisburg")
+  country    String? // Country (e.g., "Deutschland")
+
+  linkedinUrl  String?
+  githubUrl    String?
+  portfolioUrl String?
+
   // Skills
-  skills        Skill[]
-  
+  skills Skill[]
+
   // Certificates
-  certificates  Certificate[]
-  
+  certificates Certificate[]
+
   // Education
-  education     Education[]
-  
+  education Education[]
+
   // Work experiences
-  experiences   Experience[]
-  
+  experiences Experience[]
+
   // Projects
-  projects      Project[]
-  
+  projects Project[]
+
   // Languages
-  languages     Language[]
-  
+  languages Language[]
+
   // Cached ATS keywords (pre-extracted from profile for faster matching)
-  profileKeywords       Json?     // AtsKeywordsOutputDto format
+  profileKeywords         Json? // AtsKeywordsOutputDto format
   lastKeywordsExtractedAt DateTime? // Cache invalidation timestamp
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -146,11 +148,11 @@ model Skill {
   id        String  @id @default(cuid())
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  name      String
-  category  String? // e.g., "Programming Language", "Framework", "Tool"
-  level     SkillLevel? // Proficiency level
-  
+
+  name     String
+  category String? // e.g., "Programming Language", "Framework", "Tool"
+  level    SkillLevel? // Proficiency level
+
   @@unique([profileId, name]) // Prevent duplicate skill names per profile
   @@index([profileId])
   @@map("skills")
@@ -160,31 +162,31 @@ model Certificate {
   id        String  @id @default(cuid())
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  name      String
-  issuer    String
-  issueDate DateTime?
-  expiryDate DateTime?
-  credentialId String?
+
+  name          String
+  issuer        String
+  issueDate     DateTime?
+  expiryDate    DateTime?
+  credentialId  String?
   credentialUrl String?
-  
+
   @@index([profileId])
   @@map("certificates")
 }
 
 model Education {
-  id           String  @id @default(cuid())
-  profileId    String
-  profile      Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
   degree       String
   institution  String
   fieldOfStudy String?
   startYear    DateTime?
   endYear      DateTime?
   gpa          String?
-  description  String? @db.Text // Rich text (HTML)
-  
+  description  String?   @db.Text // Rich text (HTML)
+
   @@index([profileId])
   @@map("education")
 }
@@ -193,17 +195,17 @@ model Experience {
   id        String  @id @default(cuid())
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
+
   title       String
   company     String
   location    String?
   startDate   DateTime
   endDate     DateTime?
-  isCurrent   Boolean @default(false)
-  description String? @db.Text // Rich text (HTML)
-  
+  isCurrent   Boolean   @default(false)
+  description String?   @db.Text // Rich text (HTML)
+
   achievements String[] // Bullet points of achievements
-  
+
   @@index([profileId])
   @@map("experiences")
 }
@@ -212,66 +214,67 @@ model Project {
   id        String  @id @default(cuid())
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  name        String
-  description String? @db.Text // Rich text (HTML)
-  url         String?
-  startDate   DateTime?
-  endDate     DateTime?
+
+  name         String
+  description  String?   @db.Text // Rich text (HTML)
+  url          String?
+  startDate    DateTime?
+  endDate      DateTime?
   technologies String[] // Array of tech used
   highlights   String[] // Key accomplishments
-  
+
   @@index([profileId])
   @@map("projects")
 }
 
 // Language proficiency level
 enum LanguageProficiency {
-  NATIVE        // Muttersprache
-  FLUENT        // Fließend
-  ADVANCED      // Fortgeschritten
-  INTERMEDIATE  // Gut
-  BASIC         // Grundkenntnisse
+  NATIVE // Muttersprache
+  FLUENT // Fließend
+  ADVANCED // Fortgeschritten
+  INTERMEDIATE // Gut
+  BASIC // Grundkenntnisse
 }
 
 model Language {
   id        String  @id @default(cuid())
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  name      String               // e.g., "Deutsch", "English", "Français"
-  level     LanguageProficiency? // Proficiency level (nullable for migration)
-  levelLegacy String?            // Legacy string level (to be deprecated)
-  
+
+  name        String // e.g., "Deutsch", "English", "Français"
+  level       LanguageProficiency? // Proficiency level (nullable for migration)
+  levelLegacy String? // Legacy string level (to be deprecated)
+
   @@unique([profileId, name]) // Prevent duplicate languages per profile
   @@index([profileId])
   @@map("languages")
 }
 
 model JobPosting {
-  id          String @id @default(cuid())
-  userId      String
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Raw input (original HTML/scraped content for debugging)
-  rawText     String?
-  sourceUrl   String?
-  fileId      String? // Reference to uploaded file in storage
-  
+  rawText   String?
+  sourceUrl String?
+  fileId    String? // Reference to uploaded file in storage
+
   // Extracted core fields
-  title       String
-  company     String
-  location    String?
-  language    String? // Detected language (ISO 639-1: "de", "en", "fr", etc.)
-  
+  title    String
+  company  String
+  location String?
+  language String? // Detected language (ISO 639-1: "de", "en", "fr", etc.)
+
   // Full job posting text (cleaned, for CV/CL agents)
   // Contains: description, requirements, responsibilities, benefits, etc.
-  fullText    String  @db.Text
-  
-  applications Application[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  fullText String @db.Text
+
+  applications         Application[]
+  autoApplySuggestions AutoApplySuggestion[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime? // Soft delete timestamp
 
   @@index([userId])
@@ -282,65 +285,65 @@ model JobPosting {
 }
 
 model Application {
-  id            String @id @default(cuid())
-  userId        String
-  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobPostingId  String
-  jobPosting    JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
-  
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostingId String
+  jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
   // Custom Title (editable by user, LLM-generated on creation)
-  title         String? // e.g., "Senior Frontend Developer @ Google"
-  
+  title String? // e.g., "Senior Frontend Developer @ Google"
+
   // Target Job Title for CV/CL (defaults to jobPosting.title if null)
   targetJobTitle String?
-  
+
   // Application Status Tracking (user-facing)
-  applicationStatus   ApplicationTrackingStatus @default(CREATED)
-  statusUpdatedAt     DateTime?
-  
+  applicationStatus ApplicationTrackingStatus @default(CREATED)
+  statusUpdatedAt   DateTime?
+
   // PDF Generation Status (system-facing)
-  status        ApplicationGenerationStatus @default(PENDING)
-  
+  status ApplicationGenerationStatus @default(PENDING)
+
   // Generated content (Markdown/HTML before PDF)
   coverLetterText String?
   resumeText      String?
-  
+
   // File references in Azure Blob Storage (or disk in dev)
   coverLetterFileKey String?
   resumeFileKey      String?
-  
+
   // Template selection
   coverLetterTemplateId String?
   coverLetterTemplate   Template? @relation("CoverLetterTemplate", fields: [coverLetterTemplateId], references: [id], onDelete: SetNull)
   resumeTemplateId      String?
   resumeTemplate        Template? @relation("ResumeTemplate", fields: [resumeTemplateId], references: [id], onDelete: SetNull)
-  
+
   // Language preference for generated content (ISO 639-1 code)
-  language              String?   @default("de") // de, en, fr, es, it
-  
+  language String? @default("de") // de, en, fr, es, it
+
   // Metadata
-  notes         String?
-  errorMessage  String?
-  
+  notes        String?
+  errorMessage String?
+
   // ATS Keywords extracted by AI Agent (JSON with all keyword categories)
-  keywordsData  Json?
-  
+  keywordsData Json?
+
   // Match Analysis (profile match percentage and details)
-  matchScore    Float?   // 0-100 match percentage
-  matchDetails  Json?    // Detailed breakdown of matches
-  
+  matchScore   Float? // 0-100 match percentage
+  matchDetails Json? // Detailed breakdown of matches
+
   // New single-LLM pipeline fields
-  atsKeywords       Json?  // AtsKeywordsOutputDto (focused 20-keyword set)
-  tailoredProfile   Json?  // TailoredProfileDto (selected profile data for debugging)
-  
+  atsKeywords     Json? // AtsKeywordsOutputDto (focused 20-keyword set)
+  tailoredProfile Json? // TailoredProfileDto (selected profile data for debugging)
+
   // Source language tracking (for initial generation)
-  sourceLanguage        String?   // Original content language when app was created (ISO 639-1)
-  
+  sourceLanguage String? // Original content language when app was created (ISO 639-1)
+
   // Interview sessions for this application
   interviewSessions InterviewSession[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime? // Soft delete timestamp
 
   @@index([userId])
@@ -358,50 +361,50 @@ model Application {
 
 // User-facing application tracking status
 enum ApplicationTrackingStatus {
-  CREATED      // Bewerbung erstellt (initial status)
-  APPLIED      // Beworben
-  INTERVIEW    // Interview
-  ACCEPTED     // Angenommen
-  REJECTED     // Abgelehnt
+  CREATED // Bewerbung erstellt (initial status)
+  APPLIED // Beworben
+  INTERVIEW // Interview
+  ACCEPTED // Angenommen
+  REJECTED // Abgelehnt
 }
 
 // System-facing PDF generation status
 enum ApplicationGenerationStatus {
-  PENDING      // Submitted, not yet started
-  GENERATING   // LLM is generating content
-  READY        // PDFs generated and stored
-  FAILED       // Generation failed
+  PENDING // Submitted, not yet started
+  GENERATING // LLM is generating content
+  READY // PDFs generated and stored
+  FAILED // Generation failed
 }
 
 model Template {
-  id                String   @id @default(cuid())
-  name              String
-  description       String?
-  type              TemplateType
-  category          String   // e.g., "Professional", "Modern", "Creative", "Minimal", "Technical"
-  
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  type        TemplateType
+  category    String // e.g., "Professional", "Modern", "Creative", "Minimal", "Technical"
+
   // Multilingual support
-  language          String   @default("en") // ISO 639-1: "de", "en", "fr", "es", "it"
-  baseTemplateId    String?  // Groups language/color variants of same design (e.g., all "Elegant Sidebar" templates)
-  
+  language       String  @default("en") // ISO 639-1: "de", "en", "fr", "es", "it"
+  baseTemplateId String? // Groups language/color variants of same design (e.g., all "Elegant Sidebar" templates)
+
   // Color variant support
-  accentColor       String?  // Primary accent color hex (e.g., "#9c7a5b", "#3182ce")
-  colorVariantName  String?  // Display name for color variant (e.g., "Original Brown", "Ocean Blue")
-  
-  thumbnailUrl      String?
-  previewImageKey   String?  // Storage key for cached preview image
-  htmlTemplate      String   @db.Text
-  cssStyles         String   @db.Text
-  isActive          Boolean  @default(true)
-  isDefault         Boolean  @default(false)
-  
+  accentColor      String? // Primary accent color hex (e.g., "#9c7a5b", "#3182ce")
+  colorVariantName String? // Display name for color variant (e.g., "Original Brown", "Ocean Blue")
+
+  thumbnailUrl    String?
+  previewImageKey String? // Storage key for cached preview image
+  htmlTemplate    String  @db.Text
+  cssStyles       String  @db.Text
+  isActive        Boolean @default(true)
+  isDefault       Boolean @default(false)
+
   // Relations
   applicationsAsCoverLetter Application[] @relation("CoverLetterTemplate")
   applicationsAsResume      Application[] @relation("ResumeTemplate")
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([name, type, language]) // Prevent duplicate template names
   @@index([type, isActive])
   @@index([isDefault])
@@ -424,11 +427,11 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
   isRevoked Boolean  @default(false)
-  
+
   // Optional: Track device/IP for security
   userAgent String?
   ipAddress String?
-  
+
   @@index([userId])
   @@index([userId, expiresAt])
   // Note: @unique on token already creates an implicit index
@@ -445,34 +448,34 @@ enum DeviceType {
 
 // Session tracking for multi-device management
 model Session {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Token Info
-  refreshTokenId  String?  // Reference to RefreshToken (not a relation to allow orphaned sessions)
-  accessTokenJti  String?  // JWT ID for access token (optional)
-  
+  refreshTokenId String? // Reference to RefreshToken (not a relation to allow orphaned sessions)
+  accessTokenJti String? // JWT ID for access token (optional)
+
   // Device Info
-  deviceName      String?     // e.g., "iPhone 14 Pro", "Chrome on Windows"
-  deviceType      DeviceType? // Device category
-  browser         String?     // Chrome, Safari, Firefox
-  os              String?     // iOS, Android, Windows, macOS
-  
+  deviceName String? // e.g., "iPhone 14 Pro", "Chrome on Windows"
+  deviceType DeviceType? // Device category
+  browser    String? // Chrome, Safari, Firefox
+  os         String? // iOS, Android, Windows, macOS
+
   // Location Info
-  ipAddress       String
-  country         String?
-  city            String?
-  
+  ipAddress String
+  country   String?
+  city      String?
+
   // Timestamps
-  createdAt       DateTime @default(now())
-  lastActiveAt    DateTime @default(now())
-  expiresAt       DateTime
-  
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+  expiresAt    DateTime
+
   // Status
-  isActive        Boolean  @default(true)
-  revokedAt       DateTime?
-  
+  isActive  Boolean   @default(true)
+  revokedAt DateTime?
+
   @@index([userId, isActive])
   @@index([userId, lastActiveAt])
   @@index([userId, expiresAt])
@@ -537,10 +540,10 @@ model AuditLog {
   email     String?
   ip        String
   userAgent String
-  severity  AuditSeverity  // Event severity level
-  metadata  Json?          // Additional context as JSON
+  severity  AuditSeverity // Event severity level
+  metadata  Json? // Additional context as JSON
   createdAt DateTime       @default(now())
-  
+
   @@index([userId])
   @@index([userId, createdAt(sort: Desc)])
   @@index([eventType])
@@ -565,25 +568,25 @@ enum BackgroundJobStatus {
 // Background job tracking for Azure Service Bus
 // Provides persistent status storage since Service Bus doesn't support direct job lookup
 model BackgroundJob {
-  id            String              @id // Same as Service Bus messageId
-  type          String              // Job type (e.g., "application:generate")
-  status        BackgroundJobStatus @default(PENDING)
-  data          Json                // Job payload
-  result        Json?               // Processing result (on success)
-  error         String?             // Error message (on failure)
-  retryCount    Int                 @default(0)
-  maxRetries    Int                 @default(5)
-  
+  id         String              @id // Same as Service Bus messageId
+  type       String // Job type (e.g., "application:generate")
+  status     BackgroundJobStatus @default(PENDING)
+  data       Json // Job payload
+  result     Json? // Processing result (on success)
+  error      String? // Error message (on failure)
+  retryCount Int                 @default(0)
+  maxRetries Int                 @default(5)
+
   // Timestamps
-  createdAt     DateTime            @default(now())
-  startedAt     DateTime?
-  completedAt   DateTime?
-  updatedAt     DateTime            @updatedAt
-  
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
   // Dead letter info
-  deadLetterReason      String?
-  deadLetteredAt        DateTime?
-  
+  deadLetterReason String?
+  deadLetteredAt   DateTime?
+
   @@index([type])
   @@index([status])
   @@index([createdAt])
@@ -616,35 +619,35 @@ enum SubscriptionStatus {
 
 // User subscription for tier-based features
 model Subscription {
-  id                    String             @id @default(cuid())
-  userId                String             @unique
-  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Plan
-  tier                  SubscriptionTier   @default(FREE)
-  status                SubscriptionStatus @default(ACTIVE)
-  
+  tier   SubscriptionTier   @default(FREE)
+  status SubscriptionStatus @default(ACTIVE)
+
   // Stripe Integration (for future payment processing)
-  stripeCustomerId      String?            @unique
-  stripeSubscriptionId  String?            @unique
-  stripePriceId         String?
-  
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  stripePriceId        String?
+
   // Billing Period
-  currentPeriodStart    DateTime?
-  currentPeriodEnd      DateTime?
-  cancelAtPeriodEnd     Boolean            @default(false)
-  
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean   @default(false)
+
   // Trial
-  trialStart            DateTime?
-  trialEnd              DateTime?
-  
+  trialStart DateTime?
+  trialEnd   DateTime?
+
   // Timestamps
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  usage                 SubscriptionUsage?
-  
+  usage SubscriptionUsage?
+
   @@index([tier])
   @@index([status])
   // Note: @unique on stripeCustomerId/stripeSubscriptionId already creates implicit indexes
@@ -653,29 +656,30 @@ model Subscription {
 
 // Usage tracking for subscription limits
 model SubscriptionUsage {
-  id                      String       @id @default(cuid())
-  subscriptionId          String       @unique
-  subscription            Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  
+  id             String       @id @default(cuid())
+  subscriptionId String       @unique
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
   // Current Period Usage - Core Limits
-  applicationsUsed        Int          @default(0) // Cover letters + Resumes generated
-  coverLettersGenerated   Int          @default(0) // KI-Anschreiben count
-  resumesGenerated        Int          @default(0) // KI-Lebensläufe count
-  jobParsingUsed          Int          @default(0) // URL/text parsing count
-  interviewSessionsUsed   Int          @default(0) // Interview Coach sessions
+  applicationsUsed      Int @default(0) // Cover letters + Resumes generated
+  coverLettersGenerated Int @default(0) // KI-Anschreiben count
+  resumesGenerated      Int @default(0) // KI-Lebensläufe count
+  jobParsingUsed        Int @default(0) // URL/text parsing count
+  interviewSessionsUsed Int @default(0) // Interview Coach sessions
+  autoApplyApprovedUsed Int @default(0) // Auto-Apply approvals (PREMIUM-only cost cap)
 
   // Rolling 24h window (cost-protection cap, independent of monthly period)
-  dailyApplicationsUsed   Int          @default(0)
-  dailyWindowStart        DateTime     @default(now())
+  dailyApplicationsUsed Int      @default(0)
+  dailyWindowStart      DateTime @default(now())
 
   // Period
-  periodStart             DateTime
-  periodEnd               DateTime
-  
+  periodStart DateTime
+  periodEnd   DateTime
+
   // Timestamps
-  createdAt               DateTime     @default(now())
-  updatedAt               DateTime     @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([subscriptionId])
   @@index([periodEnd])
   @@map("subscription_usage")
@@ -687,75 +691,75 @@ model SubscriptionUsage {
 
 // Interview session type
 enum InterviewType {
-  BEHAVIORAL   // Verhaltensbasierte Fragen
-  TECHNICAL    // Technische/Fachliche Fragen
-  CASE_STUDY   // Case Studies / Problemlösung
-  MIXED        // Gemischtes Interview
+  BEHAVIORAL // Verhaltensbasierte Fragen
+  TECHNICAL // Technische/Fachliche Fragen
+  CASE_STUDY // Case Studies / Problemlösung
+  MIXED // Gemischtes Interview
 }
 
 // Interview difficulty level
 enum InterviewDifficulty {
-  EASY        // Einsteiger-Level
-  MEDIUM      // Standard-Level
-  HARD        // Experten-Level
+  EASY // Einsteiger-Level
+  MEDIUM // Standard-Level
+  HARD // Experten-Level
 }
 
 // Interview session status
 enum InterviewSessionStatus {
-  IN_PROGRESS  // Laufend
-  COMPLETED    // Abgeschlossen
-  ABANDONED    // Abgebrochen
+  IN_PROGRESS // Laufend
+  COMPLETED // Abgeschlossen
+  ABANDONED // Abgebrochen
 }
 
 // Question type
 enum InterviewQuestionType {
-  OPEN          // Offene Frage
-  SITUATIONAL   // Situationsbezogen (STAR-Methode)
-  TECHNICAL     // Technisch/Fachlich
-  BEHAVIORAL    // Verhaltensbezogen
-  FOLLOW_UP     // Nachfrage
+  OPEN // Offene Frage
+  SITUATIONAL // Situationsbezogen (STAR-Methode)
+  TECHNICAL // Technisch/Fachlich
+  BEHAVIORAL // Verhaltensbezogen
+  FOLLOW_UP // Nachfrage
 }
 
 // Interview session with KI coach
 model InterviewSession {
-  id              String                 @id @default(cuid())
-  userId          String
-  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Optional link to application (for context-aware interviews)
-  applicationId   String?
-  application     Application?           @relation(fields: [applicationId], references: [id], onDelete: SetNull)
-  
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
   // Interview configuration
-  type            InterviewType          @default(MIXED)
-  industry        String?                // e.g., "IT", "Healthcare", "Finance"
-  difficulty      InterviewDifficulty    @default(MEDIUM)
-  language        String                 @default("de") // ISO 639-1: "de", "en"
-  
+  type       InterviewType       @default(MIXED)
+  industry   String? // e.g., "IT", "Healthcare", "Finance"
+  difficulty InterviewDifficulty @default(MEDIUM)
+  language   String              @default("de") // ISO 639-1: "de", "en"
+
   // Target position (from application or user input)
-  jobTitle        String?
-  company         String?
-  jobDescription  String?                @db.Text
-  
+  jobTitle       String?
+  company        String?
+  jobDescription String? @db.Text
+
   // Interview settings
-  maxQuestions    Int                    @default(10)
-  timeLimitMinutes Int?                  // Optional time limit per question
-  
+  maxQuestions     Int  @default(10)
+  timeLimitMinutes Int? // Optional time limit per question
+
   // Session status
-  status          InterviewSessionStatus @default(IN_PROGRESS)
-  startedAt       DateTime               @default(now())
-  completedAt     DateTime?
-  
+  status      InterviewSessionStatus @default(IN_PROGRESS)
+  startedAt   DateTime               @default(now())
+  completedAt DateTime?
+
   // Results
-  overallScore    Int?                   // 1-100 overall score
-  
+  overallScore Int? // 1-100 overall score
+
   // Relations
-  questions       InterviewQuestion[]
-  feedback        InterviewFeedback?
-  
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
-  
+  questions InterviewQuestion[]
+  feedback  InterviewFeedback?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([userId])
   @@index([userId, status])
   @@index([userId, createdAt(sort: Desc)])
@@ -765,29 +769,29 @@ model InterviewSession {
 
 // Individual interview question with answer and feedback
 model InterviewQuestion {
-  id              String                 @id @default(cuid())
-  sessionId       String
-  session         InterviewSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+  id        String           @id @default(cuid())
+  sessionId String
+  session   InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   // Question details
-  questionText    String                 @db.Text
-  questionType    InterviewQuestionType  @default(OPEN)
-  expectedTopics  String[]               // Topics expected in a good answer
-  
+  questionText   String                @db.Text
+  questionType   InterviewQuestionType @default(OPEN)
+  expectedTopics String[] // Topics expected in a good answer
+
   // User's answer
-  userAnswer      String?                @db.Text
-  answerDuration  Int?                   // Answer duration in seconds
-  
+  userAnswer     String? @db.Text
+  answerDuration Int? // Answer duration in seconds
+
   // AI evaluation
-  score           Int?                   // 1-100 score
-  feedback        String?                @db.Text
-  improvementTips String[]               // Specific improvement suggestions
-  
+  score           Int? // 1-100 score
+  feedback        String?  @db.Text
+  improvementTips String[] // Specific improvement suggestions
+
   // Question order and timing
-  order           Int
-  askedAt         DateTime               @default(now())
-  answeredAt      DateTime?
-  
+  order      Int
+  askedAt    DateTime  @default(now())
+  answeredAt DateTime?
+
   @@index([sessionId])
   @@index([sessionId, order])
   @@map("interview_questions")
@@ -795,29 +799,29 @@ model InterviewQuestion {
 
 // Overall session feedback
 model InterviewFeedback {
-  id              String                 @id @default(cuid())
-  sessionId       String                 @unique
-  session         InterviewSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+  id        String           @id @default(cuid())
+  sessionId String           @unique
+  session   InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   // Overall score
-  overallScore    Int                    // 1-100
-  
+  overallScore Int // 1-100
+
   // Category scores (1-100 each)
-  technicalScore      Int?               // Fachkompetenz
-  communicationScore  Int                // Kommunikation
-  presentationScore   Int                // Selbstpräsentation
-  problemSolvingScore Int?               // Problemlösung
-  cultureFitScore     Int?               // Kulturfit
-  
+  technicalScore      Int? // Fachkompetenz
+  communicationScore  Int // Kommunikation
+  presentationScore   Int // Selbstpräsentation
+  problemSolvingScore Int? // Problemlösung
+  cultureFitScore     Int? // Kulturfit
+
   // Feedback content
-  strengths       String[]               // Stärken
-  improvements    String[]               // Verbesserungspotential
-  recommendations String[]               // Konkrete Empfehlungen
-  
+  strengths       String[] // Stärken
+  improvements    String[] // Verbesserungspotential
+  recommendations String[] // Konkrete Empfehlungen
+
   // Optional: Example ideal answers
-  idealAnswers    Json?                  // Map<questionId, idealAnswer>
-  
-  createdAt       DateTime               @default(now())
+  idealAnswers Json? // Map<questionId, idealAnswer>
+
+  createdAt DateTime @default(now())
 
   @@map("interview_feedback")
 }
@@ -828,24 +832,24 @@ model InterviewFeedback {
 
 // Two-Factor Authentication settings for a user
 model TwoFactorAuth {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // TOTP Configuration
-  isEnabled       Boolean   @default(false)
-  encryptedSecret String?   // AES-256-GCM encrypted TOTP secret
-  secretIv        String?   // Initialization vector for decryption
-  secretAuthTag   String?   // Authentication tag for GCM
+  isEnabled       Boolean @default(false)
+  encryptedSecret String? // AES-256-GCM encrypted TOTP secret
+  secretIv        String? // Initialization vector for decryption
+  secretAuthTag   String? // Authentication tag for GCM
 
   // Setup tracking
-  verifiedAt      DateTime? // When 2FA was successfully verified/enabled
+  verifiedAt DateTime? // When 2FA was successfully verified/enabled
 
   // Backup codes (one-time use, hashed with Argon2)
-  backupCodes     TwoFactorBackupCode[]
+  backupCodes TwoFactorBackupCode[]
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("two_factor_auth")
 }
@@ -857,10 +861,10 @@ model TwoFactorBackupCode {
   twoFactorAuth   TwoFactorAuth @relation(fields: [twoFactorAuthId], references: [id], onDelete: Cascade)
 
   // Hashed code (Argon2)
-  codeHash        String
-  usedAt          DateTime?     // Null if not yet used
+  codeHash String
+  usedAt   DateTime? // Null if not yet used
 
-  createdAt       DateTime      @default(now())
+  createdAt DateTime @default(now())
 
   @@index([twoFactorAuthId])
   @@map("two_factor_backup_codes")
@@ -868,24 +872,24 @@ model TwoFactorBackupCode {
 
 // Trusted devices for "Remember this device" feature (30 days)
 model TrustedDevice {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Device fingerprint (hashed token for cookie matching)
-  deviceTokenHash String   @unique
+  deviceTokenHash String @unique
 
   // Device info for display in settings
-  deviceName      String?
-  browser         String?
-  os              String?
-  ipAddress       String?
+  deviceName String?
+  browser    String?
+  os         String?
+  ipAddress  String?
 
   // Trust period
-  expiresAt       DateTime // 30 days from creation
-  lastUsedAt      DateTime @default(now())
+  expiresAt  DateTime // 30 days from creation
+  lastUsedAt DateTime @default(now())
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([expiresAt])
@@ -907,32 +911,127 @@ enum OAuthProviderType {
 
 // OAuth provider linked to user account
 model OAuthProvider {
-  id           String            @id @default(cuid())
-  provider     OAuthProviderType // Provider type
-  providerId   String            // External OAuth ID (sub claim)
-  email        String?           // Email from OAuth provider
-  
+  id         String            @id @default(cuid())
+  provider   OAuthProviderType // Provider type
+  providerId String // External OAuth ID (sub claim)
+  email      String? // Email from OAuth provider
+
   // Tokens (encrypted)
-  accessToken  String?           @db.Text // OAuth access token (optional)
-  refreshToken String?           @db.Text // OAuth refresh token (optional)
-  tokenExpiry  DateTime?         // When the access token expires
-  
+  accessToken  String?   @db.Text // OAuth access token (optional)
+  refreshToken String?   @db.Text // OAuth refresh token (optional)
+  tokenExpiry  DateTime? // When the access token expires
+
   // Profile data from OAuth
-  displayName  String?
-  avatarUrl    String?
-  
+  displayName String?
+  avatarUrl   String?
+
   // User relation
-  userId       String
-  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Timestamps
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  lastUsedAt   DateTime          @default(now())
-  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastUsedAt DateTime @default(now())
+
   @@unique([provider, providerId]) // Each OAuth account is unique
-  @@unique([provider, userId])     // One OAuth provider per user (e.g., only one Google account)
+  @@unique([provider, userId]) // One OAuth provider per user (e.g., only one Google account)
   @@index([userId])
   @@index([provider])
   @@map("oauth_providers")
+}
+
+// =====================================
+// AUTO-APPLY AGENT (Premium Feature)
+// =====================================
+
+// User decision on a job suggestion surfaced by the auto-apply cron.
+enum AutoApplySuggestionStatus {
+  PENDING // Awaiting user decision (shown in inbox)
+  APPROVED // User approved -> Application created
+  SKIPPED // User dismissed this one
+  BLOCKED // User blocked the company - also adds it to blockedCompanies
+  EXPIRED // Auto-cleaned by cron after retention window
+}
+
+// Per-user auto-apply configuration. One per user (keep simple for v1).
+//
+// The cron worker (`AutoApplyCron`) walks active configs every 15 min and
+// runs `searchFilters` against the LinkedIn scraper, materializing fresh
+// candidates as `AutoApplySuggestion` rows for the user to review.
+model AutoApplyConfig {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isActive Boolean @default(true)
+
+  // LinkedIn search filters (mirrors SearchLinkedInJobsDto shape)
+  searchFilters Json
+
+  // Recommendation rules
+  maxSuggestionsPerDay Int      @default(5)
+  minAtsScore          Int? // 0-100, optional gate
+  requiredKeywords     String[] // Job description must mention all of these
+  blockedCompanies     String[] // Never suggest postings from these companies
+
+  // Schedule (cron expression). Default: 09:00 daily.
+  cronSchedule String    @default("0 9 * * *")
+  lastRunAt    DateTime?
+  nextRunAt    DateTime?
+
+  // Daily digest opt-in
+  digestEnabled    Boolean   @default(true)
+  lastDigestSentAt DateTime?
+
+  suggestions AutoApplySuggestion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, nextRunAt]) // cron worker query
+  @@map("auto_apply_configs")
+}
+
+// A single recommended job awaiting (or past) user review.
+//
+// `externalJobId` is the LinkedIn posting id and is unique per user so
+// repeated cron runs don't surface the same posting twice. Snapshots
+// (jobTitle / company / location / jobUrl) are stored at suggestion time
+// so the inbox keeps working even if the LinkedIn URL goes 404 later.
+model AutoApplySuggestion {
+  id       String          @id @default(cuid())
+  userId   String
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  configId String
+  config   AutoApplyConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  // The job we found
+  externalJobId String // LinkedIn posting id
+  jobPostingId  String? // FK once approved
+  jobPosting    JobPosting? @relation(fields: [jobPostingId], references: [id], onDelete: SetNull)
+
+  // Snapshot at suggest-time
+  jobTitle String
+  company  String
+  location String?
+  jobUrl   String
+  postedAt DateTime?
+
+  // Pre-computed match data (best-effort; null if scoring failed)
+  matchScore   Float?
+  matchReasons Json? // { matchedSkills, missingSkills, ... }
+
+  // User decision
+  status        AutoApplySuggestionStatus @default(PENDING)
+  decidedAt     DateTime?
+  applicationId String? // set when user approved
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, externalJobId]) // dedup across cron runs
+  @@index([userId, status, createdAt(sort: Desc)])
+  @@index([configId])
+  @@map("auto_apply_suggestions")
 }

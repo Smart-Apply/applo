@@ -32,6 +32,7 @@ import { ContactModule } from './contact/contact.module';
 import { UpstashThrottlerStorage } from './common/throttler/upstash-throttler-storage';
 import { AdminModule } from './admin/admin.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { AutoApplyModule } from './auto-apply/auto-apply.module';
 
 @Module({
   imports: [
@@ -112,6 +113,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ContactModule,
     AdminModule,
     AnalyticsModule,
+    AutoApplyModule,
     HealthModule,
   ],
   controllers: [CSPViolationController],

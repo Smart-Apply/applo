@@ -40,8 +40,12 @@ export interface TierFeatures {
   prioritySupport: boolean;
   advancedAnalytics: boolean;
   interviewCoach: boolean;
-  /** LinkedIn job search & import (Pro feature) */
+  /** LinkedIn job search & import (Premium feature) */
   linkedinImport?: boolean;
+  /** Auto-Apply Agent (Premium feature) */
+  autoApplyAgent?: boolean;
+  /** Email-based application tracking (future Premium feature) */
+  emailParsing?: boolean;
 }
 
 export interface TierLimits {
@@ -976,4 +980,71 @@ export interface LinkedInJobSearchResponse {
 export interface ImportLinkedInJobDto {
   /** Full LinkedIn job object as returned by /linkedin-jobs/search */
   job: LinkedInJob;
+}
+
+// ============================================
+// Auto-Apply Agent (Premium Feature)
+// ============================================
+
+export type AutoApplySuggestionStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'SKIPPED'
+  | 'BLOCKED'
+  | 'EXPIRED';
+
+export interface AutoApplyConfig {
+  id: string;
+  isActive: boolean;
+  /** LinkedInJobSearchFilters payload, stored as JSON server-side */
+  searchFilters: LinkedInJobSearchFilters;
+  maxSuggestionsPerDay: number;
+  minAtsScore?: number;
+  requiredKeywords: string[];
+  blockedCompanies: string[];
+  /** 5-field cron expression (restricted server-side) */
+  cronSchedule: string;
+  digestEnabled: boolean;
+  lastRunAt?: string;
+  nextRunAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpsertAutoApplyConfigPayload {
+  isActive?: boolean;
+  searchFilters: LinkedInJobSearchFilters;
+  maxSuggestionsPerDay?: number;
+  minAtsScore?: number;
+  requiredKeywords?: string[];
+  blockedCompanies?: string[];
+  cronSchedule?: string;
+  digestEnabled?: boolean;
+}
+
+export interface AutoApplySuggestion {
+  id: string;
+  externalJobId: string;
+  jobTitle: string;
+  company: string;
+  location?: string;
+  jobUrl: string;
+  postedAt?: string;
+  matchScore?: number;
+  matchReasons?: { matchedTokens?: string[] };
+  status: AutoApplySuggestionStatus;
+  decidedAt?: string;
+  applicationId?: string;
+  createdAt: string;
+}
+
+export interface AutoApplySuggestionsResponse {
+  items: AutoApplySuggestion[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface ApproveAutoApplySuggestionResponse {
+  applicationId: string;
 }
