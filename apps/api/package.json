@@ -80,6 +80,7 @@
     "class-validator": "^0.15.1",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
+    "cron-parser": "^5.5.0",
     "csrf-csrf": "^4.0.3",
     "generic-pool": "^3.9.0",
     "handlebars": "^4.7.8",

@@ -159,10 +159,10 @@ export class SubscriptionController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Check if user can perform action (legacy)' })
-  @ApiParam({ name: 'action', enum: ['coverLetter', 'resume', 'jobParsing', 'interview'] })
+  @ApiParam({ name: 'action', enum: ['coverLetter', 'resume', 'jobParsing', 'interview', 'autoApply'] })
   async canPerformActionGet(
     @CurrentUser('id') userId: string,
-    @Param('action') action: 'coverLetter' | 'resume' | 'jobParsing' | 'interview',
+    @Param('action') action: 'coverLetter' | 'resume' | 'jobParsing' | 'interview' | 'autoApply',
   ) {
     return this.subscriptionService.canPerformAction(userId, action);
   }

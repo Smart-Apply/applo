@@ -8,7 +8,7 @@ import { ConfigService } from '../config/config.service';
 export interface SendEmailOptions {
   to: string;
   subject: string;
-  template: 'verification-email' | 'password-reset-email';
+  template: 'verification-email' | 'password-reset-email' | 'auto-apply-digest';
   context: Record<string, unknown>;
 }
 
@@ -31,7 +31,7 @@ export class EmailService {
 
   private loadTemplates(): void {
     const templateDir = path.join(__dirname, 'templates');
-    const templateNames = ['verification-email', 'password-reset-email'];
+    const templateNames = ['verification-email', 'password-reset-email', 'auto-apply-digest'];
 
     for (const name of templateNames) {
       try {
