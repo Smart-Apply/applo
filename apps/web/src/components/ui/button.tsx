@@ -56,6 +56,10 @@ function Button({
 }: ButtonProps) {
   const Comp = asChild ? Slot : "button"
 
+  // Radix `Slot` uses `React.Children.only`, so when `asChild` is true we must
+  // pass exactly one child through. The `loading` spinner is only injected for
+  // the native <button> render path; consumers using `asChild` should manage
+  // their own loading affordance.
   return (
     <Comp
       data-slot="button"
@@ -63,8 +67,14 @@ function Button({
       disabled={loading || disabled}
       {...props}
     >
-      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-      {children}
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+          {children}
+        </>
+      )}
     </Comp>
   )
 }
