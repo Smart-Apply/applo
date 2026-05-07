@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0](https://github.com/Smart-Apply/smart-apply/compare/v1.7.0...v1.8.0) (2026-05-07)
+
+
+### Features
+
+* **ats:** implement feature gating for ATS analysis in applications ([#389](https://github.com/Smart-Apply/smart-apply/issues/389)) ([60340a5](https://github.com/Smart-Apply/smart-apply/commit/60340a5b24053a12a5898b68ffe8eec4f1f0d29c))
+
 ## [1.7.0](https://github.com/Smart-Apply/smart-apply/compare/v1.6.1...v1.7.0) (2026-05-07)
 
 
