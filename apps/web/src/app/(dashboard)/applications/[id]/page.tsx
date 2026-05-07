@@ -36,6 +36,8 @@ import { handleDownload, handleZipDownload, generateFilename } from '@/lib/pdf-u
 import { EditableTitle } from '@/components/applications/editable-title';
 import { StatusDropdown } from '@/components/applications/status-dropdown';
 import { ATSAnalysisPanel } from '@/components/applications/ats-analysis-panel';
+import { UpgradePrompt } from '@/components/subscription/upgrade-prompt';
+import { useFeatureGate } from '@/hooks/use-tier-gate';
 import { formatFullTimestamp, formatDate } from '@/lib/format-date';
 import { LOADING_MESSAGES } from '@/lib/constants';
 
@@ -790,8 +792,8 @@ export default function ApplicationDetailPage() {
         />
       )}
 
-      {/* ATS Analysis Panel */}
-      <ATSAnalysisPanel applicationId={applicationId} />
+      {/* ATS Analysis Panel — Pro/Premium only */}
+      <AtsAnalysisSection applicationId={applicationId} />
 
       {/* Application Info */}
       <Card>
@@ -821,4 +823,30 @@ export default function ApplicationDetailPage() {
       </Card>
     </div>
   );
+}
+
+/**
+ * ATS analysis is a paid feature (Pro & Premium). For free users we render
+ * an inline upgrade prompt instead of the panel, so the section keeps the
+ * same visual slot but stays unusable — matching how the edit-page tab is
+ * greyed out. Hooks for the panel only run when the user actually has access.
+ */
+function AtsAnalysisSection({ applicationId }: { applicationId: string }) {
+  const { hasAccess, isLoading } = useFeatureGate('atsOptimization');
+
+  if (isLoading) {
+    return <Skeleton className="h-48 w-full" />;
+  }
+
+  if (!hasAccess) {
+    return (
+      <UpgradePrompt
+        feature="ATS-Analyse"
+        requiredTier="PREMIUM"
+        description="Lass die KI deine Bewerbung gegen die Stellenausschreibung scoren und erhalte konkrete Verbesserungsvorschläge. Verfügbar ab dem Pro-Tarif."
+      />
+    );
+  }
+
+  return <ATSAnalysisPanel applicationId={applicationId} />;
 }

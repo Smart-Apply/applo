@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Download,
   Building2,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
@@ -38,6 +39,7 @@ import {
   useGenerateExperienceDescription,
   useGenerateProjectDescription,
 } from '@/hooks/use-applications';
+import { useFeatureGate } from '@/hooks/use-tier-gate';
 import { parseResumeDraft, normalizeResumeForSave } from '@/lib/resume';
 import type { ResumeData } from '@/types';
 import { toast } from 'sonner';
@@ -112,6 +114,13 @@ export default function ApplicationResumeEditorPage() {
   const generateSummary = useGenerateSummary(applicationId);
   const generateExperienceDescription = useGenerateExperienceDescription(applicationId);
   const generateProjectDescription = useGenerateProjectDescription(applicationId);
+
+  // ATS analysis is gated by `atsOptimization` (Pro & Premium only). Free
+  // users see a greyed-out tab trigger with an upgrade tooltip — same
+  // pattern as the locked sidebar entries.
+  const { hasAccess: hasAtsAccess, isLoading: isAtsAccessLoading } =
+    useFeatureGate('atsOptimization');
+  const isAtsLocked = !isAtsAccessLoading && !hasAtsAccess;
 
   // Track which experience entry is loading AI generation
   const [experienceAiLoadingIndex, setExperienceAiLoadingIndex] = useState<number>(-1);
@@ -217,6 +226,11 @@ export default function ApplicationResumeEditorPage() {
 
   // Handle tab switching with unsaved changes warning
   const handleTabChange = (newTab: 'resume' | 'cover-letter' | 'ats-score') => {
+    // Block navigation to the ATS tab when the user's tier doesn't include
+    // it. Radix Tabs would still flip `value` if we let the change through.
+    if (newTab === 'ats-score' && isAtsLocked) {
+      return;
+    }
     // Allow free tab switching - no confirmation dialogs
     setActiveTab(newTab);
   };
@@ -711,10 +725,44 @@ export default function ApplicationResumeEditorPage() {
               )}
               <TabsTrigger
                 value="ats-score"
-                className="text-xs px-3 h-7 data-[state=active]:bg-background"
+                disabled={isAtsLocked}
+                aria-disabled={isAtsLocked}
+                className={cn(
+                  'text-xs px-3 h-7 data-[state=active]:bg-background',
+                  isAtsLocked &&
+                    'cursor-not-allowed opacity-60 text-muted-foreground/60 hover:bg-transparent data-[state=active]:bg-transparent',
+                )}
+                onClick={(e) => {
+                  // Radix prevents activation when `disabled`, but we still
+                  // want a click on the locked tab to surface the tooltip
+                  // (the tooltip already opens on hover/focus).
+                  if (isAtsLocked) {
+                    e.preventDefault();
+                  }
+                }}
               >
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                ATS Score
+                {isAtsLocked ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex items-center">
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                        ATS Score
+                        <Lock className="h-3 w-3 ml-1.5 text-muted-foreground/60" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p className="font-medium">Upgrade auf Pro</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Die ATS-Analyse ist für Pro- und Premium-Mitglieder verfügbar.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                    ATS Score
+                  </>
+                )}
               </TabsTrigger>
             </TabsList>
           </Tabs>

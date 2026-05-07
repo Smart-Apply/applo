@@ -24,7 +24,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UsageLimitGuard } from '../common/guards/usage-limit.guard';
 import { EmailVerifiedGuard } from '../common/guards/email-verified.guard';
-import { CheckUsage } from '../common/decorators/tier.decorator';
+import { FeatureGuard } from '../common/guards/feature.guard';
+import { CheckUsage, RequiresFeature } from '../common/decorators/tier.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PaginationQueryDto } from '../common/dto';
 import { ApplicationsService } from './applications.service';
@@ -524,10 +525,12 @@ export class ApplicationsController {
   }
 
   @Get(':id/keywords')
+  @UseGuards(FeatureGuard)
+  @RequiresFeature('atsOptimization')
   @ApiOperation({
     summary: 'Get keyword analysis for application',
     description:
-      'Returns extracted keywords from job posting and match analysis against user profile',
+      'Returns extracted keywords from job posting and match analysis against user profile. Requires Pro or Premium subscription.',
   })
   @ApiResponse({
     status: 200,
@@ -535,6 +538,7 @@ export class ApplicationsController {
     type: ApplicationKeywordsResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Pro or Premium subscription required' })
   @ApiResponse({ status: 404, description: 'Application not found' })
   async getKeywordsAnalysis(
     @CurrentUser() user: any,
@@ -544,10 +548,12 @@ export class ApplicationsController {
   }
 
   @Post(':id/analyze-keywords')
+  @UseGuards(FeatureGuard)
+  @RequiresFeature('atsOptimization')
   @ApiOperation({
     summary: 'Trigger keyword extraction and analysis',
     description:
-      'Extracts keywords from the job posting using ATS Agent and analyzes match against profile',
+      'Extracts keywords from the job posting using ATS Agent and analyzes match against profile. Requires Pro or Premium subscription.',
   })
   @ApiResponse({
     status: 200,
@@ -555,6 +561,7 @@ export class ApplicationsController {
     type: ApplicationKeywordsResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Pro or Premium subscription required' })
   @ApiResponse({ status: 404, description: 'Application not found' })
   async analyzeKeywords(
     @CurrentUser() user: any,
