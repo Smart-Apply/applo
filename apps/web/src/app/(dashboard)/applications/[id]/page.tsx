@@ -843,7 +843,7 @@ function AtsAnalysisSection({ applicationId }: { applicationId: string }) {
       <UpgradePrompt
         feature="ATS-Analyse"
         requiredTier="PREMIUM"
-        description="Lass die KI deine Bewerbung gegen die Stellenausschreibung scoren und erhalte konkrete Verbesserungsvorschläge. Verfügbar ab dem Pro-Tarif."
+        description="Upgrade jetzt zu Premium um dieses Feature zu benutzen."
       />
     );
   }
