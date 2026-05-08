@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.2](https://github.com/Smart-Apply/smart-apply/compare/v1.8.1...v1.8.2) (2026-05-08)
+
+
+### Bug Fixes
+
+* **linkedin-jobs:** coerce applicantsCount on /import to non-negative integer ([#393](https://github.com/Smart-Apply/smart-apply/issues/393)) ([0bbc61c](https://github.com/Smart-Apply/smart-apply/commit/0bbc61c77249dd3b1c6b764babbffaef0f249bd1))
+
 ## [1.8.1](https://github.com/Smart-Apply/smart-apply/compare/v1.8.0...v1.8.1) (2026-05-08)
 
 
