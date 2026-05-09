@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.1](https://github.com/Smart-Apply/smart-apply/compare/v1.10.0...v1.10.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* **web:** auto-reload on stale-chunk errors after Worker deploy ([#401](https://github.com/Smart-Apply/smart-apply/issues/401)) ([2f0a396](https://github.com/Smart-Apply/smart-apply/commit/2f0a3967eb3e39cf029ec7f5afc3ce7718e1ec4a))
+
 ## [1.10.0](https://github.com/Smart-Apply/smart-apply/compare/v1.9.0...v1.10.0) (2026-05-09)
 
 
