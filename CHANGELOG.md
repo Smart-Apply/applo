@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.0](https://github.com/Smart-Apply/smart-apply/compare/v1.10.3...v1.11.0) (2026-05-09)
+
+
+### Features
+
+* **job-search:** hide source provider picker from UI ([#408](https://github.com/Smart-Apply/smart-apply/issues/408)) ([1b0e772](https://github.com/Smart-Apply/smart-apply/commit/1b0e772315a9feb87ad4221fa9a7a1ac933cf8ad))
+
 ## [1.10.3](https://github.com/Smart-Apply/smart-apply/compare/v1.10.2...v1.10.3) (2026-05-09)
 
 
