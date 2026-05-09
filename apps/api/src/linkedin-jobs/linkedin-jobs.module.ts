@@ -16,6 +16,13 @@ import { LinkedInJobsController } from './linkedin-jobs.controller';
   imports: [ConfigModule, JobPostingsModule],
   controllers: [LinkedInJobsController],
   providers: [ApifyClient, LinkedInJobsService],
-  exports: [LinkedInJobsService],
+  // ApifyClient must be exported alongside LinkedInJobsService because
+  // JobSearchModule's LinkedInJobSearchProvider injects it directly.
+  // Without this, the Nest IoC fails at boot:
+  //   UnknownDependenciesException: Nest can't resolve dependencies of
+  //   the LinkedInJobSearchProvider (LinkedInJobsService, ?). Please
+  //   make sure that the argument ApifyClient at index [1] is available
+  //   in the JobSearchModule module.
+  exports: [LinkedInJobsService, ApifyClient],
 })
 export class LinkedInJobsModule {}
