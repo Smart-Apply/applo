@@ -224,6 +224,25 @@ export class AutoApplyService {
       generateCoverLetter: config?.generateCoverLetter ?? true,
     });
 
+    // Auto-apply is a one-click flow — the user expects to land on a
+    // ready-to-download application. `createWithGeneration` only generates
+    // the TEXT (resume JSON + cover-letter HTML); the PDF render step
+    // happens in `requestExport`. In the wizard the user clicks "Export"
+    // themselves, but here we trigger it automatically so the detail
+    // page transitions PENDING → GENERATING → READY (with file keys)
+    // via the existing SSE pipeline. Best-effort: a failure here must
+    // not break the approve response — the user can manually re-export
+    // from the detail page.
+    try {
+      await this.applications.requestExport(userId, application.id);
+    } catch (exportError) {
+      this.logger.warn(
+        `Failed to auto-trigger PDF export for application ${application.id}: ${
+          (exportError as Error).message
+        }. User can re-export manually from the detail page.`,
+      );
+    }
+
     // Mark suggestion as approved + record usage
     await this.prisma.$transaction([
       this.prisma.autoApplySuggestion.update({
