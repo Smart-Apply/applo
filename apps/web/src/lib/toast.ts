@@ -110,14 +110,15 @@ export function toastPromise<T>(
 export function toastErrorWithRetry(
   error: unknown,
   onRetry: () => void,
-  fallbackMessage?: string
+  fallbackMessage?: string,
+  retryLabel: string = 'Wiederholen'
 ) {
   const message = fallbackMessage || getErrorMessage(error);
   
   sonnerToast.error(message, {
     duration: 6000,
     action: {
-      label: 'Wiederholen',
+      label: retryLabel,
       onClick: onRetry,
     },
   });
@@ -126,11 +127,12 @@ export function toastErrorWithRetry(
 /**
  * Show network error with retry
  */
-export function toastNetworkError(onRetry: () => void) {
+export function toastNetworkError(onRetry: () => void, retryLabel?: string) {
   toastErrorWithRetry(
     new Error('Network error'),
     onRetry,
-    'Netzwerkfehler. Bitte überprüfe deine Internetverbindung.'
+    'Netzwerkfehler. Bitte überprüfe deine Internetverbindung.',
+    retryLabel
   );
 }
 
@@ -149,3 +151,5 @@ export function toastValidationError(errors: Record<string, string[]>) {
     );
   }
 }
+
+export const toast = sonnerToast;
