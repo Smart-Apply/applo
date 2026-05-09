@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.3](https://github.com/Smart-Apply/smart-apply/compare/v1.10.2...v1.10.3) (2026-05-09)
+
+
+### Bug Fixes
+
+* **web:** silence set-state-in-effect on auto-apply settings hydration ([#406](https://github.com/Smart-Apply/smart-apply/issues/406)) ([8e426c8](https://github.com/Smart-Apply/smart-apply/commit/8e426c8332defc11796f79af5f1d550fb4f22140))
+
 ## [1.10.2](https://github.com/Smart-Apply/smart-apply/compare/v1.10.1...v1.10.2) (2026-05-09)
 
 
