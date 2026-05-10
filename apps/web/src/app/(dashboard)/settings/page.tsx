@@ -204,24 +204,36 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="account" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="account" className="gap-2">
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Account</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Sicherheit</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
-            <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Benachrichtigungen</span>
-          </TabsTrigger>
-          <TabsTrigger value="preferences" className="gap-2">
-            <Palette className="h-4 w-4" />
-            <span className="hidden sm:inline">Präferenzen</span>
-          </TabsTrigger>
-        </TabsList>
+        {/*
+          Mobile: horizontally scrollable strip with full text labels so the
+          user can always tell which tab is which (icons alone aren't enough
+          context for "Sicherheit" vs "Präferenzen"). Desktop keeps the
+          original 4-cell grid.
+
+          The `-mx-4 px-4 sm:mx-0 sm:px-0` trick lets the scroll area bleed
+          to the screen edges on mobile (so the right-hand tab doesn't feel
+          cut off) without affecting desktop spacing.
+        */}
+        <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 sm:overflow-visible">
+          <TabsList className="inline-flex w-max gap-1 sm:grid sm:w-full sm:grid-cols-4 sm:gap-0 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="account" className="gap-2 whitespace-nowrap">
+              <User className="h-4 w-4" />
+              <span>Account</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="gap-2 whitespace-nowrap">
+              <Shield className="h-4 w-4" />
+              <span>Sicherheit</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="gap-2 whitespace-nowrap">
+              <Bell className="h-4 w-4" />
+              <span>Benachrichtigungen</span>
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="gap-2 whitespace-nowrap">
+              <Palette className="h-4 w-4" />
+              <span>Präferenzen</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Account Tab */}
         <TabsContent value="account" className="space-y-6">

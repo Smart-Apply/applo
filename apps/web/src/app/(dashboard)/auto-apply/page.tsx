@@ -123,12 +123,12 @@ function InboxView() {
   const items = suggestionsQuery.data?.items ?? [];
 
   return (
-    <div className="container max-w-5xl py-6 space-y-6">
+    <div className="container max-w-5xl px-0 py-6 space-y-6">
       {/* Header */}
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Zap className="h-7 w-7 text-amber-500" />
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Zap className="h-6 w-6 sm:h-7 sm:w-7 text-amber-500" />
             Auto-Apply Agent
           </h1>
           <p className="text-muted-foreground">

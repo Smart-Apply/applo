@@ -97,8 +97,8 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
   return (
     <div className="space-y-8">
       {/* Step Indicator */}
-      <div className="relative mx-auto max-w-md">
-        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-border -translate-y-1/2 z-0" />
+      <div className="relative mx-auto w-full max-w-xs sm:max-w-md">
+        <div className="absolute top-5 left-0 w-full h-0.5 bg-border z-0" />
         <div className="relative z-10 flex justify-between">
           {steps.map((step, index) => {
             const Icon = step.icon;
@@ -106,7 +106,7 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
             const isCompleted = index < currentStepIndex;
 
             return (
-              <div key={step.id} className="flex flex-col items-center bg-background px-4">
+              <div key={step.id} className="flex flex-col items-center bg-background px-2 sm:px-4">
                 <div
                   className={cn(
                     'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300',

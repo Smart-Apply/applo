@@ -137,12 +137,12 @@ export default function JobSearchPage() {
   );
 
   return (
-    <div className="container max-w-7xl py-6 space-y-8">
+    <div className="container max-w-7xl px-0 py-6 space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Sparkles className="h-7 w-7 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
             Job-Suche
           </h1>
           <p className="text-muted-foreground">

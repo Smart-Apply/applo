@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { CurrentTierBadge } from '@/components/subscription';
+import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
 import type { TierFeatures } from '@/types';
 import {
@@ -86,9 +87,25 @@ function DashboardLayoutInner({
   const searchParams = useSearchParams();
   const { isAuthenticated, user, clearAuth, hasHydrated, setAuth } = useAuthStore();
   const [isLoadingOAuth, setIsLoadingOAuth] = useState(false);
+  // Mobile menu Sheet is controlled so the bottom-nav "Mehr" button and the
+  // hamburger in the top header share the same drawer instance, and so we
+  // can auto-close it on navigation (Sheet doesn't close on Link click by
+  // default when it's controlled).
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Auto-collapse sidebar in edit mode
   const isEditMode = pathname?.includes('/edit');
+
+  // Close the mobile drawer whenever the route changes — without this the
+  // Sheet stays open after a user picks an item from the bottom-nav "Mehr"
+  // menu and the new page is hidden behind the overlay. The setState IS the
+  // synchronisation here (URL → dialog open state), so the rule's
+  // auto-fix (move to render) would re-close the dialog on every render
+  // and break it.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     // Wait for auth store to hydrate from localStorage before checking auth
@@ -235,9 +252,15 @@ function DashboardLayoutInner({
             />
           </Link>
 
-          <Sheet>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Menü öffnen"
+                // 44x44 minimum hit target — Apple HIG / Material guideline.
+                className="h-11 w-11"
+              >
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
@@ -307,7 +330,15 @@ function DashboardLayoutInner({
             </SheetContent>
           </Sheet>
         </header>
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">{children}</main>
+        {/*
+          pb compensates for the fixed bottom nav (~56px) plus the iOS home
+          indicator (`env(safe-area-inset-bottom)`). Without this, the last
+          row of every list/form gets covered by the nav.
+        */}
+        <main className="flex-1 overflow-y-auto p-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:p-6">
+          {children}
+        </main>
+        <MobileBottomNav onMoreClick={() => setMobileMenuOpen(true)} />
       </div>
 
       {/* Desktop Main Content */}
