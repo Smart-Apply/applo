@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.13.0](https://github.com/Smart-Apply/smart-apply/compare/v1.12.0...v1.13.0) (2026-05-10)
+
+
+### Features
+
+* **web:** mobile UX overhaul ([#421](https://github.com/Smart-Apply/smart-apply/issues/421)) ([89a8715](https://github.com/Smart-Apply/smart-apply/commit/89a8715ea938d3904e2e77b480b77354dd26e6a1))
+
+
+### Bug Fixes
+
+* **auth:** set SameSite=Lax on auth cookies for cross-subdomain XHR ([#422](https://github.com/Smart-Apply/smart-apply/issues/422)) ([fc87b5b](https://github.com/Smart-Apply/smart-apply/commit/fc87b5bb83da76bee87306c5e4ad2390e4e2889b))
+* **auto-apply:** improve background processing and error handling for runNow endpoint ([#419](https://github.com/Smart-Apply/smart-apply/issues/419)) ([0e2e49b](https://github.com/Smart-Apply/smart-apply/commit/0e2e49b851751d36138f5cd077ece76f732be825))
+* **web:** stop hardcoding fly.dev API URL in cf:build:staging ([#423](https://github.com/Smart-Apply/smart-apply/issues/423)) ([64e8c63](https://github.com/Smart-Apply/smart-apply/commit/64e8c631cbf4b9a9bf9657dd9538b38ed4a5a62d))
+
 ## [1.12.0](https://github.com/Smart-Apply/smart-apply/compare/v1.11.3...v1.12.0) (2026-05-10)
 
 
