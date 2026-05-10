@@ -120,7 +120,10 @@ export class AuthController {
       res.cookie('trusted_device', result.deviceToken, {
         httpOnly: true,
         secure: this.configService.isProduction,
-        sameSite: this.configService.isProduction ? 'strict' : 'lax',
+        // Lax (not Strict) so Chrome's tracking protection doesn't drop
+        // the cookie on cross-subdomain XHR (frontend.smart-apply.io →
+        // api.smart-apply.io). See setAuthCookies for the full rationale.
+        sameSite: 'lax',
         domain: this.configService.cookieDomain,
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         path: '/',
@@ -215,7 +218,7 @@ export class AuthController {
     res.clearCookie('access_token', {
       httpOnly: true,
       secure: this.configService.isProduction,
-      sameSite: 'strict',
+      sameSite: 'lax', // MUST match Set-Cookie above (lax) so the browser actually clears it
       domain,
       path: '/',
     });
@@ -223,7 +226,7 @@ export class AuthController {
     res.clearCookie('refresh_token', {
       httpOnly: true,
       secure: this.configService.isProduction,
-      sameSite: 'strict',
+      sameSite: 'lax', // MUST match Set-Cookie above (lax) so the browser actually clears it
       domain,
       path: '/',
     });
@@ -232,7 +235,7 @@ export class AuthController {
     res.clearCookie('trusted_device', {
       httpOnly: true,
       secure: this.configService.isProduction,
-      sameSite: 'strict',
+      sameSite: 'lax', // MUST match Set-Cookie above (lax) so the browser actually clears it
       domain,
       path: '/',
     });
@@ -273,7 +276,7 @@ export class AuthController {
     res.clearCookie('access_token', {
       httpOnly: true,
       secure: this.configService.isProduction,
-      sameSite: 'strict',
+      sameSite: 'lax', // MUST match Set-Cookie above (lax) so the browser actually clears it
       domain,
       path: '/',
     });
@@ -281,7 +284,7 @@ export class AuthController {
     res.clearCookie('refresh_token', {
       httpOnly: true,
       secure: this.configService.isProduction,
-      sameSite: 'strict',
+      sameSite: 'lax', // MUST match Set-Cookie above (lax) so the browser actually clears it
       domain,
       path: '/',
     });
@@ -308,7 +311,7 @@ export class AuthController {
     res.clearCookie('access_token', {
       httpOnly: true,
       secure: this.configService.isProduction,
-      sameSite: 'strict',
+      sameSite: 'lax', // MUST match Set-Cookie above (lax) so the browser actually clears it
       domain,
       path: '/',
     });
@@ -316,7 +319,7 @@ export class AuthController {
     res.clearCookie('refresh_token', {
       httpOnly: true,
       secure: this.configService.isProduction,
-      sameSite: 'strict',
+      sameSite: 'lax', // MUST match Set-Cookie above (lax) so the browser actually clears it
       domain,
       path: '/',
     });
@@ -529,12 +532,21 @@ export class AuthController {
     res.cookie('access_token', accessToken, {
       httpOnly: true, // Prevents JavaScript access (XSS protection)
       secure: isProduction, // HTTPS only in production
-      sameSite: isProduction ? 'strict' : 'lax', // 'lax' in dev for cross-origin (3001->3000), 'strict' in prod
+      // Lax (not Strict) for cross-subdomain XHR. The frontend lives on
+      // `<env>.smart-apply.io` and the API on `api-<env>.smart-apply.io`
+      // — same registrable domain, different hosts. Per spec, Strict
+      // SHOULD allow this (same-site), but Chrome 147+ tracking
+      // protection drops the cookie on the post-login XHR anyway, so
+      // login succeeds (Set-Cookie 201) and the very next /auth/me
+      // returns 401 with no cookie. Lax fixes it conclusively.
+      // We don't lose meaningful CSRF protection: the cookie is
+      // HttpOnly + Secure, the JWT body isn't form-submittable, and
+      // ENABLE_CSRF + the X-CSRF-Token header are still available for
+      // double-submit defence on the mutating endpoints.
+      sameSite: 'lax',
       // Scope to parent domain in prod (e.g. .smart-apply.io) so the cookie
       // is first-party for both `staging.smart-apply.io` (frontend) and
-      // `api-staging.smart-apply.io` (this API). Without this, Chrome's
-      // tracking protection drops the cookie cross-subdomain and the user
-      // gets bounced back to the login screen after a successful login.
+      // `api-staging.smart-apply.io` (this API).
       domain,
       maxAge: 15 * 60 * 1000, // 15 minutes (matches JWT expiry)
       path: '/', // Available for all routes
@@ -544,7 +556,7 @@ export class AuthController {
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true, // Prevents JavaScript access (XSS protection)
       secure: isProduction, // HTTPS only in production
-      sameSite: isProduction ? 'strict' : 'lax', // 'lax' in dev for cross-origin (3001->3000), 'strict' in prod
+      sameSite: 'lax', // see access_token comment above
       domain,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days (matches JWT expiry)
       path: '/', // Available for all routes
