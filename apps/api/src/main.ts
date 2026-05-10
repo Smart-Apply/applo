@@ -176,9 +176,13 @@ async function bootstrap() {
       cookieName: configService.isProduction ? '__Host-csrf' : 'csrf',
       cookieOptions: {
         httpOnly: true,
-        // Use 'strict' in production for better security (assumes same-origin deployment)
-        // Use 'lax' in development for cross-origin (frontend:3001 -> backend:3000)
-        sameSite: configService.isProduction ? 'strict' : 'lax',
+        // Lax (not Strict) so Chrome's tracking protection doesn't drop
+        // the CSRF cookie on cross-subdomain XHR
+        // (frontend.smart-apply.io → api.smart-apply.io). Same fix as
+        // the auth cookies in auth.controller.ts. Lax is sufficient
+        // because the double-submit pattern requires the matching
+        // X-CSRF-Token header anyway, which CSRF can't forge cross-site.
+        sameSite: 'lax',
         secure: configService.isProduction, // HTTPS only in production
         path: '/',
       },
