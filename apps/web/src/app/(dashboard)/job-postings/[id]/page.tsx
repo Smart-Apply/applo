@@ -77,9 +77,9 @@ export default function JobPostingDetailPage() {
       {/* Job Title & Company */}
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-2 flex-1">
-              <CardTitle className="text-3xl">{jobPosting.title}</CardTitle>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-2 flex-1 min-w-0">
+              <CardTitle className="text-2xl sm:text-3xl break-words">{jobPosting.title}</CardTitle>
               <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
