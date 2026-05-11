@@ -7,15 +7,15 @@
  */
 
 import { createElement, Fragment, type ReactNode } from 'react';
-import type { ReactPdfNamespace } from './react-pdf-loader';
+import type { ReactPdfNamespace, ReactPdfStyle } from './react-pdf-loader';
 
 interface RichTextStyles {
-  paragraph?: any;
-  list?: any;
-  listItem?: any;
-  link?: any;
-  strong?: any;
-  em?: any;
+  paragraph?: ReactPdfStyle;
+  list?: ReactPdfStyle;
+  listItem?: ReactPdfStyle;
+  link?: ReactPdfStyle;
+  strong?: ReactPdfStyle;
+  em?: ReactPdfStyle;
 }
 
 const VOID_TAGS = new Set(['br', 'hr', 'img', 'meta', 'link']);

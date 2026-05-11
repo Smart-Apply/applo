@@ -1,13 +1,23 @@
 /**
  * Classic ATS — react-pdf port of apps/api/src/pdf/templates/classic-ats/.
  *
- * Visual goal: equivalent (within react-pdf's flexbox-only layout) to the
- * Puppeteer/Handlebars version. Same section order + labels. Page-break
- * behavior is deterministic via `wrap={false}` on each item.
+ * Visual goal: pixel-equivalent (within react-pdf's flexbox-only layout
+ * engine) to the Puppeteer/Handlebars version. Page-break behavior is
+ * deterministic via `wrap={false}` on each item.
  *
- * Fonts: relies on react-pdf's built-in Helvetica family. Lato/Source Sans 3
- * (used by the HTML version) require Font.register() with downloaded TTFs;
- * deferred until we ship the font-bundling story.
+ * Unit conversion
+ * ---------------
+ * The HTML/CSS source uses CSS pixels (`px`) at Chromium's print default of
+ * 96 DPI. The PDF coordinate system is points (pt), 72 per inch. So:
+ *     1 CSS px = 72 / 96 = 0.75 pt
+ * All numeric tokens below come from `templates/classic-ats/styles.css` with
+ * `px` multiplied by 0.75. Inches stay direct: 0.5in = 36pt, 0.6in = 43.2pt.
+ *
+ * Fonts
+ * -----
+ * Falls back to react-pdf's built-in Helvetica family. The HTML version uses
+ * Lato/Source Sans 3 — registering those via Font.register() is deferred to
+ * the font-bundling follow-up (font-size cascade is matched here regardless).
  *
  * Factory pattern: receives the lazily-loaded @react-pdf/renderer namespace.
  * See react-pdf-loader.ts for why we don't import the package statically.
@@ -25,76 +35,256 @@ import type {
 
 const ACCENT_FALLBACK = '#1a1a1a';
 
+/** CSS px → PDF pt at Chromium's print default (96 DPI). */
+const px = (n: number) => n * 0.75;
+
+/** CSS inches → PDF pt. */
+const inch = (n: number) => n * 72;
+
+// CSS custom-property mirrors. Names match `:root` block in styles.css.
+const FS = {
+  xs: px(9),
+  sm: px(10),
+  base: px(11),
+  md: px(12),
+  lg: px(14),
+  xl: px(16),
+  xxl: px(20),
+  xxxl: px(28),
+};
+
+const SP = {
+  xs: px(2),
+  sm: px(4),
+  md: px(8),
+  lg: px(12),
+  xl: px(16),
+};
+
+const COLORS = {
+  text: '#1a1a1a',
+  textSecondary: '#333333',
+  textMuted: '#666666',
+};
+
 const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
   rp.StyleSheet.create({
-    page: {
-      paddingTop: 36,
-      paddingBottom: 36,
-      paddingHorizontal: 36,
+    // ── Resume page (CSS: .resume padding 0.5in 0.5in 0.4in 0.5in) ──
+    resumePage: {
+      paddingTop: inch(0.5),
+      paddingRight: inch(0.5),
+      paddingBottom: inch(0.4),
+      paddingLeft: inch(0.5),
       fontFamily: 'Helvetica',
-      fontSize: 10,
-      color: '#1a1a1a',
-      lineHeight: 1.45,
+      fontSize: FS.base,
+      color: COLORS.text,
+      lineHeight: 1.5,
     },
-    header: { textAlign: 'center', marginBottom: 12 },
+    // ── Cover-letter page (CSS: .cover-letter padding 0.6in 0.6in 0.5in 0.6in) ──
+    coverLetterPage: {
+      paddingTop: inch(0.6),
+      paddingRight: inch(0.6),
+      paddingBottom: inch(0.5),
+      paddingLeft: inch(0.6),
+      fontFamily: 'Helvetica',
+      fontSize: FS.md,
+      color: COLORS.text,
+      lineHeight: 1.7,
+    },
+
+    // ── Resume header (CSS: .resume-header text-align center, margin-bottom var(--spacing-lg)) ──
+    resumeHeader: { textAlign: 'center', marginBottom: SP.lg },
+
+    // ── Cover-letter header (CSS: text-align center, margin-bottom xl, padding-bottom lg, border-bottom 1px) ──
+    coverLetterHeader: {
+      textAlign: 'center',
+      marginBottom: SP.xl,
+      paddingBottom: SP.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: COLORS.text,
+      borderBottomStyle: 'solid',
+    },
+
+    // ── Candidate name — different size for resume vs CL (3xl vs 2xl) ──
     candidateName: {
-      fontSize: 22,
+      fontSize: FS.xxxl,
       fontFamily: 'Helvetica-Bold',
-      letterSpacing: 0.5,
+      letterSpacing: px(0.5),
       textTransform: 'uppercase',
       color: accent,
-      marginBottom: 2,
+      marginBottom: SP.xs,
     },
-    jobTitle: { fontSize: 11, color: '#666666', marginBottom: 4 },
-    contactInfo: { fontSize: 9, color: '#333333', textAlign: 'center' },
-    contactLink: { color: '#333333', textDecoration: 'underline' },
-    section: { marginBottom: 10 },
+    candidateNameCoverLetter: {
+      fontSize: FS.xxl,
+      fontFamily: 'Helvetica-Bold',
+      letterSpacing: px(0.5),
+      textTransform: 'uppercase',
+      color: accent,
+      marginBottom: SP.xs,
+    },
+
+    jobTitle: {
+      fontSize: FS.md,
+      color: COLORS.textMuted,
+      marginBottom: SP.sm,
+    },
+    contactInfo: {
+      fontSize: FS.sm,
+      color: COLORS.textSecondary,
+      textAlign: 'center',
+    },
+    contactLink: {
+      color: COLORS.textSecondary,
+      textDecoration: 'underline',
+    },
+
+    // ── Section ──
+    section: { marginBottom: SP.lg },
     sectionTitle: {
-      fontSize: 12,
+      fontSize: FS.lg,
       fontFamily: 'Helvetica-Bold',
       textTransform: 'uppercase',
-      letterSpacing: 0.8,
+      letterSpacing: px(0.8),
       color: accent,
       borderBottomWidth: 1,
       borderBottomColor: accent,
       borderBottomStyle: 'solid',
-      paddingBottom: 2,
-      marginBottom: 4,
+      paddingBottom: SP.xs,
+      marginBottom: SP.sm,
     },
-    item: { marginBottom: 6 },
+
+    // ── Summary ──
+    summaryText: { fontSize: FS.base, lineHeight: 1.6, color: COLORS.text },
+
+    // ── Item (experience / education / project / certification) ──
+    item: { marginBottom: SP.md },
     itemHeaderRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-end',
     },
-    itemTitle: { fontSize: 11, fontFamily: 'Helvetica-Bold' },
-    itemDate: { fontSize: 9, fontStyle: 'italic', color: '#666666' },
+    itemTitle: {
+      fontSize: FS.md,
+      fontFamily: 'Helvetica-Bold',
+      color: COLORS.text,
+    },
+    itemDate: {
+      fontSize: FS.sm,
+      fontStyle: 'italic',
+      color: COLORS.textMuted,
+    },
     itemSubRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginTop: 1,
+      marginTop: SP.xs,
     },
-    itemSubtitle: { fontSize: 10, fontStyle: 'italic', color: '#333333' },
-    itemLocation: { fontSize: 9, fontStyle: 'italic', color: '#666666' },
-    itemBody: { marginTop: 3, fontSize: 10 },
-    bulletRow: { flexDirection: 'row', marginTop: 2 },
-    bulletGlyph: { width: 10, fontSize: 10, color: '#666666' },
-    bulletText: { flex: 1, fontSize: 10 },
-    skillRow: { flexDirection: 'row', marginBottom: 2 },
-    skillCategoryLabel: { fontFamily: 'Helvetica-Bold', marginRight: 4 },
-    skillList: { flex: 1 },
-    languagesRow: { flexDirection: 'row', flexWrap: 'wrap' },
-    languageItem: { marginRight: 8 },
+    itemSubtitle: {
+      fontSize: FS.base,
+      fontStyle: 'italic',
+      color: COLORS.textSecondary,
+    },
+    itemLocation: {
+      fontSize: FS.sm,
+      fontStyle: 'italic',
+      color: COLORS.textMuted,
+    },
+    itemBody: {
+      marginTop: SP.sm,
+      fontSize: FS.base,
+      lineHeight: 1.5,
+      color: COLORS.text,
+    },
+
+    // ── Achievements / bullets (CSS: ul margin-left 0.15in) ──
+    bulletList: {
+      marginTop: SP.sm,
+      marginLeft: inch(0.15),
+    },
+    bulletRow: {
+      flexDirection: 'row',
+      marginBottom: SP.xs,
+    },
+    bulletGlyph: {
+      width: px(10),
+      fontSize: FS.xs,
+      color: COLORS.textMuted,
+      paddingTop: 1, // optical alignment with first text line
+    },
+    bulletText: {
+      flex: 1,
+      fontSize: FS.base,
+      lineHeight: 1.5,
+      color: COLORS.text,
+    },
+
+    // ── Skills (CSS: skills-container column gap sm; skill-row row gap sm) ──
+    skillsContainer: { flexDirection: 'column' },
+    skillRow: {
+      flexDirection: 'row',
+      marginBottom: SP.sm,
+      fontSize: FS.base,
+      lineHeight: 1.5,
+    },
+    skillCategoryLabel: {
+      fontFamily: 'Helvetica-Bold',
+      color: COLORS.text,
+      marginRight: SP.sm,
+    },
+    skillList: { flex: 1, color: COLORS.text },
+
+    // ── Languages ──
+    languagesRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    languageItem: {
+      marginRight: SP.sm,
+      fontSize: FS.base,
+      color: COLORS.text,
+    },
+
+    // ── Cover-letter date (CSS: text-align right, margin-bottom lg, font-size base) ──
     coverLetterDate: {
       textAlign: 'right',
-      marginBottom: 12,
-      fontSize: 10,
-      color: '#333333',
+      marginBottom: SP.lg,
+      fontSize: FS.base,
+      color: COLORS.textSecondary,
     },
-    coverLetterBody: { fontSize: 11, lineHeight: 1.6 },
-    coverLetterParagraph: { marginBottom: 8, textAlign: 'justify' },
-    coverLetterClosing: { marginTop: 16, fontSize: 11 },
-    coverLetterSignature: { marginTop: 16, fontFamily: 'Helvetica-Bold' },
+
+    // ── Cover-letter body (CSS: font-size md, line-height 1.7) ──
+    coverLetterBody: {
+      fontSize: FS.md,
+      lineHeight: 1.7,
+      color: COLORS.text,
+    },
+    // CSS: .cover-letter-body p { margin-bottom: var(--spacing-lg); text-align: justify; }
+    coverLetterParagraph: {
+      marginBottom: SP.lg,
+      textAlign: 'justify',
+    },
+    // CSS: .cover-letter-body ul { margin-left: 0.25in; margin-bottom: var(--spacing-lg); }
+    coverLetterList: {
+      marginLeft: inch(0.25),
+      marginBottom: SP.lg,
+    },
+    coverLetterListItem: {
+      marginBottom: SP.sm,
+      fontSize: FS.md,
+      lineHeight: 1.7,
+    },
+
+    // ── Cover-letter closing (CSS: margin-top xl, font-size md) ──
+    coverLetterClosing: {
+      marginTop: SP.xl,
+      fontSize: FS.md,
+    },
+    coverLetterClosingPhrase: {
+      marginBottom: SP.md,
+    },
+    coverLetterSignature: {
+      marginTop: SP.xl,
+      fontFamily: 'Helvetica-Bold',
+    },
   });
 
 interface ContactPart {
@@ -110,14 +300,16 @@ function ContactInfoFactory(rp: ReactPdfNamespace) {
     linkStyle,
   }: {
     parts: ContactPart[];
-    style: any;
-    linkStyle: any;
+    style: unknown;
+    linkStyle: unknown;
   }): ReactElement | null {
     const filtered = parts.filter((p) => p.label);
     if (filtered.length === 0) return null;
     const children: ReactElement[] = [];
     filtered.forEach((p, idx) => {
-      if (idx > 0) children.push(createElement(Text, { key: `sep-${idx}` }, ' | '));
+      if (idx > 0) {
+        children.push(createElement(Text, { key: `sep-${idx}` }, ' | '));
+      }
       if (p.href) {
         children.push(
           createElement(Link, { key: `lnk-${idx}`, src: p.href, style: linkStyle }, p.label),
@@ -170,11 +362,11 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
         },
         createElement(
           Page,
-          { size: 'A4', style: styles.page },
+          { size: 'LETTER', style: styles.resumePage },
           // Header
           createElement(
             View,
-            { style: styles.header },
+            { style: styles.resumeHeader },
             createElement(Text, { style: styles.candidateName }, data.candidateName),
             data.targetJobTitle &&
               createElement(Text, { style: styles.jobTitle }, data.targetJobTitle),
@@ -190,9 +382,7 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
               View,
               { style: styles.section, wrap: false },
               createElement(Text, { style: styles.sectionTitle }, tLabel('resume.summary', lang)),
-              renderRichText(data.summary, {
-                paragraph: { fontSize: 10, lineHeight: 1.5 },
-              }),
+              renderRichText(data.summary, { paragraph: styles.summaryText }),
             ),
           // Education
           data.education &&
@@ -225,7 +415,7 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                     createElement(
                       View,
                       { style: styles.itemBody },
-                      renderRichText(edu.description, { paragraph: { fontSize: 10 } }),
+                      renderRichText(edu.description, { paragraph: { fontSize: FS.base } }),
                     ),
                 ),
               ),
@@ -262,20 +452,26 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                     createElement(
                       View,
                       { style: styles.itemBody },
-                      renderRichText(exp.description, { paragraph: { fontSize: 10 } }),
+                      renderRichText(exp.description, { paragraph: { fontSize: FS.base } }),
                     ),
-                  ...(exp.achievements ?? []).map((ach, aidx) =>
+                  exp.achievements &&
+                    exp.achievements.length > 0 &&
                     createElement(
                       View,
-                      { key: `ach-${aidx}`, style: styles.bulletRow },
-                      createElement(Text, { style: styles.bulletGlyph }, '•'),
-                      createElement(
-                        View,
-                        { style: styles.bulletText },
-                        renderRichText(ach, { paragraph: { fontSize: 10 } }),
+                      { style: styles.bulletList },
+                      ...exp.achievements.map((ach, aidx) =>
+                        createElement(
+                          View,
+                          { key: `ach-${aidx}`, style: styles.bulletRow },
+                          createElement(Text, { style: styles.bulletGlyph }, '•'),
+                          createElement(
+                            View,
+                            { style: { flex: 1 } },
+                            renderRichText(ach, { paragraph: styles.bulletText }),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
                 ),
               ),
             ),
@@ -300,20 +496,26 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                     createElement(
                       View,
                       { style: styles.itemBody },
-                      renderRichText(proj.description, { paragraph: { fontSize: 10 } }),
+                      renderRichText(proj.description, { paragraph: { fontSize: FS.base } }),
                     ),
-                  ...(proj.highlights ?? []).map((h, hidx) =>
+                  proj.highlights &&
+                    proj.highlights.length > 0 &&
                     createElement(
                       View,
-                      { key: `hl-${hidx}`, style: styles.bulletRow },
-                      createElement(Text, { style: styles.bulletGlyph }, '•'),
-                      createElement(
-                        View,
-                        { style: styles.bulletText },
-                        renderRichText(h, { paragraph: { fontSize: 10 } }),
+                      { style: styles.bulletList },
+                      ...proj.highlights.map((h, hidx) =>
+                        createElement(
+                          View,
+                          { key: `hl-${hidx}`, style: styles.bulletRow },
+                          createElement(Text, { style: styles.bulletGlyph }, '•'),
+                          createElement(
+                            View,
+                            { style: { flex: 1 } },
+                            renderRichText(h, { paragraph: styles.bulletText }),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
                 ),
               ),
             ),
@@ -324,13 +526,17 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
               View,
               { style: styles.section, wrap: false },
               createElement(Text, { style: styles.sectionTitle }, tLabel('resume.skills', lang)),
-              ...data.skillCategories.map((cat, idx) =>
-                createElement(
-                  View,
-                  { key: `sk-${idx}`, style: styles.skillRow },
-                  cat.type &&
-                    createElement(Text, { style: styles.skillCategoryLabel }, `${cat.type}:`),
-                  createElement(Text, { style: styles.skillList }, cat.skills.join(', ')),
+              createElement(
+                View,
+                { style: styles.skillsContainer },
+                ...data.skillCategories.map((cat, idx) =>
+                  createElement(
+                    View,
+                    { key: `sk-${idx}`, style: styles.skillRow },
+                    cat.type &&
+                      createElement(Text, { style: styles.skillCategoryLabel }, `${cat.type}:`),
+                    createElement(Text, { style: styles.skillList }, cat.skills.join(', ')),
+                  ),
                 ),
               ),
             ),
@@ -407,11 +613,11 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
         },
         createElement(
           Page,
-          { size: 'A4', style: styles.page },
+          { size: 'LETTER', style: styles.coverLetterPage },
           createElement(
             View,
-            { style: styles.header },
-            createElement(Text, { style: styles.candidateName }, data.candidateName),
+            { style: styles.coverLetterHeader },
+            createElement(Text, { style: styles.candidateNameCoverLetter }, data.candidateName),
             data.targetJobTitle &&
               createElement(Text, { style: styles.jobTitle }, data.targetJobTitle),
             createElement(ContactInfo, {
@@ -426,14 +632,15 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
             { style: styles.coverLetterBody },
             renderRichText(data.content, {
               paragraph: styles.coverLetterParagraph,
-              list: { marginBottom: 8 },
-              listItem: { fontSize: 11 },
+              list: styles.coverLetterList,
+              listItem: styles.coverLetterListItem,
             }),
           ),
           createElement(
             View,
             { style: styles.coverLetterClosing },
-            data.closingPhrase && createElement(Text, null, data.closingPhrase),
+            data.closingPhrase &&
+              createElement(Text, { style: styles.coverLetterClosingPhrase }, data.closingPhrase),
             createElement(Text, { style: styles.coverLetterSignature }, data.candidateName),
           ),
         ),
