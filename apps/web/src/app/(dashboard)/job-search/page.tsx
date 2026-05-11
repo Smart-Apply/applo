@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useFeatureGate } from '@/hooks/use-tier-gate';
 import {
-  useLinkedInJobSearch,
-  useImportLinkedInJob,
-} from '@/hooks/use-linkedin-jobs';
+  useImportUnifiedJob,
+  useJobSearch,
+  useJobSearchSources,
+} from '@/hooks/use-job-search';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,51 +36,20 @@ import {
   Users,
 } from 'lucide-react';
 import type {
+  JobSearchSource,
   LinkedInCountry,
-  LinkedInDatePosted,
-  LinkedInExperienceLevel,
-  LinkedInJob,
-  LinkedInJobSearchFilters,
-  LinkedInJobType,
-  LinkedInRemoteFilter,
-  LinkedInSortBy,
+  UnifiedJob,
+  UnifiedJobSearchRequest,
 } from '@/types';
 
-// LinkedIn URL parameter values mapped to user-facing German labels.
-const EXPERIENCE_LEVELS: { value: LinkedInExperienceLevel; label: string }[] = [
-  { value: '1', label: 'Praktikum' },
-  { value: '2', label: 'Berufseinsteiger' },
-  { value: '3', label: 'Associate' },
-  { value: '4', label: 'Mid-Senior' },
-  { value: '5', label: 'Direktor' },
-  { value: '6', label: 'Executive' },
-];
-
-const JOB_TYPES: { value: LinkedInJobType; label: string }[] = [
-  { value: 'F', label: 'Vollzeit' },
-  { value: 'P', label: 'Teilzeit' },
-  { value: 'C', label: 'Vertrag' },
-  { value: 'T', label: 'Befristet' },
-  { value: 'I', label: 'Praktikum' },
-];
-
-const REMOTE_OPTIONS: { value: LinkedInRemoteFilter; label: string }[] = [
-  { value: '1', label: 'Vor Ort' },
-  { value: '2', label: 'Remote' },
-  { value: '3', label: 'Hybrid' },
-];
-
-const DATE_POSTED_OPTIONS: { value: LinkedInDatePosted | 'any'; label: string }[] = [
-  { value: 'any', label: 'Beliebig' },
-  { value: 'r86400', label: 'Letzte 24 Stunden' },
-  { value: 'r604800', label: 'Letzte Woche' },
-  { value: 'r2592000', label: 'Letzter Monat' },
-];
-
-const SORT_OPTIONS: { value: LinkedInSortBy; label: string }[] = [
-  { value: 'DD', label: 'Neueste zuerst' },
-  { value: 'R', label: 'Relevanteste zuerst' },
-];
+// ─────────────────────────────────────────────────────────────────────────────
+// Job-source providers are intentionally NOT surfaced in the UI — the user
+// sees a single unified result list. The frontend just calls /job-search and
+// trusts the backend to fan out across whichever providers are configured
+// for the user's tier. We still query /job-search/sources internally to know
+// whether the user has any source (search-button enable) and whether to show
+// the Premium upsell, but never render source names.
+// ─────────────────────────────────────────────────────────────────────────────
 
 const COUNTRY_OPTIONS: { value: LinkedInCountry; label: string }[] = [
   { value: 'de', label: '🇩🇪 Deutschland' },
@@ -110,49 +79,47 @@ function formatPostedAt(iso?: string): string | null {
 
 export default function JobSearchPage() {
   const router = useRouter();
-  const { hasAccess, isLoading: isLoadingTier } = useFeatureGate('linkedinImport');
-  const isLocked = !isLoadingTier && !hasAccess;
+  const sourcesQuery = useJobSearchSources();
+
+  // Discover which sources are actually available for THIS user. The
+  // backend already factors in tier + provider configuration, so we can
+  // trust this list for picker disabled-state and Premium upsell logic.
+  const availableSources = useMemo<JobSearchSource[]>(
+    () => sourcesQuery.data?.sources ?? [],
+    [sourcesQuery.data],
+  );
+  const hasAnySource = availableSources.some((s) => s.available);
 
   // Search form state.
   const [keywords, setKeywords] = useState('');
   const [location, setLocation] = useState('');
   const [country, setCountry] = useState<LinkedInCountry>('de');
-  const [experience, setExperience] = useState<LinkedInExperienceLevel[]>([]);
-  const [jobTypes, setJobTypes] = useState<LinkedInJobType[]>([]);
-  const [remoteOpts, setRemoteOpts] = useState<LinkedInRemoteFilter[]>([]);
-  const [datePosted, setDatePosted] = useState<LinkedInDatePosted | 'any'>('any');
-  const [sortBy, setSortBy] = useState<LinkedInSortBy>('DD');
-  const [easyApply, setEasyApply] = useState(false);
-  const [count, setCount] = useState<number>(15);
+  const [remoteOnly, setRemoteOnly] = useState(false);
+  const [perSourceLimit, setPerSourceLimit] = useState<number>(15);
 
-  const search = useLinkedInJobSearch();
-  const importJob = useImportLinkedInJob();
+  const search = useJobSearch();
+  const importJob = useImportUnifiedJob();
   const [importingId, setImportingId] = useState<string | null>(null);
-
-  const toggle = <T,>(arr: T[], value: T): T[] =>
-    arr.includes(value) ? arr.filter((x) => x !== value) : [...arr, value];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLocked) return;
+    if (!hasAnySource) return;
 
-    const filters: LinkedInJobSearchFilters = {
+    // No `sources` filter — backend fans out across every provider that's
+    // configured AND available for the user's tier. Hiding the picker means
+    // we don't expose provider identities (LinkedIn/Arbeitnow/...) to users.
+    const request: UnifiedJobSearchRequest = {
       keywords: keywords.trim() || undefined,
       location: location.trim() || undefined,
       country,
-      experienceLevel: experience.length ? experience : undefined,
-      jobType: jobTypes.length ? jobTypes : undefined,
-      remote: remoteOpts.length ? remoteOpts : undefined,
-      datePosted: datePosted === 'any' ? undefined : datePosted,
-      sortBy,
-      easyApply: easyApply || undefined,
-      count,
+      remoteOnly: remoteOnly || undefined,
+      perSourceLimit,
     };
-    search.mutate(filters);
+    search.mutate(request);
   };
 
-  const handleImport = async (job: LinkedInJob) => {
-    setImportingId(job.id);
+  const handleImport = async (job: UnifiedJob) => {
+    setImportingId(`${job.source}:${job.externalId}`);
     try {
       const created = await importJob.mutateAsync(job);
       router.push(`/applications/new?jobPostingId=${created.id}`);
@@ -163,21 +130,27 @@ export default function JobSearchPage() {
 
   const results = search.data?.results ?? [];
 
+  // Premium upsell only if AT LEAST ONE source requires Premium AND the user
+  // has none of those available. Avoids nagging users who are already paying.
+  const showPremiumUpsell = availableSources.some(
+    (s) => s.requiresPremium && !s.available,
+  );
+
   return (
-    <div className="container max-w-7xl py-6 space-y-8">
+    <div className="container max-w-7xl px-0 py-6 space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Sparkles className="h-7 w-7 text-primary" />
-            LinkedIn Job-Suche
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+            Job-Suche
           </h1>
           <p className="text-muted-foreground">
-            Finde passende Stellen direkt auf LinkedIn und erstelle mit einem Klick eine
-            maßgeschneiderte Bewerbung.
+            Finde passende Stellen aus tausenden offenen Positionen und erstelle mit einem
+            Klick eine maßgeschneiderte Bewerbung.
           </p>
         </div>
-        {isLocked && (
+        {showPremiumUpsell && (
           <Button asChild className="gap-2">
             <Link href="/pricing">
               <Lock className="h-4 w-4" />
@@ -188,25 +161,25 @@ export default function JobSearchPage() {
       </div>
 
       {/* Search form */}
-      <Card className={isLocked ? 'opacity-60' : ''}>
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg">Suchfilter</CardTitle>
           <CardDescription>
-            Premium-Mitglieder können bis zu 10 Suchanfragen pro Stunde durchführen.
+            Premium-Mitglieder profitieren von einer deutlich erweiterten Stellenauswahl.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSearch} className="space-y-6">
-            {/* Keywords + Location row */}
+            {/* Keywords + Location + Country row */}
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="keywords">Stichwörter</Label>
                 <Input
                   id="keywords"
-                  placeholder="z.B. Projektmanager, Krankenpfleger, Vertriebsleiter"
+                  placeholder="z.B. Werkstudent Wirtschaftsinformatik"
                   value={keywords}
                   onChange={(e) => setKeywords(e.target.value)}
-                  disabled={isLocked || search.isPending}
+                  disabled={search.isPending}
                 />
               </div>
               <div className="space-y-2">
@@ -216,7 +189,7 @@ export default function JobSearchPage() {
                   placeholder="z.B. NRW, Berlin, München"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  disabled={isLocked || search.isPending}
+                  disabled={search.isPending}
                 />
               </div>
               <div className="space-y-2">
@@ -224,7 +197,7 @@ export default function JobSearchPage() {
                 <Select
                   value={country}
                   onValueChange={(v) => setCountry(v as LinkedInCountry)}
-                  disabled={isLocked || search.isPending}
+                  disabled={search.isPending}
                 >
                   <SelectTrigger id="country">
                     <SelectValue />
@@ -240,99 +213,42 @@ export default function JobSearchPage() {
               </div>
             </div>
 
-            {/* Selects row */}
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Veröffentlicht</Label>
-                <Select
-                  value={datePosted}
-                  onValueChange={(v) => setDatePosted(v as LinkedInDatePosted | 'any')}
-                  disabled={isLocked || search.isPending}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DATE_POSTED_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Remote toggle + per-source limit + submit */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={remoteOnly}
+                    onCheckedChange={(v) => setRemoteOnly(v === true)}
+                    disabled={search.isPending}
+                  />
+                  <span className="text-sm">Nur Remote-Stellen</span>
+                </label>
+                <div className="space-y-2">
+                  <Label htmlFor="count" className="text-xs text-muted-foreground">
+                    Max. Treffer pro Quelle
+                  </Label>
+                  <Input
+                    id="count"
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={perSourceLimit}
+                    onChange={(e) =>
+                      setPerSourceLimit(
+                        Math.min(50, Math.max(1, Number(e.target.value) || 15)),
+                      )
+                    }
+                    disabled={search.isPending}
+                    className="w-32"
+                  />
+                </div>
               </div>
-
-              <div className="space-y-2">
-                <Label>Sortierung</Label>
-                <Select
-                  value={sortBy}
-                  onValueChange={(v) => setSortBy(v as LinkedInSortBy)}
-                  disabled={isLocked || search.isPending}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORT_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="count">Max. Ergebnisse</Label>
-                <Input
-                  id="count"
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={count}
-                  onChange={(e) => setCount(Math.min(50, Math.max(1, Number(e.target.value) || 15)))}
-                  disabled={isLocked || search.isPending}
-                />
-              </div>
-            </div>
-
-            {/* Multi-select chip groups */}
-            <div className="grid gap-6 md:grid-cols-3">
-              <ChipGroup
-                label="Erfahrungslevel"
-                options={EXPERIENCE_LEVELS}
-                selected={experience}
-                onToggle={(v) => setExperience(toggle(experience, v))}
-                disabled={isLocked || search.isPending}
-              />
-              <ChipGroup
-                label="Beschäftigungsart"
-                options={JOB_TYPES}
-                selected={jobTypes}
-                onToggle={(v) => setJobTypes(toggle(jobTypes, v))}
-                disabled={isLocked || search.isPending}
-              />
-              <ChipGroup
-                label="Arbeitsmodell"
-                options={REMOTE_OPTIONS}
-                selected={remoteOpts}
-                onToggle={(v) => setRemoteOpts(toggle(remoteOpts, v))}
-                disabled={isLocked || search.isPending}
-              />
-            </div>
-
-            {/* Easy apply + submit */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={easyApply}
-                  onCheckedChange={(v) => setEasyApply(v === true)}
-                  disabled={isLocked || search.isPending}
-                />
-                <span className="text-sm">Nur Easy-Apply Stellen</span>
-              </label>
-
-              <Button type="submit" disabled={isLocked || search.isPending} className="gap-2">
+              <Button
+                type="submit"
+                disabled={search.isPending || !hasAnySource}
+                className="gap-2"
+              >
                 {search.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -372,25 +288,28 @@ export default function JobSearchPage() {
         <EmptyState
           icon={Briefcase}
           title="Keine Stellen gefunden"
-          description="Versuche andere Stichwörter, einen anderen Standort oder weniger Filter."
+          description="Versuche andere Stichwörter oder einen anderen Standort."
         />
       )}
 
       {!search.isPending && results.length > 0 && (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            {results.length} {results.length === 1 ? 'Treffer' : 'Treffer'} gefunden
+            {results.length} Treffer gefunden
           </p>
           <div className="space-y-3">
-            {results.map((job) => (
-              <JobResultCard
-                key={job.id}
-                job={job}
-                onImport={() => handleImport(job)}
-                isImporting={importingId === job.id}
-                disabled={importJob.isPending}
-              />
-            ))}
+            {results.map((job) => {
+              const importKey = `${job.source}:${job.externalId}`;
+              return (
+                <JobResultCard
+                  key={importKey}
+                  job={job}
+                  onImport={() => handleImport(job)}
+                  isImporting={importingId === importKey}
+                  disabled={importJob.isPending}
+                />
+              );
+            })}
           </div>
         </div>
       )}
@@ -402,55 +321,13 @@ export default function JobSearchPage() {
 // Helper components
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ChipGroup<T extends string>({
-  label,
-  options,
-  selected,
-  onToggle,
-  disabled,
-}: {
-  label: string;
-  options: { value: T; label: string }[];
-  selected: T[];
-  onToggle: (v: T) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <div className="flex flex-wrap gap-2">
-        {options.map((opt) => {
-          const active = selected.includes(opt.value);
-          return (
-            <button
-              type="button"
-              key={opt.value}
-              disabled={disabled}
-              onClick={() => onToggle(opt.value)}
-              className={[
-                'rounded-full border px-3 py-1 text-xs transition',
-                active
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background text-foreground border-input hover:bg-muted',
-                disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
-              ].join(' ')}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function JobResultCard({
   job,
   onImport,
   isImporting,
   disabled,
 }: {
-  job: LinkedInJob;
+  job: UnifiedJob;
   onImport: () => void;
   isImporting: boolean;
   disabled: boolean;
@@ -498,7 +375,6 @@ function JobResultCard({
             </Badge>
           )}
           {job.employmentType && <Badge variant="outline">{job.employmentType}</Badge>}
-          {job.seniority && <Badge variant="outline">{job.seniority}</Badge>}
           {job.salary && <Badge variant="outline">{job.salary}</Badge>}
           {job.applicantsCount !== undefined && (
             <Badge variant="outline" className="gap-1">
@@ -506,6 +382,11 @@ function JobResultCard({
               {job.applicantsCount} Bewerber
             </Badge>
           )}
+          {job.tags?.slice(0, 3).map((tag) => (
+            <Badge key={tag} variant="outline">
+              {tag}
+            </Badge>
+          ))}
         </div>
 
         {job.description && (

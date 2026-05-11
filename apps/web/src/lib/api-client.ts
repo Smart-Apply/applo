@@ -46,6 +46,10 @@ import type {
   LinkedInJob,
   LinkedInJobSearchFilters,
   LinkedInJobSearchResponse,
+  UnifiedJob,
+  UnifiedJobSearchRequest,
+  UnifiedJobSearchResponse,
+  JobSearchSourcesResponse,
   AnalyticsOverview,
   AutoApplyConfig,
   UpsertAutoApplyConfigPayload,
@@ -148,6 +152,13 @@ async function refreshAccessToken(): Promise<boolean> {
         return false;
       }
 
+      // Reset the proactive-refresh clock so we don't fire two refreshes
+      // in quick succession when the reactive 401 path beats the timer.
+      lastRefreshAt = Date.now();
+      if (proactiveRefreshTimer !== null) {
+        scheduleNextProactiveRefresh();
+      }
+
       return true;
     } catch (error) {
       console.error('Failed to refresh token:', error);
@@ -162,6 +173,106 @@ async function refreshAccessToken(): Promise<boolean> {
   })();
 
   return refreshPromise;
+}
+
+// ─── Proactive token refresh ────────────────────────────────────────────
+//
+// The access-token cookie has a 15-minute TTL (see auth.controller.ts).
+// Without proactive refresh, the typical user flow is:
+//   1. Token expires while the tab sits idle
+//   2. Next API call returns 401 (visible in DevTools)
+//   3. api-client silently calls /auth/refresh + retries
+//   4. User sees correct data but DevTools is full of red 401s
+//
+// We pre-empt step 2 by scheduling a refresh ~1 minute before the cookie
+// expires. We also re-check on `visibilitychange` so a backgrounded tab
+// (where setTimeout may be throttled or paused on iOS Safari) refreshes
+// the moment the user returns to it.
+//
+// If a real 401 still slips through (e.g. clock skew, server restart) the
+// reactive refresh path inside `apiRequest` catches it — this is purely
+// noise reduction, not a correctness change.
+
+const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000; // matches auth.controller.ts cookie maxAge
+const PROACTIVE_REFRESH_LEAD_MS = 60 * 1000; // refresh 1 min before expiry
+const PROACTIVE_REFRESH_INTERVAL_MS = ACCESS_TOKEN_TTL_MS - PROACTIVE_REFRESH_LEAD_MS;
+
+let proactiveRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+let lastRefreshAt = 0;
+let visibilityListenerAttached = false;
+
+function clearProactiveRefreshTimer(): void {
+  if (proactiveRefreshTimer !== null) {
+    clearTimeout(proactiveRefreshTimer);
+    proactiveRefreshTimer = null;
+  }
+}
+
+async function runProactiveRefresh(): Promise<void> {
+  if (isRedirectingToLogin) {
+    stopProactiveTokenRefresh();
+    return;
+  }
+  const ok = await refreshAccessToken();
+  if (ok) {
+    lastRefreshAt = Date.now();
+    scheduleNextProactiveRefresh();
+  }
+  // If refresh failed, the next real API call will trigger the reactive
+  // 401 → /auth/refresh path which knows how to bail to /login. Don't
+  // re-arm the timer here to avoid spamming /auth/refresh in a loop.
+}
+
+function scheduleNextProactiveRefresh(): void {
+  clearProactiveRefreshTimer();
+  if (typeof window === 'undefined') return;
+  proactiveRefreshTimer = setTimeout(() => {
+    void runProactiveRefresh();
+  }, PROACTIVE_REFRESH_INTERVAL_MS);
+}
+
+function handleVisibilityChange(): void {
+  if (typeof document === 'undefined') return;
+  if (document.visibilityState !== 'visible') return;
+  if (isRedirectingToLogin) return;
+  // If we've been hidden long enough that the access token has likely
+  // expired, refresh immediately rather than waiting for the (possibly
+  // throttled) setTimeout to fire.
+  const elapsed = Date.now() - lastRefreshAt;
+  if (elapsed >= PROACTIVE_REFRESH_INTERVAL_MS) {
+    void runProactiveRefresh();
+  }
+}
+
+/**
+ * Start the proactive refresh loop. Safe to call multiple times — it
+ * resets the timer on each call. Wired up by the top-level `Providers`
+ * component when an authenticated session is detected.
+ */
+export function startProactiveTokenRefresh(): void {
+  if (typeof window === 'undefined') return;
+  // Treat "now" as the moment we last got a fresh token. Login/refresh
+  // callers invoke this immediately after the cookie is set, so this is
+  // accurate. For a hydrated session that's older, the worst case is
+  // one redundant refresh fired ~14 minutes from now.
+  lastRefreshAt = Date.now();
+  scheduleNextProactiveRefresh();
+  if (!visibilityListenerAttached) {
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    visibilityListenerAttached = true;
+  }
+}
+
+/**
+ * Stop the proactive refresh loop. Called on logout / clearAuth.
+ */
+export function stopProactiveTokenRefresh(): void {
+  clearProactiveRefreshTimer();
+  if (visibilityListenerAttached && typeof document !== 'undefined') {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    visibilityListenerAttached = false;
+  }
+  lastRefreshAt = 0;
 }
 
 /**
@@ -367,7 +478,12 @@ export function resetAuthRedirectFlag(): void {
  * Does NOT set Content-Type header (browser sets it with boundary automatically)
  */
 async function apiRequestFormData<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { retry = true, maxRetries = 3, ...fetchOptions } = options;
+  // FormData uploads use the simpler retry-on-401-after-refresh path that
+  // every authenticated fetch in this file follows; the `retry`/`maxRetries`
+  // options on RequestOptions are intentionally ignored here so we don't
+  // accidentally re-upload the same multipart body multiple times on a
+  // network blip.
+  const { retry: _retry, maxRetries: _maxRetries, ...fetchOptions } = options;
 
   const makeRequest = async (isRetryAfterRefresh = false): Promise<T> => {
     const headers: Record<string, string> = {
@@ -549,7 +665,7 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
-    deleteAccount: (data: { password: string }) =>
+    deleteAccount: (data: { password?: string }) =>
       apiRequest<{ message: string }>('/auth/account', {
         method: 'DELETE',
         body: JSON.stringify(data),
@@ -704,6 +820,42 @@ export const api = {
      */
     import: (job: LinkedInJob) =>
       apiRequest<JobPosting>('/linkedin-jobs/import', {
+        method: 'POST',
+        body: JSON.stringify({ job }),
+      }),
+  },
+
+  // Unified Job Search (multi-source: LinkedIn + Arbeitnow)
+  // Pluggable backend; the legacy `linkedinJobs` namespace above is kept
+  // alive for any code path that hasn't migrated yet.
+  jobSearch: {
+    /**
+     * List configured providers + per-tier availability so the UI can
+     * grey out sources the current user can't actually use.
+     */
+    sources: () => apiRequest<JobSearchSourcesResponse>('/job-search/sources'),
+
+    /**
+     * Fan-out search across all configured providers. Per-source
+     * try/catch on the backend means partial failures still return
+     * useful results — inspect `response.sources[]` to see which
+     * sources contributed and which were skipped/errored.
+     *
+     * Throttled server-side to 30 requests/hour per user.
+     */
+    search: (request: UnifiedJobSearchRequest) =>
+      apiRequest<UnifiedJobSearchResponse>('/job-search', {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }),
+
+    /**
+     * Persist a search result via its originating provider so the
+     * application wizard can consume it. The backend dispatches on
+     * `job.source` to compose the right `fullText` per source.
+     */
+    import: (job: UnifiedJob) =>
+      apiRequest<JobPosting>('/job-search/import', {
         method: 'POST',
         body: JSON.stringify({ job }),
       }),
@@ -1022,9 +1174,15 @@ export const api = {
     deleteConfig: () =>
       apiRequest<void>('/auto-apply/config', { method: 'DELETE' }),
 
-    /** Manually trigger one recommendation run (1/hour). */
+    /**
+     * Manually trigger one recommendation run (1/hour).
+     *
+     * Fire-and-forget on the backend — returns 202 immediately while the
+     * LinkedIn search + scoring run in the background. The caller should
+     * poll `listSuggestions()` to surface new results.
+     */
     runNow: () =>
-      apiRequest<{ ok: boolean; suggestionsCreated: number }>(
+      apiRequest<{ ok: boolean; dispatched: boolean }>(
         '/auto-apply/config/run-now',
         { method: 'POST' },
       ),

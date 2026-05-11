@@ -995,6 +995,96 @@ export interface ImportLinkedInJobDto {
 }
 
 // ============================================
+// Unified Job Search (multi-source)
+// ============================================
+//
+// Provider-agnostic shapes returned by the new `/job-search/*` endpoints.
+// One implementation per backend `JobSearchProvider`:
+//   - 'linkedin'  → Apify-backed LinkedIn scraper (Premium-only)
+//   - 'arbeitnow' → Free public Arbeitnow REST API (FREE-tier OK)
+//
+// The legacy `LinkedInJob*` types above are kept for backward compatibility
+// with the original `/linkedin-jobs/*` endpoints — new UI code should use
+// the unified types below.
+
+/** Stable identifier for a job source — must match backend `JobSourceId`. */
+export type JobSourceId = 'linkedin' | 'arbeitnow';
+
+/**
+ * Provider-agnostic job result. Strict subset of `LinkedInJob` plus a
+ * `source` discriminator so the round-trip `/import` call can be routed
+ * to the correct provider.
+ */
+export interface UnifiedJob {
+  source: JobSourceId;
+  /** Provider-native job ID (LinkedIn jobId, Arbeitnow slug, …) */
+  externalId: string;
+  title: string;
+  company: string;
+  companyLogoUrl?: string;
+  location?: string;
+  workType?: string;
+  employmentType?: string;
+  postedAt?: string;
+  /** LinkedIn only — Arbeitnow doesn't expose this. */
+  applicantsCount?: number;
+  salary?: string;
+  url: string;
+  description?: string;
+  /** Provider-supplied tags / categories (e.g. ["Remote", "Software Development"]). */
+  tags?: string[];
+}
+
+/**
+ * Unified search request. Filters that don't apply to a given source
+ * are silently ignored — `sources[]` in the response reports which
+ * filters actually ran where.
+ */
+export interface UnifiedJobSearchRequest {
+  keywords?: string;
+  location?: string;
+  /** LinkedIn only — Arbeitnow ignores country (German-first corpus). */
+  country?: LinkedInCountry;
+  /** Honored by Arbeitnow + translated to LinkedIn's f_WT=2 filter. */
+  remoteOnly?: boolean;
+  /** Omit or pass empty to fan out across all configured providers. */
+  sources?: JobSourceId[];
+  /** Max results PER SOURCE (1–100, default 25). */
+  perSourceLimit?: number;
+}
+
+/** Per-source bookkeeping returned alongside merged results. */
+export interface JobSearchSourceStatus {
+  source: JobSourceId;
+  /** Number of results this source contributed after dedup. */
+  count: number;
+  status: 'ok' | 'skipped' | 'error';
+  /** Reason a source was skipped or errored ("Premium tier required", etc.). */
+  reason?: string;
+}
+
+export interface UnifiedJobSearchResponse {
+  results: UnifiedJob[];
+  /** Total result count across all sources after dedup. */
+  totalCount: number;
+  sources: JobSearchSourceStatus[];
+  searchedAt: string;
+}
+
+/** Single entry returned by `GET /job-search/sources`. */
+export interface JobSearchSource {
+  id: JobSourceId;
+  name: string;
+  requiresPremium: boolean;
+  /** False when the source is misconfigured OR gated behind a tier the user lacks. */
+  available: boolean;
+}
+
+export interface JobSearchSourcesResponse {
+  sources: JobSearchSource[];
+}
+
+// ============================================
 // Auto-Apply Agent (Premium Feature)
 // ============================================
 
@@ -1017,6 +1107,19 @@ export interface AutoApplyConfig {
   /** 5-field cron expression (restricted server-side) */
   cronSchedule: string;
   digestEnabled: boolean;
+  /**
+   * Resume template id used when the user approves a suggestion. When
+   * undefined the backend auto-picks the language-matched default.
+   */
+  cvTemplateId?: string;
+  /** Cover-letter template id; ignored when generateCoverLetter=false. */
+  clTemplateId?: string;
+  /**
+   * Whether to generate an Anschreiben on approval. False = resume-only,
+   * which keeps the cost lower for users who write their cover letters
+   * manually.
+   */
+  generateCoverLetter: boolean;
   lastRunAt?: string;
   nextRunAt?: string;
   createdAt: string;
@@ -1032,6 +1135,9 @@ export interface UpsertAutoApplyConfigPayload {
   blockedCompanies?: string[];
   cronSchedule?: string;
   digestEnabled?: boolean;
+  cvTemplateId?: string;
+  clTemplateId?: string;
+  generateCoverLetter?: boolean;
 }
 
 export interface AutoApplySuggestion {

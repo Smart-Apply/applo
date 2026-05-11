@@ -2,6 +2,110 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.13.0](https://github.com/Smart-Apply/smart-apply/compare/v1.12.0...v1.13.0) (2026-05-10)
+
+
+### Features
+
+* **web:** mobile UX overhaul ([#421](https://github.com/Smart-Apply/smart-apply/issues/421)) ([89a8715](https://github.com/Smart-Apply/smart-apply/commit/89a8715ea938d3904e2e77b480b77354dd26e6a1))
+
+
+### Bug Fixes
+
+* **auth:** set SameSite=Lax on auth cookies for cross-subdomain XHR ([#422](https://github.com/Smart-Apply/smart-apply/issues/422)) ([fc87b5b](https://github.com/Smart-Apply/smart-apply/commit/fc87b5bb83da76bee87306c5e4ad2390e4e2889b))
+* **auto-apply:** improve background processing and error handling for runNow endpoint ([#419](https://github.com/Smart-Apply/smart-apply/issues/419)) ([0e2e49b](https://github.com/Smart-Apply/smart-apply/commit/0e2e49b851751d36138f5cd077ece76f732be825))
+* **web:** stop hardcoding fly.dev API URL in cf:build:staging ([#423](https://github.com/Smart-Apply/smart-apply/issues/423)) ([64e8c63](https://github.com/Smart-Apply/smart-apply/commit/64e8c631cbf4b9a9bf9657dd9538b38ed4a5a62d))
+
+## [1.12.0](https://github.com/Smart-Apply/smart-apply/compare/v1.11.3...v1.12.0) (2026-05-10)
+
+
+### Features
+
+* **auth:** add admin endpoint to permanently delete user accounts and update related flows for OAuth-only users ([#417](https://github.com/Smart-Apply/smart-apply/issues/417)) ([0923564](https://github.com/Smart-Apply/smart-apply/commit/09235642c6c36abd4821166e521cad98f24b541e))
+
+## [1.11.3](https://github.com/Smart-Apply/smart-apply/compare/v1.11.2...v1.11.3) (2026-05-10)
+
+
+### Bug Fixes
+
+* **deps:** pin fast-xml-builder to &lt;1.2.0 (broken publish) ([#415](https://github.com/Smart-Apply/smart-apply/issues/415)) ([8c412cd](https://github.com/Smart-Apply/smart-apply/commit/8c412cdba725b30b6ad854c6dfb7c4475b1696d1))
+
+## [1.11.2](https://github.com/Smart-Apply/smart-apply/compare/v1.11.1...v1.11.2) (2026-05-10)
+
+
+### Bug Fixes
+
+* **web:** standardize toast utilities and remove redundant Treffer/retry label logic ([#411](https://github.com/Smart-Apply/smart-apply/issues/411)) ([a380642](https://github.com/Smart-Apply/smart-apply/commit/a3806426784bbe63bfbcb18787baf90a8cd85d21))
+
+## [1.11.1](https://github.com/Smart-Apply/smart-apply/compare/v1.11.0...v1.11.1) (2026-05-10)
+
+
+### Bug Fixes
+
+* **deps:** patch 8 dependabot alerts via npm overrides ([#412](https://github.com/Smart-Apply/smart-apply/issues/412)) ([d83576f](https://github.com/Smart-Apply/smart-apply/commit/d83576fd258fd868f2fd00873f72bf016b58fc08))
+
+## [1.11.0](https://github.com/Smart-Apply/smart-apply/compare/v1.10.3...v1.11.0) (2026-05-09)
+
+
+### Features
+
+* **job-search:** hide source provider picker from UI ([#408](https://github.com/Smart-Apply/smart-apply/issues/408)) ([1b0e772](https://github.com/Smart-Apply/smart-apply/commit/1b0e772315a9feb87ad4221fa9a7a1ac933cf8ad))
+
+## [1.10.3](https://github.com/Smart-Apply/smart-apply/compare/v1.10.2...v1.10.3) (2026-05-09)
+
+
+### Bug Fixes
+
+* **web:** silence set-state-in-effect on auto-apply settings hydration ([#406](https://github.com/Smart-Apply/smart-apply/issues/406)) ([8e426c8](https://github.com/Smart-Apply/smart-apply/commit/8e426c8332defc11796f79af5f1d550fb4f22140))
+
+## [1.10.2](https://github.com/Smart-Apply/smart-apply/compare/v1.10.1...v1.10.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* **auto-apply:** auto-trigger PDF export after application approval ([#404](https://github.com/Smart-Apply/smart-apply/issues/404)) ([1eb4bb1](https://github.com/Smart-Apply/smart-apply/commit/1eb4bb1a8778c134360982eb41dcc7c70ed5c853))
+
+## [1.10.1](https://github.com/Smart-Apply/smart-apply/compare/v1.10.0...v1.10.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* **web:** auto-reload on stale-chunk errors after Worker deploy ([#401](https://github.com/Smart-Apply/smart-apply/issues/401)) ([2f0a396](https://github.com/Smart-Apply/smart-apply/commit/2f0a3967eb3e39cf029ec7f5afc3ce7718e1ec4a))
+
+## [1.10.0](https://github.com/Smart-Apply/smart-apply/compare/v1.9.0...v1.10.0) (2026-05-09)
+
+
+### Features
+
+* **auto-apply:** user-controlled templates + cover-letter toggle, fix ATS=0% ([#398](https://github.com/Smart-Apply/smart-apply/issues/398)) ([9445c73](https://github.com/Smart-Apply/smart-apply/commit/9445c735d391164f33fbdb0501f80ea3a14ccbc9))
+
+
+### Bug Fixes
+
+* **job-search:** export ApifyClient so JobSearchModule can boot ([#399](https://github.com/Smart-Apply/smart-apply/issues/399)) ([080d132](https://github.com/Smart-Apply/smart-apply/commit/080d132d93be94b905519ec6dfa3ea97e25c4cbc))
+
+## [1.9.0](https://github.com/Smart-Apply/smart-apply/compare/v1.8.2...v1.9.0) (2026-05-09)
+
+
+### Features
+
+* **job-search:** add pluggable multi-source search (LinkedIn + Arbeitnow) ([#395](https://github.com/Smart-Apply/smart-apply/issues/395)) ([a6a010c](https://github.com/Smart-Apply/smart-apply/commit/a6a010cfdb5a28c6e78c0ba0d16576d235a8e30e))
+* **web:** wire job-search page to unified multi-source endpoint ([#396](https://github.com/Smart-Apply/smart-apply/issues/396)) ([81e4c1e](https://github.com/Smart-Apply/smart-apply/commit/81e4c1ed9a42243b4fcfe4d920839cb1ce3dfeb6))
+
+## [1.8.2](https://github.com/Smart-Apply/smart-apply/compare/v1.8.1...v1.8.2) (2026-05-08)
+
+
+### Bug Fixes
+
+* **linkedin-jobs:** coerce applicantsCount on /import to non-negative integer ([#393](https://github.com/Smart-Apply/smart-apply/issues/393)) ([0bbc61c](https://github.com/Smart-Apply/smart-apply/commit/0bbc61c77249dd3b1c6b764babbffaef0f249bd1))
+
+## [1.8.1](https://github.com/Smart-Apply/smart-apply/compare/v1.8.0...v1.8.1) (2026-05-08)
+
+
+### Bug Fixes
+
+* **ats:** make locked tab truly unclickable + match upgrade copy ([63ea014](https://github.com/Smart-Apply/smart-apply/commit/63ea0140e28e51ab61d04f4f89b90b388c093988))
+
 ## [1.8.0](https://github.com/Smart-Apply/smart-apply/compare/v1.7.0...v1.8.0) (2026-05-07)
 
 

@@ -7,7 +7,6 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -49,10 +48,8 @@ import {
   XCircle,
   AlertCircle,
   RefreshCw,
-  Trash2,
   ChevronLeft,
   ChevronRight,
-  ArrowUpDown,
   Briefcase,
   Send,
   Users,
@@ -492,9 +489,127 @@ export default function ApplicationsPage() {
             )}
           </div>
 
-          {/* Application List Table */}
+          {/* Application List \u2014 mobile card view (<md) */}
+          {paginatedApplications.length > 0 && (
+            <div className="space-y-3 md:hidden">
+              {paginatedApplications.map((application) => {
+                const statusInfo = getGenerationStatusInfo(application.status);
+                const StatusIcon = statusInfo.icon;
+                const jobTitle =
+                  application.title ||
+                  application.jobPosting?.title ||
+                  `Bewerbung #${application.id.substring(0, APPLICATION_ID_DISPLAY_LENGTH)}`;
+                const company = application.jobPosting?.company;
+                const location = application.jobPosting?.location;
+                const timeAgo = formatDateSmart(application.createdAt);
+
+                return (
+                  <button
+                    key={application.id}
+                    type="button"
+                    onClick={() => router.push(`/applications/${application.id}`)}
+                    className="w-full text-left rounded-xl border border-border/50 bg-card p-4 shadow-sm transition-colors active:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-foreground line-clamp-2 break-words">
+                          {jobTitle}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          {company && (
+                            <span className="inline-flex items-center gap-1 min-w-0">
+                              <Building2 className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{company}</span>
+                            </span>
+                          )}
+                          {location && (
+                            <span className="inline-flex items-center gap-1 min-w-0">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{location}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label="Aktionen"
+                              className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push(`/applications/${application.id}`)}>
+                              Details anzeigen
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/applications/${application.id}/edit`)}>
+                              Bearbeiten
+                            </DropdownMenuItem>
+                            {application.status === 'READY' && application.coverLetterUrl && (
+                              <DropdownMenuItem onClick={() => window.open(application.coverLetterUrl, '_blank')}>
+                                Anschreiben öffnen
+                              </DropdownMenuItem>
+                            )}
+                            {application.status === 'READY' && application.resumeUrl && (
+                              <DropdownMenuItem onClick={() => window.open(application.resumeUrl, '_blank')}>
+                                Lebenslauf öffnen
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleDeleteClick(application.id, jobTitle)}
+                            >
+                              Löschen
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Badge variant={statusInfo.variant} className="font-normal text-xs py-0.5 h-6 whitespace-nowrap">
+                        <StatusIcon
+                          className={`mr-1.5 h-3 w-3 ${application.status === 'GENERATING' ? 'animate-spin' : ''}`}
+                        />
+                        {statusInfo.label}
+                      </Badge>
+                      <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 flex-wrap">
+                        <StatusDropdown
+                          applicationId={application.id}
+                          currentStatus={application.applicationStatus}
+                          variant="dropdown"
+                        />
+                        {application.statusSource === 'EMAIL_TRACKING' && (
+                          <span
+                            className="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700"
+                            title="Status wurde durch automatisches E-Mail-Tracking aktualisiert"
+                          >
+                            📧 Auto
+                          </span>
+                        )}
+                      </div>
+                      <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {timeAgo}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 border-t border-border/40 pt-3" onClick={(e) => e.stopPropagation()}>
+                      <ATSScoreCell applicationId={application.id} status={application.status} />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Application List \u2014 desktop table (md+) */}
           {paginatedApplications.length > 0 ? (
-            <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-sm">
+            <div className="hidden md:block rounded-xl border border-border/50 bg-card overflow-hidden shadow-sm">
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
@@ -506,7 +621,7 @@ export default function ApplicationsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedApplications.map((application, index) => {
+                  {paginatedApplications.map((application) => {
                     const statusInfo = getGenerationStatusInfo(application.status);
                     const StatusIcon = statusInfo.icon;
                     const jobTitle = application.title || application.jobPosting?.title || `Bewerbung #${application.id.substring(0, APPLICATION_ID_DISPLAY_LENGTH)}`;

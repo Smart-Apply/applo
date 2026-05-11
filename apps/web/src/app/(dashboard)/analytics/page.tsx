@@ -88,10 +88,10 @@ export default function AnalyticsPage() {
   const isEmpty = data.totals.applications === 0;
 
   return (
-    <div className="container max-w-7xl py-6 space-y-8">
+    <div className="container max-w-7xl px-0 py-6 space-y-8">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <BarChart3 className="h-7 w-7 text-primary" />
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+          <BarChart3 className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
           Analytics
         </h1>
         <p className="text-muted-foreground">

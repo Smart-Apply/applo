@@ -4,23 +4,16 @@ import { startTransition, useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
-  Briefcase,
-  MapPin,
-  Sparkles,
   FileText,
   Save,
   CheckCircle2,
-  AlertCircle,
   Download,
-  Building2,
   Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredLoader } from '@/components/shared/loading';
 import {
@@ -546,6 +539,15 @@ export default function ApplicationResumeEditorPage() {
         }
       }
     },
+    // `handleResumeSave` and `handleCoverSave` are inline declarations that
+    // reference local component state (parsedResume, coverLetterValue, ...).
+    // The deps below already include the derived `hasResumeChanges` /
+    // `hasCoverChanges` flags, so the callback recreates whenever the
+    // underlying state changes meaningfully \u2014 capturing fresh closures
+    // for both save functions. Adding the functions themselves would
+    // re-attach the document keydown listener on every render and is
+    // exactly what the existing flag-based deps avoid.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       activeTab,
       hasResumeChanges,
@@ -596,9 +598,7 @@ export default function ApplicationResumeEditorPage() {
     );
   }
 
-  const isSaveDisabled = !parsedResume || updateResume.isPending || !hasResumeChanges;
   const coverMutationPending = upsertCoverLetter.isPending;
-  const isCoverSaveDisabled = !coverHasContent || coverMutationPending || !hasCoverChanges;
 
   // Check if data exists in the application (saved data), not just in editor state
   const hasSavedResume = application?.resumeText && application.resumeText.trim().length > 0;
@@ -723,47 +723,46 @@ export default function ApplicationResumeEditorPage() {
                   Anschreiben
                 </TabsTrigger>
               )}
-              <TabsTrigger
-                value="ats-score"
-                disabled={isAtsLocked}
-                aria-disabled={isAtsLocked}
-                className={cn(
-                  'text-xs px-3 h-7 data-[state=active]:bg-background',
-                  isAtsLocked &&
-                    'cursor-not-allowed opacity-60 text-muted-foreground/60 hover:bg-transparent data-[state=active]:bg-transparent',
-                )}
-                onClick={(e) => {
-                  // Radix prevents activation when `disabled`, but we still
-                  // want a click on the locked tab to surface the tooltip
-                  // (the tooltip already opens on hover/focus).
-                  if (isAtsLocked) {
-                    e.preventDefault();
-                  }
-                }}
-              >
-                {isAtsLocked ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="flex items-center">
-                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                        ATS Score
-                        <Lock className="h-3 w-3 ml-1.5 text-muted-foreground/60" />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs">
-                      <p className="font-medium">Upgrade auf Pro</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Die ATS-Analyse ist für Pro- und Premium-Mitglieder verfügbar.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                    ATS Score
-                  </>
-                )}
-              </TabsTrigger>
+              {isAtsLocked ? (
+                // When locked, render a non-Tabs element entirely. Radix's
+                // <TabsTrigger disabled> swallows pointer events on nested
+                // tooltip triggers in some browsers, so we mirror the
+                // sidebar's NavLinkGated pattern: a focusable <span> that
+                // looks like a tab but can never become active.
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      role="tab"
+                      aria-disabled="true"
+                      tabIndex={0}
+                      className={cn(
+                        'inline-flex items-center justify-center whitespace-nowrap rounded-sm',
+                        'text-xs px-3 h-7',
+                        'cursor-not-allowed opacity-60 text-muted-foreground/70',
+                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      )}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                      ATS Score
+                      <Lock className="h-3 w-3 ml-1.5" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <p className="font-medium">Upgrade jetzt zu Premium</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Upgrade jetzt zu Premium um dieses Feature zu benutzen.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <TabsTrigger
+                  value="ats-score"
+                  className="text-xs px-3 h-7 data-[state=active]:bg-background"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                  ATS Score
+                </TabsTrigger>
+              )}
             </TabsList>
           </Tabs>
 
