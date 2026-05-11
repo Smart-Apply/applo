@@ -1,474 +1,1030 @@
 'use client';
 
-import { useProfile } from '@/hooks/use-profile';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useProfile, useUpdateProfile } from '@/hooks/use-profile';
 import { useAuthStore } from '@/stores/auth-store';
 import { calculateProfileStrength } from '@/lib/profile-utils';
 import { getLanguageLevelLabel } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { ProfileSkeleton } from '@/components/shared/skeletons';
 import { sanitizeUrl } from '@/lib/sanitize';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
+import type { AnalyticsOverview } from '@/types';
 import {
-  User,
-  Mail,
-  Phone,
   MapPin,
+  Phone,
+  Mail,
   Linkedin,
-  Globe,
   Briefcase,
-  GraduationCap,
-  Award,
-  Code,
-  Edit,
   Plus,
+  Download,
+  X,
+  Star,
+  Pencil,
   Languages,
-  ExternalLink,
+  Code2,
+  BarChart3,
+  Award,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/format-date';
+import Link from 'next/link';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
-export default function ProfilePage() {
-  const router = useRouter();
-  const { data: profile, isLoading, error } = useProfile();
-  const user = useAuthStore((state) => state.user);
+const SKILL_SUGGESTIONS = [
+  'JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'C++', 'Go', 'Rust', 'PHP', 'Ruby',
+  'Swift', 'Kotlin', 'React', 'Next.js', 'Vue.js', 'Angular', 'Svelte', 'Node.js', 'NestJS',
+  'Express', 'Django', 'Flask', 'Spring Boot', 'Laravel', '.NET', 'Ruby on Rails',
+  'HTML', 'CSS', 'Tailwind CSS', 'SASS', 'Bootstrap',
+  'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'Firebase', 'Supabase',
+  'Docker', 'Kubernetes', 'AWS', 'Azure', 'Google Cloud', 'Terraform', 'CI/CD',
+  'Git', 'GitHub', 'GitLab', 'Jira', 'Confluence',
+  'REST API', 'GraphQL', 'gRPC', 'WebSockets',
+  'Linux', 'Bash', 'PowerShell',
+  'Figma', 'Adobe XD', 'Photoshop', 'Illustrator',
+  'Agile', 'Scrum', 'Kanban', 'Projektmanagement',
+  'SAP', 'Salesforce', 'Power BI', 'Tableau', 'Excel', 'Microsoft Office',
+  'Machine Learning', 'Data Science', 'TensorFlow', 'PyTorch',
+  'Verhandlungsführung', 'Kommunikation', 'Teamführung', 'Kundenbetreuung',
+];
 
-  if (isLoading) {
-    return <ProfileSkeleton />;
+function InlineSkillInput({
+  existingSkills,
+  onAdd,
+}: {
+  existingSkills: string[];
+  onAdd: (name: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('');
+  const [highlightIdx, setHighlightIdx] = useState(-1);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const existing = new Set(existingSkills.map((s) => s.toLowerCase()));
+
+  const suggestions =
+    value.trim().length > 0
+      ? SKILL_SUGGESTIONS.filter(
+          (s) =>
+            s.toLowerCase().includes(value.toLowerCase()) && !existing.has(s.toLowerCase()),
+        ).slice(0, 6)
+      : SKILL_SUGGESTIONS.filter((s) => !existing.has(s.toLowerCase())).slice(0, 6);
+
+  const submit = useCallback(
+    (name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      if (existing.has(trimmed.toLowerCase())) {
+        toast.error('Dieser Skill existiert bereits');
+        return;
+      }
+      onAdd(trimmed);
+      setValue('');
+      setHighlightIdx(-1);
+      inputRef.current?.focus();
+    },
+    [existing, onAdd],
+  );
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setValue('');
+        setHighlightIdx(-1);
+      }
+    }
+    if (open) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Skill hinzufügen
+      </button>
+    );
   }
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Profil</h1>
-            <p className="mt-1 text-gray-500">Dein persönliches Profil</p>
-          </div>
+  return (
+    <div ref={containerRef} className="relative mt-4">
+      <div className="flex gap-2">
+        <Input
+          ref={inputRef}
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            setHighlightIdx(-1);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (highlightIdx >= 0 && highlightIdx < suggestions.length) {
+                submit(suggestions[highlightIdx]);
+              } else if (value.trim()) {
+                submit(value);
+              }
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              setHighlightIdx((prev) => Math.min(prev + 1, suggestions.length - 1));
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              setHighlightIdx((prev) => Math.max(prev - 1, -1));
+            } else if (e.key === 'Escape') {
+              setOpen(false);
+              setValue('');
+              setHighlightIdx(-1);
+            }
+          }}
+          placeholder="z.B. React, Python, Projektmanagement…"
+          className="h-9 text-sm"
+        />
+        <Button
+          size="sm"
+          disabled={!value.trim()}
+          onClick={() => submit(value)}
+          className="shrink-0"
+        >
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Hinzufügen
+        </Button>
+      </div>
+
+      {suggestions.length > 0 && (
+        <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg border border-border bg-card p-1 shadow-md">
+          <p className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Vorschläge
+          </p>
+          {suggestions.map((s, i) => (
+            <button
+              key={s}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                submit(s);
+              }}
+              onMouseEnter={() => setHighlightIdx(i)}
+              className={`flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
+                i === highlightIdx
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-foreground hover:bg-muted'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
         </div>
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="text-red-900">Fehler beim Laden</CardTitle>
-            <CardDescription className="text-red-700">
-              Dein Profil konnte nicht geladen werden. Bitte versuche es später erneut.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      )}
+    </div>
+  );
+}
+
+const LANGUAGE_SUGGESTIONS = [
+  'Deutsch', 'Englisch', 'Französisch', 'Spanisch', 'Italienisch', 'Portugiesisch',
+  'Niederländisch', 'Polnisch', 'Russisch', 'Türkisch', 'Arabisch', 'Chinesisch',
+  'Japanisch', 'Koreanisch', 'Hindi', 'Griechisch', 'Tschechisch', 'Schwedisch',
+  'Dänisch', 'Norwegisch', 'Finnisch', 'Rumänisch', 'Ungarisch', 'Kroatisch',
+  'Serbisch', 'Ukrainisch', 'Bulgarisch', 'Hebräisch', 'Vietnamesisch', 'Thailändisch',
+];
+
+const LANGUAGE_LEVELS = [
+  { value: 'NATIVE', label: 'Muttersprache' },
+  { value: 'FLUENT', label: 'Fließend' },
+  { value: 'ADVANCED', label: 'Fortgeschritten' },
+  { value: 'INTERMEDIATE', label: 'Gut' },
+  { value: 'BASIC', label: 'Grundkenntnisse' },
+];
+
+function InlineLanguageInput({
+  existingLanguages,
+  onAdd,
+}: {
+  existingLanguages: string[];
+  onAdd: (name: string, level: string) => void;
+}) {
+  const [step, setStep] = useState<'closed' | 'name' | 'level'>('closed');
+  const [name, setName] = useState('');
+  const [highlightIdx, setHighlightIdx] = useState(-1);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const existing = new Set(existingLanguages.map((s) => s.toLowerCase()));
+
+  const suggestions =
+    name.trim().length > 0
+      ? LANGUAGE_SUGGESTIONS.filter(
+          (s) =>
+            s.toLowerCase().includes(name.toLowerCase()) && !existing.has(s.toLowerCase()),
+        ).slice(0, 6)
+      : LANGUAGE_SUGGESTIONS.filter((s) => !existing.has(s.toLowerCase())).slice(0, 6);
+
+  const selectLanguage = useCallback(
+    (langName: string) => {
+      const trimmed = langName.trim();
+      if (!trimmed) return;
+      if (existing.has(trimmed.toLowerCase())) {
+        toast.error('Diese Sprache existiert bereits');
+        return;
+      }
+      setName(trimmed);
+      setStep('level');
+      setHighlightIdx(-1);
+    },
+    [existing],
+  );
+
+  const addWithLevel = useCallback(
+    (level: string) => {
+      if (!name.trim()) return;
+      onAdd(name.trim(), level);
+      setName('');
+      setStep('closed');
+      setHighlightIdx(-1);
+    },
+    [name, onAdd],
+  );
+
+  const reset = useCallback(() => {
+    setStep('closed');
+    setName('');
+    setHighlightIdx(-1);
+  }, []);
+
+  useEffect(() => {
+    if (step === 'name') inputRef.current?.focus();
+  }, [step]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        reset();
+      }
+    }
+    if (step !== 'closed') document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [step, reset]);
+
+  if (step === 'closed') {
+    return (
+      <button
+        onClick={() => setStep('name')}
+        className="mt-4 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Sprache hinzufügen
+      </button>
+    );
+  }
+
+  if (step === 'level') {
+    return (
+      <div ref={containerRef} className="mt-4 space-y-3">
+        <p className="text-sm text-foreground">
+          <span className="font-medium">{name}</span>
+          <span className="text-muted-foreground"> — Wie gut sprichst du diese Sprache?</span>
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {LANGUAGE_LEVELS.map((l) => (
+            <button
+              key={l.value}
+              onClick={() => addWithLevel(l.value)}
+              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-all duration-200 hover:border-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => { setStep('name'); setName(''); }}
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          ← Zurück
+        </button>
       </div>
     );
   }
 
-  // Calculate Profile Strength using centralized utility
-  const profileStrength = calculateProfileStrength(profile, user).score;
-  const hasSkills = profile?.skills && profile.skills.length > 0;
-  const hasLanguages = profile?.languages && profile.languages.length > 0;
-  const hasExperiences = profile?.experiences && profile.experiences.length > 0;
-  const hasEducation = profile?.education && profile.education.length > 0;
-  const hasCertificates = profile?.certificates && profile.certificates.length > 0;
-  const hasProjects = profile?.projects && profile.projects.length > 0;
+  return (
+    <div ref={containerRef} className="relative mt-4">
+      <Input
+        ref={inputRef}
+        value={name}
+        onChange={(e) => {
+          setName(e.target.value);
+          setHighlightIdx(-1);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightIdx >= 0 && highlightIdx < suggestions.length) {
+              selectLanguage(suggestions[highlightIdx]);
+            } else if (name.trim()) {
+              selectLanguage(name);
+            }
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setHighlightIdx((prev) => Math.min(prev + 1, suggestions.length - 1));
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setHighlightIdx((prev) => Math.max(prev - 1, -1));
+          } else if (e.key === 'Escape') {
+            reset();
+          }
+        }}
+        placeholder="z.B. Englisch, Französisch…"
+        className="h-9 text-sm"
+      />
+
+      {suggestions.length > 0 && (
+        <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg border border-border bg-card p-1 shadow-md">
+          <p className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Vorschläge
+          </p>
+          {suggestions.map((s, i) => (
+            <button
+              key={s}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                selectLanguage(s);
+              }}
+              onMouseEnter={() => setHighlightIdx(i)}
+              className={`flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
+                i === highlightIdx
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-foreground hover:bg-muted'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LanguageRow({
+  lang,
+  onRemove,
+  onUpdateLevel,
+}: {
+  lang: { name: string; level?: string };
+  onRemove: () => void;
+  onUpdateLevel: (level: string) => void;
+}) {
+  const [picking, setPicking] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (rowRef.current && !rowRef.current.contains(e.target as Node)) {
+        setPicking(false);
+      }
+    }
+    if (picking) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [picking]);
+
+  const label = getLanguageLevelLabel(lang.level);
+
+  if (picking) {
+    return (
+      <div ref={rowRef} className="space-y-2 rounded-lg bg-muted/40 p-2.5">
+        <p className="text-sm font-medium text-foreground">{lang.name}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {LANGUAGE_LEVELS.map((l) => (
+            <button
+              key={l.value}
+              onClick={() => {
+                onUpdateLevel(l.value);
+                setPicking(false);
+              }}
+              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
+                lang.level === l.value
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-primary/5'
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-10">
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary-soft p-8 shadow-medium">
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="h-24 w-24 rounded-full bg-white p-1 shadow-lg">
-              <div className="h-full w-full rounded-full bg-primary/10 flex items-center justify-center text-3xl font-bold text-primary">
-                {(user?.firstName || user?.email)?.charAt(0).toUpperCase()}
+    <div className="group/lang flex items-center justify-between text-sm">
+      <span className="font-medium text-foreground">{lang.name}</span>
+      <div className="flex items-center gap-2">
+        {label ? (
+          <button
+            onClick={() => setPicking(true)}
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {label}
+          </button>
+        ) : (
+          <button
+            onClick={() => setPicking(true)}
+            className="text-xs italic text-primary/60 transition-colors hover:text-primary"
+          >
+            Einstufung wählen
+          </button>
+        )}
+        <button
+          onClick={onRemove}
+          className="rounded-full p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/lang:opacity-100"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CompanyMark({ name }: { name: string }) {
+  const initials = name
+    .split(/[\s]+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0c1d3f] text-xs font-bold text-white">
+      {initials}
+    </div>
+  );
+}
+
+function MiniDonut({ value }: { value: number }) {
+  const r = 16;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference - (value / 100) * circumference;
+  return (
+    <svg width="40" height="40" viewBox="0 0 40 40" className="shrink-0">
+      <circle cx="20" cy="20" r={r} fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/40" />
+      <circle
+        cx="20"
+        cy="20"
+        r={r}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        transform="rotate(-90 20 20)"
+        className="text-primary"
+      />
+      <text x="20" y="21" textAnchor="middle" dominantBaseline="central" className="fill-foreground text-[11px] font-bold">
+        {value}%
+      </text>
+    </svg>
+  );
+}
+
+export default function ProfilePage() {
+  const router = useRouter();
+  const { data: profile, isLoading, error } = useProfile();
+  const updateProfile = useUpdateProfile();
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [tipDismissed, setTipDismissed] = useState(false);
+
+  const { data: analytics } = useQuery<AnalyticsOverview>({
+    queryKey: ['analytics-overview'],
+    queryFn: () => api.analytics.getOverview(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  if (isLoading) return <ProfileSkeleton />;
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
+        Profil konnte nicht geladen werden. Bitte versuche es später erneut.
+      </div>
+    );
+  }
+
+  const { score: profileStrength } = calculateProfileStrength(profile, user);
+
+  const initials =
+    `${user?.firstName?.charAt(0) ?? ''}${user?.lastName?.charAt(0) ?? ''}`
+      .toUpperCase()
+      .trim() || (user?.email?.charAt(0).toUpperCase() ?? '?');
+
+  const fullName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || '';
+
+  const location = [profile?.city, profile?.country].filter(Boolean).join(', ');
+  const currentPosition = profile?.experiences?.[0]?.title;
+
+  const linkedinDisplay = profile?.linkedinUrl
+    ?.replace(/^https?:\/\/(www\.)?/, '')
+    .replace(/\/$/, '');
+
+  const handleAddSkill = useCallback(
+    (name: string) => {
+      const currentSkills = profile?.skills ?? [];
+      const updatedSkills = [...currentSkills, { name }].sort((a, b) =>
+        a.name.localeCompare(b.name),
+      );
+      updateProfile.mutate({ skills: updatedSkills });
+    },
+    [profile?.skills, updateProfile],
+  );
+
+  const handleRemoveSkill = useCallback(
+    (name: string) => {
+      const updatedSkills = (profile?.skills ?? []).filter(
+        (s) => s.name.toLowerCase() !== name.toLowerCase(),
+      );
+      updateProfile.mutate({ skills: updatedSkills });
+    },
+    [profile?.skills, updateProfile],
+  );
+
+  const handleRemoveExperience = useCallback(
+    (index: number) => {
+      const updated = (profile?.experiences ?? []).filter((_, i) => i !== index);
+      updateProfile.mutate({ experiences: updated });
+    },
+    [profile?.experiences, updateProfile],
+  );
+
+  const handleRemoveCertificate = useCallback(
+    (index: number) => {
+      const updated = (profile?.certificates ?? []).filter((_, i) => i !== index);
+      updateProfile.mutate({ certificates: updated });
+    },
+    [profile?.certificates, updateProfile],
+  );
+
+  const handleRemoveLanguage = useCallback(
+    (index: number) => {
+      const updated = (profile?.languages ?? []).filter((_, i) => i !== index);
+      updateProfile.mutate({ languages: updated });
+    },
+    [profile?.languages, updateProfile],
+  );
+
+  const handleAddLanguage = useCallback(
+    (name: string, level: string) => {
+      const currentLanguages = profile?.languages ?? [];
+      const updatedLanguages = [...currentLanguages, { name, level }];
+      updateProfile.mutate({ languages: updatedLanguages });
+    },
+    [profile?.languages, updateProfile],
+  );
+
+  const totalApps = analytics?.totals.applications ?? 0;
+  const totalInterviews = analytics?.totals.interviews ?? 0;
+  const responseRate = analytics ? Math.round(analytics.responseRate * 100) : 0;
+  const interviewRate = analytics ? Math.round(analytics.interviewRate * 100) : 0;
+
+  return (
+    <div className="space-y-5 pb-10">
+      {/* ── Page header ── */}
+      <div className="flex items-center justify-between">
+        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Link href="/dashboard" className="transition-colors hover:text-foreground">
+            SmartApply
+          </Link>
+          <span>→</span>
+          <span className="font-medium text-foreground">Mein Profil</span>
+        </nav>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => router.push('/profile/edit')}
+          >
+            <Download className="h-4 w-4" />
+            CV herunterladen
+          </Button>
+          <Button size="sm" onClick={() => router.push('/profile/edit')}>
+            Speichern
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Tip banner ── */}
+      {!tipDismissed && (
+        <div className="flex items-start gap-3 rounded-xl border border-border bg-card px-5 py-4 shadow-sm">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Star className="h-4 w-4 text-primary" />
+          </div>
+          <p className="flex-1 text-sm leading-relaxed">
+            <span className="font-semibold">Tipp · So bearbeitest du dein Profil</span>{' '}
+            Klicke auf jedes Feld um es zu ändern. Mit{' '}
+            <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-xs">
+              + hinzufügen
+            </kbd>{' '}
+            fügst du Einträge hinzu, mit dem 🗑 löschst du sie. Klicke auf die Punkte einer
+            Fähigkeit, um dein Level zu setzen.
+          </p>
+          <button
+            onClick={() => setTipDismissed(true)}
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* ── Main grid ── */}
+      <div className="grid gap-5 lg:grid-cols-3">
+        {/* ════════ Left column (2/3) ════════ */}
+        <div className="space-y-5 lg:col-span-2">
+          {/* Profile info card */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-6 flex items-start gap-4">
+              <div className="relative shrink-0">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#0c1d3f] text-xl font-bold text-white">
+                  {initials}
+                </div>
+                <button
+                  onClick={() => router.push('/profile/edit')}
+                  className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-white shadow-sm transition-colors hover:bg-muted"
+                >
+                  <Pencil className="h-3 w-3 text-muted-foreground" />
+                </button>
               </div>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                {user?.firstName} {user?.lastName}
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Bewerber
-              </p>
-              <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                {(profile?.street || profile?.city) && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {[
-                      profile?.street,
-                      [profile?.postalCode, profile?.city].filter(Boolean).join(' '),
-                      profile?.country
-                    ].filter(Boolean).join(', ')}
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-bold text-foreground">{fullName}</h1>
+                  <button
+                    onClick={() => router.push('/profile/edit')}
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <Badge className="mt-1.5 border-green-200 bg-green-100 text-xs font-medium text-green-700 hover:bg-green-100">
+                  ● Offen für neue Rollen
+                </Badge>
+                {location && (
+                  <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {location}
                   </div>
                 )}
-                <div className="flex items-center gap-1">
-                  <Mail className="h-4 w-4" />
-                  {user?.email}
+              </div>
+            </div>
+
+            <div className="space-y-3 border-t border-border pt-5">
+              {currentPosition && (
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
+                    <Briefcase className="h-4 w-4" />
+                    <span>Aktuelle Position</span>
+                  </div>
+                  <span className="font-medium text-foreground">{currentPosition}</span>
                 </div>
+              )}
+              {profile?.phone && (
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    <span>Telefon</span>
+                  </div>
+                  <span className="font-medium text-foreground">{profile.phone}</span>
+                </div>
+              )}
+              {user?.email && (
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <span>E-Mail</span>
+                  </div>
+                  <span className="font-medium text-foreground">{user.email}</span>
+                </div>
+              )}
+              {profile?.linkedinUrl && (
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
+                    <Linkedin className="h-4 w-4" />
+                    <span>LinkedIn</span>
+                  </div>
+                  {sanitizeUrl(profile.linkedinUrl) ? (
+                    <a
+                      href={sanitizeUrl(profile.linkedinUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-foreground transition-colors hover:text-primary"
+                    >
+                      {linkedinDisplay}
+                    </a>
+                  ) : (
+                    <span className="font-medium text-foreground">{linkedinDisplay}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Aktivität ── */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-foreground">Aktivität</h2>
+                <span className="text-sm text-muted-foreground">letzte 3 Monate</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
+                <div className="flex-1">
+                  <p className="text-2xl font-bold text-foreground">{totalApps}</p>
+                  <p className="text-xs text-muted-foreground">Bewerbungen</p>
+                </div>
+                <MiniDonut value={responseRate} />
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
+                <div className="flex-1">
+                  <p className="text-2xl font-bold text-foreground">{analytics?.totals.activelyTracked ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">Profil-Aufrufe</p>
+                </div>
+                <MiniDonut value={interviewRate} />
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
+                <div className="flex-1">
+                  <p className="text-2xl font-bold text-foreground">{totalInterviews}</p>
+                  <p className="text-xs text-muted-foreground">Einladungen</p>
+                </div>
+                <MiniDonut value={analytics ? Math.round(analytics.offerRate * 100) : 0} />
               </div>
             </div>
           </div>
-          <Button
-            onClick={() => router.push('/profile/edit')}
-            className="shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 hover:-translate-y-0.5"
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Profil bearbeiten
-          </Button>
-        </div>
 
-        {/* Decorative Background Elements */}
-        <div className="absolute right-0 top-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-primary/5 blur-3xl"></div>
-        <div className="absolute right-20 bottom-0 -mb-10 h-40 w-40 rounded-full bg-blue-500/5 blur-2xl"></div>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Left Sidebar */}
-        <div className="space-y-8">
-          {/* Profile Strength */}
-          <Card className="border-border/50 shadow-soft">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Profilstärke</CardTitle>
-              <CardDescription>Vervollständige dein Profil für bessere Chancen</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-end justify-between">
-                  <span className="text-2xl font-bold text-primary">{profileStrength}%</span>
-                  <span className="text-sm text-muted-foreground mb-1">
-                    {profileStrength === 100 ? 'Perfekt!' : 'Fast geschafft!'}
+          {/* ── Fähigkeiten ── */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Code2 className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-foreground">Fähigkeiten</h2>
+                {(profile?.skills?.length ?? 0) > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {profile!.skills!.length} Skills
                   </span>
-                </div>
-                <Progress value={profileStrength} className="h-2" />
-                {profileStrength < 100 && (
-                  <p className="text-xs text-muted-foreground pt-1">
-                    Füge weitere Details hinzu, um Arbeitgeber zu überzeugen.
-                  </p>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Contact Info */}
-          <Card className="border-border/50 shadow-soft">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                Kontakt
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="truncate">{user?.email}</span>
-                </div>
-                {profile?.phone && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.phone}</span>
-                  </div>
-                )}
-                {(profile?.street || profile?.city || profile?.country) && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{[
-                      profile.street,
-                      [profile.postalCode, profile.city].filter(Boolean).join(' '),
-                      profile.country
-                    ].filter(Boolean).join(', ')}</span>
-                  </div>
+            {(profile?.skills?.length ?? 0) > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {profile!.skills!.map((skill, i) => (
+                  <span
+                    key={i}
+                    className="group relative inline-flex items-center rounded-md border border-primary bg-primary/10 py-1.5 pl-3 pr-7 text-xs font-medium text-primary transition-all duration-300 ease-in-out hover:bg-primary hover:text-primary-foreground"
+                  >
+                    {skill.name}
+                    <button
+                      onClick={() => handleRemoveSkill(skill.name)}
+                      className="absolute right-1.5 shrink-0 rounded-full p-0.5 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Noch keine Fähigkeiten eingetragen.
+              </p>
+            )}
+
+            <InlineSkillInput
+              existingSkills={(profile?.skills ?? []).map((s) => s.name)}
+              onAdd={handleAddSkill}
+            />
+          </div>
+
+          {/* ── Berufserfahrung ── */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-foreground">Berufserfahrung</h2>
+                {(profile?.experiences?.length ?? 0) > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {profile!.experiences!.length} Stationen
+                  </span>
                 )}
               </div>
+            </div>
 
-              {(profile?.linkedinUrl || profile?.portfolioUrl) && (
-                <>
-                  <Separator />
-                  <div className="space-y-3 pt-1">
-                    {profile?.linkedinUrl && sanitizeUrl(profile.linkedinUrl) && (
-                      <a
-                        href={sanitizeUrl(profile.linkedinUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
-                      >
-                        <Linkedin className="h-4 w-4 text-[#0077b5]" />
-                        <span>LinkedIn Profil</span>
-                        <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
-                      </a>
-                    )}
-                    {profile?.portfolioUrl && sanitizeUrl(profile.portfolioUrl) && (
-                      <a
-                        href={sanitizeUrl(profile.portfolioUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
-                      >
-                        <Globe className="h-4 w-4 text-muted-foreground" />
-                        <span>Website / Portfolio</span>
-                        <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
-                      </a>
-                    )}
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Skills */}
-          <Card className="border-border/50 shadow-soft">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Code className="h-5 w-5 text-primary" />
-                Fähigkeiten
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {hasSkills ? (
-                <div className="flex flex-wrap gap-2">
-                  {profile.skills?.map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs font-medium px-2.5 py-0.5">
-                      {skill.name}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground mb-3">Keine Fähigkeiten angegeben</p>
-                  <Button variant="outline" size="sm" onClick={() => router.push('/profile/edit')}>
-                    <Plus className="mr-2 h-3 w-3" /> Hinzufügen
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Languages */}
-          <Card className="border-border/50 shadow-soft">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Languages className="h-5 w-5 text-primary" />
-                Sprachen
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {hasLanguages ? (
-                <div className="space-y-3">
-                  {profile.languages?.map((lang, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{lang.name}</span>
-                      <span className="text-muted-foreground text-xs">{getLanguageLevelLabel(lang.level)}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground mb-3">Keine Sprachen angegeben</p>
-                  <Button variant="outline" size="sm" onClick={() => router.push('/profile/edit')}>
-                    <Plus className="mr-2 h-3 w-3" /> Hinzufügen
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Summary */}
-          {profile?.summary && (
-            <Card className="border-border/50 shadow-soft">
-              <CardHeader>
-                <CardTitle className="text-xl">Über mich</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div 
-                  className="text-base text-muted-foreground leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: profile.summary }}
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Experience */}
-          <Card className="border-border/50 shadow-soft">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-primary" />
-                Berufserfahrung
-              </CardTitle>
-              {!hasExperiences && (
-                <Button variant="ghost" size="sm" onClick={() => router.push('/profile/edit')}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              {hasExperiences ? (
-                <div className="space-y-8">
-                  {profile.experiences?.map((exp, index) => (
-                    <div key={index} className="relative pl-6 border-l-2 border-border/50 last:border-0 pb-1">
-                      <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full border-2 border-primary bg-background" />
-
-                      <div className="mb-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                        <h3 className="text-lg font-semibold text-foreground">{exp.title}</h3>
-                        <span className="text-sm text-muted-foreground font-medium bg-muted px-2 py-0.5 rounded">
-                          {formatDate(exp.startDate, 'MMM yyyy')} - {' '}
-                          {exp.endDate ? formatDate(exp.endDate, 'MMM yyyy') : 'Heute'}
-                        </span>
+            {(profile?.experiences?.length ?? 0) > 0 ? (
+              <div className="space-y-6">
+                {profile!.experiences!.map((exp, i) => (
+                  <div key={i} className="group/exp flex gap-4">
+                    <CompanyMark name={exp.company} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{exp.title}</p>
+                          <p className="text-sm text-muted-foreground">{exp.company}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            {formatDate(exp.startDate, 'MMM yyyy')}
+                          </span>
+                          <button
+                            onClick={() => handleRemoveExperience(i)}
+                            className="rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/exp:opacity-100"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
-
-                      <div className="mb-3 text-base font-medium text-primary">
-                        {exp.company}
-                        {exp.location && <span className="text-muted-foreground font-normal"> • {exp.location}</span>}
-                      </div>
-
                       {exp.description && (
-                        <div 
-                          className="text-sm text-muted-foreground prose prose-sm max-w-none"
+                        <div
+                          className="prose prose-sm mt-2 max-w-none text-sm leading-relaxed text-muted-foreground line-clamp-3"
                           dangerouslySetInnerHTML={{ __html: exp.description }}
                         />
                       )}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 bg-muted/20 rounded-xl border border-dashed border-border">
-                  <Briefcase className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground mb-4">Füge deine Berufserfahrung hinzu, um dein Profil zu stärken.</p>
-                  <Button onClick={() => router.push('/profile/edit')}>Erfahrung hinzufügen</Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Noch keine Berufserfahrung eingetragen.
+              </p>
+            )}
 
-          {/* Education */}
-          <Card className="border-border/50 shadow-soft">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-primary" />
-                Ausbildung
-              </CardTitle>
-              {!hasEducation && (
-                <Button variant="ghost" size="sm" onClick={() => router.push('/profile/edit')}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              {hasEducation ? (
-                <div className="space-y-8">
-                  {profile.education?.map((edu, index) => (
-                    <div key={index} className="relative pl-6 border-l-2 border-border/50 last:border-0 pb-1">
-                      <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full border-2 border-primary bg-background" />
+            <button
+              onClick={() => router.push('/profile/edit')}
+              className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Berufserfahrung hinzufügen
+            </button>
+          </div>
 
-                      <div className="mb-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                        <h3 className="text-lg font-semibold text-foreground">{edu.institution}</h3>
-                        <span className="text-sm text-muted-foreground font-medium bg-muted px-2 py-0.5 rounded">
-                          {edu.startYear ? new Date(edu.startYear).getFullYear() : ''} - {edu.endYear ? new Date(edu.endYear).getFullYear() : 'Heute'}
-                        </span>
+          {/* ── Zertifikate ── */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-foreground">Zertifikate</h2>
+                {(profile?.certificates?.length ?? 0) > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {profile!.certificates!.length} Zertifikate
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {(profile?.certificates?.length ?? 0) > 0 ? (
+              <div className="space-y-4">
+                {profile!.certificates!.map((cert, i) => (
+                  <div key={i} className="group/cert flex gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0c1d3f] text-xs font-bold text-white">
+                      <Award className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{cert.name}</p>
+                          <p className="text-sm text-muted-foreground">{cert.issuer}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {cert.dateObtained && (
+                            <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                              {formatDate(cert.dateObtained, 'MMM yyyy')}
+                            </span>
+                          )}
+                          <button
+                            onClick={() => handleRemoveCertificate(i)}
+                            className="rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/cert:opacity-100"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
-
-                      <div className="mb-2 text-base text-muted-foreground">
-                        <span className="font-medium text-foreground">{edu.degree}</span>
-                        {edu.fieldOfStudy && <span> • {edu.fieldOfStudy}</span>}
-                      </div>
-
-                      {edu.description && (
-                        <div 
-                          className="text-sm text-muted-foreground mt-2 prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: edu.description }}
-                        />
+                      {cert.credentialId && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          ID: {cert.credentialId}
+                        </p>
                       )}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 bg-muted/20 rounded-xl border border-dashed border-border">
-                  <GraduationCap className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground mb-4">Füge deine Ausbildung hinzu.</p>
-                  <Button variant="outline" onClick={() => router.push('/profile/edit')}>Ausbildung hinzufügen</Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Noch keine Zertifikate eingetragen.
+              </p>
+            )}
 
-          {/* Projects & Certificates Grid */}
-          <div className="grid gap-8 md:grid-cols-2">
-            {/* Projects */}
-            <Card className="border-border/50 shadow-soft h-full">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Code className="h-5 w-5 text-primary" />
-                  Projekte
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {hasProjects ? (
-                  <div className="space-y-4">
-                    {profile.projects?.map((project, index) => (
-                      <div key={index} className="rounded-lg border border-border/50 bg-card p-4 hover:shadow-sm transition-shadow">
-                        <h4 className="font-semibold text-foreground">{project.name}</h4>
-                        {project.description && (
-                          <div 
-                            className="text-sm text-muted-foreground mt-1 line-clamp-2 prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: project.description }}
-                          />
-                        )}
-                        {project.url && (
-                          <a
-                            href={sanitizeUrl(project.url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline mt-2 inline-flex items-center gap-1"
-                          >
-                            Ansehen <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="text-sm text-muted-foreground mb-3">Keine Projekte</p>
-                    <Button variant="outline" size="sm" onClick={() => router.push('/profile/edit')}>
-                      <Plus className="mr-2 h-3 w-3" /> Hinzufügen
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <button
+              onClick={() => router.push('/profile/edit')}
+              className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Zertifikat hinzufügen
+            </button>
+          </div>
 
-            {/* Certificates */}
-            <Card className="border-border/50 shadow-soft h-full">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Award className="h-5 w-5 text-primary" />
-                  Zertifikate
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {hasCertificates ? (
-                  <div className="space-y-4">
-                    {profile.certificates?.map((cert, index) => (
-                      <div key={index} className="rounded-lg border border-border/50 bg-card p-4 hover:shadow-sm transition-shadow">
-                        <h4 className="font-semibold text-foreground">{cert.name}</h4>
-                        <p className="text-sm text-muted-foreground">{cert.issuer}</p>
-                        {cert.dateObtained && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {formatDate(cert.dateObtained, 'MMM yyyy')}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="text-sm text-muted-foreground mb-3">Keine Zertifikate</p>
-                    <Button variant="outline" size="sm" onClick={() => router.push('/profile/edit')}>
-                      <Plus className="mr-2 h-3 w-3" /> Hinzufügen
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+        </div>
+
+        {/* ════════ Right sidebar (1/3) ════════ */}
+        <div className="space-y-5">
+          {/* Profile strength – dark card */}
+          <div className="rounded-2xl bg-[#0c1d3f] p-6 text-white shadow-sm">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
+              PROFILSTÄRKE
+            </p>
+            <p className="mb-3 text-5xl font-bold leading-none">
+              {profileStrength}
+              <span className="text-2xl">%</span>
+            </p>
+            <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-white/20">
+              <div
+                className="h-full rounded-full bg-white transition-all duration-500"
+                style={{ width: `${profileStrength}%` }}
+              />
+            </div>
+            <p className="text-sm leading-relaxed text-gray-300">
+              {profileStrength === 100
+                ? 'Vollständig — Recruiter können dich über die Job-Suche finden.'
+                : 'Vervollständige dein Profil für bessere Chancen bei Recruitern.'}
+            </p>
+          </div>
+
+          {/* ── Empfohlene Stellen ── */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-semibold text-foreground">Empfohlene Stellen</h2>
+              <Link
+                href="/job-search"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Alle anzeigen
+              </Link>
+            </div>
+
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Starte eine{' '}
+              <Link href="/job-search" className="font-medium text-primary hover:underline">
+                Job-Suche
+              </Link>{' '}
+              um Empfehlungen basierend auf deinem Profil zu erhalten.
+            </p>
+          </div>
+
+          {/* ── Sprachen ── */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Languages className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-foreground">Sprachen</h2>
+              </div>
+            </div>
+
+            {(profile?.languages?.length ?? 0) > 0 ? (
+              <div className="space-y-2.5">
+                {profile!.languages!.map((lang, i) => (
+                  <LanguageRow
+                    key={i}
+                    lang={lang}
+                    onRemove={() => handleRemoveLanguage(i)}
+                    onUpdateLevel={(level) => {
+                      const updated = [...(profile?.languages ?? [])];
+                      updated[i] = { ...updated[i], level };
+                      updateProfile.mutate({ languages: updated });
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="py-2 text-center text-sm text-muted-foreground">
+                Noch keine Sprachen eingetragen.
+              </p>
+            )}
+
+            <InlineLanguageInput
+              existingLanguages={(profile?.languages ?? []).map((l) => l.name)}
+              onAdd={handleAddLanguage}
+            />
           </div>
         </div>
       </div>
