@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1](https://github.com/Smart-Apply/smart-apply/compare/v2.0.0...v2.0.1) (2026-05-14)
+
+
+### Bug Fixes
+
+* **docker:** drop COPY of deleted apps/api/src/pdf/templates ([#433](https://github.com/Smart-Apply/smart-apply/issues/433)) ([b0f89a4](https://github.com/Smart-Apply/smart-apply/commit/b0f89a41b9340f151fa54d1f630af713da01bf8b))
+
 ## [2.0.0](https://github.com/Smart-Apply/smart-apply/compare/v1.15.0...v2.0.0) (2026-05-14)
 
 
