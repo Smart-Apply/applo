@@ -4,6 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { LinkedInJobsService } from '../linkedin-jobs/linkedin-jobs.service';
 import { AutoApplyService } from './auto-apply.service';
+import { ConfigService } from '../config/config.service';
 import { SearchLinkedInJobsDto } from '../linkedin-jobs/dto/search-linkedin-jobs.dto';
 import { LinkedInJobDto } from '../linkedin-jobs/dto/linkedin-job.dto';
 import { Prisma } from '../generated/prisma/client';
@@ -33,6 +34,7 @@ export class AutoApplyCron {
     private readonly prisma: PrismaService,
     private readonly linkedinJobs: LinkedInJobsService,
     private readonly autoApply: AutoApplyService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -41,6 +43,21 @@ export class AutoApplyCron {
    */
   @Cron(CronExpression.EVERY_30_MINUTES, { name: 'auto-apply-tick' })
   async tick(): Promise<void> {
+    if (!this.configService.enableCronJobs) {
+      this.logger.debug('auto-apply tick skipped (ENABLE_CRON_JOBS=false)');
+      return;
+    }
+
+    // Cheap pre-check: avoid the wider findMany when nothing is due.
+    // Saves a steady trickle of Neon egress on tenants with zero active configs.
+    const dueCount = await this.prisma.autoApplyConfig.count({
+      where: {
+        isActive: true,
+        OR: [{ nextRunAt: null }, { nextRunAt: { lte: new Date() } }],
+      },
+    });
+    if (dueCount === 0) return;
+
     const due = await this.prisma.autoApplyConfig.findMany({
       where: {
         isActive: true,
