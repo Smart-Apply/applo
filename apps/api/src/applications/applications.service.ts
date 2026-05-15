@@ -2690,9 +2690,13 @@ Summary: ${resume.summary || 'Not provided'}
       lastMessage = message;
     });
 
-    // Create SSE stream that polls status every second
-    // Using timer(0, 1000) to emit immediately on connect, then every 1 second
-    return timer(0, 1000).pipe(
+    // Create SSE stream that polls status every 5 seconds.
+    // Was 1s but that produced ~60 DB round-trips per generation; combined
+    // with hundreds of generations/day this dominated Neon egress (5GB/mo cap).
+    // 5s is still snappy enough for the wizard UI — progress bar updates
+    // come from the in-memory `progressCallbacks` closure between polls,
+    // and the final READY/FAILED transition is bounded by one extra poll.
+    return timer(0, 5000).pipe(
       // Fetch latest application status
       switchMap(async () => {
         const application = await this.prisma.application.findFirst({

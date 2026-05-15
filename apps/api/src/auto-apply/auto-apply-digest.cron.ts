@@ -26,6 +26,11 @@ export class AutoApplyDigestCron {
 
   @Cron(CronExpression.EVERY_DAY_AT_6PM, { name: 'auto-apply-digest' })
   async sendDailyDigests(): Promise<void> {
+    if (!this.config.enableCronJobs) {
+      this.logger.debug('auto-apply digest skipped (ENABLE_CRON_JOBS=false)');
+      return;
+    }
+
     const since = new Date(Date.now() - 23 * 60 * 60 * 1000);
 
     const configs = await this.prisma.autoApplyConfig.findMany({
