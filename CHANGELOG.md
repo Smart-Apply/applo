@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.4](https://github.com/Smart-Apply/smart-apply/compare/v3.0.3...v3.0.4) (2026-05-17)
+
+
+### Bug Fixes
+
+* **infra:** trigger release for pnpm migration + node 24 + cf token rotation ([#460](https://github.com/Smart-Apply/smart-apply/issues/460)) ([bb724e1](https://github.com/Smart-Apply/smart-apply/commit/bb724e13e0bb9f10f39271652642364934816af4))
+
 ## [3.0.3](https://github.com/Smart-Apply/smart-apply/compare/v3.0.2...v3.0.3) (2026-05-15)
 
 
