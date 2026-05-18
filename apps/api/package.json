@@ -83,7 +83,7 @@
     "cron-parser": "^5.5.0",
     "csrf-csrf": "^4.0.3",
     "handlebars": "^4.7.8",
-    "helmet": "^7.1.0",
+    "helmet": "^8.1.0",
     "mammoth": "^1.6.0",
     "markdown-it": "^14.1.0",
     "marked": "^18.0.3",
