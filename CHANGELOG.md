@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.0](https://github.com/Smart-Apply/smart-apply/compare/v3.0.4...v3.1.0) (2026-05-18)
+
+
+### Features
+
+* **pricing:** reposition plans as risk-free / optimise / automate ([#472](https://github.com/Smart-Apply/smart-apply/issues/472)) ([0e7fce3](https://github.com/Smart-Apply/smart-apply/commit/0e7fce3a64af428ee6895ab7d68b9147b7ef8076))
+
 ## [3.0.4](https://github.com/Smart-Apply/smart-apply/compare/v3.0.3...v3.0.4) (2026-05-17)
 
 
