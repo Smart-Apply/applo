@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.0](https://github.com/Smart-Apply/smart-apply/compare/v3.1.0...v3.2.0) (2026-05-23)
+
+
+### Features
+
+* **auth:** add closed-beta invite-code gate ([#477](https://github.com/Smart-Apply/smart-apply/issues/477)) ([a0e1ffb](https://github.com/Smart-Apply/smart-apply/commit/a0e1ffbb124f0d408382e72190d9c2d7494193fa))
+* **auth:** extend invite-code gate to OAuth signup ([#478](https://github.com/Smart-Apply/smart-apply/issues/478)) ([5877694](https://github.com/Smart-Apply/smart-apply/commit/5877694f3bf9def79f633fd6b3ee1ed61d162c62))
+
+
+### Bug Fixes
+
+* **web:** route upgrade CTAs to /#pricing anchor instead of 404 /pricing ([#475](https://github.com/Smart-Apply/smart-apply/issues/475)) ([751bb62](https://github.com/Smart-Apply/smart-apply/commit/751bb62b5a411519e4ed33ef89ca29bdb02329ce))
+* **web:** wrap auth pages in Suspense for useSearchParams ([#479](https://github.com/Smart-Apply/smart-apply/issues/479)) ([ee81a03](https://github.com/Smart-Apply/smart-apply/commit/ee81a033f4acd2a6e535b9158e45fe7250a496a0))
+
 ## [3.1.0](https://github.com/Smart-Apply/smart-apply/compare/v3.0.4...v3.1.0) (2026-05-18)
 
 
