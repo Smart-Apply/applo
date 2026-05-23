@@ -85,7 +85,7 @@ const faqs: FaqItem[] = [
         Auto-Apply, E-Mail-Tracking und Interview-Coach. Alle Preise sind
         transparent, monatlich kündbar und ohne versteckte Kosten — Details
         auf unserer{" "}
-        <Link href="/pricing" className="underline">
+        <Link href="/#pricing" className="underline">
           Preisseite
         </Link>
         .
