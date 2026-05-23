@@ -1080,6 +1080,21 @@ export class AuthService {
     }
 
     // Create new user with OAuth provider
+    // Closed-beta gate: when REQUIRE_INVITE_CODES is on, the only path
+    // to a brand-new account is the email/password register endpoint
+    // (which redeems a code atomically). OAuth has no place to type a
+    // code, so we hard-block first-time signup here. Existing OAuth
+    // users — and existing email/password users linking a new OAuth
+    // provider — are unaffected (handled in the `if (existingUser)`
+    // branch above, which returns before reaching this point).
+    if (this.configService.requireInviteCodes) {
+      this.auditLogger.logOAuthSignupBlocked(provider, email);
+      this.logger.warn(
+        `Blocked OAuth signup via ${provider} for ${email} — closed-beta gate is on`,
+      );
+      throw new ForbiddenWithCode(ErrorCode.INVITE_CODE_REQUIRED);
+    }
+
     const newUser = await this.prisma.$transaction(async (tx: TransactionClient) => {
       // Create user (password is null for OAuth users)
       const user = await tx.user.create({

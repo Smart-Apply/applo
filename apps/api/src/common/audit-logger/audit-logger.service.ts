@@ -33,6 +33,15 @@ export enum AuditEventType {
   INVITE_CODE_ISSUED = 'INVITE_CODE_ISSUED',
   INVITE_CODE_REDEEMED = 'INVITE_CODE_REDEEMED',
   INVITE_CODE_REJECTED = 'INVITE_CODE_REJECTED',
+  /**
+   * A brand-new OAuth signup (Google / Microsoft / Azure AD) was blocked
+   * because the closed-beta gate is on and OAuth has no place to enter
+   * an invite code. Distinct from `INVITE_CODE_REJECTED` so we can chart
+   * "how many would-be users hit the OAuth wall" separately from
+   * email/password attempts (signal for whether to build a pre-claim
+   * flow post-beta).
+   */
+  OAUTH_SIGNUP_BLOCKED = 'OAUTH_SIGNUP_BLOCKED',
 }
 
 export interface AuditLogEntry {
@@ -294,6 +303,25 @@ export class AuditLoggerService {
       timestamp: new Date(),
       severity: 'warning',
       metadata,
+    });
+  }
+
+  /**
+   * Brand-new OAuth signup blocked because the closed-beta gate is on.
+   * Called from inside `AuthService.validateOAuthUser` which runs in the
+   * passport verify callback — there is no Express `req` in scope there,
+   * so IP/UA are intentionally omitted. The provider + email is enough
+   * to correlate with web-server access logs if a deeper trace is needed.
+   */
+  logOAuthSignupBlocked(provider: string, email: string) {
+    this.log({
+      eventType: AuditEventType.OAUTH_SIGNUP_BLOCKED,
+      email,
+      ip: 'unknown',
+      userAgent: 'oauth-callback',
+      timestamp: new Date(),
+      severity: 'warning',
+      metadata: { provider },
     });
   }
 
