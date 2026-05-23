@@ -216,6 +216,12 @@ export class ConfigService {
       .filter(Boolean);
   }
 
+  // Closed-beta invite-code gate. Defaults to TRUE (fail-closed) at the
+  // schema layer; this getter just decodes the validated string.
+  get requireInviteCodes(): boolean {
+    return this.nestConfig.get('REQUIRE_INVITE_CODES', { infer: true }) === 'true';
+  }
+
   // Public base URL of the API (used for OAuth callbacks)
   // Falls back to http://localhost:${PORT} when API_BASE_URL is not set (dev)
   get apiBaseUrl(): string {

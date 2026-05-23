@@ -35,6 +35,7 @@ import { AdminModule } from './admin/admin.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AutoApplyModule } from './auto-apply/auto-apply.module';
 import { MailboxSyncModule } from './mailbox-sync/mailbox-sync.module';
+import { InviteCodeModule } from './invite-codes/invite-codes.module';
 
 @Module({
   imports: [
@@ -118,6 +119,7 @@ import { MailboxSyncModule } from './mailbox-sync/mailbox-sync.module';
     AnalyticsModule,
     AutoApplyModule,
     MailboxSyncModule,
+    InviteCodeModule,
     HealthModule,
   ],
   controllers: [CSPViolationController],

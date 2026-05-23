@@ -634,11 +634,27 @@ export async function authenticatedFetch(
 export const api = {
   // Auth
   auth: {
-    register: (data: { email: string; password: string; firstName: string; lastName: string; turnstileToken?: string }) =>
+    register: (data: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      turnstileToken?: string;
+      inviteCode?: string;
+    }) =>
       apiRequest<{ user: User }>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+
+    /**
+     * Public auth-time configuration. Read once on register-page mount to
+     * decide whether to render the invite-code field. Heavily cached on
+     * the client (TanStack Query staleTime: 10min) since toggles are
+     * rare.
+     */
+    getConfig: () =>
+      apiRequest<{ requireInviteCode: boolean }>('/auth/config'),
 
     login: (data: { email: string; password: string }) =>
       apiRequest<{ user?: User; requiresTwoFactor?: boolean; challengeToken?: string; methods?: string[] }>('/auth/login', {

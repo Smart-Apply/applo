@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { api, resetAuthRedirectFlag } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAuthConfig } from '@/hooks/use-auth-config';
 import { toast } from '@/lib/toast';
 import { TwoFactorChallengeForm } from '@/components/two-factor';
 import { TurnstileWidget, resetTurnstile } from '@/components/auth/turnstile-widget';
@@ -48,6 +49,11 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { setAuth, isAuthenticated, hasHydrated } = useAuthStore();
+  // Whether the closed-beta invite-code gate is on. Fetched once and
+  // cached — we default to TRUE while loading so we never flash a
+  // gate-less form against a gated backend.
+  const { data: authConfig } = useAuthConfig();
+  const requireInviteCode = authConfig?.requireInviteCode ?? true;
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -85,6 +91,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       email: '',
       password: '',
       confirmPassword: '',
+      inviteCode: '',
     },
   });
 
@@ -165,8 +172,19 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       return;
     }
 
+    // Belt-and-braces client-side guard for the invite-code gate. The
+    // server is authoritative, but blocking here saves a round-trip and
+    // gives a clearer message.
+    if (requireInviteCode && !data.inviteCode?.trim()) {
+      registerForm.setError('inviteCode', {
+        type: 'manual',
+        message: 'Bitte gib deinen Einladungscode ein.',
+      });
+      return;
+    }
+
     try {
-      const { confirmPassword: _confirmPassword, ...registerData } = data;
+      const { confirmPassword: _confirmPassword, inviteCode, ...registerData } = data;
       const response = await api.auth.register({
         email: registerData.email,
         password: registerData.password,
@@ -176,6 +194,10 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
         // on this environment). When configured, missing/expired token
         // is rejected with `code: 'CAPTCHA_FAILED'`.
         turnstileToken: turnstileToken ?? undefined,
+        // Trimmed so a stray space in the pasted code doesn't fail the
+        // hash lookup. Sent only when the user provided a non-empty
+        // value — the backend treats `undefined` and empty as the same.
+        inviteCode: inviteCode?.trim() || undefined,
       });
       resetAuthRedirectFlag();
       setAuth(response.user);
@@ -197,6 +219,36 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
             'Bot-Schutz fehlgeschlagen. Bitte löse das CAPTCHA erneut. Wenn es nicht erscheint, deaktiviere kurz den Tracking-Schutz oder Adblocker für diese Seite.',
             { duration: 10000 },
           );
+        } else if (error.data?.code === 'INVITE_CODE_REQUIRED') {
+          // Backend says the gate is on but we sent no code. Update the
+          // local cache so the field appears immediately on next render
+          // (covers the race where authConfig was stale).
+          registerForm.setError('inviteCode', {
+            type: 'manual',
+            message: 'Bitte gib deinen Einladungscode ein.',
+          });
+          toast.error(
+            'Smart Apply ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.',
+            { duration: 8000 },
+          );
+        } else if (error.data?.code === 'INVITE_CODE_INVALID') {
+          registerForm.setError('inviteCode', {
+            type: 'manual',
+            message: 'Code ist ungültig.',
+          });
+          toast.error('Dieser Einladungscode ist ungültig. Bitte überprüfe die Schreibweise.');
+        } else if (error.data?.code === 'INVITE_CODE_ALREADY_USED') {
+          registerForm.setError('inviteCode', {
+            type: 'manual',
+            message: 'Code wurde bereits verwendet.',
+          });
+          toast.error('Dieser Einladungscode wurde bereits eingelöst.');
+        } else if (error.data?.code === 'INVITE_CODE_EXPIRED') {
+          registerForm.setError('inviteCode', {
+            type: 'manual',
+            message: 'Code ist abgelaufen.',
+          });
+          toast.error('Dieser Einladungscode ist abgelaufen.');
         } else if (error.status === 400 || error.status === 409) {
           toast.error('Diese E-Mail-Adresse ist bereits registriert.');
         } else if (error.status === 429) {
@@ -579,6 +631,46 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                     </FormItem>
                   )}
                 />
+
+                {/* Closed-beta invite-code gate. Only rendered when the
+                    backend has REQUIRE_INVITE_CODES=true; the
+                    useAuthConfig hook caches the answer for 10 min so
+                    the field doesn't flicker between page loads. The
+                    gate is enforced server-side regardless \u2014 the field
+                    is just UX. */}
+                {requireInviteCode && (
+                  <FormField
+                    control={registerForm.control}
+                    name="inviteCode"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <FormLabel className="font-poppins text-base font-semibold text-foreground">
+                          Einladungscode
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="BETA-XXXX-XXXX-XXXX"
+                            autoComplete="off"
+                            autoCapitalize="characters"
+                            spellCheck={false}
+                            className={`h-9 rounded-xl border-2 bg-transparent px-4 font-mono text-[14px] tracking-wider placeholder:text-muted-foreground focus:border-primary ${
+                              fieldState.error
+                                ? 'border-red-500 focus:border-red-500'
+                                : fieldState.isDirty && !fieldState.invalid
+                                ? 'border-green-500'
+                                : 'border-input'
+                            }`}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        <p className="mt-1 font-poppins text-xs text-muted-foreground">
+                          Smart Apply ist gerade in der geschlossenen Beta. Du brauchst einen Einladungscode, um dich zu registrieren.
+                        </p>
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <div className="flex justify-center pt-2">
                   <SubmitButton

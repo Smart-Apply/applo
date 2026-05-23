@@ -55,6 +55,11 @@ model User {
   twoFactorAuth  TwoFactorAuth?
   trustedDevices TrustedDevice[]
 
+  // Closed-beta invite code that was redeemed to create this account.
+  // Optional (null for accounts created before the gate, OAuth signups, or
+  // when REQUIRE_INVITE_CODES is disabled for the public launch).
+  inviteCodeRedeemed InviteCode? @relation("InviteCodeRedemption")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -460,6 +465,39 @@ model RefreshToken {
   @@index([userId, expiresAt])
   // Note: @unique on token already creates an implicit index
   @@map("refresh_tokens")
+}
+
+// Closed-beta / invite-only registration gate (see
+// docs/guides/CLOSED_BETA_PLAN.md, item #A3). When the backend env var
+// `REQUIRE_INVITE_CODES=true`, a valid unused row here is required to
+// complete `POST /auth/register`.
+//
+// Storage rules (same shape as RefreshToken):
+//   - We NEVER persist plaintext codes — only sha256(plaintext) in
+//     `codeHash`. Codes are 128-bit cryptographically random, so plain
+//     sha256 is enough; argon2 would be overkill for high-entropy tokens.
+//   - `prefix` is the first 8 chars of the plaintext so the admin UI can
+//     render "BETA-3F2A…" without revealing the full code.
+//   - Redemption is a single atomic UPDATE … WHERE usedAt IS NULL guarded
+//     by the unique `codeHash`, which makes double-spend impossible at
+//     the DB layer.
+//   - `usedByUserId` is @unique so each user can redeem at most one code.
+//   - `onDelete: SetNull` keeps the redemption row when the user is
+//     deleted (GDPR), so we retain "slot was used" without retaining PII.
+model InviteCode {
+  id           String    @id @default(cuid())
+  codeHash     String    @unique // sha256(plaintext) hex — never store plaintext
+  prefix       String // First 8 chars of plaintext, safe to show in admin UI
+  note         String? // Free-form, e.g. "Wave 1 — alice@example.com"
+  usedAt       DateTime? // NULL = unused; set atomically on redeem
+  usedByUserId String?   @unique // FK once redeemed (one redemption per user)
+  usedBy       User?     @relation("InviteCodeRedemption", fields: [usedByUserId], references: [id], onDelete: SetNull)
+  expiresAt    DateTime? // Optional expiry; NULL = never
+  createdAt    DateTime  @default(now())
+
+  @@index([usedAt])
+  @@index([expiresAt])
+  @@map("invite_codes")
 }
 
 // Device type for session tracking

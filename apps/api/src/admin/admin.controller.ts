@@ -11,16 +11,30 @@ import {
   Param,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsISO8601,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { Request } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { SubscriptionTier } from '../generated/prisma/client';
 import { AdminGuard } from './admin.guard';
+import { InviteCodeService } from '../invite-codes/invite-code.service';
+import { AuditLoggerService } from '../common/audit-logger';
+import { Sanitize } from '../common/decorators/sanitize.decorator';
 
 class SetTierDto {
   @IsIn(['FREE', 'PREMIUM', 'PREMIUM_PLUS'])
@@ -31,6 +45,28 @@ class SetTierDto {
   @Min(1)
   @Max(120)
   periodMonths?: number;
+}
+
+/**
+ * Body of `POST /admin/invite-codes`. Note: `note` is sanitized because it
+ * will be rendered in the admin UI listing endpoint.
+ */
+class IssueInviteCodesDto {
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  count!: number;
+
+  @IsOptional()
+  @Sanitize()
+  @IsString()
+  @MaxLength(200)
+  note?: string;
+
+  /** ISO-8601 expiry (e.g. `2026-12-31T23:59:59.000Z`). Optional. */
+  @IsOptional()
+  @IsISO8601()
+  expiresAt?: string;
 }
 
 /**
@@ -51,6 +87,8 @@ export class AdminController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly subscriptions: SubscriptionService,
+    private readonly inviteCodes: InviteCodeService,
+    private readonly auditLogger: AuditLoggerService,
   ) {}
 
   /**
@@ -172,6 +210,77 @@ export class AdminController {
     return {
       deleted: true,
       user: { id: user.id, email: user.email, provider: user.provider },
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Closed-beta invite codes (item #A3 in CLOSED_BETA_PLAN.md)
+  // ---------------------------------------------------------------------
+
+  /**
+   * Issue N invite codes in a single batch. Returns the plaintext codes
+   * EXACTLY ONCE — they cannot be retrieved again because only the
+   * sha256 hash is persisted. Save them somewhere durable (1Password,
+   * email drafts, Notion) before closing the response.
+   *
+   * Example:
+   *   POST /api/v1/admin/invite-codes
+   *   { "count": 25, "note": "Wave 1 — Reddit r/sideproject" }
+   *
+   * Optional ISO-8601 expiry:
+   *   { "count": 5, "note": "Wave 2 — conference handout", "expiresAt": "2027-01-01T00:00:00Z" }
+   */
+  @Post('invite-codes')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary:
+      'Issue closed-beta invite codes (admin only — plaintexts returned ONCE)',
+  })
+  async issueInviteCodes(
+    @Body() body: IssueInviteCodesDto,
+    @CurrentUser('id') adminUserId: string,
+    @CurrentUser('email') adminEmail: string,
+    @Req() req: Request,
+  ) {
+    const expiresAt = body.expiresAt ? new Date(body.expiresAt) : undefined;
+    if (expiresAt && expiresAt.getTime() <= Date.now()) {
+      throw new BadRequestException('expiresAt must be in the future');
+    }
+
+    const issued = await this.inviteCodes.issue(body.count, body.note, expiresAt);
+
+    this.auditLogger.logInviteCodesIssued(adminUserId, adminEmail, req, {
+      count: issued.length,
+      prefixes: issued.map((c) => c.prefix),
+      note: body.note,
+    });
+
+    this.logger.log(
+      `Admin ${adminEmail} issued ${issued.length} invite code(s)${body.note ? ` (note: ${body.note})` : ''}`,
+    );
+
+    return {
+      message:
+        'Codes returned ONCE — save them now. The plaintexts are not stored and cannot be retrieved later.',
+      count: issued.length,
+      codes: issued,
+    };
+  }
+
+  /**
+   * List invite codes for admin review. Never returns plaintexts — only
+   * metadata (prefix, note, usage status). `?available=true` filters to
+   * unused codes only.
+   */
+  @Get('invite-codes')
+  @ApiOperation({ summary: 'List invite codes (admin only — metadata only)' })
+  async listInviteCodes(@Query('available') available?: string) {
+    const onlyUnused = available === 'true';
+    const codes = await this.inviteCodes.list(!onlyUnused);
+    return {
+      count: codes.length,
+      filter: onlyUnused ? 'available' : 'all',
+      codes,
     };
   }
 }

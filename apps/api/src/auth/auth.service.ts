@@ -27,8 +27,10 @@ import {
   UnauthorizedWithCode,
   BadRequestWithCode,
   NotFoundWithCode,
+  ForbiddenWithCode,
 } from '../common/exceptions/coded-http.exception';
 import { SubscriptionService } from '../subscription/subscription.service';
+import { InviteCodeService } from '../invite-codes/invite-code.service';
 
 interface TokenPair {
   accessToken: string;
@@ -66,9 +68,21 @@ export class AuthService {
     @Inject(forwardRef(() => TwoFactorService))
     private twoFactorService: TwoFactorService,
     private emailService: EmailService,
+    private inviteCodeService: InviteCodeService,
   ) {}
 
   async register(dto: RegisterDto, userAgent?: string, ipAddress?: string, req?: Request) {
+    // Closed-beta gate: when REQUIRE_INVITE_CODES is true, an invite code
+    // is mandatory. We check missing-code BEFORE the DB lookup so we never
+    // leak account existence to clients that don't know to send a code.
+    const inviteGateEnabled = this.configService.requireInviteCodes;
+    if (inviteGateEnabled && !dto.inviteCode?.trim()) {
+      if (req) {
+        this.auditLogger.logInviteCodeRejected(dto.email, req, { reason: 'missing' });
+      }
+      throw new ForbiddenWithCode(ErrorCode.INVITE_CODE_REQUIRED);
+    }
+
     // Check if user exists
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -81,34 +95,72 @@ export class AuthService {
     // Hash password
     const hashedPassword = await argon2.hash(dto.password);
 
-    // Create user and profile in a transaction
-    const user = await this.prisma.$transaction(async (tx: TransactionClient) => {
-      const newUser = await tx.user.create({
-        data: {
-          email: dto.email,
-          password: hashedPassword,
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          provider: 'local',
-        },
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          createdAt: true,
-        },
-      });
+    // Create user, profile, and redeem the invite code in a single
+    // transaction. The invite-code redemption runs LAST so that any
+    // failure in user/profile creation aborts before we mark the code
+    // as used. The redemption itself is an atomic
+    //   UPDATE … WHERE usedAt IS NULL
+    // guarded by the unique codeHash, so concurrent redemptions of the
+    // same code cannot both succeed.
+    let redeemedInvite: { inviteCodeId: string; prefix: string } | null = null;
+    let user: {
+      id: string;
+      email: string;
+      firstName: string | null;
+      lastName: string | null;
+      createdAt: Date;
+    };
+    try {
+      user = await this.prisma.$transaction(async (tx: TransactionClient) => {
+        const newUser = await tx.user.create({
+          data: {
+            email: dto.email,
+            password: hashedPassword,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            provider: 'local',
+          },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            createdAt: true,
+          },
+        });
 
-      // Create empty profile for new user
-      await tx.profile.create({
-        data: {
-          userId: newUser.id,
-        },
-      });
+        // Create empty profile for new user
+        await tx.profile.create({
+          data: {
+            userId: newUser.id,
+          },
+        });
 
-      return newUser;
-    });
+        if (inviteGateEnabled) {
+          // dto.inviteCode is guaranteed non-empty here (checked above).
+          redeemedInvite = await this.inviteCodeService.redeemInTransaction(
+            tx,
+            dto.inviteCode!,
+            newUser.id,
+          );
+        }
+
+        return newUser;
+      });
+    } catch (err) {
+      // Surface a rejected invite code as a structured audit event so we
+      // can spot brute-force attempts in the Winston rotation.
+      if (err instanceof ForbiddenWithCode && req) {
+        const reason: 'invalid' | 'already_used' | 'expired' =
+          err.code === ErrorCode.INVITE_CODE_ALREADY_USED
+            ? 'already_used'
+            : err.code === ErrorCode.INVITE_CODE_EXPIRED
+              ? 'expired'
+              : 'invalid';
+        this.auditLogger.logInviteCodeRejected(dto.email, req, { reason });
+      }
+      throw err;
+    }
 
     // Create default FREE subscription for new user
     // This is done outside the transaction to avoid circular dependency issues
@@ -124,6 +176,14 @@ export class AuthService {
     // Log registration event
     if (req) {
       this.auditLogger.logRegistration(user.email, user.id, req);
+      if (redeemedInvite) {
+        // Cast away the never inference TS does on the conditional branch.
+        const invite = redeemedInvite as { inviteCodeId: string; prefix: string };
+        this.auditLogger.logInviteCodeRedeemed(user.id, user.email, req, {
+          inviteCodeId: invite.inviteCodeId,
+          prefix: invite.prefix,
+        });
+      }
     }
 
     // Send the verification email straight away. We deliberately await

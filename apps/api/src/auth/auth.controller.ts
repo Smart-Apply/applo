@@ -44,6 +44,29 @@ export class AuthController {
     private configService: ConfigService,
   ) {}
 
+  /**
+   * Public auth configuration. The frontend calls this on mount to decide
+   * whether the registration form should render the invite-code field.
+   *
+   * Why an endpoint and not `NEXT_PUBLIC_REQUIRE_INVITE`: NEXT_PUBLIC_*
+   * vars are baked into the Cloudflare Worker bundle at build time, which
+   * means flipping the gate would require a redeploy of the frontend.
+   * Reading from the API at runtime lets the backend toggle it instantly.
+   *
+   * Cached aggressively on the client (TanStack Query with a 10 min
+   * staleTime is fine — toggles are rare).
+   */
+  @Public()
+  @Get('config')
+  @ApiOperation({
+    summary: 'Public auth-time configuration (feature flags read by login/register UI)',
+  })
+  getAuthConfig() {
+    return {
+      requireInviteCode: this.configService.requireInviteCodes,
+    };
+  }
+
   @Public()
   @RequiresCaptcha()
   @UseThrottler('auth')

@@ -28,6 +28,11 @@ export enum AuditEventType {
   // Suspicious Activity
   MULTIPLE_FAILED_LOGINS = 'MULTIPLE_FAILED_LOGINS',
   IP_CHANGE_DETECTED = 'IP_CHANGE_DETECTED',
+
+  // Closed-beta invite-code gate
+  INVITE_CODE_ISSUED = 'INVITE_CODE_ISSUED',
+  INVITE_CODE_REDEEMED = 'INVITE_CODE_REDEEMED',
+  INVITE_CODE_REJECTED = 'INVITE_CODE_REJECTED',
 }
 
 export interface AuditLogEntry {
@@ -221,6 +226,73 @@ export class AuditLoggerService {
       userAgent: req.headers['user-agent'] || 'unknown',
       timestamp: new Date(),
       severity: 'info',
+      metadata,
+    });
+  }
+
+  /**
+   * Admin issued one or more invite codes. We log the prefixes (first
+   * 8 chars of the plaintext code) so audits can correlate "code XXXX
+   * was issued at T1 and redeemed at T2" without ever persisting the
+   * full plaintext.
+   */
+  logInviteCodesIssued(
+    adminUserId: string,
+    adminEmail: string,
+    req: Request,
+    metadata: { count: number; prefixes: string[]; note?: string },
+  ) {
+    this.log({
+      eventType: AuditEventType.INVITE_CODE_ISSUED,
+      userId: adminUserId,
+      email: adminEmail,
+      ip: this.getClientIp(req),
+      userAgent: req.headers['user-agent'] || 'unknown',
+      timestamp: new Date(),
+      severity: 'info',
+      metadata,
+    });
+  }
+
+  /**
+   * Successful invite-code redemption during registration. Logged on the
+   * new user's behalf (the user did not exist before this call).
+   */
+  logInviteCodeRedeemed(
+    userId: string,
+    email: string,
+    req: Request,
+    metadata: { inviteCodeId: string; prefix: string },
+  ) {
+    this.log({
+      eventType: AuditEventType.INVITE_CODE_REDEEMED,
+      userId,
+      email,
+      ip: this.getClientIp(req),
+      userAgent: req.headers['user-agent'] || 'unknown',
+      timestamp: new Date(),
+      severity: 'info',
+      metadata,
+    });
+  }
+
+  /**
+   * Rejected invite-code attempt — wrong code, already used, expired, or
+   * missing while the gate is enabled. Warning severity so a Sentry/SIEM
+   * alert can fire if the rate spikes (signals brute-forcing).
+   */
+  logInviteCodeRejected(
+    email: string | undefined,
+    req: Request,
+    metadata: { reason: 'missing' | 'invalid' | 'already_used' | 'expired'; prefix?: string },
+  ) {
+    this.log({
+      eventType: AuditEventType.INVITE_CODE_REJECTED,
+      email,
+      ip: this.getClientIp(req),
+      userAgent: req.headers['user-agent'] || 'unknown',
+      timestamp: new Date(),
+      severity: 'warning',
       metadata,
     });
   }

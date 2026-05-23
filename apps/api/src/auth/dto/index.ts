@@ -68,6 +68,17 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   turnstileToken?: string;
+
+  @ApiProperty({
+    example: 'BETA-3F2A-9C8B-7E15',
+    required: false,
+    description:
+      'Closed-beta invite code. Required when REQUIRE_INVITE_CODES=true (default during the closed beta). Frontend should fetch GET /auth/config to discover whether to render the field. Not sanitized: codes are looked up by sha256 hash and never round-trip to a render context.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64, { message: 'Invite code must be at most 64 characters' })
+  inviteCode?: string;
 }
 
 export class LoginDto {
