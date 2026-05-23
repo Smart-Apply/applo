@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, JSX } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import Image from 'next/image';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -48,12 +48,39 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { setAuth, isAuthenticated, hasHydrated } = useAuthStore();
   // Whether the closed-beta invite-code gate is on. Fetched once and
   // cached — we default to TRUE while loading so we never flash a
   // gate-less form against a gated backend.
   const { data: authConfig } = useAuthConfig();
   const requireInviteCode = authConfig?.requireInviteCode ?? true;
+
+  // Surface OAuth callback errors that the API redirected us back to
+  // /login?oauth=error&message=... with. The closed-beta gate blocks
+  // first-time OAuth signup (Google/Microsoft) when REQUIRE_INVITE_CODES
+  // is on — we redirect here with `message=invite_required` so we can
+  // explain that the user has to sign up with email + invite code first.
+  useEffect(() => {
+    if (searchParams.get('oauth') !== 'error') return;
+    const message = searchParams.get('message');
+    if (message === 'invite_required') {
+      toast.error(
+        'Smart Apply ist gerade in der geschlossenen Beta. Bitte registriere dich zuerst mit deinem Einladungscode \u2014 danach kannst du Google / Microsoft in den Einstellungen verknüpfen.',
+        { duration: 12000 },
+      );
+    } else if (message === 'authentication_failed') {
+      toast.error('Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
+    } else {
+      toast.error('Bei der Anmeldung ist ein Fehler aufgetreten.');
+    }
+    // Strip the query params so a refresh doesn't re-fire the toast.
+    router.replace(pathname);
+    // We deliberately depend on searchParams as a *snapshot* so this
+    // effect only re-runs when the URL actually changes \u2014 not when the
+    // router/pathname identities are recreated.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
