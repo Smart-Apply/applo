@@ -31,7 +31,6 @@ allowBuilds:
   '@prisma/client': true                     # generates DB client at install
   '@prisma/engines': true                    # native engine binaries
   '@scarf/scarf': true                       # Sentry/Prisma usage telemetry
-  '@sentry-internal/node-cpu-profiler': true # native profiler addon
   '@swc/core': true                          # Vitest TS transpiler
   argon2: true                               # password hashing (native binding)
   dtrace-provider: true                      # transitive (pino → dtrace), optional
