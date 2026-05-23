@@ -16,6 +16,7 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 - **Mock interviews** — AI-generated interview questions per job
 - **Email tracking (Premium)** — Connect Outlook/Microsoft 365; smart-apply detects company replies (interview invites, confirmations, rejections) and updates the application status automatically. No email bodies are persisted.
 - **Auth & security** — JWT in HttpOnly cookies, refresh-token rotation, multi-device sessions, OAuth (Google, Microsoft, Azure AD), 2FA (TOTP), CSRF, rate limiting, audit logs, Sentry
+- **Closed-beta gate** — Optional database-backed invite-code system on `POST /auth/register` (single-use, hashed, atomic redemption). Toggled at runtime via `REQUIRE_INVITE_CODES` Fly secret; admins issue codes via `POST /admin/invite-codes`. See [docs/guides/CLOSED_BETA_PLAN.md](./docs/guides/CLOSED_BETA_PLAN.md).
 - **Subscriptions** — Tiered plans with usage limits
 - **Transactional email** — Resend integration
 

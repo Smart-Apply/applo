@@ -72,7 +72,7 @@ every item is checked.
   Without this, every "the PDF preview broke on my iPhone" report is
   unfixable.
 
-- [ ] **#A2 — Verify `LLM_PROVIDER=azure-openai` on Fly prod** *(30s)*
+- [x] **#A2 — Verify `LLM_PROVIDER=azure-openai` on Fly prod** ✅ *(verified on `fly.prod.toml`)*
   ```bash
   flyctl secrets list --app smart-apply-api | grep LLM_PROVIDER
   ```
@@ -80,18 +80,43 @@ every item is checked.
   mock text and the whole beta is worthless. Also confirm
   `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_DEPLOYMENT_NAME` are set.
 
-- [ ] **#A3 — Invite-code gate on `/auth/register`** *(~30min)*
-  Add `INVITE_CODES` env var (comma-separated, e.g.
-  `alpha-001,alpha-002,...`). Check in `AuthService.register`; throw
-  `ForbiddenException('Invalid invite code')` when missing or unknown.
-  Each code is single-use (track in `User.inviteCodeUsed` or a tiny
-  `InviteCode` model). Frontend: add `inviteCode` to the register form,
-  shown when `NEXT_PUBLIC_REQUIRE_INVITE=true`.
-  **Why:** lets you stage the rollout, identify who churned, and shut
-  the door instantly if something blows up. Beats a hard "first 50" DB
-  cap (no race conditions, no waitlist UX to build).
+- [x] **#A3 — Invite-code gate on `/auth/register`** ✅ *(merged: `feat/invite-code-gate`)*
+  Shipped as a database-backed gate, not an env-var allow-list — atomic
+  single-use redemption, hashed-at-rest codes, revocation without
+  redeploy, full audit trail.
 
-- [ ] **#A4 — Audit Premium CTAs for dead ends** *(~30min)*
+  - **Backend:** `REQUIRE_INVITE_CODES=true` (default) on the API
+    enforces the gate in `AuthService.register`. Invite codes live in
+    the `invite_codes` table (`codeHash` is sha256-of-plaintext;
+    plaintext is shown to the admin **once** at issuance). Redemption
+    is an atomic `UPDATE … WHERE used_at IS NULL AND (expires_at IS
+    NULL OR expires_at > NOW())` inside the user-creation transaction
+    so a failed signup never burns a code.
+  - **Frontend:** the register form calls `GET /auth/config` (cached
+    10 min) and shows the invite-code field when
+    `requireInviteCode: true`. Backend-only env var — no
+    `NEXT_PUBLIC_*` baked into the Worker bundle, so you can flip the
+    gate via `flyctl secrets set REQUIRE_INVITE_CODES=false` without
+    a frontend redeploy.
+  - **Admin API** (`ADMIN_EMAILS` allow-listed):
+    - `POST /api/v1/admin/invite-codes` — issue 1–100 codes, optional
+      `note` + `expiresAt`. Returns plaintext **once**, never again.
+    - `GET /api/v1/admin/invite-codes?available=true` — list metadata
+      (prefix, note, expiresAt, usedAt) — never the plaintext.
+  - **First batch after deploy:**
+    ```bash
+    curl -X POST https://api.smart-apply.io/api/v1/admin/invite-codes \
+      -H "Cookie: access_token=<your-admin-jwt>" \
+      -H "Content-Type: application/json" \
+      -d '{"count": 10, "note": "wave 1 — friends"}'
+    ```
+    Save the response — those plaintexts are the only copy.
+  - **Error codes returned to the frontend:**
+    `INVITE_CODE_REQUIRED`, `INVITE_CODE_INVALID`,
+    `INVITE_CODE_ALREADY_USED`, `INVITE_CODE_EXPIRED` — each surfaces a
+    dedicated German message in the register form.
+
+- [x] **#A4 — Audit Premium CTAs for dead ends** ✅ *(merged)*
   Grep the frontend for "Upgrade", "Premium", "Pro" buttons. Either
   remove for the beta or point them at the existing contact form
   (`POST /api/v1/contact`). Premium gets granted manually via

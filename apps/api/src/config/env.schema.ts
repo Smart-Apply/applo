@@ -215,6 +215,16 @@ const envSchema = z.object({
   // unset, all /admin/* routes return 403.
   ADMIN_EMAILS: z.string().optional(),
 
+  // Closed-beta invite-code gate. When 'true' (default \u2014 fail-closed), the
+  // `POST /auth/register` endpoint requires a valid unused row in
+  // `invite_codes`. Set to 'false' once you're ready for open public
+  // signup. Backend-only on purpose: a NEXT_PUBLIC_* flag would be baked
+  // into the Cloudflare Worker build, the frontend reads the value at
+  // runtime from `GET /auth/config` instead.
+  REQUIRE_INVITE_CODES: z
+    .enum(['true', 'false'])
+    .default('true'),
+
   // -------------------------------------------------------------------------
   // Email Tracking (Premium feature) — OAuth Inbox Sync
   // -------------------------------------------------------------------------
