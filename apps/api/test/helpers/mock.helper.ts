@@ -174,6 +174,10 @@ export class MockHelper {
       storageDriver: 'disk',
       jobsProvider: 'in-memory',
       llmProvider: 'mock',
+      // Closed-beta invite-code gate — off in unit tests so the existing
+      // register-flow tests don't have to supply a code. Integration tests
+      // that exercise the gate should override this with `true`.
+      requireInviteCodes: false,
     };
   }
 
