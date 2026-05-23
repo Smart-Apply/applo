@@ -2,6 +2,84 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.0](https://github.com/Smart-Apply/smart-apply/compare/v3.0.4...v3.1.0) (2026-05-18)
+
+
+### Features
+
+* **pricing:** reposition plans as risk-free / optimise / automate ([#472](https://github.com/Smart-Apply/smart-apply/issues/472)) ([0e7fce3](https://github.com/Smart-Apply/smart-apply/commit/0e7fce3a64af428ee6895ab7d68b9147b7ef8076))
+
+## [3.0.4](https://github.com/Smart-Apply/smart-apply/compare/v3.0.3...v3.0.4) (2026-05-17)
+
+
+### Bug Fixes
+
+* **infra:** trigger release for pnpm migration + node 24 + cf token rotation ([#460](https://github.com/Smart-Apply/smart-apply/issues/460)) ([bb724e1](https://github.com/Smart-Apply/smart-apply/commit/bb724e13e0bb9f10f39271652642364934816af4))
+
+## [3.0.3](https://github.com/Smart-Apply/smart-apply/compare/v3.0.2...v3.0.3) (2026-05-15)
+
+
+### Performance Improvements
+
+* **api:** lean select on dashboard list endpoints to cut Neon egress ([#442](https://github.com/Smart-Apply/smart-apply/issues/442)) ([9eb57ce](https://github.com/Smart-Apply/smart-apply/commit/9eb57ce892da78ec8b7923101add515beeba8179))
+
+## [3.0.2](https://github.com/Smart-Apply/smart-apply/compare/v3.0.1...v3.0.2) (2026-05-15)
+
+
+### Bug Fixes
+
+* **api:** reduce Neon egress from SSE polling and idle crons ([#440](https://github.com/Smart-Apply/smart-apply/issues/440)) ([44cea74](https://github.com/Smart-Apply/smart-apply/commit/44cea74a68ca0312c798f2ab1a8e8da113c1f54f))
+
+## [3.0.1](https://github.com/Smart-Apply/smart-apply/compare/v3.0.0...v3.0.1) (2026-05-15)
+
+
+### Bug Fixes
+
+* **api:** bump sanitize-html to 2.17.4 to patch CVE-2026-44990 ([#438](https://github.com/Smart-Apply/smart-apply/issues/438)) ([f316746](https://github.com/Smart-Apply/smart-apply/commit/f3167461746f3e88684088c86d79fa5a2b69bb3c))
+
+## [3.0.0](https://github.com/Smart-Apply/smart-apply/compare/v2.0.1...v3.0.0) (2026-05-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **config:** any prod deployment still configured with STORAGE_DRIVER=disk or JOBS_DRIVER=in-memory will now fail to boot with a clear error message instead of silently losing data.
+
+### Features
+
+* **config:** refuse to boot prod with disk storage or in-memory queue ([#432](https://github.com/Smart-Apply/smart-apply/issues/432)) ([cc19b5c](https://github.com/Smart-Apply/smart-apply/commit/cc19b5cfa29aee5294ad3246b2e08fd2f3f07804))
+
+## [2.0.1](https://github.com/Smart-Apply/smart-apply/compare/v2.0.0...v2.0.1) (2026-05-14)
+
+
+### Bug Fixes
+
+* **docker:** drop COPY of deleted apps/api/src/pdf/templates ([#433](https://github.com/Smart-Apply/smart-apply/issues/433)) ([b0f89a4](https://github.com/Smart-Apply/smart-apply/commit/b0f89a41b9340f151fa54d1f630af713da01bf8b))
+
+## [2.0.0](https://github.com/Smart-Apply/smart-apply/compare/v1.15.0...v2.0.0) (2026-05-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **pdf:** PDF_RENDERER_DEFAULT, PUPPETEER_EXECUTABLE_PATH, PUPPETEER_MAX_BROWSERS, PUPPETEER_MIN_BROWSERS, PUPPETEER_IDLE_TIMEOUT_MS and PUPPETEER_EVICTION_INTERVAL_MS env vars are no longer read. Templates without a registered react-pdf factory now throw at render time instead of silently falling back to puppeteer.
+
+### Features
+
+* **pdf:** remove puppeteer pipeline; render previews via react-pdf + pdfjs ([#430](https://github.com/Smart-Apply/smart-apply/issues/430)) ([de68153](https://github.com/Smart-Apply/smart-apply/commit/de68153c17391fb67a32d86f88125e37094b11a7))
+
+## [1.15.0](https://github.com/Smart-Apply/smart-apply/compare/v1.14.0...v1.15.0) (2026-05-14)
+
+
+### Features
+
+* **pdf-v2:** introduce @react-pdf/renderer pipeline (Phase 1) ([#428](https://github.com/Smart-Apply/smart-apply/issues/428)) ([3b9e55b](https://github.com/Smart-Apply/smart-apply/commit/3b9e55b1fe7cb78d2b6a228d31913c97688c44ab))
+
+## [1.14.0](https://github.com/Smart-Apply/smart-apply/compare/v1.13.0...v1.14.0) (2026-05-11)
+
+
+### Features
+
+* consolidate launch planning and documentation ([#426](https://github.com/Smart-Apply/smart-apply/issues/426)) ([74d5f01](https://github.com/Smart-Apply/smart-apply/commit/74d5f01e7fa9c0594d48a7a2335b3530b9b2abf1))
+
 ## [1.13.0](https://github.com/Smart-Apply/smart-apply/compare/v1.12.0...v1.13.0) (2026-05-10)
 
 

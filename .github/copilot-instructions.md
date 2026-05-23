@@ -4,7 +4,7 @@
 Deliver a production-grade, multi-provider application with:
 1) **Frontend (Next.js 16 + React 19)**: Auth (email/password + OAuth + 2FA), profile management, job-posting ingestion, application dashboard with PDF preview/editing, deployed to **Cloudflare Workers** via OpenNext.
 2) **Backend API (NestJS 11)**: Candidate profile (skills, experiences, education, certificates, projects, languages), ingests job postings (text/URL/file → normalized), generates tailored cover letter + resume on Azure OpenAI / mock.
-3) **PDF Generation**: Puppeteer + Handlebars (50 templates, ATS-optimized), stored via pluggable storage (Cloudflare R2 / disk) and retrieved via signed URLs.
+3) **PDF Generation**: `@react-pdf/renderer` (TSX templates, 50 variants, ATS-optimized), stored via pluggable storage (Cloudflare R2 / disk) and retrieved via signed URLs.
 
 ## Agent Instructions
 For specific tasks, refer to these specialized instruction files:
@@ -71,7 +71,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **NEVER** suggest `prisma migrate reset` for any environment other than your local dev DB.
 
 ### When you change `package.json`
-- Run `npm install --legacy-peer-deps` immediately after, and commit the resulting `package-lock.json` change in the same PR. The `lint-and-typecheck` CI job blocks on lockfile drift (only fails on real package/version changes, not cosmetic metadata).
+- Run `pnpm install` immediately after, and commit the resulting `pnpm-lock.yaml` change in the same PR. The `lint-and-typecheck` CI job blocks on lockfile drift (`pnpm install --lockfile-only` against the manifests must produce no diff against the committed lockfile).
 - For dependency upgrades: minor/patch bumps are handled by Dependabot's grouped weekly PRs. Major bumps for `next`, `react`, `react-dom`, `prisma`, `@prisma/*`, `@nestjs/*`, `puppeteer`, `playwright`, `tailwindcss`, `typescript`, `turbo`, `lucide-react`, `eslint`, `eslint-config-next`, `@types/node` are **explicitly ignored** in [`.github/dependabot.yml`](../.github/dependabot.yml) — those need a deliberate, hand-tested PR.
 
 ### When architecture changes
@@ -93,7 +93,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 
 ### Lint policy
 - **New code MUST land with 0 ESLint errors AND 0 ESLint warnings.** CI's `lint-and-typecheck` job currently fails on errors only, but warnings accumulate into untracked tech debt — historically one reached 74 warnings before a single new error tipped the build red and blocked every PR. Treat warnings as errors for anything you author.
-- Before opening a PR that touches `apps/web` or `apps/api`, run `npm run lint` from the affected workspace and confirm a clean exit. If you add a file, lint that file.
+- Before opening a PR that touches `apps/web` or `apps/api`, run `pnpm lint` from the affected workspace and confirm a clean exit. If you add a file, lint that file.
 - Don't introduce unused imports, unused locals, or unused parameters. If a parameter is required by a signature you don't control (route handlers, callback shapes), prefix it with `_` — `eslint.config.mjs` ignores leading-underscore identifiers project-wide.
 - Don't suppress with `eslint-disable` unless the suppression is *behaviour-correct* (e.g. SSE effect that depends on `application?.status` not the whole `application` to avoid stream thrash). Always add a comment on the line above the disable explaining why the rule's auto-fix would break behaviour.
 - If you introduce a deliberately-unused identifier (e.g. a destructured prop kept for API compat), prefix with `_` rather than disabling the rule.
@@ -113,7 +113,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - Bypassing `@Sanitize()`, DTO whitelist, or JWT guards without explicit justification in the PR description
 - Catch-and-ignore error handling (`try { ... } catch {}`)
 - Lockfile changes without the matching `package.json` change in the same PR (or vice versa)
-- Adding to `node_modules/` directly, or hand-editing `package-lock.json`
+- Adding to `node_modules/` directly, or hand-editing `pnpm-lock.yaml`
 - Pasting real secrets in PR descriptions, issue comments, or chat
 - Shipping new code that introduces ESLint errors *or* warnings (see Lint policy)
 - `form.watch(...)` inside a component body — use `useWatch({ control, name })`
@@ -126,7 +126,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 ## Tech Stack
 
 ### Monorepo
-- **npm workspaces** + **Turborepo 2.8** (`apps/api`, `apps/web`, `packages/shared`)
+- **pnpm workspaces** (`pnpm-workspace.yaml`) + **Turborepo 2.8** (`apps/api`, `apps/web`, `packages/shared`)
 - Node **24** (>= 20.19), TypeScript 5.9 strict
 
 ### Backend (`apps/api`, Port 3000)
@@ -140,14 +140,18 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Auth:** passport-jwt, passport-google-oauth20, passport-microsoft, passport-azure-ad, argon2id, **otplib + qrcode + speakeasy** (TOTP 2FA)
 - **Refresh tokens:** dual-token rotation, device tracking, max 5/user
 - **Sessions:** multi-device, IP/UA, remote logout, cron cleanup
-- **Storage (pluggable via `STORAGE_DRIVER`):** `disk` | `r2` (`@aws-sdk/client-s3`)
-- **Queue (pluggable via `JOBS_DRIVER`):** `in-memory` | `qstash` (`@upstash/qstash`)
+- **Storage (pluggable via `STORAGE_DRIVER`):** `disk` | `r2` (`@aws-sdk/client-s3`). Boot refuses to start when `NODE_ENV=production` and the driver isn't `r2`.
+- **Queue (pluggable via `JOBS_DRIVER`):** `in-memory` | `qstash` (`@upstash/qstash`). Boot refuses to start when `NODE_ENV=production` and the driver isn't `qstash`.
 - **Cache:** Upstash Redis (`@upstash/redis`) + `node-cache`
 - **LLM (pluggable via `LLM_PROVIDER`):** `azure-openai` | `azure-ai-foundry` | `mock`
   - Direct Azure OpenAI HTTP calls (`@nestjs/axios`)
   - Azure AI Foundry agents (`@azure/ai-agents`) for ATS keyword extraction, CV/CL writing
   - **opossum** circuit breaker around LLM calls
-- **PDF:** Puppeteer 24 + Playwright 1.56 + Handlebars + pdf-lib + pdf-parse + mammoth (DOCX); browser instance pool via `generic-pool`
+- **PDF:**
+  - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
+  - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
+  - Resume parsing intake: `pdf-parse` (PDF text) + `mammoth` (DOCX text).
+  - Currently registered TSX designs: `classic-ats`, `harvard-classic`, `elegant-sidebar` (all 5 color variants resolve via single factory + DB `accentColor`). Templates without a registered factory cause `PdfService` to throw — there is no fallback path.
 - **Email:** Resend (`resend`) for transactional mail
 - **Logging:** Pino (request logs) + Winston with daily rotation (audit, 90-day retention)
 - **Monitoring:** Sentry (`@sentry/node` + `@sentry/profiling-node`)
@@ -192,7 +196,8 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `llm` — pluggable providers (`azure-openai` | `azure-ai-foundry` | `mock`) with automatic language detection, opossum circuit breaker
 - `logger` — Pino + Winston audit logger
 - `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification.
-- `pdf` — Puppeteer + Handlebars (50 templates), ATS-optimized; browser pool via `generic-pool`
+- `pdf` — thin façade over `pdf-v2/ReactPdfRendererService`. Kept so external callers (`application.processor.ts`, tests) preserve the `PdfService` API surface. Throws when a template has no react-pdf factory registered.
+- `pdf-v2` — the active PDF subsystem. Owns `ReactPdfRendererService` (TSX → PDF buffer), `PreviewRendererService` (PDF → PNG via `pdfjs-dist` + `@napi-rs/canvas`), the template registry, and the shared template-data types. See [`.github/skills/pdf-react-pdf-template.md`](./skills/pdf-react-pdf-template.md) for the porting recipe. Quick standalone check: `npx ts-node -r tsconfig-paths/register scripts/validate-react-pdf-templates.ts`.
 - `prisma` — PrismaService
 - `profile` — CRUD with **differential updates** (Skills, Experiences, Education, Certificates, Projects, Languages)
 - `resume-parser` — PDF/DOCX → Profile bootstrap (pdf-parse + mammoth)
@@ -402,7 +407,7 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
   1. Load profile + job posting
   2. Render LLM prompts with data
   3. Call Azure OpenAI (or mock provider)
-  4. Generate PDFs with Puppeteer
+  4. Generate PDFs with @react-pdf/renderer
   5. Upload to Azure Blob Storage
   6. Update status to READY
 
@@ -487,7 +492,7 @@ PUT /api/v1/profile
 2. Detect language (DE/EN), select template (lang × design), extract ATS keywords
 3. Render prompt templates (`prompts/cover-letter.md`, `prompts/resume.md`)
 4. Call LLM via provider abstraction wrapped in **opossum** circuit breaker → Markdown/HTML
-5. HTML → PDF via Puppeteer **browser pool** (`generic-pool`); pdf-lib post-processing
+5. TSX → PDF via `@react-pdf/renderer` (no browser, no post-processing)
 6. Upload PDFs via storage provider (Blob/S3/disk); persist keys + signed URLs
 7. Status: `PENDING → GENERATING → READY | FAILED` (pushed to client via **SSE**)
 8. Background work via pluggable queue (`qstash` | `in-memory`)
@@ -575,7 +580,7 @@ PUT /api/v1/profile
 - WebAuthn/passkeys
 
 **Security Roadmap**
-See `MVP_FEATURES.md` for detailed security tasks with priorities and estimates.
+See [docs/guides/PUBLIC_LAUNCH_PLAN.md](../docs/guides/PUBLIC_LAUNCH_PLAN.md) for the active pre-launch checklist.
 
 ## Environment Variables
 
@@ -607,7 +612,7 @@ RATE_LIMIT_AUTH_MAX=5        # Auth endpoints (STRICT)
 ENABLE_CSRF=false
 
 # Storage (pluggable)
-STORAGE_DRIVER=disk          # disk | r2
+STORAGE_DRIVER=disk          # disk | r2 — NODE_ENV=production rejects 'disk'
 
 # Cloudflare R2 (S3-compatible) — required when STORAGE_DRIVER=r2
 # Use an EU-jurisdiction bucket + EU-scoped token for GDPR data residency.
@@ -618,7 +623,7 @@ R2_BUCKET=smart-apply-prod
 R2_ENDPOINT=https://<account-id>.eu.r2.cloudflarestorage.com
 
 # Queue (pluggable)
-JOBS_DRIVER=in-memory      # in-memory | qstash
+JOBS_DRIVER=in-memory      # in-memory | qstash — NODE_ENV=production rejects 'in-memory'
 QSTASH_TOKEN=<upstash-qstash-token>
 QSTASH_CURRENT_SIGNING_KEY=<key>
 QSTASH_NEXT_SIGNING_KEY=<key>
@@ -678,7 +683,9 @@ MS_GRAPH_TENANT=common  # or a specific tenant id
 # MAILBOX_SUBSCRIPTION_RENEWAL_MARGIN_MINUTES=360  # default 6h margin
 
 # PDF Generation
-PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# react-pdf has no env config of its own. PNG previews use pdfjs-dist +
+# @napi-rs/canvas (no Chromium). Note: agent-url.parser.ts (Playwright)
+# still needs CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser in Docker.
 ```
 
 ### Frontend (`apps/web/.env`)
@@ -697,8 +704,11 @@ NEXT_PUBLIC_SENTRY_DSN=<public DSN, leave empty locally>
 
 ### Initial Setup
 ```bash
+# 0. Install pnpm via corepack (one-time, ships with Node 16.13+)
+corepack enable && corepack prepare pnpm@11.1.2 --activate
+
 # 1. Install workspaces
-npm install --legacy-peer-deps
+pnpm install
 
 # 2. Local Postgres (or skip and use a Neon dev branch)
 docker compose -f infra/docker-compose.yml up -d db
@@ -710,40 +720,40 @@ cp apps/web/.env.example apps/web/.env
 # Defaults run fully offline (Docker Postgres, mock LLM, disk storage).
 
 # 4. Migrate + seed
-npm --workspace @smart-apply/api run prisma:migrate
-npm --workspace @smart-apply/api run prisma:seed
-npm --workspace @smart-apply/api run prisma:seed:templates
+pnpm --filter @smart-apply/api prisma:migrate
+pnpm --filter @smart-apply/api prisma:seed
+pnpm --filter @smart-apply/api prisma:seed:templates
 
 # 5. Run both apps in parallel (Turborepo)
-npm run dev
+pnpm dev
 ```
 
 ### Turborepo (root)
 ```bash
-npm run dev              # API + Web in parallel
-npm run build            # Build all workspaces
-npm run lint             # Lint all workspaces
-npm run test             # Test all workspaces
+pnpm dev                 # API + Web in parallel
+pnpm build               # Build all workspaces
+pnpm lint                # Lint all workspaces
+pnpm test                # Test all workspaces
 ```
 
 ### Backend (Terminal 1)
 ```bash
 cd apps/api
-npm run start:dev        # NestJS at http://localhost:3000
-npm run test:e2e         # E2E tests
-npm run prisma:studio    # Prisma Studio GUI
-npm run prisma:migrate   # Run migrations
+pnpm start:dev           # NestJS at http://localhost:3000
+pnpm test:e2e            # E2E tests
+pnpm prisma:studio       # Prisma Studio GUI
+pnpm prisma:migrate      # Run migrations
 ```
 
 ### Frontend (Terminal 2)
 ```bash
 cd apps/web
-npm run dev              # Next.js at http://localhost:3001
-npm run build            # Production build (validates TS)
-npm run lint             # ESLint check
-npm run cf:preview       # Local Cloudflare Workers preview (OpenNext)
-npm run cf:deploy        # Deploy to Cloudflare Workers
-npx shadcn@latest add <component>  # Add shadcn/ui component
+pnpm dev                 # Next.js at http://localhost:3001
+pnpm build               # Production build (validates TS)
+pnpm lint                # ESLint check
+pnpm cf:preview          # Local Cloudflare Workers preview (OpenNext)
+pnpm cf:deploy           # Deploy to Cloudflare Workers
+pnpm dlx shadcn@latest add <component>  # Add shadcn/ui component
 ```
 
 ### Access URLs
@@ -789,9 +799,9 @@ Four workflows, each with a single purpose. **Never propose adding a fifth that 
 ## Tests
 **Backend (apps/api)**
 - E2E: Auth (register, login, me), Profile CRUD, Application pipeline (mock LLM + in-memory providers)
-- Run: `cd apps/api && npm run test:e2e`
+- Run: `cd apps/api && pnpm test:e2e`
 
 **Frontend (apps/web)**
 - ESLint validation (TypeScript strict mode, no `any` types)
 - Production build test (validates all pages compile)
-- Run: `cd apps/web && npm run lint && npm run build`
+- Run: `cd apps/web && pnpm lint && pnpm build`

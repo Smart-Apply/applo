@@ -48,7 +48,7 @@
 | `_acme-challenge.api.…`     | CNAME → `api.smart-apply.io.93ke51y.flydns.net` (DNS-only) | Required for Fly cert renewal behind CF proxy |
 | `_fly-ownership.api.…`      | TXT `app-93ke51y`                                     | Required when traffic is proxied via Cloudflare    |
 
-## 📦 Monorepo Structure (npm Workspaces + Turborepo)
+## 📦 Monorepo Structure (pnpm Workspaces + Turborepo)
 
 ```text
 smart-apply/
@@ -75,7 +75,8 @@ smart-apply/
 │   │   │   ├── llm/               # LLM provider abstraction
 │   │   │   ├── logger/            # Pino + Winston audit
 │   │   │   ├── mailbox-sync/      # Email Tracking (Premium): MS Graph OAuth + classifier
-│   │   │   ├── pdf/               # Puppeteer + Handlebars (50 templates)
+│   │   │   ├── pdf/               # Thin façade over pdf-v2 (kept for caller API stability)
+│   │   │   ├── pdf-v2/            # @react-pdf/renderer (TSX templates) + PNG previews
 │   │   │   ├── prisma/            # PrismaService (pg adapter)
 │   │   │   ├── profile/           # Profile CRUD (differential updates)
 │   │   │   ├── resume-parser/     # PDF/DOCX → Profile bootstrap
@@ -145,11 +146,15 @@ User → Frontend (Next.js)
         │
         ▼
 ┌──────────────────────────────────────┐
-│ PDF Service (Puppeteer pool)         │
-│ 1. Render Handlebars template        │
-│ 2. Generate ATS-optimized PDFs       │
-│ 3. Apply pdf-lib post-processing     │
-└──────────────────────────────────────┘
+│ PDF Service (@react-pdf/renderer)    │
+│ 1. Resolve template via              │
+│    pdf-v2/template-registry.ts       │
+│ 2. Render TSX → PDF buffer           │
+│ Throws if no react-pdf factory is    │
+│ registered for the template (no      │
+│ fallback path — puppeteer removed    │
+│ in v1.16).                           │
+└───────────────────────────────────────┘
         │
         ▼
 ┌──────────────────────────────────────┐
@@ -240,12 +245,12 @@ User 1:1 Subscription
 | Cache       | Upstash Redis · node-cache                           |
 | Storage     | Cloudflare R2 (S3-compatible) · local disk           |
 | LLM         | Azure AI Foundry · Azure OpenAI · mock               |
-| PDF         | Puppeteer 24 + Playwright · Handlebars · pdf-lib · pdf-parse · mammoth (DOCX) |
+| PDF         | `@react-pdf/renderer` 4.5 (TSX templates) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake) |
 | Email       | Resend                                               |
 | Logging     | Pino (req logs) + Winston (audit, daily rotation)    |
 | Monitoring  | Sentry (`@sentry/node` + profiling)                  |
 | Validation  | class-validator · Zod · sanitize-html                |
-| Resilience  | opossum (circuit breaker) · generic-pool (browser pool) |
+| Resilience  | opossum (circuit breaker) |
 | Scheduling  | `@nestjs/schedule` (cron jobs)                       |
 | Health      | `@nestjs/terminus`                                   |
 
@@ -335,9 +340,9 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 ### Development
 
 ```bash
-npm run dev          # API + Web in parallel (Turborepo)
-npm run api:dev      # NestJS on :3000
-npm run web:dev      # Next.js on :3001
+pnpm dev          # API + Web in parallel (Turborepo)
+pnpm api:dev      # NestJS on :3000
+pnpm web:dev      # Next.js on :3001
 ```
 
 ### Production
@@ -404,7 +409,7 @@ GitHub Actions
 | Feature             | Implementation                              |
 | ------------------- | ------------------------------------------- |
 | **Template cache**  | In-memory cache (TTL)                       |
-| **Browser pool**    | Puppeteer instance pool (`generic-pool`)    |
+| **Browser pool**    | (removed in v1.16 — react-pdf has no browser dependency) |
 | **Circuit breaker** | `opossum` around LLM calls                  |
 | **DB indexes**      | Targeted indexes; cursor-based pagination   |
 | **Compression**     | gzip middleware                             |

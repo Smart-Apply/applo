@@ -181,25 +181,9 @@ export class ConfigService {
   }
 
   // PDF
-  get puppeteerExecutablePath(): string | undefined {
-    return this.nestConfig.get('PUPPETEER_EXECUTABLE_PATH', { infer: true });
-  }
-
-  get puppeteerMaxBrowsers(): number {
-    return parseInt(this.nestConfig.get('PUPPETEER_MAX_BROWSERS', { infer: true }), 10);
-  }
-
-  get puppeteerMinBrowsers(): number {
-    return parseInt(this.nestConfig.get('PUPPETEER_MIN_BROWSERS', { infer: true }), 10);
-  }
-
-  get puppeteerIdleTimeoutMs(): number {
-    return parseInt(this.nestConfig.get('PUPPETEER_IDLE_TIMEOUT_MS', { infer: true }), 10);
-  }
-
-  get puppeteerEvictionIntervalMs(): number {
-    return parseInt(this.nestConfig.get('PUPPETEER_EVICTION_INTERVAL_MS', { infer: true }), 10);
-  }
+  // (No tuning surface — react-pdf renders synchronously on the request thread
+  // and pdf-v2/preview-renderer.service.ts loads pdfjs-dist + @napi-rs/canvas
+  // lazily on first preview request.)
 
   // OAuth
   get azureAdClientId(): string | undefined {

@@ -65,13 +65,13 @@ jobs:
               - 'fly.prod.toml'
               - 'fly.staging.toml'
               - 'package.json'
-              - 'package-lock.json'
+              - 'pnpm-lock.yaml'
               - '.github/workflows/deploy-staging.yml'
             web:
               - 'apps/web/**'
               - 'packages/shared/**'
               - 'package.json'
-              - 'package-lock.json'
+              - 'pnpm-lock.yaml'
               - '.github/workflows/deploy-staging.yml'
 
   # ─────────────────────────────────────────────────────────────────────
@@ -147,16 +147,28 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.1.2
+          # standalone bundles a self-contained pnpm exec with its own Node.
+          # Required because pnpm 11 needs Node >=22.13 but the ubuntu-latest
+          # runner default is Node 20.x at the moment we invoke this action.
+          standalone: true
+
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
-          cache: 'npm'
+          # Node 24 to match the API workflow + satisfy pnpm 11's >=22.13
+          # requirement. The Cloudflare Workers RUNTIME version is set in
+          # apps/web/wrangler.jsonc via compatibility_date and is independent
+          # of the host Node used to build the bundle.
+          node-version: '24'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci --workspace=apps/web --workspace=packages/shared --include=dev --legacy-peer-deps
+        run: pnpm install --frozen-lockfile --filter @smart-apply/web... --filter @smart-apply/shared...
 
       - name: Build shared package
-        run: npm run shared:build
+        run: pnpm shared:build
 
       - name: Build + deploy Worker (staging)
         working-directory: apps/web
@@ -169,7 +181,7 @@ jobs:
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ vars.SENTRY_DSN_WEB }}
           NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
-        run: npm run cf:deploy:staging
+        run: pnpm --filter @smart-apply/web cf:deploy:staging
 
       - name: Smoke test deployed Worker
         run: |
