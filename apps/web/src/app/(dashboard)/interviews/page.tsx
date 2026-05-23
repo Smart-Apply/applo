@@ -169,7 +169,7 @@ export default function InterviewsPage() {
         </div>
         {isLocked ? (
           <Button asChild className="gap-2">
-            <Link href="/pricing">
+            <Link href="/#pricing">
               <Lock className="h-4 w-4" />
               Premium freischalten
             </Link>
@@ -307,7 +307,7 @@ export default function InterviewsPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/pricing"
+                  href="/#pricing"
                   aria-label="Nur in Premium verfügbar – jetzt upgraden"
                   className="absolute inset-0 z-10 flex cursor-not-allowed items-start justify-center rounded-lg pt-12"
                 >
