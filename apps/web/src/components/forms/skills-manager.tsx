@@ -79,7 +79,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
           Füge deine technischen und fachlichen Kompetenzen hinzu
         </p>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             id="skill-input"
             type="text"
