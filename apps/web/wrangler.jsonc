@@ -14,7 +14,16 @@
   // Static asset directory produced by OpenNext.
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // Route /_next/static/* through the Worker FIRST instead of letting
+    // the asset binding handle (and HTML-fall-through) directly. This
+    // lets our custom OpenNext assetResolver in `open-next.config.ts`
+    // return a real 404 for missing hashed chunks (stale tabs across
+    // deploys) instead of serving the SPA shell HTML, which Chrome then
+    // rejects with a `MIME type 'text/html' is not executable` error.
+    // Worker handles ~50 chunks per page load — adds ~1-3ms overhead per
+    // chunk on first request; cached after that by CF edge cache.
+    "run_worker_first": ["/_next/static/*"]
   },
   // Production env vars set at deploy time via `wrangler secret put` (secrets)
   // or the dashboard (plain vars). NEXT_PUBLIC_* must be inlined at BUILD time
