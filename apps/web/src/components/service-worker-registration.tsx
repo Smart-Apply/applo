@@ -1,6 +1,91 @@
 'use client';
 
 import { useEffect } from 'react';
+import { toast } from '@/lib/toast';
+
+/**
+ * Stable sonner toast id used for both chunk-error and SW-update
+ * triggers. Sharing the id deduplicates: a chunk error followed by an
+ * SW update (or vice-versa) updates the existing toast instead of
+ * stacking a second copy.
+ */
+const UPDATE_TOAST_ID = 'smart-apply-update-available';
+
+/**
+ * Show the user-controlled "new version available" toast.
+ *
+ * Triggered by:
+ *   - `ChunkLoadError` (the user's tab is from a previous build whose
+ *     hashed chunks no longer exist on the Cloudflare Worker)
+ *   - `sw-update-available` event (a new service worker has installed
+ *     in the background)
+ *
+ * Both situations have the same fix from the user's perspective: a
+ * full-document reload that bypasses caches. We intentionally do NOT
+ * trigger this reload silently — the user might be mid-form, mid-paste,
+ * or mid-PDF-preview. Letting them opt in eliminates surprise reloads
+ * and the reload loops PR #491-#493 chased.
+ */
+export function showUpdateAvailableToast(): void {
+  toast(
+    'Neue Version verfügbar',
+    {
+      id: UPDATE_TOAST_ID,
+      description:
+        'Lade die Seite neu, um die aktuelle Version von Smart Apply zu sehen. Deine Eingaben in offenen Formularen gehen dabei verloren.',
+      // Stay until the user acts — surprise auto-reloads cost more than
+      // a visible banner.
+      duration: Infinity,
+      action: {
+        label: 'Jetzt aktualisieren',
+        onClick: () => {
+          void hardReloadWithCacheBust();
+        },
+      },
+    },
+  );
+}
+
+/**
+ * Hard reload that proactively clears caches and the service worker
+ * before navigating. Belt-and-braces against the chunks of stale state
+ * that have bitten us during the closed beta:
+ *
+ *   - Service Worker cache (`caches.delete(name)` for each cache key)
+ *   - Service Worker registration itself (`unregister()`)
+ *   - Browser HTTP cache (cache-busting `?_v=<timestamp>` on the URL)
+ *
+ * Errors during cleanup are swallowed — the reload still proceeds so
+ * the user is never stuck if e.g. `caches` is unavailable in the
+ * runtime (older iOS Safari) or the SW registration call throws.
+ */
+async function hardReloadWithCacheBust(): Promise<void> {
+  try {
+    if (typeof caches !== 'undefined') {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k).catch(() => undefined)));
+    }
+  } catch {
+    // Cache cleanup is best-effort — don't block the reload on it.
+  }
+
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister().catch(() => undefined)));
+    }
+  } catch {
+    // Same: best effort.
+  }
+
+  // `location.replace` (not `assign`) keeps the user out of back-button
+  // history pointing at the stale URL. The `?_v=<ts>` query bypasses
+  // any aggressive HTML cache; the Worker ignores unknown query params
+  // for HTML routes so this is safe.
+  const url = new URL(window.location.href);
+  url.searchParams.set('_v', String(Date.now()));
+  window.location.replace(url.toString());
+}
 
 /**
  * Service Worker Registration Component
@@ -14,6 +99,7 @@ export function ServiceWorkerRegistration() {
     if (process.env.NODE_ENV === 'production') {
       registerServiceWorker();
       installChunkErrorRecovery();
+      installUpdateAvailableListener();
     } else {
       // Dev: aggressively kill any stale SW + caches left behind by a
       // previous `next build` / Cloudflare deploy on the same origin.
@@ -25,6 +111,17 @@ export function ServiceWorkerRegistration() {
   }, []);
 
   return null;
+}
+
+/**
+ * Hook the `sw-update-available` event (dispatched by
+ * `registerServiceWorker` below when a new SW installs in the
+ * background) to the same toast as chunk errors.
+ */
+function installUpdateAvailableListener(): void {
+  window.addEventListener('sw-update-available', () => {
+    showUpdateAvailableToast();
+  });
 }
 
 async function unregisterAllServiceWorkers() {
@@ -109,27 +206,15 @@ async function registerServiceWorker() {
 }
 
 /**
- * Recover from "stale chunk" errors after a Cloudflare Worker deploy.
+ * Detect "stale chunk" errors (the user's tab is on build N, we shipped
+ * build N+1, the hashed chunks the old code wants no longer exist on
+ * the Cloudflare Worker) and surface a user-controlled update prompt.
  *
- * The scenario:
- *   1. User loads `smart-apply.io/dashboard` — React app is now in memory
- *      with references to chunk hashes from build N.
- *   2. We deploy build N+1. Chunk hashes change; the old hashes are gone
- *      from the Worker.
- *   3. User clicks something that triggers a code-split lazy load.
- *      Webpack tries to fetch `/_next/static/chunks/<old-hash>.js`.
- *   4. The Worker can't find it, falls back to the SPA HTML, which the
- *      browser refuses to execute as a script (MIME error). React then
- *      surfaces a `ChunkLoadError`.
- *
- * Fix: detect that error and force a full page reload so the browser
- * re-fetches `index.html` and gets the fresh chunk hashes. We guard
- * against reload loops via sessionStorage — if a reload itself triggers
- * the same error, we surrender and let the user see it.
+ * We DO NOT auto-reload here — see the long comment above
+ * `showUpdateAvailableToast`. The toast lets the user opt in at a moment
+ * they choose, preserving any in-progress form input.
  */
 function installChunkErrorRecovery(): void {
-  const RELOAD_FLAG = '__smart_apply_chunk_reload__';
-
   const isChunkLoadError = (reason: unknown): boolean => {
     if (!reason) return false;
     // Webpack emits ChunkLoadError; Next.js wraps with name "ChunkLoadError".
@@ -144,37 +229,17 @@ function installChunkErrorRecovery(): void {
     );
   };
 
-  const tryReload = (): void => {
-    // One reload max — sessionStorage survives the reload itself, so a
-    // second chunk error on the fresh page short-circuits and lets the
-    // user/Sentry see the real failure instead of an infinite loop.
-    if (sessionStorage.getItem(RELOAD_FLAG) === '1') {
-      console.error(
-        '[PWA] Chunk load error after reload — giving up to avoid loop.',
-      );
-      return;
-    }
-    sessionStorage.setItem(RELOAD_FLAG, '1');
-    console.warn('[PWA] Chunk load error detected — reloading to pick up new build.');
-    window.location.reload();
-  };
-
-  // Clear the loop guard once we've successfully run for ~10s without
-  // another chunk failure. Means a future deploy this session can also
-  // self-heal.
-  setTimeout(() => sessionStorage.removeItem(RELOAD_FLAG), 10_000);
-
   window.addEventListener('error', (event) => {
     if (isChunkLoadError(event.error ?? event)) {
       event.preventDefault();
-      tryReload();
+      showUpdateAvailableToast();
     }
   });
 
   window.addEventListener('unhandledrejection', (event) => {
     if (isChunkLoadError(event.reason)) {
       event.preventDefault();
-      tryReload();
+      showUpdateAvailableToast();
     }
   });
 }

@@ -89,8 +89,10 @@ const betaFaqs: FaqItem[] = [
             ausfüllen
           </li>
           <li>
-            Nach einem neuen Release musst du die Seite einmal mit
-            Cmd-Shift-R neu laden
+            Wenn eine neue Version live geht und du gerade ein
+            Formular ausfüllst, erscheint oben rechts ein Hinweis
+            „Neue Version verfügbar“ — klick auf „Jetzt aktualisieren“,
+            sobald du fertig bist.
           </li>
         </ul>
       </>
@@ -262,7 +264,7 @@ const faqsForJsonLd: { q: string; a: string }[] = [
   },
   {
     q: "Was kann in der Beta noch schiefgehen?",
-    a: "Bekannte Stolperstellen: Stellen-URLs brauchen vereinzelt einen zweiten Versuch, PDF-Vorschau ist auf älteren iPhones langsam, Lebenslauf-Upload trifft exotische Layouts nicht perfekt. Nach Releases einmal Cmd-Shift-R neu laden.",
+    a: "Bekannte Stolperstellen: Stellen-URLs brauchen vereinzelt einen zweiten Versuch, PDF-Vorschau ist auf älteren iPhones langsam, Lebenslauf-Upload trifft exotische Layouts nicht perfekt. Wenn eine neue Version live geht, siehst du oben rechts einen „Neue Version verfügbar“ Hinweis — klick auf „Jetzt aktualisieren“, wenn dir passt.",
   },
   {
     q: "Wie melde ich Fehler oder Feedback während der Beta?",
