@@ -82,14 +82,25 @@ async function registerServiceWorker() {
       }
     });
 
-    // Handle controller changes (new service worker took over)
-    let refreshing = false;
+    // Handle controller changes (new service worker took over).
+    //
+    // We DELIBERATELY DON'T force `window.location.reload()` here.
+    // Forcing a reload the moment a new SW activates compounded badly
+    // with the chunk-error-recovery flow during the beta:
+    //   1. A user mid-session lazy-loads a stale chunk → 404 →
+    //      `installChunkErrorRecovery` reloads once (sessionStorage flag)
+    //   2. The fresh page registers the new SW → `controllerchange`
+    //      fires → another forced reload, bypassing the sessionStorage
+    //      flag, sometimes mid-render
+    //   3. User sees the page flash-reload 2-3 times back-to-back
+    //
+    // The custom `sw-update-available` event is still dispatched above,
+    // so a future "Update available — click to refresh" toast can hook
+    // into it. For now, the new SW silently takes effect on the next
+    // natural navigation, which is the standard PWA pattern.
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) {
-        refreshing = true;
-        console.log('[PWA] New service worker activated, reloading...');
-        window.location.reload();
-      }
+       
+      console.log('[PWA] New service worker activated. Update applies on next navigation.');
     });
 
   } catch (error) {

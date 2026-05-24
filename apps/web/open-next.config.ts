@@ -88,15 +88,31 @@ const staticChunk404Resolver: AssetResolver = {
 
     // The actual fix: 404 instead of `undefined` so OpenNext returns
     // a real 404 to the browser rather than rendering the SPA shell.
+    //
+    // Critically: Chrome's strict-MIME mode rejects ANY response to a
+    // <script>/<link rel=stylesheet> request whose `Content-Type` isn't
+    // executable/stylesheet — including an empty MIME like `''`. Without
+    // the explicit `text/plain` header, the browser would still log the
+    // same `MIME type ('') is not executable` error and Next's
+    // chunk-error-handler would treat it as a failure-to-load rather than
+    // an honest 404, so reload-and-recover wouldn't work. With the
+    // header, the browser surfaces a proper 404 to the chunk loader and
+    // the recovery reload fires exactly once.
     if (response.status === 404) {
       await response.body?.cancel();
       return {
         type: 'core',
         statusCode: 404,
-        headers: { 'cache-control': 'no-store' },
-        // OpenNext's InternalResult requires a ReadableStream — return
-        // an empty closed one for both GET and HEAD.
-        body: new ReadableStream({ start: (c) => c.close() }),
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          'cache-control': 'no-store',
+        },
+        body: new ReadableStream({
+          start: (c) => {
+            c.enqueue(new TextEncoder().encode('Not Found'));
+            c.close();
+          },
+        }),
         isBase64Encoded: false,
       };
     }
