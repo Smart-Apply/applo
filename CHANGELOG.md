@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.5](https://github.com/Smart-Apply/smart-apply/compare/v3.4.4...v3.4.5) (2026-05-24)
+
+
+### Bug Fixes
+
+* **web:** replace silent chunk-reload with user-controlled update toast ([#495](https://github.com/Smart-Apply/smart-apply/issues/495)) ([831962d](https://github.com/Smart-Apply/smart-apply/commit/831962d55022a66550a74f946b0012e9878af282))
+
 ## [3.4.4](https://github.com/Smart-Apply/smart-apply/compare/v3.4.3...v3.4.4) (2026-05-24)
 
 
