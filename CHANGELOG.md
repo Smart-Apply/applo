@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.0](https://github.com/Smart-Apply/smart-apply/compare/v3.3.0...v3.4.0) (2026-05-24)
+
+
+### Features
+
+* **web:** add closed-beta FAQ section to /faq ([#486](https://github.com/Smart-Apply/smart-apply/issues/486)) ([e26f642](https://github.com/Smart-Apply/smart-apply/commit/e26f64263d04f70b7aa5cc2f2de5bbde2d5ddc20))
+
+
+### Bug Fixes
+
+* **gitignore:** add invite-codes-*.json to ignore list ([#484](https://github.com/Smart-Apply/smart-apply/issues/484)) ([98e5580](https://github.com/Smart-Apply/smart-apply/commit/98e5580fd1fb5fc000d84f402805188b1e89f780))
+
 ## [3.3.0](https://github.com/Smart-Apply/smart-apply/compare/v3.2.0...v3.3.0) (2026-05-23)
 
 
