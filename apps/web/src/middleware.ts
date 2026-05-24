@@ -64,6 +64,16 @@ export function middleware(_request: NextRequest) {
   // floods the console — purely a noise issue, but worth fixing.
   const cloudflareInsightsOrigin = 'https://static.cloudflareinsights.com';
 
+  // Sentry ingest endpoints. DSNs have the shape
+  // `https://<key>@<org>.ingest.<region>.sentry.io/<project>` where
+  // `<region>` is missing for US-region orgs and `de` for EU-region
+  // orgs. We allow both so the frontend SDK from PR #480 can actually
+  // transmit events — otherwise CSP silently drops every error report
+  // and Sentry stays empty no matter what crashes in the browser.
+  // Wildcards on the leftmost label match the org-specific subdomain.
+  const sentryIngestOrigins =
+    'https://*.ingest.sentry.io https://*.ingest.de.sentry.io';
+
   // Set CSP header dynamically based on runtime environment
   // Note: 'unsafe-eval' is required for Handlebars template compilation in the browser
   // This is needed for the template preview feature which renders Handlebars templates client-side
@@ -73,7 +83,7 @@ export function middleware(_request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: https: ${apiOriginList}`,
     "font-src 'self' data:",
-    `connect-src ${connectSrc} ${turnstileOrigin} ${cloudflareInsightsOrigin}`,
+    `connect-src ${connectSrc} ${turnstileOrigin} ${cloudflareInsightsOrigin} ${sentryIngestOrigins}`,
     `frame-src ${turnstileOrigin}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",

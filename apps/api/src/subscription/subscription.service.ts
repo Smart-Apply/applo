@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '../config/config.service';
 import { SubscriptionTier, SubscriptionStatus } from '../generated/prisma/client';
 import type { SubscriptionUsage } from '../generated/prisma/client';
 
@@ -176,11 +177,20 @@ export interface CanPerformActionResult {
 export class SubscriptionService {
   private readonly logger = new Logger(SubscriptionService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
-   * Get or create subscription for a user
-   * Automatically creates FREE tier if no subscription exists
+   * Get or create subscription for a user.
+   *
+   * Default tier is FREE. While the closed-beta gate is on
+   * (`REQUIRE_INVITE_CODES=true`), new signups instead get PREMIUM so
+   * invitees can exercise the full product — matches the promise in
+   * the beta FAQ that all features are free during the closed beta.
+   * Once the gate flips off (open launch), new signups start FREE
+   * again, and existing beta users keep their PREMIUM row.
    */
   async getOrCreateSubscription(userId: string) {
     let subscription = await this.prisma.subscription.findUnique({
@@ -189,14 +199,17 @@ export class SubscriptionService {
     });
 
     if (!subscription) {
-      // Create default FREE subscription with usage tracking
       const now = new Date();
       const periodEnd = this.getNextPeriodEnd(now);
+      const grantBetaPremium = this.configService.requireInviteCodes;
+      const initialTier = grantBetaPremium
+        ? SubscriptionTier.PREMIUM
+        : SubscriptionTier.FREE;
 
       subscription = await this.prisma.subscription.create({
         data: {
           userId,
-          tier: SubscriptionTier.FREE,
+          tier: initialTier,
           status: SubscriptionStatus.ACTIVE,
           usage: {
             create: {
@@ -210,7 +223,10 @@ export class SubscriptionService {
         include: { usage: true },
       });
 
-      this.logger.log(`Created FREE subscription for user ${userId}`);
+      this.logger.log(
+        `Created ${initialTier} subscription for user ${userId}` +
+          (grantBetaPremium ? ' (closed-beta auto-grant)' : ''),
+      );
     }
 
     return subscription;
