@@ -124,7 +124,7 @@ export function LanguagesManager({
           Füge deine Sprachkenntnisse hinzu
         </p>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             id="language-input"
             type="text"
@@ -140,7 +140,7 @@ export function LanguagesManager({
             onValueChange={setLanguageLevel}
             disabled={disabled}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Niveau" />
             </SelectTrigger>
             <SelectContent>

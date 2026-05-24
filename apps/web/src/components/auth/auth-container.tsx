@@ -308,10 +308,15 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-      <div className="relative h-[800px] w-[1040px] overflow-hidden rounded-xl bg-card shadow-lg border border-border">
-        {/* Sliding Branding Panel */}
+      {/* Container: full-width on mobile so the form actually fits a 360px
+          viewport; locks to the original 1040x800 design on md+ desktop
+          where the sliding-panel animation works. */}
+      <div className="relative min-h-[640px] w-full max-w-[1040px] overflow-hidden rounded-xl bg-card shadow-lg border border-border md:h-[800px]">
+        {/* Sliding Branding Panel — desktop only. Hidden below md: because
+            it consumed half the screen width and squashed the form on
+            iPhone-sized viewports (visible in the wave-2 E2E screenshots). */}
         <div
-          className={`absolute top-0 z-20 h-full w-1/2 transform transition-transform duration-500 ease-in-out ${isLogin ? 'translate-x-0' : 'translate-x-full'
+          className={`absolute top-0 z-20 hidden h-full w-1/2 transform transition-transform duration-500 ease-in-out md:block ${isLogin ? 'translate-x-0' : 'translate-x-full'
             }`}
         >
           <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-primary p-12">
@@ -395,7 +400,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
         <div className="flex h-full w-full">
           {/* Login Form (Right Side when active) */}
           <div
-            className={`absolute right-0 top-0 flex h-full w-1/2 flex-col justify-center px-8 py-12 transition-opacity duration-300 md:px-12 ${isLogin && !isAnimating ? 'z-10 opacity-100' : 'z-0 opacity-0'
+            className={`absolute right-0 top-0 flex h-full w-full flex-col justify-center px-6 py-12 transition-opacity duration-300 md:w-1/2 md:px-12 ${isLogin && !isAnimating ? 'z-10 opacity-100' : 'z-0 opacity-0'
               }`}
           >
             <h1 className="mb-8 text-center font-poppins text-2xl font-semibold text-foreground">
@@ -514,7 +519,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
           {/* Register Form (Left Side when active) */}
           <div
-            className={`absolute left-0 top-0 flex h-full w-1/2 flex-col justify-center px-8 py-12 transition-opacity duration-300 md:px-12 ${!isLogin && !isAnimating ? 'z-10 opacity-100' : 'z-0 opacity-0'
+            className={`absolute left-0 top-0 flex h-full w-full flex-col justify-center px-6 py-12 transition-opacity duration-300 md:w-1/2 md:px-12 ${!isLogin && !isAnimating ? 'z-10 opacity-100' : 'z-0 opacity-0'
               }`}
           >
             <h1 className="mb-6 text-center font-poppins text-2xl font-semibold text-foreground">
