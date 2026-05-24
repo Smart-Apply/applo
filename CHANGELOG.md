@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.3](https://github.com/Smart-Apply/smart-apply/compare/v3.4.2...v3.4.3) (2026-05-24)
+
+
+### Bug Fixes
+
+* **web:** return real 404 for missing /_next/static/* chunks ([#491](https://github.com/Smart-Apply/smart-apply/issues/491)) ([a95fdf4](https://github.com/Smart-Apply/smart-apply/commit/a95fdf4d6d1d7e81d6422b617df7a31e0ffeb627))
+
 ## [3.4.2](https://github.com/Smart-Apply/smart-apply/compare/v3.4.1...v3.4.2) (2026-05-24)
 
 
