@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.2](https://github.com/Smart-Apply/smart-apply/compare/v3.4.1...v3.4.2) (2026-05-24)
+
+
+### Bug Fixes
+
+* **web:** three mobile UI bugs from Wave 2 E2E pass ([#489](https://github.com/Smart-Apply/smart-apply/issues/489)) ([f4be445](https://github.com/Smart-Apply/smart-apply/commit/f4be44513082ebf760ff0c92bebd2847a78512eb))
+
 ## [3.4.1](https://github.com/Smart-Apply/smart-apply/compare/v3.4.0...v3.4.1) (2026-05-24)
 
 
