@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "FAQ – Smart Apply",
   description:
-    "Häufig gestellte Fragen zu Smart Apply: Bewerbungen, Lebenslauf, Anschreiben, Datenschutz und Preise.",
+    "Häufig gestellte Fragen zu Smart Apply: geschlossene Beta, Einladungscodes, Bewerbungen, Lebenslauf, Anschreiben, Datenschutz und Preise.",
   robots: { index: true, follow: true },
 };
 
@@ -17,11 +17,116 @@ interface FaqItem {
  * Public FAQ page. Rendered as a static, SEO-friendly server component
  * with `<details>`-based accordions so it works fully without JavaScript.
  *
- * To add or edit questions: just append to the `faqs` array below. The
- * JSON-LD block at the bottom keeps the structured data in sync
- * automatically (text content only — no markup) so Google can show
- * rich-result FAQ snippets in search.
+ * Two sections:
+ *   - Beta FAQs answer the most-likely questions from closed-beta
+ *     invitees ("how does the invite code work", "why is <feature>
+ *     flaky", "will I lose my data when the beta ends"). When the
+ *     gate flips off (REQUIRE_INVITE_CODES=false), delete the
+ *     `betaFaqs` array + the corresponding JSON-LD block + the
+ *     `<BetaNotice />` block below. No other changes needed.
+ *   - General FAQs are the long-lived product questions.
+ *
+ * To add or edit questions: just append to the relevant array. The
+ * JSON-LD block at the bottom is built from both lists so Google can
+ * show rich-result FAQ snippets in search.
  */
+const betaFaqs: FaqItem[] = [
+  {
+    q: "Wie funktioniert der Einladungscode?",
+    a: (
+      <>
+        Während der geschlossenen Beta ist die Registrierung nur mit einem
+        persönlichen Einladungscode möglich (Format{" "}
+        <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm">
+          BETA-XXXX-XXXX-XXXX
+        </code>
+        ). Den Code hast du per E-Mail bekommen — trage ihn unten auf der
+        Registrierungsseite ein. Jeder Code lässt sich nur einmal
+        einlösen.
+      </>
+    ),
+  },
+  {
+    q: "Kann ich mich mit Google oder Microsoft anmelden?",
+    a: (
+      <>
+        Während der Beta noch nicht: „Mit Google anmelden“ funktioniert nur
+        für Konten, die bereits per E-Mail registriert sind. Lege also
+        zuerst dein Konto mit Einladungscode + E-Mail an — danach kannst du
+        in den Einstellungen Google oder Microsoft mit deinem Konto
+        verknüpfen und dich damit anmelden.
+      </>
+    ),
+  },
+  {
+    q: "Was kostet Smart Apply während der Beta?",
+    a: (
+      <>
+        Für alle Beta-Tester ist Smart Apply kostenlos — inklusive aller
+        Pro- und Premium-Features (Auto-Apply, E-Mail-Tracking,
+        Interview-Coach, unbegrenzte Bewerbungen). Wenn du in der Beta
+        aktiv mitgetestet hast, behältst du Premium auch nach dem offenen
+        Launch ein Stück weit kostenlos — wir geben rechtzeitig Bescheid,
+        wenn sich daran etwas ändert.
+      </>
+    ),
+  },
+  {
+    q: "Was kann (noch) schiefgehen?",
+    a: (
+      <>
+        Smart Apply ist eine frühe Version. Erwartbare Stolperstellen:
+        <ul className="mt-2 list-inside list-disc space-y-1">
+          <li>
+            Vereinzelt brauchen Stellenanzeigen-URLs einen zweiten Versuch
+          </li>
+          <li>
+            Die PDF-Vorschau lädt auf älteren iPhones manchmal langsam
+          </li>
+          <li>
+            Lebenslauf-Upload (PDF/DOCX) klappt bei sehr exotischen
+            Layouts nicht perfekt — dann am besten die Felder manuell
+            ausfüllen
+          </li>
+          <li>
+            Nach einem neuen Release musst du die Seite einmal mit
+            Cmd-Shift-R neu laden
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    q: "Wie melde ich Fehler oder Feedback?",
+    a: (
+      <>
+        Schreib uns an{" "}
+        <a href="mailto:support@smart-apply.io" className="underline">
+          support@smart-apply.io
+        </a>
+        . Für Beta-Tester antworten wir in der Regel innerhalb weniger
+        Stunden. Hilfreich sind: Browser + Gerät, was du gemacht hast und
+        was passiert ist (gern auch ein Screenshot). Frontend-Fehler
+        landen automatisch in unserem Monitoring — du brauchst keine
+        Konsolen-Logs zu kopieren.
+      </>
+    ),
+  },
+  {
+    q: "Was passiert mit meinen Daten, wenn die Beta endet?",
+    a: (
+      <>
+        Nichts — dein Konto und alle erstellten Bewerbungen bleiben
+        erhalten und gehen 1-zu-1 in den offenen Launch über. Wir setzen
+        die Datenbank nicht zurück. Wenn du dein Konto vorher löschen
+        möchtest, geht das jederzeit unter Einstellungen → Konto löschen,
+        und vorher kannst du alles als JSON exportieren (Einstellungen →
+        Daten exportieren).
+      </>
+    ),
+  },
+];
+
 const faqs: FaqItem[] = [
   {
     q: "Was macht Smart Apply genau?",
@@ -142,6 +247,32 @@ const faqs: FaqItem[] = [
  * to a static plain-text version below.
  */
 const faqsForJsonLd: { q: string; a: string }[] = [
+  // Beta block — delete this block when REQUIRE_INVITE_CODES flips off.
+  {
+    q: "Wie funktioniert der Einladungscode?",
+    a: "Während der geschlossenen Beta ist die Registrierung nur mit persönlichem Einladungscode (Format BETA-XXXX-XXXX-XXXX) möglich. Du hast den Code per E-Mail erhalten; trage ihn auf der Registrierungsseite ein. Jeder Code ist nur einmal einlösbar.",
+  },
+  {
+    q: "Kann ich mich mit Google oder Microsoft anmelden?",
+    a: "Während der Beta nur für bereits per E-Mail registrierte Konten. Erstelle dein Konto zuerst mit Einladungscode + E-Mail, danach kannst du Google oder Microsoft in den Einstellungen verknüpfen.",
+  },
+  {
+    q: "Was kostet Smart Apply während der Beta?",
+    a: "Für alle Beta-Tester ist Smart Apply komplett kostenlos — alle Pro- und Premium-Features inklusive. Aktive Beta-Tester behalten auch nach dem offenen Launch Premium ein Stück weit kostenlos.",
+  },
+  {
+    q: "Was kann in der Beta noch schiefgehen?",
+    a: "Bekannte Stolperstellen: Stellen-URLs brauchen vereinzelt einen zweiten Versuch, PDF-Vorschau ist auf älteren iPhones langsam, Lebenslauf-Upload trifft exotische Layouts nicht perfekt. Nach Releases einmal Cmd-Shift-R neu laden.",
+  },
+  {
+    q: "Wie melde ich Fehler oder Feedback während der Beta?",
+    a: "Per E-Mail an support@smart-apply.io. Antwort meist innerhalb weniger Stunden. Frontend-Fehler landen automatisch in unserem Monitoring — keine Konsolen-Logs nötig.",
+  },
+  {
+    q: "Was passiert mit meinen Daten, wenn die Beta endet?",
+    a: "Nichts — dein Konto und alle Bewerbungen bleiben erhalten und gehen direkt in den offenen Launch über. Du kannst jederzeit unter Einstellungen Daten exportieren oder dein Konto löschen.",
+  },
+  // End beta block.
   {
     q: "Was macht Smart Apply genau?",
     a: "Smart Apply erstellt aus deinem Profil und einer Stellenanzeige in wenigen Sekunden ein passendes Anschreiben und einen optimierten Lebenslauf als PDF — individuell auf die jeweilige Stelle zugeschnitten.",
@@ -199,25 +330,72 @@ export default function FaqPage() {
         .
       </p>
 
-      <div className="mt-6 space-y-3">
-        {faqs.map(({ q, a }) => (
-          <details
-            key={q}
-            className="group rounded-lg border border-gray-200 bg-white p-4 open:shadow-sm"
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between font-poppins text-base font-semibold text-[#1B2A49] [&::-webkit-details-marker]:hidden">
-              <span>{q}</span>
-              <span
-                className="ml-4 select-none text-xl text-gray-400 transition-transform group-open:rotate-45"
-                aria-hidden="true"
-              >
-                +
-              </span>
-            </summary>
-            <div className="mt-3 text-gray-700 leading-relaxed">{a}</div>
-          </details>
-        ))}
-      </div>
+      {/* Beta notice — visually highlights that we're in closed beta and
+          frames the next section. When REQUIRE_INVITE_CODES flips off,
+          delete this <aside> + the betaFaqs array + the matching JSON-LD
+          entries above. */}
+      <aside
+        role="note"
+        aria-label="Hinweis zur geschlossenen Beta"
+        className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900"
+      >
+        <strong className="font-semibold">
+          Smart Apply ist gerade in der geschlossenen Beta.
+        </strong>{" "}
+        Die Registrierung erfolgt nur per Einladungscode, alle Features
+        sind während der Beta kostenlos, und du hilfst uns aktiv dabei,
+        Rauheiten zu finden — vielen Dank!
+      </aside>
+
+      <section aria-labelledby="beta-faq-heading" className="mt-8">
+        <h2 id="beta-faq-heading" className="text-xl font-semibold">
+          Während der geschlossenen Beta
+        </h2>
+        <div className="mt-3 space-y-3">
+          {betaFaqs.map(({ q, a }) => (
+            <details
+              key={q}
+              className="group rounded-lg border border-gray-200 bg-white p-4 open:shadow-sm"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between font-poppins text-base font-semibold text-[#1B2A49] [&::-webkit-details-marker]:hidden">
+                <span>{q}</span>
+                <span
+                  className="ml-4 select-none text-xl text-gray-400 transition-transform group-open:rotate-45"
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              </summary>
+              <div className="mt-3 text-gray-700 leading-relaxed">{a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="general-faq-heading" className="mt-10">
+        <h2 id="general-faq-heading" className="text-xl font-semibold">
+          Allgemein
+        </h2>
+        <div className="mt-3 space-y-3">
+          {faqs.map(({ q, a }) => (
+            <details
+              key={q}
+              className="group rounded-lg border border-gray-200 bg-white p-4 open:shadow-sm"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between font-poppins text-base font-semibold text-[#1B2A49] [&::-webkit-details-marker]:hidden">
+                <span>{q}</span>
+                <span
+                  className="ml-4 select-none text-xl text-gray-400 transition-transform group-open:rotate-45"
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              </summary>
+              <div className="mt-3 text-gray-700 leading-relaxed">{a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
 
       {/* Structured data for Google's FAQ rich result */}
       <script
