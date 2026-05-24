@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.4](https://github.com/Smart-Apply/smart-apply/compare/v3.4.3...v3.4.4) (2026-05-24)
+
+
+### Bug Fixes
+
+* **web:** stop chunk-404 reload loop on stale tabs ([#493](https://github.com/Smart-Apply/smart-apply/issues/493)) ([47a1c84](https://github.com/Smart-Apply/smart-apply/commit/47a1c848c20ebc199132ac816ec619c2cebed659))
+
 ## [3.4.3](https://github.com/Smart-Apply/smart-apply/compare/v3.4.2...v3.4.3) (2026-05-24)
 
 
