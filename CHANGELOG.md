@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.0](https://github.com/Smart-Apply/smart-apply/compare/v3.2.0...v3.3.0) (2026-05-23)
+
+
+### Features
+
+* **web:** wire client-side Sentry for closed-beta wave 2 ([#480](https://github.com/Smart-Apply/smart-apply/issues/480)) ([a7dcf41](https://github.com/Smart-Apply/smart-apply/commit/a7dcf41a89cc5a1523cb965e20c514cd65e1dc5f))
+
+
+### Bug Fixes
+
+* **api:** disable Sentry continuous profiling to stop burning quota ([#481](https://github.com/Smart-Apply/smart-apply/issues/481)) ([c7891ee](https://github.com/Smart-Apply/smart-apply/commit/c7891ee033831a21920649bc4ef21cd26f09ea24))
+* **api:** port resume parser to pdf-parse v2 API ([#483](https://github.com/Smart-Apply/smart-apply/issues/483)) ([f1578cb](https://github.com/Smart-Apply/smart-apply/commit/f1578cbab1ecd4c071bc332da2df4ad57542e0db))
+
 ## [3.2.0](https://github.com/Smart-Apply/smart-apply/compare/v3.1.0...v3.2.0) (2026-05-23)
 
 
