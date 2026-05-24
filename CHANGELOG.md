@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.1](https://github.com/Smart-Apply/smart-apply/compare/v3.4.0...v3.4.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* unblock Sentry CSP + grant Premium to beta signups ([#487](https://github.com/Smart-Apply/smart-apply/issues/487)) ([afdc834](https://github.com/Smart-Apply/smart-apply/commit/afdc83416b5a0db0f95f083cdfd136a64be2b8a6))
+
 ## [3.4.0](https://github.com/Smart-Apply/smart-apply/compare/v3.3.0...v3.4.0) (2026-05-24)
 
 
