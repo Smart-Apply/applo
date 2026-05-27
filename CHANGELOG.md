@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.7](https://github.com/Smart-Apply/smart-apply/compare/v3.4.6...v3.4.7) (2026-05-27)
+
+
+### Bug Fixes
+
+* **auth:** soft-fail Turnstile during closed beta ([#508](https://github.com/Smart-Apply/smart-apply/issues/508)) ([f9ff214](https://github.com/Smart-Apply/smart-apply/commit/f9ff214a28c482c9db163959704d9f638ec83b5c))
+
 ## [3.4.6](https://github.com/Smart-Apply/smart-apply/compare/v3.4.5...v3.4.6) (2026-05-27)
 
 
