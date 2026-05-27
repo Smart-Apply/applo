@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.9](https://github.com/Smart-Apply/smart-apply/compare/v3.4.8...v3.4.9) (2026-05-27)
+
+
+### Bug Fixes
+
+* **web:** force one-shot reload of cached clients on SW activate ([#512](https://github.com/Smart-Apply/smart-apply/issues/512)) ([0a9f4ef](https://github.com/Smart-Apply/smart-apply/commit/0a9f4efcd9ce1953949f6e1f927da96be4d41551))
+
 ## [3.4.8](https://github.com/Smart-Apply/smart-apply/compare/v3.4.7...v3.4.8) (2026-05-27)
 
 
