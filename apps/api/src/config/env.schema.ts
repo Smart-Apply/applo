@@ -30,6 +30,13 @@ const envSchema = z.object({
       (val) => !val.includes('change') && !val.includes('REPLACE') && !val.includes('example'),
       'JWT_SECRET cannot contain placeholder text - generate with: openssl rand -base64 64',
     ),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(64, 'JWT_REFRESH_SECRET must be at least 64 characters for security')
+    .refine(
+      (val) => !val.includes('change') && !val.includes('REPLACE') && !val.includes('example'),
+      'JWT_REFRESH_SECRET cannot contain placeholder text - generate with: openssl rand -base64 64',
+    ),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'), // Short-lived access tokens
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'), // Long-lived refresh tokens
   // Legacy support
@@ -279,6 +286,23 @@ const envSchema = z.object({
       message: `JOBS_DRIVER must be 'qstash' when NODE_ENV=production (got '${env.JOBS_DRIVER}'). The 'in-memory' driver drops queued jobs on machine restart.`,
     });
   }
+
+  if (!env.TURNSTILE_SECRET_KEY) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['TURNSTILE_SECRET_KEY'],
+      message:
+        "TURNSTILE_SECRET_KEY is required when NODE_ENV=production to prevent bot signup abuse.",
+    });
+  }
+
+  if (!env.ENABLE_CSRF) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['ENABLE_CSRF'],
+      message: 'ENABLE_CSRF must be true when NODE_ENV=production.',
+    });
+  }
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -290,6 +314,7 @@ export function validateEnv(config: Record<string, unknown>): EnvConfig {
       configKeys: config ? Object.keys(config).length : 0,
       hasDatabase: !!config?.DATABASE_URL,
       hasJwtSecret: !!config?.JWT_SECRET,
+      hasJwtRefreshSecret: !!config?.JWT_REFRESH_SECRET,
     });
   }
 

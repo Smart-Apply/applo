@@ -43,11 +43,18 @@ export class CloudflareTurnstileService {
   async verify(token: string | undefined, remoteIp?: string): Promise<boolean> {
     const secret = this.configService.turnstileSecretKey;
 
-    // Soft-fail if Turnstile isn't configured. We don't want to brick
-    // local dev. Log loudly so production ops sees the gap.
+    // Soft-fail only outside production. In production we fail closed so
+    // bot traffic cannot bypass registration protection by misconfiguration.
     if (!secret) {
+      if (this.configService.isProduction) {
+        this.logger.error(
+          'TURNSTILE_SECRET_KEY missing in production — rejecting captcha verification.',
+        );
+        return false;
+      }
+
       this.logger.warn(
-        'TURNSTILE_SECRET_KEY not configured — captcha verification skipped. Set it in production!',
+        'TURNSTILE_SECRET_KEY not configured — captcha verification skipped outside production.',
       );
       return true;
     }
