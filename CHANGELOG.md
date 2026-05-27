@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.10](https://github.com/Smart-Apply/smart-apply/compare/v3.4.9...v3.4.10) (2026-05-27)
+
+
+### Bug Fixes
+
+* **api:** downgrade ENABLE_CSRF=false-in-prod from boot error to warning ([#514](https://github.com/Smart-Apply/smart-apply/issues/514)) ([c6ed6f4](https://github.com/Smart-Apply/smart-apply/commit/c6ed6f406293037c5379ccfb23c6ad1122a7ef9f))
+
 ## [3.4.9](https://github.com/Smart-Apply/smart-apply/compare/v3.4.8...v3.4.9) (2026-05-27)
 
 
