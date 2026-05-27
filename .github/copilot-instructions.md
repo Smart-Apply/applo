@@ -98,6 +98,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - Don't suppress with `eslint-disable` unless the suppression is *behaviour-correct* (e.g. SSE effect that depends on `application?.status` not the whole `application` to avoid stream thrash). Always add a comment on the line above the disable explaining why the rule's auto-fix would break behaviour.
 - If you introduce a deliberately-unused identifier (e.g. a destructured prop kept for API compat), prefix with `_` rather than disabling the rule.
 - The frontend uses the React Compiler. **Never** call `form.watch(...)` from `react-hook-form` inside a component — use `useWatch({ control, name })` instead. The bare `watch()` returns an unstable function ref and trips `react-hooks/incompatible-library`, which silently disables memoisation for the whole component.
+- **Never** key the CSRF `getSessionIdentifier` (in [apps/api/src/main.ts](apps/api/src/main.ts)) off any value that changes during the auth lifecycle — `access_token` cookie, `refresh_token` cookie, `Authorization` header, user id, etc. The frontend caches the CSRF token in `localStorage` for ~1h ([apps/web/src/lib/csrf.ts](apps/web/src/lib/csrf.ts)), so a varying identifier invalidates every cached token on login/refresh/logout and surfaces as a confusing 403 `EBADCSRFTOKEN` (the German UI maps it to "Die Sicherheitsüberprüfung ist fehlgeschlagen", which looks like a Turnstile/captcha failure). Use a constant string — the double-submit pattern stays secure because the matching `X-CSRF-Token` header still cannot be forged cross-site. Regression history: PR #502 introduced the bug, PR #505 reverted to a stable identifier.
 
 ### Test suite status
 - The existing unit tests (`apps/api/test/unit/**`) are **out of sync with the codebase**. CI marks `unit-tests` as `continue-on-error: true` so failures don't block PRs.
@@ -117,6 +118,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - Pasting real secrets in PR descriptions, issue comments, or chat
 - Shipping new code that introduces ESLint errors *or* warnings (see Lint policy)
 - `form.watch(...)` inside a component body — use `useWatch({ control, name })`
+- Binding `getSessionIdentifier` (CSRF middleware in [apps/api/src/main.ts](apps/api/src/main.ts)) to any auth-lifecycle value (cookies, headers, user id)
 
 ## Non-Goals
 - Rich document editing beyond Tiptap StarterKit
