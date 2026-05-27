@@ -23,7 +23,7 @@ export default function ImpressumPage() {
 
       <h2>Angaben gemäß § 5 DDG</h2>
       <p>
-        Arianit Sheholli
+        A. Sheholli
         <br />
         c/o IP-Management #9916
         <br />
@@ -51,7 +51,7 @@ export default function ImpressumPage() {
 
       <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
       <p>
-        Arianit Sheholli
+        A. Sheholli
         <br />
         Adresse wie oben
       </p>
