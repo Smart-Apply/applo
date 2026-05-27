@@ -54,6 +54,10 @@ export class ConfigService {
     return this.nestConfig.get('JWT_SECRET', { infer: true });
   }
 
+  get jwtRefreshSecret(): string {
+    return this.nestConfig.get('JWT_REFRESH_SECRET', { infer: true });
+  }
+
   get jwtExpiresIn(): string {
     return this.nestConfig.get('JWT_EXPIRES_IN', { infer: true });
   }

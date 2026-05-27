@@ -170,7 +170,23 @@ async function bootstrap() {
       doubleCsrfProtection: csrfMiddleware, // Middleware to validate CSRF tokens
     } = doubleCsrf({
       getSecret: () => configService.jwtSecret, // Use JWT secret for CSRF token generation
-      getSessionIdentifier: (req) => req.headers['authorization'] || '', // Use auth header as session identifier
+      getSessionIdentifier: (req) => {
+        // We authenticate primarily via HttpOnly cookies, not bearer
+        // headers. If we only key off Authorization, most requests end up
+        // with an empty identifier and all CSRF tokens share one bucket.
+        const accessCookie = req.cookies?.access_token;
+        if (typeof accessCookie === 'string' && accessCookie.length > 0) {
+          return accessCookie;
+        }
+
+        const refreshCookie = req.cookies?.refresh_token;
+        if (typeof refreshCookie === 'string' && refreshCookie.length > 0) {
+          return refreshCookie;
+        }
+
+        const authHeader = req.headers['authorization'];
+        return typeof authHeader === 'string' ? authHeader : '';
+      },
       // Use __Host- prefix only in production (requires HTTPS)
       // In development, use simple name (localhost doesn't support __Host- prefix)
       cookieName: configService.isProduction ? '__Host-csrf' : 'csrf',
