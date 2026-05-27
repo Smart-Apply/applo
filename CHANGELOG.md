@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.6](https://github.com/Smart-Apply/smart-apply/compare/v3.4.5...v3.4.6) (2026-05-27)
+
+
+### Bug Fixes
+
+* **security:** use stable CSRF session identifier ([#505](https://github.com/Smart-Apply/smart-apply/issues/505)) ([d544984](https://github.com/Smart-Apply/smart-apply/commit/d54498486a7ed77438ee7c76a56b8a0e44a86838))
+
 ## [3.4.5](https://github.com/Smart-Apply/smart-apply/compare/v3.4.4...v3.4.5) (2026-05-24)
 
 
