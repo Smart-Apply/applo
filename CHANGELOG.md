@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.8](https://github.com/Smart-Apply/smart-apply/compare/v3.4.7...v3.4.8) (2026-05-27)
+
+
+### Bug Fixes
+
+* **web:** ensure CSRF token is fetched before mutating requests ([#510](https://github.com/Smart-Apply/smart-apply/issues/510)) ([0937290](https://github.com/Smart-Apply/smart-apply/commit/0937290f483ebac6e4b374e4d088be84b6b92ae4))
+
 ## [3.4.7](https://github.com/Smart-Apply/smart-apply/compare/v3.4.6...v3.4.7) (2026-05-27)
 
 
