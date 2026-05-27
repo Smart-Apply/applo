@@ -297,11 +297,23 @@ const envSchema = z.object({
   }
 
   if (!env.ENABLE_CSRF) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['ENABLE_CSRF'],
-      message: 'ENABLE_CSRF must be true when NODE_ENV=production.',
-    });
+    // Downgraded from a hard schema error to a runtime warning on
+    // 2026-05-28 during the prod register-403 incident
+    // (docs/incidents/2026-05-27-register-403.md): a hard refusal to
+    // boot meant we couldn't use `flyctl secrets set ENABLE_CSRF=false`
+    // as the documented emergency unblock — the new machine crash-looped
+    // in release. The guardrail's intent is "don't accidentally ship
+    // prod without CSRF", not "make incident response impossible". A
+    // loud warning at boot + the existing log line from main.ts
+    // ("⚠️  CSRF protection disabled") still surfaces the risk; an
+    // operator who runs `flyctl secrets set ENABLE_CSRF=false` has
+    // already made an intentional, audit-logged decision.
+     
+    console.warn(
+      '⚠️  ENABLE_CSRF is not "true" in production — CSRF middleware will be DISABLED. ' +
+        'This should only happen during an authorised incident response. ' +
+        'Re-enable as soon as the incident is resolved.',
+    );
   }
 });
 
