@@ -4,7 +4,18 @@
 // every existing user's browser to drop the previous SW's caches on next
 // visit. Anything not matching the current version below is deleted on
 // activation.
-const CACHE_VERSION = 'v5';
+//
+// v6 (2026-05-28): forced one-shot hard-reload of all controlled clients
+// on activation. Required to unblock the prod register-403 incident
+// (docs/incidents/2026-05-27-register-403.md) — existing tabs were
+// running a pre-#510 bundle whose apiRequest skipped the CSRF header
+// when the in-memory token wasn't yet populated. Bumping the version
+// alone wouldn't help: the activate handler runs in the new SW but the
+// open tabs keep executing the cached JS until the user manually
+// reloads. The SW_FORCE_RELOAD broadcast below + the listener in
+// service-worker-registration.tsx triggers exactly one cache-busting
+// reload per client when the new SW takes over.
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `smart-apply-${CACHE_VERSION}`;
 const STATIC_CACHE_NAME = `smart-apply-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `smart-apply-dynamic-${CACHE_VERSION}`;
@@ -68,6 +79,29 @@ self.addEventListener('activate', (event) => {
   // Take control of all clients immediately so the next request goes
   // through this SW's logic, not the previous version's.
   self.clients.claim();
+
+  // Broadcast a one-shot reload trigger to every controlled client.
+  // The client-side listener (service-worker-registration.tsx) calls
+  // hardReloadWithCacheBust() exactly once per page load when it
+  // receives this message. Without this, an open tab keeps executing
+  // the previously-cached JS bundle even after the new SW activates —
+  // which is exactly the failure mode that produced the prod
+  // register-403 incident.
+  event.waitUntil(
+    (async () => {
+      try {
+        const clients = await self.clients.matchAll({
+          type: 'window',
+          includeUncontrolled: true,
+        });
+        for (const client of clients) {
+          client.postMessage({ type: 'SW_FORCE_RELOAD', version: CACHE_VERSION });
+        }
+      } catch (err) {
+        console.warn('[SW] Failed to broadcast SW_FORCE_RELOAD:', err);
+      }
+    })(),
+  );
 });
 
 // Fetch event - handle network requests
