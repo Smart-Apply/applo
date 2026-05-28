@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.11](https://github.com/Smart-Apply/smart-apply/compare/v3.4.10...v3.4.11) (2026-05-28)
+
+
+### Bug Fixes
+
+* **web:** unwrap TransformInterceptor envelope in fetchCsrfToken ([#516](https://github.com/Smart-Apply/smart-apply/issues/516)) ([f2ff971](https://github.com/Smart-Apply/smart-apply/commit/f2ff971cabc3b4bda1c50728f208733a1612676b))
+
 ## [3.4.10](https://github.com/Smart-Apply/smart-apply/compare/v3.4.9...v3.4.10) (2026-05-27)
 
 
