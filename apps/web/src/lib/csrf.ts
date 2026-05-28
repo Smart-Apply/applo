@@ -88,10 +88,27 @@ export async function fetchCsrfToken(): Promise<void> {
         throw new Error(`Failed to fetch CSRF token: ${response.status}`);
       }
 
-      const data = await response.json();
-      
+      // The API wraps every successful response in { data, meta } via the
+      // global TransformInterceptor (apps/api/src/common/interceptors/
+      // transform.interceptor.ts). Most frontend callers go through
+      // `apiRequest` in api-client.ts which unwraps `.data` for them, but
+      // this file calls `fetch` directly to avoid a circular dependency
+      // with api-client → csrf.ts, so we must unwrap manually here.
+      //
+      // Reading `body.csrfToken` (the pre-interceptor shape) instead of
+      // `body.data.csrfToken` was the actual root cause of the prod
+      // register-403 incident (docs/incidents/2026-05-27-register-403.md):
+      // when CSRF was enabled, csrfToken stayed `undefined`, the
+      // X-CSRF-Token header was never attached, and the backend returned
+      // 403 EBADCSRFTOKEN. When CSRF was disabled, the 'csrf-disabled'
+      // branch never matched for the same reason — harmless because the
+      // backend wasn't validating either way, but a confusing red herring.
+      const body = (await response.json()) as
+        | { data?: { csrfToken?: string }; csrfToken?: string };
+      const tokenFromResponse = body?.data?.csrfToken ?? body?.csrfToken;
+
       // Check if CSRF is disabled on backend
-      if (data.csrfToken === 'csrf-disabled') {
+      if (tokenFromResponse === 'csrf-disabled') {
         csrfToken = null;
         localStorage.removeItem(CSRF_TOKEN_KEY);
         localStorage.removeItem(CSRF_TOKEN_TIMESTAMP_KEY);
@@ -100,9 +117,9 @@ export async function fetchCsrfToken(): Promise<void> {
         }
         return;
       }
-      
-      csrfToken = data.csrfToken;
-      
+
+      csrfToken = tokenFromResponse ?? null;
+
       // Cache in localStorage with timestamp
       if (csrfToken) {
         try {
