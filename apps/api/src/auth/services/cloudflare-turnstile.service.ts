@@ -43,11 +43,43 @@ export class CloudflareTurnstileService {
   async verify(token: string | undefined, remoteIp?: string): Promise<boolean> {
     const secret = this.configService.turnstileSecretKey;
 
-    // Soft-fail if Turnstile isn't configured. We don't want to brick
-    // local dev. Log loudly so production ops sees the gap.
+    // Closed-beta soft-fail: when REQUIRE_INVITE_CODES is on, invite
+    // codes already gate every signup (single-use, admin-issued). A
+    // failing Turnstile widget in a real user's browser (Firefox tracking
+    // protection, iframe sandboxing, network blocks) would lock them
+    // out completely despite holding a valid invite — so we allow the
+    // request through and rely on the invite gate. Once the gate flips
+    // off post-beta, this branch goes away and Turnstile is mandatory.
+    if (this.configService.requireInviteCodes) {
+      if (!secret || !token) {
+        this.logger.warn(
+          'Turnstile soft-pass during closed beta (invite-code gate is the primary bot defence).',
+        );
+        return true;
+      }
+      // Token AND secret present — still attempt verification so we
+      // collect signal, but downgrade failures to a warning + allow.
+      const ok = await this.verifyWithCloudflare(secret, token, remoteIp);
+      if (!ok) {
+        this.logger.warn(
+          'Turnstile verification failed during closed beta — allowing because invite gate is active.',
+        );
+      }
+      return true;
+    }
+
+    // Post-beta strict path: fail closed when secret is missing in
+    // production to prevent misconfiguration from disabling bot defence.
     if (!secret) {
+      if (this.configService.isProduction) {
+        this.logger.error(
+          'TURNSTILE_SECRET_KEY missing in production — rejecting captcha verification.',
+        );
+        return false;
+      }
+
       this.logger.warn(
-        'TURNSTILE_SECRET_KEY not configured — captcha verification skipped. Set it in production!',
+        'TURNSTILE_SECRET_KEY not configured — captcha verification skipped outside production.',
       );
       return true;
     }
@@ -56,6 +88,15 @@ export class CloudflareTurnstileService {
       this.logger.warn('Turnstile verification rejected: no token supplied by client.');
       return false;
     }
+
+    return this.verifyWithCloudflare(secret, token, remoteIp);
+  }
+
+  private async verifyWithCloudflare(
+    secret: string,
+    token: string,
+    remoteIp?: string,
+  ): Promise<boolean> {
 
     const formData = new URLSearchParams();
     formData.append('secret', secret);

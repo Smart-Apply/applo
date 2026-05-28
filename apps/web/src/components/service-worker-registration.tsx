@@ -12,6 +12,18 @@ import { toast } from '@/lib/toast';
 const UPDATE_TOAST_ID = 'smart-apply-update-available';
 
 /**
+ * Module-level guard so a single page load only ever performs ONE
+ * SW-driven hard reload. Without this, a misbehaving SW that
+ * re-broadcasts SW_FORCE_RELOAD on each navigation could trap the user
+ * in a reload loop. We also persist a sessionStorage breadcrumb so the
+ * post-reload page doesn't immediately reload again if the new SW
+ * re-broadcasts on its very first activate (it shouldn't, but
+ * belt-and-braces).
+ */
+const SW_FORCE_RELOAD_FLAG_KEY = 'sa-sw-force-reload-handled';
+let swForceReloadHandled = false;
+
+/**
  * Show the user-controlled "new version available" toast.
  *
  * Triggered by:
@@ -100,6 +112,7 @@ export function ServiceWorkerRegistration() {
       registerServiceWorker();
       installChunkErrorRecovery();
       installUpdateAvailableListener();
+      installSwForceReloadListener();
     } else {
       // Dev: aggressively kill any stale SW + caches left behind by a
       // previous `next build` / Cloudflare deploy on the same origin.
@@ -121,6 +134,53 @@ export function ServiceWorkerRegistration() {
 function installUpdateAvailableListener(): void {
   window.addEventListener('sw-update-available', () => {
     showUpdateAvailableToast();
+  });
+}
+
+/**
+ * Listen for the `SW_FORCE_RELOAD` message broadcast by sw.js on
+ * activate. Triggers a single cache-busting hard reload so the open
+ * tab picks up the new JS bundle immediately, instead of continuing
+ * to run the previously-cached one.
+ *
+ * Guard rails:
+ *   - Module-level `swForceReloadHandled` flag → only fires once per
+ *     page load.
+ *   - sessionStorage breadcrumb → if the post-reload page receives
+ *     another broadcast in the same tab session, skip it (defensive;
+ *     should not happen because the new SW only activates once).
+ *   - Only enabled in production (caller gates on NODE_ENV).
+ *
+ * Background: introduced for the prod register-403 incident
+ * (docs/incidents/2026-05-27-register-403.md). The Pre-#510 bundle on
+ * cached tabs was the root cause; this listener guarantees those tabs
+ * pick up the fix on next visit without waiting for the user to hit a
+ * ChunkLoadError or manually clear caches.
+ */
+function installSwForceReloadListener(): void {
+  if (!('serviceWorker' in navigator)) return;
+
+  let alreadyHandledInSession = false;
+  try {
+    alreadyHandledInSession = sessionStorage.getItem(SW_FORCE_RELOAD_FLAG_KEY) === '1';
+  } catch {
+    // sessionStorage unavailable — fall back to the in-memory guard only.
+  }
+
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    const data = event.data as { type?: string; version?: string } | null;
+    if (!data || data.type !== 'SW_FORCE_RELOAD') return;
+    if (swForceReloadHandled || alreadyHandledInSession) return;
+
+    swForceReloadHandled = true;
+    try {
+      sessionStorage.setItem(SW_FORCE_RELOAD_FLAG_KEY, '1');
+    } catch {
+      // Ignore — we still have the module-level guard.
+    }
+
+    console.log('[PWA] Received SW_FORCE_RELOAD, hard-reloading once.', data.version);
+    void hardReloadWithCacheBust();
   });
 }
 

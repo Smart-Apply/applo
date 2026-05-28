@@ -375,7 +375,7 @@ export class AuthService {
     let payload: any;
     try {
       payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.jwtSecret,
+        secret: this.configService.jwtRefreshSecret,
       });
     } catch (error) {
       throw new UnauthorizedWithCode(ErrorCode.REFRESH_TOKEN_INVALID);
@@ -882,7 +882,10 @@ export class AuthService {
         type: 'refresh',
         jti: `${Date.now()}-${Math.random().toString(36).substring(7)}`, // Unique token ID
       },
-      { expiresIn: this.configService.jwtRefreshExpiresIn as any },
+      {
+        expiresIn: this.configService.jwtRefreshExpiresIn as any,
+        secret: this.configService.jwtRefreshSecret,
+      },
     );
 
     // Calculate expiration date for refresh token

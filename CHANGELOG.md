@@ -2,6 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.11](https://github.com/Smart-Apply/smart-apply/compare/v3.4.10...v3.4.11) (2026-05-28)
+
+
+### Bug Fixes
+
+* **web:** unwrap TransformInterceptor envelope in fetchCsrfToken ([#516](https://github.com/Smart-Apply/smart-apply/issues/516)) ([f2ff971](https://github.com/Smart-Apply/smart-apply/commit/f2ff971cabc3b4bda1c50728f208733a1612676b))
+
+## [3.4.10](https://github.com/Smart-Apply/smart-apply/compare/v3.4.9...v3.4.10) (2026-05-27)
+
+
+### Bug Fixes
+
+* **api:** downgrade ENABLE_CSRF=false-in-prod from boot error to warning ([#514](https://github.com/Smart-Apply/smart-apply/issues/514)) ([c6ed6f4](https://github.com/Smart-Apply/smart-apply/commit/c6ed6f406293037c5379ccfb23c6ad1122a7ef9f))
+
+## [3.4.9](https://github.com/Smart-Apply/smart-apply/compare/v3.4.8...v3.4.9) (2026-05-27)
+
+
+### Bug Fixes
+
+* **web:** force one-shot reload of cached clients on SW activate ([#512](https://github.com/Smart-Apply/smart-apply/issues/512)) ([0a9f4ef](https://github.com/Smart-Apply/smart-apply/commit/0a9f4efcd9ce1953949f6e1f927da96be4d41551))
+
+## [3.4.8](https://github.com/Smart-Apply/smart-apply/compare/v3.4.7...v3.4.8) (2026-05-27)
+
+
+### Bug Fixes
+
+* **web:** ensure CSRF token is fetched before mutating requests ([#510](https://github.com/Smart-Apply/smart-apply/issues/510)) ([0937290](https://github.com/Smart-Apply/smart-apply/commit/0937290f483ebac6e4b374e4d088be84b6b92ae4))
+
+## [3.4.7](https://github.com/Smart-Apply/smart-apply/compare/v3.4.6...v3.4.7) (2026-05-27)
+
+
+### Bug Fixes
+
+* **auth:** soft-fail Turnstile during closed beta ([#508](https://github.com/Smart-Apply/smart-apply/issues/508)) ([f9ff214](https://github.com/Smart-Apply/smart-apply/commit/f9ff214a28c482c9db163959704d9f638ec83b5c))
+
+## [3.4.6](https://github.com/Smart-Apply/smart-apply/compare/v3.4.5...v3.4.6) (2026-05-27)
+
+
+### Bug Fixes
+
+* **security:** use stable CSRF session identifier ([#505](https://github.com/Smart-Apply/smart-apply/issues/505)) ([d544984](https://github.com/Smart-Apply/smart-apply/commit/d54498486a7ed77438ee7c76a56b8a0e44a86838))
+
 ## [3.4.5](https://github.com/Smart-Apply/smart-apply/compare/v3.4.4...v3.4.5) (2026-05-24)
 
 

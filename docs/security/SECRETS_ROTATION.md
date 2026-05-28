@@ -30,7 +30,8 @@
 
 | Secret                          | Source of truth          | Used by                              |
 | ------------------------------- | ------------------------ | ------------------------------------ |
-| `JWT_SECRET`                    | Fly Secrets              | API (signs auth + refresh tokens)    |
+| `JWT_SECRET`                    | Fly Secrets              | API (signs access + challenge tokens) |
+| `JWT_REFRESH_SECRET`            | Fly Secrets              | API (signs and verifies refresh tokens) |
 | `TWO_FACTOR_ENCRYPTION_KEY`     | Fly Secrets              | API (encrypts TOTP secrets at rest)  |
 | `DATABASE_URL` / `DIRECT_URL`   | Fly Secrets ← Neon       | API (Prisma)                         |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Fly Secrets ← Cloudflare R2 | API (PDF storage)             |
@@ -73,7 +74,7 @@ STAGING app: smart-apply-api-staging
 
 ---
 
-## 1. JWT_SECRET
+## 1. JWT_SECRET + JWT_REFRESH_SECRET
 
 **Blast radius:** Logs out every user with an active session. Refresh tokens
 are also invalidated, so they have to log in again with email/password.
@@ -85,10 +86,14 @@ returns 401 and the frontend redirects to `/login`.
 ```bash
 # 1. Generate (88 chars of base64 = 64 bytes of entropy)
 NEW_JWT=$(openssl rand -base64 64 | tr -d '\n')
-echo "Length: ${#NEW_JWT} (must be ≥ 64)"
+NEW_JWT_REFRESH=$(openssl rand -base64 64 | tr -d '\n')
+echo "JWT_SECRET length: ${#NEW_JWT} (must be ≥ 64)"
+echo "JWT_REFRESH_SECRET length: ${#NEW_JWT_REFRESH} (must be ≥ 64)"
 
 # 2. Push to PROD first
-fly secrets set --app smart-apply-api JWT_SECRET="$NEW_JWT"
+fly secrets set --app smart-apply-api \
+  JWT_SECRET="$NEW_JWT" \
+  JWT_REFRESH_SECRET="$NEW_JWT_REFRESH"
 
 # 3. Wait for rolling restart, verify
 sleep 30
@@ -96,12 +101,15 @@ curl -s https://api.smart-apply.io/api/v1/health | head -c 200
 
 # 4. Repeat for STAGING (different value — never share JWT secrets across envs)
 NEW_JWT_STAGING=$(openssl rand -base64 64 | tr -d '\n')
-fly secrets set --app smart-apply-api-staging JWT_SECRET="$NEW_JWT_STAGING"
+NEW_JWT_REFRESH_STAGING=$(openssl rand -base64 64 | tr -d '\n')
+fly secrets set --app smart-apply-api-staging \
+  JWT_SECRET="$NEW_JWT_STAGING" \
+  JWT_REFRESH_SECRET="$NEW_JWT_REFRESH_STAGING"
 sleep 30
 curl -s https://smart-apply-api-staging.fly.dev/api/v1/health | head -c 200
 
 # 5. Forget the values — Fly is now the only place they exist
-unset NEW_JWT NEW_JWT_STAGING
+unset NEW_JWT NEW_JWT_REFRESH NEW_JWT_STAGING NEW_JWT_REFRESH_STAGING
 ```
 
 ---
