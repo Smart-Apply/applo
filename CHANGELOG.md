@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.14](https://github.com/Smart-Apply/smart-apply/compare/v3.4.13...v3.4.14) (2026-05-30)
+
+
+### Performance Improvements
+
+* **job-postings:** speed up URL parsing pipeline ([#531](https://github.com/Smart-Apply/smart-apply/issues/531)) ([b314b4d](https://github.com/Smart-Apply/smart-apply/commit/b314b4dcf30013c0d4f64539dda4c3f16ecc12da))
+
 ## [3.4.13](https://github.com/Smart-Apply/smart-apply/compare/v3.4.12...v3.4.13) (2026-05-30)
 
 
