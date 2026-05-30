@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.15](https://github.com/Smart-Apply/smart-apply/compare/v3.4.14...v3.4.15) (2026-05-30)
+
+
+### Bug Fixes
+
+* **web:** pin pdfjs-dist to react-pdf's bundled version ([#534](https://github.com/Smart-Apply/smart-apply/issues/534)) ([d8a049b](https://github.com/Smart-Apply/smart-apply/commit/d8a049bc947db6c7b0c3d8d96541a6104f20ff20))
+
 ## [3.4.14](https://github.com/Smart-Apply/smart-apply/compare/v3.4.13...v3.4.14) (2026-05-30)
 
 
