@@ -334,8 +334,8 @@ export function validateEnv(config: Record<string, unknown>): EnvConfig {
     return envSchema.parse(config);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const missingVars = error.errors
-        ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('\n')
+      const missingVars = error.issues
+        ? error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join('\n')
         : 'Unknown validation error';
       throw new Error(`❌ Environment validation failed:\n${missingVars}`);
     }
