@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.13](https://github.com/Smart-Apply/smart-apply/compare/v3.4.12...v3.4.13) (2026-05-30)
+
+
+### Bug Fixes
+
+* **config:** use ZodError.issues instead of removed .errors ([#528](https://github.com/Smart-Apply/smart-apply/issues/528)) ([8694b57](https://github.com/Smart-Apply/smart-apply/commit/8694b576dec9ac765f2d01b86caa87015ea74e9f))
+
 ## [3.4.12](https://github.com/Smart-Apply/smart-apply/compare/v3.4.11...v3.4.12) (2026-05-30)
 
 
