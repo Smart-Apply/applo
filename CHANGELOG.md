@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.12](https://github.com/Smart-Apply/smart-apply/compare/v3.4.11...v3.4.12) (2026-05-30)
+
+
+### Bug Fixes
+
+* **jobs:** exempt external webhooks from CSRF middleware ([#526](https://github.com/Smart-Apply/smart-apply/issues/526)) ([16197d4](https://github.com/Smart-Apply/smart-apply/commit/16197d4f9fa66961098e49d833fe916e159e0233))
+
 ## [3.4.11](https://github.com/Smart-Apply/smart-apply/compare/v3.4.10...v3.4.11) (2026-05-28)
 
 
