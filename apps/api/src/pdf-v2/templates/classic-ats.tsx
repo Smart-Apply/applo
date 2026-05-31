@@ -370,7 +370,9 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
     return function ClassicAtsResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const accent = meta.accentColor || ACCENT_FALLBACK;
       const styles = buildStyles(rp, accent);
-      const lang = meta.language || data.language || 'en';
+      // Prefer the explicit export-request language (data.language) over the
+      // DB template row's language (meta.language). See issue #536.
+      const lang = data.language || meta.language || 'en';
       const contactParts = buildResumeContactParts(data);
 
       return createElement(
