@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.16](https://github.com/Smart-Apply/smart-apply/compare/v3.4.15...v3.4.16) (2026-05-31)
+
+
+### Bug Fixes
+
+* **pdf:** respect export-request language over DB template language ([#537](https://github.com/Smart-Apply/smart-apply/issues/537)) ([2f0302c](https://github.com/Smart-Apply/smart-apply/commit/2f0302ca3f135e837bced05e835f9e67c8da3cdd)), closes [#536](https://github.com/Smart-Apply/smart-apply/issues/536)
+
 ## [3.4.15](https://github.com/Smart-Apply/smart-apply/compare/v3.4.14...v3.4.15) (2026-05-30)
 
 
