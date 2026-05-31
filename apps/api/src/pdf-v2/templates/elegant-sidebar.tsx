@@ -433,7 +433,9 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
     return function ElegantSidebarResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const palette = deriveElegantSidebarPalette(meta.accentColor);
       const styles = buildResumeStyles(rp, palette);
-      const lang = meta.language || data.language || 'en';
+      // Prefer the explicit export-request language (data.language) over the
+      // DB template row's language (meta.language). See issue #536.
+      const lang = data.language || meta.language || 'en';
       const contactParts = buildResumeContactParts(data);
 
       // Render contact items with optional Links

@@ -299,7 +299,13 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
 
     return function HarvardClassicResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const styles = buildStyles(rp);
-      const lang = meta.language || data.language || 'en';
+      // Prefer the explicit export-request language (data.language) over the
+      // DB template row's language (meta.language). The DB row may be the
+      // English fallback when no DE/FR/ES/IT variant has been seeded for
+      // this design, in which case meta.language is 'en' but the user has
+      // explicitly asked to export in another language — and the LLM body
+      // is already in that language. See issue #536.
+      const lang = data.language || meta.language || 'en';
       const contactParts = buildResumeContactParts(data);
 
       return createElement(
