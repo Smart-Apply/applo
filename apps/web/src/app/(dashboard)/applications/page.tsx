@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useApplications, useDeleteApplication } from '@/hooks/use-applications';
 import { useDebounce } from '@/hooks/use-debounce';
+import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +36,7 @@ import {
 import { ApplicationCardSkeleton } from '@/components/shared/skeletons';
 import { ATSScoreCell } from '@/components/applications/ats-score-cell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Tooltip,
   TooltipContent,
@@ -50,6 +53,8 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Briefcase,
   Send,
   Users,
@@ -60,7 +65,11 @@ import {
   MapPin,
   Building2,
   Search,
-  Loader2
+  Loader2,
+  LayoutGrid,
+  List,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Application, ApplicationGenerationStatus, ApplicationTrackingStatus } from '@/types';
@@ -81,6 +90,7 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 type SortOption = 'newest' | 'oldest' | 'title-asc' | 'company-asc';
+type ViewMode = 'table' | 'cards';
 
 // Tab configuration for application tracking status
 const TRACKING_STATUS_TABS: {
@@ -96,11 +106,34 @@ const TRACKING_STATUS_TABS: {
     { value: 'REJECTED', label: 'Abgelehnt', icon: ThumbsDown },
   ];
 
+// Per-status accent colors for tabs, summary cards and indicators.
+const TRACKING_STATUS_STYLE: Record<
+  ApplicationTrackingStatus | 'all',
+  { text: string; bg: string; ring: string; dot: string }
+> = {
+  all: { text: 'text-foreground', bg: 'bg-muted', ring: 'ring-border', dot: 'bg-foreground/60' },
+  CREATED: { text: 'text-slate-600', bg: 'bg-slate-100', ring: 'ring-slate-200', dot: 'bg-slate-500' },
+  APPLIED: { text: 'text-blue-600', bg: 'bg-blue-100', ring: 'ring-blue-200', dot: 'bg-blue-500' },
+  INTERVIEW: { text: 'text-purple-600', bg: 'bg-purple-100', ring: 'ring-purple-200', dot: 'bg-purple-500' },
+  ACCEPTED: { text: 'text-green-600', bg: 'bg-green-100', ring: 'ring-green-200', dot: 'bg-green-500' },
+  REJECTED: { text: 'text-red-600', bg: 'bg-red-100', ring: 'ring-red-200', dot: 'bg-red-500' },
+};
+
+// Sort options for the applications list.
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Neueste zuerst' },
   { value: 'oldest', label: 'Älteste zuerst' },
   { value: 'title-asc', label: 'Jobtitel A–Z' },
   { value: 'company-asc', label: 'Unternehmen A–Z' },
+];
+
+// Status options offered in the bulk action bar.
+const BULK_STATUS_OPTIONS: { value: ApplicationTrackingStatus; label: string }[] = [
+  { value: 'CREATED', label: '📋 Entwurf' },
+  { value: 'APPLIED', label: '📝 Beworben' },
+  { value: 'INTERVIEW', label: '🗓️ Interview' },
+  { value: 'ACCEPTED', label: '✅ Angenommen' },
+  { value: 'REJECTED', label: '❌ Abgelehnt' },
 ];
 
 // ============================================================================
@@ -168,6 +201,21 @@ function sortApplications(applications: Application[], sortBy: SortOption): Appl
   });
 }
 
+// Build a compact page list with ellipsis, e.g. [1, '…', 4, 5, 6, '…', 12].
+function getPageItems(current: number, total: number): (number | 'ellipsis')[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const items: (number | 'ellipsis')[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) items.push('ellipsis');
+  for (let p = start; p <= end; p++) items.push(p);
+  if (end < total - 1) items.push('ellipsis');
+  items.push(total);
+  return items;
+}
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -188,7 +236,16 @@ export default function ApplicationsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [applicationToDelete, setApplicationToDelete] = useState<{ id: string; title: string } | null>(null);
-  
+
+  // View mode (table | cards) — persisted in URL.
+  const initialView = (searchParams.get('view') as ViewMode) === 'cards' ? 'cards' : 'table';
+  const [viewMode, setViewMode] = useState<ViewMode>(initialView);
+
+  // Bulk selection state.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
   // Search state with debouncing
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300); // 300ms delay for search
@@ -202,6 +259,7 @@ export default function ApplicationsPage() {
 
   // Delete application mutation
   const deleteApplication = useDeleteApplication();
+  const queryClient = useQueryClient();
 
   // Fetch applications
   const { data: applications, isLoading, refetch } = useApplications();
@@ -211,6 +269,7 @@ export default function ApplicationsPage() {
     const params = new URLSearchParams();
     if (selectedTab !== 'all') params.set('status', selectedTab);
     if (sortBy !== 'newest') params.set('sort', sortBy);
+    if (viewMode !== 'table') params.set('view', viewMode);
     if (currentPage > 1) params.set('page', currentPage.toString());
 
     const queryString = params.toString();
@@ -218,7 +277,7 @@ export default function ApplicationsPage() {
 
     // Use replaceState to avoid adding to history on every filter change
     window.history.replaceState(null, '', newUrl);
-  }, [selectedTab, sortBy, currentPage, pathname]);
+  }, [selectedTab, sortBy, viewMode, currentPage, pathname]);
 
   // Detect status changes and show toast notifications
   useEffect(() => {
@@ -302,7 +361,17 @@ export default function ApplicationsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
+    setSelectedIds(new Set());
   }, [debouncedTab, debouncedSort, debouncedSearchTerm]);
+
+  // IDs visible on the current page (used for select-all logic).
+  const pageIds = useMemo(
+    () => paginatedApplications.map((app) => app.id),
+    [paginatedApplications]
+  );
+  const selectedCount = selectedIds.size;
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const somePageSelected = pageIds.some((id) => selectedIds.has(id));
 
   // Count applications by tracking status
   const statusCounts = useMemo(() => ({
@@ -360,35 +429,115 @@ export default function ApplicationsPage() {
     setApplicationToDelete(null);
   };
 
+  // Selection handlers
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllOnPage = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      const everySelected = pageIds.every((id) => next.has(id));
+      if (everySelected) {
+        pageIds.forEach((id) => next.delete(id));
+      } else {
+        pageIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  // Bulk delete the currently selected applications.
+  const handleBulkDeleteConfirm = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    setIsBulkProcessing(true);
+    const results = await Promise.allSettled(
+      ids.map((id) => deleteApplication.mutateAsync(id))
+    );
+    setIsBulkProcessing(false);
+
+    const failed = results.filter((r) => r.status === 'rejected').length;
+    const succeeded = ids.length - failed;
+
+    setBulkDeleteOpen(false);
+    clearSelection();
+
+    if (failed === 0) {
+      toast.success(`${succeeded} ${succeeded === 1 ? 'Bewerbung' : 'Bewerbungen'} gelöscht`);
+    } else {
+      toast.error(`${succeeded} gelöscht, ${failed} fehlgeschlagen`);
+    }
+  };
+
+  // Bulk update the tracking status of the selected applications.
+  const handleBulkStatusChange = async (newStatus: ApplicationTrackingStatus) => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    setIsBulkProcessing(true);
+    const results = await Promise.allSettled(
+      ids.map((id) => api.applications.updateStatus(id, newStatus))
+    );
+    setIsBulkProcessing(false);
+
+    await queryClient.invalidateQueries({ queryKey: ['applications'] });
+
+    const failed = results.filter((r) => r.status === 'rejected').length;
+    const succeeded = ids.length - failed;
+    clearSelection();
+
+    if (failed === 0) {
+      toast.success(`Status für ${succeeded} ${succeeded === 1 ? 'Bewerbung' : 'Bewerbungen'} aktualisiert`);
+    } else {
+      toast.error(`${succeeded} aktualisiert, ${failed} fehlgeschlagen`);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Bewerbungen</h1>
-          <p className="mt-1 text-muted-foreground">
-            Verwalte und verfolge den Status deiner Bewerbungen.
-          </p>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary-soft p-6 sm:p-8 shadow-medium">
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+              Bewerbungen
+            </h1>
+            <p className="mt-2 max-w-xl text-muted-foreground">
+              Verwalte und verfolge den Status deiner Bewerbungen an einem Ort.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="h-10 rounded-xl bg-background/60 backdrop-blur-sm border-primary/20 hover:bg-background/90"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Aktualisieren
+            </Button>
+            <Button
+              onClick={() => router.push('/applications/new')}
+              className="h-10 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 hover:-translate-y-0.5"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Neue Bewerbung
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="h-10"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Aktualisieren
-          </Button>
-          <Button
-            onClick={() => router.push('/applications/new')}
-            className="h-10 shadow-md hover:shadow-lg transition-all"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Neue Bewerbung
-          </Button>
-        </div>
+        {/* Decorative accents */}
+        <div className="absolute right-0 top-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute right-20 bottom-0 -mb-10 h-40 w-40 rounded-full bg-blue-500/5 blur-2xl" />
       </div>
 
       {isLoading ? (
@@ -429,40 +578,47 @@ export default function ApplicationsPage() {
             )}
           </div>
           
-          {/* Controls: Filter & Sort */}
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-card/50 p-4 rounded-xl border border-border/50">
-            <div className="flex items-center gap-2 w-full lg:w-auto">
-              <span className="text-sm font-medium whitespace-nowrap">
-                Status:
-              </span>
-              <Select value={selectedTab} onValueChange={handleTabChange}>
-                <SelectTrigger className="w-full lg:w-[240px] bg-background">
-                  <SelectValue placeholder="Status filtern" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TRACKING_STATUS_TABS.map((tab) => (
-                    <SelectItem key={tab.value} value={tab.value}>
-                      <div className="flex items-center gap-2 w-full">
-                        <tab.icon className="h-4 w-4 text-muted-foreground" />
-                        <span>{tab.label}</span>
-                        {statusCounts[tab.value] > 0 && (
-                          <Badge variant="secondary" className="ml-auto text-[10px] h-5 px-1.5 min-w-[1.5rem] justify-center">
-                            {statusCounts[tab.value]}
-                          </Badge>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Status pill tabs */}
+          <div className="flex flex-wrap gap-2">
+            {TRACKING_STATUS_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const style = TRACKING_STATUS_STYLE[tab.value];
+              const isActive = selectedTab === tab.value;
+              const count = statusCounts[tab.value];
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => handleTabChange(tab.value)}
+                  className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all ${
+                    isActive
+                      ? `${style.bg} ${style.text} border-transparent ring-2 ${style.ring}`
+                      : 'bg-card text-muted-foreground border-border/60 hover:bg-muted/60 hover:text-foreground'
+                  }`}
+                  aria-pressed={isActive}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                  <span
+                    className={`inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold ${
+                      isActive ? 'bg-background/70 text-foreground' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-            <div className="flex items-center gap-2 ml-auto w-full lg:w-auto">
+          {/* Controls: Sort & view toggle */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline-block">
                 Sortieren nach:
               </span>
               <Select value={sortBy} onValueChange={handleSortChange}>
-                <SelectTrigger className="w-full lg:w-[180px] bg-background">
+                <SelectTrigger className="w-full sm:w-[200px] bg-background">
                   <SelectValue placeholder="Sortieren" />
                 </SelectTrigger>
                 <SelectContent>
@@ -473,6 +629,38 @@ export default function ApplicationsPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* View toggle (table | cards) — desktop only */}
+            <div className="hidden md:inline-flex items-center rounded-lg border border-border/60 bg-card p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                aria-pressed={viewMode === 'table'}
+                aria-label="Tabellenansicht"
+              >
+                <List className="h-4 w-4" />
+                Tabelle
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('cards')}
+                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === 'cards'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                aria-pressed={viewMode === 'cards'}
+                aria-label="Kartenansicht"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Karten
+              </button>
             </div>
           </div>
 
@@ -489,9 +677,62 @@ export default function ApplicationsPage() {
             )}
           </div>
 
-          {/* Application List \u2014 mobile card view (<md) */}
+          {/* Bulk action bar */}
+          {selectedCount > 0 && (
+            <div className="sticky top-2 z-20 flex flex-col gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3 shadow-medium backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-foreground">
+                  {selectedCount} ausgewählt
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSelection}
+                  className="h-8 px-2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="mr-1 h-4 w-4" />
+                  Auswahl aufheben
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select
+                  onValueChange={(value) => handleBulkStatusChange(value as ApplicationTrackingStatus)}
+                  disabled={isBulkProcessing}
+                >
+                  <SelectTrigger className="h-9 w-[190px] bg-background">
+                    <SelectValue placeholder="Status setzen…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BULK_STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setBulkDeleteOpen(true)}
+                  disabled={isBulkProcessing}
+                  className="h-9"
+                >
+                  <Trash2 className="mr-1.5 h-4 w-4" />
+                  Löschen
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Application List — card view (mobile always; desktop when viewMode=cards) */}
           {paginatedApplications.length > 0 && (
-            <div className="space-y-3 md:hidden">
+            <div
+              className={
+                viewMode === 'cards'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4'
+                  : 'space-y-3 md:hidden'
+              }
+            >
               {paginatedApplications.map((application) => {
                 const statusInfo = getGenerationStatusInfo(application.status);
                 const StatusIcon = statusInfo.icon;
@@ -502,6 +743,7 @@ export default function ApplicationsPage() {
                 const company = application.jobPosting?.company;
                 const location = application.jobPosting?.location;
                 const timeAgo = formatDateSmart(application.createdAt);
+                const isSelected = selectedIds.has(application.id);
 
                 return (
                   <div
@@ -515,26 +757,37 @@ export default function ApplicationsPage() {
                         router.push(`/applications/${application.id}`);
                       }
                     }}
-                    className="w-full text-left rounded-xl border border-border/50 bg-card p-4 shadow-sm transition-colors active:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                    className={`w-full text-left rounded-xl border bg-card p-4 shadow-sm transition-colors active:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer ${
+                      isSelected ? 'border-primary ring-1 ring-primary/40' : 'border-border/50'
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-foreground line-clamp-2 break-words">
-                          {jobTitle}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                          {company && (
-                            <span className="inline-flex items-center gap-1 min-w-0">
-                              <Building2 className="h-3 w-3 shrink-0" />
-                              <span className="truncate">{company}</span>
-                            </span>
-                          )}
-                          {location && (
-                            <span className="inline-flex items-center gap-1 min-w-0">
-                              <MapPin className="h-3 w-3 shrink-0" />
-                              <span className="truncate">{location}</span>
-                            </span>
-                          )}
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div onClick={(e) => e.stopPropagation()} className="pt-0.5">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(application.id)}
+                            aria-label="Bewerbung auswählen"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-foreground line-clamp-2 break-words">
+                            {jobTitle}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            {company && (
+                              <span className="inline-flex items-center gap-1 min-w-0">
+                                <Building2 className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{company}</span>
+                              </span>
+                            )}
+                            {location && (
+                              <span className="inline-flex items-center gap-1 min-w-0">
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{location}</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
@@ -614,17 +867,24 @@ export default function ApplicationsPage() {
             </div>
           )}
 
-          {/* Application List \u2014 desktop table (md+) */}
-          {paginatedApplications.length > 0 ? (
+          {/* Application List — desktop table (md+, viewMode=table) */}
+          {paginatedApplications.length > 0 && viewMode === 'table' && (
             <div className="hidden md:block rounded-xl border border-border/50 bg-card overflow-hidden shadow-sm">
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="w-[35%]">Job & Unternehmen</TableHead>
+                    <TableHead className="w-[44px]">
+                      <Checkbox
+                        checked={allPageSelected ? true : somePageSelected ? 'indeterminate' : false}
+                        onCheckedChange={toggleSelectAllOnPage}
+                        aria-label="Alle auf dieser Seite auswählen"
+                      />
+                    </TableHead>
+                    <TableHead className="w-[32%]">Job & Unternehmen</TableHead>
                     <TableHead className="w-[15%]">Status</TableHead>
                     <TableHead className="w-[12%] text-center">ATS Score</TableHead>
-                    <TableHead className="w-[18%]">Erstellt</TableHead>
-                    <TableHead className="w-[20%] text-right">Aktionen</TableHead>
+                    <TableHead className="w-[16%]">Erstellt</TableHead>
+                    <TableHead className="w-[18%] text-right">Aktionen</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -636,13 +896,22 @@ export default function ApplicationsPage() {
                     const location = application.jobPosting?.location;
                     const timeAgo = formatDateSmart(application.createdAt);
                     const fullTimestamp = formatTooltipTimestamp(application.createdAt);
+                    const isSelected = selectedIds.has(application.id);
 
                     return (
                       <TableRow 
                         key={application.id} 
-                        className="group hover:bg-muted/30 transition-colors cursor-pointer"
+                        data-state={isSelected ? 'selected' : undefined}
+                        className="group hover:bg-muted/30 data-[state=selected]:bg-primary/5 transition-colors cursor-pointer"
                         onClick={() => router.push(`/applications/${application.id}`)}
                       >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(application.id)}
+                            aria-label="Bewerbung auswählen"
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
                             <span className="font-semibold text-foreground line-clamp-1" title={jobTitle}>
@@ -747,7 +1016,10 @@ export default function ApplicationsPage() {
                 </TableBody>
               </Table>
             </div>
-          ) : (
+          )}
+
+          {/* Empty state */}
+          {paginatedApplications.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-muted/10 animate-in fade-in zoom-in-95 duration-500">
               <EmptyState
                 icon={FileText}
@@ -770,42 +1042,78 @@ export default function ApplicationsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-8">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Zurück</span>
-              </Button>
-
+            <div className="flex flex-col items-center justify-between gap-3 pt-8 sm:flex-row">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
+                  {Math.min(currentPage * ITEMS_PER_PAGE, sortedApplications.length)}
+                </span>{' '}
+                von {sortedApplications.length}
+              </p>
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={page === currentPage ? 'default' : 'ghost'}
-                    size="sm"
-                    className={`h-8 w-8 p-0 ${page === currentPage ? 'pointer-events-none' : ''}`}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </Button>
-                ))}
-              </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="h-8 w-8 p-0"
+                  aria-label="Erste Seite"
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className="h-8 w-8 p-0"
+                  aria-label="Vorherige Seite"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">Weiter</span>
-              </Button>
+                {getPageItems(currentPage, totalPages).map((item, idx) =>
+                  item === 'ellipsis' ? (
+                    <span
+                      key={`ellipsis-${idx}`}
+                      className="px-1.5 text-sm text-muted-foreground select-none"
+                    >
+                      …
+                    </span>
+                  ) : (
+                    <Button
+                      key={item}
+                      variant={item === currentPage ? 'default' : 'ghost'}
+                      size="sm"
+                      className={`h-8 w-8 p-0 ${item === currentPage ? 'pointer-events-none' : ''}`}
+                      onClick={() => setCurrentPage(item)}
+                    >
+                      {item}
+                    </Button>
+                  )
+                )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="h-8 w-8 p-0"
+                  aria-label="Nächste Seite"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="h-8 w-8 p-0"
+                  aria-label="Letzte Seite"
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -851,6 +1159,39 @@ export default function ApplicationsPage() {
               variant="destructive"
               onClick={handleDeleteConfirm}
               isLoading={deleteApplication.isPending}
+              loadingText="Wird gelöscht..."
+            >
+              Löschen
+            </SubmitButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedCount} Bewerbungen löschen?</DialogTitle>
+            <DialogDescription>
+              Möchtest du wirklich{' '}
+              <span className="font-medium text-foreground">
+                {selectedCount} {selectedCount === 1 ? 'Bewerbung' : 'Bewerbungen'}
+              </span>{' '}
+              löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setBulkDeleteOpen(false)}
+              disabled={isBulkProcessing}
+            >
+              Abbrechen
+            </Button>
+            <SubmitButton
+              variant="destructive"
+              onClick={handleBulkDeleteConfirm}
+              isLoading={isBulkProcessing}
               loadingText="Wird gelöscht..."
             >
               Löschen
