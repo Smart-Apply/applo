@@ -28,6 +28,20 @@ export enum AuditEventType {
   // Suspicious Activity
   MULTIPLE_FAILED_LOGINS = 'MULTIPLE_FAILED_LOGINS',
   IP_CHANGE_DETECTED = 'IP_CHANGE_DETECTED',
+
+  // Closed-beta invite-code gate
+  INVITE_CODE_ISSUED = 'INVITE_CODE_ISSUED',
+  INVITE_CODE_REDEEMED = 'INVITE_CODE_REDEEMED',
+  INVITE_CODE_REJECTED = 'INVITE_CODE_REJECTED',
+  /**
+   * A brand-new OAuth signup (Google / Microsoft / Azure AD) was blocked
+   * because the closed-beta gate is on and OAuth has no place to enter
+   * an invite code. Distinct from `INVITE_CODE_REJECTED` so we can chart
+   * "how many would-be users hit the OAuth wall" separately from
+   * email/password attempts (signal for whether to build a pre-claim
+   * flow post-beta).
+   */
+  OAUTH_SIGNUP_BLOCKED = 'OAUTH_SIGNUP_BLOCKED',
 }
 
 export interface AuditLogEntry {
@@ -222,6 +236,92 @@ export class AuditLoggerService {
       timestamp: new Date(),
       severity: 'info',
       metadata,
+    });
+  }
+
+  /**
+   * Admin issued one or more invite codes. We log the prefixes (first
+   * 8 chars of the plaintext code) so audits can correlate "code XXXX
+   * was issued at T1 and redeemed at T2" without ever persisting the
+   * full plaintext.
+   */
+  logInviteCodesIssued(
+    adminUserId: string,
+    adminEmail: string,
+    req: Request,
+    metadata: { count: number; prefixes: string[]; note?: string },
+  ) {
+    this.log({
+      eventType: AuditEventType.INVITE_CODE_ISSUED,
+      userId: adminUserId,
+      email: adminEmail,
+      ip: this.getClientIp(req),
+      userAgent: req.headers['user-agent'] || 'unknown',
+      timestamp: new Date(),
+      severity: 'info',
+      metadata,
+    });
+  }
+
+  /**
+   * Successful invite-code redemption during registration. Logged on the
+   * new user's behalf (the user did not exist before this call).
+   */
+  logInviteCodeRedeemed(
+    userId: string,
+    email: string,
+    req: Request,
+    metadata: { inviteCodeId: string; prefix: string },
+  ) {
+    this.log({
+      eventType: AuditEventType.INVITE_CODE_REDEEMED,
+      userId,
+      email,
+      ip: this.getClientIp(req),
+      userAgent: req.headers['user-agent'] || 'unknown',
+      timestamp: new Date(),
+      severity: 'info',
+      metadata,
+    });
+  }
+
+  /**
+   * Rejected invite-code attempt — wrong code, already used, expired, or
+   * missing while the gate is enabled. Warning severity so a Sentry/SIEM
+   * alert can fire if the rate spikes (signals brute-forcing).
+   */
+  logInviteCodeRejected(
+    email: string | undefined,
+    req: Request,
+    metadata: { reason: 'missing' | 'invalid' | 'already_used' | 'expired'; prefix?: string },
+  ) {
+    this.log({
+      eventType: AuditEventType.INVITE_CODE_REJECTED,
+      email,
+      ip: this.getClientIp(req),
+      userAgent: req.headers['user-agent'] || 'unknown',
+      timestamp: new Date(),
+      severity: 'warning',
+      metadata,
+    });
+  }
+
+  /**
+   * Brand-new OAuth signup blocked because the closed-beta gate is on.
+   * Called from inside `AuthService.validateOAuthUser` which runs in the
+   * passport verify callback — there is no Express `req` in scope there,
+   * so IP/UA are intentionally omitted. The provider + email is enough
+   * to correlate with web-server access logs if a deeper trace is needed.
+   */
+  logOAuthSignupBlocked(provider: string, email: string) {
+    this.log({
+      eventType: AuditEventType.OAUTH_SIGNUP_BLOCKED,
+      email,
+      ip: 'unknown',
+      userAgent: 'oauth-callback',
+      timestamp: new Date(),
+      severity: 'warning',
+      metadata: { provider },
     });
   }
 

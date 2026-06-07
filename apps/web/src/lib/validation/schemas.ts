@@ -36,6 +36,11 @@ export const registerSchema = z.object({
       'Passwort muss einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen (@$!%*?&#) enthalten'
     ),
   confirmPassword: z.string(),
+  // Closed-beta invite code. Optional in the schema because we don't know
+  // at build time whether the gate is enabled — the AuthContainer fetches
+  // GET /auth/config and decides at render time whether to require it.
+  // Bounded to 64 chars to match the backend DTO.
+  inviteCode: z.string().max(64, 'Einladungscode ist zu lang').optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwörter stimmen nicht überein',
   path: ['confirmPassword'],

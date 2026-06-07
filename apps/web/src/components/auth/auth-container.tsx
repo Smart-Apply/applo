@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, JSX } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import Image from 'next/image';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { api, resetAuthRedirectFlag } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAuthConfig } from '@/hooks/use-auth-config';
 import { toast } from '@/lib/toast';
 import { TwoFactorChallengeForm } from '@/components/two-factor';
 import { TurnstileWidget, resetTurnstile } from '@/components/auth/turnstile-widget';
@@ -47,7 +48,39 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { setAuth, isAuthenticated, hasHydrated } = useAuthStore();
+  // Whether the closed-beta invite-code gate is on. Fetched once and
+  // cached — we default to TRUE while loading so we never flash a
+  // gate-less form against a gated backend.
+  const { data: authConfig } = useAuthConfig();
+  const requireInviteCode = authConfig?.requireInviteCode ?? true;
+
+  // Surface OAuth callback errors that the API redirected us back to
+  // /login?oauth=error&message=... with. The closed-beta gate blocks
+  // first-time OAuth signup (Google/Microsoft) when REQUIRE_INVITE_CODES
+  // is on — we redirect here with `message=invite_required` so we can
+  // explain that the user has to sign up with email + invite code first.
+  useEffect(() => {
+    if (searchParams.get('oauth') !== 'error') return;
+    const message = searchParams.get('message');
+    if (message === 'invite_required') {
+      toast.error(
+        'Smart Apply ist gerade in der geschlossenen Beta. Bitte registriere dich zuerst mit deinem Einladungscode \u2014 danach kannst du Google / Microsoft in den Einstellungen verknüpfen.',
+        { duration: 12000 },
+      );
+    } else if (message === 'authentication_failed') {
+      toast.error('Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
+    } else {
+      toast.error('Bei der Anmeldung ist ein Fehler aufgetreten.');
+    }
+    // Strip the query params so a refresh doesn't re-fire the toast.
+    router.replace(pathname);
+    // We deliberately depend on searchParams as a *snapshot* so this
+    // effect only re-runs when the URL actually changes \u2014 not when the
+    // router/pathname identities are recreated.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -85,6 +118,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       email: '',
       password: '',
       confirmPassword: '',
+      inviteCode: '',
     },
   });
 
@@ -165,8 +199,19 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       return;
     }
 
+    // Belt-and-braces client-side guard for the invite-code gate. The
+    // server is authoritative, but blocking here saves a round-trip and
+    // gives a clearer message.
+    if (requireInviteCode && !data.inviteCode?.trim()) {
+      registerForm.setError('inviteCode', {
+        type: 'manual',
+        message: 'Bitte gib deinen Einladungscode ein.',
+      });
+      return;
+    }
+
     try {
-      const { confirmPassword: _confirmPassword, ...registerData } = data;
+      const { confirmPassword: _confirmPassword, inviteCode, ...registerData } = data;
       const response = await api.auth.register({
         email: registerData.email,
         password: registerData.password,
@@ -176,6 +221,10 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
         // on this environment). When configured, missing/expired token
         // is rejected with `code: 'CAPTCHA_FAILED'`.
         turnstileToken: turnstileToken ?? undefined,
+        // Trimmed so a stray space in the pasted code doesn't fail the
+        // hash lookup. Sent only when the user provided a non-empty
+        // value — the backend treats `undefined` and empty as the same.
+        inviteCode: inviteCode?.trim() || undefined,
       });
       resetAuthRedirectFlag();
       setAuth(response.user);
@@ -197,6 +246,36 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
             'Bot-Schutz fehlgeschlagen. Bitte löse das CAPTCHA erneut. Wenn es nicht erscheint, deaktiviere kurz den Tracking-Schutz oder Adblocker für diese Seite.',
             { duration: 10000 },
           );
+        } else if (error.data?.code === 'INVITE_CODE_REQUIRED') {
+          // Backend says the gate is on but we sent no code. Update the
+          // local cache so the field appears immediately on next render
+          // (covers the race where authConfig was stale).
+          registerForm.setError('inviteCode', {
+            type: 'manual',
+            message: 'Bitte gib deinen Einladungscode ein.',
+          });
+          toast.error(
+            'Smart Apply ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.',
+            { duration: 8000 },
+          );
+        } else if (error.data?.code === 'INVITE_CODE_INVALID') {
+          registerForm.setError('inviteCode', {
+            type: 'manual',
+            message: 'Code ist ungültig.',
+          });
+          toast.error('Dieser Einladungscode ist ungültig. Bitte überprüfe die Schreibweise.');
+        } else if (error.data?.code === 'INVITE_CODE_ALREADY_USED') {
+          registerForm.setError('inviteCode', {
+            type: 'manual',
+            message: 'Code wurde bereits verwendet.',
+          });
+          toast.error('Dieser Einladungscode wurde bereits eingelöst.');
+        } else if (error.data?.code === 'INVITE_CODE_EXPIRED') {
+          registerForm.setError('inviteCode', {
+            type: 'manual',
+            message: 'Code ist abgelaufen.',
+          });
+          toast.error('Dieser Einladungscode ist abgelaufen.');
         } else if (error.status === 400 || error.status === 409) {
           toast.error('Diese E-Mail-Adresse ist bereits registriert.');
         } else if (error.status === 429) {
@@ -229,10 +308,15 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-      <div className="relative h-[800px] w-[1040px] overflow-hidden rounded-xl bg-card shadow-lg border border-border">
-        {/* Sliding Branding Panel */}
+      {/* Container: full-width on mobile so the form actually fits a 360px
+          viewport; locks to the original 1040x800 design on md+ desktop
+          where the sliding-panel animation works. */}
+      <div className="relative min-h-[640px] w-full max-w-[1040px] overflow-hidden rounded-xl bg-card shadow-lg border border-border md:h-[800px]">
+        {/* Sliding Branding Panel — desktop only. Hidden below md: because
+            it consumed half the screen width and squashed the form on
+            iPhone-sized viewports (visible in the wave-2 E2E screenshots). */}
         <div
-          className={`absolute top-0 z-20 h-full w-1/2 transform transition-transform duration-500 ease-in-out ${isLogin ? 'translate-x-0' : 'translate-x-full'
+          className={`absolute top-0 z-20 hidden h-full w-1/2 transform transition-transform duration-500 ease-in-out md:block ${isLogin ? 'translate-x-0' : 'translate-x-full'
             }`}
         >
           <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-primary p-12">
@@ -316,7 +400,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
         <div className="flex h-full w-full">
           {/* Login Form (Right Side when active) */}
           <div
-            className={`absolute right-0 top-0 flex h-full w-1/2 flex-col justify-center px-8 py-12 transition-opacity duration-300 md:px-12 ${isLogin && !isAnimating ? 'z-10 opacity-100' : 'z-0 opacity-0'
+            className={`absolute right-0 top-0 flex h-full w-full flex-col justify-center px-6 py-12 transition-opacity duration-300 md:w-1/2 md:px-12 ${isLogin && !isAnimating ? 'z-10 opacity-100' : 'z-0 opacity-0'
               }`}
           >
             <h1 className="mb-8 text-center font-poppins text-2xl font-semibold text-foreground">
@@ -435,7 +519,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
           {/* Register Form (Left Side when active) */}
           <div
-            className={`absolute left-0 top-0 flex h-full w-1/2 flex-col justify-center px-8 py-12 transition-opacity duration-300 md:px-12 ${!isLogin && !isAnimating ? 'z-10 opacity-100' : 'z-0 opacity-0'
+            className={`absolute left-0 top-0 flex h-full w-full flex-col justify-center px-6 py-12 transition-opacity duration-300 md:w-1/2 md:px-12 ${!isLogin && !isAnimating ? 'z-10 opacity-100' : 'z-0 opacity-0'
               }`}
           >
             <h1 className="mb-6 text-center font-poppins text-2xl font-semibold text-foreground">
@@ -579,6 +663,46 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                     </FormItem>
                   )}
                 />
+
+                {/* Closed-beta invite-code gate. Only rendered when the
+                    backend has REQUIRE_INVITE_CODES=true; the
+                    useAuthConfig hook caches the answer for 10 min so
+                    the field doesn't flicker between page loads. The
+                    gate is enforced server-side regardless \u2014 the field
+                    is just UX. */}
+                {requireInviteCode && (
+                  <FormField
+                    control={registerForm.control}
+                    name="inviteCode"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <FormLabel className="font-poppins text-base font-semibold text-foreground">
+                          Einladungscode
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="BETA-XXXX-XXXX-XXXX"
+                            autoComplete="off"
+                            autoCapitalize="characters"
+                            spellCheck={false}
+                            className={`h-9 rounded-xl border-2 bg-transparent px-4 font-mono text-[14px] tracking-wider placeholder:text-muted-foreground focus:border-primary ${
+                              fieldState.error
+                                ? 'border-red-500 focus:border-red-500'
+                                : fieldState.isDirty && !fieldState.invalid
+                                ? 'border-green-500'
+                                : 'border-input'
+                            }`}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        <p className="mt-1 font-poppins text-xs text-muted-foreground">
+                          Smart Apply ist gerade in der geschlossenen Beta. Du brauchst einen Einladungscode, um dich zu registrieren.
+                        </p>
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <div className="flex justify-center pt-2">
                   <SubmitButton

@@ -98,6 +98,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - Don't suppress with `eslint-disable` unless the suppression is *behaviour-correct* (e.g. SSE effect that depends on `application?.status` not the whole `application` to avoid stream thrash). Always add a comment on the line above the disable explaining why the rule's auto-fix would break behaviour.
 - If you introduce a deliberately-unused identifier (e.g. a destructured prop kept for API compat), prefix with `_` rather than disabling the rule.
 - The frontend uses the React Compiler. **Never** call `form.watch(...)` from `react-hook-form` inside a component — use `useWatch({ control, name })` instead. The bare `watch()` returns an unstable function ref and trips `react-hooks/incompatible-library`, which silently disables memoisation for the whole component.
+- **Never** key the CSRF `getSessionIdentifier` (in [apps/api/src/main.ts](apps/api/src/main.ts)) off any value that changes during the auth lifecycle — `access_token` cookie, `refresh_token` cookie, `Authorization` header, user id, etc. The frontend caches the CSRF token in `localStorage` for ~1h ([apps/web/src/lib/csrf.ts](apps/web/src/lib/csrf.ts)), so a varying identifier invalidates every cached token on login/refresh/logout and surfaces as a confusing 403 `EBADCSRFTOKEN` (the German UI maps it to "Die Sicherheitsüberprüfung ist fehlgeschlagen", which looks like a Turnstile/captcha failure). Use a constant string — the double-submit pattern stays secure because the matching `X-CSRF-Token` header still cannot be forged cross-site. Regression history: PR #502 introduced the bug, PR #505 reverted to a stable identifier.
 
 ### Test suite status
 - The existing unit tests (`apps/api/test/unit/**`) are **out of sync with the codebase**. CI marks `unit-tests` as `continue-on-error: true` so failures don't block PRs.
@@ -117,6 +118,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - Pasting real secrets in PR descriptions, issue comments, or chat
 - Shipping new code that introduces ESLint errors *or* warnings (see Lint policy)
 - `form.watch(...)` inside a component body — use `useWatch({ control, name })`
+- Binding `getSessionIdentifier` (CSRF middleware in [apps/api/src/main.ts](apps/api/src/main.ts)) to any auth-lifecycle value (cookies, headers, user id)
 
 ## Non-Goals
 - Rich document editing beyond Tiptap StarterKit
@@ -188,6 +190,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `email` — Resend transactional email
 - `health` — Terminus health checks
 - `interviews` — AI mock-interview Q&A generator
+- `invite-codes` — Closed-beta invite-code gate. Hashed-at-rest (sha256), single-use, atomic redemption inside the registration transaction so failed signups never burn a code. Toggle via `REQUIRE_INVITE_CODES` (default `true`). Admins issue codes via `POST /admin/invite-codes`; plaintexts are returned **once** at issuance and never readable again.
 - `job-postings` — parse text/URL/file → normalized JobPosting
 - `jobs` — pluggable queue providers (`in-memory` | `qstash`)
 - `keywords` — ATS keyword extraction & matching with language detection
@@ -233,6 +236,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **User**, **Profile**, **Skill**, **Experience**, **Education**, **Certificate**, **Project**, **Language**
 - **JobPosting**, **Application**, **ResumeTemplate**, **Interview**
 - **RefreshToken**, **Session** (auth/security)
+- **InviteCode** (closed-beta gate — hashed, single-use, optional expiry)
 - **Subscription** (plans & usage)
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
@@ -270,6 +274,11 @@ All endpoints are prefixed with `/api/v1` and documented at `http://localhost:30
 - Rate limit: 100 requests / 15 minutes (default, NOT strict auth limit)
 - Returns: `{ csrfToken: string, message: string }`
 - Frontend auto-fetches and includes in X-CSRF-Token header
+
+**GET /api/v1/auth/config**
+- Public auth-time flags consumed by the web client (e.g. whether to render the closed-beta invite-code field on the register form)
+- Returns: `{ requireInviteCode: boolean }`
+- Backend-authoritative: gate enforcement happens server-side in `AuthService.register` regardless of what the client sends. The endpoint exists so toggling the gate via `flyctl secrets set REQUIRE_INVITE_CODES=false` takes effect without a frontend redeploy (unlike `NEXT_PUBLIC_*` which is baked into the Worker bundle).
 
 **GET /api/v1/auth/me**
 - Get current authenticated user details
@@ -314,6 +323,18 @@ Gated by `ADMIN_EMAILS` (comma-separated, case-insensitive). Returns 403 when th
   - Use case: OAuth-only users (e.g. "Sign in with Google") who never set a password and can't complete the self-service deletion flow on their own — or any support-driven account removal.
   - Cascades through Prisma `onDelete: Cascade` (Profile, Applications, JobPostings, Sessions, RefreshTokens, OAuthProviders, MailboxConnections). Stored PDFs in R2/disk are NOT deleted here — same trade-off as the user-facing `AuthService.deleteAccount`.
   - `:email` matched case-insensitively. Returns 404 if the account is already gone.
+
+**POST /api/v1/admin/invite-codes** — issue closed-beta invite codes
+  - Body: `{ "count": 1–100, "note"?: string (≤2 00 chars, sanitized), "expiresAt"?: ISO-8601 (must be > now) }`
+  - Returns HTTP 201 with `{ message, count, codes: [{ id, code (plaintext), prefix, note, expiresAt, createdAt }] }`
+  - The plaintext `code` is shown **once** here — we only persist `codeHash` (sha256) + `prefix`. Save them before closing the response.
+  - Format: `BETA-XXXX-XXXX-XXXX` using Crockford base32 (no `0`, `O`, `1`, `I`, `L` to avoid typos).
+  - Audit-logged with prefixes (never plaintext) under `INVITE_CODE_ISSUED`.
+
+**GET /api/v1/admin/invite-codes?available=true** — list invite codes (metadata only, never plaintext)
+  - Query: `available=true` filters to unused + non-expired codes (default returns all).
+  - Returns: `{ count, filter, codes: [{ id, prefix, note, usedAt, usedByUserId, expiresAt, createdAt }] }`
+  - Capped at 200 rows. There is no plaintext lookup endpoint by design — if a user loses their code, revoke + reissue.
 
 ### User Preferences (Protected)
 
@@ -669,6 +690,14 @@ SENTRY_ENVIRONMENT=development
 
 # Admin (comma-separated, case-insensitive). Leave empty to disable /admin/*.
 ADMIN_EMAILS=you@example.com,coworker@example.com
+
+# Closed-beta invite-code gate on POST /auth/register. Default 'true'
+# (fail-closed). Codes are issued via POST /admin/invite-codes and
+# redeemed atomically inside the registration transaction. Flip to
+# 'false' to open registration to the public — takes effect without a
+# frontend redeploy because the web client reads GET /auth/config at
+# runtime.
+REQUIRE_INVITE_CODES=true
 
 # Email Tracking (Premium feature) — OAuth Inbox Sync
 # AES-256-GCM key (32 bytes hex) for encrypting persisted refresh tokens.

@@ -217,7 +217,11 @@ jobs:
         run: |
           cd apps/api
           echo "::group::Migration plan"
-          npx prisma migrate status
+          # `migrate status` exits 1 whenever there are pending migrations
+          # (which is the entire point of this job), so explicitly tolerate
+          # a non-zero exit here — it's purely informational. The real
+          # check is `migrate deploy` below.
+          npx prisma migrate status || true
           echo "::endgroup::"
 
           echo "::group::Applying migrations"

@@ -33,6 +33,12 @@ import { UseThrottler } from '../common/decorators/throttle.decorator';
 import { RequiresCaptcha } from './decorators/requires-captcha.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ConfigService } from '../config/config.service';
+import {
+  GoogleOAuthCallbackGuard,
+  MicrosoftOAuthCallbackGuard,
+  type OAuthRequest,
+} from './guards/oauth-callback.guard';
+import { ErrorCode } from '../common/constants/error-codes';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -43,6 +49,29 @@ export class AuthController {
     private authService: AuthService,
     private configService: ConfigService,
   ) {}
+
+  /**
+   * Public auth configuration. The frontend calls this on mount to decide
+   * whether the registration form should render the invite-code field.
+   *
+   * Why an endpoint and not `NEXT_PUBLIC_REQUIRE_INVITE`: NEXT_PUBLIC_*
+   * vars are baked into the Cloudflare Worker bundle at build time, which
+   * means flipping the gate would require a redeploy of the frontend.
+   * Reading from the API at runtime lets the backend toggle it instantly.
+   *
+   * Cached aggressively on the client (TanStack Query with a 10 min
+   * staleTime is fine — toggles are rare).
+   */
+  @Public()
+  @Get('config')
+  @ApiOperation({
+    summary: 'Public auth-time configuration (feature flags read by login/register UI)',
+  })
+  getAuthConfig() {
+    return {
+      requireInviteCode: this.configService.requireInviteCodes,
+    };
+  }
 
   @Public()
   @RequiresCaptcha()
@@ -422,14 +451,19 @@ export class AuthController {
    */
   @Public()
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleOAuthCallbackGuard)
   @ApiOperation({ summary: 'Google OAuth callback' })
-  async googleCallback(@CurrentUser() user: any, @Res() res: Response, @Req() req: Request) {
+  async googleCallback(@CurrentUser() user: any, @Res() res: Response, @Req() req: OAuthRequest) {
     const frontendUrl = this.configService.appUrl || 'http://localhost:3001';
-    
+
     try {
       // User is already validated by GoogleStrategy
       if (!user) {
+        // Closed-beta gate blocked a first-time OAuth signup. Redirect
+        // to a tailored message instead of the generic auth-failed.
+        if (req.oauthCallbackError?.code === ErrorCode.INVITE_CODE_REQUIRED) {
+          return res.redirect(`${frontendUrl}/login?oauth=error&message=invite_required`);
+        }
         return res.redirect(`${frontendUrl}/login?oauth=error&message=authentication_failed`);
       }
 
@@ -469,14 +503,17 @@ export class AuthController {
    */
   @Public()
   @Get('microsoft/callback')
-  @UseGuards(AuthGuard('microsoft'))
+  @UseGuards(MicrosoftOAuthCallbackGuard)
   @ApiOperation({ summary: 'Microsoft OAuth callback' })
-  async microsoftCallback(@CurrentUser() user: any, @Res() res: Response, @Req() req: Request) {
+  async microsoftCallback(@CurrentUser() user: any, @Res() res: Response, @Req() req: OAuthRequest) {
     const frontendUrl = this.configService.appUrl || 'http://localhost:3001';
-    
+
     try {
       // User is already validated by MicrosoftStrategy
       if (!user) {
+        if (req.oauthCallbackError?.code === ErrorCode.INVITE_CODE_REQUIRED) {
+          return res.redirect(`${frontendUrl}/login?oauth=error&message=invite_required`);
+        }
         return res.redirect(`${frontendUrl}/login?oauth=error&message=authentication_failed`);
       }
 

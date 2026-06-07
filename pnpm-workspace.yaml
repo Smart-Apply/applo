@@ -26,18 +26,21 @@ peerDependencyRules:
 # `true` here in the same PR, or `pnpm install` will leave it un-built and the
 # runtime will throw `MODULE_NOT_FOUND` at the .node binary path.
 allowBuilds:
-  '@nestjs/core': true                       # optional metadata + DI helpers
-  '@napi-rs/canvas': true                    # PNG preview rasteriser (pdf-v2)
-  '@prisma/client': true                     # generates DB client at install
-  '@prisma/engines': true                    # native engine binaries
-  '@scarf/scarf': true                       # Sentry/Prisma usage telemetry
-  '@sentry-internal/node-cpu-profiler': true # native profiler addon
-  '@swc/core': true                          # Vitest TS transpiler
-  argon2: true                               # password hashing (native binding)
-  dtrace-provider: true                      # transitive (pino → dtrace), optional
-  esbuild: true                              # native binary for fast bundling
-  prisma: true                               # CLI native engine
-  sharp: true                                # Next.js image optimisation
-  unrs-resolver: true                        # OXC/swc resolver native binding
-  workerd: true                              # Cloudflare Workers runtime (web build)
-
+  '@nestjs/core': true # optional metadata + DI helpers
+  '@napi-rs/canvas': true # PNG preview rasteriser (pdf-v2)
+  '@prisma/client': true # generates DB client at install
+  '@prisma/engines': true # native engine binaries
+  '@scarf/scarf': true # Sentry/Prisma usage telemetry
+  '@swc/core': true # Vitest TS transpiler
+  argon2: true # password hashing (native binding)
+  dtrace-provider: true # transitive (pino → dtrace), optional
+  esbuild: true # native binary for fast bundling
+  prisma: true # CLI native engine
+  sharp: true # Next.js image optimisation
+  unrs-resolver: true # OXC/swc resolver native binding
+  workerd: true # Cloudflare Workers runtime (web build)
+  # @sentry/cli's postinstall compiles a native binary used ONLY for
+  # source-map upload during build. We don't upload source maps yet
+  # (SENTRY_AUTH_TOKEN is unset), so the binary is dead weight. Flip to
+  # `true` if/when source-map upload gets wired into the deploy pipeline.
+  '@sentry/cli': false

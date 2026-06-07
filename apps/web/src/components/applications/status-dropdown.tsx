@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Select,
@@ -58,6 +58,12 @@ export function StatusDropdown({
 }: StatusDropdownProps) {
   const [status, setStatus] = useState(currentStatus);
   const queryClient = useQueryClient();
+
+  // Keep local state in sync when the status changes externally
+  // (e.g. a bulk status update or an email-tracking auto-update).
+  useEffect(() => {
+    setStatus(currentStatus);
+  }, [currentStatus]);
 
   const updateStatusMutation = useMutation({
     mutationFn: (newStatus: ApplicationTrackingStatus) =>

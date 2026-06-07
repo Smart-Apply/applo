@@ -30,6 +30,13 @@ const envSchema = z.object({
       (val) => !val.includes('change') && !val.includes('REPLACE') && !val.includes('example'),
       'JWT_SECRET cannot contain placeholder text - generate with: openssl rand -base64 64',
     ),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(64, 'JWT_REFRESH_SECRET must be at least 64 characters for security')
+    .refine(
+      (val) => !val.includes('change') && !val.includes('REPLACE') && !val.includes('example'),
+      'JWT_REFRESH_SECRET cannot contain placeholder text - generate with: openssl rand -base64 64',
+    ),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'), // Short-lived access tokens
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'), // Long-lived refresh tokens
   // Legacy support
@@ -215,6 +222,16 @@ const envSchema = z.object({
   // unset, all /admin/* routes return 403.
   ADMIN_EMAILS: z.string().optional(),
 
+  // Closed-beta invite-code gate. When 'true' (default \u2014 fail-closed), the
+  // `POST /auth/register` endpoint requires a valid unused row in
+  // `invite_codes`. Set to 'false' once you're ready for open public
+  // signup. Backend-only on purpose: a NEXT_PUBLIC_* flag would be baked
+  // into the Cloudflare Worker build, the frontend reads the value at
+  // runtime from `GET /auth/config` instead.
+  REQUIRE_INVITE_CODES: z
+    .enum(['true', 'false'])
+    .default('true'),
+
   // -------------------------------------------------------------------------
   // Email Tracking (Premium feature) — OAuth Inbox Sync
   // -------------------------------------------------------------------------
@@ -269,6 +286,35 @@ const envSchema = z.object({
       message: `JOBS_DRIVER must be 'qstash' when NODE_ENV=production (got '${env.JOBS_DRIVER}'). The 'in-memory' driver drops queued jobs on machine restart.`,
     });
   }
+
+  if (!env.TURNSTILE_SECRET_KEY) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['TURNSTILE_SECRET_KEY'],
+      message:
+        "TURNSTILE_SECRET_KEY is required when NODE_ENV=production to prevent bot signup abuse.",
+    });
+  }
+
+  if (!env.ENABLE_CSRF) {
+    // Downgraded from a hard schema error to a runtime warning on
+    // 2026-05-28 during the prod register-403 incident
+    // (docs/incidents/2026-05-27-register-403.md): a hard refusal to
+    // boot meant we couldn't use `flyctl secrets set ENABLE_CSRF=false`
+    // as the documented emergency unblock — the new machine crash-looped
+    // in release. The guardrail's intent is "don't accidentally ship
+    // prod without CSRF", not "make incident response impossible". A
+    // loud warning at boot + the existing log line from main.ts
+    // ("⚠️  CSRF protection disabled") still surfaces the risk; an
+    // operator who runs `flyctl secrets set ENABLE_CSRF=false` has
+    // already made an intentional, audit-logged decision.
+     
+    console.warn(
+      '⚠️  ENABLE_CSRF is not "true" in production — CSRF middleware will be DISABLED. ' +
+        'This should only happen during an authorised incident response. ' +
+        'Re-enable as soon as the incident is resolved.',
+    );
+  }
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -280,6 +326,7 @@ export function validateEnv(config: Record<string, unknown>): EnvConfig {
       configKeys: config ? Object.keys(config).length : 0,
       hasDatabase: !!config?.DATABASE_URL,
       hasJwtSecret: !!config?.JWT_SECRET,
+      hasJwtRefreshSecret: !!config?.JWT_REFRESH_SECRET,
     });
   }
 
@@ -287,8 +334,8 @@ export function validateEnv(config: Record<string, unknown>): EnvConfig {
     return envSchema.parse(config);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const missingVars = error.errors
-        ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('\n')
+      const missingVars = error.issues
+        ? error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join('\n')
         : 'Unknown validation error';
       throw new Error(`❌ Environment validation failed:\n${missingVars}`);
     }

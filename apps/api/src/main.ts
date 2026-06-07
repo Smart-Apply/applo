@@ -170,7 +170,20 @@ async function bootstrap() {
       doubleCsrfProtection: csrfMiddleware, // Middleware to validate CSRF tokens
     } = doubleCsrf({
       getSecret: () => configService.jwtSecret, // Use JWT secret for CSRF token generation
-      getSessionIdentifier: (req) => req.headers['authorization'] || '', // Use auth header as session identifier
+      getSessionIdentifier: () => {
+        // Stable identifier across the auth lifecycle. We deliberately do
+        // NOT key off the access_token cookie: the frontend caches the
+        // CSRF token for ~1h, but the access_token changes on login,
+        // refresh, and logout. A varying session identifier would
+        // invalidate every cached token the moment auth state changes
+        // and surface as EBADCSRFTOKEN on the first mutation after login.
+        //
+        // Security note: the double-submit pattern remains effective
+        // because the CSRF cookie is HttpOnly + Secure + SameSite=Lax and
+        // the matching value must also be sent in X-CSRF-Token (which
+        // cross-site requests cannot forge).
+        return 'smart-apply';
+      },
       // Use __Host- prefix only in production (requires HTTPS)
       // In development, use simple name (localhost doesn't support __Host- prefix)
       cookieName: configService.isProduction ? '__Host-csrf' : 'csrf',
@@ -249,15 +262,26 @@ async function bootstrap() {
 
   // Apply CSRF protection globally if enabled (after API prefix)
   // This will validate CSRF tokens on all POST, PUT, DELETE, PATCH requests
-  // Exception: /auth/refresh is excluded because it's already protected by HttpOnly cookie
+  //
+  // Paths that MUST bypass CSRF:
+  // - /auth/refresh — protected by the HttpOnly refresh_token cookie. Adding
+  //   CSRF here is a chicken-and-egg problem: the client needs a valid access
+  //   token to fetch a CSRF token, but refresh is called precisely when the
+  //   access token has expired.
+  // - External webhooks — POSTed by third-party services (QStash, Microsoft
+  //   Graph) that cannot carry our CSRF token. They authenticate via their own
+  //   signature (Upstash-Signature) / per-connection clientState secret, which
+  //   is the real trust boundary. Without these exemptions, enabling CSRF in
+  //   prod silently 403s every QStash delivery → application generation jobs
+  //   dead-letter and stick in GENERATING forever.
+  const csrfExemptPaths = new Set([
+    '/api/v1/auth/refresh',
+    '/api/v1/jobs/qstash-webhook',
+    '/api/v1/mailbox-sync/microsoft/webhook',
+  ]);
   if (configService.enableCsrf && doubleCsrfProtection) {
     app.use((req, res, next) => {
-      // Skip CSRF validation for /auth/refresh endpoint
-      // The refresh endpoint is already protected by the HttpOnly refresh_token cookie
-      // Adding CSRF here would create a chicken-and-egg problem:
-      // - User needs valid access token to get CSRF token
-      // - But refresh endpoint is called when access token is expired
-      if (req.path === '/api/v1/auth/refresh') {
+      if (csrfExemptPaths.has(req.path)) {
         return next();
       }
       // Apply CSRF protection to all other routes

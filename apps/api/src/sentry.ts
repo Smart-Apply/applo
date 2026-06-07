@@ -12,7 +12,6 @@
  * leave the process. Stack traces and error messages still go up.
  */
 import * as Sentry from '@sentry/node';
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 const SENSITIVE_KEYS = new Set([
   'password',
@@ -64,9 +63,12 @@ export function initSentry(): boolean {
     sampleRate: 1.0,
     // Performance tracing — 10% of requests is plenty to spot slow endpoints
     tracesSampleRate: 0.1,
-    // CPU profiling on the 10% of traced requests
-    profilesSampleRate: 1.0,
-    integrations: [nodeProfilingIntegration()],
+    // CPU profiling is DISABLED. With 2 prod machines × 24/7 × 10% trace
+    // sampling × 100% profile-of-trace, it burned the free tier's 50
+    // profile-hours/month quota in days without anyone ever opening a
+    // flamegraph. Re-enable (re-add `@sentry/profiling-node`,
+    // `nodeProfilingIntegration()`, and a low `profilesSampleRate` like
+    // 0.01) when there's a specific perf bug worth chasing.
     // Don't auto-attach IP / user identifiers — we'll add minimal context manually
     sendDefaultPii: false,
     beforeSend(event) {

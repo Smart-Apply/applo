@@ -240,14 +240,18 @@ function DashboardLayoutInner({
 
       {/* Mobile Header */}
       <div className="flex flex-1 flex-col md:hidden">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-md px-4">
+        {/* bg-background/95 (was /80) so scrolled content doesn't bleed
+            through and visually "hover above" the logo — the issue
+            surfaced in wave-2 E2E on iOS Chrome. backdrop-blur stays for
+            the frosted-glass feel when something does peek through. */}
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border/50 bg-background/95 backdrop-blur-md px-4">
           <Link href="/dashboard" className="flex items-center">
             <Image
               src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
               alt="Smart Apply"
               width={200}
               height={40}
-              className="w-[180px] h-auto"
+              className="h-10 w-auto"
               priority
             />
           </Link>

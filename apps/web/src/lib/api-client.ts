@@ -66,7 +66,7 @@ import {
   getRetryDelay,
   isPermanentAuthFailure,
 } from './errors';
-import { getCsrfToken, refreshCsrfToken } from './csrf';
+import { getCsrfToken, refreshCsrfToken, fetchCsrfToken } from './csrf';
 import { getApiBaseUrl, getApiBaseUrlSync } from './config';
 
 interface RequestOptions extends RequestInit {
@@ -291,7 +291,21 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
     // Include CSRF token for state-changing requests (POST, PUT, DELETE, PATCH)
     const method = fetchOptions.method?.toUpperCase() || 'GET';
     if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-      const csrfToken = getCsrfToken();
+      let csrfToken = getCsrfToken();
+      // If we don't yet have an in-memory token (cold load, cleared
+      // storage, prior fetch race), block this request until we either
+      // get one or confirm CSRF is disabled. Without this, the POST
+      // goes out without the X-CSRF-Token header and the backend
+      // returns 403 EBADCSRFTOKEN.
+      if (!csrfToken) {
+        try {
+          await fetchCsrfToken();
+          csrfToken = getCsrfToken();
+        } catch {
+          // Swallow — request will proceed without the header. The
+          // server will return 403 and we'll surface a clean error.
+        }
+      }
       if (csrfToken) {
         headers['X-CSRF-Token'] = csrfToken;
       }
@@ -634,11 +648,27 @@ export async function authenticatedFetch(
 export const api = {
   // Auth
   auth: {
-    register: (data: { email: string; password: string; firstName: string; lastName: string; turnstileToken?: string }) =>
+    register: (data: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      turnstileToken?: string;
+      inviteCode?: string;
+    }) =>
       apiRequest<{ user: User }>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+
+    /**
+     * Public auth-time configuration. Read once on register-page mount to
+     * decide whether to render the invite-code field. Heavily cached on
+     * the client (TanStack Query staleTime: 10min) since toggles are
+     * rare.
+     */
+    getConfig: () =>
+      apiRequest<{ requireInviteCode: boolean }>('/auth/config'),
 
     login: (data: { email: string; password: string }) =>
       apiRequest<{ user?: User; requiresTwoFactor?: boolean; challengeToken?: string; methods?: string[] }>('/auth/login', {

@@ -54,6 +54,10 @@ export class ConfigService {
     return this.nestConfig.get('JWT_SECRET', { infer: true });
   }
 
+  get jwtRefreshSecret(): string {
+    return this.nestConfig.get('JWT_REFRESH_SECRET', { infer: true });
+  }
+
   get jwtExpiresIn(): string {
     return this.nestConfig.get('JWT_EXPIRES_IN', { infer: true });
   }
@@ -214,6 +218,12 @@ export class ConfigService {
       .split(',')
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
+  }
+
+  // Closed-beta invite-code gate. Defaults to TRUE (fail-closed) at the
+  // schema layer; this getter just decodes the validated string.
+  get requireInviteCodes(): boolean {
+    return this.nestConfig.get('REQUIRE_INVITE_CODES', { infer: true }) === 'true';
   }
 
   // Public base URL of the API (used for OAuth callbacks)

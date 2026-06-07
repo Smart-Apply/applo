@@ -152,7 +152,7 @@ export default function JobSearchPage() {
         </div>
         {showPremiumUpsell && (
           <Button asChild className="gap-2">
-            <Link href="/pricing">
+            <Link href="/#pricing">
               <Lock className="h-4 w-4" />
               Premium freischalten
             </Link>

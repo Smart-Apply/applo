@@ -2,6 +2,157 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.16](https://github.com/Smart-Apply/smart-apply/compare/v3.4.15...v3.4.16) (2026-05-31)
+
+
+### Bug Fixes
+
+* **pdf:** respect export-request language over DB template language ([#537](https://github.com/Smart-Apply/smart-apply/issues/537)) ([2f0302c](https://github.com/Smart-Apply/smart-apply/commit/2f0302ca3f135e837bced05e835f9e67c8da3cdd)), closes [#536](https://github.com/Smart-Apply/smart-apply/issues/536)
+
+## [3.4.15](https://github.com/Smart-Apply/smart-apply/compare/v3.4.14...v3.4.15) (2026-05-30)
+
+
+### Bug Fixes
+
+* **web:** pin pdfjs-dist to react-pdf's bundled version ([#534](https://github.com/Smart-Apply/smart-apply/issues/534)) ([d8a049b](https://github.com/Smart-Apply/smart-apply/commit/d8a049bc947db6c7b0c3d8d96541a6104f20ff20))
+
+## [3.4.14](https://github.com/Smart-Apply/smart-apply/compare/v3.4.13...v3.4.14) (2026-05-30)
+
+
+### Performance Improvements
+
+* **job-postings:** speed up URL parsing pipeline ([#531](https://github.com/Smart-Apply/smart-apply/issues/531)) ([b314b4d](https://github.com/Smart-Apply/smart-apply/commit/b314b4dcf30013c0d4f64539dda4c3f16ecc12da))
+
+## [3.4.13](https://github.com/Smart-Apply/smart-apply/compare/v3.4.12...v3.4.13) (2026-05-30)
+
+
+### Bug Fixes
+
+* **config:** use ZodError.issues instead of removed .errors ([#528](https://github.com/Smart-Apply/smart-apply/issues/528)) ([8694b57](https://github.com/Smart-Apply/smart-apply/commit/8694b576dec9ac765f2d01b86caa87015ea74e9f))
+
+## [3.4.12](https://github.com/Smart-Apply/smart-apply/compare/v3.4.11...v3.4.12) (2026-05-30)
+
+
+### Bug Fixes
+
+* **jobs:** exempt external webhooks from CSRF middleware ([#526](https://github.com/Smart-Apply/smart-apply/issues/526)) ([16197d4](https://github.com/Smart-Apply/smart-apply/commit/16197d4f9fa66961098e49d833fe916e159e0233))
+
+## [3.4.11](https://github.com/Smart-Apply/smart-apply/compare/v3.4.10...v3.4.11) (2026-05-28)
+
+
+### Bug Fixes
+
+* **web:** unwrap TransformInterceptor envelope in fetchCsrfToken ([#516](https://github.com/Smart-Apply/smart-apply/issues/516)) ([f2ff971](https://github.com/Smart-Apply/smart-apply/commit/f2ff971cabc3b4bda1c50728f208733a1612676b))
+
+## [3.4.10](https://github.com/Smart-Apply/smart-apply/compare/v3.4.9...v3.4.10) (2026-05-27)
+
+
+### Bug Fixes
+
+* **api:** downgrade ENABLE_CSRF=false-in-prod from boot error to warning ([#514](https://github.com/Smart-Apply/smart-apply/issues/514)) ([c6ed6f4](https://github.com/Smart-Apply/smart-apply/commit/c6ed6f406293037c5379ccfb23c6ad1122a7ef9f))
+
+## [3.4.9](https://github.com/Smart-Apply/smart-apply/compare/v3.4.8...v3.4.9) (2026-05-27)
+
+
+### Bug Fixes
+
+* **web:** force one-shot reload of cached clients on SW activate ([#512](https://github.com/Smart-Apply/smart-apply/issues/512)) ([0a9f4ef](https://github.com/Smart-Apply/smart-apply/commit/0a9f4efcd9ce1953949f6e1f927da96be4d41551))
+
+## [3.4.8](https://github.com/Smart-Apply/smart-apply/compare/v3.4.7...v3.4.8) (2026-05-27)
+
+
+### Bug Fixes
+
+* **web:** ensure CSRF token is fetched before mutating requests ([#510](https://github.com/Smart-Apply/smart-apply/issues/510)) ([0937290](https://github.com/Smart-Apply/smart-apply/commit/0937290f483ebac6e4b374e4d088be84b6b92ae4))
+
+## [3.4.7](https://github.com/Smart-Apply/smart-apply/compare/v3.4.6...v3.4.7) (2026-05-27)
+
+
+### Bug Fixes
+
+* **auth:** soft-fail Turnstile during closed beta ([#508](https://github.com/Smart-Apply/smart-apply/issues/508)) ([f9ff214](https://github.com/Smart-Apply/smart-apply/commit/f9ff214a28c482c9db163959704d9f638ec83b5c))
+
+## [3.4.6](https://github.com/Smart-Apply/smart-apply/compare/v3.4.5...v3.4.6) (2026-05-27)
+
+
+### Bug Fixes
+
+* **security:** use stable CSRF session identifier ([#505](https://github.com/Smart-Apply/smart-apply/issues/505)) ([d544984](https://github.com/Smart-Apply/smart-apply/commit/d54498486a7ed77438ee7c76a56b8a0e44a86838))
+
+## [3.4.5](https://github.com/Smart-Apply/smart-apply/compare/v3.4.4...v3.4.5) (2026-05-24)
+
+
+### Bug Fixes
+
+* **web:** replace silent chunk-reload with user-controlled update toast ([#495](https://github.com/Smart-Apply/smart-apply/issues/495)) ([831962d](https://github.com/Smart-Apply/smart-apply/commit/831962d55022a66550a74f946b0012e9878af282))
+
+## [3.4.4](https://github.com/Smart-Apply/smart-apply/compare/v3.4.3...v3.4.4) (2026-05-24)
+
+
+### Bug Fixes
+
+* **web:** stop chunk-404 reload loop on stale tabs ([#493](https://github.com/Smart-Apply/smart-apply/issues/493)) ([47a1c84](https://github.com/Smart-Apply/smart-apply/commit/47a1c848c20ebc199132ac816ec619c2cebed659))
+
+## [3.4.3](https://github.com/Smart-Apply/smart-apply/compare/v3.4.2...v3.4.3) (2026-05-24)
+
+
+### Bug Fixes
+
+* **web:** return real 404 for missing /_next/static/* chunks ([#491](https://github.com/Smart-Apply/smart-apply/issues/491)) ([a95fdf4](https://github.com/Smart-Apply/smart-apply/commit/a95fdf4d6d1d7e81d6422b617df7a31e0ffeb627))
+
+## [3.4.2](https://github.com/Smart-Apply/smart-apply/compare/v3.4.1...v3.4.2) (2026-05-24)
+
+
+### Bug Fixes
+
+* **web:** three mobile UI bugs from Wave 2 E2E pass ([#489](https://github.com/Smart-Apply/smart-apply/issues/489)) ([f4be445](https://github.com/Smart-Apply/smart-apply/commit/f4be44513082ebf760ff0c92bebd2847a78512eb))
+
+## [3.4.1](https://github.com/Smart-Apply/smart-apply/compare/v3.4.0...v3.4.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* unblock Sentry CSP + grant Premium to beta signups ([#487](https://github.com/Smart-Apply/smart-apply/issues/487)) ([afdc834](https://github.com/Smart-Apply/smart-apply/commit/afdc83416b5a0db0f95f083cdfd136a64be2b8a6))
+
+## [3.4.0](https://github.com/Smart-Apply/smart-apply/compare/v3.3.0...v3.4.0) (2026-05-24)
+
+
+### Features
+
+* **web:** add closed-beta FAQ section to /faq ([#486](https://github.com/Smart-Apply/smart-apply/issues/486)) ([e26f642](https://github.com/Smart-Apply/smart-apply/commit/e26f64263d04f70b7aa5cc2f2de5bbde2d5ddc20))
+
+
+### Bug Fixes
+
+* **gitignore:** add invite-codes-*.json to ignore list ([#484](https://github.com/Smart-Apply/smart-apply/issues/484)) ([98e5580](https://github.com/Smart-Apply/smart-apply/commit/98e5580fd1fb5fc000d84f402805188b1e89f780))
+
+## [3.3.0](https://github.com/Smart-Apply/smart-apply/compare/v3.2.0...v3.3.0) (2026-05-23)
+
+
+### Features
+
+* **web:** wire client-side Sentry for closed-beta wave 2 ([#480](https://github.com/Smart-Apply/smart-apply/issues/480)) ([a7dcf41](https://github.com/Smart-Apply/smart-apply/commit/a7dcf41a89cc5a1523cb965e20c514cd65e1dc5f))
+
+
+### Bug Fixes
+
+* **api:** disable Sentry continuous profiling to stop burning quota ([#481](https://github.com/Smart-Apply/smart-apply/issues/481)) ([c7891ee](https://github.com/Smart-Apply/smart-apply/commit/c7891ee033831a21920649bc4ef21cd26f09ea24))
+* **api:** port resume parser to pdf-parse v2 API ([#483](https://github.com/Smart-Apply/smart-apply/issues/483)) ([f1578cb](https://github.com/Smart-Apply/smart-apply/commit/f1578cbab1ecd4c071bc332da2df4ad57542e0db))
+
+## [3.2.0](https://github.com/Smart-Apply/smart-apply/compare/v3.1.0...v3.2.0) (2026-05-23)
+
+
+### Features
+
+* **auth:** add closed-beta invite-code gate ([#477](https://github.com/Smart-Apply/smart-apply/issues/477)) ([a0e1ffb](https://github.com/Smart-Apply/smart-apply/commit/a0e1ffbb124f0d408382e72190d9c2d7494193fa))
+* **auth:** extend invite-code gate to OAuth signup ([#478](https://github.com/Smart-Apply/smart-apply/issues/478)) ([5877694](https://github.com/Smart-Apply/smart-apply/commit/5877694f3bf9def79f633fd6b3ee1ed61d162c62))
+
+
+### Bug Fixes
+
+* **web:** route upgrade CTAs to /#pricing anchor instead of 404 /pricing ([#475](https://github.com/Smart-Apply/smart-apply/issues/475)) ([751bb62](https://github.com/Smart-Apply/smart-apply/commit/751bb62b5a411519e4ed33ef89ca29bdb02329ce))
+* **web:** wrap auth pages in Suspense for useSearchParams ([#479](https://github.com/Smart-Apply/smart-apply/issues/479)) ([ee81a03](https://github.com/Smart-Apply/smart-apply/commit/ee81a033f4acd2a6e535b9158e45fe7250a496a0))
+
 ## [3.1.0](https://github.com/Smart-Apply/smart-apply/compare/v3.0.4...v3.1.0) (2026-05-18)
 
 

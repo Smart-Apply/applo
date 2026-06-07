@@ -56,7 +56,7 @@ export function UpgradePrompt({
   const defaultCta = `Upgrade auf ${tierLabel}`;
 
   const handleUpgrade = () => {
-    router.push('/pricing');
+    router.push('/#pricing');
   };
 
   // Inline variant - minimal styling
@@ -202,7 +202,7 @@ export function LimitReachedPrompt({
                 Upgrade für mehr Kapazität.
               </p>
             </div>
-            <Button onClick={() => router.push('/pricing')} size="sm">
+            <Button onClick={() => router.push('/#pricing')} size="sm">
               <Sparkles className="mr-2 h-4 w-4" />
               Jetzt upgraden
             </Button>

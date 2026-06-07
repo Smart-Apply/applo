@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { load } from 'cheerio';
 import axios from 'axios';
+import NodeCache from 'node-cache';
 import { AgentUrlParser, type JobPostingExtraction } from '../agents/agent-url.parser';
 
 interface ParsedJobData {
@@ -12,12 +13,28 @@ interface ParsedJobData {
   rawText: string;
 }
 
+type CachedParseResult = string | ParsedJobData;
+
 @Injectable()
 export class UrlParser {
   private readonly logger = new Logger(UrlParser.name);
   private readonly REQUEST_TIMEOUT = 10000; // 10 seconds
   private readonly useAgentFallback: boolean;
   private agentParser?: AgentUrlParser;
+
+  /**
+   * In-process cache of successful URL parses. Job postings are immutable
+   * for our purposes \u2014 a second user submitting the same URL within an
+   * hour shouldn't pay the 8\u201320s agent-parse cost again. In-memory (not
+   * Redis) on purpose: cheap, no extra infra, and each Fly worker independently
+   * warming its own cache is fine for this hit-rate profile.
+   */
+  private readonly cache = new NodeCache({
+    stdTTL: 60 * 60, // 1 hour
+    checkperiod: 120,
+    maxKeys: 500,
+    useClones: false,
+  });
 
   /**
    * Job boards that render content with JavaScript and need the
@@ -57,6 +74,39 @@ export class UrlParser {
    * 4. Otherwise → friendly error asking the user to paste the text
    */
   async parse(url: string): Promise<string | ParsedJobData> {
+    const cacheKey = this.cacheKeyForUrl(url);
+    const cached = this.cache.get<CachedParseResult>(cacheKey);
+    if (cached) {
+      this.logger.log(`Cache hit for ${url}`);
+      return cached;
+    }
+
+    const result = await this.parseUncached(url);
+    this.cache.set(cacheKey, result);
+    return result;
+  }
+
+  /**
+   * Normalise URL for caching: strip tracking params + fragment so the same
+   * job posting shared from different referrers hits the same cache entry.
+   */
+  private cacheKeyForUrl(url: string): string {
+    try {
+      const u = new URL(url);
+      u.hash = '';
+      const trackingPrefixes = ['utm_', 'mc_', 'fbclid', 'gclid', 'msclkid', 'igshid', 'ref_'];
+      for (const key of [...u.searchParams.keys()]) {
+        if (trackingPrefixes.some((p) => key.toLowerCase().startsWith(p))) {
+          u.searchParams.delete(key);
+        }
+      }
+      return u.toString();
+    } catch {
+      return url;
+    }
+  }
+
+  private async parseUncached(url: string): Promise<string | ParsedJobData> {
     const isDynamicSite = this.DYNAMIC_SITES.some((site) => url.includes(site));
 
     if (isDynamicSite) {
