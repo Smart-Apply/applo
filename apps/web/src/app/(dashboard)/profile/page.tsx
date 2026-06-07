@@ -580,33 +580,6 @@ export default function ProfilePage() {
     retry: false,
   });
 
-  if (isLoading) return <ProfileSkeleton />;
-
-  if (error) {
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
-        Profil konnte nicht geladen werden. Bitte versuche es später erneut.
-      </div>
-    );
-  }
-
-  const { score: profileStrength } = calculateProfileStrength(profile, user);
-
-  const initials =
-    `${user?.firstName?.charAt(0) ?? ''}${user?.lastName?.charAt(0) ?? ''}`
-      .toUpperCase()
-      .trim() || (user?.email?.charAt(0).toUpperCase() ?? '?');
-
-  const fullName =
-    [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || '';
-
-  const location = [profile?.city, profile?.country].filter(Boolean).join(', ');
-  const currentPosition = profile?.experiences?.[0]?.title;
-
-  const linkedinDisplay = profile?.linkedinUrl
-    ?.replace(/^https?:\/\/(www\.)?/, '')
-    .replace(/\/$/, '');
-
   const handleAddSkill = useCallback(
     (name: string) => {
       const currentSkills = profile?.skills ?? [];
@@ -669,6 +642,33 @@ export default function ProfilePage() {
     [profile?.languages, updateProfile],
   );
 
+  if (isLoading) return <ProfileSkeleton />;
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
+        Profil konnte nicht geladen werden. Bitte versuche es später erneut.
+      </div>
+    );
+  }
+
+  const { score: profileStrength } = calculateProfileStrength(profile, user);
+
+  const initials =
+    `${user?.firstName?.charAt(0) ?? ''}${user?.lastName?.charAt(0) ?? ''}`
+      .toUpperCase()
+      .trim() || (user?.email?.charAt(0).toUpperCase() ?? '?');
+
+  const fullName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || '';
+
+  const location = [profile?.city, profile?.country].filter(Boolean).join(', ');
+  const currentPosition = profile?.experiences?.[0]?.title;
+
+  const linkedinDisplay = profile?.linkedinUrl
+    ?.replace(/^https?:\/\/(www\.)?/, '')
+    .replace(/\/$/, '');
+
   const totalApps = analytics?.totals.applications ?? 0;
   const totalInterviews = analytics?.totals.interviews ?? 0;
   const responseRate = analytics ? Math.round(analytics.responseRate * 100) : 0;
@@ -688,10 +688,10 @@ export default function ProfilePage() {
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5"
+          className="group gap-1.5 transition-all duration-200 hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-md"
           onClick={() => setCvDialogOpen(true)}
         >
-          <Upload className="h-4 w-4" />
+          <Upload className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5" />
           CV hochladen
         </Button>
       </div>
