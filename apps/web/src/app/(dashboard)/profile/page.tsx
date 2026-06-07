@@ -985,9 +985,9 @@ export default function ProfilePage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-semibold text-foreground">{proj.name}</p>
-                            {proj.url && (
+                            {proj.url && sanitizeUrl(proj.url) && (
                               <a
-                                href={proj.url}
+                                href={sanitizeUrl(proj.url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-muted-foreground transition-colors hover:text-primary"
