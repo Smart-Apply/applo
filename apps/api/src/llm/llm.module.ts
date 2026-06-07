@@ -27,6 +27,9 @@ import { ConfigService } from '../config/config.service';
     {
       provide: 'AZURE_OPENAI_PROVIDER',
       useFactory: (configService: ConfigService, httpService: HttpService) => {
+        if (!configService.azureOpenAIEndpoint || !configService.azureOpenAIApiKey) {
+          return null;
+        }
         return new AzureOpenAIProvider(httpService, configService);
       },
       inject: [ConfigService, HttpService],
