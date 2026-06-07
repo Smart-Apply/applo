@@ -53,13 +53,17 @@ const ProjectsManager = dynamic(
 );
 
 const VALID_TABS = ['basic', 'experience', 'education', 'skills', 'projects', 'certificates'] as const;
+type ValidTab = (typeof VALID_TABS)[number];
+
+function isValidTab(tab: string | null): tab is ValidTab {
+  return tab !== null && (VALID_TABS as readonly string[]).includes(tab);
+}
 
 export default function ProfileEditPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = VALID_TABS.includes(searchParams.get('tab') as any)
-    ? (searchParams.get('tab') as string)
-    : 'basic';
+  const tabParam = searchParams.get('tab');
+  const initialTab = isValidTab(tabParam) ? tabParam : 'basic';
   const { data: profile, isLoading } = useProfile();
   const user = useAuthStore((state) => state.user);
   const updateProfile = useUpdateProfile();
