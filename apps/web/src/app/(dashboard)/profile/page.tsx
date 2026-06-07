@@ -487,7 +487,7 @@ function MiniDonut({ value }: { value: number }) {
   const offset = circumference - (value / 100) * circumference;
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" className="shrink-0">
-      <circle cx="20" cy="20" r={r} fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/40" />
+      <circle cx="20" cy="20" r={r} fill="none" stroke="currentColor" strokeWidth="4" className="text-muted-foreground/40" />
       <circle
         cx="20"
         cy="20"
