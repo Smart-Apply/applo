@@ -6,51 +6,35 @@ import { Button } from '@/components/ui/button';
 import { useProfile } from '@/hooks/use-profile';
 import { CenteredLoader } from '@/components/shared/loading';
 import { JobStep } from '@/components/forms/wizard/job-step';
-import { GenerateStep } from '@/components/forms/wizard/generate-step';
-import { Check, Briefcase, Sparkles, ChevronLeft, ArrowRight } from 'lucide-react';
-import type { JobPosting } from '@/types';
+import { ConfigureStep } from '@/components/forms/wizard/configure-step';
+import { Check, Briefcase, Settings, Sparkles, ChevronLeft, ArrowRight } from 'lucide-react';
+import type { JobPosting, Template } from '@/types';
 import { cn } from '@/lib/utils';
 
-type WizardStep = 'job' | 'generate';
+type WizardStep = 'job' | 'configure' | 'generate';
 
 interface StepConfig {
   id: WizardStep;
   title: string;
-  description: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const steps: StepConfig[] = [
-  {
-    id: 'job',
-    title: 'Stelle',
-    description: 'Hinzufügen',
-    icon: Briefcase,
-  },
-  {
-    id: 'generate',
-    title: 'Erstellen',
-    description: 'Generieren',
-    icon: Sparkles,
-  },
+  { id: 'job', title: 'Stelle hinzufügen', icon: Briefcase },
+  { id: 'configure', title: 'Konfigurieren', icon: Settings },
+  { id: 'generate', title: 'Fertig', icon: Sparkles },
 ];
 
 export type ApplicationLanguage = 'de' | 'en' | 'fr' | 'es' | 'it';
 
 interface ApplicationWizardProps {
-  /**
-   * If provided, the wizard skips the "Stelle" step and lands directly on
-   * the generation step with this job pre-selected. Used by the LinkedIn
-   * job-search flow that imports a JobPosting and routes to
-   * `/applications/new?jobPostingId=...`.
-   */
   initialJobPosting?: JobPosting | null;
 }
 
 export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps = {}) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<WizardStep>(
-    initialJobPosting ? 'generate' : 'job',
+    initialJobPosting ? 'configure' : 'job',
   );
   const [selectedJob, setSelectedJob] = useState<JobPosting | null>(
     initialJobPosting ?? null,
@@ -60,7 +44,6 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
 
-  // Redirect to onboarding if profile is empty
   useEffect(() => {
     if (!profileLoading && profile) {
       const hasMinimalProfile = profile.summary || (profile.skills && profile.skills.length > 0);
@@ -76,18 +59,18 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
 
   const handleNext = () => {
     if (currentStep === 'job' && selectedJob) {
-      setCurrentStep('generate');
+      setCurrentStep('configure');
     }
   };
 
   const handleBack = () => {
-    if (currentStep === 'generate') {
+    if (currentStep === 'configure') {
       setCurrentStep('job');
     }
   };
 
   const handleCancel = () => {
-    router.push('/dashboard');
+    router.push('/applications');
   };
 
   if (profileLoading) {
@@ -96,39 +79,62 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
 
   return (
     <div className="space-y-8">
-      {/* Step Indicator */}
-      <div className="relative mx-auto w-full max-w-xs sm:max-w-md">
-        <div className="absolute top-5 left-0 w-full h-0.5 bg-border z-0" />
-        <div className="relative z-10 flex justify-between">
+      {/* Step Indicator — 3-phase with done/active/todo states */}
+      <div className="relative mx-auto w-full max-w-2xl">
+        <div className="flex items-start justify-between">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = currentStep === step.id;
             const isCompleted = index < currentStepIndex;
+            const isTodo = index > currentStepIndex;
 
             return (
-              <div key={step.id} className="flex flex-col items-center bg-background px-2 sm:px-4">
-                <div
-                  className={cn(
-                    'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300',
-                    isActive
-                      ? 'border-primary bg-primary text-primary-foreground scale-110 shadow-glow'
-                      : isCompleted
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-muted-foreground/30 bg-background text-muted-foreground'
-                  )}
-                >
-                  {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
-                </div>
-                <div className="mt-2 text-center">
-                  <p
-                    className={cn(
-                      'text-xs font-semibold transition-colors duration-300',
-                      isActive ? 'text-primary' : 'text-muted-foreground'
+              <div key={step.id} className="flex items-center flex-1 last:flex-none">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="relative">
+                    <div
+                      className={cn(
+                        'flex items-center justify-center w-[52px] h-[52px] rounded-2xl transition-all duration-300',
+                        isCompleted && 'bg-green-500 text-white',
+                        isActive && 'bg-primary text-primary-foreground shadow-[0_6px_16px_rgba(27,42,73,0.28)]',
+                        isTodo && 'bg-muted text-muted-foreground',
+                      )}
+                    >
+                      {isCompleted ? (
+                        <Check className="w-5 h-5" strokeWidth={2.6} />
+                      ) : (
+                        <Icon className="w-5 h-5" />
+                      )}
+                    </div>
+                    {isActive && (
+                      <span className="absolute -inset-[5px] rounded-[19px] border-2 border-primary/35 animate-[ringPulse_1.8s_ease-out_infinite]" />
                     )}
-                  >
-                    {step.title}
-                  </p>
+                  </div>
+                  <div className="text-center">
+                    <p className={cn(
+                      'text-sm font-bold whitespace-nowrap',
+                      isTodo ? 'text-muted-foreground/50' : 'text-foreground',
+                    )}>
+                      {step.title}
+                    </p>
+                    <p className={cn(
+                      'text-xs font-semibold mt-0.5',
+                      isCompleted && 'text-green-600',
+                      isActive && 'text-foreground',
+                      isTodo && 'text-muted-foreground/50',
+                    )}>
+                      {isCompleted ? 'Erledigt' : isActive ? 'Aktiv' : 'Ausstehend'}
+                    </p>
+                  </div>
                 </div>
+                {index < steps.length - 1 && (
+                  <div className="flex-1 h-[3px] bg-muted rounded mx-4 mt-[-26px] overflow-hidden min-w-[48px]">
+                    <div
+                      className="h-full bg-green-500 rounded transition-all duration-500"
+                      style={{ width: isCompleted ? '100%' : '0%' }}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}
@@ -141,8 +147,11 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
           <JobStep onJobCreated={handleJobCreated} />
         )}
 
-        {currentStep === 'generate' && selectedJob && (
-          <GenerateStep jobPosting={selectedJob} />
+        {currentStep === 'configure' && selectedJob && (
+          <ConfigureStep
+            jobPosting={selectedJob}
+            onStepChange={setCurrentStep}
+          />
         )}
       </div>
 
@@ -163,8 +172,8 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
         </div>
       )}
 
-      {currentStep === 'generate' && (
-        <div className="flex items-center justify-start pt-6 border-t border-border/50">
+      {currentStep === 'configure' && (
+        <div className="flex items-center justify-between pt-6 border-t border-border/50">
           <Button variant="outline" onClick={handleBack}>
             <ChevronLeft className="mr-2 h-4 w-4" />
             Zurück

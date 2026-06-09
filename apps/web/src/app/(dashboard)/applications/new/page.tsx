@@ -25,7 +25,7 @@ function NewApplicationContent() {
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Neue Bewerbung</h1>
         <p className="text-muted-foreground max-w-lg mx-auto">
-          Füge eine Stellenanzeige hinzu und erstelle deine Bewerbung mit KI — in nur 2 Schritten.
+          Füge eine Stellenanzeige hinzu, konfiguriere deine Optionen und erstelle deine Bewerbung mit KI.
         </p>
       </div>
 

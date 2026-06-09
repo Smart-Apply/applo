@@ -843,7 +843,6 @@ export default function ProfilePage() {
                 </div>
                 <MiniDonut value={interviewRate} />
               </div>
-              </div>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
                 <div className="flex-1">
                   <p className="text-2xl font-bold text-foreground">{totalInterviews}</p>

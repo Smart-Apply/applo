@@ -238,13 +238,13 @@ function DashboardLayoutInner({
         </aside>
       )}
 
-      {/* Mobile Header */}
-      <div className="flex flex-1 flex-col md:hidden">
+      {/* Content column — single {children} prevents double-mount */}
+      <div className="flex flex-1 flex-col">
         {/* bg-background/95 (was /80) so scrolled content doesn't bleed
             through and visually "hover above" the logo — the issue
             surfaced in wave-2 E2E on iOS Chrome. backdrop-blur stays for
             the frosted-glass feel when something does peek through. */}
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border/50 bg-background/95 backdrop-blur-md px-4">
+        <header className="md:hidden sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border/50 bg-background/95 backdrop-blur-md px-4">
           <Link href="/dashboard" className="flex items-center">
             <Image
               src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
@@ -339,20 +339,18 @@ function DashboardLayoutInner({
           indicator (`env(safe-area-inset-bottom)`). Without this, the last
           row of every list/form gets covered by the nav.
         */}
-        <main className="flex-1 overflow-y-auto p-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:p-6">
-          {children}
+        {/* Main Content — single {children} render, responsive padding */}
+        <main className="flex-1 overflow-y-auto p-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0 md:h-screen">
+          {isEditMode ? (
+            <div className="h-full md:p-4">{children}</div>
+          ) : (
+            <div className="md:mx-auto md:max-w-7xl md:p-8">{children}</div>
+          )}
         </main>
-        <MobileBottomNav onMoreClick={() => setMobileMenuOpen(true)} />
+        <div className="md:hidden">
+          <MobileBottomNav onMoreClick={() => setMobileMenuOpen(true)} />
+        </div>
       </div>
-
-      {/* Desktop Main Content */}
-      <main className="hidden flex-1 md:block overflow-y-auto h-screen">
-        {isEditMode ? (
-          <div className="h-full p-4">{children}</div>
-        ) : (
-          <div className="mx-auto max-w-7xl p-8">{children}</div>
-        )}
-      </main>
     </div>
     </TooltipProvider>
   );
