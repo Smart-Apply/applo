@@ -1,0 +1,18 @@
+{
+  "id": "classic-ats",
+  "name": "Classic ATS",
+  "description": "Klares, ATS-optimiertes Layout mit maximaler Lesbarkeit für automatische Bewerbungsparser.",
+  "category": "Professional",
+  "isDefault": true,
+  "isAtsOptimized": true,
+  "previewColor": "#1a1a1a",
+  "colorVariants": [
+    { "id": "default", "name": "Klassisch", "accent": "#1a1a1a", "isDefault": true },
+    { "id": "blue", "name": "Navy", "accent": "#1B2A49" },
+    { "id": "teal", "name": "Teal", "accent": "#0d9488" }
+  ],
+  "customTemplates": {
+    "resume": "resume.hbs",
+    "coverLetter": "cover-letter.hbs"
+  }
+}

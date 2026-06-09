@@ -1,0 +1,22 @@
+/* Base styles shared across all templates */
+:root {
+  --accent-color: #1a1a1a;
+  --text-color: #1a1a1a;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  --border-color: #e5e7eb;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  color: var(--text-color);
+  line-height: 1.5;
+}

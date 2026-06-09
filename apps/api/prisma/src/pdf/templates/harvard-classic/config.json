@@ -1,0 +1,18 @@
+{
+  "id": "harvard-classic",
+  "name": "Harvard Classic",
+  "description": "Zeitloses, akademisches Design inspiriert vom klassischen Harvard-Format.",
+  "category": "Academic",
+  "isDefault": false,
+  "isAtsOptimized": true,
+  "previewColor": "#A51C30",
+  "colorVariants": [
+    { "id": "crimson", "name": "Harvard Crimson", "accent": "#A51C30", "isDefault": true },
+    { "id": "navy", "name": "Navy", "accent": "#1B2A49" },
+    { "id": "charcoal", "name": "Charcoal", "accent": "#374151" }
+  ],
+  "customTemplates": {
+    "resume": "resume.hbs",
+    "coverLetter": "cover-letter.hbs"
+  }
+}
