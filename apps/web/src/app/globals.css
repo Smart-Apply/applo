@@ -363,3 +363,101 @@
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+
+/* ============ APPLO STATE MACHINE ============ */
+.applo * { transform-box: view-box; }
+.applo { animation: apploEnter .4s cubic-bezier(.34,1.4,.64,1) both; transform-origin: 120px 256px; }
+@keyframes apploEnter { 0% { transform: scale(.94) translateY(8px) } 60% { transform: scale(1.012) translateY(-1px) } 100% { transform: none } }
+@keyframes fxPop { 0% { opacity: 0; transform: scale(.55) } 100% { opacity: 1; transform: scale(1) } }
+
+/* visibility defaults */
+.applo .a-l-up, .applo .a-r-up, .applo .a-r-wave, .applo .a-r-thumb, .applo .a-r-chin,
+.applo .mo-happy, .applo .mo-o, .applo .ey-happy, .applo .brow-think,
+.applo .fx-dots, .applo .fx-confetti, .applo .fx-gears { display: none; }
+.applo .fx-check { opacity: 0; stroke-dasharray: 46; stroke-dashoffset: 46; }
+
+/* IDLE */
+.applo .root-float { animation: apploFloaty 3s ease-in-out infinite; }
+.applo .body { animation: apploBreathe 3s ease-in-out infinite; transform-origin: 120px 201px; }
+.applo .ant-l { animation: apploSway 3.4s ease-in-out infinite; transform-origin: 100px 62px; }
+.applo .ant-r { animation: apploSway 3.8s ease-in-out infinite reverse; transform-origin: 140px 62px; }
+.applo .ey-open { animation: apploBlink 4.2s ease-in-out infinite; transform-origin: 120px 110px; }
+
+@keyframes apploFloaty { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+@keyframes apploBreathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.02) } }
+@keyframes apploSway { 0%,100% { transform: rotate(-4deg) } 50% { transform: rotate(4deg) } }
+@keyframes apploBlink { 0%,90%,100% { transform: scaleY(1) } 95% { transform: scaleY(.08) } }
+
+/* WAVE */
+.applo.state-wave .a-r-down { display: none; }
+.applo.state-wave .a-r-wave { display: block; animation: apploWave 1.2s ease-in-out both; transform-origin: 156px 174px; }
+.applo.state-wave .mo-neutral { display: none; }
+.applo.state-wave .mo-happy { display: block; }
+.applo.state-wave .ey-open { display: none; }
+.applo.state-wave .ey-happy { display: block; }
+.applo.state-wave .rig { animation: apploLean 1.2s ease-in-out both; transform-origin: 120px 250px; }
+.applo.state-wave .ant-r { animation: apploSway 1.2s ease-in-out .08s 1; transform-origin: 140px 62px; }
+@keyframes apploWave { 0% { transform: rotate(46deg) } 16% { transform: rotate(0deg) } 33% { transform: rotate(17deg) } 50% { transform: rotate(-6deg) } 67% { transform: rotate(17deg) } 84% { transform: rotate(-6deg) } 100% { transform: rotate(2deg) } }
+@keyframes apploLean { 0%,100% { transform: rotate(0) } 30%,75% { transform: rotate(2.2deg) } }
+
+/* THINKING */
+.applo.state-think .a-r-down { display: none; }
+.applo.state-think .a-r-chin { display: block; animation: apploTapChin 1.8s ease-in-out infinite; transform-origin: 158px 188px; }
+.applo.state-think .mo-neutral { display: none; }
+.applo.state-think .mo-o { display: block; }
+.applo.state-think .fx-dots { display: block; animation: fxPop .38s cubic-bezier(.34,1.5,.64,1) .04s both; transform-origin: 200px 17px; }
+.applo.state-think .d1 { animation: apploDot 1.4s ease-in-out 0s infinite; }
+.applo.state-think .d2 { animation: apploDot 1.4s ease-in-out .2s infinite; }
+.applo.state-think .d3 { animation: apploDot 1.4s ease-in-out .4s infinite; }
+.applo.state-think .ey-open { animation: apploReadBlink 2.8s ease-in-out infinite; transform-origin: 120px 110px; }
+.applo.state-think .rig { animation: apploTilt 4s ease-in-out infinite; transform-origin: 120px 250px; }
+@keyframes apploDot { 0%,60%,100% { opacity: .3; transform: translateY(0) } 30% { opacity: 1; transform: translateY(-5px) } }
+@keyframes apploReadBlink { 0%,100% { transform: translateX(-3px) scaleY(1) } 44% { transform: translateX(3px) scaleY(1) } 49% { transform: translateX(3px) scaleY(.12) } 54% { transform: translateX(3px) scaleY(1) } }
+@keyframes apploTilt { 0%,100% { transform: rotate(0) } 50% { transform: rotate(3.4deg) } }
+@keyframes apploTapChin { 0%,100% { transform: rotate(0) } 25% { transform: rotate(-3.2deg) } 50% { transform: rotate(0) } }
+
+/* PROCESSING */
+.applo.state-process .fx-gears { display: block; animation: fxPop .42s cubic-bezier(.34,1.5,.64,1) .04s both; transform-origin: 120px 199px; }
+.applo.state-process .mo-neutral { display: none; }
+.applo.state-process .mo-o { display: block; }
+.applo.state-process .ey-open { animation: apploPonder 3.6s ease-in-out infinite; transform-origin: 120px 110px; }
+.applo.state-process .gear-1 { animation: apploGearSpin 3s linear infinite; }
+.applo.state-process .gear-2 { animation: apploGearSpin 2.4s linear infinite reverse; }
+.applo.state-process .gear-3 { animation: apploGearSpin 1.9s linear infinite; }
+.applo.state-process .rig { animation: apploPonderLean 4.5s ease-in-out infinite; transform-origin: 120px 250px; }
+@keyframes apploGearSpin { to { transform: rotate(360deg) } }
+@keyframes apploPonder { 0%,100% { transform: translate(-2.5px,-2px) } 50% { transform: translate(2.5px,-2px) } }
+@keyframes apploPonderLean { 0%,100% { transform: rotate(-1.6deg) } 50% { transform: rotate(1.6deg) } }
+
+/* SUCCESS */
+.applo.state-success .a-l-down, .applo.state-success .a-r-down { display: none; }
+.applo.state-success .a-l-up, .applo.state-success .a-r-up { display: block; }
+.applo.state-success .mo-neutral { display: none; }
+.applo.state-success .mo-happy { display: block; }
+.applo.state-success .ey-open { display: none; }
+.applo.state-success .ey-happy { display: block; }
+.applo.state-success .fx-confetti { display: block; }
+.applo.state-success .fx-check { opacity: 1; animation: apploDraw .45s ease-out .12s both; }
+.applo.state-success .c1 { animation: apploBurst .9s ease-out both; }
+.applo.state-success .c2 { animation: apploBurst .9s ease-out .05s both; }
+.applo.state-success .c3 { animation: apploBurst .9s ease-out .1s both; }
+.applo.state-success .rig { animation: apploJump 1s cubic-bezier(.3,.7,.3,1) both; transform-origin: 120px 250px; }
+.applo.state-success .body { animation: apploSquash 1s ease-in-out both; transform-origin: 120px 242px; }
+@keyframes apploJump { 0% { transform: translateY(0) } 12% { transform: translateY(3px) } 42% { transform: translateY(-26px) } 68% { transform: translateY(0) } 80% { transform: translateY(-6px) } 100% { transform: translateY(0) } }
+@keyframes apploSquash { 0%,38% { transform: scaleY(1) scaleX(1) } 40% { transform: scaleY(.86) scaleX(1.06) } 58% { transform: scaleY(1.05) scaleX(.97) } 74% { transform: scaleY(.97) scaleX(1.02) } 100% { transform: scaleY(1) scaleX(1) } }
+@keyframes apploBurst { 0% { opacity: 0; transform: translateY(8px) scale(.3) } 25% { opacity: 1; transform: translateY(-3px) scale(1) } 100% { opacity: 0; transform: translateY(-22px) scale(1) } }
+@keyframes apploDraw { from { stroke-dashoffset: 46 } to { stroke-dashoffset: 0 } }
+
+/* DONE */
+.applo.state-done .a-r-down { display: none; }
+.applo.state-done .a-r-thumb { display: block; animation: apploThumb 1s ease-out both; transform-origin: 156px 178px; }
+.applo.state-done .fx-check { opacity: 1; animation: apploDraw .5s ease-out .12s both; }
+.applo.state-done .rig { animation: apploNod 1s ease-in-out both; transform-origin: 120px 250px; }
+@keyframes apploThumb { 0% { transform: rotate(40deg) } 35% { transform: rotate(-8deg) } 55% { transform: rotate(2deg) } 72% { transform: rotate(-3deg) } 100% { transform: rotate(0) } }
+@keyframes apploNod { 0%,100% { transform: rotate(0) } 28% { transform: rotate(2.8deg) } 55% { transform: rotate(0) } 78% { transform: rotate(1.6deg) } }
+
+@media (prefers-reduced-motion: reduce) {
+  .applo, .applo * { animation: none !important; }
+  .applo { opacity: 1 !important; transform: none !important; }
+  .applo .fx-check { opacity: 1 !important; stroke-dashoffset: 0 !important; }
+}

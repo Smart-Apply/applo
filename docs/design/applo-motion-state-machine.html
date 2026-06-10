@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Applo — Motion State Machine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f6f8fb; --surface:#fff; --surface-2:#f4f7fc;
+    --border:#e7ebf1; --ink:#15233f; --ink-soft:#33425c; --muted:#64748b; --muted-2:#94a3b8;
+    --blue:#2563eb; --blue-bg:#eaf1ff; --green:#15a34a; --green-bg:#dcf6e6;
+    --r:14px; --r-lg:22px;
+    --sh-sm:0 1px 2px rgba(20,33,61,.05);
+    --sh:0 4px 16px rgba(20,33,61,.06),0 1px 3px rgba(20,33,61,.05);
+    --sh-lg:0 24px 60px rgba(20,33,61,.14);
+    --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1180px;margin:0 auto;padding:54px 40px 90px;}
+
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:28px;flex-wrap:wrap;}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);margin:0 0 12px;}
+  h1{font-size:44px;line-height:1.05;font-weight:900;letter-spacing:-.03em;margin:0;}
+  .lead{color:var(--muted);font-size:16.5px;line-height:1.55;margin:16px 0 0;max-width:600px;}
+  .backlink{font-size:13.5px;font-weight:600;color:var(--blue);text-decoration:none;background:var(--surface);border:1px solid var(--border);padding:10px 16px;border-radius:12px;box-shadow:var(--sh-sm);white-space:nowrap;}
+  .backlink:hover{background:var(--blue-bg);}
+
+  /* ---- player ---- */
+  .player{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;margin-top:40px;}
+  .stage-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-lg);overflow:hidden;}
+  .stage{height:420px;display:grid;place-items:center;background:var(--surface-2);position:relative;}
+  .stage .badge{position:absolute;top:16px;left:16px;font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);background:var(--surface);border:1px solid var(--border);padding:6px 12px;border-radius:999px;}
+  .stage .statenow{position:absolute;top:16px;right:16px;font-size:12.5px;font-weight:700;color:var(--blue);background:var(--blue-bg);padding:6px 13px;border-radius:999px;}
+
+  .panel{display:flex;flex-direction:column;gap:10px;}
+  .panel h2{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin:2px 0 6px;}
+  .trigger{display:flex;align-items:flex-start;gap:13px;text-align:left;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;box-shadow:var(--sh-sm);transition:border-color .15s,background .15s,transform .05s;font-family:inherit;}
+  .trigger:hover{border-color:#c9d4e6;}
+  .trigger:active{transform:translateY(1px);}
+  .trigger.active{border-color:var(--blue);background:var(--blue-bg);}
+  .trigger .dot{flex:0 0 9px;width:9px;height:9px;border-radius:50%;margin-top:5px;background:var(--muted-2);}
+  .trigger.active .dot{background:var(--blue);}
+  .trigger .tx{flex:1;min-width:0;}
+  .trigger .tt{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .trigger .tt .time{font-size:11px;font-weight:700;color:var(--muted-2);background:var(--surface-2);border:1px solid var(--border);padding:2px 8px;border-radius:999px;letter-spacing:.02em;white-space:nowrap;}
+  .trigger.active .tt .time{background:#fff;}
+  .trigger .ds{font-size:13px;color:var(--muted);line-height:1.45;margin-top:3px;}
+
+  /* ---- context strip ---- */
+  section{margin-top:60px;}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:24px;}
+  .sec-head h2{font-size:14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0;}
+  .sec-head .hint{font-size:14px;color:var(--muted);}
+  .rule{flex:1;height:1px;background:var(--border);}
+  .ctx{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+  .ctx-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);padding:24px 22px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .ctx-stage{height:150px;display:grid;place-items:center;}
+  .ctx-card h4{font-size:15.5px;font-weight:800;margin:8px 0 5px;}
+  .ctx-card p{font-size:13px;color:var(--muted);line-height:1.5;margin:0;max-width:230px;}
+
+  /* ---- spec table ---- */
+  .spec{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh-sm);}
+  .spec th,.spec td{text-align:left;padding:13px 18px;font-size:13.5px;border-bottom:1px solid var(--border);}
+  .spec th{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);background:var(--surface-2);}
+  .spec tr:last-child td{border-bottom:none;}
+  .spec td.s{font-weight:700;}
+  .spec td.m{color:var(--muted);}
+  .spec .tag{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--blue);background:var(--blue-bg);padding:2px 7px;border-radius:6px;}
+
+  .note{margin-top:30px;display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;color:var(--ink-soft);font-size:13.5px;line-height:1.55;box-shadow:var(--sh-sm);}
+  .note b{color:var(--ink);}
+  .note .gdot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--green);margin-top:6px;}
+  .foot{margin-top:54px;color:var(--muted);font-size:13.5px;text-align:center;}
+
+  /* ============ APPLO STATE MACHINE (flat, no shadow/glow) ============ */
+  .applo *{transform-box:view-box;}
+  /* ---- state-change transition: whole character settles in on every change ---- */
+  .applo{animation:apploEnter .4s cubic-bezier(.34,1.4,.64,1) both;transform-origin:120px 256px;}
+  @keyframes apploEnter{0%{transform:scale(.94) translateY(8px)}60%{transform:scale(1.012) translateY(-1px)}100%{transform:none}}
+  /* ---- loop-effect groups ease in (e.g. Nachdenken → Verarbeiten) ---- */
+  @keyframes fxPop{0%{opacity:0;transform:scale(.55)}100%{opacity:1;transform:scale(1)}}
+  /* visibility defaults */
+  .applo .a-l-up,.applo .a-r-up,.applo .a-r-wave,.applo .a-r-thumb,.applo .a-r-chin,
+  .applo .mo-happy,.applo .mo-o,.applo .ey-happy,.applo .brow-think,
+  .applo .fx-dots,.applo .fx-confetti,.applo .fx-gears{display:none;}
+  .applo .fx-check{opacity:0;stroke-dasharray:46;stroke-dashoffset:46;}
+
+  /* IDLE — always on */
+  .applo .root-float{animation:floaty 3s ease-in-out infinite;}
+  .applo .body{animation:breathe 3s ease-in-out infinite;transform-origin:120px 201px;}
+  .applo .ant-l{animation:sway 3.4s ease-in-out infinite;transform-origin:100px 62px;}
+  .applo .ant-r{animation:sway 3.8s ease-in-out infinite reverse;transform-origin:140px 62px;}
+  .applo .ey-open{animation:blink 4.2s ease-in-out infinite;transform-origin:120px 110px;}
+
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+  @keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+  @keyframes blink{0%,90%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+
+  /* WAVE */
+  .applo.state-wave .a-r-down{display:none;}
+  .applo.state-wave .a-r-wave{display:block;animation:wave 1.2s ease-in-out both;transform-origin:156px 174px;}
+  .applo.state-wave .mo-neutral{display:none;}
+  .applo.state-wave .mo-happy{display:block;}
+  .applo.state-wave .ey-open{display:none;}
+  .applo.state-wave .ey-happy{display:block;}
+  .applo.state-wave .rig{animation:lean 1.2s ease-in-out both;transform-origin:120px 250px;}
+  .applo.state-wave .ant-r{animation:sway 1.2s ease-in-out .08s 1;transform-origin:140px 62px;}
+  @keyframes wave{0%{transform:rotate(46deg)}16%{transform:rotate(0deg)}33%{transform:rotate(17deg)}50%{transform:rotate(-6deg)}67%{transform:rotate(17deg)}84%{transform:rotate(-6deg)}100%{transform:rotate(2deg)}}
+  @keyframes lean{0%,100%{transform:rotate(0)}30%,75%{transform:rotate(2.2deg)}}
+
+  /* THINKING */
+  .applo.state-think .a-r-down{display:none;}
+  .applo.state-think .a-r-chin{display:block;animation:tapchin 1.8s ease-in-out infinite;transform-origin:158px 188px;}
+  .applo.state-think .mo-neutral{display:none;}
+  .applo.state-think .mo-o{display:block;}
+  .applo.state-think .fx-dots{display:block;animation:fxPop .38s cubic-bezier(.34,1.5,.64,1) .04s both;transform-origin:200px 17px;}
+  .applo.state-think .d1{animation:dot 1.4s ease-in-out 0s infinite;}
+  .applo.state-think .d2{animation:dot 1.4s ease-in-out .2s infinite;}
+  .applo.state-think .d3{animation:dot 1.4s ease-in-out .4s infinite;}
+  .applo.state-think .ey-open{animation:readblink 2.8s ease-in-out infinite;transform-origin:120px 110px;}
+  .applo.state-think .rig{animation:tilt 4s ease-in-out infinite;transform-origin:120px 250px;}
+  @keyframes dot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-5px)}}
+  @keyframes bubin{0%{opacity:0;transform:scale(.2)}100%{opacity:1;transform:scale(1)}}
+  @keyframes readblink{0%,100%{transform:translateX(-3px) scaleY(1)}44%{transform:translateX(3px) scaleY(1)}49%{transform:translateX(3px) scaleY(.12)}54%{transform:translateX(3px) scaleY(1)}}
+  @keyframes tilt{0%,100%{transform:rotate(0)}50%{transform:rotate(3.4deg)}}
+  @keyframes tapchin{0%,100%{transform:rotate(0)}25%{transform:rotate(-3.2deg)}50%{transform:rotate(0)}}
+
+  /* PROCESSING — gears turn in the belly while Applo ponders */
+  .applo.state-process .fx-gears{display:block;animation:fxPop .42s cubic-bezier(.34,1.5,.64,1) .04s both;transform-origin:120px 199px;}
+  .applo.state-process .mo-neutral{display:none;}
+  .applo.state-process .mo-o{display:block;}
+  .applo.state-process .ey-open{animation:ponder 3.6s ease-in-out infinite;transform-origin:120px 110px;}
+  .applo.state-process .gear-1{animation:gearspin 3s linear infinite;}
+  .applo.state-process .gear-2{animation:gearspin 2.4s linear infinite reverse;}
+  .applo.state-process .gear-3{animation:gearspin 1.9s linear infinite;}
+  .applo.state-process .rig{animation:ponderlean 4.5s ease-in-out infinite;transform-origin:120px 250px;}
+  @keyframes gearspin{to{transform:rotate(360deg)}}
+  @keyframes ponder{0%,100%{transform:translate(-2.5px,-2px)}50%{transform:translate(2.5px,-2px)}}
+  @keyframes ponderlean{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}
+
+  /* SUCCESS */
+  .applo.state-success .a-l-down,.applo.state-success .a-r-down{display:none;}
+  .applo.state-success .a-l-up,.applo.state-success .a-r-up{display:block;}
+  .applo.state-success .mo-neutral{display:none;}
+  .applo.state-success .mo-happy{display:block;}
+  .applo.state-success .ey-open{display:none;}
+  .applo.state-success .ey-happy{display:block;}
+  .applo.state-success .fx-confetti{display:block;}
+  .applo.state-success .fx-check{opacity:1;animation:draw .45s ease-out .12s both;}
+  .applo.state-success .c1{animation:burst .9s ease-out both;}
+  .applo.state-success .c2{animation:burst .9s ease-out .05s both;}
+  .applo.state-success .c3{animation:burst .9s ease-out .1s both;}
+  .applo.state-success .rig{animation:jump 1s cubic-bezier(.3,.7,.3,1) both;transform-origin:120px 250px;}
+  .applo.state-success .body{animation:squash 1s ease-in-out both;transform-origin:120px 242px;}
+  @keyframes jump{0%{transform:translateY(0)}12%{transform:translateY(3px)}42%{transform:translateY(-26px)}68%{transform:translateY(0)}80%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+  @keyframes squash{0%,38%{transform:scaleY(1) scaleX(1)}40%{transform:scaleY(.86) scaleX(1.06)}58%{transform:scaleY(1.05) scaleX(.97)}74%{transform:scaleY(.97) scaleX(1.02)}100%{transform:scaleY(1) scaleX(1)}}
+  @keyframes burst{0%{opacity:0;transform:translateY(8px) scale(.3)}25%{opacity:1;transform:translateY(-3px) scale(1)}100%{opacity:0;transform:translateY(-22px) scale(1)}}
+  @keyframes draw{from{stroke-dashoffset:46}to{stroke-dashoffset:0}}
+
+  /* DONE */
+  .applo.state-done .a-r-down{display:none;}
+  .applo.state-done .a-r-thumb{display:block;animation:thumb 1s ease-out both;transform-origin:156px 178px;}
+  .applo.state-done .fx-check{opacity:1;animation:draw .5s ease-out .12s both;}
+  .applo.state-done .rig{animation:nod 1s ease-in-out both;transform-origin:120px 250px;}
+  @keyframes thumb{0%{transform:rotate(40deg)}35%{transform:rotate(-8deg)}55%{transform:rotate(2deg)}72%{transform:rotate(-3deg)}100%{transform:rotate(0)}}
+  @keyframes nod{0%,100%{transform:rotate(0)}28%{transform:rotate(2.8deg)}55%{transform:rotate(0)}78%{transform:rotate(1.6deg)}}
+
+  @media (prefers-reduced-motion: reduce){
+    .applo,.applo *{animation:none !important;}
+    .applo{opacity:1 !important;transform:none !important;}
+    .applo .fx-check{opacity:1 !important;stroke-dashoffset:0 !important;}
+  }
+  @media(max-width:880px){
+    .player{grid-template-columns:1fr;}
+    .ctx{grid-template-columns:1fr;}
+    h1{font-size:34px;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="applo-rig.jsx"></script>
+<script type="text/babel">
+const { useState, useRef, useEffect, useCallback } = React;
+const { ApploRig } = window;
+
+const DUR = { wave:1200, success:1000, done:1000 }; // one-shot durations (ms)
+
+const TRIGGERS = [
+  { key:'wave',    tt:'Winken',     time:'1,2 s · einmal', ds:'Page-Load / Empty State — Arm winkt 2×, leichter Body-Lean, glückliches Blinzeln.' },
+  { key:'think',   tt:'Nachdenken', time:'Loop',           ds:'KI-Generierung läuft — drei Punkte als Typing-Indicator, Kopf neigt, Augen „lesen“.' },
+  { key:'process', tt:'Verarbeiten', time:'Loop',           ds:'Applo überlegt, was zu tun ist — im Bauch drehen sich die Zahnräder.' },
+  { key:'success', tt:'Erfolg',     time:'1,0 s · einmal', ds:'CV/Anschreiben fertig — Sprung mit Squash-&-Stretch, Arme hoch, Häkchen + Konfetti.' },
+  { key:'done',    tt:'Fertig',     time:'1,0 s · einmal', ds:'Schritt abgeschlossen / gespeichert — Daumen hoch, Häkchen zeichnet sich, sanftes Nicken.' },
+];
+
+const LABELS = { idle:'Idle', wave:'Winken', think:'Nachdenken', process:'Verarbeiten', success:'Erfolg', done:'Fertig' };
+
+function Player(){
+  const [state, setState] = useState('idle');
+  const [nonce, setNonce] = useState(0);
+  const timer = useRef(null);
+
+  const trigger = useCallback((key)=>{
+    if(timer.current){ clearTimeout(timer.current); timer.current=null; }
+    // loop states (no fixed duration) toggle off when re-clicked
+    if(!DUR[key] && state===key){ setState('idle'); setNonce(n=>n+1); return; }
+    setNonce(n=>n+1);
+    setState(key);
+    if(DUR[key]){
+      timer.current = setTimeout(()=>{ setState('idle'); setNonce(n=>n+1); timer.current=null; }, DUR[key]+60);
+    }
+  },[state]);
+
+  useEffect(()=>()=>{ if(timer.current) clearTimeout(timer.current); },[]);
+
+  return (
+    <div className="player">
+      <div className="stage-card">
+        <div className="stage">
+          <span className="badge">Live Preview</span>
+          <span className="statenow">{LABELS[state]}</span>
+          <ApploRig key={nonce} state={state} size={300} />
+        </div>
+      </div>
+      <div className="panel">
+        <h2>Trigger</h2>
+        {TRIGGERS.map(t=>(
+          <button key={t.key} className={"trigger"+((state===t.key)?" active":"")} onClick={()=>trigger(t.key)}>
+            <span className="dot"></span>
+            <span className="tx">
+              <span className="tt">{t.tt} <span className="time">{t.time}</span></span>
+              <span className="ds">{t.ds}</span>
+            </span>
+          </button>
+        ))}
+        <button className={"trigger"+((state==='idle')?" active":"")} onClick={()=>trigger('idle')} style={{marginTop:2}}>
+          <span className="dot"></span>
+          <span className="tx">
+            <span className="tt">Idle <span className="time">3 s · Loop</span></span>
+            <span className="ds">Default-Zustand — Atmen (±2%), Schweben (±4px), Antennen wippen versetzt, Blinzeln. Kein Arm.</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* Context cards: play a state, rest in idle, repeat — so one-shots stay readable */
+function ContextPlayer({ pose, gap=2600, size=130 }){
+  const [state, setState] = useState(pose);
+  const [nonce, setNonce] = useState(0);
+  useEffect(()=>{
+    let t1,t2,alive=true;
+    const loop=()=>{
+      if(!alive) return;
+      setState(pose); setNonce(n=>n+1);
+      if(DUR[pose]){
+        t1=setTimeout(()=>{ setState('idle'); setNonce(n=>n+1); }, DUR[pose]+60);
+      }
+      t2=setTimeout(loop, gap);
+    };
+    loop();
+    return ()=>{ alive=false; clearTimeout(t1); clearTimeout(t2); };
+  },[pose,gap]);
+  return <ApploRig key={nonce} state={state} size={size} />;
+}
+
+function App(){
+  return (
+    <div className="wrap">
+      <div className="top">
+        <div>
+          <p className="eyebrow">Brand Mascot · Motion System</p>
+          <h1>Applo — <span style={{color:'var(--blue)'}}>State Machine</span></h1>
+          <p className="lead">Fünf Bewegungszustände als interaktive State-Machine, gebaut nach der Motion-Spec: flaches 2D, getrennte Layer (Antennen · Augen · Arme · Body), Ease-in-out durchgehend. Getriggerte Zustände spielen einmal und fallen zurück ins Idle.</p>
+        </div>
+        <a className="backlink" href="SmartApply Maskottchen.html">← Charakter-Sheet</a>
+      </div>
+
+      <Player/>
+
+      <section>
+        <div className="sec-head"><h2>Im Produkt</h2><div className="rule"></div><span className="hint">Zustände spielen, ruhen, wiederholen</span></div>
+        <div className="ctx">
+          <div className="ctx-card">
+            <div className="ctx-stage"><ContextPlayer pose="wave" gap={3200} /></div>
+            <h4>Onboarding</h4>
+            <p>Applo winkt beim ersten Start und begrüßt neue Nutzer.</p>
+          </div>
+          <div className="ctx-card">
+            <div className="ctx-stage"><ApploRig state="think" size={130} /></div>
+            <h4>KI-Analyse läuft</h4>
+            <p>Während das Profil ausgewertet wird, denkt Applo sichtbar nach.</p>
+          </div>
+          <div className="ctx-card">
+            <div className="ctx-stage"><ApploRig state="process" size={130} /></div>
+            <h4>Wird verarbeitet</h4>
+            <p>Applo überlegt den nächsten Schritt — im Bauch drehen sich die Zahnräder.</p>
+          </div>
+          <div className="ctx-card">
+            <div className="ctx-stage"><ContextPlayer pose="success" gap={2800} /></div>
+            <h4>Erfolgreich erstellt</h4>
+            <p>Dokument fertig — kurzer Jubel mit Häkchen und Konfetti.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="sec-head"><h2>Motion-Spec</h2><div className="rule"></div><span className="hint">Timing &amp; Trigger</span></div>
+        <table className="spec">
+          <thead><tr><th>Zustand</th><th>Trigger</th><th>Timing</th><th>Bewegung</th></tr></thead>
+          <tbody>
+            <tr><td className="s">Idle</td><td className="m">always on</td><td><span className="tag">3 s loop</span></td><td className="m">Atmen ±2%, Schweben ±4px, Antennen versetzt, Blinzeln</td></tr>
+            <tr><td className="s">Wave</td><td className="m">page load · empty state</td><td><span className="tag">1,2 s · 1×</span></td><td className="m">Arm winkt 2×, Body-Lean, Antennen mit Verzögerung, Squint</td></tr>
+            <tr><td className="s">Thinking</td><td className="m">AI in progress</td><td><span className="tag">loop</span></td><td className="m">3 Punkte in Sequenz, Kopf-Tilt, Augen lesen L/R</td></tr>
+            <tr><td className="s">Processing</td><td className="m">Aufgabe wird bearbeitet</td><td><span className="tag">loop</span></td><td className="m">Zahnräder drehen im Bauch, grübelnder Blick, Augenbraue, leichter Kopf-Lean</td></tr>
+            <tr><td className="s">Success</td><td className="m">Dokument generiert</td><td><span className="tag">1,0 s · 1×</span></td><td className="m">Sprung + Squash/Stretch, Arme hoch, Häkchen, Konfetti</td></tr>
+            <tr><td className="s">Done</td><td className="m">Schritt gespeichert</td><td><span className="tag">1,0 s · 1×</span></td><td className="m">Daumen hoch + Nicken, Häkchen zeichnet sich auf der Brust</td></tr>
+          </tbody>
+        </table>
+        <div className="note">
+          <span className="gdot"></span>
+          <span><b>Barrierefrei &amp; performant:</b> Reine SVG/CSS-Bewegung — kein Video, kein GIF, keine Runtime-Library. <b>prefers-reduced-motion</b> friert Applo auf den statischen Zustand ein. Die getrennten Layer (Antennen / Augen / Arme / Body) und Timings sind so strukturiert, dass sie sich 1:1 nach Lottie oder Rive portieren lassen.</span>
+        </div>
+      </section>
+
+      <p className="foot">SmartApply Maskottchen „Applo“ · Motion State Machine</p>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
