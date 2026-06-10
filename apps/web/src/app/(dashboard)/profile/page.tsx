@@ -836,7 +836,6 @@ export default function ProfilePage() {
                 <MiniDonut value={responseRate} />
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
                 <div className="flex-1">
                   <p className="text-2xl font-bold text-foreground">{analytics?.totals.activelyTracked ?? 0}</p>
                   <p className="text-xs text-muted-foreground">Aktiv verfolgt</p>
