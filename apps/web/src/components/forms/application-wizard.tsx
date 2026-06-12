@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/hooks/use-profile';
 import { CenteredLoader } from '@/components/shared/loading';
+import { ApploGuide } from '@/components/ui/applo-guide';
+import type { ApploGuideStep } from '@/components/ui/applo-guide';
 import { JobStep } from '@/components/forms/wizard/job-step';
 import { ConfigureStep } from '@/components/forms/wizard/configure-step';
 import { Check, Briefcase, Settings, Sparkles, ChevronLeft, ArrowRight } from 'lucide-react';
-import type { JobPosting, Template } from '@/types';
+import type { JobPosting } from '@/types';
 import { cn } from '@/lib/utils';
 
 type WizardStep = 'job' | 'configure' | 'generate';
@@ -39,10 +41,22 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
   const [selectedJob, setSelectedJob] = useState<JobPosting | null>(
     initialJobPosting ?? null,
   );
+  const [generation, setGeneration] = useState({ generating: false, finishing: false });
 
   const { data: profile, isLoading: profileLoading } = useProfile();
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
+
+  const handleGenerationStateChange = useCallback((generating: boolean, finishing: boolean) => {
+    setGeneration(prev =>
+      prev.generating === generating && prev.finishing === finishing
+        ? prev
+        : { generating, finishing },
+    );
+  }, []);
+
+  const guideStep: ApploGuideStep =
+    currentStep === 'job' ? 'add' : generation.generating ? 'loading' : 'config';
 
   useEffect(() => {
     if (!profileLoading && profile) {
@@ -79,6 +93,9 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
 
   return (
     <div className="space-y-8">
+      {/* Applo guide companion — above the step path (pb widens the gap to the indicator) */}
+      <ApploGuide step={guideStep} finishing={generation.finishing} className="pb-6" />
+
       {/* Step Indicator — 3-phase with done/active/todo states */}
       <div className="relative mx-auto w-full max-w-2xl">
         <div className="flex items-start justify-between">
@@ -151,6 +168,7 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
           <ConfigureStep
             jobPosting={selectedJob}
             onStepChange={setCurrentStep}
+            onGenerationStateChange={handleGenerationStateChange}
           />
         )}
       </div>

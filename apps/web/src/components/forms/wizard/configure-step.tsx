@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { CenteredLoader } from '@/components/shared/loading';
-import { TemplateCard } from '@/components/templates/template-card';
 import { useProfile } from '@/hooks/use-profile';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCreateApplicationWithGeneration } from '@/hooks/use-applications';
@@ -34,6 +33,9 @@ import type { JobPosting, Template } from '@/types';
 
 export type ApplicationLanguage = 'de' | 'en' | 'fr' | 'es' | 'it';
 
+/** Faked generation progress: estimated total duration of the pipeline. */
+const TOTAL_SECONDS = 60;
+
 const LANGUAGE_OPTIONS: { value: ApplicationLanguage; label: string; flag: string }[] = [
   { value: 'de', label: 'Deutsch', flag: '🇩🇪' },
   { value: 'en', label: 'English', flag: '🇬🇧' },
@@ -45,6 +47,13 @@ const LANGUAGE_OPTIONS: { value: ApplicationLanguage; label: string; flag: strin
 interface TemplateGroup {
   baseTemplate: Template;
   colorVariants: { id: string; accentColor: string; colorVariantName: string }[];
+}
+
+/** Template preview image served by the API (same source as the PDF render). */
+function templatePreviewUrl(templateId: string): string {
+  const base =
+    process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3000';
+  return `${base}/api/v1/templates/${templateId}/preview`;
 }
 
 function groupTemplatesByBase(templates: Template[]): TemplateGroup[] {
@@ -86,9 +95,15 @@ function groupTemplatesByBase(templates: Template[]): TemplateGroup[] {
 interface ConfigureStepProps {
   jobPosting: JobPosting;
   onStepChange: (step: 'job' | 'configure' | 'generate') => void;
+  /** Reports generating/finishing so the wizard can drive the Applo guide above the step path. */
+  onGenerationStateChange?: (generating: boolean, finishing: boolean) => void;
 }
 
-export function ConfigureStep({ jobPosting, onStepChange }: ConfigureStepProps) {
+export function ConfigureStep({
+  jobPosting,
+  onStepChange,
+  onGenerationStateChange,
+}: ConfigureStepProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
@@ -101,7 +116,7 @@ export function ConfigureStep({ jobPosting, onStepChange }: ConfigureStepProps) 
   const [selectedResumeTemplateId, setSelectedResumeTemplateId] = useState<string | null>(null);
   const [generateCoverLetter, setGenerateCoverLetter] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState<ApplicationLanguage>('de');
-  const [showAllTemplates, setShowAllTemplates] = useState(false);
+  const [hoverGroupKey, setHoverGroupKey] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const isGenerating = createApplication.isPending || isRedirecting;
@@ -117,6 +132,12 @@ export function ConfigureStep({ jobPosting, onStepChange }: ConfigureStepProps) 
     }, 1000);
     return () => clearInterval(interval);
   }, [isGenerating]);
+
+  // Drive the wizard-level Applo guide (process → success once done).
+  const isFinishing = isGenerating && (isRedirecting || elapsedSeconds >= TOTAL_SECONDS);
+  useEffect(() => {
+    onGenerationStateChange?.(isGenerating, isFinishing);
+  }, [isGenerating, isFinishing, onGenerationStateChange]);
 
   const resumeTemplateGroups = resumeTemplates ? groupTemplatesByBase(resumeTemplates) : [];
 
@@ -204,6 +225,18 @@ export function ConfigureStep({ jobPosting, onStepChange }: ConfigureStepProps) 
   const getSelectedVariantForGroup = (group: TemplateGroup) =>
     group.colorVariants.find(v => v.id === effectiveResumeTemplateId)?.id;
 
+  // Live preview shows the hovered design, otherwise the selected one.
+  const selectedGroup = resumeTemplateGroups.find(isGroupSelected) ?? resumeTemplateGroups[0];
+  const shownGroup =
+    (hoverGroupKey &&
+      resumeTemplateGroups.find(g => g.baseTemplate.id === hoverGroupKey)) ||
+    selectedGroup;
+  const shownTemplateId = shownGroup
+    ? shownGroup === selectedGroup
+      ? (effectiveResumeTemplateId ?? shownGroup.baseTemplate.id)
+      : shownGroup.baseTemplate.id
+    : null;
+
   if (clLoading || rtLoading) {
     return <CenteredLoader message="Vorlagen werden geladen..." />;
   }
@@ -218,7 +251,6 @@ export function ConfigureStep({ jobPosting, onStepChange }: ConfigureStepProps) 
     ];
 
     const filteredSteps = generateCoverLetter ? STEPS : STEPS.filter(s => s.key !== 'cover');
-    const TOTAL_SECONDS = 60;
     const pct = Math.min(100, Math.round((elapsedSeconds / TOTAL_SECONDS) * 100));
     const currentStepIdx = filteredSteps.findIndex(s => elapsedSeconds < s.doneAt);
     const activeIdx = currentStepIdx === -1 ? filteredSteps.length - 1 : currentStepIdx;
@@ -421,36 +453,140 @@ export function ConfigureStep({ jobPosting, onStepChange }: ConfigureStepProps) 
         </CardContent>
       </Card>
 
-      {/* Template Picker */}
+      {/* Template Picker — list + live preview */}
       <Card className="shadow-soft border-border/50">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Design auswählen</CardTitle>
-              <CardDescription>
-                Wähle eine Vorlage für deinen Lebenslauf.
-                {generateCoverLetter && ' Das Anschreiben wird automatisch im passenden Design erstellt.'}
-              </CardDescription>
-            </div>
-            {resumeTemplateGroups.length > 3 && (
-              <Button variant="ghost" size="sm" onClick={() => setShowAllTemplates(!showAllTemplates)}>
-                {showAllTemplates ? 'Weniger' : 'Alle anzeigen'}
-              </Button>
-            )}
-          </div>
+          <CardTitle className="text-lg">Design auswählen</CardTitle>
+          <CardDescription>
+            Fahre über eine Vorlage, um rechts die Vorschau zu sehen.
+            {generateCoverLetter && ' Das Anschreiben wird automatisch im passenden Design erstellt.'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {(showAllTemplates ? resumeTemplateGroups : resumeTemplateGroups.slice(0, 3)).map(group => (
-              <TemplateCard
-                key={group.baseTemplate.id}
-                template={group.baseTemplate}
-                isSelected={isGroupSelected(group)}
-                onSelect={setSelectedResumeTemplateId}
-                colorVariants={group.colorVariants.length > 1 ? group.colorVariants : undefined}
-                selectedVariantId={getSelectedVariantForGroup(group)}
-              />
-            ))}
+          <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
+            {/* Template list */}
+            <div className="space-y-3">
+              {resumeTemplateGroups.map(group => {
+                const selected = isGroupSelected(group);
+                return (
+                  <div
+                    key={group.baseTemplate.id}
+                    role="button"
+                    tabIndex={0}
+                    onMouseEnter={() => setHoverGroupKey(group.baseTemplate.id)}
+                    onMouseLeave={() => setHoverGroupKey(null)}
+                    onClick={() =>
+                      setSelectedResumeTemplateId(
+                        getSelectedVariantForGroup(group) ?? group.baseTemplate.id,
+                      )
+                    }
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedResumeTemplateId(
+                          getSelectedVariantForGroup(group) ?? group.baseTemplate.id,
+                        );
+                      }
+                    }}
+                    className={cn(
+                      'flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-all',
+                      selected
+                        ? 'border-primary bg-primary/5 shadow-sm ring-2 ring-primary/20'
+                        : 'border-border/50 bg-background hover:border-border hover:bg-muted/30',
+                    )}
+                  >
+                    <div className="relative h-20 w-[60px] shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted">
+                      <Image
+                        src={templatePreviewUrl(group.baseTemplate.id)}
+                        alt={`${group.baseTemplate.name} Miniatur`}
+                        fill
+                        unoptimized
+                        className="object-cover object-top"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {group.baseTemplate.name.replace(/\s*\([^)]*\)\s*$/, '')}
+                        </p>
+                        <Badge variant="secondary" className="shrink-0 text-[10px]">
+                          {group.baseTemplate.category}
+                        </Badge>
+                      </div>
+                      {group.baseTemplate.description && (
+                        <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                          {group.baseTemplate.description}
+                        </p>
+                      )}
+                      {selected && group.colorVariants.length > 1 && (
+                        <div
+                          className="mt-2 flex items-center gap-1.5"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <span className="text-xs text-muted-foreground">Farbe:</span>
+                          {group.colorVariants.map(variant => {
+                            const variantSelected = variant.id === effectiveResumeTemplateId;
+                            return (
+                              <button
+                                key={variant.id}
+                                type="button"
+                                title={variant.colorVariantName}
+                                onClick={() => setSelectedResumeTemplateId(variant.id)}
+                                className={cn(
+                                  'h-5 w-5 rounded-full border-2 transition-all hover:scale-110',
+                                  variantSelected
+                                    ? 'border-primary ring-2 ring-primary/25'
+                                    : 'border-border hover:border-muted-foreground',
+                                )}
+                                style={{ backgroundColor: variant.accentColor }}
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    <span
+                      className={cn(
+                        'mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors',
+                        selected
+                          ? 'bg-primary text-primary-foreground'
+                          : 'border border-border bg-background',
+                      )}
+                    >
+                      {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Live preview pane */}
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+              <div className="mb-2 flex items-center justify-between px-1">
+                <p className="text-sm text-muted-foreground">
+                  Vorschau:{' '}
+                  <span className="font-semibold text-foreground">
+                    {shownGroup?.baseTemplate.name.replace(/\s*\([^)]*\)\s*$/, '')}
+                  </span>
+                </p>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+                  Live
+                </span>
+              </div>
+              {shownTemplateId && (
+                <div className="relative aspect-[8.5/11] overflow-hidden rounded-lg border border-border/50 bg-white">
+                  <Image
+                    key={shownTemplateId}
+                    src={templatePreviewUrl(shownTemplateId)}
+                    alt="Template Vorschau"
+                    fill
+                    unoptimized
+                    className="object-cover animate-in fade-in duration-300"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
