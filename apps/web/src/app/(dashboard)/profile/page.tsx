@@ -493,7 +493,6 @@ function ApploWaveOnClick({ size = 200 }: { size?: number }) {
     </button>
   );
 }
-
 function CompanyMark({ name }: { name: string }) {
   const initials = name
     .split(/[\s]+/)
@@ -1212,7 +1211,6 @@ export default function ProfilePage() {
               onAdd={handleAddLanguage}
             />
           </div>
-
           {/* ── Applo ── */}
           <div className="flex flex-col items-center py-4">
             <ApploWaveOnClick size={200} />
