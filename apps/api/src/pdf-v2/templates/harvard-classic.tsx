@@ -54,10 +54,13 @@ const COLORS = {
   border: '#1a1a1a',
 };
 
+/** Charcoal — the original monochrome look when the DB row has no accent. */
+const ACCENT_FALLBACK = COLORS.text;
+
 /** CSS inches → PDF pt. */
 const inch = (n: number) => n * 72;
 
-const buildStyles = (rp: ReactPdfNamespace) =>
+const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
   rp.StyleSheet.create({
     // ── Page (CSS: padding 0.5in) ──
     page: {
@@ -83,10 +86,11 @@ const buildStyles = (rp: ReactPdfNamespace) =>
       textTransform: 'uppercase',
       lineHeight: 1.15,
       marginBottom: SP.xxs,
+      color: accent,
     },
     headerDivider: {
       borderTopWidth: 1,
-      borderTopColor: COLORS.border,
+      borderTopColor: accent,
       borderTopStyle: 'solid',
       marginTop: SP.xs,
       marginBottom: SP.xs,
@@ -115,6 +119,7 @@ const buildStyles = (rp: ReactPdfNamespace) =>
       textTransform: 'uppercase',
       marginTop: SP.lg,
       marginBottom: SP.sm,
+      color: accent,
     },
 
     // ── Entry container ──
@@ -298,7 +303,8 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
     const ContactInfo = ContactInfoFactory(rp);
 
     return function HarvardClassicResume({ data, meta }: ReactPdfResumeProps): ReactElement {
-      const styles = buildStyles(rp);
+      const accent = meta.accentColor || ACCENT_FALLBACK;
+      const styles = buildStyles(rp, accent);
       // Prefer the explicit export-request language (data.language) over the
       // DB template row's language (meta.language). The DB row may be the
       // English fallback when no DE/FR/ES/IT variant has been seeded for
@@ -619,9 +625,10 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
 
     return function HarvardClassicCoverLetter({
       data,
-      meta: _meta,
+      meta,
     }: ReactPdfCoverLetterProps): ReactElement {
-      const styles = buildStyles(rp);
+      const accent = meta.accentColor || ACCENT_FALLBACK;
+      const styles = buildStyles(rp, accent);
       const contactParts = buildCoverLetterContactParts(data);
 
       return createElement(

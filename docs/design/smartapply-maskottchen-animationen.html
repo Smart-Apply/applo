@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SmartApply Maskottchen — Animationen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f6f8fb; --surface:#fff; --surface-2:#f8fafc;
+    --border:#e7ebf1; --ink:#15233f; --ink-soft:#33425c; --muted:#64748b; --muted-2:#94a3b8;
+    --blue:#2563eb; --blue-bg:#eaf1ff; --green:#15a34a; --green-bg:#dcf6e6;
+    --light-stage:linear-gradient(160deg,#f3f6fc 0%,#dbe5f3 100%);
+    --r:14px; --r-lg:22px;
+    --sh-sm:0 1px 2px rgba(20,33,61,.05);
+    --sh:0 4px 16px rgba(20,33,61,.06),0 1px 3px rgba(20,33,61,.05);
+    --sh-lg:0 24px 60px rgba(20,33,61,.14);
+    --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1180px;margin:0 auto;padding:54px 40px 90px;}
+
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:28px;flex-wrap:wrap;}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);margin:0 0 12px;}
+  h1{font-size:46px;line-height:1.04;font-weight:900;letter-spacing:-.03em;margin:0;}
+  .lead{color:var(--muted);font-size:17px;line-height:1.55;margin:16px 0 0;max-width:580px;}
+  .backlink{font-size:13.5px;font-weight:600;color:var(--blue);text-decoration:none;background:var(--surface);border:1px solid var(--border);padding:10px 16px;border-radius:12px;box-shadow:var(--sh-sm);white-space:nowrap;}
+  .backlink:hover{background:var(--blue-bg);}
+
+  section{margin-top:60px;}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:24px;}
+  .sec-head h2{font-size:14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0;}
+  .sec-head .hint{font-size:14px;color:var(--muted);}
+  .rule{flex:1;height:1px;background:var(--border);}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:440px 1fr;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-lg);overflow:hidden;margin-top:38px;}
+  .hero-stage{position:relative;display:grid;place-items:center;padding:40px;background:var(--light-stage);}
+  .hero-stage::after{content:"";position:absolute;inset:0;background:radial-gradient(75% 60% at 50% 38%,transparent,rgba(21,35,63,.06));pointer-events:none;}
+  .hero-info{padding:46px 44px;display:flex;flex-direction:column;justify-content:center;}
+  .hero-info h3{font-size:34px;font-weight:900;letter-spacing:-.02em;margin:0;}
+  .hero-info p{color:var(--ink-soft);font-size:16px;line-height:1.6;margin:16px 0 0;max-width:430px;}
+  .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;}
+  .pill{font-size:13px;font-weight:600;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--border);padding:7px 13px;border-radius:999px;}
+
+  /* anim grid */
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  .card{border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;background:var(--surface);}
+  .card .stage{height:240px;display:grid;place-items:center;padding:14px;background:var(--light-stage);position:relative;overflow:hidden;}
+  .card .label{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-top:1px solid var(--border);}
+  .card .label .l{font-size:15px;font-weight:700;}
+  .card .label .n{font-size:12.5px;color:var(--muted-2);}
+
+  /* shared shadow under characters */
+  .stage svg{position:relative;filter:drop-shadow(0 16px 20px rgba(20,33,61,.20));}
+
+  /* ====== ANIMATION ENGINE ====== */
+  /* whole-character motion is applied to the root <svg>; part motion to inner groups */
+  .stage svg .m-eyes,.stage svg .m-wavearm,.stage svg .m-celearms,
+  .stage svg .m-confetti,.stage svg .m-check,.stage svg .m-ant,
+  .stage svg .m-think,.stage svg [class*="m-think-"]{
+    transform-box:view-box;
+  }
+
+  /* IDLE / WAVE */
+  .anim-wave svg{animation:breathe 3.2s ease-in-out infinite;transform-origin:120px 252px;}
+  .anim-wave .m-wavearm{animation:wavehand 1.1s ease-in-out infinite;transform-origin:158px 176px;}
+  .anim-wave .m-eyes{animation:blink 4.6s ease-in-out infinite;transform-origin:120px 110px;}
+  .anim-wave .m-ant-l{animation:antbob 3.2s ease-in-out infinite;transform-origin:100px 60px;}
+  .anim-wave .m-ant-r{animation:antbob 3.2s ease-in-out .25s infinite;transform-origin:140px 60px;}
+
+  /* THINK */
+  .anim-think svg{animation:tilt 4s ease-in-out infinite;transform-origin:120px 200px;}
+  .anim-think .m-think-d1{animation:dotPop 3s ease-in-out infinite;}
+  .anim-think .m-think-d2{animation:dotPop 3s ease-in-out .18s infinite;}
+  .anim-think .m-think-t1{animation:dotBlink 1.5s ease-in-out infinite;}
+  .anim-think .m-think-t2{animation:dotBlink 1.5s ease-in-out .25s infinite;}
+  .anim-think .m-think-t3{animation:dotBlink 1.5s ease-in-out .5s infinite;}
+
+  /* CELEBRATE */
+  .anim-celebrate svg{animation:hop 1.5s cubic-bezier(.3,.6,.3,1) infinite;transform-origin:120px 252px;}
+  .anim-celebrate .m-celearms{animation:armcheer 1.5s ease-in-out infinite;transform-origin:120px 180px;}
+  .anim-celebrate .m-confetti{animation:confetti 1.5s ease-in-out infinite;transform-origin:120px 80px;}
+
+  /* DONE */
+  .anim-done svg{animation:nod 3s ease-in-out infinite;transform-origin:120px 252px;}
+  .anim-done .m-check{animation:checkpop 3s cubic-bezier(.34,1.56,.64,1) infinite;transform-origin:186px 66px;}
+  .anim-done .m-eyes{animation:blink 4.6s ease-in-out 1s infinite;transform-origin:120px 110px;}
+
+  @keyframes breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.012)}}
+  @keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+  @keyframes wavehand{0%,100%{transform:rotate(2deg)}25%{transform:rotate(20deg)}60%{transform:rotate(-10deg)}}
+  @keyframes antbob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(3deg)}}
+  @keyframes tilt{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+  @keyframes dotPop{0%,70%,100%{opacity:0;transform:translateY(4px) scale(.6)}20%,55%{opacity:.6;transform:translateY(0) scale(1)}}
+  @keyframes dotBlink{0%,100%{opacity:.25}50%{opacity:1}}
+  @keyframes hop{0%,100%{transform:translateY(0) scaleY(1)}15%{transform:translateY(2px) scaleY(.94)}45%{transform:translateY(-20px) scaleY(1.04)}70%{transform:translateY(0) scaleY(.97)}}
+  @keyframes armcheer{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+  @keyframes confetti{0%{opacity:0;transform:translateY(10px) scale(.7) rotate(-8deg)}30%{opacity:1}100%{opacity:0;transform:translateY(-14px) scale(1.1) rotate(10deg)}}
+  @keyframes nod{0%,100%{transform:rotate(0)}50%{transform:rotate(2deg)}}
+  @keyframes checkpop{0%,70%,100%{transform:scale(1)}80%{transform:scale(0)}88%{transform:scale(1.25)}94%{transform:scale(.92)}}
+
+  /* ===== USE CASES (flat, in UI context) ===== */
+  .uses{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .uc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);padding:26px 24px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .uc .uc-stage{height:150px;display:grid;place-items:center;}
+  .uc .uc-stage svg{filter:none;}
+  .uc h4{font-size:16px;font-weight:800;margin:6px 0 6px;letter-spacing:-.01em;}
+  .uc p{font-size:13.5px;color:var(--muted);line-height:1.5;margin:0;max-width:230px;}
+  .uc .cta{margin-top:16px;font-size:13.5px;font-weight:700;color:#fff;background:var(--blue);padding:9px 18px;border-radius:10px;white-space:nowrap;}
+
+  .note{margin-top:46px;display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;color:var(--ink-soft);font-size:13.5px;line-height:1.55;box-shadow:var(--sh-sm);}
+  .note b{color:var(--ink);}
+  .note .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--green);margin-top:6px;}
+  .foot{margin-top:54px;color:var(--muted);font-size:13.5px;text-align:center;}
+
+  @media(prefers-reduced-motion:reduce){
+    .stage svg,[class^="anim-"] *{animation:none !important;}
+  }
+  @media(max-width:880px){
+    .hero{grid-template-columns:1fr;}
+    .grid{grid-template-columns:repeat(2,1fr);}
+    .uses{grid-template-columns:1fr;}
+    h1{font-size:36px;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="mascot.jsx"></script>
+<script type="text/babel">
+const { Mascot } = window;
+
+const ANIMS = [
+  { key:'wave',      cls:'anim-wave',      l:'Winken',     n:'Begrüßung' },
+  { key:'think',     cls:'anim-think',     l:'Nachdenken', n:'Analyse · Laden' },
+  { key:'celebrate', cls:'anim-celebrate', l:'Feiern',     n:'Erfolg' },
+  { key:'done',      cls:'anim-done',      l:'Fertig',     n:'Abgeschlossen' },
+];
+
+const USES = [
+  { pose:'wave', cls:'anim-wave', h:'Onboarding', p:'Applo winkt beim ersten Start und begrüßt neue Nutzer.', cta:'Los geht’s' },
+  { pose:'think', cls:'anim-think', h:'Ladezustand', p:'Während die Bewerbung analysiert wird, denkt Applo sichtbar nach.', cta:null },
+  { pose:'celebrate', cls:'anim-celebrate', h:'Erfolgsmeldung', p:'Bewerbung abgeschickt — Applo feiert mit Konfetti mit.', cta:'Weiter' },
+];
+
+function Hero(){
+  return (
+    <div className="hero">
+      <div className="hero-stage anim-wave"><Mascot pose="wave" variant="3d" size={300} id="hero" /></div>
+      <div className="hero-info">
+        <h3>Applo in Bewegung</h3>
+        <p>Fünf loopende Mikro-Animationen, gebaut als reine CSS-Bewegung auf der Vektorgrafik — leicht, skalierbar und direkt in App, Web oder als animierter Sticker einsetzbar. Atmen und Blinzeln laufen im Idle, dazu eine Geste pro Zustand.</p>
+        <div className="pill-row">
+          <span className="pill">Atmen + Blinzeln</span>
+          <span className="pill">Winken</span>
+          <span className="pill">Nachdenken</span>
+          <span className="pill">Feiern</span>
+          <span className="pill">Häkchen-Pop</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Sheet(){
+  return (
+    <div className="wrap">
+      <div className="top">
+        <div>
+          <p className="eyebrow">Brand Mascot · Motion</p>
+          <h1>Applo — <span style={{color:'var(--blue)'}}>Animationen</span></h1>
+          <p className="lead">Bewegungsstudien für das SmartApply-Maskottchen. Jede Pose bekommt eine charaktervolle, dezent loopende Animation — für lebendige UI-Momente ohne Ablenkung.</p>
+        </div>
+        <a className="backlink" href="SmartApply Maskottchen.html">← Charakter-Sheet</a>
+      </div>
+
+      <Hero/>
+
+      <section>
+        <div className="sec-head"><h2>Animations-Set</h2><div className="rule"></div><span className="hint">Loopende 3D-Varianten</span></div>
+        <div className="grid">
+          {ANIMS.map(a=>(
+            <div className="card" key={a.key}>
+              <div className={"stage "+a.cls}><Mascot pose={a.key} variant="3d" size={170} id={"an-"+a.key} /></div>
+              <div className="label"><span className="l">{a.l}</span><span className="n">{a.n}</span></div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="sec-head"><h2>Im Einsatz</h2><div className="rule"></div><span className="hint">2D · App-UI-Momente</span></div>
+        <div className="uses">
+          {USES.map(u=>(
+            <div className="uc" key={u.h}>
+              <div className={"uc-stage "+u.cls}><Mascot pose={u.pose} variant="flat" size={132} id={"uc-"+u.pose} /></div>
+              <h4>{u.h}</h4>
+              <p>{u.p}</p>
+              {u.cta && <span className="cta">{u.cta}</span>}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="note">
+        <span className="dot"></span>
+        <span><b>Barrierefrei:</b> Alle Animationen respektieren <b>prefers-reduced-motion</b> — bei aktivierter Systemeinstellung steht Applo still und ruhig da. Die Bewegung ist reines CSS auf der Vektorgrafik, lädt also ohne Video oder GIF.</span>
+      </div>
+
+      <p className="foot">SmartApply Maskottchen „Applo“ · Motion-Studie</p>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Sheet/>);
+</script>
+</body>
+</html>

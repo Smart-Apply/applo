@@ -395,11 +395,12 @@ export default function ApplicationResumeEditorPage() {
           // Final update with complete content
           setCoverLetterValue(sanitized);
           setCoverVersion(sanitized);
+          setLastSavedCoverLetter(sanitized); // Mark as saved after streaming
           setCoverInitialized(true);
           clearInterval(streamInterval);
 
           console.log('✅ Streaming complete');
-          toast.success('AI-Änderungen angewendet. Bitte speichern.');
+          toast.success('AI-Änderungen gespeichert!');
         } else {
           // Progressive update
           const partialContent = words.slice(0, currentIndex).join(' ');

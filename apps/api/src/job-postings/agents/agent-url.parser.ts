@@ -55,6 +55,15 @@ const AGENT_PARSE_HARD_TIMEOUT_MS = 90_000; // 90s
 const AZURE_OPENAI_FETCH_TIMEOUT_MS = 45_000; // 45s
 
 /**
+ * Keep the launched Chromium warm between parses to skip the ~1–2s cold
+ * launch every request would otherwise pay. Parses are already single-flighted
+ * (see `inFlightParse`), so at most one warm browser is alive. Evict it after
+ * this idle window so an idle worker doesn't pin ~120MB Chromium RSS on the
+ * 1GB Fly VM indefinitely.
+ */
+const BROWSER_IDLE_EVICTION_MS = 60_000; // 60s
+
+/**
  * Concurrency gate. The agent parser launches a fresh Chromium via Playwright
  * AND the Puppeteer PDF pool can be holding up to 2 more browsers — on a
  * 1 GB shared-cpu-1x Fly VM that means a second concurrent agent parse
@@ -72,6 +81,7 @@ interface ChatMessage {
 export class AgentUrlParser {
   private readonly logger = new Logger(AgentUrlParser.name);
   private browser: Browser | null = null;
+  private idleTimer: NodeJS.Timeout | null = null;
   private readonly maxSteps: number;
   private readonly timeout: number;
 
@@ -129,11 +139,20 @@ export class AgentUrlParser {
     }
 
     const run = this.parseInternal(url);
-    inFlightParse = run.finally(() => {
-      if (inFlightParse === run) {
-        inFlightParse = null;
-      }
-    });
+    // The single-flight gate must NEVER reject. The real caller awaits `run`
+    // (and handles its rejection), so a rejection on this derived gate promise
+    // would be unobserved when no concurrent request is waiting on it — which
+    // surfaces as an unhandledRejection and crashes the worker
+    // (triggerUncaughtException, fromPromise). Swallow settlement here; the
+    // gate only tracks when the Chromium slot frees up.
+    const gate = run
+      .catch(() => undefined)
+      .finally(() => {
+        if (inFlightParse === gate) {
+          inFlightParse = null;
+        }
+      });
+    inFlightParse = gate;
     return run;
   }
 
@@ -180,7 +199,10 @@ export class AgentUrlParser {
       throw error;
     } finally {
       if (timeoutHandle) clearTimeout(timeoutHandle);
-      await this.closeBrowser();
+      // Leave the browser warm for the next parse, but arm an idle-eviction
+      // timer so it doesn't hold memory forever. Relaunching costs ~1–2s, so
+      // reuse is the single biggest latency win for back-to-back parses.
+      this.scheduleBrowserEviction();
     }
   }
 
@@ -257,18 +279,38 @@ export class AgentUrlParser {
    * Initialize Playwright browser
    */
   private async initBrowser(): Promise<void> {
+    // Cancel any pending idle eviction — a parse is starting.
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
+    }
+
+    // Reuse the warm browser when it's still connected. A crashed/disconnected
+    // instance is dropped so we relaunch cleanly below.
     if (this.browser) {
-      return;
+      if (this.browser.isConnected()) {
+        return;
+      }
+      this.logger.debug('Warm browser was disconnected; relaunching');
+      this.browser = null;
     }
 
     this.logger.debug('Launching browser...');
 
-    const executablePath =
-      process.env.CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium-browser';
+    // Only override the binary when CHROMIUM_EXECUTABLE_PATH is explicitly set
+    // (the Docker image sets it to the system Chromium it bakes in). Otherwise
+    // pass no executablePath so Playwright uses its OWN bundled, version-matched
+    // Chromium (installed via `pnpm exec playwright install chromium`).
+    //
+    // Deliberately NOT falling back to PUPPETEER_EXECUTABLE_PATH: that points at
+    // full Google Chrome for the Puppeteer PDF subsystem and is typically a
+    // newer build than the Chromium this Playwright release is pinned to —
+    // driving a mismatched Chrome over CDP is unsupported and flaky.
+    const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH || undefined;
 
     this.browser = await chromium.launch({
       headless: true,
-      executablePath: executablePath,
+      ...(executablePath ? { executablePath } : {}),
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -309,15 +351,15 @@ export class AgentUrlParser {
       });
 
       await page
-        .waitForLoadState('networkidle', { timeout: 3000 })
+        .waitForLoadState('networkidle', { timeout: 2500 })
         .catch(() => {
           this.logger.debug('Network idle timeout, proceeding anyway');
         });
 
       await this.handlePopups(page);
-      // Brief settle for late-bound JS content. Was 3000ms — most SPAs are
-      // done well before this; 1000ms is enough alongside networkidle above.
-      await page.waitForTimeout(1000);
+      // Brief settle for late-bound JS content. networkidle above already
+      // covered XHR-driven rendering; 400ms is enough for the final paint.
+      await page.waitForTimeout(400);
 
       return page;
     } catch (error) {
@@ -327,31 +369,66 @@ export class AgentUrlParser {
   }
 
   /**
-   * Handle cookie banners and popups
+   * Handle cookie banners and popups.
+   *
+   * Single in-browser pass instead of a per-selector `isVisible({ timeout })`
+   * loop: the old approach issued one CDP roundtrip per selector and waited the
+   * full timeout on each miss, costing up to ~7s on the common "no banner"
+   * path. This does it in one `evaluate` with zero waiting on misses.
    */
   private async handlePopups(page: Page): Promise<void> {
-    const acceptSelectors = [
-      'button:has-text("Accept")',
-      'button:has-text("Accept all")',
-      'button:has-text("I Accept")',
-      'button:has-text("Agree")',
-      'button:has-text("OK")',
-      '[id*="accept"]',
-      '[class*="accept"]',
-    ];
-
-    for (const selector of acceptSelectors) {
-      try {
-        const button = page.locator(selector).first();
-        if (await button.isVisible({ timeout: 1000 })) {
-          await button.click({ timeout: 1000 });
-          this.logger.debug(`Clicked accept button: ${selector}`);
-          await page.waitForTimeout(500);
-          break;
+    try {
+      const clicked = await page.evaluate(() => {
+        const labels = [
+          'accept all',
+          'accept',
+          'i accept',
+          'agree',
+          'ok',
+          'alle akzeptieren',
+          'akzeptieren',
+          'zustimmen',
+          'alle cookies akzeptieren',
+        ];
+        const candidates = Array.from(
+          document.querySelectorAll(
+            'button, [role="button"], a, input[type="button"], input[type="submit"]',
+          ),
+        ) as HTMLElement[];
+        for (const el of candidates) {
+          // Skip off-screen / display:none elements.
+          if (el.offsetParent === null) continue;
+          const label = (
+            el.innerText ||
+            (el as HTMLInputElement).value ||
+            el.getAttribute('aria-label') ||
+            ''
+          )
+            .trim()
+            .toLowerCase();
+          if (!label || label.length > 30) continue;
+          if (labels.some((t) => label === t || label.startsWith(t))) {
+            el.click();
+            return true;
+          }
         }
-      } catch {
-        // ignore
+        // Attribute-based fallback for unlabelled consent buttons.
+        const attrMatch = document.querySelector(
+          '[id*="accept" i], [class*="accept" i]',
+        ) as HTMLElement | null;
+        if (attrMatch && attrMatch.offsetParent !== null) {
+          attrMatch.click();
+          return true;
+        }
+        return false;
+      });
+
+      if (clicked) {
+        this.logger.debug('Dismissed cookie/consent popup');
+        await page.waitForTimeout(300);
       }
+    } catch {
+      // Popup handling is best-effort — never block parsing on it.
     }
   }
 
@@ -789,11 +866,32 @@ export class AgentUrlParser {
    * Close browser and cleanup resources
    */
   private async closeBrowser(): Promise<void> {
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
+    }
     if (this.browser) {
       this.logger.debug('Closing browser...');
-      await this.browser.close();
+      const browser = this.browser;
       this.browser = null;
+      await browser.close().catch(() => undefined);
     }
+  }
+
+  /**
+   * Arm (or re-arm) the idle-eviction timer that closes the warm browser once
+   * no parse has run for BROWSER_IDLE_EVICTION_MS. Single-flighting guarantees
+   * this never fires mid-parse (initBrowser clears it on the next parse start).
+   */
+  private scheduleBrowserEviction(): void {
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+    }
+    this.idleTimer = setTimeout(() => {
+      this.idleTimer = null;
+      void this.closeBrowser();
+    }, BROWSER_IDLE_EVICTION_MS);
+    this.idleTimer.unref?.();
   }
 
   /**

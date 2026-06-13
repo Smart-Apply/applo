@@ -8,6 +8,8 @@ import { getLanguageLevelLabel } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProfileSkeleton } from '@/components/shared/skeletons';
+import { ApploRig } from '@/components/ui/applo-rig';
+import type { ApploState } from '@/components/ui/applo-rig';
 import { sanitizeUrl } from '@/lib/sanitize';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
@@ -467,6 +469,30 @@ function LanguageRow({
   );
 }
 
+function ApploWaveOnClick({ size = 200 }: { size?: number }) {
+  const [state, setState] = useState<ApploState>('idle');
+  const [nonce, setNonce] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleClick = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    setNonce((n) => n + 1);
+    setState('wave');
+    timer.current = setTimeout(() => {
+      setState('idle');
+      setNonce((n) => n + 1);
+      timer.current = null;
+    }, 1260);
+  }, []);
+
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  return (
+    <button type="button" onClick={handleClick} aria-label="Applo winken lassen">
+      <ApploRig key={nonce} state={state} size={size} />
+    </button>
+  );
+}
 function CompanyMark({ name }: { name: string }) {
   const initials = name
     .split(/[\s]+/)
@@ -836,13 +862,11 @@ export default function ProfilePage() {
                 <MiniDonut value={responseRate} />
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
                 <div className="flex-1">
                   <p className="text-2xl font-bold text-foreground">{analytics?.totals.activelyTracked ?? 0}</p>
                   <p className="text-xs text-muted-foreground">Aktiv verfolgt</p>
                 </div>
                 <MiniDonut value={interviewRate} />
-              </div>
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
                 <div className="flex-1">
@@ -1186,6 +1210,11 @@ export default function ProfilePage() {
               existingLanguages={(profile?.languages ?? []).map((l) => l.name)}
               onAdd={handleAddLanguage}
             />
+          </div>
+          {/* ── Applo ── */}
+          <div className="flex flex-col items-center py-4">
+            <ApploWaveOnClick size={200} />
+            <p className="mt-2 text-xs text-muted-foreground">Applo hilft dir weiter!</p>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as nodePath from 'node:path';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReactPdfRendererService } from './react-pdf-renderer.service';
 import type {
@@ -9,27 +10,26 @@ import { TemplateType } from '../generated/prisma/client';
 
 /**
  * Generates A4-sized PNG previews of templates by rendering the template via
- * `@react-pdf/renderer` and rasterising page 1 with `pdfjs-dist` driven by a
- * `@napi-rs/canvas` backend. Replaces the puppeteer-based screenshot path
- * that used to live in the legacy `PdfService` (`generateScreenshot`).
+ * `@react-pdf/renderer` and rasterising page 1 with `pdfjs-dist`. Replaces
+ * the puppeteer-based screenshot path that used to live in the legacy
+ * `PdfService` (`generateScreenshot`).
  *
- * Both libraries are loaded lazily because:
- *   - `pdfjs-dist` ships only as ESM in modern releases and the api package
- *     is CommonJS (`tsconfig.json` sets `module: node16`). We use the same
- *     `new Function('m', 'return import(m)')` workaround as
- *     `react-pdf-loader.ts`.
- *   - `@napi-rs/canvas` is a native module — keeping it cold-loaded shaves
- *     ~50ms off boot for instances that never request a preview.
+ * `pdfjs-dist` is loaded lazily because it ships only as ESM in modern
+ * releases and the api package is CommonJS (`tsconfig.json` sets
+ * `module: node16`). We use the same `new Function('m', 'return import(m)')`
+ * workaround as `react-pdf-loader.ts`.
  *
- * Both `pdfjs-dist` and `@napi-rs/canvas` were added as runtime dependencies
- * as part of the puppeteer removal. Together they replace ~600MB of
- * Chromium + bundled Puppeteer.
+ * The raster canvas comes from `doc.canvasFactory` (pdfjs' NodeCanvasFactory,
+ * backed by the `@napi-rs/canvas` copy bundled WITH pdfjs-dist). Do not pass
+ * a canvas from our own `@napi-rs/canvas` dependency: pdfjs builds `Path2D`
+ * objects from its instance of the native module, and a context from a second
+ * copy/version rejects them at render time with
+ * "Value is none of these types `String`, `Path`".
  */
 @Injectable()
 export class PreviewRendererService {
   private readonly logger = new Logger(PreviewRendererService.name);
   private pdfjsModule: Promise<PdfjsNamespace> | null = null;
-  private canvasModule: Promise<CanvasNamespace> | null = null;
 
   /** A4 at 72 DPI — matches the legacy puppeteer call signature. */
   private static readonly PAGE_WIDTH_PT = 595;
@@ -90,7 +90,6 @@ export class PreviewRendererService {
 
   private async pdfPageToPng(pdfBuffer: Buffer): Promise<Buffer> {
     const pdfjs = await this.loadPdfjs();
-    const canvas = await this.loadCanvas();
 
     // Copy into a fresh Uint8Array — pdfjs detaches the underlying buffer.
     const data = new Uint8Array(pdfBuffer);
@@ -101,28 +100,33 @@ export class PreviewRendererService {
       disableFontFace: true,
       useSystemFonts: false,
       isEvalSupported: false,
+      // Standard-14 PDF fonts (Helvetica etc.) ship with pdfjs-dist; without
+      // this the rasteriser warns per glyph run and falls back to wrong
+      // metrics.
+      standardFontDataUrl: PreviewRendererService.resolveStandardFontDir(),
     });
     const doc = await loadingTask.promise;
     try {
       const page = await doc.getPage(1);
       const viewport = page.getViewport({ scale: PreviewRendererService.RENDER_SCALE });
 
-      const c = canvas.createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
-      const ctx = c.getContext('2d');
-      // White background so transparent PDF regions render cleanly.
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, c.width, c.height);
+      // pdfjs paints the page background white itself (render `background`
+      // default), so no manual fill is needed.
+      const { canvas, context } = doc.canvasFactory.create(
+        Math.ceil(viewport.width),
+        Math.ceil(viewport.height),
+      );
 
       await page.render({
-        canvasContext: ctx as unknown as CanvasRenderingContext2D,
+        canvasContext: context,
         viewport,
         // Required by pdfjs >= 4 when using a non-DOM canvas.
-        canvas: c as unknown as HTMLCanvasElement,
+        canvas,
       }).promise;
 
-      const pngBuffer = c.encode('png');
+      const pngBuffer = canvas.toBuffer('image/png');
       this.logger.debug(
-        `Preview PNG rendered (${c.width}x${c.height}, ${pngBuffer.length} bytes)`,
+        `Preview PNG rendered (${canvas.width}x${canvas.height}, ${pngBuffer.length} bytes)`,
       );
       return Buffer.from(pngBuffer);
     } finally {
@@ -145,14 +149,18 @@ export class PreviewRendererService {
     return this.pdfjsModule;
   }
 
-  private async loadCanvas(): Promise<CanvasNamespace> {
-    if (!this.canvasModule) {
-      const dynamicImport = new Function('m', 'return import(m)') as (
-        m: string,
-      ) => Promise<CanvasNamespace>;
-      this.canvasModule = dynamicImport('@napi-rs/canvas');
-    }
-    return this.canvasModule;
+  /**
+   * Absolute path to pdfjs-dist's bundled standard-14 fonts. pdfjs
+   * concatenates file names directly onto this string, so the trailing
+   * separator is required.
+   */
+  private static resolveStandardFontDir(): string {
+    return (
+      nodePath.join(
+        nodePath.dirname(require.resolve('pdfjs-dist/package.json')),
+        'standard_fonts',
+      ) + nodePath.sep
+    );
   }
 }
 
@@ -262,13 +270,26 @@ interface PdfjsNamespace {
     disableFontFace?: boolean;
     useSystemFonts?: boolean;
     isEvalSupported?: boolean;
+    standardFontDataUrl?: string;
   }): { promise: Promise<PdfjsDocument> };
 }
 
 interface PdfjsDocument {
   getPage(n: number): Promise<PdfjsPage>;
+  /** pdfjs' NodeCanvasFactory — uses the @napi-rs/canvas copy bundled with pdfjs. */
+  canvasFactory: PdfjsCanvasFactory;
   cleanup(): Promise<void>;
   destroy(): void;
+}
+
+interface PdfjsCanvasFactory {
+  create(width: number, height: number): { canvas: PdfjsNodeCanvas; context: unknown };
+}
+
+interface PdfjsNodeCanvas {
+  width: number;
+  height: number;
+  toBuffer(mime: 'image/png'): Uint8Array;
 }
 
 interface PdfjsPage {
@@ -278,20 +299,4 @@ interface PdfjsPage {
     viewport: { width: number; height: number };
     canvas: unknown;
   }): { promise: Promise<void> };
-}
-
-interface CanvasNamespace {
-  createCanvas(width: number, height: number): NapiCanvas;
-}
-
-interface NapiCanvas {
-  width: number;
-  height: number;
-  getContext(type: '2d'): NapiCanvasContext;
-  encode(format: 'png'): Uint8Array;
-}
-
-interface NapiCanvasContext {
-  fillStyle: string;
-  fillRect(x: number, y: number, w: number, h: number): void;
 }

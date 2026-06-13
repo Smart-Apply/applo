@@ -1,66 +1,63 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/hooks/use-profile';
 import { CenteredLoader } from '@/components/shared/loading';
+import { ApploGuide } from '@/components/ui/applo-guide';
+import type { ApploGuideStep } from '@/components/ui/applo-guide';
 import { JobStep } from '@/components/forms/wizard/job-step';
-import { GenerateStep } from '@/components/forms/wizard/generate-step';
-import { Check, Briefcase, Sparkles, ChevronLeft, ArrowRight } from 'lucide-react';
+import { ConfigureStep } from '@/components/forms/wizard/configure-step';
+import { Check, Briefcase, Settings, Sparkles, ArrowRight } from 'lucide-react';
 import type { JobPosting } from '@/types';
 import { cn } from '@/lib/utils';
 
-type WizardStep = 'job' | 'generate';
+type WizardStep = 'job' | 'configure' | 'generate';
 
 interface StepConfig {
   id: WizardStep;
   title: string;
-  description: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const steps: StepConfig[] = [
-  {
-    id: 'job',
-    title: 'Stelle',
-    description: 'Hinzufügen',
-    icon: Briefcase,
-  },
-  {
-    id: 'generate',
-    title: 'Erstellen',
-    description: 'Generieren',
-    icon: Sparkles,
-  },
+  { id: 'job', title: 'Stelle hinzufügen', icon: Briefcase },
+  { id: 'configure', title: 'Konfigurieren', icon: Settings },
+  { id: 'generate', title: 'Fertig', icon: Sparkles },
 ];
 
 export type ApplicationLanguage = 'de' | 'en' | 'fr' | 'es' | 'it';
 
 interface ApplicationWizardProps {
-  /**
-   * If provided, the wizard skips the "Stelle" step and lands directly on
-   * the generation step with this job pre-selected. Used by the LinkedIn
-   * job-search flow that imports a JobPosting and routes to
-   * `/applications/new?jobPostingId=...`.
-   */
   initialJobPosting?: JobPosting | null;
 }
 
 export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps = {}) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<WizardStep>(
-    initialJobPosting ? 'generate' : 'job',
+    initialJobPosting ? 'configure' : 'job',
   );
   const [selectedJob, setSelectedJob] = useState<JobPosting | null>(
     initialJobPosting ?? null,
   );
+  const [generation, setGeneration] = useState({ generating: false, finishing: false });
 
   const { data: profile, isLoading: profileLoading } = useProfile();
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
 
-  // Redirect to onboarding if profile is empty
+  const handleGenerationStateChange = useCallback((generating: boolean, finishing: boolean) => {
+    setGeneration(prev =>
+      prev.generating === generating && prev.finishing === finishing
+        ? prev
+        : { generating, finishing },
+    );
+  }, []);
+
+  const guideStep: ApploGuideStep =
+    currentStep === 'job' ? 'add' : generation.generating ? 'loading' : 'config';
+
   useEffect(() => {
     if (!profileLoading && profile) {
       const hasMinimalProfile = profile.summary || (profile.skills && profile.skills.length > 0);
@@ -76,18 +73,12 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
 
   const handleNext = () => {
     if (currentStep === 'job' && selectedJob) {
-      setCurrentStep('generate');
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep === 'generate') {
-      setCurrentStep('job');
+      setCurrentStep('configure');
     }
   };
 
   const handleCancel = () => {
-    router.push('/dashboard');
+    router.push('/applications');
   };
 
   if (profileLoading) {
@@ -95,60 +86,83 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
   }
 
   return (
-    <div className="space-y-8">
-      {/* Step Indicator */}
-      <div className="relative mx-auto w-full max-w-xs sm:max-w-md">
-        <div className="absolute top-5 left-0 w-full h-0.5 bg-border z-0" />
-        <div className="relative z-10 flex justify-between">
+    <div className={cn('space-y-4', currentStep === 'job' && 'mx-auto max-w-2xl')}>
+      {/* Compact centered header: Applo on top, step path right below
+          (gap comes from .applo-guide--compact margin-bottom). */}
+      <div>
+        <ApploGuide step={guideStep} finishing={generation.finishing} compact />
+
+        {/* Step Indicator — equal 1fr columns so the middle step is perfectly centered */}
+        <div className="mx-auto grid w-full max-w-lg grid-cols-[1fr_auto_1fr_auto_1fr] items-start">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = currentStep === step.id;
             const isCompleted = index < currentStepIndex;
+            const isTodo = index > currentStepIndex;
 
             return (
-              <div key={step.id} className="flex flex-col items-center bg-background px-2 sm:px-4">
-                <div
-                  className={cn(
-                    'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300',
-                    isActive
-                      ? 'border-primary bg-primary text-primary-foreground scale-110 shadow-glow'
-                      : isCompleted
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-muted-foreground/30 bg-background text-muted-foreground'
-                  )}
-                >
-                  {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
-                </div>
-                <div className="mt-2 text-center">
-                  <p
-                    className={cn(
-                      'text-xs font-semibold transition-colors duration-300',
-                      isActive ? 'text-primary' : 'text-muted-foreground'
+              <Fragment key={step.id}>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="relative">
+                    <div
+                      className={cn(
+                        'flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300',
+                        isCompleted && 'bg-green-500 text-white',
+                        isActive && 'bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(27,42,73,0.28)]',
+                        isTodo && 'bg-muted text-muted-foreground',
+                      )}
+                    >
+                      {isCompleted ? (
+                        <Check className="w-4 h-4" strokeWidth={2.6} />
+                      ) : (
+                        <Icon className="w-4 h-4" />
+                      )}
+                    </div>
+                    {isActive && (
+                      <span className="absolute -inset-[4px] rounded-[15px] border-2 border-primary/35 animate-[ringPulse_1.8s_ease-out_infinite]" />
                     )}
-                  >
+                  </div>
+                  <p className={cn(
+                    'text-xs font-bold whitespace-nowrap',
+                    isCompleted && 'text-green-600',
+                    isActive && 'text-foreground',
+                    isTodo && 'text-muted-foreground/50',
+                  )}>
                     {step.title}
                   </p>
                 </div>
-              </div>
+                {index < steps.length - 1 && (
+                  <div className="mt-[18.5px] h-[3px] w-12 sm:w-16 bg-muted rounded overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded transition-all duration-500"
+                      style={{ width: isCompleted ? '100%' : '0%' }}
+                    />
+                  </div>
+                )}
+              </Fragment>
             );
           })}
         </div>
       </div>
 
       {/* Step Content */}
-      <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {currentStep === 'job' && (
           <JobStep onJobCreated={handleJobCreated} />
         )}
 
-        {currentStep === 'generate' && selectedJob && (
-          <GenerateStep jobPosting={selectedJob} />
+        {currentStep === 'configure' && selectedJob && (
+          <ConfigureStep
+            jobPosting={selectedJob}
+            onStepChange={setCurrentStep}
+            onGenerationStateChange={handleGenerationStateChange}
+          />
         )}
       </div>
 
       {/* Navigation Buttons */}
       {currentStep === 'job' && (
-        <div className="flex items-center justify-between pt-6 border-t border-border/50">
+        <div className="flex items-center justify-between pt-4 border-t border-border/50">
           <Button variant="ghost" onClick={handleCancel} className="text-muted-foreground hover:text-foreground">
             Abbrechen
           </Button>
@@ -163,14 +177,6 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
         </div>
       )}
 
-      {currentStep === 'generate' && (
-        <div className="flex items-center justify-start pt-6 border-t border-border/50">
-          <Button variant="outline" onClick={handleBack}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Zurück
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

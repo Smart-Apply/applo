@@ -1,0 +1,18 @@
+{
+  "id": "elegant-sidebar",
+  "name": "Elegant Sidebar",
+  "description": "Modernes zweispaltiges Layout mit farbiger Seitenleiste für einen professionellen Auftritt.",
+  "category": "Creative",
+  "isDefault": false,
+  "isAtsOptimized": true,
+  "previewColor": "#8B5E3C",
+  "colorVariants": [
+    { "id": "brown", "name": "Original Brown", "accent": "#8B5E3C", "isDefault": true },
+    { "id": "blue", "name": "Ocean Blue", "accent": "#2563eb" },
+    { "id": "green", "name": "Forest Green", "accent": "#16a34a" }
+  ],
+  "customTemplates": {
+    "resume": "resume.hbs",
+    "coverLetter": "cover-letter.hbs"
+  }
+}
