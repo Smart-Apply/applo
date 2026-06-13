@@ -21,6 +21,13 @@
       "runtimeArgs": ["--filter", "@smart-apply/api", "dev"],
       "port": 3000,
       "autoPort": false
+    },
+    {
+      "name": "preview-shim",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "3016"],
+      "port": 3016,
+      "autoPort": false
     }
   ]
 }

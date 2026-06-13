@@ -407,9 +407,11 @@ export function ConfigureStep({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 lg:grid-cols-[minmax(170px,200px)_minmax(0,1fr)_minmax(180px,215px)]">
-              {/* Options column */}
-              <div className="space-y-2.5">
+            <div className="grid gap-3 lg:grid-cols-[minmax(240px,290px)_minmax(0,480px)] lg:justify-center">
+              {/* Options bar — cover-letter toggle and language picker run
+                  horizontally across the full width (spanning both columns),
+                  so the template picker and preview below get more room. */}
+              <div className="grid gap-2.5 sm:grid-cols-2 lg:col-span-2">
                 <div
                   className="flex items-start gap-2.5 p-2.5 rounded-xl border border-border/50 cursor-pointer hover:bg-muted/20 transition-colors"
                   onClick={() => setGenerateCoverLetter(!generateCoverLetter)}
@@ -430,9 +432,9 @@ export function ConfigureStep({
                   </div>
                 </div>
 
-                <div className="p-2.5 rounded-xl border border-border/50">
-                  <Label className="text-sm font-medium">Sprache</Label>
-                  <div className="mt-2 flex flex-wrap items-center gap-1">
+                <div className="flex items-center gap-3 p-2.5 rounded-xl border border-border/50">
+                  <Label className="text-sm font-medium shrink-0">Sprache</Label>
+                  <div className="flex flex-wrap items-center gap-1.5">
                     {LANGUAGE_OPTIONS.map(option => (
                       <button
                         key={option.value}
@@ -441,7 +443,7 @@ export function ConfigureStep({
                         title={option.label}
                         aria-label={option.label}
                         className={cn(
-                          'flex items-center gap-1 px-1.5 py-1 rounded-lg border transition-all duration-200 text-xs font-semibold',
+                          'flex items-center gap-1 px-2 py-1 rounded-lg border transition-all duration-200 text-xs font-semibold',
                           selectedLanguage === option.value
                             ? 'border-primary bg-primary/5 text-primary shadow-sm ring-2 ring-primary/20'
                             : 'border-border/50 bg-background hover:bg-muted/50 text-muted-foreground'
@@ -455,8 +457,9 @@ export function ConfigureStep({
                 </div>
               </div>
 
-              {/* Template list — scroll-capped so the card never grows past the preview */}
-              <div className="space-y-2.5 lg:max-h-[330px] lg:overflow-y-auto lg:pr-1">
+              {/* Template list — a compact left rail; the preview is the hero.
+                  Scroll-capped so the rail never grows past the preview. */}
+              <div className="space-y-2.5 lg:max-h-[620px] lg:overflow-y-auto lg:pr-1">
                 {resumeTemplateGroups.map(group => {
                   const selected = isGroupSelected(group);
                   return (
@@ -558,9 +561,10 @@ export function ConfigureStep({
                 })}
               </div>
 
-              {/* Live preview pane */}
-              <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
-                <div className="mb-2 flex items-center justify-between px-1">
+              {/* Live preview pane — the CV page is the hero: a large, centered
+                  document that stands out in the foreground. */}
+              <div className="flex flex-col rounded-xl border border-border/50 bg-muted/30 p-4">
+                <div className="mb-3 flex items-center justify-between px-1">
                   <p className="text-sm text-muted-foreground">
                     Vorschau:{' '}
                     <span className="font-semibold text-foreground">
@@ -573,15 +577,17 @@ export function ConfigureStep({
                   </span>
                 </div>
                 {shownTemplateId && (
-                  <div className="relative aspect-[8.5/11] overflow-hidden rounded-lg border border-border/50 bg-white">
-                    <Image
-                      key={shownTemplateId}
-                      src={templatePreviewUrl(shownTemplateId)}
-                      alt="Template Vorschau"
-                      fill
-                      unoptimized
-                      className="object-cover animate-in fade-in duration-300"
-                    />
+                  <div className="flex flex-1 items-start justify-center">
+                    <div className="relative aspect-[8.5/11] h-[520px] min-h-[240px] max-h-[calc(100vh-650px)] overflow-hidden rounded-lg border border-border/50 bg-white shadow-xl ring-1 ring-black/5">
+                      <Image
+                        key={shownTemplateId}
+                        src={templatePreviewUrl(shownTemplateId)}
+                        alt="Template Vorschau"
+                        fill
+                        unoptimized
+                        className="object-cover animate-in fade-in duration-300"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
