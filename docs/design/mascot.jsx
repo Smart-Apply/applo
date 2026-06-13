@@ -12,7 +12,6 @@
   const SCREEN_BORDER = 'rgba(21,35,63,.08)';
   const BLUE   = '#2563eb';
   const GREEN  = '#15a34a';
-  const DASH   = '#9fb0c9';
 
   function Diamond({ cx, cy, s, fill, o = 1 }) {
     const x = Number(cx), y = Number(cy), r = Number(s);
