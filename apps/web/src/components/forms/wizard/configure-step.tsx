@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -27,6 +28,7 @@ import {
   Target,
   Download,
   Eye,
+  Maximize2,
 } from 'lucide-react';
 import type { JobPosting, Template } from '@/types';
 
@@ -132,6 +134,8 @@ export function ConfigureStep({
   const [selectedLanguage, setSelectedLanguage] = useState<ApplicationLanguage>('de');
   const [hoverGroupKey, setHoverGroupKey] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  // Click the live preview to open the CV full-size in a dialog.
+  const [zoomOpen, setZoomOpen] = useState(false);
 
   const isGenerating = createApplication.isPending || isRedirecting;
   // Fractional seconds, ticked at 200ms so the progress ring moves smoothly
@@ -397,21 +401,15 @@ export function ConfigureStep({
           (options | template list | live preview) so the whole step fits
           on a single screen. */}
       <div>
-        <Card className="shadow-soft border-border/50 gap-3 py-4">
-          <CardHeader>
-            <CardTitle className="text-lg">Konfigurieren</CardTitle>
-            <CardDescription>
-              {generateCoverLetter
-                ? 'Wähle Optionen und ein Design – das Anschreiben übernimmt das Design automatisch.'
-                : 'Wähle Optionen und ein Design – fahr über eine Vorlage für die Vorschau.'}
-            </CardDescription>
+        <Card className="shadow-soft border-border/50 gap-2 py-3">
+          <CardHeader className="pb-0">
+            <CardTitle className="text-base">Konfigurieren</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 lg:grid-cols-[minmax(240px,290px)_minmax(0,480px)] lg:justify-center">
-              {/* Options bar — cover-letter toggle and language picker run
-                  horizontally across the full width (spanning both columns),
-                  so the template picker and preview below get more room. */}
-              <div className="grid gap-2.5 sm:grid-cols-2 lg:col-span-2">
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:items-start">
+              {/* Options bar spans both columns; the rail and preview below each
+                  fill one column, so they line up exactly with the two fields. */}
+              <div className="grid gap-2.5 sm:grid-cols-2 sm:col-span-2">
                 <div
                   className="flex items-start gap-2.5 p-2.5 rounded-xl border border-border/50 cursor-pointer hover:bg-muted/20 transition-colors"
                   onClick={() => setGenerateCoverLetter(!generateCoverLetter)}
@@ -457,9 +455,9 @@ export function ConfigureStep({
                 </div>
               </div>
 
-              {/* Template list — a compact left rail; the preview is the hero.
-                  Scroll-capped so the rail never grows past the preview. */}
-              <div className="space-y-2.5 lg:max-h-[620px] lg:overflow-y-auto lg:pr-1">
+              {/* Template list — fills the left column (under "Anschreiben generieren").
+                  Scroll-capped so the column never grows past the preview. */}
+              <div className="space-y-2.5 lg:max-h-[calc(100vh-470px)] lg:overflow-y-auto lg:pr-1">
                 {resumeTemplateGroups.map(group => {
                   const selected = isGroupSelected(group);
                   return (
@@ -561,8 +559,9 @@ export function ConfigureStep({
                 })}
               </div>
 
-              {/* Live preview pane — the CV page is the hero: a large, centered
-                  document that stands out in the foreground. */}
+              {/* Live preview pane — fills the right column (under "Sprache"),
+                  so it's exactly as wide as the language field above. The CV page
+                  stays height-constrained and centered inside it. */}
               <div className="flex flex-col rounded-xl border border-border/50 bg-muted/30 p-4">
                 <div className="mb-3 flex items-center justify-between px-1">
                   <p className="text-sm text-muted-foreground">
@@ -578,7 +577,12 @@ export function ConfigureStep({
                 </div>
                 {shownTemplateId && (
                   <div className="flex flex-1 items-start justify-center">
-                    <div className="relative aspect-[8.5/11] h-[520px] min-h-[240px] max-h-[calc(100vh-650px)] overflow-hidden rounded-lg border border-border/50 bg-white shadow-xl ring-1 ring-black/5">
+                    <button
+                      type="button"
+                      onClick={() => setZoomOpen(true)}
+                      title="Zum Vergrößern klicken"
+                      className="group relative aspect-[8.5/11] h-[560px] max-h-[calc(100vh-540px)] cursor-zoom-in overflow-hidden rounded-lg border border-border/50 bg-white shadow-xl ring-1 ring-black/5 transition-shadow hover:shadow-2xl"
+                    >
                       <Image
                         key={shownTemplateId}
                         src={templatePreviewUrl(shownTemplateId)}
@@ -587,10 +591,34 @@ export function ConfigureStep({
                         unoptimized
                         className="object-cover animate-in fade-in duration-300"
                       />
-                    </div>
+                      <span className="pointer-events-none absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[11px] font-medium text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                        <Maximize2 className="h-3 w-3" /> Vergrößern
+                      </span>
+                    </button>
                   </div>
                 )}
               </div>
+
+              {/* Full-size CV preview — opened by clicking the live preview. */}
+              <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
+                <DialogContent className="w-fit max-w-[96vw] border-none bg-transparent p-0 shadow-none sm:max-w-[96vw]">
+                  <DialogTitle className="sr-only">
+                    Vorschau: {shownGroup?.baseTemplate.name.replace(/\s*\([^)]*\)\s*$/, '')}
+                  </DialogTitle>
+                  {shownTemplateId && (
+                    <div className="relative aspect-[8.5/11] h-[88vh] max-h-[88vh] overflow-hidden rounded-lg border border-border/50 bg-white shadow-2xl">
+                      <Image
+                        key={shownTemplateId}
+                        src={templatePreviewUrl(shownTemplateId)}
+                        alt="Template Vorschau groß"
+                        fill
+                        unoptimized
+                        className="object-contain"
+                      />
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
