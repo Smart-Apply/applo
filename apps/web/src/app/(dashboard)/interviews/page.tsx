@@ -20,6 +20,7 @@ import {
 import { StartInterviewDialog } from '@/components/interviews/start-interview-dialog';
 import { InterviewStatsCards } from '@/components/interviews/interview-stats-cards';
 import { InterviewProgressChart } from '@/components/interviews/interview-progress-chart';
+import { InterviewIntro } from '@/components/interviews/interview-intro';
 import {
   MessageSquare,
   Play,
@@ -157,6 +158,13 @@ export default function InterviewsPage() {
     router.push(`/interviews/${session.id}`);
   };
 
+  // First-time experience: a user who has never run a session (or any FREE
+  // user behind the lock) sees the guided 3-step tutorial instead of four
+  // empty "0 / —" stat cards and a bare empty state. Once at least one
+  // session exists, the familiar stats + history layout takes over.
+  const hasNoSessions = !!stats && stats.totalSessions === 0;
+  const showIntro = isLocked || hasNoSessions;
+
   return (
     <div className="container max-w-7xl py-6 space-y-8">
       {/* Header */}
@@ -196,107 +204,88 @@ export default function InterviewsPage() {
             }
             aria-hidden={isLocked}
           >
-            {/* Stats Overview */}
-            {statsLoading ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <Card key={i}>
-                    <CardHeader className="pb-2">
-                      <Skeleton className="h-4 w-24" />
-                    </CardHeader>
-                    <CardContent>
-                      <Skeleton className="h-8 w-16" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : stats ? (
-              <InterviewStatsCards stats={stats} />
-            ) : isLocked ? (
-              // Lightweight placeholder so FREE users see *something*
-              // behind the lock instead of an empty container.
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <Card key={i}>
-                    <CardHeader className="pb-2">
-                      <CardDescription>Vorschau</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">—</div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : null}
+            {/* First-time tutorial (also shown behind the lock for FREE users
+                so they preview the experience) vs. the returning layout. */}
+            {showIntro ? (
+              <InterviewIntro onStart={() => setDialogOpen(true)} />
+            ) : (
+              <>
+                {/* Stats Overview */}
+                {statsLoading ? (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <Card key={i}>
+                        <CardHeader className="pb-2">
+                          <Skeleton className="h-4 w-24" />
+                        </CardHeader>
+                        <CardContent>
+                          <Skeleton className="h-8 w-16" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : stats ? (
+                  <InterviewStatsCards stats={stats} />
+                ) : null}
 
-            {/* Progress Chart */}
-            {stats && stats.completedSessions > 0 && (
-              <Card className="mt-8">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Fortschritt
-                  </CardTitle>
-                  <CardDescription>
-                    Ihre Entwicklung über die letzten Interviews
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <InterviewProgressChart stats={stats} />
-                </CardContent>
-              </Card>
+                {/* Progress Chart */}
+                {stats && stats.completedSessions > 0 && (
+                  <Card className="mt-8">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        Fortschritt
+                      </CardTitle>
+                      <CardDescription>
+                        Ihre Entwicklung über die letzten Interviews
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <InterviewProgressChart stats={stats} />
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Sessions List */}
+                <div className="mt-8">
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList>
+                      <TabsTrigger value="all">Alle</TabsTrigger>
+                      <TabsTrigger value="IN_PROGRESS" className="gap-1">
+                        <Loader2 className="h-3 w-3" />
+                        Laufend
+                      </TabsTrigger>
+                      <TabsTrigger value="COMPLETED" className="gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        Abgeschlossen
+                      </TabsTrigger>
+                      <TabsTrigger value="ABANDONED" className="gap-1">
+                        <XCircle className="h-3 w-3" />
+                        Abgebrochen
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value={activeTab} className="mt-6">
+                      {sessionsLoading ? (
+                        <SessionsSkeleton />
+                      ) : !sessionsData?.sessions?.length ? (
+                        <EmptyState
+                          icon={MessageSquare}
+                          title="Keine Interview-Sessions"
+                          description="Keine Sessions mit diesem Status gefunden."
+                        />
+                      ) : (
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {sessionsData.sessions.map((session: InterviewSession) => (
+                            <SessionCard key={session.id} session={session} />
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </>
             )}
-
-            {/* Sessions List */}
-            <div className="mt-8">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList>
-                  <TabsTrigger value="all">Alle</TabsTrigger>
-                  <TabsTrigger value="IN_PROGRESS" className="gap-1">
-                    <Loader2 className="h-3 w-3" />
-                    Laufend
-                  </TabsTrigger>
-                  <TabsTrigger value="COMPLETED" className="gap-1">
-                    <CheckCircle className="h-3 w-3" />
-                    Abgeschlossen
-                  </TabsTrigger>
-                  <TabsTrigger value="ABANDONED" className="gap-1">
-                    <XCircle className="h-3 w-3" />
-                    Abgebrochen
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value={activeTab} className="mt-6">
-                  {sessionsLoading ? (
-                    <SessionsSkeleton />
-                  ) : !sessionsData?.sessions?.length ? (
-                    <EmptyState
-                      icon={MessageSquare}
-                      title="Keine Interview-Sessions"
-                      description={
-                        activeTab === 'all'
-                          ? 'Starten Sie Ihr erstes KI-Interview, um Ihre Fähigkeiten zu verbessern.'
-                          : 'Keine Sessions mit diesem Status gefunden.'
-                      }
-                      action={
-                        !isLocked && activeTab === 'all'
-                          ? {
-                              label: 'Interview starten',
-                              onClick: () => setDialogOpen(true),
-                            }
-                          : undefined
-                      }
-                    />
-                  ) : (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {sessionsData.sessions.map((session: InterviewSession) => (
-                        <SessionCard key={session.id} session={session} />
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
           </div>
 
           {/* Hover-trigger overlay: covers the dimmed area and shows the
