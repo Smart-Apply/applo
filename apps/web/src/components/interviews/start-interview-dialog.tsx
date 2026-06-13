@@ -21,8 +21,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Link from 'next/link';
 import { useApplications } from '@/hooks/use-applications';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import type { StartInterviewDto, InterviewType, InterviewDifficulty, Application } from '@/types';
 
 interface StartInterviewDialogProps {
@@ -117,7 +118,7 @@ export function StartInterviewDialog({
           <Tabs value={mode} onValueChange={(v) => setMode(v as 'application' | 'custom')} className="mt-4">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="custom">Freies Interview</TabsTrigger>
-              <TabsTrigger value="application" disabled={readyApplications.length === 0}>
+              <TabsTrigger value="application">
                 Basierend auf Bewerbung
               </TabsTrigger>
             </TabsList>
@@ -146,9 +147,23 @@ export function StartInterviewDialog({
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  Keine fertigen Bewerbungen verfügbar. Erstellen Sie zuerst eine Bewerbung.
-                </p>
+                <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-8 text-center">
+                  <p className="max-w-sm text-sm text-muted-foreground">
+                    Du hast noch keine fertige Bewerbung. Erstelle zuerst eine
+                    Bewerbung, um daraus passende Interview-Fragen zu generieren.
+                  </p>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    <Link href="/applications/new">
+                      <Plus className="mr-1 h-4 w-4" />
+                      Bewerbung erstellen
+                    </Link>
+                  </Button>
+                </div>
               )}
             </TabsContent>
 
@@ -299,7 +314,10 @@ export function StartInterviewDialog({
             >
               Abbrechen
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button
+              type="submit"
+              disabled={isLoading || (mode === 'application' && !formData.applicationId)}
+            >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Interview starten
             </Button>
