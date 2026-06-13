@@ -360,8 +360,8 @@ export class ApplicationsService {
     const trim = (value?: string | null) => value?.trim() || undefined;
 
     return {
-      candidateName: resume.candidateName.trim(),
-      email: resume.email.trim(),
+      candidateName: trim(resume.candidateName) || 'Vorname Nachname',
+      email: trim(resume.email) || 'email@example.com',
       phone: trim(resume.phone),
       location: trim(resume.location),
       linkedin: sanitizeUrl(resume.linkedin),
@@ -369,42 +369,42 @@ export class ApplicationsService {
       summary: trim(resume.summary),
       skillCategories: (resume.skillCategories || [])
         .map((category) => ({
-          type: category.type.trim(),
+          type: trim(category.type) || 'Fähigkeiten',
           skills: (category.skills || []).map((skill) => skill.trim()).filter(Boolean),
         }))
         .filter((category) => category.skills.length),
       experiences: (resume.experiences || []).map(
         ({ id: _id, startDate: _startDate, endDate: _endDate, ...experience }) => ({
-          title: experience.title.trim(),
-          company: experience.company.trim(),
+          title: trim(experience.title) || 'Beruf',
+          company: trim(experience.company) || 'Unternehmen',
           location: trim(experience.location),
-          dateRange: experience.dateRange.trim(),
+          dateRange: trim(experience.dateRange) || '2024',
           description: trim(experience.description),
           achievements: (experience.achievements || []).map((item) => item.trim()).filter(Boolean),
         }),
       ),
       projects: (resume.projects || []).map(({ id: _id, ...project }) => ({
-        name: project.name.trim(),
+        name: trim(project.name) || 'Projekt',
         description: trim(project.description),
         date: trim(project.date),
         highlights: (project.highlights || []).map((item) => item.trim()).filter(Boolean),
       })),
       education: (resume.education || []).map(({ id: _id, ...edu }) => ({
-        degree: edu.degree.trim(),
-        institution: edu.institution.trim(),
-        year: edu.year.trim(),
+        degree: trim(edu.degree) || 'Abschluss',
+        institution: trim(edu.institution) || 'Bildungseinrichtung',
+        year: trim(edu.year) || '2024',
         fieldOfStudy: trim(edu.fieldOfStudy),
         gpa: trim(edu.gpa),
         description: trim(edu.description),
       })),
       certifications: (resume.certifications || []).map(({ id: _id, ...cert }) => ({
-        name: cert.name.trim(),
-        issuer: cert.issuer.trim(),
+        name: trim(cert.name) || 'Zertifikat',
+        issuer: trim(cert.issuer) || 'Aussteller',
         date: trim(cert.date),
       })),
       languages: (resume.languages || [])
         .map((lang) => ({
-          name: lang.name.trim(),
+          name: trim(lang.name) || 'Sprache',
           level: normalizeProficiencyLevel(lang.level?.trim()),
         }))
         .filter((lang) => lang.name),

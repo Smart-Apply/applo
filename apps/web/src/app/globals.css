@@ -547,3 +547,36 @@
     height: 130px;
   }
 }
+
+/* Compact variant — same centered stack, smaller avatar + tighter bubble.
+   Used by the wizard header so the form itself stays above the fold.
+   margin-bottom sets the gap to the step indicator below (Tailwind's
+   space-y can't: its :where() rule loses to this class's explicit margin). */
+.applo-guide--compact {
+  margin: 0 auto 1.5rem;
+}
+
+.applo-guide--compact .applo-guide-av {
+  width: 100px;
+  height: 100px;
+}
+
+.applo-guide--compact .applo-bubble {
+  max-width: 480px;
+}
+
+.applo-guide--compact .applo-bubble-inner {
+  padding: 10px 16px;
+}
+
+/* The step path right below the bubble already says where we are —
+   the "Schritt X von 3" eyebrow would repeat it. */
+.applo-guide--compact .ab-eyebrow {
+  display: none;
+}
+
+.applo-guide--compact .ab-msg {
+  font-size: 14px;
+  line-height: 1.5;
+}
+

@@ -64,10 +64,13 @@ const STEPS: Record<
 export function ApploGuide({
   step = 'add',
   finishing = false,
+  compact = false,
   className,
 }: {
   step?: ApploGuideStep;
   finishing?: boolean;
+  /** Smaller avatar + tighter bubble — dense headers like the wizard. */
+  compact?: boolean;
   className?: string;
 }) {
   const baseStep: ApploGuideStep = step === 'loading' && finishing ? 'finishing' : step;
@@ -89,9 +92,13 @@ export function ApploGuide({
   }, [cfg.pose]);
 
   return (
-    <div className={cn('applo-guide', className)} role="status" aria-live="polite">
+    <div
+      className={cn('applo-guide', compact && 'applo-guide--compact', className)}
+      role="status"
+      aria-live="polite"
+    >
       <div className="applo-guide-av">
-        <ApploRig key={baseStep + pose} state={pose} size={132} />
+        <ApploRig key={baseStep + pose} state={pose} size={compact ? 90 : 132} />
       </div>
       <div className="applo-bubble">
         <div className="applo-bubble-inner">

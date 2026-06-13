@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/hooks/use-profile';
@@ -9,7 +9,7 @@ import { ApploGuide } from '@/components/ui/applo-guide';
 import type { ApploGuideStep } from '@/components/ui/applo-guide';
 import { JobStep } from '@/components/forms/wizard/job-step';
 import { ConfigureStep } from '@/components/forms/wizard/configure-step';
-import { Check, Briefcase, Settings, Sparkles, ChevronLeft, ArrowRight } from 'lucide-react';
+import { Check, Briefcase, Settings, Sparkles, ArrowRight } from 'lucide-react';
 import type { JobPosting } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -77,12 +77,6 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
     }
   };
 
-  const handleBack = () => {
-    if (currentStep === 'configure') {
-      setCurrentStep('job');
-    }
-  };
-
   const handleCancel = () => {
     router.push('/applications');
   };
@@ -92,13 +86,14 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
   }
 
   return (
-    <div className="space-y-8">
-      {/* Applo guide companion — above the step path (pb widens the gap to the indicator) */}
-      <ApploGuide step={guideStep} finishing={generation.finishing} className="pb-6" />
+    <div className={cn('space-y-4', currentStep === 'job' && 'mx-auto max-w-2xl')}>
+      {/* Compact centered header: Applo on top, step path right below
+          (gap comes from .applo-guide--compact margin-bottom). */}
+      <div>
+        <ApploGuide step={guideStep} finishing={generation.finishing} compact />
 
-      {/* Step Indicator — 3-phase with done/active/todo states */}
-      <div className="relative mx-auto w-full max-w-2xl">
-        <div className="flex items-start justify-between">
+        {/* Step Indicator — equal 1fr columns so the middle step is perfectly centered */}
+        <div className="mx-auto grid w-full max-w-lg grid-cols-[1fr_auto_1fr_auto_1fr] items-start">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = currentStep === step.id;
@@ -106,60 +101,52 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
             const isTodo = index > currentStepIndex;
 
             return (
-              <div key={step.id} className="flex items-center flex-1 last:flex-none">
-                <div className="flex flex-col items-center gap-3">
+              <Fragment key={step.id}>
+                <div className="flex flex-col items-center gap-2">
                   <div className="relative">
                     <div
                       className={cn(
-                        'flex items-center justify-center w-[52px] h-[52px] rounded-2xl transition-all duration-300',
+                        'flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300',
                         isCompleted && 'bg-green-500 text-white',
-                        isActive && 'bg-primary text-primary-foreground shadow-[0_6px_16px_rgba(27,42,73,0.28)]',
+                        isActive && 'bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(27,42,73,0.28)]',
                         isTodo && 'bg-muted text-muted-foreground',
                       )}
                     >
                       {isCompleted ? (
-                        <Check className="w-5 h-5" strokeWidth={2.6} />
+                        <Check className="w-4 h-4" strokeWidth={2.6} />
                       ) : (
-                        <Icon className="w-5 h-5" />
+                        <Icon className="w-4 h-4" />
                       )}
                     </div>
                     {isActive && (
-                      <span className="absolute -inset-[5px] rounded-[19px] border-2 border-primary/35 animate-[ringPulse_1.8s_ease-out_infinite]" />
+                      <span className="absolute -inset-[4px] rounded-[15px] border-2 border-primary/35 animate-[ringPulse_1.8s_ease-out_infinite]" />
                     )}
                   </div>
-                  <div className="text-center">
-                    <p className={cn(
-                      'text-sm font-bold whitespace-nowrap',
-                      isTodo ? 'text-muted-foreground/50' : 'text-foreground',
-                    )}>
-                      {step.title}
-                    </p>
-                    <p className={cn(
-                      'text-xs font-semibold mt-0.5',
-                      isCompleted && 'text-green-600',
-                      isActive && 'text-foreground',
-                      isTodo && 'text-muted-foreground/50',
-                    )}>
-                      {isCompleted ? 'Erledigt' : isActive ? 'Aktiv' : 'Ausstehend'}
-                    </p>
-                  </div>
+                  <p className={cn(
+                    'text-xs font-bold whitespace-nowrap',
+                    isCompleted && 'text-green-600',
+                    isActive && 'text-foreground',
+                    isTodo && 'text-muted-foreground/50',
+                  )}>
+                    {step.title}
+                  </p>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className="flex-1 h-[3px] bg-muted rounded mx-4 mt-[-26px] overflow-hidden min-w-[48px]">
+                  <div className="mt-[18.5px] h-[3px] w-12 sm:w-16 bg-muted rounded overflow-hidden">
                     <div
                       className="h-full bg-green-500 rounded transition-all duration-500"
                       style={{ width: isCompleted ? '100%' : '0%' }}
                     />
                   </div>
                 )}
-              </div>
+              </Fragment>
             );
           })}
         </div>
       </div>
 
       {/* Step Content */}
-      <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {currentStep === 'job' && (
           <JobStep onJobCreated={handleJobCreated} />
         )}
@@ -175,7 +162,7 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
 
       {/* Navigation Buttons */}
       {currentStep === 'job' && (
-        <div className="flex items-center justify-between pt-6 border-t border-border/50">
+        <div className="flex items-center justify-between pt-4 border-t border-border/50">
           <Button variant="ghost" onClick={handleCancel} className="text-muted-foreground hover:text-foreground">
             Abbrechen
           </Button>
@@ -190,14 +177,6 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
         </div>
       )}
 
-      {currentStep === 'configure' && (
-        <div className="flex items-center justify-between pt-6 border-t border-border/50">
-          <Button variant="outline" onClick={handleBack}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Zurück
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

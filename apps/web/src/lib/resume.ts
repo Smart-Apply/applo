@@ -338,8 +338,8 @@ export function normalizeResumeForSave(resume: ResumeData): ResumeData {
 
   return {
     ...resume,
-    candidateName: resume.candidateName.trim(),
-    email: resume.email.trim(),
+    candidateName: trim(resume.candidateName) || 'Vorname Nachname',
+    email: trim(resume.email) || 'email@example.com',
     phone: trim(resume.phone),
     street,
     postalCode,
@@ -352,22 +352,22 @@ export function normalizeResumeForSave(resume: ResumeData): ResumeData {
     skillCategories: (resume.skillCategories || [])
       .map((category) => ({
         id: category.id,
-        type: category.type.trim(),
+        type: trim(category.type) || 'Fähigkeiten',
         skills: category.skills.map((skill) => skill.trim()).filter(Boolean),
       }))
       .filter((category) => category.skills.length),
     experiences: (resume.experiences || [])
       .map((experience) => ({
         ...withDateRange(experience),
-        title: experience.title.trim(),
-        company: experience.company.trim(),
+        title: trim(experience.title) || 'Beruf',
+        company: trim(experience.company) || 'Unternehmen',
         location: trim(experience.location),
       }))
       .filter((experience) => experience.title && experience.company),
     projects: resume.projects
       ?.map((project) => ({
         ...project,
-        name: project.name.trim(),
+        name: trim(project.name) || 'Projekt',
         description: toHtmlSafe(project.description),
         highlights: project.highlights?.map((item) => item.trim()).filter(Boolean),
       }))
@@ -375,8 +375,8 @@ export function normalizeResumeForSave(resume: ResumeData): ResumeData {
     education: resume.education
       ?.map((education) => ({
         ...education,
-        degree: education.degree.trim(),
-        institution: education.institution.trim(),
+        degree: trim(education.degree) || 'Abschluss',
+        institution: trim(education.institution) || 'Bildungseinrichtung',
         fieldOfStudy: trim(education.fieldOfStudy),
         gpa: trim(education.gpa),
         description: toHtmlSafe(education.description),
