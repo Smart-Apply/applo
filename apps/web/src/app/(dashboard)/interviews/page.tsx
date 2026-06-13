@@ -1,15 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useInterviewSessions, useInterviewStats, useStartInterview } from '@/hooks/use-interviews';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Tooltip,
@@ -18,111 +16,166 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { StartInterviewDialog } from '@/components/interviews/start-interview-dialog';
-import { InterviewStatsCards } from '@/components/interviews/interview-stats-cards';
-import { InterviewProgressChart } from '@/components/interviews/interview-progress-chart';
 import { InterviewIntro } from '@/components/interviews/interview-intro';
+import { Applo } from '@/components/interviews/applo';
 import {
   MessageSquare,
   Play,
   Trophy,
+  Target,
   TrendingUp,
-  CheckCircle,
-  XCircle,
   Loader2,
   Lock,
+  RefreshCw,
+  ArrowRight,
+  ExternalLink,
 } from 'lucide-react';
 import type { InterviewSession, InterviewSessionStatus } from '@/types';
 
-const statusConfig: Record<
-  InterviewSessionStatus,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  IN_PROGRESS: { label: 'Laufend', variant: 'default' },
-  COMPLETED: { label: 'Abgeschlossen', variant: 'secondary' },
-  ABANDONED: { label: 'Abgebrochen', variant: 'destructive' },
-};
+const SESSION_FILTERS: [string, string][] = [
+  ['all', 'Alle'],
+  ['IN_PROGRESS', 'Laufend'],
+  ['COMPLETED', 'Abgeschlossen'],
+  ['ABANDONED', 'Abgebrochen'],
+];
 
-const difficultyLabels = {
-  EASY: 'Einsteiger',
-  MEDIUM: 'Standard',
-  HARD: 'Experte',
-};
+/** Score → badge colour, matching the design's green/amber/red tiers. */
+function scoreTone(score: number): string {
+  if (score >= 85) return 'bg-green-100 text-green-700';
+  if (score >= 60) return 'bg-amber-100 text-amber-700';
+  return 'bg-red-100 text-red-700';
+}
 
-const typeLabels = {
-  BEHAVIORAL: 'Verhalten',
-  TECHNICAL: 'Technisch',
-  CASE_STUDY: 'Fallstudie',
-  MIXED: 'Gemischt',
-};
-
-function SessionCard({ session }: { session: InterviewSession }) {
-  const router = useRouter();
-  const config = statusConfig[session.status];
-
+function StatCell({
+  icon,
+  value,
+  label,
+  good,
+}: {
+  icon: ReactNode;
+  value: ReactNode;
+  label: string;
+  good?: boolean;
+}) {
   return (
-    <Card
-      className="cursor-pointer hover:shadow-md transition-shadow"
-      onClick={() => router.push(`/interviews/${session.id}`)}
-    >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg">
-              {session.jobTitle || 'Allgemeines Interview'}
-            </CardTitle>
-            {session.company && (
-              <CardDescription>{session.company}</CardDescription>
-            )}
-          </div>
-          <Badge variant={config.variant}>{config.label}</Badge>
+    <div className="flex flex-1 items-center gap-3 p-4">
+      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <div className={cn('text-xl font-bold leading-none', good && 'text-green-600')}>
+          {value}
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2 mb-3">
-          <Badge variant="outline">{typeLabels[session.type]}</Badge>
-          <Badge variant="outline">{difficultyLabels[session.difficulty]}</Badge>
-          {session.industry && <Badge variant="outline">{session.industry}</Badge>}
-        </div>
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <MessageSquare className="h-4 w-4" />
-              {session.answeredCount}/{session.maxQuestions} Fragen
-            </span>
-            {session.overallScore !== undefined && session.overallScore !== null && (
-              <span className="flex items-center gap-1">
-                <Trophy className="h-4 w-4 text-yellow-500" />
-                {session.overallScore}/100
-              </span>
-            )}
-          </div>
-          <span>
-            {new Date(session.startedAt).toLocaleDateString('de-DE')}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+        <div className="mt-1 truncate text-xs text-muted-foreground">{label}</div>
+      </div>
+    </div>
   );
 }
 
-function SessionsSkeleton() {
+function SessionRow({ session }: { session: InterviewSession }) {
+  const router = useRouter();
+  const running = session.status === 'IN_PROGRESS';
+  const score = session.overallScore;
+  const meta = [
+    session.company,
+    `${session.maxQuestions} Fragen`,
+    new Date(session.startedAt).toLocaleDateString('de-DE'),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  const open = () => router.push(`/interviews/${session.id}`);
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={open}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open();
+        }
+      }}
+      className="group flex cursor-pointer items-center gap-4 py-3 outline-none"
+    >
+      <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-muted text-muted-foreground">
+        <MessageSquare className="h-5 w-5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold">
+          {session.jobTitle || 'Allgemeines Interview'}
+        </div>
+        <div className="mt-0.5 truncate text-xs text-muted-foreground">{meta}</div>
+      </div>
+      {running ? (
+        <span className="flex flex-none items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+          <Loader2 className="h-3 w-3 animate-spin" /> Laufend
+        </span>
+      ) : session.status === 'ABANDONED' ? (
+        <span className="flex-none text-xs text-muted-foreground">Abgebrochen</span>
+      ) : score != null && score > 0 ? (
+        <span
+          className={cn(
+            'flex-none rounded-full px-2.5 py-1 text-xs font-bold',
+            scoreTone(score)
+          )}
+        >
+          {score}%
+        </span>
+      ) : null}
+      <span className="flex-none text-muted-foreground transition-colors group-hover:text-foreground">
+        {running ? <ArrowRight className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
+      </span>
+    </div>
+  );
+}
+
+function SessionRowsSkeleton() {
+  return (
+    <>
       {[1, 2, 3].map((i) => (
-        <Card key={i}>
-          <CardHeader>
-            <Skeleton className="h-6 w-2/3" />
-            <Skeleton className="h-4 w-1/3" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2 mb-3">
-              <Skeleton className="h-5 w-16" />
-              <Skeleton className="h-5 w-16" />
+        <div key={i} className="flex items-center gap-4 py-3">
+          <Skeleton className="h-10 w-10 flex-none rounded-xl" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-3 w-1/3" />
+          </div>
+          <Skeleton className="h-6 w-12 rounded-full" />
+        </div>
+      ))}
+    </>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col divide-y rounded-xl border bg-card sm:flex-row sm:divide-x sm:divide-y-0">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex flex-1 items-center gap-3 p-4">
+            <Skeleton className="h-9 w-9 flex-none rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-12" />
+              <Skeleton className="h-3 w-24" />
             </div>
-            <Skeleton className="h-4 w-full" />
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+        <Card>
+          <CardContent className="p-5">
+            <SessionRowsSkeleton />
           </CardContent>
         </Card>
-      ))}
+        <Card>
+          <CardContent className="p-5">
+            <Skeleton className="h-28 w-full rounded-xl" />
+            <Skeleton className="mx-auto mt-4 h-5 w-2/3" />
+            <Skeleton className="mx-auto mt-2 h-4 w-1/2" />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -147,7 +200,7 @@ export default function InterviewsPage() {
     status: statusFilter,
     enabled: hasInterviewCoach,
   });
-  const { data: stats, isLoading: statsLoading } = useInterviewStats({
+  const { data: stats } = useInterviewStats({
     enabled: hasInterviewCoach,
   });
   const startInterview = useStartInterview();
@@ -159,9 +212,11 @@ export default function InterviewsPage() {
   };
 
   // First-time experience: a user who has never run a session (or any FREE
-  // user behind the lock) sees the guided 3-step tutorial instead of four
-  // empty "0 / —" stat cards and a bare empty state. Once at least one
-  // session exists, the familiar stats + history layout takes over.
+  // user behind the lock) sees the guided 3-step tutorial. Once at least one
+  // session exists (even an abandoned one), the redesigned dashboard — stat
+  // strip + recent sessions + Applo "next round" sidebar — takes over. That
+  // redesigned view *is* how returning users experience the new look, so no
+  // manual tutorial toggle is needed.
   const hasNoSessions = !!stats && stats.totalSessions === 0;
   const showIntro = isLocked || hasNoSessions;
 
@@ -183,10 +238,12 @@ export default function InterviewsPage() {
             </Link>
           </Button>
         ) : (
-          <Button onClick={() => setDialogOpen(true)} className="gap-2">
-            <Play className="h-4 w-4" />
-            Neues Interview starten
-          </Button>
+          !showIntro && (
+            <Button onClick={() => setDialogOpen(true)} className="gap-2">
+              <Play className="h-4 w-4" />
+              Neues Interview starten
+            </Button>
+          )
         )}
       </div>
 
@@ -208,83 +265,141 @@ export default function InterviewsPage() {
                 so they preview the experience) vs. the returning layout. */}
             {showIntro ? (
               <InterviewIntro onStart={() => setDialogOpen(true)} />
+            ) : !stats ? (
+              <DashboardSkeleton />
             ) : (
-              <>
-                {/* Stats Overview */}
-                {statsLoading ? (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    {[1, 2, 3, 4].map((i) => (
-                      <Card key={i}>
-                        <CardHeader className="pb-2">
-                          <Skeleton className="h-4 w-24" />
-                        </CardHeader>
-                        <CardContent>
-                          <Skeleton className="h-8 w-16" />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : stats ? (
-                  <InterviewStatsCards stats={stats} />
-                ) : null}
+              <div className="space-y-6">
+                {/* Stat strip */}
+                <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card shadow-sm sm:flex-row sm:divide-x sm:divide-y-0">
+                  <StatCell
+                    icon={<MessageSquare className="h-5 w-5" />}
+                    value={stats.completedSessions}
+                    label="Abgeschlossene Sessions"
+                  />
+                  <StatCell
+                    icon={<Target className="h-5 w-5" />}
+                    value={stats.averageScore > 0 ? `${stats.averageScore}%` : '—'}
+                    label={`Ø Score · ${stats.totalQuestionsAnswered} Fragen`}
+                  />
+                  <StatCell
+                    icon={<Trophy className="h-5 w-5" />}
+                    value={stats.bestScore > 0 ? `${stats.bestScore}%` : '—'}
+                    label="Bester Score"
+                    good
+                  />
+                  <StatCell
+                    icon={<TrendingUp className="h-5 w-5" />}
+                    value={
+                      stats.scoredSessions >= 4
+                        ? `${stats.scoreImprovement > 0 ? '+' : ''}${stats.scoreImprovement}`
+                        : '—'
+                    }
+                    label={stats.scoredSessions >= 4 ? 'Verbesserung' : 'Mind. 4 Sessions'}
+                    good={stats.scoredSessions >= 4 && stats.scoreImprovement >= 0}
+                  />
+                </div>
 
-                {/* Progress Chart */}
-                {stats && stats.completedSessions > 0 && (
-                  <Card className="mt-8">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5" />
-                        Fortschritt
-                      </CardTitle>
-                      <CardDescription>
-                        Ihre Entwicklung über die letzten Interviews
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <InterviewProgressChart stats={stats} />
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Sessions List */}
-                <div className="mt-8">
-                  <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList>
-                      <TabsTrigger value="all">Alle</TabsTrigger>
-                      <TabsTrigger value="IN_PROGRESS" className="gap-1">
-                        <Loader2 className="h-3 w-3" />
-                        Laufend
-                      </TabsTrigger>
-                      <TabsTrigger value="COMPLETED" className="gap-1">
-                        <CheckCircle className="h-3 w-3" />
-                        Abgeschlossen
-                      </TabsTrigger>
-                      <TabsTrigger value="ABANDONED" className="gap-1">
-                        <XCircle className="h-3 w-3" />
-                        Abgebrochen
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value={activeTab} className="mt-6">
-                      {sessionsLoading ? (
-                        <SessionsSkeleton />
-                      ) : !sessionsData?.sessions?.length ? (
-                        <EmptyState
-                          icon={MessageSquare}
-                          title="Keine Interview-Sessions"
-                          description="Keine Sessions mit diesem Status gefunden."
-                        />
-                      ) : (
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                          {sessionsData.sessions.map((session: InterviewSession) => (
-                            <SessionCard key={session.id} session={session} />
+                {/* Sessions + next-round sidebar */}
+                <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+                  <Card>
+                    <CardContent className="p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h3 className="text-base font-semibold">Letzte Sessions</h3>
+                        <div className="flex flex-wrap gap-1.5">
+                          {SESSION_FILTERS.map(([id, label]) => (
+                            <button
+                              key={id}
+                              onClick={() => setActiveTab(id)}
+                              className={cn(
+                                'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+                                activeTab === id
+                                  ? 'border-primary bg-primary text-primary-foreground'
+                                  : 'text-muted-foreground hover:border-muted-foreground/40'
+                              )}
+                            >
+                              {label}
+                            </button>
                           ))}
                         </div>
-                      )}
-                    </TabsContent>
-                  </Tabs>
+                      </div>
+
+                      <div className="mt-2 divide-y">
+                        {sessionsLoading ? (
+                          <SessionRowsSkeleton />
+                        ) : sessionsData?.sessions?.length ? (
+                          sessionsData.sessions.map((session: InterviewSession) => (
+                            <SessionRow key={session.id} session={session} />
+                          ))
+                        ) : (
+                          <p className="py-10 text-center text-sm text-muted-foreground">
+                            Keine Sessions mit diesem Status.
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="flex h-full flex-col p-5">
+                      <div
+                        className="grid h-28 place-items-center rounded-xl"
+                        style={{
+                          background:
+                            'radial-gradient(55% 60% at 50% 45%, rgba(59,130,246,0.10) 0%, transparent 72%)',
+                        }}
+                      >
+                        <Applo state="success" size={92} aria-hidden />
+                      </div>
+                      <h3 className="mt-2 text-center text-lg font-semibold">
+                        Bereit für die nächste Runde?
+                      </h3>
+                      <p className="mb-4 mt-1 text-center text-sm text-muted-foreground">
+                        Übe gezielt weiter — mit jeder Runde wirst du besser.
+                      </p>
+
+                      <button
+                        onClick={() => setDialogOpen(true)}
+                        className="mb-2.5 flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/50"
+                      >
+                        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-muted text-foreground">
+                          <MessageSquare className="h-4 w-4" />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-semibold">Freies Interview</span>
+                          <span className="block text-xs text-muted-foreground">
+                            Für eine beliebige Position üben
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => setDialogOpen(true)}
+                        className="flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/50"
+                      >
+                        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-muted text-foreground">
+                          <RefreshCw className="h-4 w-4" />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-semibold">
+                            Basierend auf Bewerbung
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            Fragen aus einer echten Stelle
+                          </span>
+                        </span>
+                      </button>
+
+                      <Button
+                        onClick={() => setDialogOpen(true)}
+                        className="mt-auto w-full gap-2"
+                        size="lg"
+                      >
+                        <Play className="h-4 w-4" />
+                        Neues Interview starten
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
-              </>
+              </div>
             )}
           </div>
 

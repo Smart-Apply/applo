@@ -4,6 +4,7 @@ import { api } from '@/lib/api-client';
 import { toastSuccess, toastError } from '@/lib/toast';
 import type {
   InterviewSessionDetail,
+  InterviewStats,
   StartInterviewDto,
   SubmitAnswerDto,
   InterviewSessionStatus,
@@ -79,6 +80,14 @@ export function useStartInterview() {
     mutationFn: (data: StartInterviewDto) => api.interviews.start(data),
     onSuccess: (session) => {
       queryClient.invalidateQueries({ queryKey: ['interviews', 'list'] });
+      // Starting a session changes the session count that the interviews page
+      // uses to choose between the first-run tutorial and the normal dashboard.
+      // Optimistically bump + invalidate the stats so abandoning the very first
+      // session doesn't bounce the user back into the tutorial (stale count).
+      queryClient.setQueryData<InterviewStats>(['interviews', 'stats'], (old) =>
+        old ? { ...old, totalSessions: old.totalSessions + 1 } : old,
+      );
+      queryClient.invalidateQueries({ queryKey: ['interviews', 'stats'] });
       queryClient.setQueryData(['interviews', 'detail', session.id], session);
       toastSuccess('Interview-Session gestartet');
     },
@@ -186,6 +195,10 @@ export function useAbandonInterview(sessionId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['interviews', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['interviews', 'detail', sessionId] });
+      // Keep the session count fresh so the user lands on the normal dashboard
+      // (with the abandoned session in history) instead of the first-run
+      // tutorial after cancelling.
+      queryClient.invalidateQueries({ queryKey: ['interviews', 'stats'] });
       toastSuccess('Interview-Session abgebrochen');
     },
     onError: (error: unknown) => {
