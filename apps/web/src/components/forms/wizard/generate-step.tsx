@@ -219,18 +219,27 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
   // ── Generating or redirecting: show loading UI ──
   if (createApplication.isPending || isRedirecting) {
     // Estimated step durations (cumulative seconds). Heuristic only — the
-    // actual timing depends on the LLM. Tuned so users see steady progress
-    // for a typical 30–60s generation.
-    const STEPS: { label: string; doneAt: number }[] = [
-      { label: 'Profil und Stellenanzeige werden analysiert', doneAt: 6 },
-      { label: 'Anschreiben wird mit KI generiert', doneAt: 28 },
-      { label: 'Lebenslauf wird auf die Stelle zugeschnitten', doneAt: 50 },
-      { label: 'Dokumente werden gespeichert', doneAt: 60 },
-    ];
+    // actual timing depends on the LLM. The cover-letter editor pass adds one
+    // extra LLM round-trip, so the steps + estimate differ when a cover letter
+    // is generated.
+    const STEPS: { label: string; doneAt: number }[] = generateCoverLetter
+      ? [
+          { label: 'Profil und Stellenanzeige werden analysiert', doneAt: 6 },
+          { label: 'Anschreiben wird mit KI generiert', doneAt: 28 },
+          { label: 'Lebenslauf wird auf die Stelle zugeschnitten', doneAt: 48 },
+          { label: 'Anschreiben wird geprüft und verfeinert', doneAt: 66 },
+          { label: 'Dokumente werden gespeichert', doneAt: 74 },
+        ]
+      : [
+          { label: 'Profil und Stellenanzeige werden analysiert', doneAt: 6 },
+          { label: 'Lebenslauf wird auf die Stelle zugeschnitten', doneAt: 45 },
+          { label: 'Dokumente werden gespeichert', doneAt: 55 },
+        ];
 
+    const totalEstimate = STEPS[STEPS.length - 1].doneAt;
     const currentStepIndex = STEPS.findIndex((s) => elapsedSeconds < s.doneAt);
     const activeIndex = currentStepIndex === -1 ? STEPS.length - 1 : currentStepIndex;
-    const isOverdue = elapsedSeconds > 75;
+    const isOverdue = elapsedSeconds > totalEstimate + 15;
 
     return (
       <Card className="shadow-soft border-border/50">
@@ -239,7 +248,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
           <CardDescription>
             {isOverdue
               ? 'Dauert länger als gewöhnlich, einen Moment noch …'
-              : 'Das dauert üblicherweise 30–60 Sekunden. Bitte schließ dieses Fenster nicht.'}
+              : `Das dauert üblicherweise ${generateCoverLetter ? '45–75' : '30–55'} Sekunden. Bitte schließ dieses Fenster nicht.`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

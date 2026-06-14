@@ -143,6 +143,10 @@ User → Frontend (Next.js)
 │ Circuit-breaker + retries (opossum)  │
 │ 1. Generate cover letter             │
 │ 2. Generate resume                   │
+│ 3. Editor pass: critique + revise    │
+│    the cover letter                  │
+│ 4. Grounding check: flag fabricated  │
+│    impact numbers vs. the profile    │
 └──────────────────────────────────────┘
         │
         ▼

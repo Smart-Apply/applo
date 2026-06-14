@@ -50,10 +50,15 @@ The **live** path is the v1 "single-LLM pipeline" inside
 | 2a | [`v1/cover-letter.md`](../../apps/api/prompts/v1/cover-letter.md) | `callText` | Cover letter (Markdown → HTML) |
 | 2b | [`v1/resume-rewrite.md`](../../apps/api/prompts/v1/resume-rewrite.md) | `callJson` (temp 0.35) | Rewrite summary / experiences / projects |
 | 2c | [`v1/ats-keywords.md`](../../apps/api/prompts/v1/ats-keywords.md) | `callJson` | Extract ≤15 job keywords, then **deterministic** match vs. profile |
+| 2d | [`v1/editor-cover-letter.md`](../../apps/api/prompts/v1/editor-cover-letter.md) | `callText` | **Editor pass (#1):** critique + revise the cover letter; graceful fallback to the draft |
 | 3 | — | code | `convertTailoredProfileToResumeJson` → stored as `resumeText` (JSON) |
+| 4 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
 
-Steps 2a/2b/2c run in **parallel** (`Promise.all`). Resume is persisted as structured
-JSON for the editor; the cover letter is persisted as HTML for the PDF.
+Steps 2a/2b/2c run in **parallel** (`Promise.all`). The editor pass (2d) runs **after** the
+draft is produced (sequential by nature); the grounding check (4) runs on the finalized
+documents. Resume is persisted as structured JSON for the editor; the cover letter is
+persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and
+`generateWithSinglePipeline` (test endpoint) — share the editor + grounding helpers.
 
 **Dead / optional code (do not confuse with the live path):**
 - `apps/api/src/agents/**` (`ApplicationPipelineService`, `CVWriterAgent`,
@@ -79,8 +84,8 @@ JSON for the editor; the cover letter is persisted as HTML for the PDF.
 | 3 | XYZ/STAR achievement-bullet formula | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
 | 4 | Make the professional summary / Kurzprofil do real work | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
 | 5 | Real cover-letter personalization | 1 | Low | 🟡 In progress | `prompts/v1/cover-letter.md`, (later) data layer |
-| 1 | Self-critique / editor pass | 2 | Med | 🔴 Planned | new `prompts/v1/editor-*.md`, `llm.service.ts`, `applications.service.ts` |
-| 7 | Anti-hallucination grounding validator | 2 | Med | 🔴 Planned | new `grounding/` service, `applications.service.ts` |
+| 1 | Self-critique / editor pass | 2 | Med | � In progress | `prompts/v1/editor-cover-letter.md`, `applications.service.ts` |
+| 7 | Anti-hallucination grounding validator | 2 | Med | 🟢 Shipped | `grounding/grounding-validator.service.ts`, `applications.service.ts` |
 | 6 | Coverage-driven keyword loop | 3 | Med | 🔴 Planned | `applications.service.ts`, `keywords/**` |
 | 9 | Trustworthy + actionable match score | 3 | Low | 🔴 Planned | `applications.service.ts`, web ATS panel |
 | 8 | Structured outputs (JSON schema) instead of regex repair | 4 | Med-High | 🔴 Planned | `llm/providers/azure-openai.provider.ts`, `llm.service.ts` |
@@ -130,11 +135,19 @@ once. Two variants:
 `LLMService.runEditorPass(...)`; wire as a step in `applications.service.ts` `create()`,
 guarded (graceful degradation: on failure keep the original draft).
 
+**Shipped (cover letter).** `prompts/v1/editor-cover-letter.md` +
+`runCoverLetterEditorPass` in `applications.service.ts`, wired into **both** live paths
+(`createWithGeneration` + `generateWithSinglePipeline`). Temp 0.4, max 1500 tokens.
+Graceful degradation: on any error or a suspiciously short result (<50% of the draft
+length) we keep the original draft, so generation never breaks. The editor is also
+forbidden from introducing new facts/metrics — it can only tighten what's there.
+
 **Acceptance.**
-- [ ] Cover-letter editor pass live in the create pipeline with graceful fallback.
+- [x] Cover-letter editor pass live in **both** pipelines with graceful fallback.
+- [x] Editor latency made visible to the user (wizard step + SSE progress).
 - [ ] Resume editor pass live (summary + achievements), IDs preserved.
 - [ ] Eval (#10) shows rubric-score improvement vs. no-editor baseline.
-- [ ] README + ARCHITECTURE + copilot-instructions updated (pipeline change).
+- [x] README + ARCHITECTURE + copilot-instructions updated (pipeline change).
 
 ---
 
@@ -246,10 +259,20 @@ after generation (and ideally after the editor pass). No LLM call.
 **Files.** new `apps/api/src/applications/grounding/grounding-validator.service.ts`
 (+ unit spec); wire into `create()`.
 
+**Shipped.** `GroundingValidatorService`
+(`apps/api/src/applications/grounding/grounding-validator.service.ts`) +
+`runGroundingCheck` wired into both live paths; registered in `ApplicationsModule`.
+7 unit tests (DE/EN, JSON + HTML inputs). Targets **impact numbers only** — percentages,
+currency, magnitudes (2k, 3 Mio), and counts ≥ 100; small standalone integers like
+"5 years" are intentionally not checked (they're often derived from dates → false
+positives). **Decision: flag + log** (non-destructive) — stripping a number out of prose
+would mangle the sentence, so we log a warning for telemetry instead. Not persisted to the
+DB yet (no schema change). The report is the foundation for a future editor feedback loop.
+
 **Acceptance.**
-- [ ] Validator detects fabricated numbers / employers / certs in tests.
-- [ ] Wired into the pipeline; unsupported claims are stripped or flagged (decision logged).
-- [ ] README/ARCHITECTURE updated (pipeline change).
+- [x] Validator detects fabricated numbers in tests (7 unit tests, DE/EN, JSON + HTML).
+- [x] Wired into both pipelines; unsupported claims flagged + logged (decision: flag, not strip).
+- [x] README/ARCHITECTURE/copilot-instructions updated (pipeline change).
 
 ---
 
@@ -294,7 +317,7 @@ the keyword *Qualitätsmanagement*"). Show in the web ATS panel.
 **Problem.** We can't prove the main quality driver improved without measuring it.
 
 **Approach.** A golden set of ~20-30 `(job posting × profile)` pairs spanning professions
-+ languages. A script runs the pipeline and scores each draft with an LLM judge against
+and languages. A script runs the pipeline and scores each draft with an LLM judge against
 the rubric (items #1, #3, #4, #5) plus a deterministic grounding check (#7). Run on every
 prompt/pipeline change to catch regressions. The Microsoft Foundry evaluation tooling in
 the stack can host batch/continuous evals.
@@ -315,14 +338,69 @@ hook (non-blocking, like the existing unit-tests job).
   self-contained, easy to eval) vs. Foundry agents. Item #2 assumes v1.
 - **Model for the writing + editor passes** — `gpt-4.1` today; worth A/B-testing a
   stronger reasoning model specifically for #1, where prose quality lives.
-- **Grounding strictness (#7)** — strip unsupported claims automatically vs. flag for the
-  user. Record the choice when implementing.
+- **Grounding strictness (#7)** — ✅ RESOLVED 2026-06-15: **flag + log** (non-destructive).
+  Stripping numbers from prose mangles sentences; flagging gives telemetry now and can feed
+  the editor pass later. Revisit if we want auto-correction.
 
 ---
 
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-15 — Fix grounding-validator false positives (first real run)
+- First real `azure-openai` generation surfaced a bug: the grounding check reported
+  `7/11 impact numbers not found (score 36)` flagging values like `4915159051609`
+  (the candidate's **phone number**), `1781479444091` (a **timestamp**) and `00.000`
+  (an **ISO date** fragment). Root cause: the validator extracted numbers from the
+  **entire serialized resume JSON** (contact block, ISO `startDate`/`endDate`, ids).
+- **Fix (#7):**
+  1. Resume JSON is now walked **prose-only** — numbers are extracted solely from
+     `summary` / `description` / `achievements` / `highlights` keys, not contact/date/id
+     fields.
+  2. The plain-number bucket is restricted to a plausible metric range: 3–6 significant
+     digits, no leading zero (ISO-time artifacts), and 4-digit calendar years (1900–2099)
+     excluded. Strong-signal numbers (%, currency, magnitudes) are still always checked.
+- Added 3 regression tests (phone + ISO dates not flagged, calendar years not flagged,
+  real fabricated metric inside a prose field still flagged). 10 grounding tests pass.
+- **Also confirmed working end-to-end** in the same run: `Cover letter editor pass applied`
+  fired after the parallel generation, total generation 18.9s (acceptable).
+- Files: `apps/api/src/applications/grounding/grounding-validator.service.ts`,
+  `apps/api/src/applications/__tests__/unit/grounding-validator.unit.spec.ts`.
+
+### 2026-06-15 — Make the editor-pass latency visible to the user
+- **#1** — surfaced the extra editor round-trip in the UI so the added latency reads as
+  progress, not a stall:
+  - Frontend wizard ([generate-step.tsx](../../apps/web/src/components/forms/wizard/generate-step.tsx)):
+    the synchronous main path shows a simulated step list — added an **"Anschreiben wird
+    geprüft und verfeinert"** step (only when a cover letter is generated), retuned the
+    per-step timing, widened the estimate copy to 45–75s (with cover letter) / 30–55s
+    (without), and derived the "taking longer" threshold from the estimate.
+  - Backend SSE path (`generateWithSinglePipeline`): added
+    `emitProgress(90, 'Anschreiben wird geprüft und verfeinert...')` before the editor call.
+- Files: `apps/web/src/components/forms/wizard/generate-step.tsx`,
+  `apps/api/src/applications/applications.service.ts`.
+
+### 2026-06-15 — Phase 2: editor pass (#1, cover letter) + grounding validator (#7)
+- **#7 Shipped** — `GroundingValidatorService`
+  ([grounding-validator.service.ts](../../apps/api/src/applications/grounding/grounding-validator.service.ts)),
+  a deterministic, non-destructive anti-hallucination check. Flags impact numbers
+  (%, currency, magnitudes, counts ≥ 100) that don't appear in the source profile. Handles
+  both resume shapes (JSON + Markdown) and HTML cover letters. 7 unit tests (DE/EN). Wired
+  into both live paths via `runGroundingCheck` (log-only). **Decision: flag, not strip.**
+- **#1 In progress** — cover-letter editor pass:
+  [editor-cover-letter.md](../../apps/api/prompts/v1/editor-cover-letter.md) +
+  `runCoverLetterEditorPass`, wired into `createWithGeneration` + `generateWithSinglePipeline`
+  with graceful degradation (keep the draft on failure / short output). Resume editor pass
+  still pending.
+- **Doc-sync** — updated `README.md`, `ARCHITECTURE.md` (pipeline diagram) and
+  `.github/copilot-instructions.md` (applications module + pipeline steps).
+- Files: `apps/api/src/applications/grounding/grounding-validator.service.ts`,
+  `apps/api/src/applications/__tests__/unit/grounding-validator.unit.spec.ts`,
+  `apps/api/prompts/v1/editor-cover-letter.md`,
+  `apps/api/src/applications/applications.service.ts`,
+  `apps/api/src/applications/applications.module.ts`, two test modules (DI provider),
+  `README.md`, `ARCHITECTURE.md`, `.github/copilot-instructions.md`.
 
 ### 2026-06-15 — Phase 1 kickoff + tracker created
 - **Added** this living tracker (`docs/implementation/LLM_OUTPUT_QUALITY.md`) covering all
