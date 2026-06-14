@@ -81,6 +81,14 @@ Every error response includes:
 | `LLM_PARSE_ERROR`      | 500         | Die KI-Antwort konnte nicht verarbeitet werden. Bitte versuche es erneut.                         |
 | `LLM_INVALID_RESPONSE` | 500         | Die KI hat eine ungültige Antwort geliefert. Bitte versuche es erneut.                            |
 
+### AI Prompt Guardrails (400)
+
+Returned when a user-entered AI prompt (Interview Coach answer, Edit-Mode AI assistant instructions) exceeds the per-surface character **or** token limit. Both dimensions share one code; the message names how much to trim (e.g. "… um 120 Zeichen bzw. 30 Tokens.") and the response carries `surface`, `maxChars`, `maxTokens`, `chars`, `tokens`, `overChars`, `overTokens` metadata. Limits live in `@smart-apply/shared` (`AI_PROMPT_LIMITS`); the server re-counts tokens with `gpt-tokenizer` (model `gpt-4.1`).
+
+| Code                 | HTTP Status | Message                                                                             |
+| -------------------- | ----------- | ----------------------------------------------------------------------------------- |
+| `AI_PROMPT_TOO_LONG` | 400         | Deine Eingabe für die KI ist zu lang. Bitte kürze den Text und versuche es erneut.  |
+
 ### File Upload Errors (400)
 
 | Code                | HTTP Status | Message                                                            |

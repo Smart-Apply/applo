@@ -99,7 +99,7 @@ smart-apply/
 │       │   └── types/             # Shared TS types
 │       └── public/                # Static assets
 │
-├── packages/shared/          # Shared types/utils
+├── packages/shared/          # Shared types/utils (+ AI prompt guardrail config)
 ├── docs/                     # Feature, guide, security, implementation docs
 ├── infra/                    # Dockerfiles, docker-compose, nginx
 └── scripts/                  # Deploy & maintenance
@@ -227,6 +227,7 @@ User 1:1 Subscription
 | **OAuth**      | Google, Microsoft, Azure AD (passport)             |
 | **Rate Limit** | 5/15min auth · 100/15min standard (`@nestjs/throttler`) |
 | **Input**      | class-validator DTOs, `@Sanitize()` + DOMPurify    |
+| **AI Guardrails** | per-surface char + token limits on AI prompt inputs (`@smart-apply/shared` + `gpt-tokenizer` model `gpt-4.1`) |
 | **CSRF**       | csrf-csrf (Double Submit Cookie, optional)         |
 | **Passwords**  | argon2id, strength regex                           |
 | **Audit**      | Winston daily-rotated logs (90-day retention)      |
@@ -252,6 +253,7 @@ User 1:1 Subscription
 | Logging     | Pino (req logs) + Winston (audit, daily rotation)    |
 | Monitoring  | Sentry (`@sentry/node` + profiling)                  |
 | Validation  | class-validator · Zod · sanitize-html                |
+| AI guardrails | `@smart-apply/shared` (limits) · `gpt-tokenizer` (model `gpt-4.1`) |
 | Resilience  | opossum (circuit breaker) |
 | Scheduling  | `@nestjs/schedule` (cron jobs)                       |
 | Health      | `@nestjs/terminus`                                   |

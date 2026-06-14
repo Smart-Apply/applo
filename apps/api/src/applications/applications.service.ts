@@ -36,6 +36,7 @@ import {
   NotFoundWithCode,
   ConflictWithCode,
 } from '../common/exceptions/coded-http.exception';
+import { assertPromptWithinLimits } from '../common/guardrails/prompt-guardrail';
 import {
   buildResumeTemplateData,
   ProfileWithRelations,
@@ -1924,6 +1925,9 @@ Summary: ${resume.summary || 'Not provided'}
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
     this.ensureNotGenerating(application);
 
+    // Guardrail: enforce char/token limits on the AI instructions (issue #520)
+    assertPromptWithinLimits(dto.instructions, 'editModeAssistant');
+
     const resume = this.parseResume(application.resumeText);
     if (!resume) {
       throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_RESUME);
@@ -2002,6 +2006,9 @@ Summary: ${resume.summary || 'Not provided'}
 
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
 
+    // Guardrail: enforce char/token limits on the AI instructions (issue #520)
+    assertPromptWithinLimits(dto.instructions, 'editModeAssistant');
+
     const jobPosting = application.jobPosting;
     if (!jobPosting) {
       throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_JOB);
@@ -2065,6 +2072,9 @@ Summary: ${resume.summary || 'Not provided'}
 
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
 
+    // Guardrail: enforce char/token limits on the AI instructions (issue #520)
+    assertPromptWithinLimits(dto.instructions, 'editModeAssistant');
+
     const jobPosting = application.jobPosting;
     if (!jobPosting) {
       throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_JOB);
@@ -2120,6 +2130,9 @@ Summary: ${resume.summary || 'Not provided'}
     );
 
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    // Guardrail: enforce char/token limits on the AI instructions (issue #520)
+    assertPromptWithinLimits(dto.instructions, 'editModeAssistant');
 
     const jobPosting = application.jobPosting;
     if (!jobPosting) {

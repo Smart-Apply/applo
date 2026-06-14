@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import type { InterviewSessionDetail, InterviewQuestion } from '@/types';
 import { useSubmitAnswer, useGetNextQuestion, useCompleteInterview, useAbandonInterview } from '@/hooks/use-interviews';
+import { usePromptUsage } from '@/hooks/use-prompt-usage';
+import { PromptUsageMeter } from '@/components/ui/prompt-usage-meter';
 import { toast } from 'sonner';
 
 interface InterviewChatProps {
@@ -80,6 +82,9 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
   const completeMutation = useCompleteInterview(session.id);
   const abandonMutation = useAbandonInterview(session.id);
 
+  // Live character/token guardrail for the answer input (issue #520).
+  const usage = usePromptUsage(answer, 'interviewChat');
+
   // Calculate progress
   const totalQuestions = session.maxQuestions;
   const answeredQuestions = session.answeredCount;
@@ -109,7 +114,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
   };
 
   const handleSubmitAnswer = useCallback(async () => {
-    if (!answer.trim() || !currentQuestion) return;
+    if (!answer.trim() || !currentQuestion || usage.isOverLimit) return;
 
     const answerContent = answer.trim();
     setAnswer('');
@@ -181,7 +186,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
       // Restore the answer
       setAnswer(answerContent);
     }
-  }, [answer, currentQuestion, timer, isLastQuestion, submitAnswerMutation, getNextQuestionMutation]);
+  }, [answer, currentQuestion, timer, isLastQuestion, usage.isOverLimit, submitAnswerMutation, getNextQuestionMutation]);
 
   const handleComplete = async () => {
     try {
@@ -339,18 +344,22 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
             </div>
           ) : (
             <div className="w-full flex gap-2">
-              <Textarea
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Deine Antwort eingeben... (Enter zum Senden, Shift+Enter für Zeilenumbruch)"
-                className="flex-1 min-h-[80px] max-h-[200px] resize-none"
-                disabled={isLoading || !currentQuestion}
-              />
+              <div className="flex-1 space-y-1">
+                <Textarea
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Deine Antwort eingeben... (Enter zum Senden, Shift+Enter für Zeilenumbruch)"
+                  className="w-full min-h-[80px] max-h-[200px] resize-none"
+                  disabled={isLoading || !currentQuestion}
+                  aria-invalid={usage.isOverLimit}
+                />
+                <PromptUsageMeter usage={usage} />
+              </div>
               <Button
                 onClick={handleSubmitAnswer}
-                disabled={!answer.trim() || isLoading || !currentQuestion}
-                className="self-end"
+                disabled={!answer.trim() || isLoading || !currentQuestion || usage.isOverLimit}
+                className="self-start"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

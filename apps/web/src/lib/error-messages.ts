@@ -39,6 +39,9 @@ export enum ErrorCode {
   LLM_TIMEOUT = 'LLM_TIMEOUT',
   LLM_PARSE_ERROR = 'LLM_PARSE_ERROR',
   LLM_INVALID_RESPONSE = 'LLM_INVALID_RESPONSE',
+
+  // AI prompt guardrails (issue #520)
+  AI_PROMPT_TOO_LONG = 'AI_PROMPT_TOO_LONG',
   
   // File upload errors
   FILE_TOO_LARGE = 'FILE_TOO_LARGE',
@@ -100,6 +103,9 @@ export const ERROR_MESSAGES: Record<string, string> = {
   [ErrorCode.LLM_TIMEOUT]: 'Die KI-Generierung dauert länger als erwartet. Deine Bewerbung wird im Hintergrund erstellt.',
   [ErrorCode.LLM_PARSE_ERROR]: 'Die KI-Antwort konnte nicht verarbeitet werden. Bitte versuche es erneut.',
   [ErrorCode.LLM_INVALID_RESPONSE]: 'Die KI hat eine ungültige Antwort geliefert. Bitte versuche es erneut.',
+
+  // AI prompt guardrails (issue #520)
+  [ErrorCode.AI_PROMPT_TOO_LONG]: 'Deine Eingabe für die KI ist zu lang. Bitte kürze den Text und versuche es erneut.',
   
   // File upload errors
   [ErrorCode.FILE_TOO_LARGE]: 'Die Datei ist zu groß. Maximal 10 MB sind erlaubt.',
