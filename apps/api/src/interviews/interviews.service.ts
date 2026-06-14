@@ -15,6 +15,7 @@ import {
   InterviewDifficulty,
 } from '../generated/prisma/client';
 import { StartInterviewDto, SubmitAnswerDto } from './dto';
+import { assertPromptWithinLimits } from '../common/guardrails/prompt-guardrail';
 import {
   InterviewQuestionGeneratorService,
   QuestionGenerationContext,
@@ -216,6 +217,9 @@ export class InterviewsService {
     if (question.userAnswer) {
       throw new BadRequestException('Diese Frage wurde bereits beantwortet');
     }
+
+    // Guardrail: enforce char/token limits on the user's answer (issue #520)
+    assertPromptWithinLimits(dto.answer, 'interviewChat');
 
     // Analyze the answer
     const analysisContext: AnswerAnalysisContext = {

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SubmitButton } from '@/components/ui/submit-button';
+import { PromptUsageMeter } from '@/components/ui/prompt-usage-meter';
+import { usePromptUsage } from '@/hooks/use-prompt-usage';
 import { useCallback } from 'react';
 
 export interface AiAssistantPopoverProps {
@@ -61,17 +63,20 @@ export function AiAssistantPopover({
   buttonSize = 'sm',
   buttonClassName = 'h-8 px-3 text-xs border-primary/30 hover:border-primary/50 hover:bg-primary/5',
 }: AiAssistantPopoverProps) {
+  // Live character/token guardrail for the instructions field (issue #520).
+  const usage = usePromptUsage(instructions, 'editModeAssistant');
+
   // Handle Enter key to submit (Shift+Enter for new line)
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        if (instructions.trim() && !isLoading) {
+        if (instructions.trim() && !isLoading && !usage.isOverLimit) {
           onApply();
         }
       }
     },
-    [instructions, isLoading, onApply],
+    [instructions, isLoading, usage.isOverLimit, onApply],
   );
 
   return (
@@ -98,8 +103,10 @@ export function AiAssistantPopover({
             placeholder={placeholder}
             rows={3}
             disabled={isLoading}
+            aria-invalid={usage.isOverLimit}
             className="resize-none text-sm"
           />
+          <PromptUsageMeter usage={usage} />
           <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
             <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>{warningMessage}</span>
@@ -110,7 +117,7 @@ export function AiAssistantPopover({
             onClick={onApply}
             isLoading={isLoading}
             loadingText={loadingText}
-            disabled={isLoading || !instructions.trim()}
+            disabled={isLoading || !instructions.trim() || usage.isOverLimit}
             className="w-full"
           >
             <Sparkles className="h-3.5 w-3.5 mr-2" />

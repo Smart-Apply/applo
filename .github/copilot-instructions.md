@@ -184,7 +184,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `agents` — Azure AI Foundry agents (URL parsing, etc.)
 - `applications` — generation pipeline (profile + job → LLM → PDF → storage), SSE status stream
 - `auth` — JWT, refresh-token rotation, OAuth (Google/Microsoft/Azure AD), TOTP 2FA, password reset
-- `common` — guards, filters, decorators (`@Sanitize()`)
+- `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@smart-apply/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`)
 - `config` — Zod env schema
 - `contact` — contact form
 - `email` — Resend transactional email

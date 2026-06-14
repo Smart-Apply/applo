@@ -126,7 +126,7 @@ smart-apply/
 │   │   │   └── user-preferences/
 │   │   └── prisma/               # Schema, migrations, seeds
 │   └── web/                      # Next.js 16 frontend (Port 3001)
-├── packages/shared/              # Shared types
+├── packages/shared/              # Shared types (+ AI prompt guardrail config)
 ├── docs/                         # Feature, guide & security docs
 ├── infra/                        # Docker & Compose
 └── scripts/                      # Deploy & maintenance
@@ -171,6 +171,7 @@ pnpm typecheck
 - Helmet, restrictive CORS whitelist, optional CSRF (csrf-csrf)
 - Rate limiting (5/15min auth · 100/15min standard)
 - Input sanitization (`@Sanitize()` + DOMPurify)
+- AI prompt guardrails — per-surface character + token limits on every AI input, enforced live in the UI and authoritatively on the server (cost & abuse control)
 - Winston audit logs (daily rotation, 90-day retention)
 - Sentry error & performance monitoring
 

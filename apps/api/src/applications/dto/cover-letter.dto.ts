@@ -1,5 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
+import { AI_PROMPT_HARD_CEILING_CHARS } from '@smart-apply/shared';
+import { Sanitize } from '../../common/decorators/sanitize.decorator';
 
 export class CoverLetterDto {
   @ApiPropertyOptional({
@@ -8,6 +10,8 @@ export class CoverLetterDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(AI_PROMPT_HARD_CEILING_CHARS, { message: 'Die Anweisungen sind zu lang.' })
+  @Sanitize()
   instructions?: string;
 
   @ApiPropertyOptional({
