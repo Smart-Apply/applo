@@ -46,6 +46,7 @@ import {
   normalizeProficiencyLevel,
 } from './resume-template.util';
 import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.util';
+import { buildMatchInsights } from './match-insights.util';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -1946,6 +1947,7 @@ Summary: ${resume.summary || 'Not provided'}
           matchedKeywords,
           missingKeywords,
           keywords,
+          { targetRole: application.jobPosting?.title },
         );
 
         // Update the cached analysis data
@@ -2930,6 +2932,7 @@ Summary: ${resume.summary || 'Not provided'}
           matchedKeywords,
           missingKeywords,
           keywords,
+          { targetRole: application.jobPosting.title },
         );
 
         this.logger.log(
@@ -3022,7 +3025,9 @@ Summary: ${resume.summary || 'Not provided'}
     const { matchedKeywords, missingKeywords } = this.matchKeywords(keywords, candidateKeywords);
 
     // Calculate match analysis
-    const matchAnalysis = this.calculateMatchAnalysis(matchedKeywords, missingKeywords, keywords);
+    const matchAnalysis = this.calculateMatchAnalysis(matchedKeywords, missingKeywords, keywords, {
+      targetRole: jobPosting.title,
+    });
 
     // Cache the results
     const analysisData = {
@@ -3336,12 +3341,17 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
-   * Calculate match analysis from matched/missing keywords
+   * Calculate match analysis from matched/missing keywords.
+   *
+   * The `overallScore` is purely deterministic (keyword coverage) — it is NEVER
+   * an LLM self-report. `context.targetRole` (the job title) lets the suggestions
+   * name the role the user is applying for.
    */
   private calculateMatchAnalysis(
     matchedKeywords: any[],
     missingKeywords: any[],
     keywords: any,
+    context?: { targetRole?: string },
   ): any {
     // Support both old and new field names for counting totals
     // Only count hard skills (technical) - soft skills removed
@@ -3377,37 +3387,12 @@ Summary: ${resume.summary || 'Not provided'}
     // No more soft skills weighting
     const overallScore = technicalScore;
 
-    const suggestions: string[] = [];
-    const strengths: string[] = [];
-    const weaknesses: string[] = [];
-
-    if (technicalScore >= 70) {
-      strengths.push('Gute Übereinstimmung bei Kernkompetenzen');
-    } else if (technicalScore < 50) {
-      const missingCore = missingKeywords
-        .filter(
-          (k) =>
-            k.category === 'core' || k.category === 'methodology' || k.category === 'technical',
-        )
-        .slice(0, 3)
-        .map((k) => k.keyword);
-      if (missingCore.length > 0) {
-        suggestions.push(
-          `Relevante Qualifikationen könnten ergänzt werden: ${missingCore.join(', ')}`,
-        );
-        weaknesses.push('Einige Kernkompetenzen nicht gefunden');
-      }
-    }
-
-    if (experienceScore >= 70) {
-      strengths.push('Berufserfahrung entspricht den Anforderungen');
-    }
-
-    if (overallScore >= 75) {
-      strengths.push('Profil passt gut zur Stellenausschreibung');
-    } else if (overallScore < 50) {
-      suggestions.push('Das Profil könnte detaillierter auf die Stelle zugeschnitten werden');
-    }
+    const { suggestions, strengths, weaknesses } = buildMatchInsights(
+      matchedKeywords,
+      missingKeywords,
+      { overallScore, experienceScore },
+      context?.targetRole,
+    );
 
     return {
       overallScore,
