@@ -149,6 +149,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - Direct Azure OpenAI HTTP calls (`@nestjs/axios`)
   - Azure AI Foundry agents (`@azure/ai-agents`) for ATS keyword extraction, CV/CL writing
   - **opossum** circuit breaker around LLM calls
+  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Needs `AZURE_OPENAI_API_VERSION` ≥ `2024-08-01-preview` (default is `2025-01-01-preview`).
 - **PDF:**
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
@@ -196,7 +197,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `keywords` — ATS keyword extraction & matching with language detection
 - `linkedin-jobs` — LinkedIn job search via Apify scraper (Premium-only single-source endpoint, kept for backward compat)
 - `job-search` — **Pluggable multi-source job search** (`JobSearchProvider` interface). Concrete providers: `linkedin` (Premium, wraps `linkedin-jobs`) and `arbeitnow` (free, German-first public API). Fan-out by default; per-source try/catch; cross-source dedup by `(title, company)`. Add new sources by implementing `JobSearchProvider` and binding under `JOB_SEARCH_PROVIDERS` in `JobSearchModule`.
-- `llm` — pluggable providers (`azure-openai` | `azure-ai-foundry` | `mock`) with automatic language detection, opossum circuit breaker
+- `llm` — pluggable providers (`azure-openai` | `azure-ai-foundry` | `mock`) with automatic language detection, opossum circuit breaker, and Azure **structured outputs** (#8: strict `json_schema` for `ats-keywords`/`resume-rewrite`, `json_object` JSON mode elsewhere, resolved by template path in `schemas/v1-schemas.ts`; regex JSON repair kept as a fallback)
 - `logger` — Pino + Winston audit logger
 - `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification.
 - `pdf` — thin façade over `pdf-v2/ReactPdfRendererService`. Kept so external callers (`application.processor.ts`, tests) preserve the `PdfService` API surface. Throws when a template has no react-pdf factory registered.
@@ -663,6 +664,8 @@ LLM_PROVIDER=mock            # azure-openai | azure-ai-foundry | mock
 AZURE_OPENAI_ENDPOINT=https://your-aoai.openai.azure.com/
 AZURE_OPENAI_API_KEY=<key>
 AZURE_OPENAI_DEPLOYMENT_NAME=<deployment>
+# Structured outputs (#8) need 2024-08-01-preview+. Default: 2025-01-01-preview.
+AZURE_OPENAI_API_VERSION=2025-01-01-preview
 
 # Azure AI Foundry (URL parsing agents)
 AZURE_AI_FOUNDRY_ENDPOINT=<endpoint>

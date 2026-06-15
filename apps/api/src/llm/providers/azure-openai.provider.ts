@@ -43,22 +43,29 @@ export class AzureOpenAIProvider implements LLMProvider {
       content: prompt,
     });
 
+    // Structured outputs (#8): forward `response_format` when the caller asks
+    // for JSON mode or a JSON schema. Schema-constrained output needs
+    // api-version 2024-08-01-preview+; JSON mode needs 2023-12-01-preview+.
+    // Both are satisfied by the default api-version. Providers/deployments that
+    // don't support it surface a 400 here, which the LLMService JSON-repair
+    // fallback then handles on a retry path.
+    const requestBody: Record<string, unknown> = {
+      messages,
+      temperature: options?.temperature ?? 0.7,
+      max_tokens: options?.maxTokens ?? 2000,
+    };
+    if (options?.responseFormat) {
+      requestBody.response_format = options.responseFormat;
+    }
+
     try {
       const response = await firstValueFrom(
-        this.httpService.post(
-          url,
-          {
-            messages,
-            temperature: options?.temperature ?? 0.7,
-            max_tokens: options?.maxTokens ?? 2000,
+        this.httpService.post(url, requestBody, {
+          headers: {
+            'api-key': this.apiKey,
+            'Content-Type': 'application/json',
           },
-          {
-            headers: {
-              'api-key': this.apiKey,
-              'Content-Type': 'application/json',
-            },
-          },
-        ),
+        }),
       );
 
       const content = response.data.choices[0]?.message?.content;

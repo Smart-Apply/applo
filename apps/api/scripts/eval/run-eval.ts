@@ -269,7 +269,10 @@ async function main(): Promise<void> {
   );
 
   const app = await NestFactory.createApplicationContext(EvalHarnessModule, {
-    logger: ['error', 'warn'],
+    // Surface 'log' level (incl. the #8 JSON parse-clean telemetry) when
+    // LOG_LLM_CALLS is set, otherwise keep the run output quiet.
+    logger:
+      process.env.LOG_LLM_CALLS === 'true' ? ['error', 'warn', 'log'] : ['error', 'warn'],
   });
 
   try {

@@ -141,6 +141,8 @@ User → Frontend (Next.js)
 │ Provider: Azure OpenAI (GPT-4o) /    │
 │           Azure AI Foundry / mock    │
 │ Circuit-breaker + retries (opossum)  │
+│ Structured outputs: json_schema /    │
+│   json_object (schema-valid JSON)     │
 │ 1. Generate cover letter             │
 │ 2. Generate resume                   │
 │ 3. Editor pass: critique + revise    │

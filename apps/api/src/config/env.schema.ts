@@ -77,7 +77,9 @@ const envSchema = z.object({
   AZURE_OPENAI_ENDPOINT: z.string().optional(),
   AZURE_OPENAI_API_KEY: z.string().optional(),
   AZURE_OPENAI_DEPLOYMENT_NAME: z.string().default('gpt-4o'),
-  AZURE_OPENAI_API_VERSION: z.string().default('2024-02-15-preview'),
+  // 2024-08-01-preview+ is required for structured outputs (json_schema, #8).
+  // Bumped from 2024-02-15-preview so prod/staging get schema-constrained JSON.
+  AZURE_OPENAI_API_VERSION: z.string().default('2025-01-01-preview'),
   LLM_PROVIDER: z.enum(['azure-openai', 'azure-ai-foundry', 'mock']).default('mock'),
 
   // LLM Configuration (reuses AZURE_OPENAI_DEPLOYMENT_NAME for model)
