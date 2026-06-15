@@ -68,10 +68,12 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 - `azure-ai-foundry.provider.ts` is only reachable when `LLM_PROVIDER=azure-ai-foundry`,
   in which case the same v1 prompt calls are routed to Foundry agents. With
   `azure-openai` / `mock` it is never touched.
-- The legacy `prompts/resume-ats.md` / `prompts/cover-letter-ats.md` (+
-  `generateResumeATS` / `generateCoverLetterATS`) are only used by the **edit-mode
-  regenerate** flow (`upsertCoverLetter`), not the main create pipeline. Tracked under
-  item #2 for consolidation (still pending).
+- ~~The legacy `prompts/resume-ats.md` / `prompts/cover-letter-ats.md` (+
+  `generateResumeATS` / `generateCoverLetterATS`)~~ **Removed (#2, 2026-06-15).** The
+  edit-mode regenerate flow (`upsertCoverLetter`) now reuses `v1/cover-letter.md` via
+  [`stored-resume.util.ts`](../../apps/api/src/applications/stored-resume.util.ts); the
+  unused standard `cover-letter.md` / `resume.md` prompts + `generateCoverLetter` /
+  `generateResume` were retired in the same change.
 
 ---
 
@@ -81,7 +83,7 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 
 | # | Improvement | Phase | Risk | Status | Primary files |
 |---|---|---|---|---|---|
-| 2 | Consolidate onto one pipeline; retire dead/legacy paths | 1 | Low | 🟡 In progress | `agents/**`, `prompts/*-ats.md`, `applications.service.ts` |
+| 2 | Consolidate onto one pipeline; retire dead/legacy paths | 1 | Low | � Shipped | `agents/**`, `prompts/*-ats.md`, `stored-resume.util.ts`, `applications.service.ts` |
 | 3 | XYZ/STAR achievement-bullet formula | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
 | 4 | Make the professional summary / Kurzprofil do real work | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
 | 5 | Real cover-letter personalization | 1 | Low | � Shipped | `prompts/v1/cover-letter.md`, `prompts/v1/job-facts.md`, `job-facts.util.ts` |
@@ -162,7 +164,7 @@ malformed payload, falling back to the pre-edit payload. Verified on real Azure 
 
 ---
 
-### 2. Consolidate onto one pipeline 🟡
+### 2. Consolidate onto one pipeline �
 **Problem.** Three generation paths coexist (live v1 prompts, dead `agents/**`, legacy
 `*-ats.md`). Quality fixes keep landing in the wrong place.
 
@@ -175,18 +177,29 @@ malformed payload, falling back to the pre-edit payload. Verified on real Azure 
 - Confirm `infra/Dockerfile` still COPYs the `prompts/` dir (it does) and that no removed
   path is referenced in a prod-stage `COPY`.
 
-**Progress (2026-06-15).** The dead `apps/api/src/agents/**` Foundry agent classes
-(`ApplicationPipelineService`, `CVWriterAgent`, `CLWriterAgent`, `ATSKeywordAgent`) + their
-module were deleted (11 files). The two still-live types they housed (`ATSAgentOutput`,
-`ProfileData`) moved to `keywords/keywords.types.ts`; `AgentsModule` was dropped from
-`ApplicationsModule`. No Dockerfile COPY referenced the path. Build + 66 unit tests green.
-The `*-ats.md` migration is the remaining sub-task.
+**Progress (2026-06-15).** **Part 1** deleted the dead `apps/api/src/agents/**` Foundry agent
+classes (11 files; live types `ATSAgentOutput` / `ProfileData` relocated to
+`keywords/keywords.types.ts`, `AgentsModule` dropped from `ApplicationsModule`). **Part 2**
+migrated the edit-mode regenerate flow (`upsertCoverLetter`) onto `v1/cover-letter.md`: the
+saved editor resume is mapped into a `TailoredProfileDto` by the new pure
+[`stored-resume.util.ts`](../../apps/api/src/applications/stored-resume.util.ts)
+(`mapStoredResumeToTailoredProfile`, 11 unit tests), then runs job-facts extraction + the
+deterministic salutation — the same #1/#5/#6 quality the create pipeline gets. The legacy
+`cover-letter-ats.md`, `resume-ats.md` and the now-unused standard `cover-letter.md` /
+`resume.md` prompts were deleted, along with `generateCoverLetterATS` / `generateResumeATS` /
+`generateCoverLetter` / `generateResume` + their `buildATS*Context` helpers and context
+interfaces in `llm.service.ts`, plus `buildCoverLetterContext` / `buildATSCoverLetterContext` /
+`buildATSResumeContext` / `getKeywordsForGeneration` / `matchKeywordsForLLM` in
+`applications.service.ts`. No Dockerfile COPY referenced a removed path; `nest build` clean;
+a real-Azure smoke of the regenerate path produced a personalized German cover letter
+(company specifics woven, salary/start-date addressed only because the posting asked, no
+placeholder leak).
 
 **Acceptance.**
 - [x] This tracker documents the canonical path + dead code (so fixes land correctly).
 - [x] `agents/**` removed (live types relocated to `keywords/keywords.types.ts`).
-- [ ] Edit-mode regenerate uses v1 prompts; `*-ats.md` deleted.
-- [ ] README/ARCHITECTURE updated to describe one pipeline.
+- [x] Edit-mode regenerate uses v1 prompts; `*-ats.md` deleted.
+- [x] README/ARCHITECTURE updated to describe one pipeline.
 
 ---
 
@@ -512,6 +525,29 @@ _Newest first. Add an entry for every change that touches generation quality._
   `apps/api/src/applications/__tests__/unit/resume-editor.unit.spec.ts`,
   `apps/api/src/applications/applications.service.ts`,
   `apps/api/scripts/eval/{pipeline-runner,aggregate,run-eval}.ts`.
+
+### 2026-06-15 — Cleanup: retire legacy `*-ats.md` prompts (#2, part 2)
+- Migrated the edit-mode "regenerate cover letter" flow (`upsertCoverLetter`) off
+  `cover-letter-ats.md` onto the canonical `v1/cover-letter.md` prompt. The saved editor
+  resume is mapped into a skill-selector `TailoredProfileDto` by the new pure
+  [`stored-resume.util.ts`](../../apps/api/src/applications/stored-resume.util.ts)
+  (`mapStoredResumeToTailoredProfile`), then runs job-facts extraction + the deterministic
+  salutation — so regenerate now gets the same #1/#5/#6 quality as initial generation.
+- Deleted the legacy/now-dead prompts `cover-letter-ats.md`, `resume-ats.md`,
+  `cover-letter.md`, `resume.md` (kept the `v1/*` variants), plus `generateCoverLetterATS` /
+  `generateResumeATS` / `generateCoverLetter` / `generateResume` + `buildATS*Context` helpers +
+  the `CoverLetterContext` / `ResumeContext` / `KeywordMatch` / `ATSCoverLetterContext` /
+  `ATSResumeContext` interfaces in `llm.service.ts`, and `buildCoverLetterContext` /
+  `buildATSCoverLetterContext` / `buildATSResumeContext` / `getKeywordsForGeneration` /
+  `matchKeywordsForLLM` in `applications.service.ts`.
+- Verified: `nest build` clean; lint 0 errors (service warnings 62→60, no new); 21 unit tests
+  pass (11 new for the mapper); the `summary-translation` integration test failure is
+  pre-existing on `main` (out-of-sync `TemplatesService` DI). Real-Azure smoke of the
+  regenerate path produced a personalized German cover letter with no placeholder leak.
+- Files: added `apps/api/src/applications/stored-resume.util.ts` +
+  `__tests__/unit/stored-resume.unit.spec.ts`; edited `applications.service.ts`,
+  `llm.service.ts`; deleted `apps/api/prompts/{cover-letter,resume,cover-letter-ats,resume-ats}.md`;
+  doc-sync `.github/copilot-instructions.md`, `ARCHITECTURE.md`.
 
 ### 2026-06-15 — Cleanup: retire dead Foundry agent classes (#2, part 1)
 - Deleted the unused `apps/api/src/agents/**` Azure AI Foundry agent pipeline
