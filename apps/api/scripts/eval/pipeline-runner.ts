@@ -23,6 +23,7 @@ import {
   type MatchedAtsKeywords,
   type CoverageReport,
 } from '../../src/applications/keyword-coverage.util';
+import { isValidResumeEdit } from '../../src/applications/resume-editor.util';
 import type {
   TailoredProfileDto,
   RewrittenProfileDto,
@@ -63,6 +64,8 @@ export interface GeneratedDocuments {
   resumeJsonForGrounding: string;
   /** True when the cover-letter editor pass produced a usable revision. */
   editorApplied: boolean;
+  /** True when the resume editor pass produced a valid, ID-preserving revision. */
+  resumeEditorApplied: boolean;
   /** Whether the resume-rewrite call succeeded (false = degraded fallback). */
   resumeRewriteSucceeded: boolean;
   /** True when the keyword weave pass actually ran (had a gap + succeeded). */
@@ -200,6 +203,33 @@ function assembleResumeView(
 }
 
 /**
+ * Replicates `runResumeEditorPass` (#1): one JSON→JSON critique pass over the
+ * rewritten resume payload, keeping the pre-edit payload on failure or an edit
+ * that fails the ID-preservation guard.
+ */
+async function runResumeEditor(
+  llm: LLMService,
+  rewritten: RewrittenProfileDto,
+  tailoredProfile: TailoredProfileDto,
+  language: string,
+  fixtureId: string,
+): Promise<{ profile: RewrittenProfileDto; applied: boolean }> {
+  try {
+    const edited = await llm.callJson<RewrittenProfileDto>(
+      'v1/editor-resume.md',
+      { rewrittenProfile: rewritten, tailoredProfile, language, userId: fixtureId, jobPostingId: fixtureId },
+      { temperature: 0.35, maxTokens: 2000 },
+    );
+    if (!isValidResumeEdit(rewritten, edited)) {
+      return { profile: rewritten, applied: false };
+    }
+    return { profile: edited, applied: true };
+  } catch {
+    return { profile: rewritten, applied: false };
+  }
+}
+
+/**
  * Run the v1 generation chain for a single fixture.
  */
 export async function generateForFixture(
@@ -284,9 +314,14 @@ export async function generateForFixture(
   const finalCoverLetter = coverLetterDraft ? weave.text : null;
   const coverageAfterWeave = computePriority1Coverage(atsKeywords, finalCoverLetter);
 
+  // Resume editor pass (#1) — JSON→JSON critique with ID-preservation guard.
+  const resumeEditor = rewrittenProfile
+    ? await runResumeEditor(llm, rewrittenProfile, tailoredProfile, language, fixture.id)
+    : { profile: null as RewrittenProfileDto | null, applied: false };
+
   const resumeView = assembleResumeView(
     tailoredProfile,
-    rewrittenProfile,
+    resumeEditor.profile,
     fixture.profile.summary,
   );
 
@@ -308,6 +343,7 @@ export async function generateForFixture(
     resumeView,
     resumeJsonForGrounding,
     editorApplied: editor.applied,
+    resumeEditorApplied: resumeEditor.applied,
     resumeRewriteSucceeded: rewrittenProfile !== null,
     weaveApplied: weave.applied,
     weaveKeywords,

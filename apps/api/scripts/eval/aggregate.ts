@@ -38,6 +38,7 @@ export interface FixtureResult {
   coverage?: FixtureCoverageSummary;
   durationMs: number;
   editorApplied: boolean;
+  resumeEditorApplied: boolean;
   resumeRewriteSucceeded: boolean;
   error?: string;
 }
@@ -186,6 +187,7 @@ export function formatReport(summary: EvalSummary): string {
     }
     const flags = [
       r.editorApplied ? 'editor' : '',
+      r.resumeEditorApplied ? 'resume-editor' : '',
       r.coverage?.weaveApplied ? `weave:${r.coverage.weaveKeywords.join('/')}` : '',
       r.resumeRewriteSucceeded ? '' : 'rewrite-degraded',
       r.grounding && r.grounding.unsupportedCount > 0

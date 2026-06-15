@@ -48,6 +48,7 @@ import {
 import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.util';
 import { buildMatchInsights } from './match-insights.util';
 import { matchAtsKeywordsToProfile, selectKeywordsToWeave } from './keyword-coverage.util';
+import { isValidResumeEdit } from './resume-editor.util';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -1014,12 +1015,22 @@ Summary: ${resume.summary || 'Not provided'}
         );
       }
 
+      // Editor pass (#1, resume): critique + revise the rewritten resume payload
+      // (summary + achievements), preserving every profile ID. Graceful fallback.
+      const editedRewrittenProfile = await this.runResumeEditorPass(
+        rewrittenProfile,
+        tailoredProfile,
+        detectedLanguage,
+        userId,
+        jobPosting.id,
+      );
+
       // Step 3: Convert tailoredProfile to JSON format for frontend editor
       this.logger.log('Step 3: Converting resume to JSON format for editor...');
       const resumeJson = this.convertTailoredProfileToResumeJson(
         profile,
         tailoredProfile,
-        rewrittenProfile,
+        editedRewrittenProfile,
       );
 
       // Debug: Log the first experience achievements to verify German content is saved
@@ -1445,6 +1456,52 @@ Summary: ${resume.summary || 'Not provided'}
         `Resume rewrite LLM call failed, continuing with original profile data: ${error.message}`,
       );
       return null;
+    }
+  }
+
+  /**
+   * Resume editor pass (#1) — one critique-and-revise pass over the rewritten
+   * resume payload (summary + achievements), mirroring the cover-letter editor.
+   * JSON → JSON. Graceful degradation: on any failure, an invalid edit, or an
+   * edit that drops/changes a `profileExperienceId` / `profileProjectId` (which
+   * would silently lose the rewritten content), we keep the pre-edit payload.
+   */
+  private async runResumeEditorPass(
+    rewrittenProfile: RewrittenProfileDto | null,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    userId: string,
+    jobPostingId: string,
+  ): Promise<RewrittenProfileDto | null> {
+    if (!rewrittenProfile) return rewrittenProfile;
+
+    try {
+      const edited = await this.llmService.callJson<RewrittenProfileDto>(
+        'v1/editor-resume.md',
+        {
+          rewrittenProfile,
+          tailoredProfile,
+          language,
+          userId,
+          jobPostingId,
+        },
+        { temperature: 0.35, maxTokens: 2000 },
+      );
+
+      // Guard: the edit MUST preserve every ID and not gut an entry. Otherwise
+      // the rewritten (often translated) content can't map back to the profile.
+      if (!isValidResumeEdit(rewrittenProfile, edited)) {
+        this.logger.warn(
+          'Resume editor pass produced an invalid or ID-dropping edit; keeping pre-edit payload',
+        );
+        return rewrittenProfile;
+      }
+
+      this.logger.log('Resume editor pass applied');
+      return edited;
+    } catch (error) {
+      this.logger.warn(`Resume editor pass failed; keeping pre-edit payload: ${error.message}`);
+      return rewrittenProfile;
     }
   }
 

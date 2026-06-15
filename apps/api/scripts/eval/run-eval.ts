@@ -160,6 +160,7 @@ async function runOne(
       },
       durationMs: docs.durationMs,
       editorApplied: docs.editorApplied,
+      resumeEditorApplied: docs.resumeEditorApplied,
       resumeRewriteSucceeded: docs.resumeRewriteSucceeded,
     };
   } catch (err) {
@@ -167,6 +168,7 @@ async function runOne(
       ...base,
       durationMs: 0,
       editorApplied: false,
+      resumeEditorApplied: false,
       resumeRewriteSucceeded: false,
       error: err instanceof Error ? err.message : String(err),
     };
