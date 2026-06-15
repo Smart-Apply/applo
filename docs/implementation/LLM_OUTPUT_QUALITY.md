@@ -88,8 +88,8 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 | 7 | Anti-hallucination grounding validator | 2 | Med | 🟢 Shipped | `grounding/grounding-validator.service.ts`, `applications.service.ts` |
 | 6 | Coverage-driven keyword loop | 3 | Med | 🟢 Shipped | `applications.service.ts`, `keyword-coverage.util.ts`, `prompts/v1/keyword-weave.md` |
 | 9 | Trustworthy + actionable match score | 3 | Low | 🟢 Shipped | `applications.service.ts`, `match-insights.util.ts`, web ATS panel |
-| 8 | Structured outputs (JSON schema) instead of regex repair | 4 | Med-High | 🔴 Planned | `llm/providers/azure-openai.provider.ts`, `llm.service.ts` |
-| 10 | LLM-as-judge evaluation harness | 4 (start early) | Low | � Shipped | `apps/api/scripts/eval/**`, `prompts/eval/judge-rubric.md` |
+| 8 | Structured outputs (JSON schema) instead of regex repair | 4 | Med-High | 🟢 Shipped | `llm/providers/azure-openai.provider.ts`, `llm/schemas/v1-schemas.ts`, `llm.service.ts` |
+| 10 | LLM-as-judge evaluation harness | 4 (start early) | Low | 🟢 Shipped | `apps/api/scripts/eval/**`, `prompts/eval/judge-rubric.md` |
 
 > **Doc-sync note:** items **#1, #6, #7, #8** change the generation pipeline / a provider,
 > so when they ship they MUST also update `README.md` + `ARCHITECTURE.md` +
@@ -306,7 +306,7 @@ DB yet (no schema change). The report is the foundation for a future editor feed
 
 ---
 
-### 8. Structured outputs instead of regex JSON repair 🔴
+### 8. Structured outputs instead of regex JSON repair �
 **Problem.** `LLMService.parseJsonResponse` strips code fences, regex-extracts the JSON,
 repairs trailing commas, and silently falls back to degraded output on parse failure.
 
@@ -320,14 +320,39 @@ construction. Keep the regex path as a fallback only.
 **Risk.** Provider + deployment behaviour — needs testing against the real Azure
 deployment and the `mock` provider.
 
+**Shipped.** `GenerateOptions` gained a `responseFormat` field
+([`llm.interface.ts`](../../apps/api/src/llm/llm.interface.ts)); the Azure provider forwards
+it as `response_format`. A **tiered** strategy keyed off the template path inside
+`callJson` (no call-site changes, so the eval harness exercises the identical path):
+- **Strict `json_schema`** for the union-free shapes — `v1/ats-keywords.md` and
+  `v1/resume-rewrite.md` ([`llm/schemas/v1-schemas.ts`](../../apps/api/src/llm/schemas/v1-schemas.ts),
+  `additionalProperties:false` + all-`required`). Strict mode also reinforces the critical
+  `profileExperienceId` / `profileProjectId` preservation in resume-rewrite.
+- **JSON mode (`json_object`)** for everything else whose prompt mentions "json" — incl.
+  `v1/skill-selector.md`, whose `TailoredProfileDto` has `(string | object)[]` union fields
+  that strict mode can't model cleanly. Clean JSON without shape enforcement.
+- The regex/fence repair in `parseJsonResponse` stays as a **fallback** and now logs whether
+  each parse was `clean` or needed `RECOVERY` (telemetry to measure the rollout).
+
+The env-schema **`AZURE_OPENAI_API_VERSION` default was bumped `2024-02-15-preview` →
+`2025-01-01-preview`** so structured outputs work on prod/staging (json_schema needs
+2024-08-01-preview+). The `mock` provider ignores `responseFormat`.
+
+**Measured (real Azure, `LOG_LLM_CALLS=true`).** Across `skill-selector`, `ats-keywords`,
+`resume-rewrite` (and the eval judge), **every JSON parse is now `clean`** — the regex
+recovery path triggered **0** times, down from being the routine path. Generation quality
+unchanged (eval OVERALL 5.00). 10 unit tests for `resolveResponseFormat` + schema validity.
+
 **Acceptance.**
-- [ ] Schema-constrained responses for the 3 JSON calls; mock provider honours it.
-- [ ] Silent-degradation fallback path measured (how often it triggers) and reduced.
-- [ ] README/ARCHITECTURE updated.
+- [x] Schema-constrained responses for the 2 union-free JSON calls; JSON mode for the
+      union-typed `skill-selector`; `mock` provider unaffected.
+- [x] Silent-degradation fallback path instrumented + measured (clean vs recovery) and
+      reduced to ~0 on real Azure.
+- [x] README/ARCHITECTURE/copilot-instructions updated (provider change).
 
 ---
 
-### 9. Trustworthy + actionable match score �
+### 9. Trustworthy + actionable match score 🟢
 **Problem.** The old CV agent self-reported a `matchScore` (unreliable). We already have a
 deterministic `matchKeywordsAgainstProfile` / coverage calculation.
 
@@ -404,6 +429,29 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-15 — Phase 4: structured outputs (#8)
+- **#8 Shipped** — Azure OpenAI `response_format` for the JSON-producing v1 calls, replacing
+  reliance on regex/fence repair. `GenerateOptions.responseFormat`
+  ([`llm.interface.ts`](../../apps/api/src/llm/llm.interface.ts)) is forwarded by the Azure
+  provider; `callJson` resolves it by template path
+  ([`llm/schemas/v1-schemas.ts`](../../apps/api/src/llm/schemas/v1-schemas.ts)): **strict
+  `json_schema`** for the union-free `ats-keywords` + `resume-rewrite`, **`json_object`**
+  (JSON mode) for `skill-selector` (union types) and any other json-mentioning prompt. No
+  call-site changes — the registry lives in `callJson`, so the eval harness exercises the
+  same path. The regex repair stays as a fallback and now logs `clean` vs `RECOVERY`.
+- **api-version default bumped** `2024-02-15-preview` → `2025-01-01-preview` (json_schema
+  needs 2024-08-01-preview+) so prod/staging get structured outputs, not just local.
+- **Measured (real Azure):** across `skill-selector` / `ats-keywords` / `resume-rewrite`
+  (+ the eval judge) **every JSON parse is now `clean`** — regex recovery fired **0** times.
+  Generation quality unchanged (eval OVERALL 5.00). The `mock` provider ignores
+  `responseFormat`.
+- 10 unit tests (`resolveResponseFormat` + strict-schema shape validity). Doc-sync: README +
+  ARCHITECTURE + copilot-instructions + this tracker.
+- Files: `apps/api/src/llm/llm.interface.ts`, `apps/api/src/llm/providers/azure-openai.provider.ts`,
+  `apps/api/src/llm/schemas/v1-schemas.ts`, `apps/api/src/llm/llm.service.ts`,
+  `apps/api/src/llm/__tests__/unit/v1-schemas.unit.spec.ts`, `apps/api/src/config/env.schema.ts`,
+  `apps/api/scripts/eval/run-eval.ts`.
 
 ### 2026-06-15 — Phase 3: coverage-driven keyword loop (#6)
 - **#6 Shipped** — [`keyword-coverage.util.ts`](../../apps/api/src/applications/keyword-coverage.util.ts)
