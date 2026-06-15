@@ -49,6 +49,12 @@ import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.u
 import { buildMatchInsights } from './match-insights.util';
 import { matchAtsKeywordsToProfile, selectKeywordsToWeave } from './keyword-coverage.util';
 import { isValidResumeEdit } from './resume-editor.util';
+import {
+  buildSalutation,
+  isValidJobFacts,
+  normalizeJobFacts,
+  type JobFactsDto,
+} from './job-facts.util';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -935,22 +941,29 @@ Summary: ${resume.summary || 'Not provided'}
     try {
       const startTime = Date.now();
 
-      // Step 1: Select relevant profile data
+      // Step 1: Select relevant profile data (in parallel with job-facts
+      // extraction (#5) — both only depend on the job posting, so no added
+      // critical-path latency).
       this.logger.log('Step 1: Selecting relevant profile data...');
-      const tailoredProfile = await this.llmService.callJson<TailoredProfileDto>(
-        'v1/skill-selector.md',
-        {
-          profile: this.serializeProfile(profile),
-          job: this.serializeJobPosting(jobPosting),
-          language: detectedLanguage,
-          userId,
-          jobPostingId: jobPosting.id,
-        },
-        {
-          temperature: 0.2, // Low temperature for deterministic skill matching
-          maxTokens: 3000,
-        },
-      );
+      const [tailoredProfile, jobFacts] = await Promise.all([
+        this.llmService.callJson<TailoredProfileDto>(
+          'v1/skill-selector.md',
+          {
+            profile: this.serializeProfile(profile),
+            job: this.serializeJobPosting(jobPosting),
+            language: detectedLanguage,
+            userId,
+            jobPostingId: jobPosting.id,
+          },
+          {
+            temperature: 0.2, // Low temperature for deterministic skill matching
+            maxTokens: 3000,
+          },
+        ),
+        shouldGenerateCoverLetter
+          ? this.extractJobFacts(jobPosting, detectedLanguage, userId)
+          : Promise.resolve(null),
+      ]);
       this.logger.log(
         `Profile tailored: ${tailoredProfile.selected_hard_skills.length} hard skills, ${tailoredProfile.selected_experiences.length} experiences`,
       );
@@ -965,6 +978,8 @@ Summary: ${resume.summary || 'Not provided'}
         ? this.llmService.callText('v1/cover-letter.md', {
             job: this.serializeJobPosting(jobPosting),
             tailoredProfile,
+            jobFacts: normalizeJobFacts(jobFacts),
+            salutation: buildSalutation(jobFacts, detectedLanguage),
             language: detectedLanguage,
             userId,
             jobPostingId: jobPosting.id,
@@ -1168,19 +1183,22 @@ Summary: ${resume.summary || 'Not provided'}
     this.logger.log(`Detected language: ${language}`);
 
     try {
-      // 3. Call skill selector (ONCE per application)
+      // 3. Call skill selector (ONCE per application), in parallel with the
+      // job-facts extraction (#5) used for the cover letter.
       emitProgress(20, 'Wähle relevante Profildaten aus...');
       this.logger.log('Step 1: Selecting relevant profile data...');
-      const tailoredProfile = await this.llmService.callJson<TailoredProfileDto>(
-        'v1/skill-selector.md',
-        {
+      const [tailoredProfile, jobFacts] = await Promise.all([
+        this.llmService.callJson<TailoredProfileDto>('v1/skill-selector.md', {
           profile: this.serializeProfile(profile),
           job: this.serializeJobPosting(jobPosting),
           language,
           userId,
           jobPostingId: jobPosting.id,
-        },
-      );
+        }),
+        shouldGenerateCoverLetter
+          ? this.extractJobFacts(jobPosting, language, userId)
+          : Promise.resolve(null),
+      ]);
       this.logger.log(
         `Profile tailored: ${tailoredProfile.selected_hard_skills.length} hard skills, ${tailoredProfile.selected_experiences.length} experiences`,
       );
@@ -1204,6 +1222,8 @@ Summary: ${resume.summary || 'Not provided'}
         coverLetterMarkdown = await this.llmService.callText('v1/cover-letter.md', {
           job: this.serializeJobPosting(jobPosting),
           tailoredProfile,
+          jobFacts: normalizeJobFacts(jobFacts),
+          salutation: buildSalutation(jobFacts, language),
           language,
           userId,
           jobPostingId: jobPosting.id,
@@ -1421,6 +1441,45 @@ Summary: ${resume.summary || 'Not provided'}
    * Call resume-rewrite LLM with graceful degradation
    * If the LLM call fails, returns null and the pipeline continues with original profile data
    */
+  /**
+   * Cover-letter data layer (#5) — extract structured job facts (contact person,
+   * company specifics, explicit salary/start-date asks) as a focused step, so the
+   * cover-letter writer gets them ready-made instead of scanning `fullText` while
+   * it writes. Graceful degradation: on any failure returns null and the prompt
+   * falls back to scanning `fullText` itself.
+   */
+  private async extractJobFacts(
+    jobPosting: JobPosting,
+    language: string,
+    userId: string,
+  ): Promise<JobFactsDto | null> {
+    try {
+      const raw = await this.llmService.callJson<JobFactsDto>(
+        'v1/job-facts.md',
+        {
+          job: this.serializeJobPosting(jobPosting),
+          language,
+          userId,
+          jobPostingId: jobPosting.id,
+        },
+        { temperature: 0, maxTokens: 500 },
+      );
+      if (!isValidJobFacts(raw)) {
+        this.logger.warn('Job-facts extraction returned an invalid payload; ignoring');
+        return null;
+      }
+      const facts = normalizeJobFacts(raw);
+      this.logger.log(
+        `Job facts: contact="${facts.contact_name || '—'}", ${facts.company_specifics.length} specifics` +
+          `, salary=${facts.asks_salary}, startDate=${facts.asks_start_date}`,
+      );
+      return facts;
+    } catch (error) {
+      this.logger.warn(`Job-facts extraction failed; continuing without it: ${error.message}`);
+      return null;
+    }
+  }
+
   private async callResumeRewrite(
     tailoredProfile: TailoredProfileDto,
     jobPosting: any,

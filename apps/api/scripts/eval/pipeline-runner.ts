@@ -24,6 +24,11 @@ import {
   type CoverageReport,
 } from '../../src/applications/keyword-coverage.util';
 import { isValidResumeEdit } from '../../src/applications/resume-editor.util';
+import {
+  buildSalutation,
+  normalizeJobFacts,
+  type JobFactsDto,
+} from '../../src/applications/job-facts.util';
 import type {
   TailoredProfileDto,
   RewrittenProfileDto,
@@ -244,23 +249,35 @@ export async function generateForFixture(
   const serializedJob = serializeJobPostingForLlm(fixture.jobPosting);
   const language = fixture.language;
 
-  // Step 1: skill selector (temp 0.2).
-  const tailoredProfile = await llm.callJson<TailoredProfileDto>(
-    'v1/skill-selector.md',
-    {
-      profile: serializedProfile,
-      job: serializedJob,
-      language,
-      userId: fixture.id,
-      jobPostingId: fixture.id,
-    },
-    { temperature: 0.2, maxTokens: 3000 },
-  );
+  // Step 1: skill selector (temp 0.2), in parallel with job-facts (#5).
+  const [tailoredProfile, jobFacts] = await Promise.all([
+    llm.callJson<TailoredProfileDto>(
+      'v1/skill-selector.md',
+      {
+        profile: serializedProfile,
+        job: serializedJob,
+        language,
+        userId: fixture.id,
+        jobPostingId: fixture.id,
+      },
+      { temperature: 0.2, maxTokens: 3000 },
+    ),
+    llm
+      .callJson<JobFactsDto>(
+        'v1/job-facts.md',
+        { job: serializedJob, language, userId: fixture.id, jobPostingId: fixture.id },
+        { temperature: 0, maxTokens: 500 },
+      )
+      .then((f) => normalizeJobFacts(f))
+      .catch(() => normalizeJobFacts(null)),
+  ]);
 
   // Step 2: parallel cover letter (text) + resume rewrite (json) + ATS keywords.
   const coverLetterPromise = llm.callText('v1/cover-letter.md', {
     job: serializedJob,
     tailoredProfile,
+    jobFacts,
+    salutation: buildSalutation(jobFacts, language),
     language,
     userId: fixture.id,
     jobPostingId: fixture.id,

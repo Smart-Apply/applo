@@ -18,6 +18,14 @@ You are a professional cover letter writer specializing in creating impactful, c
 {{json tailoredProfile}}
 ```
 
+**Extracted Job Facts (use these — already pulled from the posting for you):**
+
+```json
+{{json jobFacts}}
+```
+
+**Salutation to use VERBATIM as the first line:** {{salutation}}
+
 **Target Language:** {{language}}
 
 ---
@@ -39,7 +47,7 @@ Write a professional cover letter that demonstrates why the candidate is an exce
 ### German Format (if `language` is `de`)
 
 ```markdown
-Sehr geehrte Damen und Herren,
+{{salutation}}
 
 [Opening paragraph: 2-3 sentences]
 - Which role you're applying for
@@ -67,7 +75,7 @@ Mit freundlichen Grüßen,
 ### English Format (if `language` is `en`)
 
 ```markdown
-Dear Hiring Manager,
+{{salutation}}
 
 [Opening paragraph: 2-3 sentences]
 - State the position you're applying for
@@ -101,9 +109,21 @@ Sincerely,
 1. **Specific Examples:** Use `selected_experiences` or `selected_projects` with concrete details
 2. **Quantified Achievements:** "Reduced deployment time by 50%" > "Improved deployment". Never invent numbers — if none exist, use a concrete qualitative outcome.
 3. **Technical Skills:** Mention 3-4 CORE skills that match job requirements (not all 12)
-4. **Concrete Company Reference (CRITICAL):** Scan the job posting `fullText` for something specific about THIS company — a named product, mission/value, recent initiative, team, or a figure — and tie one of your strengths to it. A missing or generic company reference is the #1 reason cover letters get auto-rejected as mass/AI applications. Do NOT write interchangeable filler that would fit any company.
-5. **Named Salutation (Anrede):** Scan `fullText` for a contact person (e.g. "Ansprechpartner: Frau Schmidt", "Kontakt: Herr Müller"). If found, address them directly ("Sehr geehrte Frau Schmidt," / "Dear Ms. Schmidt,"). Only fall back to "Sehr geehrte Damen und Herren," / "Dear Hiring Manager," when no name is present.
-6. **Salary & Start Date — only if explicitly requested:** If the posting explicitly asks for a salary expectation (Gehaltsvorstellung) or earliest start date (frühestmöglicher Eintrittstermin), address it in the closing paragraph. If the profile gives no basis, omit gracefully rather than inventing a figure. Do NOT volunteer either when the posting does not ask.
+4. **Concrete Company Reference (CRITICAL):** Reference something specific about THIS company
+   to prove you read the posting. **Prefer `jobFacts.company_specifics`** — these were
+   already extracted for you; weave ONE of them into a body paragraph and tie a strength to
+   it. If `company_specifics` is empty, scan the job posting `fullText` for a named product,
+   mission/value, recent initiative, team or figure. A missing or generic company reference
+   is the #1 reason cover letters get auto-rejected as mass/AI applications. Do NOT write
+   interchangeable filler that would fit any company.
+5. **Salutation (Anrede):** Begin the letter with **exactly** the `{{salutation}}` line
+   provided above — do not change or re-derive it. (It already reflects the named contact
+   person from `jobFacts.contact_name` when one was found, or a correct generic greeting.)
+6. **Salary & Start Date — only if explicitly requested:** Address a salary expectation in
+   the closing **only if `jobFacts.asks_salary` is `true`**, and an earliest start date
+   **only if `jobFacts.asks_start_date` is `true`**. If the profile gives no basis, omit
+   gracefully rather than inventing a figure. Do NOT volunteer either when the flags are
+   `false`.
 7. **Relevant Experience:** Choose 1-2 most relevant past roles to highlight
 
 ### What to Avoid

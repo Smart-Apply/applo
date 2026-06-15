@@ -77,6 +77,25 @@ const resumeRewriteSchema = {
   },
 } as const;
 
+const jobFactsSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: [
+    'contact_name',
+    'contact_salutation',
+    'company_specifics',
+    'asks_salary',
+    'asks_start_date',
+  ],
+  properties: {
+    contact_name: { type: 'string' },
+    contact_salutation: { type: 'string' },
+    company_specifics: { type: 'array', items: { type: 'string' } },
+    asks_salary: { type: 'boolean' },
+    asks_start_date: { type: 'boolean' },
+  },
+} as const;
+
 /**
  * Registry mapping a prompt template path (suffix-matched) to the strict JSON
  * schema that constrains its output. Consulted by `LLMService.callJson` so call
@@ -85,6 +104,7 @@ const resumeRewriteSchema = {
 const SCHEMA_REGISTRY: { match: string; name: string; schema: Record<string, unknown> }[] = [
   { match: 'v1/ats-keywords.md', name: 'ats_keywords', schema: atsKeywordsSchema },
   { match: 'v1/resume-rewrite.md', name: 'resume_rewrite', schema: resumeRewriteSchema },
+  { match: 'v1/job-facts.md', name: 'job_facts', schema: jobFactsSchema },
 ];
 
 /**
@@ -111,4 +131,4 @@ export function resolveResponseFormat(
   return undefined;
 }
 
-export const __testSchemas = { atsKeywordsSchema, resumeRewriteSchema };
+export const __testSchemas = { atsKeywordsSchema, resumeRewriteSchema, jobFactsSchema };
