@@ -13,6 +13,12 @@ interface CoverLetterEditorProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  /**
+   * Inline mode: render just the editable body (no toolbar, no bordered box) so
+   * it can sit inside the WYSIWYG letter document. Keyboard formatting still
+   * works via StarterKit.
+   */
+  inline?: boolean;
 }
 
 interface ToolbarButtonProps {
@@ -41,7 +47,7 @@ function ToolbarButton({ onClick, active, icon, label, disabled }: ToolbarButton
   );
 }
 
-export function CoverLetterEditor({ value, onChange, disabled }: CoverLetterEditorProps) {
+export function CoverLetterEditor({ value, onChange, disabled, inline }: CoverLetterEditorProps) {
   const editor = useEditor(
     {
       extensions: [
@@ -58,8 +64,9 @@ export function CoverLetterEditor({ value, onChange, disabled }: CoverLetterEdit
       immediatelyRender: false, // Required for Next.js SSR
       editorProps: {
         attributes: {
-          class:
-            'tiptap-editor min-h-[320px] max-w-none px-4 py-3 text-sm focus:outline-none',
+          class: inline
+            ? 'tiptap-editor max-w-none focus:outline-none'
+            : 'tiptap-editor min-h-[320px] max-w-none px-4 py-3 text-sm focus:outline-none',
         },
       },
       onUpdate({ editor }) {
@@ -69,31 +76,20 @@ export function CoverLetterEditor({ value, onChange, disabled }: CoverLetterEdit
     [], // Remove value from dependencies - we handle updates via useEffect
   );
 
-  // Sync value changes to editor
+  // Sync external value changes into the editor (without emitting an update).
   useEffect(() => {
     if (!editor) return;
-    
+
     const current = editor.getHTML();
-    
-    console.log('🔄 CoverLetterEditor: Value changed', {
-      hasValue: !!value,
-      valueLength: value?.length || 0,
-      currentLength: current.length,
-      areEqual: value === current,
-    });
-    
-    // Only update if the value actually changed and is different from current
+
     if (value && value !== current) {
-      console.log('✅ CoverLetterEditor: Updating content...');
       // Use queueMicrotask to avoid React state update conflicts
       queueMicrotask(() => {
         editor.commands.setContent(value, { emitUpdate: false });
-        console.log('✅ CoverLetterEditor: Content updated');
       });
     }
-    
+
     if (!value && current !== '<p></p>') {
-      console.log('🗑️ CoverLetterEditor: Clearing content...');
       queueMicrotask(() => {
         editor.commands.clearContent();
       });
@@ -106,7 +102,15 @@ export function CoverLetterEditor({ value, onChange, disabled }: CoverLetterEdit
   }, [disabled, editor]);
 
   if (!editor) {
-    return <div className="min-h-[320px] rounded-lg border border-slate-200 bg-white" />;
+    return inline ? (
+      <div className="min-h-[220px]" />
+    ) : (
+      <div className="min-h-[320px] rounded-lg border border-slate-200 bg-white" />
+    );
+  }
+
+  if (inline) {
+    return <EditorContent editor={editor} />;
   }
 
   return (
