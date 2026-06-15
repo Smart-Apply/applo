@@ -87,7 +87,7 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 | 1 | Self-critique / editor pass | 2 | Med | � In progress | `prompts/v1/editor-cover-letter.md`, `applications.service.ts` |
 | 7 | Anti-hallucination grounding validator | 2 | Med | 🟢 Shipped | `grounding/grounding-validator.service.ts`, `applications.service.ts` |
 | 6 | Coverage-driven keyword loop | 3 | Med | 🔴 Planned | `applications.service.ts`, `keywords/**` |
-| 9 | Trustworthy + actionable match score | 3 | Low | 🔴 Planned | `applications.service.ts`, web ATS panel |
+| 9 | Trustworthy + actionable match score | 3 | Low | � Shipped | `applications.service.ts`, `match-insights.util.ts`, web ATS panel |
 | 8 | Structured outputs (JSON schema) instead of regex repair | 4 | Med-High | 🔴 Planned | `llm/providers/azure-openai.provider.ts`, `llm.service.ts` |
 | 10 | LLM-as-judge evaluation harness | 4 (start early) | Low | � Shipped | `apps/api/scripts/eval/**`, `prompts/eval/judge-rubric.md` |
 
@@ -297,7 +297,7 @@ deployment and the `mock` provider.
 
 ---
 
-### 9. Trustworthy + actionable match score 🔴
+### 9. Trustworthy + actionable match score �
 **Problem.** The old CV agent self-reported a `matchScore` (unreliable). We already have a
 deterministic `matchKeywordsAgainstProfile` / coverage calculation.
 
@@ -307,13 +307,27 @@ the keyword *Qualitätsmanagement*"). Show in the web ATS panel.
 
 **Files.** `applications.service.ts` (analysis), `keywords/**`, web ATS panel component.
 
+**Shipped.** Audit confirmed the user-facing ATS `overallScore` from `getKeywordsAnalysis`
+was **already** purely deterministic (`= technicalScore` keyword coverage) — the only
+LLM-self-reported `matchScore` lives in the dead `agents/cv/cv-writer.agent.ts` (never
+invoked, tracked for removal under #2) and the unrelated auto-apply job-match feature.
+The suggestion copy was rewritten: the generic German strings in `calculateMatchAnalysis`
+("Das Profil könnte detaillierter…") are replaced by
+[`buildMatchInsights`](../../apps/api/src/applications/match-insights.util.ts) — a pure,
+unit-tested helper that names the *actual* missing high-value keywords, anchors each to the
+target role (job title, gender-marker-stripped), and frames every suggestion around backing
+a keyword with a **real, measurable result** ("nur dort, wo du es wirklich nachweisen
+kannst") so it never nudges toward fabrication. Profession-neutral phrasing (nurse / CNC /
+sales / teacher). The target role is threaded through all three `calculateMatchAnalysis`
+call sites (`updateResume`, `getKeywordsAnalysis`, `analyzeKeywords`). 10 unit tests.
+
 **Acceptance.**
-- [ ] Self-reported LLM score removed from user-facing surfaces.
-- [ ] Deterministic score + specific, profession-neutral suggestions surfaced.
+- [x] Self-reported LLM score removed from user-facing surfaces (audit: already deterministic).
+- [x] Deterministic score + specific, profession-neutral suggestions surfaced.
 
 ---
 
-### 10. LLM-as-judge evaluation harness �
+### 10. LLM-as-judge evaluation harness 🟢
 **Problem.** We can't prove the main quality driver improved without measuring it.
 
 **Approach.** A golden set of ~20-30 `(job posting × profile)` pairs spanning professions
@@ -360,6 +374,21 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-15 — Phase 3: trustworthy + actionable match score (#9)
+- **#9 Shipped** — the user-facing ATS `overallScore` was audited and confirmed **already
+  deterministic** (keyword coverage, never an LLM self-report). The generic German
+  suggestions in `calculateMatchAnalysis` were replaced by a pure, unit-tested helper
+  [`match-insights.util.ts`](../../apps/api/src/applications/match-insights.util.ts):
+  suggestions now name the actual missing high-value keywords, anchor to the target role
+  (job title, gender markers stripped), and frame everything around backing a keyword with a
+  real measurable result (no fabrication nudge). Profession-neutral. The role is threaded
+  through all three `calculateMatchAnalysis` call sites.
+- No pipeline/provider change → no README/ARCHITECTURE sync needed (tracker-only, per the
+  roadmap doc-sync rule). 10 new unit tests; no new ESLint warnings.
+- Files: `apps/api/src/applications/match-insights.util.ts`,
+  `apps/api/src/applications/applications.service.ts`,
+  `apps/api/src/applications/__tests__/unit/match-insights.unit.spec.ts`.
 
 ### 2026-06-15 — Phase 4: LLM-as-judge eval harness (#10) + baseline captured
 - **#10 Shipped** — standalone dev-only harness under
