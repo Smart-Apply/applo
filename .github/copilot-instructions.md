@@ -182,7 +182,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 
 ## Backend Modules (`apps/api/src/`)
 - `admin` — allow-listed admin endpoints (gated by `ADMIN_EMAILS` env), e.g. `POST /admin/users/:email/tier`, `DELETE /admin/users/:email`
-- `applications` — generation pipeline (profile + job → LLM → editor pass → keyword weave → grounding check → PDF → storage), SSE status stream. Owns the `grounding/` sub-service (`GroundingValidatorService`) — a deterministic, non-destructive anti-hallucination check that flags impact numbers (%, currency, counts) absent from the source profile (logs only; never strips). Also owns the coverage-driven keyword loop (#6): `keyword-coverage.util.ts` selects the priority-1, **profile-supported** ATS keywords still missing from the cover letter and a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (never invents unsupported keywords; graceful fallback to the pre-weave draft).
+- `applications` — generation pipeline (profile + job → LLM → editor pass → keyword weave → grounding check → PDF → storage), SSE status stream. Owns the `grounding/` sub-service (`GroundingValidatorService`) — a deterministic, non-destructive anti-hallucination check that flags impact numbers (%, currency, counts) absent from the source profile (logs only; never strips). Also owns the coverage-driven keyword loop (#6): `keyword-coverage.util.ts` selects the priority-1, **profile-supported** ATS keywords still missing from the cover letter and a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (never invents unsupported keywords; graceful fallback to the pre-weave draft). Edit-mode cover-letter regeneration (`upsertCoverLetter`) reuses the v1 `cover-letter.md` prompt via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile`) instead of a separate ATS prompt (#2).
 - `auth` — JWT, refresh-token rotation, OAuth (Google/Microsoft/Azure AD), TOTP 2FA, password reset
 - `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@smart-apply/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`)
 - `config` — Zod env schema
@@ -524,8 +524,7 @@ PUT /api/v1/profile
 > See [docs/implementation/LLM_OUTPUT_QUALITY.md](../docs/implementation/LLM_OUTPUT_QUALITY.md) for the LLM output-quality roadmap (the 10 improvements to generated CVs/cover letters) and its living status tracker.
 
 ## Prompt Templates
-- **cover-letter.md**: concise, 1 page, intro → fit (3–5 bullets) → motivation → closing
-- **resume.md**: prioritize relevant experience, quantify outcomes, highlight skill-match (≤ 2 pages)
+The active generation prompts live under `apps/api/prompts/v1/*` and are described in the **Application Pipeline** above: `skill-selector`, `job-facts`, `cover-letter`, `resume`, `resume-rewrite`, `ats-keywords`, `editor-cover-letter`, `editor-resume`, `keyword-weave`. The legacy top-level `cover-letter.md`, `resume.md`, `cover-letter-ats.md` and `resume-ats.md` prompts were **retired (#2)**. The editor's "regenerate cover letter" action now reuses `v1/cover-letter.md` via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile` maps the saved editor resume back into the `TailoredProfileDto` the v1 prompt expects), so there is a single cover-letter generation path.
 
 ## Validation & Errors
 - DTO validation (class-validator or Zod)

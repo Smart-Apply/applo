@@ -177,6 +177,14 @@ User → Frontend (Next.js)
 └──────────────────────────────────────┘
 ```
 
+> **Edit-mode regenerate (single cover-letter path).** The editor's "regenerate
+> cover letter" action (`upsertCoverLetter`) reuses the same `v1/cover-letter.md`
+> prompt as the create pipeline: the saved editor resume is mapped back into the
+> skill-selector `TailoredProfileDto` shape by `stored-resume.util.ts`, then runs
+> through job-facts extraction + the deterministic salutation. The legacy `*-ats.md`
+> prompts and their `generate*ATS` methods were retired (#2), so there is one
+> cover-letter generation path.
+
 ### Output-quality measurement (offline eval harness)
 
 Generation quality is the product's main driver, so it is measured rather than
