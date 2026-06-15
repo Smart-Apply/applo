@@ -61,16 +61,17 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 `generateWithSinglePipeline` (test endpoint) — share the editor + grounding helpers.
 
 **Dead / optional code (do not confuse with the live path):**
-- `apps/api/src/agents/**` (`ApplicationPipelineService`, `CVWriterAgent`,
-  `CLWriterAgent`) is declared in `agents.module.ts` but **never invoked**. It is the old
-  Azure AI Foundry agent pipeline. Tracked for removal in **item #2**.
+- ~~`apps/api/src/agents/**` (the old Azure AI Foundry agent classes)~~ **Removed (#2,
+  2026-06-15).** The two still-live types (`ATSAgentOutput`, `ProfileData`) were relocated
+  to [`keywords/keywords.types.ts`](../../apps/api/src/keywords/keywords.types.ts); the
+  unused `AgentsModule` wiring was dropped from `ApplicationsModule`.
 - `azure-ai-foundry.provider.ts` is only reachable when `LLM_PROVIDER=azure-ai-foundry`,
   in which case the same v1 prompt calls are routed to Foundry agents. With
   `azure-openai` / `mock` it is never touched.
 - The legacy `prompts/resume-ats.md` / `prompts/cover-letter-ats.md` (+
   `generateResumeATS` / `generateCoverLetterATS`) are only used by the **edit-mode
   regenerate** flow (`upsertCoverLetter`), not the main create pipeline. Tracked under
-  item #2 for consolidation.
+  item #2 for consolidation (still pending).
 
 ---
 
@@ -164,9 +165,16 @@ forbidden from introducing new facts/metrics — it can only tighten what's ther
 - Confirm `infra/Dockerfile` still COPYs the `prompts/` dir (it does) and that no removed
   path is referenced in a prod-stage `COPY`.
 
+**Progress (2026-06-15).** The dead `apps/api/src/agents/**` Foundry agent classes
+(`ApplicationPipelineService`, `CVWriterAgent`, `CLWriterAgent`, `ATSKeywordAgent`) + their
+module were deleted (11 files). The two still-live types they housed (`ATSAgentOutput`,
+`ProfileData`) moved to `keywords/keywords.types.ts`; `AgentsModule` was dropped from
+`ApplicationsModule`. No Dockerfile COPY referenced the path. Build + 66 unit tests green.
+The `*-ats.md` migration is the remaining sub-task.
+
 **Acceptance.**
 - [x] This tracker documents the canonical path + dead code (so fixes land correctly).
-- [ ] `agents/**` removed (or explicitly kept with a documented reason).
+- [x] `agents/**` removed (live types relocated to `keywords/keywords.types.ts`).
 - [ ] Edit-mode regenerate uses v1 prompts; `*-ats.md` deleted.
 - [ ] README/ARCHITECTURE updated to describe one pipeline.
 
@@ -429,6 +437,21 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-15 — Cleanup: retire dead Foundry agent classes (#2, part 1)
+- Deleted the unused `apps/api/src/agents/**` Azure AI Foundry agent pipeline
+  (`ApplicationPipelineService`, `CVWriterAgent`, `CLWriterAgent`, `ATSKeywordAgent`,
+  `AgentsModule` + interfaces — 11 files) that was declared but never invoked.
+- The two **still-live** types it housed (`ATSAgentOutput`, `ProfileData` — used by the
+  active `keywords.service` + `applications.service` match path) were relocated to
+  [`keywords/keywords.types.ts`](../../apps/api/src/keywords/keywords.types.ts). `AgentsModule`
+  was removed from `ApplicationsModule` imports.
+- Verified: no `infra/Dockerfile` COPY referenced the path; `nest build` clean; 66 unit
+  tests pass; no new lint warnings. The `*-ats.md` prompt migration (the other half of #2)
+  remains.
+- Files: deleted `apps/api/src/agents/**`; added `apps/api/src/keywords/keywords.types.ts`;
+  edited `keywords.service.ts`, `applications.service.ts`, `applications.module.ts`,
+  `.github/copilot-instructions.md`.
 
 ### 2026-06-15 — Phase 4: structured outputs (#8)
 - **#8 Shipped** — Azure OpenAI `response_format` for the JSON-producing v1 calls, replacing
