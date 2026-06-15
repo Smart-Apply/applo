@@ -1,0 +1,74 @@
+{
+  "id": "sales-en",
+  "profession": "Sales / Account Management",
+  "language": "en",
+  "profile": {
+    "firstName": "Michael",
+    "lastName": "Roberts",
+    "email": "michael.roberts@example.com",
+    "phone": "+1 312 555 0179",
+    "city": "Chicago",
+    "country": "United States",
+    "linkedinUrl": "https://linkedin.com/in/michael-roberts-sales",
+    "summary": "B2B Account Executive with 9 years of experience selling SaaS and professional services. Carried an annual quota of 1.8 million dollars and exceeded target for four consecutive years by an average of 17 percent.",
+    "skills": [
+      { "name": "New Business Development", "level": "Expert" },
+      { "name": "Solution & Consultative Selling", "level": "Expert" },
+      { "name": "Pipeline & Forecast Management", "level": "Advanced" },
+      { "name": "Negotiation & Closing", "level": "Expert" },
+      { "name": "CRM (Salesforce, HubSpot)", "level": "Advanced" },
+      { "name": "Account Planning", "level": "Advanced" },
+      { "name": "Cross-functional Collaboration", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Senior Account Executive",
+        "company": "Northwind Software Inc.",
+        "startDate": "2019-04-01",
+        "endDate": null,
+        "description": "Full-cycle B2B sales of a SaaS platform to mid-market accounts across the Midwest region.",
+        "achievements": [
+          "Exceeded an annual quota of 1.8 million dollars for four consecutive years, averaging 117 percent attainment.",
+          "Closed two enterprise logos worth a combined 750,000 dollars in annual recurring revenue within a single year.",
+          "Shortened the average sales cycle from 95 to 68 days by introducing a structured discovery framework."
+        ]
+      },
+      {
+        "title": "Account Manager",
+        "company": "Prairie Business Solutions",
+        "startDate": "2015-08-01",
+        "endDate": "2019-03-31",
+        "description": "Managed and grew a portfolio of existing B2B accounts with renewal and upsell responsibility.",
+        "achievements": [
+          "Grew an account portfolio from 1.1 to 1.6 million dollars in annual revenue, a 45 percent increase over three years.",
+          "Maintained a customer renewal rate of 93 percent across a book of 70 accounts."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Business Administration, Marketing",
+        "institution": "University of Illinois at Chicago",
+        "startYear": "2011-09-01",
+        "endYear": "2015-05-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Challenger Sales Certification",
+        "issuer": "Challenger Inc.",
+        "issueDate": "2020-02-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Regional Sales Manager",
+    "company": "Summit Cloud Technologies",
+    "location": "Chicago, Illinois, United States",
+    "language": "en",
+    "fullText": "Summit Cloud Technologies is a fast-growing SaaS company with 320 employees and customers in over 15 countries. We are hiring a Regional Sales Manager for our Chicago office. Responsibilities: lead a team of 6 account executives, own a regional revenue target of 9 million dollars, develop and execute the regional sales strategy, and personally manage a small set of strategic accounts. Requirements: several years of quota-carrying B2B sales experience, a proven track record in new-business development, strong CRM discipline, and ideally first-line management experience. We offer an uncapped commission plan, flexible hybrid work, and a generous professional-development budget. Your point of contact is Ms. Karen Patel, VP of Sales. Please include your salary expectation and earliest possible start date."
+  }
+}

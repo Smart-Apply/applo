@@ -182,7 +182,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 ## Backend Modules (`apps/api/src/`)
 - `admin` — allow-listed admin endpoints (gated by `ADMIN_EMAILS` env), e.g. `POST /admin/users/:email/tier`, `DELETE /admin/users/:email`
 - `agents` — Azure AI Foundry agents (URL parsing, etc.)
-- `applications` — generation pipeline (profile + job → LLM → PDF → storage), SSE status stream
+- `applications` — generation pipeline (profile + job → LLM → editor pass → grounding check → PDF → storage), SSE status stream. Owns the `grounding/` sub-service (`GroundingValidatorService`) — a deterministic, non-destructive anti-hallucination check that flags impact numbers (%, currency, counts) absent from the source profile (logs only; never strips).
 - `auth` — JWT, refresh-token rotation, OAuth (Google/Microsoft/Azure AD), TOTP 2FA, password reset
 - `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@smart-apply/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`)
 - `config` — Zod env schema
@@ -511,12 +511,16 @@ PUT /api/v1/profile
 ### Application Pipeline
 1. Load Profile + JobPosting; enforce subscription usage limits
 2. Detect language (DE/EN), select template (lang × design), extract ATS keywords
-3. Render prompt templates (`prompts/cover-letter.md`, `prompts/resume.md`)
-4. Call LLM via provider abstraction wrapped in **opossum** circuit breaker → Markdown/HTML
-5. TSX → PDF via `@react-pdf/renderer` (no browser, no post-processing)
-6. Upload PDFs via storage provider (Blob/S3/disk); persist keys + signed URLs
-7. Status: `PENDING → GENERATING → READY | FAILED` (pushed to client via **SSE**)
-8. Background work via pluggable queue (`qstash` | `in-memory`)
+3. Render the v1 prompt chain: `skill-selector` → parallel(`cover-letter`, `resume-rewrite`, `ats-keywords`) under `prompts/v1/*`
+4. Call LLM via provider abstraction wrapped in **opossum** circuit breaker → Markdown/JSON
+5. **Editor pass (#1):** `prompts/v1/editor-cover-letter.md` critiques + revises the cover letter (graceful fallback to the draft on failure / suspiciously short output)
+6. **Grounding check (#7):** `GroundingValidatorService` flags fabricated impact numbers vs. the profile (non-destructive, logs a warning only)
+7. TSX → PDF via `@react-pdf/renderer` (no browser, no post-processing)
+8. Upload PDFs via storage provider (Blob/S3/disk); persist keys + signed URLs
+9. Status: `PENDING → GENERATING → READY | FAILED` (pushed to client via **SSE**)
+10. Background work via pluggable queue (`qstash` | `in-memory`)
+
+> See [docs/implementation/LLM_OUTPUT_QUALITY.md](../docs/implementation/LLM_OUTPUT_QUALITY.md) for the LLM output-quality roadmap (the 10 improvements to generated CVs/cover letters) and its living status tracker.
 
 ## Prompt Templates
 - **cover-letter.md**: concise, 1 page, intro → fit (3–5 bullets) → motivation → closing

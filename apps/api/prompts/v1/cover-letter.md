@@ -99,10 +99,12 @@ Sincerely,
 ### What to Include
 
 1. **Specific Examples:** Use `selected_experiences` or `selected_projects` with concrete details
-2. **Quantified Achievements:** "Reduced deployment time by 50%" > "Improved deployment"
+2. **Quantified Achievements:** "Reduced deployment time by 50%" > "Improved deployment". Never invent numbers — if none exist, use a concrete qualitative outcome.
 3. **Technical Skills:** Mention 3-4 CORE skills that match job requirements (not all 12)
-4. **Company Research:** Reference company's products, mission, or values if mentioned in job posting
-5. **Relevant Experience:** Choose 1-2 most relevant past roles to highlight
+4. **Concrete Company Reference (CRITICAL):** Scan the job posting `fullText` for something specific about THIS company — a named product, mission/value, recent initiative, team, or a figure — and tie one of your strengths to it. A missing or generic company reference is the #1 reason cover letters get auto-rejected as mass/AI applications. Do NOT write interchangeable filler that would fit any company.
+5. **Named Salutation (Anrede):** Scan `fullText` for a contact person (e.g. "Ansprechpartner: Frau Schmidt", "Kontakt: Herr Müller"). If found, address them directly ("Sehr geehrte Frau Schmidt," / "Dear Ms. Schmidt,"). Only fall back to "Sehr geehrte Damen und Herren," / "Dear Hiring Manager," when no name is present.
+6. **Salary & Start Date — only if explicitly requested:** If the posting explicitly asks for a salary expectation (Gehaltsvorstellung) or earliest start date (frühestmöglicher Eintrittstermin), address it in the closing paragraph. If the profile gives no basis, omit gracefully rather than inventing a figure. Do NOT volunteer either when the posting does not ask.
+7. **Relevant Experience:** Choose 1-2 most relevant past roles to highlight
 
 ### What to Avoid
 
@@ -112,6 +114,8 @@ Sincerely,
 2. **No Skill Listing:** Don't just list all skills; weave them into stories
 3. **No Generic Content:** Every sentence should be specific to THIS job and THIS company
 4. **No Repetition:** Don't repeat resume content verbatim; add context and narrative
+5. **Go Easy on Enthusiasm:** One genuine line of interest beats three. Cut adverb-heavy gushing ("absolutely thrilled", "äußerst begeistert"). Recruiters distrust over-enthusiasm.
+6. **No Konjunktiv / Hedging (German):** Avoid "würde mich freuen", "könnte", "hätte". Use confident present tense ("Ich freue mich auf…"). Hedging makes the candidate sound like a supplicant.
 
 ### Length
 
@@ -202,12 +206,15 @@ These patterns sound robotic and unnatural. **NEVER use them:**
 Before generating, ensure:
 
 - [ ] All examples come from `tailoredProfile` only
-- [ ] No invented experiences or skills
+- [ ] No invented experiences or skills (no fabricated metrics, salary, or start date)
 - [ ] Only 3-4 core skills mentioned (not all 12)
 - [ ] Specific examples with metrics where possible
+- [ ] At least one concrete, company-specific reference (not interchangeable filler)
+- [ ] Named contact used as salutation if present in the posting
+- [ ] Salary / start date addressed ONLY if the posting explicitly asks
 - [ ] Length: 350-400 words
 - [ ] Correct language (German vs. English)
-- [ ] No clichés or generic statements
+- [ ] No clichés, no Konjunktiv/hedging, no over-enthusiasm
 - [ ] Shows clear connection between candidate and role
 
 ---

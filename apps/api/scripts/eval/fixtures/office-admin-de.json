@@ -1,0 +1,74 @@
+{
+  "id": "office-admin-de",
+  "profession": "Office Administration / Büromanagement",
+  "language": "de",
+  "profile": {
+    "firstName": "Sandra",
+    "lastName": "Klein",
+    "email": "sandra.klein@example.de",
+    "phone": "+49 160 1122334",
+    "city": "Hannover",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/sandra-klein-office",
+    "summary": "Bürokauffrau und Teamassistentin mit 9 Jahren Erfahrung in der Geschäftsführungsassistenz. Koordinierte die Terminplanung für 3 Führungskräfte und organisierte jährlich rund 40 Geschäftsreisen sowie 15 interne Veranstaltungen.",
+    "skills": [
+      { "name": "Termin- und Reisemanagement", "level": "Experte" },
+      { "name": "Korrespondenz und Protokollführung", "level": "Experte" },
+      { "name": "MS Office (Word, Excel, Outlook, PowerPoint)", "level": "Experte" },
+      { "name": "Rechnungsvorbereitung und Belegwesen", "level": "Fortgeschritten" },
+      { "name": "Veranstaltungsorganisation", "level": "Fortgeschritten" },
+      { "name": "Büroorganisation und Beschaffung", "level": "Fortgeschritten" }
+    ],
+    "experiences": [
+      {
+        "title": "Assistentin der Geschäftsführung",
+        "company": "Niedersachsen Beratung GmbH",
+        "startDate": "2018-04-01",
+        "endDate": null,
+        "description": "Unterstützung der dreiköpfigen Geschäftsführung im operativen Tagesgeschäft sowie Büroorganisation.",
+        "achievements": [
+          "Koordinierte die Kalender von 3 Führungskräften und organisierte jährlich rund 40 Geschäftsreisen termin- und kostengerecht.",
+          "Reduzierte die Bearbeitungszeit der Reisekostenabrechnung durch ein neues digitales Vorlagensystem von 5 auf 2 Tage.",
+          "Organisierte 15 interne Veranstaltungen pro Jahr für bis zu 80 Teilnehmende innerhalb des vorgegebenen Budgets."
+        ]
+      },
+      {
+        "title": "Teamassistentin",
+        "company": "Hanseatische Versicherungsmakler GmbH",
+        "startDate": "2014-08-01",
+        "endDate": "2018-03-31",
+        "description": "Assistenz für ein Vertriebsteam von 8 Mitarbeitenden mit Schwerpunkt Korrespondenz und Datenpflege.",
+        "achievements": [
+          "Bearbeitete täglich rund 50 Kundenanfragen schriftlich und telefonisch mit einer Beantwortungsquote von 100 Prozent innerhalb von 24 Stunden.",
+          "Pflegte eine Kundendatenbank mit über 3.000 Datensätzen und sorgte für eine dauerhaft hohe Datenqualität."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Ausbildung Kauffrau für Büromanagement (IHK)",
+        "institution": "Berufsbildende Schule Hannover",
+        "startYear": "2011-09-01",
+        "endYear": "2014-07-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Geprüfte Fachwirtin für Büro- und Projektorganisation (IHK)",
+        "issuer": "IHK Hannover",
+        "issueDate": "2019-09-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "B2" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Teamassistenz der Geschäftsleitung (m/w/d)",
+    "company": "Leinetal Immobilien GmbH",
+    "location": "Hannover",
+    "language": "de",
+    "fullText": "Die Leinetal Immobilien GmbH verwaltet als inhabergeführtes Unternehmen mit 55 Mitarbeitenden über 4.000 Wohn- und Gewerbeeinheiten in der Region Hannover. Für unsere Zentrale suchen wir eine Teamassistenz der Geschäftsleitung (m/w/d). Ihre Aufgaben: Unterstützung der Geschäftsleitung im operativen Tagesgeschäft, Termin- und Reisekoordination, Vor- und Nachbereitung von Besprechungen inklusive Protokollführung, Bearbeitung der Korrespondenz sowie die Organisation interner Veranstaltungen. Ihr Profil: abgeschlossene kaufmännische Ausbildung, mehrjährige Erfahrung in der Assistenz, sehr gute MS-Office-Kenntnisse sowie ein freundliches und strukturiertes Auftreten. Wir bieten einen unbefristeten Arbeitsplatz, gleitende Arbeitszeiten und ein Jobticket. Ihre Ansprechpartnerin ist Frau Petra Kowalski, Leiterin Verwaltung. Bitte geben Sie Ihren frühestmöglichen Eintrittstermin an."
+  }
+}

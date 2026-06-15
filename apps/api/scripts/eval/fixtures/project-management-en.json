@@ -1,0 +1,75 @@
+{
+  "id": "project-management-en",
+  "profession": "Project Management / Construction",
+  "language": "en",
+  "profile": {
+    "firstName": "Laura",
+    "lastName": "Bennett",
+    "email": "laura.bennett@example.com",
+    "phone": "+1 416 555 0156",
+    "city": "Toronto",
+    "country": "Canada",
+    "linkedinUrl": "https://linkedin.com/in/laura-bennett-pm",
+    "summary": "Construction Project Manager with 11 years of experience delivering commercial building projects. Managed project budgets of up to 28 million dollars and delivered 14 projects on or ahead of schedule with an average of 4 percent under budget.",
+    "skills": [
+      { "name": "Project Planning & Scheduling", "level": "Expert" },
+      { "name": "Budget & Cost Control", "level": "Expert" },
+      { "name": "Stakeholder & Client Management", "level": "Advanced" },
+      { "name": "Contract & Subcontractor Management", "level": "Advanced" },
+      { "name": "Risk Management", "level": "Advanced" },
+      { "name": "Health & Safety Compliance", "level": "Advanced" },
+      { "name": "Scheduling Software (MS Project, Primavera)", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Senior Project Manager",
+        "company": "Maple Ridge Construction Ltd.",
+        "startDate": "2018-05-01",
+        "endDate": null,
+        "description": "End-to-end delivery of commercial and institutional construction projects.",
+        "achievements": [
+          "Delivered 14 commercial projects on or ahead of schedule, averaging 4 percent under budget across a combined value of 90 million dollars.",
+          "Managed a single flagship project with a 28-million-dollar budget and a team of 35 across 6 subcontractors.",
+          "Reduced change-order disputes by 35 percent by introducing a weekly client and trade coordination cadence."
+        ]
+      },
+      {
+        "title": "Project Manager",
+        "company": "Lakeside Builders Inc.",
+        "startDate": "2014-03-01",
+        "endDate": "2018-04-30",
+        "description": "Managed mid-size commercial fit-out and renovation projects from tender to handover.",
+        "achievements": [
+          "Delivered 9 fit-out projects valued between 1 and 5 million dollars each with a 100 percent on-time handover record.",
+          "Improved safety performance to zero lost-time incidents across 3 consecutive years on site."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Engineering, Civil Engineering",
+        "institution": "University of Toronto",
+        "startYear": "2009-09-01",
+        "endYear": "2013-05-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Project Management Professional (PMP)",
+        "issuer": "Project Management Institute (PMI)",
+        "issueDate": "2017-06-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" },
+      { "name": "French", "level": "C1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Construction Project Director",
+    "company": "Northgate Development Partners",
+    "location": "Ottawa, Canada",
+    "language": "en",
+    "fullText": "Northgate Development Partners is a commercial real-estate developer with 180 employees and an active pipeline of over 400 million dollars in projects. We are hiring a Construction Project Director for our Ottawa office. Responsibilities: oversee a portfolio of commercial construction projects, lead a team of 4 project managers, own budget, schedule and quality outcomes across the portfolio, and serve as the senior point of contact for clients and partners. Requirements: several years of construction project-management experience including large commercial builds, a recognized project-management credential such as PMP, strong commercial acumen, and proven leadership skills. We offer a competitive salary with bonus, a vehicle allowance, and comprehensive benefits. Your point of contact is Mr. Steven Clarke, VP of Construction. Please share your salary expectation and earliest available start date."
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "id": "logistics-en",
+  "profession": "Logistics / Supply Chain",
+  "language": "en",
+  "profile": {
+    "firstName": "Robert",
+    "lastName": "Garcia",
+    "email": "robert.garcia@example.com",
+    "phone": "+1 404 555 0167",
+    "city": "Atlanta",
+    "country": "United States",
+    "linkedinUrl": "https://linkedin.com/in/robert-garcia-supplychain",
+    "summary": "Supply Chain Coordinator with 9 years of experience in inventory planning and distribution. Managed a network of 4 distribution centers and reduced average order-to-delivery lead time from 6.5 to 3.8 days.",
+    "skills": [
+      { "name": "Inventory Planning & Demand Forecasting", "level": "Expert" },
+      { "name": "Warehouse & Distribution Management", "level": "Advanced" },
+      { "name": "ERP / WMS (SAP, Manhattan)", "level": "Advanced" },
+      { "name": "Carrier & Vendor Negotiation", "level": "Advanced" },
+      { "name": "Process Improvement (Lean)", "level": "Advanced" },
+      { "name": "Data Analysis (Excel, SQL)", "level": "Intermediate" },
+      { "name": "Cross-functional Coordination", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Supply Chain Coordinator",
+        "company": "Peachtree Distribution Co.",
+        "startDate": "2018-08-01",
+        "endDate": null,
+        "description": "Coordinated inventory and outbound logistics across a four-site distribution network.",
+        "achievements": [
+          "Reduced average order-to-delivery lead time from 6.5 to 3.8 days by re-balancing inventory across 4 distribution centers.",
+          "Cut freight cost per shipment by 14 percent by consolidating carriers and renegotiating rate cards.",
+          "Improved inventory accuracy from 92 to 99 percent through a cycle-count program covering 8,000 SKUs."
+        ]
+      },
+      {
+        "title": "Logistics Analyst",
+        "company": "Southern Freight Solutions",
+        "startDate": "2015-01-01",
+        "endDate": "2018-07-31",
+        "description": "Analyzed transportation data and supported daily dispatch planning.",
+        "achievements": [
+          "Planned around 40 daily shipments and reduced empty-mile rate from 18 to 11 percent through better backhaul scheduling.",
+          "Built a weekly KPI dashboard that improved on-time delivery tracking across a fleet of 30 vehicles."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Science in Supply Chain Management",
+        "institution": "Georgia State University",
+        "startYear": "2011-09-01",
+        "endYear": "2015-05-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "APICS Certified in Planning and Inventory Management (CPIM)",
+        "issuer": "ASCM",
+        "issueDate": "2019-09-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" },
+      { "name": "Spanish", "level": "Native" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Supply Chain Manager",
+    "company": "Cornerstone Distribution Networks",
+    "location": "Charlotte, North Carolina, United States",
+    "language": "en",
+    "fullText": "Cornerstone Distribution Networks is a third-party logistics provider with 600 employees operating 9 distribution centers across the Southeast. We are hiring a Supply Chain Manager for our Charlotte hub. Responsibilities: manage inventory planning and distribution for a network serving over 500 retail locations, lead a team of 5 coordinators, drive cost and service-level improvements, and oversee the rollout of a new warehouse management system. Requirements: several years of supply-chain or logistics experience, strong command of ERP and WMS tools, demonstrated process-improvement results, and team-leadership experience. We offer a competitive salary, an annual bonus, and relocation assistance. Your point of contact is Ms. Linda Carrington, Director of Operations. Please indicate your earliest possible start date."
+  }
+}

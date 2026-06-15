@@ -1,0 +1,74 @@
+{
+  "id": "it-en",
+  "profession": "IT / Software Engineering",
+  "language": "en",
+  "profile": {
+    "firstName": "Christopher",
+    "lastName": "Evans",
+    "email": "christopher.evans@example.com",
+    "phone": "+1 512 555 0134",
+    "city": "Austin",
+    "country": "United States",
+    "linkedinUrl": "https://linkedin.com/in/christopher-evans-engineer",
+    "summary": "Backend Software Engineer with 7 years of experience building distributed systems in Go and Python. Owned a payments service handling 12 million transactions per month and cut p95 latency by 45 percent.",
+    "skills": [
+      { "name": "Go", "level": "Expert" },
+      { "name": "Python", "level": "Advanced" },
+      { "name": "Distributed Systems & Microservices", "level": "Advanced" },
+      { "name": "PostgreSQL & Redis", "level": "Advanced" },
+      { "name": "AWS (ECS, Lambda, RDS)", "level": "Advanced" },
+      { "name": "CI/CD & Observability", "level": "Advanced" },
+      { "name": "API Design (REST, gRPC)", "level": "Expert" }
+    ],
+    "experiences": [
+      {
+        "title": "Senior Backend Engineer",
+        "company": "Lone Star Payments Inc.",
+        "startDate": "2020-02-01",
+        "endDate": null,
+        "description": "Owned core payment services on a high-throughput fintech platform.",
+        "achievements": [
+          "Reduced p95 API latency from 320 to 175 milliseconds, a 45 percent improvement, by introducing caching and query optimization.",
+          "Scaled a payments service to handle 12 million transactions per month with 99.98 percent uptime.",
+          "Led the migration of a monolith into 7 microservices, cutting deployment time from 30 to 6 minutes and mentoring 3 engineers."
+        ]
+      },
+      {
+        "title": "Software Engineer",
+        "company": "Hill Country Software LLC",
+        "startDate": "2017-06-01",
+        "endDate": "2020-01-31",
+        "description": "Built and maintained backend services for a B2B logistics SaaS product.",
+        "achievements": [
+          "Raised automated test coverage of the core module from 54 to 83 percent, halving production incidents per release.",
+          "Built an event-driven ingestion pipeline processing around 4 million events per day."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Science in Computer Science",
+        "institution": "University of Texas at Austin",
+        "startYear": "2013-09-01",
+        "endYear": "2017-05-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "AWS Certified Solutions Architect – Associate",
+        "issuer": "Amazon Web Services",
+        "issueDate": "2021-08-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Staff Backend Engineer",
+    "company": "Brightpath Cloud Systems",
+    "location": "Austin, Texas, United States",
+    "language": "en",
+    "fullText": "Brightpath Cloud Systems is a Series-C fintech with 220 employees processing over 5 billion dollars in annual payment volume. We are hiring a Staff Backend Engineer for our Austin team. Responsibilities: design and build scalable services in Go, set technical direction for the payments domain, mentor a team of 4 engineers, and improve our reliability and observability practices. Requirements: several years of backend experience, deep knowledge of distributed systems and relational databases, hands-on cloud experience, and a track record of shipping high-throughput services. We offer fully remote work, an annual learning budget of 3,000 dollars, and meaningful equity. Your point of contact is Mr. Ethan Brooks, Engineering Manager. Please share your salary expectation and earliest possible start date."
+  }
+}

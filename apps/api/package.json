@@ -42,7 +42,9 @@
     "templates:regenerate-previews": "dotenv -e .env -- ts-node -r tsconfig-paths/register scripts/generate-template-previews.ts --force",
     "templates:seed-with-previews": "pnpm run prisma:seed:templates && pnpm run templates:generate-previews",
     "templates:cleanup": "ts-node -r tsconfig-paths/register scripts/cleanup-legacy-templates.ts",
-    "create-agents": "ts-node -r tsconfig-paths/register scripts/create-agents.ts"
+    "create-agents": "ts-node -r tsconfig-paths/register scripts/create-agents.ts",
+    "eval:llm": "dotenv -e .env -- ts-node -r tsconfig-paths/register scripts/eval/run-eval.ts",
+    "eval:validate": "ts-node -r tsconfig-paths/register scripts/eval/run-eval.ts --validate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1057.0",

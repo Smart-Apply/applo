@@ -1,0 +1,74 @@
+{
+  "id": "manufacturing-en",
+  "profession": "Manufacturing / Production",
+  "language": "en",
+  "profile": {
+    "firstName": "James",
+    "lastName": "Mitchell",
+    "email": "james.mitchell@example.com",
+    "phone": "+1 313 555 0148",
+    "city": "Detroit",
+    "country": "United States",
+    "linkedinUrl": "https://linkedin.com/in/james-mitchell-production",
+    "summary": "Production Supervisor with 12 years of experience in automotive component manufacturing. Oversaw a shift of 22 operators across 3 assembly lines and raised overall equipment effectiveness (OEE) from 74 to 89 percent in 18 months.",
+    "skills": [
+      { "name": "Lean Manufacturing & Kaizen", "level": "Expert" },
+      { "name": "OEE & Throughput Optimization", "level": "Expert" },
+      { "name": "Quality Control (SPC, Six Sigma)", "level": "Advanced" },
+      { "name": "Production Planning & Scheduling", "level": "Advanced" },
+      { "name": "CNC & Machining Processes", "level": "Advanced" },
+      { "name": "Safety Management (OSHA)", "level": "Advanced" },
+      { "name": "Team Leadership", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Production Supervisor",
+        "company": "Great Lakes Components Inc.",
+        "startDate": "2018-06-01",
+        "endDate": null,
+        "description": "Shift leadership across three automotive assembly lines with full accountability for output and quality.",
+        "achievements": [
+          "Raised overall equipment effectiveness (OEE) from 74 to 89 percent within 18 months through a structured TPM program.",
+          "Cut scrap on safety-critical parts from 2.8 to 0.9 percent by introducing in-line SPC checks.",
+          "Supervised a shift of 22 operators and cross-trained 6 of them to run a second machining cell."
+        ]
+      },
+      {
+        "title": "CNC Machinist / Line Lead",
+        "company": "Motor City Precision LLC",
+        "startDate": "2013-02-01",
+        "endDate": "2018-05-31",
+        "description": "Set up and operated CNC turning and milling centers for small and mid-volume runs.",
+        "achievements": [
+          "Reduced average setup time per job from 50 to 30 minutes through standardized tooling and offsets.",
+          "Held tolerances within 0.005 millimeters with a first-pass yield above 99 percent on medical components."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Associate of Applied Science, Manufacturing Technology",
+        "institution": "Wayne County Community College",
+        "startYear": "2010-09-01",
+        "endYear": "2012-05-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Six Sigma Green Belt",
+        "issuer": "ASQ",
+        "issueDate": "2019-04-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Production Manager",
+    "company": "Lakeshore Manufacturing Group",
+    "location": "Toledo, Ohio, United States",
+    "language": "en",
+    "fullText": "Lakeshore Manufacturing Group is a Tier-1 automotive supplier with 480 employees and three plants across the Midwest. We are hiring a Production Manager for our Toledo facility. Responsibilities: lead production across three shifts and roughly 60 operators, own safety, quality, delivery and cost targets, drive continuous-improvement initiatives, and manage capital planning for new equipment. Requirements: a technical degree or equivalent trade qualification, several years of production experience in a manufacturing environment, and proven leadership skills. We offer a permanent contract, a performance bonus, and 401(k) matching. Your point of contact is Mr. David Hughes, Plant Manager. Please share your earliest available start date and salary expectation."
+  }
+}

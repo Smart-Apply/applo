@@ -12,6 +12,7 @@ import { TemplatesService } from '@/templates/templates.service';
 import { SubscriptionService } from '@/subscription/subscription.service';
 import { NotFoundWithCode } from '@/common/exceptions/coded-http.exception';
 import { MockHelper } from '../../../../test/helpers/mock.helper';
+import { GroundingValidatorService } from '../../grounding/grounding-validator.service';
 
 describe('ApplicationsService.getFileStream — PDF download (Unit)', () => {
   let service: ApplicationsService;
@@ -39,6 +40,7 @@ describe('ApplicationsService.getFileStream — PDF download (Unit)', () => {
         { provide: KeywordsService, useValue: {} },
         { provide: TemplatesService, useValue: {} },
         { provide: SubscriptionService, useValue: { incrementUsage: vi.fn() } },
+        GroundingValidatorService,
       ],
     }).compile();
 

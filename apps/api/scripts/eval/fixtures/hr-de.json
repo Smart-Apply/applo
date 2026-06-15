@@ -1,0 +1,75 @@
+{
+  "id": "hr-de",
+  "profession": "Human Resources / Personalwesen",
+  "language": "de",
+  "profile": {
+    "firstName": "Nicole",
+    "lastName": "Fischer",
+    "email": "nicole.fischer@example.de",
+    "phone": "+49 151 8899001",
+    "city": "Köln",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/nicole-fischer-hr",
+    "summary": "Personalreferentin mit 8 Jahren Erfahrung im Recruiting und in der Personalbetreuung. Verantwortete die Besetzung von rund 60 Stellen pro Jahr und senkte die durchschnittliche Time-to-Hire von 58 auf 39 Tage.",
+    "skills": [
+      { "name": "Recruiting und Active Sourcing", "level": "Experte" },
+      { "name": "Bewerbermanagement (ATS)", "level": "Fortgeschritten" },
+      { "name": "Arbeitsrecht (Grundlagen)", "level": "Fortgeschritten" },
+      { "name": "Personalentwicklung", "level": "Fortgeschritten" },
+      { "name": "Employer Branding", "level": "Fortgeschritten" },
+      { "name": "Entgeltabrechnung (Schnittstelle)", "level": "Grundkenntnisse" },
+      { "name": "Mitarbeitergespräche und Beratung", "level": "Experte" }
+    ],
+    "experiences": [
+      {
+        "title": "Personalreferentin Recruiting",
+        "company": "RheinEnergie Dienstleistungen GmbH",
+        "startDate": "2019-01-01",
+        "endDate": null,
+        "description": "Verantwortung für den gesamten Recruiting-Prozess sowie Betreuung von Fachbereichen in Personalfragen.",
+        "achievements": [
+          "Senkte die durchschnittliche Time-to-Hire durch Einführung eines neuen Bewerbermanagementsystems von 58 auf 39 Tage.",
+          "Verantwortete die Besetzung von rund 60 Stellen pro Jahr für 4 Fachbereiche mit insgesamt 450 Mitarbeitenden.",
+          "Steigerte die Annahmequote von Vertragsangeboten durch optimierte Candidate Journey von 78 auf 91 Prozent."
+        ]
+      },
+      {
+        "title": "HR-Generalistin",
+        "company": "Kölner Mittelstand Beratung GmbH",
+        "startDate": "2015-09-01",
+        "endDate": "2018-12-31",
+        "description": "Operative Personalarbeit von der Einstellung bis zum Austritt für rund 180 Mitarbeitende.",
+        "achievements": [
+          "Betreute eigenverantwortlich die Personalakten und Verträge von 180 Mitarbeitenden mit einer Bearbeitungsquote von 100 Prozent termingerecht.",
+          "Organisierte 12 Weiterbildungsmaßnahmen pro Jahr und erhöhte die Teilnahmequote um 30 Prozent."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Arts Personalmanagement",
+        "institution": "Fachhochschule Köln",
+        "startYear": "2011-10-01",
+        "endYear": "2015-08-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Zertifizierte Recruiterin (Sourcing)",
+        "issuer": "Deutsche Gesellschaft für Personalführung (DGFP)",
+        "issueDate": "2020-06-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "C1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "HR Manager / Teamleitung Recruiting (m/w/d)",
+    "company": "Innogy Talent Solutions GmbH",
+    "location": "Bonn",
+    "language": "de",
+    "fullText": "Die Innogy Talent Solutions GmbH ist ein Personaldienstleister mit 140 Mitarbeitenden und betreut über 200 Unternehmenskunden in NRW. Für unseren Standort in Bonn suchen wir einen HR Manager beziehungsweise eine Teamleitung Recruiting (m/w/d). Ihre Aufgaben: fachliche Führung eines Recruiting-Teams von 4 Mitarbeitenden, Verantwortung für die Besetzung von rund 150 Stellen pro Jahr, Weiterentwicklung der Recruiting-Strategie und des Employer Brandings sowie die enge Zusammenarbeit mit den Fachbereichen. Ihr Profil: abgeschlossenes Studium im Bereich Personal oder eine vergleichbare Qualifikation, mehrjährige Erfahrung im Recruiting, Kenntnisse moderner Sourcing-Methoden sowie idealerweise erste Führungserfahrung. Wir bieten flexible Arbeitszeiten, 3 Tage Homeoffice pro Woche und ein strukturiertes Onboarding. Ihre Ansprechpartnerin ist Frau Birgit Sommer, Leiterin People & Culture. Bitte geben Sie Ihren frühestmöglichen Eintrittstermin sowie Ihre Gehaltsvorstellung an."
+  }
+}

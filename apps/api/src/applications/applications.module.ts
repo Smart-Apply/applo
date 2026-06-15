@@ -10,6 +10,7 @@ import { SubscriptionModule } from '../subscription/subscription.module';
 import { ApplicationsController } from './applications.controller';
 import { ApplicationsService } from './applications.service';
 import { TitleGeneratorService } from './title-generator.service';
+import { GroundingValidatorService } from './grounding/grounding-validator.service';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { TitleGeneratorService } from './title-generator.service';
     SubscriptionModule,
   ],
   controllers: [ApplicationsController],
-  providers: [ApplicationsService, TitleGeneratorService],
+  providers: [ApplicationsService, TitleGeneratorService, GroundingValidatorService],
   exports: [ApplicationsService],
 })
 export class ApplicationsModule {}

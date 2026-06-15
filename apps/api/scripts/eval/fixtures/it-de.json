@@ -1,0 +1,75 @@
+{
+  "id": "it-de",
+  "profession": "IT / Softwareentwicklung",
+  "language": "de",
+  "profile": {
+    "firstName": "Daniel",
+    "lastName": "Schmidt",
+    "email": "daniel.schmidt@example.de",
+    "phone": "+49 176 4433221",
+    "city": "Karlsruhe",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/daniel-schmidt-entwicklung",
+    "summary": "Fachinformatiker für Anwendungsentwicklung mit 7 Jahren Erfahrung in der Backend-Entwicklung mit Java und Spring Boot. Betreute eine Microservice-Landschaft mit 14 Diensten und reduzierte die durchschnittliche Antwortzeit der Kern-API um 40 Prozent.",
+    "skills": [
+      { "name": "Java / Spring Boot", "level": "Experte" },
+      { "name": "REST-API-Design", "level": "Experte" },
+      { "name": "PostgreSQL", "level": "Fortgeschritten" },
+      { "name": "Docker / Kubernetes", "level": "Fortgeschritten" },
+      { "name": "CI/CD (GitLab)", "level": "Fortgeschritten" },
+      { "name": "Microservices", "level": "Fortgeschritten" },
+      { "name": "Testautomatisierung (JUnit)", "level": "Fortgeschritten" }
+    ],
+    "experiences": [
+      {
+        "title": "Softwareentwickler Backend",
+        "company": "Badische Softwarewerk GmbH",
+        "startDate": "2019-07-01",
+        "endDate": null,
+        "description": "Entwicklung und Betrieb von Backend-Diensten für eine B2B-Versicherungsplattform.",
+        "achievements": [
+          "Reduzierte die durchschnittliche Antwortzeit der Kern-API durch Caching und Query-Optimierung von 480 auf 290 Millisekunden, also um 40 Prozent.",
+          "Migrierte einen monolithischen Dienst in 6 eigenständige Microservices und senkte die Deployment-Dauer von 35 auf 8 Minuten.",
+          "Erhöhte die Testabdeckung des Kernmoduls von 55 auf 82 Prozent und reduzierte damit die Produktionsfehler pro Release um die Hälfte."
+        ]
+      },
+      {
+        "title": "Anwendungsentwickler",
+        "company": "Kommunal-IT Karlsruhe AöR",
+        "startDate": "2016-08-01",
+        "endDate": "2019-06-30",
+        "description": "Wartung und Weiterentwicklung von Fachverfahren für die öffentliche Verwaltung.",
+        "achievements": [
+          "Automatisierte einen manuellen Importprozess und sparte dem Fachbereich rund 12 Arbeitsstunden pro Woche.",
+          "Betreute 3 Fachanwendungen mit insgesamt über 600 aktiven Nutzern."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Ausbildung Fachinformatiker Anwendungsentwicklung (IHK)",
+        "institution": "Heinrich-Hertz-Schule Karlsruhe",
+        "startYear": "2013-09-01",
+        "endYear": "2016-07-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Oracle Certified Professional, Java SE",
+        "issuer": "Oracle",
+        "issueDate": "2020-05-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "C1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Senior Backend-Entwickler Java (m/w/d)",
+    "company": "Cloudwerk Süd GmbH",
+    "location": "Karlsruhe",
+    "language": "de",
+    "fullText": "Die Cloudwerk Süd GmbH entwickelt mit 70 Mitarbeitenden SaaS-Lösungen für den Mittelstand und betreibt diese in einer eigenen Cloud-Infrastruktur. Für unser Produktteam in Karlsruhe suchen wir einen Senior Backend-Entwickler Java (m/w/d). Ihre Aufgaben: Konzeption und Entwicklung skalierbarer Microservices mit Java und Spring Boot, Mitgestaltung der Systemarchitektur, technische Begleitung von 2 Junior-Entwicklern sowie die Weiterentwicklung unserer CI/CD-Pipeline. Ihr Profil: mehrjährige Erfahrung in der Backend-Entwicklung mit Java, fundierte Kenntnisse in REST, relationalen Datenbanken und Container-Technologien sowie Erfahrung mit Microservices. Wir bieten 100 Prozent Remote-Option, ein jährliches Weiterbildungsbudget von 2.000 Euro und moderne Hardware nach Wahl. Ihr Ansprechpartner ist Herr Tobias Wagner, Teamlead Engineering. Bitte nennen Sie uns Ihre Gehaltsvorstellung sowie Ihren frühestmöglichen Eintrittstermin."
+  }
+}

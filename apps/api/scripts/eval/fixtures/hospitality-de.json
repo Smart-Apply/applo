@@ -1,0 +1,75 @@
+{
+  "id": "hospitality-de",
+  "profession": "Hospitality / Gastronomie",
+  "language": "de",
+  "profile": {
+    "firstName": "Carolin",
+    "lastName": "Bauer",
+    "email": "carolin.bauer@example.de",
+    "phone": "+49 159 7766554",
+    "city": "Düsseldorf",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/carolin-bauer-gastronomie",
+    "summary": "Restaurantleiterin mit 10 Jahren Erfahrung in der gehobenen Gastronomie. Verantwortete einen Betrieb mit 120 Sitzplätzen und einem Jahresumsatz von 1,8 Millionen Euro und steigerte die Gästezufriedenheit auf einen Bewertungsdurchschnitt von 4,7 von 5 Sternen.",
+    "skills": [
+      { "name": "Restaurantleitung / Serviceorganisation", "level": "Experte" },
+      { "name": "Personalplanung und Dienstplangestaltung", "level": "Experte" },
+      { "name": "Warenwirtschaft und Einkauf", "level": "Fortgeschritten" },
+      { "name": "Kostenkontrolle (Food- und Labour-Cost)", "level": "Fortgeschritten" },
+      { "name": "Gästebetreuung und Beschwerdemanagement", "level": "Experte" },
+      { "name": "Kassensysteme und Reservierungstools", "level": "Fortgeschritten" }
+    ],
+    "experiences": [
+      {
+        "title": "Restaurantleiterin",
+        "company": "Restaurant Rheinblick GmbH",
+        "startDate": "2018-03-01",
+        "endDate": null,
+        "description": "Operative Leitung eines à-la-carte-Restaurants mit 120 Sitzplätzen und angeschlossener Eventfläche.",
+        "achievements": [
+          "Steigerte den durchschnittlichen Bewertungsschnitt auf Google und Tripadvisor innerhalb von 18 Monaten von 4,1 auf 4,7 von 5 Sternen.",
+          "Senkte die Food-Cost-Quote durch optimierten Einkauf und Reduzierung von Verschwendung von 34 auf 29 Prozent.",
+          "Führte ein Team von 18 Service- und Küchenmitarbeitenden und reduzierte die Personalfluktuation um 25 Prozent."
+        ]
+      },
+      {
+        "title": "Stellvertretende Restaurantleiterin",
+        "company": "Hotel Altstadt Köln",
+        "startDate": "2014-05-01",
+        "endDate": "2018-02-28",
+        "description": "Schichtleitung im Restaurant- und Bankettservice eines Vier-Sterne-Hotels.",
+        "achievements": [
+          "Koordinierte Bankettveranstaltungen für bis zu 200 Gäste mit einem Serviceteam von 12 Mitarbeitenden.",
+          "Verbesserte die Tischauslastung an Wochenenden durch ein neues Reservierungssystem um 15 Prozent."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Ausbildung Restaurantfachfrau (IHK)",
+        "institution": "Berufskolleg Düsseldorf",
+        "startYear": "2008-09-01",
+        "endYear": "2011-06-30"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Geprüfte Restaurantmeisterin (IHK)",
+        "issuer": "IHK Düsseldorf",
+        "issueDate": "2016-09-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "B2" },
+      { "name": "Französisch", "level": "B1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Restaurantleiter (m/w/d)",
+    "company": "Gut Lindenhof Hotel & Restaurant",
+    "location": "Neuss",
+    "language": "de",
+    "fullText": "Das Gut Lindenhof Hotel & Restaurant ist ein familiengeführtes Vier-Sterne-Haus mit 60 Zimmern, einem Restaurant mit 140 Plätzen und einer großen Veranstaltungsscheune. Für unser Restaurant in Neuss suchen wir einen Restaurantleiter (m/w/d). Ihre Aufgaben: operative Leitung des Restaurant- und Bankettbetriebs, Führung und Dienstplanung eines Teams von 20 Mitarbeitenden, Verantwortung für Umsatz-, Kosten- und Qualitätsziele sowie die Betreuung anspruchsvoller Gäste. Ihr Profil: abgeschlossene gastronomische Ausbildung, mehrjährige Erfahrung in der gehobenen Gastronomie sowie nachweisbare Führungserfahrung. Wir bieten geregelte Arbeitszeiten mit elektronischer Zeiterfassung, Beteiligung am Trinkgeld und eine leistungsorientierte Prämie. Ihre Ansprechpartnerin ist Frau Andrea Lindenberg, Inhaberin. Bitte geben Sie Ihre Gehaltsvorstellung und Ihren frühestmöglichen Eintrittstermin an."
+  }
+}

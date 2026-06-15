@@ -1,0 +1,75 @@
+{
+  "id": "skilled-trades-de",
+  "profession": "Skilled Trades / Handwerk (Elektro)",
+  "language": "de",
+  "profile": {
+    "firstName": "Michael",
+    "lastName": "Richter",
+    "email": "michael.richter@example.de",
+    "phone": "+49 173 6677889",
+    "city": "Leipzig",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/michael-richter-elektro",
+    "summary": "Elektroniker für Energie- und Gebäudetechnik mit 13 Jahren Erfahrung in Installation und Inbetriebnahme. Leitete als Vorarbeiter Baustellenteams von bis zu 6 Monteuren und schloss Projekte mit einem Auftragsvolumen von bis zu 450.000 Euro termingerecht ab.",
+    "skills": [
+      { "name": "Elektroinstallation (Niederspannung)", "level": "Experte" },
+      { "name": "Schaltschrankbau und Verdrahtung", "level": "Experte" },
+      { "name": "Mess- und Prüftechnik (DGUV V3)", "level": "Experte" },
+      { "name": "Gebäudeleittechnik / KNX", "level": "Fortgeschritten" },
+      { "name": "Photovoltaik-Montage", "level": "Fortgeschritten" },
+      { "name": "Baustellenkoordination", "level": "Fortgeschritten" },
+      { "name": "Arbeitssicherheit", "level": "Experte" }
+    ],
+    "experiences": [
+      {
+        "title": "Vorarbeiter Elektrotechnik",
+        "company": "Elektro Sachsen Anlagenbau GmbH",
+        "startDate": "2017-02-01",
+        "endDate": null,
+        "description": "Leitung von Elektroinstallationen im Gewerbe- und Industriebau einschließlich Inbetriebnahme.",
+        "achievements": [
+          "Leitete Baustellenteams von bis zu 6 Monteuren und schloss über 30 Projekte termingerecht ab.",
+          "Verantwortete Installationsprojekte mit einem Auftragsvolumen von bis zu 450.000 Euro ohne Nachbesserungen bei der Abnahme.",
+          "Reduzierte die Nacharbeitsquote durch standardisierte Prüfprotokolle nach DGUV V3 von 7 auf 2 Prozent."
+        ]
+      },
+      {
+        "title": "Elektroniker für Energie- und Gebäudetechnik",
+        "company": "Haustechnik Meißner GmbH",
+        "startDate": "2011-08-01",
+        "endDate": "2017-01-31",
+        "description": "Installation und Wartung elektrischer Anlagen in Wohn- und Gewerbeobjekten.",
+        "achievements": [
+          "Führte jährlich rund 120 DGUV-V3-Prüfungen an ortsfesten und ortsveränderlichen Anlagen durch.",
+          "Montierte über 40 KNX-Anlagen in Neubauprojekten mit durchweg positiver Kundenabnahme."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Ausbildung Elektroniker für Energie- und Gebäudetechnik (HWK)",
+        "institution": "Berufliches Schulzentrum Leipzig",
+        "startYear": "2008-09-01",
+        "endYear": "2011-07-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Geprüfter Elektrotechnikermeister (HWK)",
+        "issuer": "Handwerkskammer zu Leipzig",
+        "issueDate": "2019-03-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "A2" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Elektrotechnikermeister / Bauleiter Elektro (m/w/d)",
+    "company": "VoltTech Gebäudetechnik GmbH",
+    "location": "Halle (Saale)",
+    "language": "de",
+    "fullText": "Die VoltTech Gebäudetechnik GmbH ist ein wachsender Elektrofachbetrieb mit 65 Mitarbeitenden und realisiert anspruchsvolle Projekte im Gewerbe- und Industriebau in Mitteldeutschland. Für unseren Standort in Halle suchen wir einen Elektrotechnikermeister beziehungsweise Bauleiter Elektro (m/w/d). Ihre Aufgaben: eigenverantwortliche Leitung mehrerer Baustellen, Führung von Monteurteams mit insgesamt rund 15 Mitarbeitenden, Materialdisposition und Terminplanung sowie die Abnahme und Dokumentation der Anlagen. Ihr Profil: abgeschlossene Ausbildung im Elektrohandwerk mit Meisterbrief, mehrjährige Erfahrung in der Elektroinstallation sowie erste Erfahrung in der Baustellenleitung. Wir bieten einen Firmenwagen, eine übertarifliche Bezahlung und eine 4,5-Tage-Woche. Ihr Ansprechpartner ist Herr Robert Schreiber, technischer Geschäftsführer. Bitte teilen Sie uns Ihren frühestmöglichen Eintrittstermin und Ihre Gehaltsvorstellung mit."
+  }
+}

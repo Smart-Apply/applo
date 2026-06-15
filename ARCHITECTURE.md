@@ -143,6 +143,10 @@ User → Frontend (Next.js)
 │ Circuit-breaker + retries (opossum)  │
 │ 1. Generate cover letter             │
 │ 2. Generate resume                   │
+│ 3. Editor pass: critique + revise    │
+│    the cover letter                  │
+│ 4. Grounding check: flag fabricated  │
+│    impact numbers vs. the profile    │
 └──────────────────────────────────────┘
         │
         ▼
@@ -166,6 +170,19 @@ User → Frontend (Next.js)
 │ 4. Status → READY (SSE push)         │
 └──────────────────────────────────────┘
 ```
+
+### Output-quality measurement (offline eval harness)
+
+Generation quality is the product's main driver, so it is measured rather than
+assumed. `apps/api/scripts/eval/` runs the **real v1 prompt chain** over ~24
+profession-diverse German + English golden fixtures, scores each output with an
+**LLM-as-judge** rubric (action-verb bullets, quantified achievements, targeted
+summary, cover-letter personalization, no clichés/Konjunktiv, language
+correctness) and the deterministic **grounding validator**, and writes a
+timestamped report. Run `pnpm --filter @smart-apply/api eval:llm` to capture a
+baseline before a prompt change and re-run after to prove the lift. The roadmap +
+recorded baselines live in
+[docs/implementation/LLM_OUTPUT_QUALITY.md](docs/implementation/LLM_OUTPUT_QUALITY.md).
 
 ## 🗄️ Database Schema (Prisma 6)
 

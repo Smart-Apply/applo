@@ -7,7 +7,7 @@ import {
   MessageEvent,
 } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
-import type { Application } from '../generated/prisma/client';
+import type { Application, JobPosting } from '../generated/prisma/client';
 import { ApplicationTrackingStatus } from '../generated/prisma/client';
 import { Observable, timer } from 'rxjs';
 import { map, switchMap, takeWhile } from 'rxjs/operators';
@@ -20,6 +20,7 @@ import { TitleGeneratorService } from './title-generator.service';
 import { KeywordsService } from '../keywords/keywords.service';
 import { TemplatesService } from '../templates/templates.service';
 import { SubscriptionService } from '../subscription/subscription.service';
+import { GroundingValidatorService } from './grounding/grounding-validator.service';
 import { ATSAgentOutput } from '../agents/agents.interface';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
@@ -44,6 +45,7 @@ import {
   formatDateRange,
   normalizeProficiencyLevel,
 } from './resume-template.util';
+import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.util';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -71,6 +73,7 @@ export class ApplicationsService {
     private readonly keywordsService: KeywordsService,
     private readonly templatesService: TemplatesService,
     private readonly subscriptionService: SubscriptionService,
+    private readonly groundingValidator: GroundingValidatorService,
   ) {}
 
   private async getProfileWithRelations(userId: string): Promise<ProfileWithRelations> {
@@ -1030,8 +1033,26 @@ Summary: ${resume.summary || 'Not provided'}
 
       // Step 4: Update application with generated content
       // Note: resumeText stores JSON for editor, Markdown can be regenerated from tailoredProfile
+      // Editor pass (#1): one critique-and-revise pass over the draft cover letter.
+      const editedCoverLetterMarkdown = shouldGenerateCoverLetter
+        ? await this.runCoverLetterEditorPass(
+            coverLetterMarkdown,
+            jobPosting,
+            tailoredProfile,
+            detectedLanguage,
+            userId,
+          )
+        : coverLetterMarkdown;
+
+      // Grounding check (#7): flag any fabricated impact numbers (non-destructive).
+      this.runGroundingCheck(
+        application.id,
+        { resume: JSON.stringify(resumeJson), coverLetter: editedCoverLetterMarkdown },
+        profile,
+      );
+
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = this.convertCoverLetterToHtml(coverLetterMarkdown);
+      const coverLetterHtml = this.convertCoverLetterToHtml(editedCoverLetterMarkdown);
 
       const updatedApplication = await this.prisma.application.update({
         where: { id: application.id },
@@ -1221,8 +1242,29 @@ Summary: ${resume.summary || 'Not provided'}
       }
 
       // 7. Persist results
+      // Editor pass (#1): critique-and-revise the draft cover letter.
+      if (shouldGenerateCoverLetter) {
+        emitProgress(90, 'Anschreiben wird geprüft und verfeinert...');
+      }
+      const editedCoverLetter = shouldGenerateCoverLetter
+        ? await this.runCoverLetterEditorPass(
+            coverLetterMarkdown,
+            jobPosting,
+            tailoredProfile,
+            language,
+            userId,
+          )
+        : coverLetterMarkdown;
+
+      // Grounding check (#7): flag fabricated impact numbers (non-destructive).
+      this.runGroundingCheck(
+        applicationId,
+        { resume: resumeMarkdown, coverLetter: editedCoverLetter },
+        profile,
+      );
+
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = this.convertCoverLetterToHtml(coverLetterMarkdown);
+      const coverLetterHtml = this.convertCoverLetterToHtml(editedCoverLetter);
 
       emitProgress(95, 'Speichere Ergebnisse...');
       const updated = await this.prisma.application.update({
@@ -1393,68 +1435,12 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
-   * Serialize profile data for LLM consumption
+   * Serialize profile data for LLM consumption.
+   * Delegates to the shared pure serializer so the offline eval harness (#10)
+   * renders identical prompt inputs. See `serialize.util.ts`.
    */
   private serializeProfile(profile: ProfileWithRelations): Record<string, any> {
-    // Build full address from components
-    const addressParts: string[] = [];
-    if (profile.street) addressParts.push(profile.street);
-    if (profile.postalCode || profile.city) {
-      addressParts.push(`${profile.postalCode || ''} ${profile.city || ''}`.trim());
-    }
-    if (profile.country) addressParts.push(profile.country);
-    const fullAddress = addressParts.join(', ');
-
-    return {
-      fullName:
-        `${profile.user.firstName || ''} ${profile.user.lastName || ''}`.trim() || 'Unknown',
-      email: profile.user.email,
-      phone: profile.phone || '',
-      street: profile.street || '',
-      postalCode: profile.postalCode || '',
-      city: profile.city || '',
-      country: profile.country || '',
-      fullAddress: fullAddress || '',
-      linkedinUrl: profile.linkedinUrl || '',
-      githubUrl: profile.githubUrl || '',
-      portfolioUrl: profile.portfolioUrl || '',
-      summary: profile.summary || '',
-      skills: profile.skills.map((s) => ({ id: s.id, name: s.name, level: s.level })),
-      experiences: profile.experiences.map((e) => ({
-        id: e.id,
-        title: e.title,
-        company: e.company,
-        startDate: e.startDate.toISOString(),
-        endDate: e.endDate ? e.endDate.toISOString() : null,
-        description: e.description || '',
-        achievements: e.achievements || [],
-      })),
-      projects: profile.projects.map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description || '',
-        technologies: p.technologies || [],
-        highlights: p.highlights || [],
-      })),
-      education: profile.education.map((ed) => ({
-        id: ed.id,
-        degree: ed.degree,
-        institution: ed.institution,
-        startYear: ed.startYear?.toISOString(),
-        endYear: ed.endYear?.toISOString(),
-      })),
-      certificates: profile.certificates.map((c) => ({
-        id: c.id,
-        name: c.name,
-        issuer: c.issuer || '',
-        issueDate: c.issueDate?.toISOString(),
-      })),
-      languages: profile.languages.map((l) => ({
-        id: l.id,
-        name: l.name,
-        level: l.level,
-      })),
-    };
+    return serializeProfileForLlm(profile);
   }
 
   /**
@@ -1500,16 +1486,91 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
-   * Serialize job posting for LLM consumption
+   * Serialize job posting for LLM consumption.
+   * Delegates to the shared pure serializer so the offline eval harness (#10)
+   * renders identical prompt inputs. See `serialize.util.ts`.
    */
   private serializeJobPosting(job: any): Record<string, any> {
-    return {
-      title: job.title,
-      company: job.company || '',
-      location: job.location || '',
-      fullText: job.fullText || '',
-      language: job.language || 'en',
-    };
+    return serializeJobPostingForLlm(job);
+  }
+
+  /**
+   * Editor/critique pass (#1) — one LLM call that revises a draft cover letter
+   * against the editing rubric (de-cliché, concrete company reference, no
+   * Konjunktiv, honest metrics). Graceful degradation: on any failure or a
+   * suspiciously short result we keep the original draft so generation never
+   * breaks.
+   */
+  private async runCoverLetterEditorPass(
+    draft: string | null,
+    jobPosting: JobPosting,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    userId: string,
+  ): Promise<string | null> {
+    if (!draft || draft.trim() === '') return draft;
+
+    try {
+      const edited = await this.llmService.callText(
+        'v1/editor-cover-letter.md',
+        {
+          draft,
+          job: this.serializeJobPosting(jobPosting),
+          tailoredProfile,
+          language,
+          userId,
+          jobPostingId: jobPosting.id,
+        },
+        { temperature: 0.4, maxTokens: 1500 },
+      );
+
+      // Guard: the editor must not gut the letter. If it returns empty or less
+      // than half the draft length, treat it as a failure and keep the draft.
+      if (!edited || edited.trim().length < draft.trim().length * 0.5) {
+        this.logger.warn(
+          'Cover letter editor pass returned suspiciously short output; keeping original draft',
+        );
+        return draft;
+      }
+
+      this.logger.log('Cover letter editor pass applied');
+      return edited;
+    } catch (error) {
+      this.logger.warn(
+        `Cover letter editor pass failed; keeping original draft: ${error.message}`,
+      );
+      return draft;
+    }
+  }
+
+  /**
+   * Grounding check (#7) — deterministic, non-destructive. Logs a warning when
+   * the generated documents contain impact numbers that don't appear anywhere
+   * in the source profile (likely fabrications). Never throws.
+   */
+  private runGroundingCheck(
+    applicationId: string,
+    generated: { resume?: string | null; coverLetter?: string | null },
+    profile: ProfileWithRelations,
+  ): void {
+    try {
+      const report = this.groundingValidator.validate(generated, profile);
+      if (!report.grounded) {
+        this.logger.warn(
+          `Grounding check (application ${applicationId}): ${report.unsupported.length}/${report.totalChecked} impact numbers not found in profile (score ${report.score}). Unsupported: ${report.unsupported
+            .map((u) => u.value)
+            .join(', ')}`,
+        );
+      } else {
+        this.logger.debug(
+          `Grounding check (application ${applicationId}): all ${report.totalChecked} impact numbers grounded`,
+        );
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Grounding check failed for application ${applicationId}: ${error.message}`,
+      );
+    }
   }
 
   /**

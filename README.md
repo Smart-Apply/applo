@@ -8,7 +8,7 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 
 - **Profile management** — Skills, Experience, Education, Certificates, Projects, Languages
 - **Smart job ingestion** — Paste text, URL, or upload (PDF/DOCX); URL parsing via Azure AI Foundry agents (Indeed, LinkedIn, Glassdoor)
-- **AI generation** — Azure OpenAI (GPT-4o) with LangChain/LangGraph orchestration; pluggable providers (Azure OpenAI, Hugging Face, mock)
+- **AI generation** — Azure OpenAI with pluggable providers (`azure-openai` | `azure-ai-foundry` | `mock`), wrapped in an opossum circuit breaker; a self-review editor pass refines the cover letter and a deterministic grounding check flags fabricated metrics
 - **Multi-language** — Automatic language detection (DE/EN) for prompts and templates
 - **ATS-optimized PDFs** — 50 templates (5 designs × 5 languages × 2 types) rendered via `@react-pdf/renderer` (TSX). Template previews via `pdfjs-dist` + `@napi-rs/canvas`.
 - **Resume parser** — Upload an existing resume to bootstrap your profile
@@ -156,6 +156,10 @@ pnpm test:unit
 pnpm test:integration
 pnpm test:e2e
 pnpm test:all          # unit + integration + e2e
+
+# LLM output-quality eval harness (from apps/api; LLM-as-judge over golden fixtures)
+pnpm --filter @smart-apply/api eval:validate   # token-free fixture check
+pnpm --filter @smart-apply/api eval:llm        # real baseline (needs Azure creds)
 
 # Lint & typecheck
 pnpm lint

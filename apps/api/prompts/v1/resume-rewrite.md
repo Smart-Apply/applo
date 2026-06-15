@@ -94,6 +94,40 @@ Professionally rewrite the candidate's summary, selected experiences, and projec
 - For projects: emphasize technologies that match job requirements
 - Maintain professional tone appropriate for the role level
 
+### ⭐ ACHIEVEMENT BULLET FORMULA (CRITICAL):
+
+Every item in `rewritten_achievements` and `rewritten_highlights` MUST be a RESULT, not a duty.
+Use the **XYZ formula**: *Accomplished [X], measured by [Y], by doing [Z]* — action + measurable result + how.
+
+- **Start with a strong action verb** (DE: noun-based forms per the approved list below; EN: Led, Built, Reduced, Increased…).
+- **Quantify whenever the source data supports it** — %, absolute numbers, time saved, team size, budget, volume, frequency.
+- **NO invented numbers.** If the source profile has no metric, DO NOT fabricate one. Instead state a concrete qualitative outcome (what changed, for whom, why it mattered). Never use vague filler like "significantly improved".
+- **One idea per bullet.** Keep it to a single, scannable line.
+- Mirror exact terminology from the job posting where it is truthful to the candidate's experience.
+
+**Good vs. bad (profession-diverse, NOT just tech):**
+- ❌ "Responsible for patient care" → ✅ "Betreuung von bis zu 18 Patient:innen pro Schicht auf der Intensivstation, inkl. Medikamentenmanagement und Angehörigenkommunikation"
+- ❌ "Worked on the CNC machine" → ✅ "Reduktion des Ausschusses um 12 % durch Optimierung der CNC-Rüstprozesse"
+- ❌ "Did social media" → ✅ "Steigerung der Instagram-Reichweite um 35 % in 6 Monaten durch eine neue Content-Strategie"
+- ❌ "Helped with sales" → ✅ "Gewinnung von 14 Neukunden und €120.000 Zusatzumsatz im ersten Jahr"
+- ❌ "Improved the deployment" → ✅ "Reduktion der Deployment-Zeit um 60 % durch Einführung einer CI/CD-Pipeline"
+
+**Qualitative fallback (no metric available — still concrete, never generic):**
+- ✅ "Aufbau eines strukturierten Onboarding-Prozesses, der neue Mitarbeitende schneller einsatzfähig machte"
+- ✅ "Einführung wöchentlicher Qualitätskontrollen, die wiederkehrende Fehlerquellen sichtbar machten"
+
+### ⭐ PROFESSIONAL SUMMARY REQUIREMENTS (`rewritten_summary`):
+
+The summary is the highest-weighted section for ATS and the recruiter's 30-second first impression. It MUST contain:
+1. The **exact target job title** from the posting (translated per the job-title rules below).
+2. **Years of relevant experience** — ONLY if derivable from the profile dates; never invent.
+3. The **top 3-5 keywords/skills** that match the job posting.
+4. **One quantified or concrete achievement** that proves fit.
+
+- 3-4 sentences, ~50-80 words, written in {{language}}.
+- Profession-neutral: must read naturally for a Krankenpfleger, Zerspanungsmechaniker, Vertriebsleiter OR Software Engineer — do NOT default to tech phrasing.
+- No clichés ("teamfähig", "belastbar", "passionate"), no first-person pronoun spam.
+
 ### ⚠️ NO REPETITION RULE (CRITICAL):
 - **Description and achievements MUST contain different content**
 - Description = HIGH-LEVEL overview of the role (optional - can be empty if achievements are self-explanatory)
@@ -140,7 +174,7 @@ Return **ONLY valid JSON** in this exact structure. No markdown, no explanations
 
 ```json
 {
-  "rewritten_summary": "string IN {{language}} - 3-4 sentences targeting the specific role and company.",
+  "rewritten_summary": "string IN {{language}} - 3-4 sentences (~50-80 words). MUST include the exact target job title, years of relevant experience (only if derivable), 3-5 matching keywords, and one quantified/concrete achievement. See PROFESSIONAL SUMMARY REQUIREMENTS.",
   "rewritten_experiences": [
     {
       "profileExperienceId": "string - MUST match an ID from tailoredProfile.selected_experiences",
