@@ -43,6 +43,17 @@ function honorific(salutation: string, language: string): string | null {
 }
 
 /**
+ * Strip a leading gender honorific (Frau/Herr/Mr/Mrs/Ms/Miss/Mx) from an
+ * extracted contact name. The LLM sometimes returns the name *with* the
+ * honorific ("Frau Dr. Petra Hoffmann") while also reporting `contact_salutation`
+ * separately — composing both then doubles it ("Sehr geehrte Frau Frau …").
+ * Academic titles (Dr./Prof.) are intentionally preserved.
+ */
+function stripLeadingHonorific(name: string): string {
+  return name.replace(/^(?:Frau|Herr|Mrs|Mr|Ms|Miss|Mx)\.?(?:\s+|$)/i, '').trim();
+}
+
+/**
  * Build the salutation line for the cover letter, deterministically.
  *
  * - Gendered contact ("Frau Schmidt") → "Sehr geehrte Frau Schmidt," / "Dear Ms. Schmidt,".
@@ -58,15 +69,22 @@ export function buildSalutation(
   const lang = language.toLowerCase().startsWith('de') ? 'de' : 'en';
   const generic = GENERIC_SALUTATION[lang];
 
-  const name = facts?.contact_name?.trim() ?? '';
-  if (!name) return generic;
+  const rawName = facts?.contact_name?.trim() ?? '';
+  if (!rawName) return generic;
 
   const prefix = honorific(facts?.contact_salutation ?? '', lang);
-  if (prefix) return `${prefix} ${name},`;
+  if (prefix) {
+    // The prefix already carries the gender honorific, so drop a duplicate one
+    // from the name to avoid "Sehr geehrte Frau Frau Schmidt,".
+    const name = stripLeadingHonorific(rawName);
+    if (!name) return generic;
+    return `${prefix} ${name},`;
+  }
 
-  // Name but no gender marker: English can still address by name; German can't
-  // form a correct "Sehr geehrte/r" without it, so fall back to generic.
-  if (lang === 'en') return `Dear ${name},`;
+  // Name but no gender marker: English can still address by name (keeping any
+  // "Ms."/"Mr." the name already carries); German can't form a correct
+  // "Sehr geehrte/r" without it, so fall back to generic.
+  if (lang === 'en') return `Dear ${rawName},`;
   return generic;
 }
 

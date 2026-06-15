@@ -53,6 +53,50 @@ describe('buildSalutation (Unit, #5)', () => {
   it('treats unknown languages as English', () => {
     expect(buildSalutation(null, 'fr')).toBe('Dear Hiring Manager,');
   });
+
+  it('does not double the honorific when the name already includes it (German)', () => {
+    expect(
+      buildSalutation({ contact_name: 'Frau Dr. Petra Hoffmann', contact_salutation: 'Frau' }, 'de'),
+    ).toBe('Sehr geehrte Frau Dr. Petra Hoffmann,');
+    expect(
+      buildSalutation({ contact_name: 'Herr Müller', contact_salutation: 'Herr' }, 'de'),
+    ).toBe('Sehr geehrter Herr Müller,');
+  });
+
+  it('does not double the honorific when the name already includes it (English)', () => {
+    expect(
+      buildSalutation({ contact_name: 'Ms. Karen Patel', contact_salutation: 'Frau' }, 'en'),
+    ).toBe('Dear Ms. Karen Patel,');
+    expect(
+      buildSalutation({ contact_name: 'Mr. Brown', contact_salutation: 'Herr' }, 'en'),
+    ).toBe('Dear Mr. Brown,');
+  });
+
+  it('keeps the honorific in the name when no separate gender marker is given (English)', () => {
+    // No contact_salutation → no prefix to prepend, so the name keeps its "Ms.".
+    expect(
+      buildSalutation({ contact_name: 'Ms. Karen Patel', contact_salutation: '' }, 'en'),
+    ).toBe('Dear Ms. Karen Patel,');
+  });
+
+  it('preserves academic titles while stripping only the gender honorific', () => {
+    expect(
+      buildSalutation({ contact_name: 'Frau Prof. Dr. Lange', contact_salutation: 'Frau' }, 'de'),
+    ).toBe('Sehr geehrte Frau Prof. Dr. Lange,');
+  });
+
+  it('falls back to generic when the name is only an honorific', () => {
+    expect(buildSalutation({ contact_name: 'Frau', contact_salutation: 'Frau' }, 'de')).toBe(
+      'Sehr geehrte Damen und Herren,',
+    );
+  });
+
+  it('does not strip a real name that merely starts with an honorific substring', () => {
+    // "Frauke" must not be mangled into "ke" — the honorific must be a whole token.
+    expect(
+      buildSalutation({ contact_name: 'Frauke Schmidt', contact_salutation: 'Frau' }, 'de'),
+    ).toBe('Sehr geehrte Frau Frauke Schmidt,');
+  });
 });
 
 describe('isValidJobFacts (Unit, #5)', () => {
