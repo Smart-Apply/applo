@@ -55,6 +55,11 @@ export function CoverLetterEditor({ value, onChange, disabled, inline }: CoverLe
           heading: { levels: [1, 2, 3] },
           bulletList: { keepMarks: true },
           orderedList: { keepMarks: true },
+          // Cover letters are prose — never code. Disabling these prevents stray
+          // Markdown (e.g. an indented line from the AI) from rendering as a
+          // monospaced code block with escaped entities.
+          code: false,
+          codeBlock: false,
         }),
         TextStyle,
         FontSize,

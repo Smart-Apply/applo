@@ -20,7 +20,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredLoader } from '@/components/shared/loading';
 import { Skeleton } from '@/components/ui/skeleton';
-import { EditableResume } from '@/components/applications/editable-resume';
+import { EditableResume, resolveResumeDesign } from '@/components/applications/editable-resume';
 import { AtsOptimizer } from '@/components/applications/ats-optimizer';
 import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
 import { LanguageSelector } from '@/components/applications/language-selector';
@@ -29,6 +29,9 @@ import {
   useExportApplication,
   useUpdateApplicationResume,
   useUpsertCoverLetter,
+  useGenerateSummary,
+  useGenerateExperienceDescription,
+  useGenerateProjectDescription,
 } from '@/hooks/use-applications';
 import { useResumeTemplates } from '@/hooks/use-templates';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
@@ -94,6 +97,9 @@ export default function ApplicationResumeEditorPage() {
   const upsertCoverLetter = useUpsertCoverLetter(applicationId);
   const exportApplication = useExportApplication(applicationId);
   const { data: resumeTemplates } = useResumeTemplates();
+  const generateSummary = useGenerateSummary(applicationId);
+  const generateExperienceDescription = useGenerateExperienceDescription(applicationId);
+  const generateProjectDescription = useGenerateProjectDescription(applicationId);
 
   // ATS analysis is gated by `atsOptimization` (Pro & Premium only).
   const { hasAccess: hasAtsAccess, isLoading: isAtsAccessLoading } = useFeatureGate('atsOptimization');
@@ -129,6 +135,9 @@ export default function ApplicationResumeEditorPage() {
   const accent =
     resumeTemplates?.find((t) => t.id === application?.resumeTemplateId)?.accentColor || '#1B2A49';
 
+  // Which export template the click-to-edit surface should mimic (P1).
+  const resumeDesign = resolveResumeDesign(application?.resumeTemplateId);
+
   // ── init language ──
   useEffect(() => {
     if (application?.language && !languageInitialized) {
@@ -151,13 +160,18 @@ export default function ApplicationResumeEditorPage() {
 
     const draft = parseResumeDraft(resumeSource) || EMPTY_RESUME;
     const normalized = normalizeResumeForSave(draft);
+    // Seed the target job title from the job posting so it shows in the editor
+    // (P2); the export already falls back to it, the edit surface should too.
+    const seeded = normalized.targetJobTitle?.trim()
+      ? normalized
+      : { ...normalized, targetJobTitle: application?.jobPosting?.title || normalized.targetJobTitle };
     startTransition(() => {
-      setParsedResume(normalized);
-      setLastSavedResume(normalized);
+      setParsedResume(seeded);
+      setLastSavedResume(seeded);
       setResumeVersion(resumeSource);
       setResumeInitialized(true);
     });
-  }, [resumeText, hasResumeChanges, resumeInitialized, resumeVersion]);
+  }, [resumeText, hasResumeChanges, resumeInitialized, resumeVersion, application?.jobPosting?.title]);
 
   // ── init cover letter ──
   useEffect(() => {
@@ -295,6 +309,55 @@ export default function ApplicationResumeEditorPage() {
       return { ...prev, skillCategories: cats };
     });
   }, []);
+
+  // ── résumé AI assists (P5): summary / experience / project ──
+  // The mutation hooks surface their own error toasts, so we resolve to null
+  // on failure and let the editor keep the current content.
+  const handleGenerateSummary = useCallback(
+    async (args: { instructions: string; currentSummary?: string; regenerate?: boolean }) => {
+      try {
+        return (await generateSummary.mutateAsync(args)).summary;
+      } catch {
+        return null;
+      }
+    },
+    [generateSummary],
+  );
+  const handleGenerateExperience = useCallback(
+    async (args: {
+      experienceIndex: number;
+      experienceTitle: string;
+      experienceCompany: string;
+      experienceDateRange?: string;
+      currentDescription?: string;
+      instructions: string;
+      regenerate?: boolean;
+    }) => {
+      try {
+        return (await generateExperienceDescription.mutateAsync(args)).description;
+      } catch {
+        return null;
+      }
+    },
+    [generateExperienceDescription],
+  );
+  const handleGenerateProject = useCallback(
+    async (args: {
+      projectIndex: number;
+      projectName: string;
+      projectDate?: string;
+      currentDescription?: string;
+      instructions: string;
+      regenerate?: boolean;
+    }) => {
+      try {
+        return (await generateProjectDescription.mutateAsync(args)).description;
+      } catch {
+        return null;
+      }
+    },
+    [generateProjectDescription],
+  );
 
   if (isLoading) return <CenteredLoader message="Lädt Bewerbungsdaten..." />;
 
@@ -514,7 +577,15 @@ export default function ApplicationResumeEditorPage() {
         {/* Tab content */}
         {activeTab === 'resume' && parsedResume && (
           <div className="pb-10">
-            <EditableResume value={parsedResume} onChange={setParsedResume} accent={accent} />
+            <EditableResume
+              value={parsedResume}
+              onChange={setParsedResume}
+              accent={accent}
+              design={resumeDesign}
+              onGenerateSummary={handleGenerateSummary}
+              onGenerateExperience={handleGenerateExperience}
+              onGenerateProject={handleGenerateProject}
+            />
           </div>
         )}
 
@@ -543,6 +614,7 @@ export default function ApplicationResumeEditorPage() {
               applicationId={applicationId}
               resume={parsedResume}
               accent={accent}
+              design={resumeDesign}
               onAddKeyword={handleAddKeyword}
               onExport={handleExport}
               exportDisabled={!canExport}

@@ -31,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ApploRig } from '@/components/ui/applo-rig';
 import { useKeywordsAnalysis, useAnalyzeKeywords } from '@/hooks/use-applications';
 import { cn } from '@/lib/utils';
+import type { ResumeDesign } from '@/components/applications/editable-resume';
 import type { ResumeData, KeywordMatch, KeywordCategory } from '@/types';
 
 const CATEGORY_LABEL: Record<KeywordCategory, string> = {
@@ -130,15 +131,17 @@ function ScoreRing({ value, size = 124 }: { value: number; size?: number }) {
   );
 }
 
-/** Readable, highlightable CV working copy (left pane). */
+/** Read-only, template-skinned CV with matched keywords highlighted (left pane). */
 function CvOptiView({
   resume,
   accent,
+  design,
   foundTerms,
   addedTerms,
 }: {
   resume: ResumeData;
   accent: string;
+  design: ResumeDesign;
   foundTerms: string[];
   addedTerms: string[];
 }) {
@@ -147,67 +150,199 @@ function CvOptiView({
     addedTerms.some((f) => f.toLowerCase() === s.toLowerCase());
   const isNew = (s: string) => addedTerms.some((f) => f.toLowerCase() === s.toLowerCase());
   const allSkills = (resume.skillCategories || []).flatMap((c) => c.skills);
+  const experiences = resume.experiences || [];
+  const education = resume.education || [];
+  const projects = resume.projects || [];
+  const certifications = resume.certifications || [];
+  const languages = resume.languages || [];
+
+  const sec = (title: string, body: React.ReactNode) => (
+    <div className="rd-sec">
+      <div className="rd-sec-title" style={{ color: accent }}>
+        {title}
+      </div>
+      {body}
+    </div>
+  );
+
+  const bullets = (description?: string) => (
+    <ul className="rd-ul">
+      {descToLines(description).map((b, j) => (
+        <li className="rd-li" key={j}>
+          <span className="bullet" style={{ color: accent }}>
+            •
+          </span>
+          <span className="rd-li-txt">{hl(b, foundTerms)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+
+  const profileSec = resume.summary
+    ? sec('Profil', <p className="rd-p">{hl(htmlToText(resume.summary), foundTerms)}</p>)
+    : null;
+
+  const experienceSec =
+    experiences.length > 0
+      ? sec(
+          'Berufserfahrung',
+          experiences.map((x, i) => (
+            <div className="rd-item" key={i}>
+              <div className="rd-item-top">
+                <span className="rd-item-title">{x.title}</span>
+                {x.dateRange && <span className="rd-item-date">{x.dateRange}</span>}
+              </div>
+              {x.company && <div className="rd-item-org">{x.company}</div>}
+              {bullets(x.description)}
+            </div>
+          )),
+        )
+      : null;
+
+  const educationSec =
+    education.length > 0
+      ? sec(
+          'Ausbildung',
+          education.map((e, i) => (
+            <div className="rd-item" key={i}>
+              <div className="rd-item-top">
+                <span className="rd-item-title">{e.degree}</span>
+                {e.year && <span className="rd-item-date">{e.year}</span>}
+              </div>
+              {e.institution && <div className="rd-item-org">{e.institution}</div>}
+            </div>
+          )),
+        )
+      : null;
+
+  const projectsSec =
+    projects.length > 0
+      ? sec(
+          'Projekte',
+          projects.map((p, i) => (
+            <div className="rd-item" key={i}>
+              <div className="rd-item-top">
+                <span className="rd-item-title">{p.name}</span>
+                {p.date && <span className="rd-item-date">{p.date}</span>}
+              </div>
+              {bullets(p.description)}
+            </div>
+          )),
+        )
+      : null;
+
+  const skillsSec =
+    allSkills.length > 0
+      ? sec(
+          'Fähigkeiten',
+          <div className="rd-skills">
+            {allSkills.map((s, i) => (
+              <span key={i} className={cn('rd-skill', isHl(s) && 'hl', isNew(s) && 'new')}>
+                {s}
+                {isNew(s) && <span className="neu">NEU</span>}
+              </span>
+            ))}
+          </div>,
+        )
+      : null;
+
+  const languagesSec =
+    languages.length > 0
+      ? sec(
+          'Sprachen',
+          <div className="rd-skills">
+            {languages.map((l, i) => (
+              <span key={i} className="rd-skill">
+                {[l.name, l.level].filter(Boolean).join(' · ')}
+              </span>
+            ))}
+          </div>,
+        )
+      : null;
+
+  const certsSec =
+    certifications.length > 0
+      ? sec(
+          'Zertifikate',
+          certifications.map((c, i) => (
+            <div className="rd-item" key={i}>
+              <div className="rd-item-top">
+                <span className="rd-item-title">{c.name}</span>
+                {c.date && <span className="rd-item-date">{c.date}</span>}
+              </div>
+              {c.issuer && <div className="rd-item-org">{c.issuer}</div>}
+            </div>
+          )),
+        )
+      : null;
+
+  if (design === 'elegant-sidebar') {
+    const sidebarTint = `color-mix(in srgb, ${accent} 10%, #ffffff)`;
+    return (
+      <div className="rd rd--sidebar rd--readonly">
+        <div className="rd-topbar" style={{ background: accent }}>
+          <div className="rd-name">{resume.candidateName}</div>
+          {resume.targetJobTitle && <div className="rd-role">{resume.targetJobTitle}</div>}
+        </div>
+        <div className="rd-row">
+          <aside className="rd-aside" style={{ background: sidebarTint }}>
+            <div className="rd-sec">
+              <div className="rd-sec-title" style={{ color: accent }}>
+                Kontakt
+              </div>
+              {resume.fullAddress && <div className="rd-contact-item">{resume.fullAddress}</div>}
+              {resume.phone && <div className="rd-contact-item">{resume.phone}</div>}
+              {resume.email && <div className="rd-contact-item">{resume.email}</div>}
+              {resume.linkedin && <div className="rd-contact-item">LinkedIn</div>}
+              {resume.github && <div className="rd-contact-item">GitHub</div>}
+            </div>
+            {educationSec}
+            {skillsSec}
+            {languagesSec}
+          </aside>
+          <div className="rd-main">
+            {profileSec}
+            {experienceSec}
+            {projectsSec}
+            {certsSec}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const contactLine = [
+    resume.fullAddress,
+    resume.phone,
+    resume.email,
+    resume.linkedin && 'LinkedIn',
+    resume.github && 'GitHub',
+  ]
+    .filter(Boolean)
+    .join('  ·  ');
 
   return (
-    <div className="cv-doc">
-      <div className="cv-band" style={{ background: accent }}>
-        <div className="nm">{resume.candidateName}</div>
-        {resume.targetJobTitle && <div className="rl">{resume.targetJobTitle}</div>}
+    <div className={cn('rd rd--readonly', design === 'harvard-classic' ? 'rd--harvard' : 'rd--classic')}>
+      <div className="rd-head">
+        <div className="rd-name" style={{ color: accent }}>
+          {resume.candidateName}
+        </div>
+        {design === 'harvard-classic' && <div className="rd-divider" style={{ borderColor: accent }} />}
+        {resume.targetJobTitle && <div className="rd-role">{resume.targetJobTitle}</div>}
+        {contactLine && (
+          <div className="rd-contact">
+            <span>{contactLine}</span>
+          </div>
+        )}
       </div>
-      <div className="cv-contact">
-        {[resume.fullAddress, resume.email, resume.phone].filter(Boolean).join(' · ')}
-      </div>
-      <div className="cv-body">
-        {resume.summary && (
-          <div className="cv-sec">
-            <div className="h">
-              <span className="ln" style={{ background: accent }} />
-              Profil
-            </div>
-            <p className="cv-p">{hl(htmlToText(resume.summary), foundTerms)}</p>
-          </div>
-        )}
-
-        {(resume.experiences || []).length > 0 && (
-          <div className="cv-sec">
-            <div className="h">
-              <span className="ln" style={{ background: accent }} />
-              Berufserfahrung
-            </div>
-            {(resume.experiences || []).slice(0, 2).map((x, i) => (
-              <div key={i} style={{ marginBottom: 10 }}>
-                <div className="cv-exp-role" style={{ color: accent }}>
-                  {x.title}
-                </div>
-                <div className="cv-exp-org">
-                  {[x.company, x.dateRange].filter(Boolean).join(' · ')}
-                </div>
-                <ul className="cv-ul">
-                  {descToLines(x.description).map((b, j) => (
-                    <li key={j}>{hl(b, foundTerms)}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {allSkills.length > 0 && (
-          <div className="cv-sec">
-            <div className="h">
-              <span className="ln" style={{ background: accent }} />
-              Fähigkeiten
-            </div>
-            <div className="cv-chips">
-              {allSkills.map((s, i) => (
-                <span key={i} className={cn('cv-chip', isHl(s) && 'hl', isNew(s) && 'new')}>
-                  {s}
-                  {isNew(s) && <span className="neu">NEU</span>}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="rd-body">
+        {profileSec}
+        {educationSec}
+        {experienceSec}
+        {projectsSec}
+        {skillsSec}
+        {languagesSec}
+        {certsSec}
       </div>
     </div>
   );
@@ -217,6 +352,8 @@ interface AtsOptimizerProps {
   applicationId: string;
   resume: ResumeData;
   accent: string;
+  /** Which export template the live preview should mimic. */
+  design: ResumeDesign;
   /** Insert a keyword into the résumé (page adds it to skills + auto-saves). */
   onAddKeyword: (term: string) => void;
   /** Export trigger from the page (footer CTA). */
@@ -228,6 +365,7 @@ export function AtsOptimizer({
   applicationId,
   resume,
   accent,
+  design,
   onAddKeyword,
   onExport,
   exportDisabled,
@@ -322,7 +460,7 @@ export function AtsOptimizer({
           </span>
         </div>
         <div className="opti-body" style={{ background: 'var(--surface-2)' }}>
-          <CvOptiView resume={resume} accent={accent} foundTerms={foundTerms} addedTerms={addedTerms} />
+          <CvOptiView resume={resume} accent={accent} design={design} foundTerms={foundTerms} addedTerms={addedTerms} />
         </div>
       </div>
 

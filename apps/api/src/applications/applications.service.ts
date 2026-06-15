@@ -1940,10 +1940,18 @@ export class ApplicationsService {
     // If regenerate is true and instructions are provided, modify existing content
     if (dto.regenerate && dto.instructions && dto.content) {
       this.logger.log('Modifying cover letter with AI based on instructions');
-      content = await this.llmService.modifyCoverLetterContent(dto.content, dto.instructions, {
-        jobTitle: jobPosting.title,
-        companyName: jobPosting.company || 'Unknown Company',
-      });
+      const modified = await this.llmService.modifyCoverLetterContent(
+        dto.content,
+        dto.instructions,
+        {
+          jobTitle: jobPosting.title,
+          companyName: jobPosting.company || 'Unknown Company',
+        },
+      );
+      // modifyCoverLetterContent returns Markdown — convert it to HTML like the
+      // fresh-regenerate branch below, otherwise the editor receives raw Markdown
+      // and renders it as a monospaced code block with double-escaped entities.
+      content = this.convertCoverLetterToHtml(modified) ?? modified;
     }
     // If no content or regenerate without existing content, generate fresh using
     // the v1 pipeline prompt — the same prompt the initial-generation path uses —

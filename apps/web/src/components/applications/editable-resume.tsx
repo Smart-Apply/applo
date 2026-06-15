@@ -18,8 +18,12 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { X, Plus, Edit3 } from 'lucide-react';
+import { X, Plus, Edit3, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type {
   ResumeData,
   ResumeExperience,
@@ -64,6 +68,7 @@ function Editable({
   className = '',
   placeholder = '',
   oneline = false,
+  style,
 }: {
   initial: string;
   onCommit: (v: string) => void;
@@ -71,6 +76,7 @@ function Editable({
   className?: string;
   placeholder?: string;
   oneline?: boolean;
+  style?: React.CSSProperties;
 }) {
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -84,6 +90,7 @@ function Editable({
     suppressContentEditableWarning: true,
     spellCheck: false,
     'data-ph': placeholder,
+    style,
     onBlur: (e: React.FocusEvent<HTMLElement>) => onCommit(e.currentTarget.textContent?.replace(/\s+$/, '') ?? ''),
     onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
       if (oneline && e.key === 'Enter') {
@@ -96,15 +103,6 @@ function Editable({
     <span ref={ref as React.RefObject<HTMLSpanElement>} {...props} />
   ) : (
     <div ref={ref as React.RefObject<HTMLDivElement>} {...props} />
-  );
-}
-
-function SecHead({ accent, children }: { accent: string; children: React.ReactNode }) {
-  return (
-    <div className="ed-sec-h">
-      <span className="ln" style={{ background: accent }} />
-      {children}
-    </div>
   );
 }
 
@@ -163,18 +161,70 @@ interface Meta {
   summary: string;
   email: string;
   phone: string;
+  linkedin: string;
+  github: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}
+
+export type ResumeDesign = 'classic-ats' | 'harvard-classic' | 'elegant-sidebar';
+
+/** Map a DB template id (e.g. "elegant-sidebar-blue-resume") to a design skin. */
+export function resolveResumeDesign(templateId?: string | null): ResumeDesign {
+  const id = templateId || '';
+  if (id.startsWith('harvard-classic')) return 'harvard-classic';
+  if (id.startsWith('elegant-sidebar')) return 'elegant-sidebar';
+  return 'classic-ats';
+}
+
+interface GenerateSummaryArgs {
+  instructions: string;
+  currentSummary?: string;
+  regenerate?: boolean;
+}
+interface GenerateExperienceArgs {
+  experienceIndex: number;
+  experienceTitle: string;
+  experienceCompany: string;
+  experienceDateRange?: string;
+  currentDescription?: string;
+  instructions: string;
+  regenerate?: boolean;
+}
+interface GenerateProjectArgs {
+  projectIndex: number;
+  projectName: string;
+  projectDate?: string;
+  currentDescription?: string;
+  instructions: string;
+  regenerate?: boolean;
 }
 
 interface EditableResumeProps {
   value: ResumeData;
   onChange: (next: ResumeData) => void;
   accent: string;
+  /** Which export template the edit surface should mimic (P1). */
+  design?: ResumeDesign;
+  /** AI assists (P5) — return the generated text, or null when the request failed. */
+  onGenerateSummary?: (args: GenerateSummaryArgs) => Promise<string | null>;
+  onGenerateExperience?: (args: GenerateExperienceArgs) => Promise<string | null>;
+  onGenerateProject?: (args: GenerateProjectArgs) => Promise<string | null>;
 }
 
-export function EditableResume({ value, onChange, accent }: EditableResumeProps) {
-  // Frozen snapshot for passthrough of untouched top-level fields + the address.
+export function EditableResume({
+  value,
+  onChange,
+  accent,
+  design = 'classic-ats',
+  onGenerateSummary,
+  onGenerateExperience,
+  onGenerateProject,
+}: EditableResumeProps) {
+  // Frozen snapshot for passthrough of untouched top-level fields.
   const [original] = useState(() => value);
-  const address = original.fullAddress || '';
 
   const [meta, setMeta] = useState<Meta>(() => ({
     name: value.candidateName || '',
@@ -182,6 +232,12 @@ export function EditableResume({ value, onChange, accent }: EditableResumeProps)
     summary: value.summary ? htmlToText(value.summary) : '',
     email: value.email || '',
     phone: value.phone || '',
+    linkedin: value.linkedin || '',
+    github: value.github || '',
+    street: value.street || '',
+    postalCode: value.postalCode || '',
+    city: value.city || '',
+    country: value.country || '',
   }));
 
   const [lists, setLists] = useState<Lists>(() => ({
@@ -229,6 +285,17 @@ export function EditableResume({ value, onChange, accent }: EditableResumeProps)
     targetJobTitle: m.role || original.targetJobTitle,
     email: m.email,
     phone: m.phone,
+    linkedin: m.linkedin || undefined,
+    github: m.github || undefined,
+    street: m.street || undefined,
+    postalCode: m.postalCode || undefined,
+    city: m.city || undefined,
+    country: m.country || undefined,
+    fullAddress:
+      [m.street, [m.postalCode, m.city].filter(Boolean).join(' '), m.country]
+        .map((s) => (s || '').trim())
+        .filter(Boolean)
+        .join(', ') || original.fullAddress || undefined,
     summary: m.summary || undefined,
     experiences: l.exp.map((x) => ({
       ...x.src,
@@ -328,190 +395,410 @@ export function EditableResume({ value, onChange, accent }: EditableResumeProps)
 
   const multiCat = lists.skillCats.length > 1;
 
+  // ── contact details editor (P2) ──
+  const [contactOpen, setContactOpen] = useState(false);
+  const displayAddress =
+    [meta.street, [meta.postalCode, meta.city].filter(Boolean).join(' '), meta.country]
+      .map((s) => (s || '').trim())
+      .filter(Boolean)
+      .join(', ') ||
+    original.fullAddress ||
+    '';
+
+  // ── AI assistants (P5): summary / experience / project ──
+  const [aiOpenId, setAiOpenId] = useState<string | null>(null);
+  const [aiInstructions, setAiInstructions] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
+  // Bumped when AI rewrites the summary so the uncontrolled <Editable> remounts
+  // with the new text (it only seeds its DOM once on mount).
+  const [summaryNonce, setSummaryNonce] = useState(0);
+  const openAi = (id: string | null) => {
+    setAiOpenId(id);
+    if (id) setAiInstructions('');
+  };
+  const runSummaryAi = async () => {
+    if (!onGenerateSummary || !aiInstructions.trim()) return;
+    setAiBusy(true);
+    try {
+      const text = await onGenerateSummary({
+        instructions: aiInstructions.trim(),
+        currentSummary: meta.summary || undefined,
+        regenerate: true,
+      });
+      if (text != null) {
+        commitMeta({ summary: htmlToText(text) });
+        setSummaryNonce((n) => n + 1);
+      }
+      openAi(null);
+    } finally {
+      setAiBusy(false);
+    }
+  };
+  const runExperienceAi = async (item: ExpItem, index: number) => {
+    if (!onGenerateExperience || !aiInstructions.trim()) return;
+    setAiBusy(true);
+    try {
+      const html = await onGenerateExperience({
+        experienceIndex: index,
+        experienceTitle: item.title,
+        experienceCompany: item.company,
+        experienceDateRange: item.dateRange || undefined,
+        currentDescription: bulletsToDesc(item.bullets),
+        instructions: aiInstructions.trim(),
+        regenerate: true,
+      });
+      if (html != null) setX(item.id, { bullets: descToBullets(html) });
+      openAi(null);
+    } finally {
+      setAiBusy(false);
+    }
+  };
+  const runProjectAi = async (item: ProjItem, index: number) => {
+    if (!onGenerateProject || !aiInstructions.trim()) return;
+    setAiBusy(true);
+    try {
+      const html = await onGenerateProject({
+        projectIndex: index,
+        projectName: item.name,
+        projectDate: item.date || undefined,
+        currentDescription: bulletsToDesc(item.bullets),
+        instructions: aiInstructions.trim(),
+        regenerate: true,
+      });
+      if (html != null) setP(item.id, { bullets: descToBullets(html) });
+      openAi(null);
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  // ── contact-details popover (shared by all skins) ──
+  const field = (label: string, val: string, on: (v: string) => void, ph?: string) => (
+    <div className="space-y-1">
+      <Label className="text-[11px] font-medium text-muted-foreground">{label}</Label>
+      <Input value={val} placeholder={ph} onChange={(e) => on(e.target.value)} className="h-8 text-sm" />
+    </div>
+  );
+  const contactPopover = (
+    <Popover open={contactOpen} onOpenChange={setContactOpen}>
+      <PopoverTrigger asChild>
+        <button type="button" className="rd-contact-edit" title="Kontaktdaten bearbeiten">
+          <Pencil className="h-3 w-3" /> Kontaktdaten
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="center" className="w-80 space-y-2.5">
+        <p className="text-sm font-semibold">Kontaktdaten bearbeiten</p>
+        {field('E-Mail', meta.email, (v) => commitMeta({ email: v }), 'du@example.com')}
+        {field('Telefon', meta.phone, (v) => commitMeta({ phone: v }), '+49 …')}
+        {field('LinkedIn (URL)', meta.linkedin, (v) => commitMeta({ linkedin: v }), 'https://linkedin.com/in/…')}
+        {field('GitHub (URL)', meta.github, (v) => commitMeta({ github: v }), 'https://github.com/…')}
+        <div className="grid grid-cols-2 gap-2">
+          {field('Straße', meta.street, (v) => commitMeta({ street: v }))}
+          {field('PLZ', meta.postalCode, (v) => commitMeta({ postalCode: v }))}
+          {field('Stadt', meta.city, (v) => commitMeta({ city: v }))}
+          {field('Land', meta.country, (v) => commitMeta({ country: v }))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  // ── section renderers (shared across the three skins) ──
+  const profileSection = (
+    <div className="rd-sec">
+      <div className="rd-sec-title" style={{ color: accent }}>
+        Profil
+        {onGenerateSummary && (
+          <span className="rd-sec-ai">
+            <AiAssistantPopover
+              open={aiOpenId === 'summary'}
+              onOpenChange={(o) => openAi(o ? 'summary' : null)}
+              instructions={aiInstructions}
+              onInstructionsChange={setAiInstructions}
+              onApply={runSummaryAi}
+              isLoading={aiBusy}
+              title="KI: Profil"
+              description="Beschreibe, wie dein Profil angepasst werden soll."
+              placeholder="Z.B.: Betone meine Führungserfahrung stärker..."
+              applyButtonText="Profil anpassen"
+              buttonSize="sm"
+              buttonVariant="ghost"
+              buttonClassName="h-7 px-2 text-xs text-primary hover:bg-primary/10"
+            />
+          </span>
+        )}
+      </div>
+      <Editable key={`sum-${summaryNonce}`} className="rd-p" initial={meta.summary} placeholder="Kurzes Profil über dich …" onCommit={(v) => commitMeta({ summary: v })} />
+    </div>
+  );
+
+  const experienceSection = (
+    <div className="rd-sec">
+      <div className="rd-sec-title" style={{ color: accent }}>Berufserfahrung</div>
+      {lists.exp.map((x, index) => (
+        <div className="rd-item" key={x.id}>
+          <button className="ed-rm-sec" title="Station entfernen" onClick={() => rmStation(x.id)}>
+            <X className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </button>
+          <div className="rd-item-top">
+            <Editable className="rd-item-title" oneline initial={x.title} placeholder="Position" onCommit={(v) => setX(x.id, { title: v })} />
+            <Editable className="rd-item-date" oneline initial={x.dateRange} placeholder="Zeitraum" onCommit={(v) => setX(x.id, { dateRange: v })} />
+          </div>
+          <Editable className="rd-item-org" oneline initial={x.company} placeholder="Unternehmen" onCommit={(v) => setX(x.id, { company: v })} />
+          <ul className="rd-ul">
+            {x.bullets.map((b) => (
+              <li className="rd-li" key={b.id}>
+                <span className="bullet" style={{ color: accent }}>•</span>
+                <Editable className="rd-li-txt" oneline initial={b.text} placeholder="Was hast du erreicht?" onCommit={(v) => setBullet(x.id, b.id, v)} />
+                <button className="rm" title="Stichpunkt entfernen" onClick={() => rmBullet(x.id, b.id)}>
+                  <X className="h-3 w-3" strokeWidth={2.4} />
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="rd-item-actions">
+            <button className="ed-add" onClick={() => addBullet(x.id)}>
+              <Plus className="h-3 w-3" strokeWidth={2.6} /> Stichpunkt
+            </button>
+            {onGenerateExperience && (
+              <AiAssistantPopover
+                open={aiOpenId === `exp:${x.id}`}
+                onOpenChange={(o) => openAi(o ? `exp:${x.id}` : null)}
+                instructions={aiInstructions}
+                onInstructionsChange={setAiInstructions}
+                onApply={() => runExperienceAi(x, index)}
+                isLoading={aiBusy}
+                title="KI: Beschreibung"
+                description="Beschreibe, wie diese Station angepasst werden soll."
+                placeholder="Z.B.: Mehr messbare Erfolge, kürzer..."
+                applyButtonText="Beschreibung anpassen"
+                buttonSize="sm"
+                buttonVariant="ghost"
+                buttonClassName="h-7 px-2 text-xs text-primary hover:bg-primary/10"
+              />
+            )}
+          </div>
+        </div>
+      ))}
+      <button className="ed-add big" onClick={addStation}>
+        <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Station hinzufügen
+      </button>
+    </div>
+  );
+
+  const educationSection = (
+    <div className="rd-sec">
+      <div className="rd-sec-title" style={{ color: accent }}>Ausbildung</div>
+      {lists.edu.map((e) => (
+        <div className="rd-item" key={e.id}>
+          <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmEdu(e.id)}>
+            <X className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </button>
+          <div className="rd-item-top">
+            <Editable className="rd-item-title" oneline initial={e.degree} placeholder="Abschluss" onCommit={(v) => setE(e.id, { degree: v })} />
+            <Editable className="rd-item-date" oneline initial={e.year} placeholder="Jahr" onCommit={(v) => setE(e.id, { year: v })} />
+          </div>
+          <Editable className="rd-item-org" oneline initial={e.institution} placeholder="Institution" onCommit={(v) => setE(e.id, { institution: v })} />
+        </div>
+      ))}
+      <button className="ed-add big" onClick={addEdu}>
+        <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Eintrag hinzufügen
+      </button>
+    </div>
+  );
+
+  const projectsSection =
+    lists.projects.length > 0 ? (
+      <div className="rd-sec">
+        <div className="rd-sec-title" style={{ color: accent }}>Projekte</div>
+        {lists.projects.map((x, index) => (
+          <div className="rd-item" key={x.id}>
+            <button className="ed-rm-sec" title="Projekt entfernen" onClick={() => rmProject(x.id)}>
+              <X className="h-3.5 w-3.5" strokeWidth={2.4} />
+            </button>
+            <div className="rd-item-top">
+              <Editable className="rd-item-title" oneline initial={x.name} placeholder="Projektname" onCommit={(v) => setP(x.id, { name: v })} />
+              <Editable className="rd-item-date" oneline initial={x.date} placeholder="Zeitraum" onCommit={(v) => setP(x.id, { date: v })} />
+            </div>
+            <ul className="rd-ul">
+              {x.bullets.map((b) => (
+                <li className="rd-li" key={b.id}>
+                  <span className="bullet" style={{ color: accent }}>•</span>
+                  <Editable className="rd-li-txt" oneline initial={b.text} placeholder="Was hast du gemacht?" onCommit={(v) => setProjBullet(x.id, b.id, v)} />
+                  <button className="rm" title="Stichpunkt entfernen" onClick={() => rmProjBullet(x.id, b.id)}>
+                    <X className="h-3 w-3" strokeWidth={2.4} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="rd-item-actions">
+              <button className="ed-add" onClick={() => addProjBullet(x.id)}>
+                <Plus className="h-3 w-3" strokeWidth={2.6} /> Stichpunkt
+              </button>
+              {onGenerateProject && (
+                <AiAssistantPopover
+                  open={aiOpenId === `proj:${x.id}`}
+                  onOpenChange={(o) => openAi(o ? `proj:${x.id}` : null)}
+                  instructions={aiInstructions}
+                  onInstructionsChange={setAiInstructions}
+                  onApply={() => runProjectAi(x, index)}
+                  isLoading={aiBusy}
+                  title="KI: Projekt"
+                  description="Beschreibe, wie dieses Projekt angepasst werden soll."
+                  placeholder="Z.B.: Betone den Impact..."
+                  applyButtonText="Projekt anpassen"
+                  buttonSize="sm"
+                  buttonVariant="ghost"
+                  buttonClassName="h-7 px-2 text-xs text-primary hover:bg-primary/10"
+                />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : null;
+
+  const skillsSection = (
+    <div className="rd-sec">
+      <div className="rd-sec-title" style={{ color: accent }}>Fähigkeiten</div>
+      {lists.skillCats.map((c) => (
+        <div key={c.id}>
+          {multiCat && (
+            <Editable className="rd-skill-cat" oneline initial={c.type} placeholder="Kategorie" onCommit={(v) => setCatType(c.id, v)} />
+          )}
+          <div className="rd-skills" style={{ marginBottom: 8 }}>
+            {c.skills.map((s) => (
+              <span className="rd-skill" key={s.id}>
+                <Editable tag="span" oneline initial={s.text} placeholder="Skill" onCommit={(v) => setSkillText(c.id, s.id, v)} />
+                <button className="rm" title="Entfernen" onClick={() => rmSkill(c.id, s.id)}>
+                  <X className="h-3 w-3" strokeWidth={2.6} />
+                </button>
+              </span>
+            ))}
+            <span className="ed-skill-add">
+              <input
+                value={skillDraft[c.id] || ''}
+                onChange={(e) => setSkillDraft((d) => ({ ...d, [c.id]: e.target.value }))}
+                placeholder="Skill hinzufügen…"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addSkill(c.id);
+                }}
+              />
+              <button onClick={() => addSkill(c.id)} title="Hinzufügen">
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.6} />
+              </button>
+            </span>
+          </div>
+        </div>
+      ))}
+      <button className="ed-add" onClick={addCategory}>
+        <Plus className="h-3 w-3" strokeWidth={2.6} /> Kategorie
+      </button>
+    </div>
+  );
+
+  const languagesSection = (
+    <div className="rd-sec">
+      <div className="rd-sec-title" style={{ color: accent }}>Sprachen</div>
+      <div className="rd-skills">
+        {lists.langs.map((l) => (
+          <span className="rd-skill" key={l.id}>
+            <Editable tag="span" oneline initial={l.name} placeholder="Sprache" onCommit={(v) => setLang(l.id, { name: v })} />
+            <Editable tag="span" oneline initial={l.level} placeholder="Niveau" onCommit={(v) => setLang(l.id, { level: v })} className="text-muted-foreground" />
+            <button className="rm" title="Entfernen" onClick={() => rmLang(l.id)}>
+              <X className="h-3 w-3" strokeWidth={2.6} />
+            </button>
+          </span>
+        ))}
+        <button className="ed-add" onClick={addLang}>
+          <Plus className="h-3 w-3" strokeWidth={2.6} /> Sprache
+        </button>
+      </div>
+    </div>
+  );
+
+  const certsSection =
+    lists.certs.length > 0 ? (
+      <div className="rd-sec">
+        <div className="rd-sec-title" style={{ color: accent }}>Zertifikate</div>
+        {lists.certs.map((c) => (
+          <div className="rd-item" key={c.id}>
+            <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmCert(c.id)}>
+              <X className="h-3.5 w-3.5" strokeWidth={2.4} />
+            </button>
+            <div className="rd-item-top">
+              <Editable className="rd-item-title" oneline initial={c.name} placeholder="Zertifikat" onCommit={(v) => setC(c.id, { name: v })} />
+              <Editable className="rd-item-date" oneline initial={c.date} placeholder="Datum" onCommit={(v) => setC(c.id, { date: v })} />
+            </div>
+            <Editable className="rd-item-org" oneline initial={c.issuer} placeholder="Aussteller" onCommit={(v) => setC(c.id, { issuer: v })} />
+          </div>
+        ))}
+      </div>
+    ) : null;
+
+  const contactLine = [displayAddress, meta.phone, meta.email, meta.linkedin && 'LinkedIn', meta.github && 'GitHub']
+    .filter(Boolean)
+    .join('  ·  ');
+
+  const isSidebar = design === 'elegant-sidebar';
+  const rootClass = isSidebar ? 'rd--sidebar' : design === 'harvard-classic' ? 'rd--harvard' : 'rd--classic';
+  const sidebarTint = `color-mix(in srgb, ${accent} 10%, #ffffff)`;
+
   return (
     <div className="animate-in fade-in duration-300">
-      <div className="ed-doc">
-        <div className="ed-band" style={{ background: accent }}>
-          <Editable className="ed-name" oneline initial={meta.name} placeholder="Dein Name" onCommit={(v) => commitMeta({ name: v })} />
-          <Editable className="ed-role" oneline initial={meta.role} placeholder="Angestrebte Position" onCommit={(v) => commitMeta({ role: v })} />
-        </div>
-
-        <div className="ed-contact">
-          {address && <span>{address} · </span>}
-          <Editable tag="span" oneline initial={meta.email} placeholder="E-Mail" onCommit={(v) => commitMeta({ email: v })} />
-          {' · '}
-          <Editable tag="span" oneline initial={meta.phone} placeholder="Telefon" onCommit={(v) => commitMeta({ phone: v })} />
-        </div>
-
-        <div className="ed-body">
-          {/* Profil */}
-          <div className="ed-sec">
-            <SecHead accent={accent}>Profil</SecHead>
-            <Editable className="ed-p" initial={meta.summary} placeholder="Kurzes Profil über dich …" onCommit={(v) => commitMeta({ summary: v })} />
-          </div>
-
-          {/* Berufserfahrung */}
-          <div className="ed-sec">
-            <SecHead accent={accent}>Berufserfahrung</SecHead>
-            {lists.exp.map((x) => (
-              <div className="ed-xp" key={x.id}>
-                <button className="ed-rm-sec" title="Station entfernen" onClick={() => rmStation(x.id)}>
-                  <X className="h-3.5 w-3.5" strokeWidth={2.4} />
-                </button>
-                <div className="ed-xp-top">
-                  <Editable className="ed-xp-role" oneline initial={x.title} placeholder="Position" onCommit={(v) => setX(x.id, { title: v })} />
-                  <Editable className="ed-xp-date" oneline initial={x.dateRange} placeholder="Zeitraum" onCommit={(v) => setX(x.id, { dateRange: v })} />
-                </div>
-                <Editable className="ed-xp-org" oneline initial={x.company} placeholder="Unternehmen" onCommit={(v) => setX(x.id, { company: v })} />
-                <ul className="ed-ul">
-                  {x.bullets.map((b) => (
-                    <li className="ed-li" key={b.id}>
-                      <span className="bullet" style={{ color: accent }}>•</span>
-                      <Editable className="ed-li-txt" oneline initial={b.text} placeholder="Was hast du erreicht?" onCommit={(v) => setBullet(x.id, b.id, v)} />
-                      <button className="rm" title="Stichpunkt entfernen" onClick={() => rmBullet(x.id, b.id)}>
-                        <X className="h-3 w-3" strokeWidth={2.4} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <button className="ed-add" onClick={() => addBullet(x.id)}>
-                  <Plus className="h-3 w-3" strokeWidth={2.6} /> Stichpunkt
-                </button>
-              </div>
-            ))}
-            <button className="ed-add big" onClick={addStation}>
-              <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Station hinzufügen
-            </button>
-          </div>
-
-          {/* Ausbildung */}
-          <div className="ed-sec">
-            <SecHead accent={accent}>Ausbildung</SecHead>
-            {lists.edu.map((e) => (
-              <div className="ed-edu" key={e.id}>
-                <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmEdu(e.id)}>
-                  <X className="h-3.5 w-3.5" strokeWidth={2.4} />
-                </button>
-                <div className="ed-xp-top">
-                  <Editable className="ed-xp-role" oneline initial={e.degree} placeholder="Abschluss" onCommit={(v) => setE(e.id, { degree: v })} />
-                  <Editable className="ed-xp-date" oneline initial={e.year} placeholder="Jahr" onCommit={(v) => setE(e.id, { year: v })} />
-                </div>
-                <Editable className="ed-xp-org" oneline initial={e.institution} placeholder="Institution" onCommit={(v) => setE(e.id, { institution: v })} />
-              </div>
-            ))}
-            <button className="ed-add big" onClick={addEdu}>
-              <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Eintrag hinzufügen
-            </button>
-          </div>
-
-          {/* Projekte */}
-          {lists.projects.length > 0 && (
-            <div className="ed-sec">
-              <SecHead accent={accent}>Projekte</SecHead>
-              {lists.projects.map((x) => (
-                <div className="ed-xp" key={x.id}>
-                  <button className="ed-rm-sec" title="Projekt entfernen" onClick={() => rmProject(x.id)}>
-                    <X className="h-3.5 w-3.5" strokeWidth={2.4} />
-                  </button>
-                  <div className="ed-xp-top">
-                    <Editable className="ed-xp-role" oneline initial={x.name} placeholder="Projektname" onCommit={(v) => setP(x.id, { name: v })} />
-                    <Editable className="ed-xp-date" oneline initial={x.date} placeholder="Zeitraum" onCommit={(v) => setP(x.id, { date: v })} />
+      <div className={cn('rd', rootClass)}>
+        {isSidebar ? (
+          <>
+            <div className="rd-topbar" style={{ background: accent }}>
+              <Editable className="rd-name" oneline initial={meta.name} placeholder="Dein Name" onCommit={(v) => commitMeta({ name: v })} />
+              <Editable className="rd-role" oneline initial={meta.role} placeholder="Angestrebte Position" onCommit={(v) => commitMeta({ role: v })} />
+            </div>
+            <div className="rd-row">
+              <aside className="rd-aside" style={{ background: sidebarTint }}>
+                <div className="rd-sec">
+                  <div className="rd-sec-title" style={{ color: accent }}>
+                    Kontakt
+                    <span className="rd-sec-ai">{contactPopover}</span>
                   </div>
-                  <ul className="ed-ul">
-                    {x.bullets.map((b) => (
-                      <li className="ed-li" key={b.id}>
-                        <span className="bullet" style={{ color: accent }}>•</span>
-                        <Editable className="ed-li-txt" oneline initial={b.text} placeholder="Was hast du gemacht?" onCommit={(v) => setProjBullet(x.id, b.id, v)} />
-                        <button className="rm" title="Stichpunkt entfernen" onClick={() => rmProjBullet(x.id, b.id)}>
-                          <X className="h-3 w-3" strokeWidth={2.4} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                  <button className="ed-add" onClick={() => addProjBullet(x.id)}>
-                    <Plus className="h-3 w-3" strokeWidth={2.6} /> Stichpunkt
-                  </button>
+                  {displayAddress && <div className="rd-contact-item">{displayAddress}</div>}
+                  {meta.phone && <div className="rd-contact-item">{meta.phone}</div>}
+                  {meta.email && <div className="rd-contact-item">{meta.email}</div>}
+                  {meta.linkedin && <div className="rd-contact-item">LinkedIn</div>}
+                  {meta.github && <div className="rd-contact-item">GitHub</div>}
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Fähigkeiten */}
-          <div className="ed-sec">
-            <SecHead accent={accent}>Fähigkeiten</SecHead>
-            {lists.skillCats.map((c) => (
-              <div key={c.id}>
-                {multiCat && (
-                  <Editable className="ed-skill-cat" oneline initial={c.type} placeholder="Kategorie" onCommit={(v) => setCatType(c.id, v)} />
-                )}
-                <div className="ed-skills" style={{ marginBottom: 10 }}>
-                  {c.skills.map((s) => (
-                    <span className="ed-skill" key={s.id}>
-                      <Editable tag="span" oneline initial={s.text} placeholder="Skill" onCommit={(v) => setSkillText(c.id, s.id, v)} />
-                      <button className="rm" title="Entfernen" onClick={() => rmSkill(c.id, s.id)}>
-                        <X className="h-3 w-3" strokeWidth={2.6} />
-                      </button>
-                    </span>
-                  ))}
-                  <span className="ed-skill-add">
-                    <input
-                      value={skillDraft[c.id] || ''}
-                      onChange={(e) => setSkillDraft((d) => ({ ...d, [c.id]: e.target.value }))}
-                      placeholder="Skill hinzufügen…"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') addSkill(c.id);
-                      }}
-                    />
-                    <button onClick={() => addSkill(c.id)} title="Hinzufügen">
-                      <Plus className="h-3.5 w-3.5" strokeWidth={2.6} />
-                    </button>
-                  </span>
-                </div>
+                {educationSection}
+                {skillsSection}
+                {languagesSection}
+              </aside>
+              <div className="rd-main">
+                {profileSection}
+                {experienceSection}
+                {projectsSection}
+                {certsSection}
               </div>
-            ))}
-            <button className="ed-add" onClick={addCategory}>
-              <Plus className="h-3 w-3" strokeWidth={2.6} /> Kategorie
-            </button>
-          </div>
-
-          {/* Sprachen */}
-          <div className="ed-sec">
-            <SecHead accent={accent}>Sprachen</SecHead>
-            <div className="ed-skills">
-              {lists.langs.map((l) => (
-                <span className="ed-skill" key={l.id}>
-                  <Editable tag="span" oneline initial={l.name} placeholder="Sprache" onCommit={(v) => setLang(l.id, { name: v })} />
-                  <Editable tag="span" oneline initial={l.level} placeholder="Niveau" onCommit={(v) => setLang(l.id, { level: v })} className="text-muted-foreground" />
-                  <button className="rm" title="Entfernen" onClick={() => rmLang(l.id)}>
-                    <X className="h-3 w-3" strokeWidth={2.6} />
-                  </button>
-                </span>
-              ))}
-              <button className="ed-add" onClick={addLang}>
-                <Plus className="h-3 w-3" strokeWidth={2.6} /> Sprache
-              </button>
             </div>
-          </div>
-
-          {/* Zertifikate */}
-          {lists.certs.length > 0 && (
-            <div className="ed-sec">
-              <SecHead accent={accent}>Zertifikate</SecHead>
-              {lists.certs.map((c) => (
-                <div className="ed-edu" key={c.id}>
-                  <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmCert(c.id)}>
-                    <X className="h-3.5 w-3.5" strokeWidth={2.4} />
-                  </button>
-                  <div className="ed-xp-top">
-                    <Editable className="ed-xp-role" oneline initial={c.name} placeholder="Zertifikat" onCommit={(v) => setC(c.id, { name: v })} />
-                    <Editable className="ed-xp-date" oneline initial={c.date} placeholder="Datum" onCommit={(v) => setC(c.id, { date: v })} />
-                  </div>
-                  <Editable className="ed-xp-org" oneline initial={c.issuer} placeholder="Aussteller" onCommit={(v) => setC(c.id, { issuer: v })} />
-                </div>
-              ))}
+          </>
+        ) : (
+          <>
+            <div className="rd-head">
+              <Editable className="rd-name" oneline initial={meta.name} placeholder="Dein Name" onCommit={(v) => commitMeta({ name: v })} style={{ color: accent }} />
+              {design === 'harvard-classic' && <div className="rd-divider" style={{ borderColor: accent }} />}
+              <Editable className="rd-role" oneline initial={meta.role} placeholder="Angestrebte Position" onCommit={(v) => commitMeta({ role: v })} />
+              <div className="rd-contact">
+                {contactLine && <span>{contactLine}</span>}
+                {contactPopover}
+              </div>
             </div>
-          )}
-        </div>
+            <div className="rd-body">
+              {profileSection}
+              {educationSection}
+              {experienceSection}
+              {projectsSection}
+              {skillsSection}
+              {languagesSection}
+              {certsSection}
+            </div>
+          </>
+        )}
       </div>
 
       {/* optional-section adders under the doc */}
