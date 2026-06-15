@@ -1,0 +1,75 @@
+{
+  "id": "marketing-de",
+  "profession": "Marketing / Online-Marketing",
+  "language": "de",
+  "profile": {
+    "firstName": "Lena",
+    "lastName": "Hoffmann",
+    "email": "lena.hoffmann@example.de",
+    "phone": "+49 152 33445566",
+    "city": "Berlin",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/lena-hoffmann-marketing",
+    "summary": "Online-Marketing-Managerin mit 7 Jahren Erfahrung in den Bereichen SEO, Content und Performance-Marketing. Verantwortete ein jährliches Mediabudget von 600.000 Euro und steigerte den organischen Traffic eines Online-Shops innerhalb von 12 Monaten um 65 Prozent.",
+    "skills": [
+      { "name": "Suchmaschinenoptimierung (SEO)", "level": "Experte" },
+      { "name": "Content-Marketing", "level": "Experte" },
+      { "name": "Google Ads / SEA", "level": "Fortgeschritten" },
+      { "name": "Web-Analyse (Google Analytics 4)", "level": "Fortgeschritten" },
+      { "name": "E-Mail-Marketing / Automation", "level": "Fortgeschritten" },
+      { "name": "Social-Media-Marketing", "level": "Fortgeschritten" },
+      { "name": "Content-Management-Systeme (WordPress, TYPO3)", "level": "Fortgeschritten" }
+    ],
+    "experiences": [
+      {
+        "title": "Online-Marketing-Managerin",
+        "company": "Nordlicht E-Commerce GmbH",
+        "startDate": "2020-02-01",
+        "endDate": null,
+        "description": "Steuerung der Kanäle SEO, SEA und Content für einen Online-Shop im Bereich Wohnaccessoires.",
+        "achievements": [
+          "Steigerte den organischen Traffic innerhalb von 12 Monaten um 65 Prozent und reduzierte gleichzeitig die SEA-Kosten pro Bestellung um 18 Prozent.",
+          "Erhöhte die Conversion-Rate des Shops von 1,4 auf 2,1 Prozent durch A/B-Tests und optimierte Landingpages.",
+          "Führte ein dreiköpfiges Team aus Werkstudierenden und steuerte ein jährliches Mediabudget von 600.000 Euro."
+        ]
+      },
+      {
+        "title": "Junior Marketing Managerin",
+        "company": "Medienagentur Hauptstadt GmbH",
+        "startDate": "2017-04-01",
+        "endDate": "2020-01-31",
+        "description": "Betreuung von Content- und Social-Media-Kampagnen für mittelständische Kunden.",
+        "achievements": [
+          "Baute den Newsletter-Verteiler eines Kunden von 4.000 auf 15.000 Abonnenten aus und erreichte eine durchschnittliche Öffnungsrate von 32 Prozent.",
+          "Betreute parallel 5 Kundenprojekte und veröffentlichte über 120 redaktionelle Beiträge pro Jahr."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Arts Medien- und Kommunikationsmanagement",
+        "institution": "Hochschule für Medien Berlin",
+        "startYear": "2013-10-01",
+        "endYear": "2017-03-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Google Ads Search Zertifizierung",
+        "issuer": "Google",
+        "issueDate": "2021-03-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "C1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Teamleitung Online-Marketing (m/w/d)",
+    "company": "GrünLeben Versand GmbH",
+    "location": "Berlin",
+    "language": "de",
+    "fullText": "Die GrünLeben Versand GmbH ist ein nachhaltiger Online-Händler mit 90 Mitarbeitenden und einem jährlichen Umsatzwachstum von rund 25 Prozent. Für unseren Standort in Berlin suchen wir eine Teamleitung Online-Marketing (m/w/d). Ihre Aufgaben: Führung eines vierköpfigen Marketing-Teams, Verantwortung für die Kanäle SEO, SEA, E-Mail und Social Media, Steuerung eines Jahresbudgets von rund einer Million Euro sowie der Ausbau unserer Content-Strategie. Ihr Profil: mehrjährige Erfahrung im digitalen Marketing, fundiertes Wissen in SEO und Performance-Marketing, Erfahrung in der Steuerung von Budgets und Dienstleistern sowie eine datengetriebene Arbeitsweise. Wir bieten 4 Tage Homeoffice pro Woche, ein modernes Büro in Berlin-Kreuzberg und ein jährliches Weiterbildungsbudget. Ihre Ansprechpartnerin ist Frau Carolin Voss, Leiterin Marketing. Bitte geben Sie Ihren frühestmöglichen Eintrittstermin an."
+  }
+}

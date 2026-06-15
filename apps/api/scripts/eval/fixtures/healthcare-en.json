@@ -1,0 +1,75 @@
+{
+  "id": "healthcare-en",
+  "profession": "Healthcare / Nursing",
+  "language": "en",
+  "profile": {
+    "firstName": "Emily",
+    "lastName": "Carter",
+    "email": "emily.carter@example.com",
+    "phone": "+44 7700 912345",
+    "city": "Manchester",
+    "country": "United Kingdom",
+    "linkedinUrl": "https://linkedin.com/in/emily-carter-rn",
+    "summary": "Registered Nurse with 8 years of acute-care experience and 3 years as a ward charge nurse. Led a nursing team of 14 across rotating shifts and reduced medication-administration errors by 32 percent over two years.",
+    "skills": [
+      { "name": "Acute & Critical Care Nursing", "level": "Expert" },
+      { "name": "Patient Assessment & Triage", "level": "Expert" },
+      { "name": "Medication Administration & Safety", "level": "Expert" },
+      { "name": "Care Planning & Documentation", "level": "Advanced" },
+      { "name": "Staff Rostering & Shift Leadership", "level": "Advanced" },
+      { "name": "Infection Prevention & Control", "level": "Advanced" },
+      { "name": "Mentoring & Preceptorship", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Ward Charge Nurse",
+        "company": "Manchester Royal Infirmary",
+        "startDate": "2020-01-01",
+        "endDate": null,
+        "description": "Shift leadership and clinical oversight on a 28-bed acute medical ward.",
+        "achievements": [
+          "Led a nursing team of 14 across rotating shifts and reduced medication-administration errors by 32 percent over two years.",
+          "Cut bed-turnaround time from 95 to 60 minutes by redesigning the discharge handover checklist.",
+          "Designed a structured preceptorship that shortened new-starter onboarding from 8 to 5 weeks and mentored 12 junior nurses."
+        ]
+      },
+      {
+        "title": "Staff Nurse, Acute Medicine",
+        "company": "Salford Royal NHS Foundation Trust",
+        "startDate": "2016-03-01",
+        "endDate": "2019-12-31",
+        "description": "Direct patient care on a busy acute medical unit.",
+        "achievements": [
+          "Managed a caseload of up to 8 patients per shift while maintaining a 98 percent care-plan compliance rate.",
+          "Championed a hand-hygiene initiative that improved audit scores from 86 to 97 percent across the unit."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BSc (Hons) Adult Nursing",
+        "institution": "University of Manchester",
+        "startYear": "2012-09-01",
+        "endYear": "2015-07-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Advanced Life Support (ALS) Provider",
+        "issuer": "Resuscitation Council UK",
+        "issueDate": "2019-05-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" },
+      { "name": "Spanish", "level": "B1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Senior Charge Nurse / Care Manager (Acute)",
+    "company": "Pennine Care General Hospital",
+    "location": "Leeds, United Kingdom",
+    "language": "en",
+    "fullText": "Pennine Care General Hospital is a 410-bed NHS trust serving the Leeds area and rated 'Good' by the Care Quality Commission. We are recruiting a Senior Charge Nurse / Care Manager (m/f/d) for our 32-bed acute medical unit. Responsibilities: clinical and managerial leadership of a team of around 25 nursing staff, staff rostering, ensuring nursing quality standards, and continuing development of our care-quality framework. Requirements: valid NMC registration, several years of acute-care experience, and demonstrable leadership or supervisory experience. We offer structured induction, NHS Agenda for Change banding, and a generous CPD budget. Your point of contact is Ms Rebecca Hartley, Director of Nursing. Please indicate your earliest possible start date in your application."
+  }
+}

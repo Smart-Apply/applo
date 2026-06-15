@@ -1,0 +1,74 @@
+{
+  "id": "education-de",
+  "profession": "Education / Bildung",
+  "language": "de",
+  "profile": {
+    "firstName": "Julia",
+    "lastName": "Neumann",
+    "email": "julia.neumann@example.de",
+    "phone": "+49 157 22113344",
+    "city": "Hamburg",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/julia-neumann-paedagogik",
+    "summary": "Staatlich anerkannte Grundschullehrerin mit 9 Jahren Unterrichtserfahrung in den Fächern Deutsch und Mathematik. Unterrichtete Klassen von durchschnittlich 26 Kindern und verbesserte die Leseflüssigkeit ihrer Klasse innerhalb eines Schuljahres bei 85 Prozent der Schülerinnen und Schüler messbar.",
+    "skills": [
+      { "name": "Unterrichtsplanung und Didaktik", "level": "Experte" },
+      { "name": "Differenzierung / individuelle Förderung", "level": "Experte" },
+      { "name": "Klassenführung", "level": "Fortgeschritten" },
+      { "name": "Elternarbeit und Beratung", "level": "Fortgeschritten" },
+      { "name": "Inklusion und Förderdiagnostik", "level": "Fortgeschritten" },
+      { "name": "Digitale Lernmittel (iPad-Klasse)", "level": "Fortgeschritten" }
+    ],
+    "experiences": [
+      {
+        "title": "Klassenlehrerin Grundschule",
+        "company": "Grundschule Am Stadtpark Hamburg",
+        "startDate": "2018-08-01",
+        "endDate": null,
+        "description": "Klassenleitung sowie Fachunterricht in Deutsch und Mathematik in der Primarstufe.",
+        "achievements": [
+          "Verbesserte innerhalb eines Schuljahres bei 85 Prozent der Klasse die Leseflüssigkeit durch ein wöchentliches Lesepaten-Programm.",
+          "Führte eine Klasse von 26 Kindern über vier Jahre und koordinierte die Zusammenarbeit mit 3 Förderlehrkräften.",
+          "Entwickelte ein differenziertes Mathematik-Material, das schulweit von 8 Kolleginnen übernommen wurde."
+        ]
+      },
+      {
+        "title": "Lehrerin im Vorbereitungsdienst (Referendariat)",
+        "company": "Staatliches Studienseminar Hamburg",
+        "startDate": "2015-08-01",
+        "endDate": "2017-07-31",
+        "description": "Referendariat in der Primarstufe mit eigenverantwortlichem Unterricht.",
+        "achievements": [
+          "Plante und hielt eigenverantwortlich rund 10 Unterrichtsstunden pro Woche in zwei Klassenstufen.",
+          "Konzipierte ein fächerübergreifendes Projekt zum Thema Umwelt für 50 Kinder aus zwei Klassen."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Erstes und Zweites Staatsexamen Lehramt Primarstufe",
+        "institution": "Universität Hamburg",
+        "startYear": "2010-10-01",
+        "endYear": "2015-07-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Fortbildung Inklusion und Förderdiagnostik",
+        "issuer": "Landesinstitut für Lehrerbildung Hamburg",
+        "issueDate": "2020-09-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "B2" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Grundschullehrkraft (m/w/d)",
+    "company": "Freie Montessori-Schule Lüneburg",
+    "location": "Lüneburg",
+    "language": "de",
+    "fullText": "Die Freie Montessori-Schule Lüneburg ist eine staatlich anerkannte Ersatzschule mit rund 220 Kindern und einem reformpädagogischen Konzept. Zum kommenden Schuljahr suchen wir eine engagierte Grundschullehrkraft (m/w/d) in Voll- oder Teilzeit. Ihre Aufgaben: eigenverantwortlicher Unterricht in einer altersgemischten Lerngruppe von rund 24 Kindern, individuelle Förderung nach dem Montessori-Prinzip, vertrauensvolle Elternarbeit sowie die Mitgestaltung des Schullebens. Ihr Profil: abgeschlossenes Lehramtsstudium für die Primarstufe mit zweitem Staatsexamen, Freude an reformpädagogischer Arbeit sowie Offenheit für individualisiertes Lernen. Eine Montessori-Ausbildung ist wünschenswert, aber keine Bedingung. Wir bieten kleine Lerngruppen, eine wertschätzende Schulgemeinschaft und Unterstützung bei der Montessori-Zertifizierung. Ihre Ansprechpartnerin ist Frau Martina Brandt, Schulleiterin. Bitte teilen Sie uns Ihren möglichen Eintrittstermin mit."
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "id": "customer-service-en",
+  "profession": "Customer Service / Support",
+  "language": "en",
+  "profile": {
+    "firstName": "Ashley",
+    "lastName": "Walker",
+    "email": "ashley.walker@example.com",
+    "phone": "+353 1 555 0123",
+    "city": "Dublin",
+    "country": "Ireland",
+    "linkedinUrl": "https://linkedin.com/in/ashley-walker-support",
+    "summary": "Customer Support Team Lead with 8 years of experience in SaaS and e-commerce support. Led a team of 11 agents handling 9,000 tickets per month and improved customer satisfaction (CSAT) from 84 to 93 percent.",
+    "skills": [
+      { "name": "Team Leadership & Coaching", "level": "Expert" },
+      { "name": "Helpdesk Platforms (Zendesk, Intercom)", "level": "Expert" },
+      { "name": "SLA & Queue Management", "level": "Advanced" },
+      { "name": "Escalation & Conflict Resolution", "level": "Advanced" },
+      { "name": "Knowledge Base & Process Design", "level": "Advanced" },
+      { "name": "Support Analytics & Reporting", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Customer Support Team Lead",
+        "company": "Shamrock SaaS Ltd.",
+        "startDate": "2019-06-01",
+        "endDate": null,
+        "description": "Led a front-line support team for a B2B SaaS platform across email, chat and phone.",
+        "achievements": [
+          "Improved customer satisfaction (CSAT) from 84 to 93 percent over 18 months by introducing a structured QA framework.",
+          "Reduced average first-response time from 6 hours to 90 minutes while the team handled 9,000 tickets per month.",
+          "Coached a team of 11 agents and cut attrition by 30 percent through a new onboarding and mentoring program."
+        ]
+      },
+      {
+        "title": "Senior Support Agent",
+        "company": "Liffey Commerce Ltd.",
+        "startDate": "2016-02-01",
+        "endDate": "2019-05-31",
+        "description": "Handled escalations and complex cases for a high-volume e-commerce support team.",
+        "achievements": [
+          "Resolved around 60 tickets per day with a 97 percent customer-satisfaction rating.",
+          "Authored 40 knowledge-base articles that reduced repeat contacts on top issues by 25 percent."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Arts in Business & Communications",
+        "institution": "Dublin City University",
+        "startYear": "2012-09-01",
+        "endYear": "2016-05-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "ITIL 4 Foundation",
+        "issuer": "AXELOS",
+        "issueDate": "2020-10-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" },
+      { "name": "Irish", "level": "B1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Customer Support Manager",
+    "company": "Aerlink Digital Services",
+    "location": "Dublin, Ireland",
+    "language": "en",
+    "fullText": "Aerlink Digital Services is a fast-scaling fintech with 260 employees serving over 400,000 customers across Europe. We are hiring a Customer Support Manager for our Dublin office. Responsibilities: lead a support function of 3 team leads and around 25 agents, own CSAT, SLA and first-response targets across all channels, drive automation and self-service improvements, and report on support performance to senior leadership. Requirements: several years of customer-support experience with at least 2 in a leadership role, strong command of helpdesk platforms and analytics, and a track record of improving service metrics. We offer hybrid work, a clear career framework, and an annual wellbeing allowance. Your point of contact is Ms. Niamh O'Sullivan, Head of Customer Experience. Please share your earliest available start date."
+  }
+}

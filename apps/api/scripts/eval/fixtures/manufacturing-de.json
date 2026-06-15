@@ -1,0 +1,75 @@
+{
+  "id": "manufacturing-de",
+  "profession": "Manufacturing / Fertigung",
+  "language": "de",
+  "profile": {
+    "firstName": "Thomas",
+    "lastName": "Becker",
+    "email": "thomas.becker@example.de",
+    "phone": "+49 160 8765432",
+    "city": "Stuttgart",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/thomas-becker-fertigung",
+    "summary": "Zerspanungsmechaniker und Industriemeister Metall mit 11 Jahren Erfahrung in der CNC-Fertigung. Verantwortete als Schichtführer ein Team von 8 Maschinenbedienern und steigerte die Anlagenverfügbarkeit innerhalb von 18 Monaten von 82 auf 94 Prozent.",
+    "skills": [
+      { "name": "CNC-Programmierung (Heidenhain, Siemens)", "level": "Experte" },
+      { "name": "Zerspanungstechnik (Drehen, Fräsen)", "level": "Experte" },
+      { "name": "Qualitätssicherung / SPC", "level": "Fortgeschritten" },
+      { "name": "Lean Manufacturing / 5S", "level": "Fortgeschritten" },
+      { "name": "Total Productive Maintenance (TPM)", "level": "Fortgeschritten" },
+      { "name": "Werkzeug- und Vorrichtungsbau", "level": "Fortgeschritten" },
+      { "name": "Mitarbeiterführung", "level": "Fortgeschritten" }
+    ],
+    "experiences": [
+      {
+        "title": "Schichtführer CNC-Zerspanung",
+        "company": "Maschinenbau Spengler GmbH",
+        "startDate": "2018-05-01",
+        "endDate": null,
+        "description": "Leitung der Spätschicht in der CNC-Fertigung mit 12 Bearbeitungszentren und Verantwortung für Termintreue und Qualität.",
+        "achievements": [
+          "Steigerte die Anlagenverfügbarkeit innerhalb von 18 Monaten von 82 auf 94 Prozent durch ein konsequentes TPM-Wartungskonzept.",
+          "Reduzierte den Ausschuss bei sicherheitskritischen Bauteilen von 3,2 auf 0,8 Prozent durch Einführung einer SPC-gestützten Prozesskontrolle.",
+          "Führte ein Team von 8 Maschinenbedienern und qualifizierte zusätzlich 4 Kollegen für die Bedienung von 5-Achs-Bearbeitungszentren."
+        ]
+      },
+      {
+        "title": "CNC-Zerspanungsmechaniker",
+        "company": "Präzisionstechnik Vogel KG",
+        "startDate": "2013-08-01",
+        "endDate": "2018-04-30",
+        "description": "Programmierung und Rüsten von Dreh- und Fräszentren für Klein- und Mittelserien in der Medizintechnik.",
+        "achievements": [
+          "Verkürzte die durchschnittliche Rüstzeit pro Auftrag von 45 auf 28 Minuten durch optimierte Nullpunkt- und Werkzeugstrategien.",
+          "Fertigte Bauteile mit Toleranzen bis 5 Mikrometer bei einer Erstausschussquote von unter 1 Prozent."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Ausbildung Zerspanungsmechaniker (IHK)",
+        "institution": "Robert-Bosch-Schule Stuttgart",
+        "startYear": "2010-09-01",
+        "endYear": "2013-07-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Geprüfter Industriemeister Fachrichtung Metall (IHK)",
+        "issuer": "IHK Region Stuttgart",
+        "issueDate": "2019-11-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "B1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Fertigungsleiter CNC-Bearbeitung (m/w/d)",
+    "company": "Härtle Präzisionsteile GmbH",
+    "location": "Esslingen am Neckar",
+    "language": "de",
+    "fullText": "Die Härtle Präzisionsteile GmbH ist ein familiengeführtes Unternehmen mit 180 Mitarbeitenden und fertigt seit über 40 Jahren hochpräzise Dreh- und Frästeile für die Automobil- und Medizintechnik. Zur Verstärkung unseres Standorts in Esslingen suchen wir zum nächstmöglichen Zeitpunkt einen Fertigungsleiter CNC-Bearbeitung (m/w/d). Ihre Aufgaben: Leitung der CNC-Fertigung mit drei Schichten und rund 35 Mitarbeitenden, Sicherstellung von Termin-, Qualitäts- und Kostenzielen, Weiterentwicklung der Lean-Prozesse sowie Investitionsplanung für den Maschinenpark. Ihr Profil: abgeschlossene Ausbildung im Metallbereich mit Weiterbildung zum Industriemeister oder Techniker, mehrjährige Erfahrung in der CNC-Zerspanung sowie erste Führungserfahrung. Wir bieten einen unbefristeten Vertrag, 30 Urlaubstage und eine betriebliche Altersvorsorge. Ihr Ansprechpartner ist Herr Jürgen Härtle, Geschäftsführer. Bitte teilen Sie uns Ihren frühestmöglichen Eintrittstermin und Ihre Gehaltsvorstellung mit."
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "id": "finance-en",
+  "profession": "Finance / Financial Analysis",
+  "language": "en",
+  "profile": {
+    "firstName": "Jennifer",
+    "lastName": "Lee",
+    "email": "jennifer.lee@example.com",
+    "phone": "+1 212 555 0192",
+    "city": "New York",
+    "country": "United States",
+    "linkedinUrl": "https://linkedin.com/in/jennifer-lee-finance",
+    "summary": "Financial Analyst with 7 years of experience in FP&A for mid-market companies. Owned the annual budget cycle for a 180-million-dollar business unit and reduced forecast variance from 9 to 4 percent over two cycles.",
+    "skills": [
+      { "name": "Financial Planning & Analysis (FP&A)", "level": "Expert" },
+      { "name": "Budgeting & Forecasting", "level": "Expert" },
+      { "name": "Financial Modeling (Excel)", "level": "Expert" },
+      { "name": "Variance & Profitability Analysis", "level": "Advanced" },
+      { "name": "Power BI / Data Visualization", "level": "Advanced" },
+      { "name": "SQL", "level": "Intermediate" },
+      { "name": "ERP Systems (SAP, NetSuite)", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Senior Financial Analyst",
+        "company": "Hudson Consumer Brands Inc.",
+        "startDate": "2019-05-01",
+        "endDate": null,
+        "description": "FP&A lead for a 180-million-dollar consumer-goods business unit.",
+        "achievements": [
+          "Reduced annual forecast variance from 9 to 4 percent over two budget cycles by rebuilding the driver-based model.",
+          "Automated a monthly reporting pack in Power BI, cutting close-to-report time from 6 days to 2 days.",
+          "Identified 2.3 million dollars in cost savings through a margin analysis across 12 product lines."
+        ]
+      },
+      {
+        "title": "Financial Analyst",
+        "company": "Empire Retail Group",
+        "startDate": "2016-07-01",
+        "endDate": "2019-04-30",
+        "description": "Supported month-end close, reporting and ad-hoc analysis for the finance team.",
+        "achievements": [
+          "Prepared monthly variance reports covering a 75-million-dollar P&L with a 99 percent on-time delivery record.",
+          "Built a rolling 13-week cash-flow forecast that improved working-capital visibility for the CFO."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Science in Finance",
+        "institution": "New York University, Stern School of Business",
+        "startYear": "2012-09-01",
+        "endYear": "2016-05-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Chartered Financial Analyst (CFA) Level II Candidate",
+        "issuer": "CFA Institute",
+        "issueDate": "2021-06-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" },
+      { "name": "Mandarin", "level": "Native" }
+    ]
+  },
+  "jobPosting": {
+    "title": "FP&A Manager",
+    "company": "Meridian Capital Partners",
+    "location": "New York, New York, United States",
+    "language": "en",
+    "fullText": "Meridian Capital Partners is a private-equity-backed services firm with 900 employees and 450 million dollars in annual revenue. We are hiring an FP&A Manager for our New York headquarters. Responsibilities: lead the annual budgeting and quarterly forecasting process, manage a team of 2 analysts, partner with business-unit leaders on financial planning, and present results to the executive team and board. Requirements: several years of FP&A experience, advanced financial-modeling skills, strong command of ERP and BI tools, and the ability to translate data into actionable insight. We offer a competitive base plus bonus, hybrid work two days from home, and strong career progression. Your point of contact is Mr. Andrew Coleman, VP of Finance. Please share your salary expectation and earliest available start date."
+  }
+}

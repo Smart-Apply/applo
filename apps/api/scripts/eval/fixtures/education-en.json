@@ -1,0 +1,79 @@
+{
+  "id": "education-en",
+  "profession": "Education / Teaching",
+  "language": "en",
+  "profile": {
+    "firstName": "David",
+    "lastName": "Wilson",
+    "email": "david.wilson@example.com",
+    "phone": "+44 7700 956321",
+    "city": "Leeds",
+    "country": "United Kingdom",
+    "linkedinUrl": "https://linkedin.com/in/david-wilson-teacher",
+    "summary": "Secondary school Mathematics teacher with 8 years of classroom experience and 2 years as a department lead. Taught classes of up to 32 students and improved the proportion achieving a grade 5 or above in GCSE Maths from 61 to 78 percent over three years.",
+    "skills": [
+      { "name": "Lesson Planning & Curriculum Design", "level": "Expert" },
+      { "name": "Differentiated Instruction", "level": "Expert" },
+      { "name": "Classroom Management", "level": "Advanced" },
+      { "name": "Assessment & Data Tracking", "level": "Advanced" },
+      { "name": "SEND Support & Inclusion", "level": "Advanced" },
+      { "name": "Parent & Stakeholder Communication", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Lead Teacher of Mathematics",
+        "company": "Kirkstall Academy",
+        "startDate": "2019-09-01",
+        "endDate": null,
+        "description": "Subject leadership for Key Stages 3 and 4 alongside a full teaching timetable.",
+        "achievements": [
+          "Improved the proportion of students achieving a grade 5 or above in GCSE Maths from 61 to 78 percent over three years.",
+          "Led a department of 5 teachers and mentored 2 early-career teachers through their induction year.",
+          "Designed a Key Stage 3 intervention program that raised average end-of-year scores by 12 percentage points."
+        ]
+      },
+      {
+        "title": "Mathematics Teacher",
+        "company": "Beckett Park High School",
+        "startDate": "2016-09-01",
+        "endDate": "2019-08-31",
+        "description": "Full-time classroom teacher across Key Stages 3 and 4.",
+        "achievements": [
+          "Taught 5 classes of up to 32 students each while maintaining a 96 percent attendance rate in lessons.",
+          "Introduced low-stakes weekly quizzing that lifted average assessment results by 9 percent across two cohorts."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "PGCE Secondary Mathematics",
+        "institution": "University of Leeds",
+        "startYear": "2015-09-01",
+        "endYear": "2016-07-31"
+      },
+      {
+        "degree": "BSc (Hons) Mathematics",
+        "institution": "University of Sheffield",
+        "startYear": "2012-09-01",
+        "endYear": "2015-06-30"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Qualified Teacher Status (QTS)",
+        "issuer": "Department for Education",
+        "issueDate": "2016-08-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Head of Mathematics Department",
+    "company": "Harrogate Grange School",
+    "location": "Harrogate, United Kingdom",
+    "language": "en",
+    "fullText": "Harrogate Grange School is an Ofsted-rated 'Outstanding' secondary school with around 1,100 students on roll. We are seeking a Head of Mathematics Department to start in the new academic year. Responsibilities: lead a department of 7 teachers, set the curriculum and assessment strategy across Key Stages 3 to 5, monitor pupil progress and raise attainment, and line-manage and develop the team. Requirements: Qualified Teacher Status, several years of secondary Maths teaching experience, and evidence of raising attainment, ideally with prior curriculum or subject-leadership experience. We offer a supportive leadership team, a generous CPD allowance, and a clear progression pathway. Your point of contact is Mrs. Helen Marsh, Deputy Headteacher. Please state your earliest possible start date in your application."
+  }
+}
