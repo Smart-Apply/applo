@@ -15,7 +15,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JobsService } from '../jobs/jobs.service';
 import { StorageService } from '../storage/storage.service';
 import { JobType } from '../jobs/interfaces/queue.interface';
-import { LLMService, KeywordMatch } from '../llm/llm.service';
+import { LLMService } from '../llm/llm.service';
 import { TitleGeneratorService } from './title-generator.service';
 import { KeywordsService } from '../keywords/keywords.service';
 import { TemplatesService } from '../templates/templates.service';
@@ -49,6 +49,7 @@ import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.u
 import { buildMatchInsights } from './match-insights.util';
 import { matchAtsKeywordsToProfile, selectKeywordsToWeave } from './keyword-coverage.util';
 import { isValidResumeEdit } from './resume-editor.util';
+import { mapStoredResumeToTailoredProfile } from './stored-resume.util';
 import {
   buildSalutation,
   isValidJobFacts,
@@ -422,211 +423,6 @@ export class ApplicationsService {
         }))
         .filter((lang) => lang.name),
     };
-  }
-
-  private buildCoverLetterContext(
-    resume: any,
-    jobPosting: { title: string; company: string },
-    instructions?: string,
-  ) {
-    const skills = (resume.skillCategories || [])
-      .flatMap((category: { skills: string[] }) => category.skills)
-      .filter(Boolean)
-      .join(', ');
-
-    const experiences = (resume.experiences || [])
-      .map(
-        (experience: { title: string; company: string; dateRange: string }) =>
-          `${experience.title} bei ${experience.company} (${experience.dateRange})`,
-      )
-      .join('\n');
-
-    const motivationParts = [resume.summary, instructions].filter(Boolean);
-
-    return {
-      candidateName: resume.candidateName,
-      jobTitle: jobPosting.title,
-      companyName: jobPosting.company,
-      skills,
-      experiences,
-      motivation: motivationParts.join('\n\n'),
-    };
-  }
-
-  /**
-   * Build context for ATS-optimized cover letter generation
-   * Formats profile and keywords for strategic keyword placement
-   */
-  private buildATSCoverLetterContext(
-    resume: any,
-    jobPosting: {
-      title: string;
-      company: string;
-      location?: string | null;
-      description?: string | null;
-      fullText?: string;
-      language?: string | null;
-    },
-    matchedKeywords: KeywordMatch[],
-    missingKeywords: KeywordMatch[],
-  ) {
-    // Detect language from job posting (fallback to German as default)
-    const detectedLanguage =
-      jobPosting.language ||
-      (jobPosting.fullText ? this.detectLanguage(jobPosting.fullText) : null) ||
-      'de';
-    // Format profile information
-    const skills = (resume.skillCategories || [])
-      .flatMap((category: { skills: string[] }) => category.skills)
-      .filter(Boolean)
-      .join(', ');
-
-    const experiences = (resume.experiences || [])
-      .map(
-        (experience: {
-          title: string;
-          company: string;
-          dateRange: string;
-          achievements?: string[];
-        }) =>
-          `${experience.title} at ${experience.company} (${experience.dateRange})${
-            experience.achievements?.length
-              ? ': ' + experience.achievements.slice(0, 2).join('; ')
-              : ''
-          }`,
-      )
-      .join('\n');
-
-    const profileString = `
-Name: ${resume.candidateName}
-Skills: ${skills}
-Experience: ${experiences}
-Summary: ${resume.summary || 'Not provided'}
-    `.trim();
-
-    return {
-      profile: profileString,
-      jobTitle: jobPosting.title,
-      companyName: jobPosting.company,
-      location: jobPosting.location || undefined,
-      jobDescription: jobPosting.description || undefined,
-      matchedKeywords,
-      missingKeywords,
-      language: detectedLanguage,
-    };
-  }
-
-  /**
-   * Build context for ATS-optimized resume generation
-   * Formats profile and keywords for strategic keyword placement
-   */
-  private buildATSResumeContext(
-    resume: any,
-    jobPosting: {
-      title: string;
-      company: string;
-      description?: string | null;
-      fullText?: string;
-      language?: string | null;
-    },
-    matchedKeywords: KeywordMatch[],
-    missingKeywords: KeywordMatch[],
-  ) {
-    // Detect language from job posting (fallback to German as default)
-    const detectedLanguage =
-      jobPosting.language ||
-      (jobPosting.fullText ? this.detectLanguage(jobPosting.fullText) : null) ||
-      'de';
-
-    const profileString = JSON.stringify(resume, null, 2);
-
-    return {
-      profile: profileString,
-      jobTitle: jobPosting.title,
-      companyName: jobPosting.company,
-      jobDescription: jobPosting.description || undefined,
-      matchedKeywords,
-      missingKeywords,
-      language: detectedLanguage,
-    };
-  }
-
-  /**
-   * Extract keywords for a job posting and match against profile
-   * Used for ATS-optimized content generation
-   */
-  private async getKeywordsForGeneration(
-    jobPosting: {
-      title: string;
-      company: string;
-      location?: string | null;
-      language?: string | null;
-      fullText: string;
-      rawText?: string | null;
-    },
-    profileKeywords: Set<string>,
-  ): Promise<{ matchedKeywords: KeywordMatch[]; missingKeywords: KeywordMatch[] }> {
-    try {
-      // Extract keywords using ATS Agent (simplified - only fullText needed)
-      const keywords = await this.keywordsService.extractKeywords({
-        title: jobPosting.title,
-        company: jobPosting.company,
-        location: jobPosting.location || undefined,
-        language: jobPosting.language || undefined,
-        fullText: jobPosting.fullText,
-        rawText: jobPosting.rawText || undefined,
-      });
-
-      // Perform matching
-      return this.matchKeywordsForLLM(keywords, profileKeywords);
-    } catch (error) {
-      this.logger.warn(
-        'Failed to extract keywords for ATS generation, using fallback',
-        error as Error,
-      );
-      return { matchedKeywords: [], missingKeywords: [] };
-    }
-  }
-
-  /**
-   * Match extracted keywords against profile for LLM context
-   */
-  private matchKeywordsForLLM(
-    keywords: ATSAgentOutput,
-    profileKeywords: Set<string>,
-  ): { matchedKeywords: KeywordMatch[]; missingKeywords: KeywordMatch[] } {
-    const matched: KeywordMatch[] = [];
-    const missing: KeywordMatch[] = [];
-
-    const checkKeyword = (keyword: string, category: KeywordMatch['category']) => {
-      const normalized = keyword.toLowerCase();
-      const found =
-        profileKeywords.has(normalized) ||
-        [...profileKeywords].some((pk) => pk.includes(normalized) || normalized.includes(pk));
-
-      const match: KeywordMatch = {
-        keyword,
-        category,
-        found,
-        confidence: found ? 0.85 : 0,
-      };
-
-      if (found) {
-        matched.push(match);
-      } else {
-        missing.push(match);
-      }
-    };
-
-    // Check all keyword categories from ATSAgentOutput (using domain-neutral names)
-    keywords.coreCompetencies.forEach((k) => checkKeyword(k, 'core'));
-    keywords.softSkills.forEach((k) => checkKeyword(k, 'soft'));
-    keywords.methodologies.forEach((k) => checkKeyword(k, 'methodology'));
-    keywords.industryKeywords.forEach((k) => checkKeyword(k, 'industry'));
-    keywords.senioritySignals.forEach((k) => checkKeyword(k, 'seniority'));
-    keywords.requirementKeywords.forEach((k) => checkKeyword(k, 'requirement'));
-
-    return { matchedKeywords: matched, missingKeywords: missing };
   }
 
   private ensureNotGenerating(application: Application) {
@@ -2149,33 +1945,27 @@ Summary: ${resume.summary || 'Not provided'}
         companyName: jobPosting.company || 'Unknown Company',
       });
     }
-    // If no content or regenerate without existing content, generate new
+    // If no content or regenerate without existing content, generate fresh using
+    // the v1 pipeline prompt — the same prompt the initial-generation path uses —
+    // so edit-mode regenerate gets the #1/#5/#6 quality improvements (editor pass,
+    // job-facts personalization, keyword coverage) instead of the retired
+    // cover-letter-ats.md path. The stored resume is already tailored, so we map
+    // it straight into the TailoredProfileDto shape (no extra skill-selector call).
     else if (!content || dto.regenerate) {
-      // Extract keywords from resume for ATS-optimized generation
-      const resumeKeywords = this.extractResumeKeywords(application.resumeText);
-
-      // Get keyword analysis for ATS optimization
-      const { matchedKeywords, missingKeywords } = await this.getKeywordsForGeneration(
-        jobPosting,
-        resumeKeywords,
-      );
-
-      // Use ATS-optimized generation if keywords are available
-      if (matchedKeywords.length > 0 || missingKeywords.length > 0) {
-        this.logger.log('Regenerating cover letter with ATS optimization');
-        const atsContext = this.buildATSCoverLetterContext(
-          resume,
-          jobPosting,
-          matchedKeywords,
-          missingKeywords,
-        );
-        content = await this.llmService.generateCoverLetterATS(atsContext);
-      } else {
-        // Fallback to standard generation
-        this.logger.log('Regenerating cover letter with standard LLM');
-        const context = this.buildCoverLetterContext(resume, jobPosting, dto.instructions);
-        content = await this.llmService.generateCoverLetter(context);
-      }
+      this.logger.log('Regenerating cover letter via v1 pipeline prompt');
+      const language = jobPosting.language || this.detectLanguage(jobPosting.fullText) || 'en';
+      const tailoredProfile = mapStoredResumeToTailoredProfile(resume, jobPosting);
+      const jobFacts = await this.extractJobFacts(jobPosting, language, userId);
+      const markdown = await this.llmService.callText('v1/cover-letter.md', {
+        job: this.serializeJobPosting(jobPosting),
+        tailoredProfile,
+        jobFacts: normalizeJobFacts(jobFacts),
+        salutation: buildSalutation(jobFacts, language),
+        language,
+        userId,
+        jobPostingId: jobPosting.id,
+      });
+      content = this.convertCoverLetterToHtml(markdown) ?? markdown;
     }
 
     const sanitizedContent = this.sanitizeCoverLetter(content);
