@@ -513,7 +513,7 @@ PUT /api/v1/profile
 2. Detect language (DE/EN), select template (lang × design), extract ATS keywords
 3. Render the v1 prompt chain: `skill-selector` → parallel(`cover-letter`, `resume-rewrite`, `ats-keywords`) under `prompts/v1/*`
 4. Call LLM via provider abstraction wrapped in **opossum** circuit breaker → Markdown/JSON
-5. **Editor pass (#1):** `prompts/v1/editor-cover-letter.md` critiques + revises the cover letter (graceful fallback to the draft on failure / suspiciously short output)
+5. **Editor pass (#1):** `prompts/v1/editor-cover-letter.md` critiques + revises the cover letter, and `prompts/v1/editor-resume.md` critiques + revises the rewritten resume payload (JSON→JSON, guarded by `resume-editor.util.ts` `isValidResumeEdit` so a dropped/mangled `profileExperienceId`/`profileProjectId` falls back to the pre-edit payload). Both degrade gracefully to the draft on failure.
 6. **Keyword weave (#6):** `keyword-coverage.util.ts` finds priority-1 **profile-supported** ATS keywords still missing from the cover letter; a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (no stuffing, never an unsupported keyword, graceful fallback to the pre-weave draft)
 7. **Grounding check (#7):** `GroundingValidatorService` flags fabricated impact numbers vs. the profile (non-destructive, logs a warning only)
 8. TSX → PDF via `@react-pdf/renderer` (no browser, no post-processing)

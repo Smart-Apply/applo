@@ -143,10 +143,20 @@ Graceful degradation: on any error or a suspiciously short result (<50% of the d
 length) we keep the original draft, so generation never breaks. The editor is also
 forbidden from introducing new facts/metrics — it can only tighten what's there.
 
+**Shipped (resume).** [`prompts/v1/editor-resume.md`](../../apps/api/prompts/v1/editor-resume.md)
++ `runResumeEditorPass`, wired into `createWithGeneration` (the only path that produces the
+structured `RewrittenProfileDto`). JSON→JSON, temp 0.35. The critical risk — the editor
+dropping or mangling a `profileExperienceId` / `profileProjectId` (which silently loses the
+rewritten, often translated content) — is guarded by a pure, unit-tested
+[`isValidResumeEdit`](../../apps/api/src/applications/resume-editor.util.ts): it rejects any
+edit that changes the ID multiset, empties a previously-populated entry, or returns a
+malformed payload, falling back to the pre-edit payload. Verified on real Azure (eval flag
+`resume-editor` applied 3/3, all parses clean, OVERALL unchanged). 10 unit tests.
+
 **Acceptance.**
 - [x] Cover-letter editor pass live in **both** pipelines with graceful fallback.
 - [x] Editor latency made visible to the user (wizard step + SSE progress).
-- [ ] Resume editor pass live (summary + achievements), IDs preserved.
+- [x] Resume editor pass live (summary + achievements), IDs preserved (guarded fallback).
 - [ ] Eval (#10) shows rubric-score improvement vs. no-editor baseline.
 - [x] README + ARCHITECTURE + copilot-instructions updated (pipeline change).
 
@@ -437,6 +447,26 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-15 — Resume editor pass (#1, second variant)
+- The resume half of #1 shipped: [`prompts/v1/editor-resume.md`](../../apps/api/prompts/v1/editor-resume.md)
+  + `runResumeEditorPass` in `applications.service.ts`, wired into `createWithGeneration`
+  after `callResumeRewrite` (the only path producing the structured `RewrittenProfileDto`).
+  One JSON→JSON critique pass (temp 0.35) over summary + achievements, mirroring the
+  cover-letter editor.
+- The dangerous failure mode — the editor dropping/renaming a `profileExperienceId` /
+  `profileProjectId`, which silently loses the rewritten (often translated) content — is
+  caught by a pure, unit-tested [`isValidResumeEdit`](../../apps/api/src/applications/resume-editor.util.ts):
+  rejects an edit that changes the ID multiset, empties a previously-populated entry, or is
+  malformed; falls back to the pre-edit payload. 10 unit tests.
+- The eval harness (#10) gained a `resume-editor` flag; verified on real Azure (applied 3/3,
+  `editor-resume.md` parses clean, OVERALL unchanged at 5.00).
+- Doc-sync: tracker (#1 acceptance) + copilot-instructions (pipeline step).
+- Files: `apps/api/prompts/v1/editor-resume.md`,
+  `apps/api/src/applications/resume-editor.util.ts`,
+  `apps/api/src/applications/__tests__/unit/resume-editor.unit.spec.ts`,
+  `apps/api/src/applications/applications.service.ts`,
+  `apps/api/scripts/eval/{pipeline-runner,aggregate,run-eval}.ts`.
 
 ### 2026-06-15 — Cleanup: retire dead Foundry agent classes (#2, part 1)
 - Deleted the unused `apps/api/src/agents/**` Azure AI Foundry agent pipeline
