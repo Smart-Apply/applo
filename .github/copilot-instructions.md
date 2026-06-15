@@ -149,6 +149,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - Direct Azure OpenAI HTTP calls (`@nestjs/axios`)
   - Azure AI Foundry agents (`@azure/ai-agents`) for ATS keyword extraction, CV/CL writing
   - **opossum** circuit breaker around LLM calls
+  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Needs `AZURE_OPENAI_API_VERSION` ≥ `2024-08-01-preview` (default is `2025-01-01-preview`).
 - **PDF:**
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
@@ -181,10 +182,9 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 
 ## Backend Modules (`apps/api/src/`)
 - `admin` — allow-listed admin endpoints (gated by `ADMIN_EMAILS` env), e.g. `POST /admin/users/:email/tier`, `DELETE /admin/users/:email`
-- `agents` — Azure AI Foundry agents (URL parsing, etc.)
-- `applications` — generation pipeline (profile + job → LLM → PDF → storage), SSE status stream
+- `applications` — generation pipeline (profile + job → LLM → editor pass → keyword weave → grounding check → PDF → storage), SSE status stream. Owns the `grounding/` sub-service (`GroundingValidatorService`) — a deterministic, non-destructive anti-hallucination check that flags impact numbers (%, currency, counts) absent from the source profile (logs only; never strips). Also owns the coverage-driven keyword loop (#6): `keyword-coverage.util.ts` selects the priority-1, **profile-supported** ATS keywords still missing from the cover letter and a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (never invents unsupported keywords; graceful fallback to the pre-weave draft). Edit-mode cover-letter regeneration (`upsertCoverLetter`) reuses the v1 `cover-letter.md` prompt via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile`) instead of a separate ATS prompt (#2).
 - `auth` — JWT, refresh-token rotation, OAuth (Google/Microsoft/Azure AD), TOTP 2FA, password reset
-- `common` — guards, filters, decorators (`@Sanitize()`)
+- `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@smart-apply/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`)
 - `config` — Zod env schema
 - `contact` — contact form
 - `email` — Resend transactional email
@@ -196,7 +196,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `keywords` — ATS keyword extraction & matching with language detection
 - `linkedin-jobs` — LinkedIn job search via Apify scraper (Premium-only single-source endpoint, kept for backward compat)
 - `job-search` — **Pluggable multi-source job search** (`JobSearchProvider` interface). Concrete providers: `linkedin` (Premium, wraps `linkedin-jobs`) and `arbeitnow` (free, German-first public API). Fan-out by default; per-source try/catch; cross-source dedup by `(title, company)`. Add new sources by implementing `JobSearchProvider` and binding under `JOB_SEARCH_PROVIDERS` in `JobSearchModule`.
-- `llm` — pluggable providers (`azure-openai` | `azure-ai-foundry` | `mock`) with automatic language detection, opossum circuit breaker
+- `llm` — pluggable providers (`azure-openai` | `azure-ai-foundry` | `mock`) with automatic language detection, opossum circuit breaker, and Azure **structured outputs** (#8: strict `json_schema` for `ats-keywords`/`resume-rewrite`, `json_object` JSON mode elsewhere, resolved by template path in `schemas/v1-schemas.ts`; regex JSON repair kept as a fallback)
 - `logger` — Pino + Winston audit logger
 - `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification.
 - `pdf` — thin façade over `pdf-v2/ReactPdfRendererService`. Kept so external callers (`application.processor.ts`, tests) preserve the `PdfService` API surface. Throws when a template has no react-pdf factory registered.
@@ -511,16 +511,20 @@ PUT /api/v1/profile
 ### Application Pipeline
 1. Load Profile + JobPosting; enforce subscription usage limits
 2. Detect language (DE/EN), select template (lang × design), extract ATS keywords
-3. Render prompt templates (`prompts/cover-letter.md`, `prompts/resume.md`)
-4. Call LLM via provider abstraction wrapped in **opossum** circuit breaker → Markdown/HTML
-5. TSX → PDF via `@react-pdf/renderer` (no browser, no post-processing)
-6. Upload PDFs via storage provider (Blob/S3/disk); persist keys + signed URLs
-7. Status: `PENDING → GENERATING → READY | FAILED` (pushed to client via **SSE**)
-8. Background work via pluggable queue (`qstash` | `in-memory`)
+3. Render the v1 prompt chain: parallel(`skill-selector`, `job-facts`) → parallel(`cover-letter`, `resume-rewrite`, `ats-keywords`) under `prompts/v1/*`. `job-facts` (#5) extracts the contact person + concrete company specifics + explicit salary/start-date asks; the salutation is then built deterministically in `job-facts.util.ts` and the cover-letter prompt consumes both (graceful fallback to scanning `fullText`).
+4. Call LLM via provider abstraction wrapped in **opossum** circuit breaker → Markdown/JSON
+5. **Editor pass (#1):** `prompts/v1/editor-cover-letter.md` critiques + revises the cover letter, and `prompts/v1/editor-resume.md` critiques + revises the rewritten resume payload (JSON→JSON, guarded by `resume-editor.util.ts` `isValidResumeEdit` so a dropped/mangled `profileExperienceId`/`profileProjectId` falls back to the pre-edit payload). Both degrade gracefully to the draft on failure.
+6. **Keyword weave (#6):** `keyword-coverage.util.ts` finds priority-1 **profile-supported** ATS keywords still missing from the cover letter; a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (no stuffing, never an unsupported keyword, graceful fallback to the pre-weave draft)
+7. **Grounding check (#7):** `GroundingValidatorService` flags fabricated impact numbers vs. the profile (non-destructive, logs a warning only)
+8. TSX → PDF via `@react-pdf/renderer` (no browser, no post-processing)
+9. Upload PDFs via storage provider (Blob/S3/disk); persist keys + signed URLs
+10. Status: `PENDING → GENERATING → READY | FAILED` (pushed to client via **SSE**)
+11. Background work via pluggable queue (`qstash` | `in-memory`)
+
+> See [docs/implementation/LLM_OUTPUT_QUALITY.md](../docs/implementation/LLM_OUTPUT_QUALITY.md) for the LLM output-quality roadmap (the 10 improvements to generated CVs/cover letters) and its living status tracker.
 
 ## Prompt Templates
-- **cover-letter.md**: concise, 1 page, intro → fit (3–5 bullets) → motivation → closing
-- **resume.md**: prioritize relevant experience, quantify outcomes, highlight skill-match (≤ 2 pages)
+The active generation prompts live under `apps/api/prompts/v1/*` and are described in the **Application Pipeline** above: `skill-selector`, `job-facts`, `cover-letter`, `resume`, `resume-rewrite`, `ats-keywords`, `editor-cover-letter`, `editor-resume`, `keyword-weave`. The legacy top-level `cover-letter.md`, `resume.md`, `cover-letter-ats.md` and `resume-ats.md` prompts were **retired (#2)**. The editor's "regenerate cover letter" action now reuses `v1/cover-letter.md` via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile` maps the saved editor resume back into the `TailoredProfileDto` the v1 prompt expects), so there is a single cover-letter generation path.
 
 ## Validation & Errors
 - DTO validation (class-validator or Zod)
@@ -658,6 +662,8 @@ LLM_PROVIDER=mock            # azure-openai | azure-ai-foundry | mock
 AZURE_OPENAI_ENDPOINT=https://your-aoai.openai.azure.com/
 AZURE_OPENAI_API_KEY=<key>
 AZURE_OPENAI_DEPLOYMENT_NAME=<deployment>
+# Structured outputs (#8) need 2024-08-01-preview+. Default: 2025-01-01-preview.
+AZURE_OPENAI_API_VERSION=2025-01-01-preview
 
 # Azure AI Foundry (URL parsing agents)
 AZURE_AI_FOUNDRY_ENDPOINT=<endpoint>

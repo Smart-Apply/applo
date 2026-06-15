@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ATSAgentOutput, ProfileData } from '../agents/agents.interface';
+import { ATSAgentOutput, ProfileData } from './keywords.types';
 import { KeywordMatchDto, MatchAnalysisResponseDto, ExtractedKeywordsDto } from './dto';
 import { LLMService } from '../llm/llm.service';
 

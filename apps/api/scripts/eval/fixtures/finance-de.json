@@ -1,0 +1,75 @@
+{
+  "id": "finance-de",
+  "profession": "Finance / Rechnungswesen",
+  "language": "de",
+  "profile": {
+    "firstName": "Andreas",
+    "lastName": "Krüger",
+    "email": "andreas.krueger@example.de",
+    "phone": "+49 170 9988776",
+    "city": "Frankfurt am Main",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/andreas-krueger-finanzen",
+    "summary": "Geprüfter Bilanzbuchhalter (IHK) mit 10 Jahren Erfahrung im Rechnungswesen mittelständischer Unternehmen. Verantwortete die Monatsabschlüsse für drei Gesellschaften und verkürzte die Abschlussdauer von 9 auf 5 Arbeitstage.",
+    "skills": [
+      { "name": "Jahres- und Monatsabschlüsse (HGB)", "level": "Experte" },
+      { "name": "Debitoren- und Kreditorenbuchhaltung", "level": "Experte" },
+      { "name": "Umsatzsteuervoranmeldung", "level": "Fortgeschritten" },
+      { "name": "SAP FI/CO", "level": "Fortgeschritten" },
+      { "name": "DATEV", "level": "Experte" },
+      { "name": "Kostenrechnung und Reporting", "level": "Fortgeschritten" },
+      { "name": "Excel (Pivot, Power Query)", "level": "Fortgeschritten" }
+    ],
+    "experiences": [
+      {
+        "title": "Bilanzbuchhalter",
+        "company": "Rheinmetall Handels GmbH",
+        "startDate": "2018-06-01",
+        "endDate": null,
+        "description": "Erstellung der Monats- und Jahresabschlüsse nach HGB für eine Unternehmensgruppe mit drei Gesellschaften.",
+        "achievements": [
+          "Verkürzte die Dauer des Monatsabschlusses durch Standardisierung und Automatisierung von 9 auf 5 Arbeitstage.",
+          "Verantwortete ein jährliches Buchungsvolumen von rund 40 Millionen Euro über drei Gesellschaften hinweg.",
+          "Führte ein Team von 3 Buchhaltern und übernahm die fachliche Einarbeitung von 2 neuen Mitarbeitenden."
+        ]
+      },
+      {
+        "title": "Finanzbuchhalter",
+        "company": "Maintal Logistik GmbH",
+        "startDate": "2014-03-01",
+        "endDate": "2018-05-31",
+        "description": "Laufende Debitoren- und Kreditorenbuchhaltung sowie Mitarbeit bei den Abschlüssen.",
+        "achievements": [
+          "Reduzierte die durchschnittliche Forderungslaufzeit (DSO) durch ein konsequentes Mahnwesen von 52 auf 38 Tage.",
+          "Bearbeitete monatlich rund 1.200 Eingangs- und Ausgangsrechnungen mit einer Fehlerquote unter 0,5 Prozent."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Ausbildung Industriekaufmann (IHK)",
+        "institution": "Berufsschule Frankfurt am Main",
+        "startYear": "2010-09-01",
+        "endYear": "2013-06-30"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Geprüfter Bilanzbuchhalter (IHK)",
+        "issuer": "IHK Frankfurt am Main",
+        "issueDate": "2017-02-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "B2" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Teamleiter Finanzbuchhaltung (m/w/d)",
+    "company": "Taunus Konsumgüter AG",
+    "location": "Bad Homburg",
+    "language": "de",
+    "fullText": "Die Taunus Konsumgüter AG ist ein börsennotiertes Unternehmen mit rund 1.200 Mitarbeitenden und einem Jahresumsatz von 320 Millionen Euro. Für unsere Finanzabteilung in Bad Homburg suchen wir einen Teamleiter Finanzbuchhaltung (m/w/d). Ihre Aufgaben: fachliche und disziplinarische Leitung eines Teams von 6 Mitarbeitenden, Verantwortung für die termingerechte Erstellung der Monats-, Quartals- und Jahresabschlüsse nach HGB, Ansprechpartner für Wirtschaftsprüfer und Steuerberater sowie die Weiterentwicklung der Buchhaltungsprozesse in SAP. Ihr Profil: abgeschlossene kaufmännische Ausbildung mit Weiterbildung zum Bilanzbuchhalter, mehrjährige Erfahrung in der Bilanzbuchhaltung, sicherer Umgang mit SAP FI sowie erste Führungserfahrung. Wir bieten ein attraktives Gehaltspaket, mobiles Arbeiten an 2 Tagen pro Woche und 30 Urlaubstage. Ihr Ansprechpartner ist Herr Dr. Klaus Reinhardt, Kaufmännischer Leiter. Bitte geben Sie Ihre Gehaltsvorstellung und Ihren frühestmöglichen Eintrittstermin an."
+  }
+}

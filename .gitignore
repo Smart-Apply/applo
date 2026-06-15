@@ -71,6 +71,10 @@ lerna-debug.log*
 tmp/
 temp/
 
+# LLM eval harness — local run outputs (fixtures + harness code are tracked,
+# timestamped result JSONs are not). See apps/api/scripts/eval/.
+apps/api/scripts/eval/results/
+
 # Docker
 # (No entries — .dockerignore is intentionally tracked so Fly's remote
 # builder, GitHub Actions, and any local `docker build` all use the same

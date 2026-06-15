@@ -1,0 +1,75 @@
+{
+  "id": "sales-de",
+  "profession": "Sales / Vertrieb",
+  "language": "de",
+  "profile": {
+    "firstName": "Markus",
+    "lastName": "Schäfer",
+    "email": "markus.schaefer@example.de",
+    "phone": "+49 171 4456789",
+    "city": "München",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/markus-schaefer-vertrieb",
+    "summary": "B2B-Vertriebsprofi mit 8 Jahren Erfahrung im Maschinen- und Anlagengeschäft. Verantwortete ein Jahresumsatzvolumen von 4,5 Millionen Euro und übertraf die Vertriebsziele in drei aufeinanderfolgenden Jahren um durchschnittlich 14 Prozent.",
+    "skills": [
+      { "name": "Neukundengewinnung / Akquise", "level": "Experte" },
+      { "name": "Key-Account-Management", "level": "Experte" },
+      { "name": "Angebots- und Vertragsverhandlung", "level": "Experte" },
+      { "name": "CRM (Salesforce)", "level": "Fortgeschritten" },
+      { "name": "Vertriebssteuerung / Forecasting", "level": "Fortgeschritten" },
+      { "name": "Lösungsvertrieb (Solution Selling)", "level": "Fortgeschritten" },
+      { "name": "Verhandlungsführung", "level": "Experte" }
+    ],
+    "experiences": [
+      {
+        "title": "Key Account Manager B2B",
+        "company": "Industrievertrieb Nord GmbH",
+        "startDate": "2019-03-01",
+        "endDate": null,
+        "description": "Betreuung und Ausbau strategischer Industriekunden im süddeutschen Raum mit Umsatzverantwortung.",
+        "achievements": [
+          "Baute den Kundenstamm von 35 auf 58 aktive Bestandskunden aus und steigerte den Regionsumsatz innerhalb von zwei Jahren um 22 Prozent.",
+          "Gewann zwei Großkunden mit einem gemeinsamen Auftragsvolumen von 1,2 Millionen Euro innerhalb eines Jahres.",
+          "Verkürzte den durchschnittlichen Verkaufszyklus von 90 auf 65 Tage durch ein strukturiertes Lead-Qualifizierungssystem."
+        ]
+      },
+      {
+        "title": "Vertriebsmitarbeiter im Außendienst",
+        "company": "TechnoParts Vertriebs GmbH",
+        "startDate": "2016-01-01",
+        "endDate": "2019-02-28",
+        "description": "Verkauf von Industriekomponenten im Außendienst in einem festen Verkaufsgebiet.",
+        "achievements": [
+          "Erreichte über drei Jahre eine durchschnittliche Quotenerfüllung von 112 Prozent.",
+          "Betreute ein Verkaufsgebiet mit über 120 Kunden und einem Jahresumsatz von 2,8 Millionen Euro."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Arts Betriebswirtschaftslehre",
+        "institution": "Hochschule München",
+        "startYear": "2012-10-01",
+        "endYear": "2015-09-30"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Zertifizierter Vertriebsmanager (IHK)",
+        "issuer": "IHK München und Oberbayern",
+        "issueDate": "2018-05-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "C1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Vertriebsleiter B2B (m/w/d)",
+    "company": "ProMaschinen Systeme GmbH",
+    "location": "Nürnberg",
+    "language": "de",
+    "fullText": "Die ProMaschinen Systeme GmbH gehört mit 250 Mitarbeitenden zu den führenden Anbietern von Automatisierungslösungen im DACH-Raum und exportiert in über 20 Länder. Für den weiteren Wachstumskurs suchen wir einen Vertriebsleiter B2B (m/w/d) für unseren Standort Nürnberg. Ihre Aufgaben: disziplinarische Führung eines Vertriebsteams von 6 Außendienstmitarbeitenden, Verantwortung für ein jährliches Umsatzziel von 12 Millionen Euro, Weiterentwicklung der Vertriebsstrategie sowie Betreuung ausgewählter Schlüsselkunden. Ihr Profil: mehrjährige Erfahrung im erklärungsbedürftigen B2B-Vertrieb, nachweisbare Erfolge in der Neukundengewinnung, sicherer Umgang mit CRM-Systemen und idealerweise erste Führungserfahrung. Wir bieten ein attraktives Fixum mit ungedeckelter Provision, einen Dienstwagen zur privaten Nutzung und flexible Arbeitszeiten. Ihre Ansprechpartnerin ist Frau Sabine Lindner aus der Geschäftsleitung. Bitte nennen Sie uns Ihre Gehaltsvorstellung sowie Ihren frühestmöglichen Eintrittstermin."
+  }
+}

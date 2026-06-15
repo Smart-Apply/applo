@@ -1,0 +1,75 @@
+{
+  "id": "logistics-de",
+  "profession": "Logistics / Logistik",
+  "language": "de",
+  "profile": {
+    "firstName": "Stefan",
+    "lastName": "Wolf",
+    "email": "stefan.wolf@example.de",
+    "phone": "+49 162 5566778",
+    "city": "Dortmund",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/stefan-wolf-logistik",
+    "summary": "Logistikfachwirt mit 12 Jahren Erfahrung in Disposition und Lagerleitung. Verantwortete einen Fuhrpark von 28 Fahrzeugen und steigerte die Liefertermintreue innerhalb von zwei Jahren von 91 auf 98 Prozent.",
+    "skills": [
+      { "name": "Tourenplanung und Disposition", "level": "Experte" },
+      { "name": "Lagerverwaltung (WMS)", "level": "Experte" },
+      { "name": "Fuhrparkmanagement", "level": "Fortgeschritten" },
+      { "name": "Lean Logistics / Prozessoptimierung", "level": "Fortgeschritten" },
+      { "name": "Gefahrgutmanagement (ADR)", "level": "Fortgeschritten" },
+      { "name": "SAP EWM", "level": "Fortgeschritten" },
+      { "name": "Mitarbeiterführung", "level": "Fortgeschritten" }
+    ],
+    "experiences": [
+      {
+        "title": "Logistikleiter",
+        "company": "Westfalen Distribution GmbH",
+        "startDate": "2017-09-01",
+        "endDate": null,
+        "description": "Gesamtverantwortung für Lager und Transport an einem Standort mit 6.000 Quadratmetern Lagerfläche.",
+        "achievements": [
+          "Steigerte die Liefertermintreue innerhalb von zwei Jahren von 91 auf 98 Prozent durch eine optimierte Tourenplanung.",
+          "Reduzierte die Transportkosten pro Sendung um 12 Prozent durch Bündelung von Touren und Neuverhandlung mit Spediteuren.",
+          "Führte ein Team von 22 Lager- und Versandmitarbeitenden über zwei Schichten."
+        ]
+      },
+      {
+        "title": "Disponent",
+        "company": "Ruhr Spedition KG",
+        "startDate": "2012-04-01",
+        "endDate": "2017-08-31",
+        "description": "Planung und Steuerung von Nah- und Fernverkehren für einen festen Kundenstamm.",
+        "achievements": [
+          "Disponierte täglich rund 45 Touren und koordinierte einen Fuhrpark von 28 Fahrzeugen.",
+          "Senkte die Leerkilometer-Quote durch verbesserte Rückladungsplanung von 19 auf 11 Prozent."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Ausbildung Kaufmann für Spedition und Logistikdienstleistung (IHK)",
+        "institution": "Berufskolleg Dortmund",
+        "startYear": "2009-09-01",
+        "endYear": "2012-03-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Geprüfter Logistikfachwirt (IHK)",
+        "issuer": "IHK zu Dortmund",
+        "issueDate": "2016-04-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "B1" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Leiter Logistik und Disposition (m/w/d)",
+    "company": "NordWest Handelslogistik GmbH",
+    "location": "Hamm",
+    "language": "de",
+    "fullText": "Die NordWest Handelslogistik GmbH betreibt ein Zentrallager mit 18.000 Quadratmetern und beliefert über 800 Filialen im norddeutschen Raum. Zur Verstärkung unseres Standorts in Hamm suchen wir einen Leiter Logistik und Disposition (m/w/d). Ihre Aufgaben: Leitung des Bereichs Lager und Transport mit rund 45 Mitarbeitenden, Verantwortung für Disposition, Kommissionierung und Versand, Optimierung der Logistikkennzahlen sowie die Einführung eines neuen Lagerverwaltungssystems. Ihr Profil: abgeschlossene logistische Ausbildung mit Weiterbildung zum Fachwirt oder Studium, mehrjährige Erfahrung in der Lager- und Transportlogistik, Kenntnisse in der Steuerung von Logistikkennzahlen sowie Führungserfahrung. Wir bieten einen sicheren Arbeitsplatz, ein Jahresgehalt mit Bonusregelung und einen Dienstwagen. Ihr Ansprechpartner ist Herr Frank Lehmann, Geschäftsführer Operations. Bitte teilen Sie uns Ihren frühestmöglichen Eintrittstermin mit."
+  }
+}

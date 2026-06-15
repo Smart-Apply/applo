@@ -1,0 +1,74 @@
+{
+  "id": "healthcare-de",
+  "profession": "Healthcare / Pflege",
+  "language": "de",
+  "profile": {
+    "firstName": "Sabine",
+    "lastName": "Wagner",
+    "email": "sabine.wagner@example.de",
+    "phone": "+49 151 23456789",
+    "city": "Köln",
+    "country": "Deutschland",
+    "linkedinUrl": "https://linkedin.com/in/sabine-wagner-pflege",
+    "summary": "Examinierte Gesundheits- und Krankenpflegerin mit 9 Jahren Erfahrung auf der Intensivstation. Übernahm die Schichtleitung für ein Team von 12 Pflegekräften und senkte die Fluktuation in zwei Jahren um 18 Prozent.",
+    "skills": [
+      { "name": "Intensivpflege", "level": "Experte" },
+      { "name": "Wundmanagement", "level": "Fortgeschritten" },
+      { "name": "Qualitätsmanagement", "level": "Fortgeschritten" },
+      { "name": "Dienstplangestaltung", "level": "Fortgeschritten" },
+      { "name": "Notfallmanagement", "level": "Experte" },
+      { "name": "Mitarbeiterführung", "level": "Fortgeschritten" }
+    ],
+    "experiences": [
+      {
+        "title": "Stellvertretende Stationsleitung Intensivstation",
+        "company": "Uniklinik Köln",
+        "startDate": "2019-04-01",
+        "endDate": null,
+        "description": "Schichtleitung und Personalverantwortung auf einer 16-Betten-Intensivstation.",
+        "achievements": [
+          "Führte ein Team von 12 Pflegekräften und reduzierte die Mitarbeiterfluktuation innerhalb von zwei Jahren um 18 Prozent.",
+          "Etablierte ein strukturiertes Einarbeitungskonzept, das die Einarbeitungszeit neuer Kolleginnen von 8 auf 5 Wochen verkürzte.",
+          "Koordinierte die Versorgung von täglich bis zu 16 beatmungspflichtigen Patienten ohne dokumentierten Versorgungsausfall."
+        ]
+      },
+      {
+        "title": "Gesundheits- und Krankenpflegerin",
+        "company": "St. Marien-Hospital",
+        "startDate": "2015-01-01",
+        "endDate": "2019-03-31",
+        "description": "Pflege auf der internistischen Intensivstation.",
+        "achievements": [
+          "Betreute eigenverantwortlich eine Patientengruppe von 6 Betten pro Schicht.",
+          "Wirkte an der Einführung eines digitalen Dokumentationssystems mit und schulte 20 Kolleginnen."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Examen Gesundheits- und Krankenpflege",
+        "institution": "Pflegeschule Uniklinik Köln",
+        "startYear": "2012-09-01",
+        "endYear": "2015-08-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Fachweiterbildung Intensivpflege und Anästhesie",
+        "issuer": "DKG",
+        "issueDate": "2018-06-01"
+      }
+    ],
+    "languages": [
+      { "name": "Deutsch", "level": "Muttersprache" },
+      { "name": "Englisch", "level": "B2" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Stationsleitung Intensivpflege (m/w/d)",
+    "company": "Helios Klinikum Wuppertal",
+    "location": "Wuppertal",
+    "language": "de",
+    "fullText": "Das Helios Klinikum Wuppertal sucht zum nächstmöglichen Zeitpunkt eine Stationsleitung (m/w/d) für unsere interdisziplinäre Intensivstation mit 18 Betten. Ihre Aufgaben: fachliche und disziplinarische Leitung eines Teams von rund 25 Mitarbeitenden, Dienstplangestaltung, Sicherstellung der Pflegequalität und Weiterentwicklung des Qualitätsmanagements. Ihr Profil: abgeschlossene Ausbildung in der Gesundheits- und Krankenpflege, Fachweiterbildung Intensivpflege, mehrjährige Berufserfahrung sowie idealerweise erste Leitungserfahrung. Wir bieten eine strukturierte Einarbeitung, Vergütung nach Tarif und vielfältige Fort- und Weiterbildungsmöglichkeiten. Ihre Ansprechpartnerin ist Frau Dr. Petra Hoffmann, Pflegedirektorin. Bitte geben Sie Ihren frühestmöglichen Eintrittstermin an."
+  }
+}

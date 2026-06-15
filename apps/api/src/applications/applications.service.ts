@@ -7,7 +7,7 @@ import {
   MessageEvent,
 } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
-import type { Application } from '../generated/prisma/client';
+import type { Application, JobPosting } from '../generated/prisma/client';
 import { ApplicationTrackingStatus } from '../generated/prisma/client';
 import { Observable, timer } from 'rxjs';
 import { map, switchMap, takeWhile } from 'rxjs/operators';
@@ -15,12 +15,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JobsService } from '../jobs/jobs.service';
 import { StorageService } from '../storage/storage.service';
 import { JobType } from '../jobs/interfaces/queue.interface';
-import { LLMService, KeywordMatch } from '../llm/llm.service';
+import { LLMService } from '../llm/llm.service';
 import { TitleGeneratorService } from './title-generator.service';
 import { KeywordsService } from '../keywords/keywords.service';
 import { TemplatesService } from '../templates/templates.service';
 import { SubscriptionService } from '../subscription/subscription.service';
-import { ATSAgentOutput } from '../agents/agents.interface';
+import { GroundingValidatorService } from './grounding/grounding-validator.service';
+import { ATSAgentOutput } from '../keywords/keywords.types';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
@@ -36,6 +37,7 @@ import {
   NotFoundWithCode,
   ConflictWithCode,
 } from '../common/exceptions/coded-http.exception';
+import { assertPromptWithinLimits } from '../common/guardrails/prompt-guardrail';
 import {
   buildResumeTemplateData,
   ProfileWithRelations,
@@ -43,6 +45,17 @@ import {
   formatDateRange,
   normalizeProficiencyLevel,
 } from './resume-template.util';
+import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.util';
+import { buildMatchInsights } from './match-insights.util';
+import { matchAtsKeywordsToProfile, selectKeywordsToWeave } from './keyword-coverage.util';
+import { isValidResumeEdit } from './resume-editor.util';
+import { mapStoredResumeToTailoredProfile } from './stored-resume.util';
+import {
+  buildSalutation,
+  isValidJobFacts,
+  normalizeJobFacts,
+  type JobFactsDto,
+} from './job-facts.util';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -70,6 +83,7 @@ export class ApplicationsService {
     private readonly keywordsService: KeywordsService,
     private readonly templatesService: TemplatesService,
     private readonly subscriptionService: SubscriptionService,
+    private readonly groundingValidator: GroundingValidatorService,
   ) {}
 
   private async getProfileWithRelations(userId: string): Promise<ProfileWithRelations> {
@@ -411,211 +425,6 @@ export class ApplicationsService {
     };
   }
 
-  private buildCoverLetterContext(
-    resume: any,
-    jobPosting: { title: string; company: string },
-    instructions?: string,
-  ) {
-    const skills = (resume.skillCategories || [])
-      .flatMap((category: { skills: string[] }) => category.skills)
-      .filter(Boolean)
-      .join(', ');
-
-    const experiences = (resume.experiences || [])
-      .map(
-        (experience: { title: string; company: string; dateRange: string }) =>
-          `${experience.title} bei ${experience.company} (${experience.dateRange})`,
-      )
-      .join('\n');
-
-    const motivationParts = [resume.summary, instructions].filter(Boolean);
-
-    return {
-      candidateName: resume.candidateName,
-      jobTitle: jobPosting.title,
-      companyName: jobPosting.company,
-      skills,
-      experiences,
-      motivation: motivationParts.join('\n\n'),
-    };
-  }
-
-  /**
-   * Build context for ATS-optimized cover letter generation
-   * Formats profile and keywords for strategic keyword placement
-   */
-  private buildATSCoverLetterContext(
-    resume: any,
-    jobPosting: {
-      title: string;
-      company: string;
-      location?: string | null;
-      description?: string | null;
-      fullText?: string;
-      language?: string | null;
-    },
-    matchedKeywords: KeywordMatch[],
-    missingKeywords: KeywordMatch[],
-  ) {
-    // Detect language from job posting (fallback to German as default)
-    const detectedLanguage =
-      jobPosting.language ||
-      (jobPosting.fullText ? this.detectLanguage(jobPosting.fullText) : null) ||
-      'de';
-    // Format profile information
-    const skills = (resume.skillCategories || [])
-      .flatMap((category: { skills: string[] }) => category.skills)
-      .filter(Boolean)
-      .join(', ');
-
-    const experiences = (resume.experiences || [])
-      .map(
-        (experience: {
-          title: string;
-          company: string;
-          dateRange: string;
-          achievements?: string[];
-        }) =>
-          `${experience.title} at ${experience.company} (${experience.dateRange})${
-            experience.achievements?.length
-              ? ': ' + experience.achievements.slice(0, 2).join('; ')
-              : ''
-          }`,
-      )
-      .join('\n');
-
-    const profileString = `
-Name: ${resume.candidateName}
-Skills: ${skills}
-Experience: ${experiences}
-Summary: ${resume.summary || 'Not provided'}
-    `.trim();
-
-    return {
-      profile: profileString,
-      jobTitle: jobPosting.title,
-      companyName: jobPosting.company,
-      location: jobPosting.location || undefined,
-      jobDescription: jobPosting.description || undefined,
-      matchedKeywords,
-      missingKeywords,
-      language: detectedLanguage,
-    };
-  }
-
-  /**
-   * Build context for ATS-optimized resume generation
-   * Formats profile and keywords for strategic keyword placement
-   */
-  private buildATSResumeContext(
-    resume: any,
-    jobPosting: {
-      title: string;
-      company: string;
-      description?: string | null;
-      fullText?: string;
-      language?: string | null;
-    },
-    matchedKeywords: KeywordMatch[],
-    missingKeywords: KeywordMatch[],
-  ) {
-    // Detect language from job posting (fallback to German as default)
-    const detectedLanguage =
-      jobPosting.language ||
-      (jobPosting.fullText ? this.detectLanguage(jobPosting.fullText) : null) ||
-      'de';
-
-    const profileString = JSON.stringify(resume, null, 2);
-
-    return {
-      profile: profileString,
-      jobTitle: jobPosting.title,
-      companyName: jobPosting.company,
-      jobDescription: jobPosting.description || undefined,
-      matchedKeywords,
-      missingKeywords,
-      language: detectedLanguage,
-    };
-  }
-
-  /**
-   * Extract keywords for a job posting and match against profile
-   * Used for ATS-optimized content generation
-   */
-  private async getKeywordsForGeneration(
-    jobPosting: {
-      title: string;
-      company: string;
-      location?: string | null;
-      language?: string | null;
-      fullText: string;
-      rawText?: string | null;
-    },
-    profileKeywords: Set<string>,
-  ): Promise<{ matchedKeywords: KeywordMatch[]; missingKeywords: KeywordMatch[] }> {
-    try {
-      // Extract keywords using ATS Agent (simplified - only fullText needed)
-      const keywords = await this.keywordsService.extractKeywords({
-        title: jobPosting.title,
-        company: jobPosting.company,
-        location: jobPosting.location || undefined,
-        language: jobPosting.language || undefined,
-        fullText: jobPosting.fullText,
-        rawText: jobPosting.rawText || undefined,
-      });
-
-      // Perform matching
-      return this.matchKeywordsForLLM(keywords, profileKeywords);
-    } catch (error) {
-      this.logger.warn(
-        'Failed to extract keywords for ATS generation, using fallback',
-        error as Error,
-      );
-      return { matchedKeywords: [], missingKeywords: [] };
-    }
-  }
-
-  /**
-   * Match extracted keywords against profile for LLM context
-   */
-  private matchKeywordsForLLM(
-    keywords: ATSAgentOutput,
-    profileKeywords: Set<string>,
-  ): { matchedKeywords: KeywordMatch[]; missingKeywords: KeywordMatch[] } {
-    const matched: KeywordMatch[] = [];
-    const missing: KeywordMatch[] = [];
-
-    const checkKeyword = (keyword: string, category: KeywordMatch['category']) => {
-      const normalized = keyword.toLowerCase();
-      const found =
-        profileKeywords.has(normalized) ||
-        [...profileKeywords].some((pk) => pk.includes(normalized) || normalized.includes(pk));
-
-      const match: KeywordMatch = {
-        keyword,
-        category,
-        found,
-        confidence: found ? 0.85 : 0,
-      };
-
-      if (found) {
-        matched.push(match);
-      } else {
-        missing.push(match);
-      }
-    };
-
-    // Check all keyword categories from ATSAgentOutput (using domain-neutral names)
-    keywords.coreCompetencies.forEach((k) => checkKeyword(k, 'core'));
-    keywords.softSkills.forEach((k) => checkKeyword(k, 'soft'));
-    keywords.methodologies.forEach((k) => checkKeyword(k, 'methodology'));
-    keywords.industryKeywords.forEach((k) => checkKeyword(k, 'industry'));
-    keywords.senioritySignals.forEach((k) => checkKeyword(k, 'seniority'));
-    keywords.requirementKeywords.forEach((k) => checkKeyword(k, 'requirement'));
-
-    return { matchedKeywords: matched, missingKeywords: missing };
-  }
-
   private ensureNotGenerating(application: Application) {
     if (application.status === ApplicationStatus.GENERATING) {
       throw new BadRequestWithCode(ErrorCode.APPLICATION_GENERATING);
@@ -928,22 +737,29 @@ Summary: ${resume.summary || 'Not provided'}
     try {
       const startTime = Date.now();
 
-      // Step 1: Select relevant profile data
+      // Step 1: Select relevant profile data (in parallel with job-facts
+      // extraction (#5) — both only depend on the job posting, so no added
+      // critical-path latency).
       this.logger.log('Step 1: Selecting relevant profile data...');
-      const tailoredProfile = await this.llmService.callJson<TailoredProfileDto>(
-        'v1/skill-selector.md',
-        {
-          profile: this.serializeProfile(profile),
-          job: this.serializeJobPosting(jobPosting),
-          language: detectedLanguage,
-          userId,
-          jobPostingId: jobPosting.id,
-        },
-        {
-          temperature: 0.2, // Low temperature for deterministic skill matching
-          maxTokens: 3000,
-        },
-      );
+      const [tailoredProfile, jobFacts] = await Promise.all([
+        this.llmService.callJson<TailoredProfileDto>(
+          'v1/skill-selector.md',
+          {
+            profile: this.serializeProfile(profile),
+            job: this.serializeJobPosting(jobPosting),
+            language: detectedLanguage,
+            userId,
+            jobPostingId: jobPosting.id,
+          },
+          {
+            temperature: 0.2, // Low temperature for deterministic skill matching
+            maxTokens: 3000,
+          },
+        ),
+        shouldGenerateCoverLetter
+          ? this.extractJobFacts(jobPosting, detectedLanguage, userId)
+          : Promise.resolve(null),
+      ]);
       this.logger.log(
         `Profile tailored: ${tailoredProfile.selected_hard_skills.length} hard skills, ${tailoredProfile.selected_experiences.length} experiences`,
       );
@@ -958,6 +774,8 @@ Summary: ${resume.summary || 'Not provided'}
         ? this.llmService.callText('v1/cover-letter.md', {
             job: this.serializeJobPosting(jobPosting),
             tailoredProfile,
+            jobFacts: normalizeJobFacts(jobFacts),
+            salutation: buildSalutation(jobFacts, detectedLanguage),
             language: detectedLanguage,
             userId,
             jobPostingId: jobPosting.id,
@@ -1008,12 +826,22 @@ Summary: ${resume.summary || 'Not provided'}
         );
       }
 
+      // Editor pass (#1, resume): critique + revise the rewritten resume payload
+      // (summary + achievements), preserving every profile ID. Graceful fallback.
+      const editedRewrittenProfile = await this.runResumeEditorPass(
+        rewrittenProfile,
+        tailoredProfile,
+        detectedLanguage,
+        userId,
+        jobPosting.id,
+      );
+
       // Step 3: Convert tailoredProfile to JSON format for frontend editor
       this.logger.log('Step 3: Converting resume to JSON format for editor...');
       const resumeJson = this.convertTailoredProfileToResumeJson(
         profile,
         tailoredProfile,
-        rewrittenProfile,
+        editedRewrittenProfile,
       );
 
       // Debug: Log the first experience achievements to verify German content is saved
@@ -1029,8 +857,38 @@ Summary: ${resume.summary || 'Not provided'}
 
       // Step 4: Update application with generated content
       // Note: resumeText stores JSON for editor, Markdown can be regenerated from tailoredProfile
+      // Editor pass (#1): one critique-and-revise pass over the draft cover letter.
+      const editedCoverLetterMarkdown = shouldGenerateCoverLetter
+        ? await this.runCoverLetterEditorPass(
+            coverLetterMarkdown,
+            jobPosting,
+            tailoredProfile,
+            detectedLanguage,
+            userId,
+          )
+        : coverLetterMarkdown;
+
+      // Keyword weave (#6): close profile-supported priority-1 keyword gaps.
+      const wovenCoverLetterMarkdown = shouldGenerateCoverLetter
+        ? await this.runKeywordWeavePass(
+            editedCoverLetterMarkdown,
+            atsKeywords,
+            jobPosting,
+            tailoredProfile,
+            detectedLanguage,
+            userId,
+          )
+        : editedCoverLetterMarkdown;
+
+      // Grounding check (#7): flag any fabricated impact numbers (non-destructive).
+      this.runGroundingCheck(
+        application.id,
+        { resume: JSON.stringify(resumeJson), coverLetter: wovenCoverLetterMarkdown },
+        profile,
+      );
+
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = this.convertCoverLetterToHtml(coverLetterMarkdown);
+      const coverLetterHtml = this.convertCoverLetterToHtml(wovenCoverLetterMarkdown);
 
       const updatedApplication = await this.prisma.application.update({
         where: { id: application.id },
@@ -1121,19 +979,22 @@ Summary: ${resume.summary || 'Not provided'}
     this.logger.log(`Detected language: ${language}`);
 
     try {
-      // 3. Call skill selector (ONCE per application)
+      // 3. Call skill selector (ONCE per application), in parallel with the
+      // job-facts extraction (#5) used for the cover letter.
       emitProgress(20, 'Wähle relevante Profildaten aus...');
       this.logger.log('Step 1: Selecting relevant profile data...');
-      const tailoredProfile = await this.llmService.callJson<TailoredProfileDto>(
-        'v1/skill-selector.md',
-        {
+      const [tailoredProfile, jobFacts] = await Promise.all([
+        this.llmService.callJson<TailoredProfileDto>('v1/skill-selector.md', {
           profile: this.serializeProfile(profile),
           job: this.serializeJobPosting(jobPosting),
           language,
           userId,
           jobPostingId: jobPosting.id,
-        },
-      );
+        }),
+        shouldGenerateCoverLetter
+          ? this.extractJobFacts(jobPosting, language, userId)
+          : Promise.resolve(null),
+      ]);
       this.logger.log(
         `Profile tailored: ${tailoredProfile.selected_hard_skills.length} hard skills, ${tailoredProfile.selected_experiences.length} experiences`,
       );
@@ -1157,6 +1018,8 @@ Summary: ${resume.summary || 'Not provided'}
         coverLetterMarkdown = await this.llmService.callText('v1/cover-letter.md', {
           job: this.serializeJobPosting(jobPosting),
           tailoredProfile,
+          jobFacts: normalizeJobFacts(jobFacts),
+          salutation: buildSalutation(jobFacts, language),
           language,
           userId,
           jobPostingId: jobPosting.id,
@@ -1220,8 +1083,42 @@ Summary: ${resume.summary || 'Not provided'}
       }
 
       // 7. Persist results
+      // Editor pass (#1): critique-and-revise the draft cover letter.
+      if (shouldGenerateCoverLetter) {
+        emitProgress(90, 'Anschreiben wird geprüft und verfeinert...');
+      }
+      const editedCoverLetter = shouldGenerateCoverLetter
+        ? await this.runCoverLetterEditorPass(
+            coverLetterMarkdown,
+            jobPosting,
+            tailoredProfile,
+            language,
+            userId,
+          )
+        : coverLetterMarkdown;
+
+      // Keyword weave (#6): close profile-supported priority-1 keyword gaps.
+      // No-ops gracefully when atsKeywords has no priority-1 'both' hard skills.
+      const wovenCoverLetter = shouldGenerateCoverLetter
+        ? await this.runKeywordWeavePass(
+            editedCoverLetter,
+            atsKeywords,
+            jobPosting,
+            tailoredProfile,
+            language,
+            userId,
+          )
+        : editedCoverLetter;
+
+      // Grounding check (#7): flag fabricated impact numbers (non-destructive).
+      this.runGroundingCheck(
+        applicationId,
+        { resume: resumeMarkdown, coverLetter: wovenCoverLetter },
+        profile,
+      );
+
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = this.convertCoverLetterToHtml(coverLetterMarkdown);
+      const coverLetterHtml = this.convertCoverLetterToHtml(wovenCoverLetter);
 
       emitProgress(95, 'Speichere Ergebnisse...');
       const updated = await this.prisma.application.update({
@@ -1304,82 +1201,18 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
-   * Deterministically match extracted keywords against profile data
-   * Returns keywords with "source" field: "job" (missing) or "both" (matched)
-   * Also deduplicates keywords (case-insensitive)
-   * SIMPLIFIED: Only hard_skills now (soft skills removed)
+   * Deterministically match extracted keywords against profile data.
+   * Delegates to the shared pure matcher (`keyword-coverage.util.ts`) so the
+   * offline eval harness (#10) measures coverage with the identical matcher.
+   * Returns keywords with a "source" field: "job" (missing) or "both" (matched).
    */
   private matchKeywordsAgainstProfile(extractedKeywords: any, profile: ProfileWithRelations): any {
-    const matchKeyword = (kw: any): any => {
-      const keyword = kw.keyword.toLowerCase();
-
-      // Check if keyword exists in profile skills (exact or partial match)
-      const inSkills = profile.skills.some((s) => {
-        const skillName = s.name.toLowerCase();
-        // Exact match or keyword is part of skill name
-        return skillName === keyword || skillName.includes(keyword) || keyword.includes(skillName);
-      });
-
-      // Check if keyword exists in experience descriptions or titles
-      const inExperiences = profile.experiences.some(
-        (e) =>
-          e.description?.toLowerCase().includes(keyword) || e.title.toLowerCase().includes(keyword),
-      );
-
-      // Check if keyword exists in project descriptions, technologies, or names
-      const inProjects = profile.projects.some(
-        (p) =>
-          p.description?.toLowerCase().includes(keyword) ||
-          p.technologies?.some((t) => t.toLowerCase().includes(keyword)) ||
-          p.name.toLowerCase().includes(keyword),
-      );
-
-      // Check if keyword exists in certificates
-      const inCertificates = profile.certificates.some(
-        (c) => c.name.toLowerCase().includes(keyword) || c.issuer?.toLowerCase().includes(keyword),
-      );
-
-      const isMatched = inSkills || inExperiences || inProjects || inCertificates;
-
-      return {
-        ...kw,
-        source: isMatched ? 'both' : 'job',
-      };
-    };
-
-    // Deduplicate function (case-insensitive, preserves original casing, prefers "both" over "job")
-    const deduplicateKeywords = (keywords: any[]): any[] => {
-      const seen = new Map<string, any>();
-      keywords.forEach((kw) => {
-        const lowerKey = kw.keyword.toLowerCase();
-        if (!seen.has(lowerKey)) {
-          seen.set(lowerKey, kw);
-        } else {
-          // If duplicate found, prefer "both" over "job" for source
-          const existing = seen.get(lowerKey)!;
-          if (kw.source === 'both' && existing.source === 'job') {
-            seen.set(lowerKey, kw);
-          }
-        }
-      });
-      return Array.from(seen.values());
-    };
-
-    // Match keywords against profile (only hard_skills now)
-    const hard_skills = (extractedKeywords.hard_skills || []).map(matchKeyword);
-
-    this.logger.debug(`Before deduplication: ${hard_skills.length} hard_skills`);
-    this.logger.debug(`Hard skills: ${JSON.stringify(hard_skills.map((k) => k.keyword))}`);
-
-    // Deduplicate (LLM might return duplicates)
-    const deduplicatedHard = deduplicateKeywords(hard_skills);
-
-    this.logger.debug(`After deduplication: ${deduplicatedHard.length} hard_skills`);
-
-    return {
-      hard_skills: deduplicatedHard,
-      soft_skills: [], // No longer extracting soft skills
-    };
+    const matched = matchAtsKeywordsToProfile(extractedKeywords, profile);
+    this.logger.debug(
+      `Matched ${matched.hard_skills?.length || 0} hard_skills against profile ` +
+        `(${this.countMatchedKeywords(matched)} supported)`,
+    );
+    return matched;
   }
 
   /**
@@ -1392,74 +1225,57 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
-   * Serialize profile data for LLM consumption
+   * Serialize profile data for LLM consumption.
+   * Delegates to the shared pure serializer so the offline eval harness (#10)
+   * renders identical prompt inputs. See `serialize.util.ts`.
    */
   private serializeProfile(profile: ProfileWithRelations): Record<string, any> {
-    // Build full address from components
-    const addressParts: string[] = [];
-    if (profile.street) addressParts.push(profile.street);
-    if (profile.postalCode || profile.city) {
-      addressParts.push(`${profile.postalCode || ''} ${profile.city || ''}`.trim());
-    }
-    if (profile.country) addressParts.push(profile.country);
-    const fullAddress = addressParts.join(', ');
-
-    return {
-      fullName:
-        `${profile.user.firstName || ''} ${profile.user.lastName || ''}`.trim() || 'Unknown',
-      email: profile.user.email,
-      phone: profile.phone || '',
-      street: profile.street || '',
-      postalCode: profile.postalCode || '',
-      city: profile.city || '',
-      country: profile.country || '',
-      fullAddress: fullAddress || '',
-      linkedinUrl: profile.linkedinUrl || '',
-      githubUrl: profile.githubUrl || '',
-      portfolioUrl: profile.portfolioUrl || '',
-      summary: profile.summary || '',
-      skills: profile.skills.map((s) => ({ id: s.id, name: s.name, level: s.level })),
-      experiences: profile.experiences.map((e) => ({
-        id: e.id,
-        title: e.title,
-        company: e.company,
-        startDate: e.startDate.toISOString(),
-        endDate: e.endDate ? e.endDate.toISOString() : null,
-        description: e.description || '',
-        achievements: e.achievements || [],
-      })),
-      projects: profile.projects.map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description || '',
-        technologies: p.technologies || [],
-        highlights: p.highlights || [],
-      })),
-      education: profile.education.map((ed) => ({
-        id: ed.id,
-        degree: ed.degree,
-        institution: ed.institution,
-        startYear: ed.startYear?.toISOString(),
-        endYear: ed.endYear?.toISOString(),
-      })),
-      certificates: profile.certificates.map((c) => ({
-        id: c.id,
-        name: c.name,
-        issuer: c.issuer || '',
-        issueDate: c.issueDate?.toISOString(),
-      })),
-      languages: profile.languages.map((l) => ({
-        id: l.id,
-        name: l.name,
-        level: l.level,
-      })),
-    };
+    return serializeProfileForLlm(profile);
   }
 
   /**
    * Call resume-rewrite LLM with graceful degradation
    * If the LLM call fails, returns null and the pipeline continues with original profile data
    */
+  /**
+   * Cover-letter data layer (#5) — extract structured job facts (contact person,
+   * company specifics, explicit salary/start-date asks) as a focused step, so the
+   * cover-letter writer gets them ready-made instead of scanning `fullText` while
+   * it writes. Graceful degradation: on any failure returns null and the prompt
+   * falls back to scanning `fullText` itself.
+   */
+  private async extractJobFacts(
+    jobPosting: JobPosting,
+    language: string,
+    userId: string,
+  ): Promise<JobFactsDto | null> {
+    try {
+      const raw = await this.llmService.callJson<JobFactsDto>(
+        'v1/job-facts.md',
+        {
+          job: this.serializeJobPosting(jobPosting),
+          language,
+          userId,
+          jobPostingId: jobPosting.id,
+        },
+        { temperature: 0, maxTokens: 500 },
+      );
+      if (!isValidJobFacts(raw)) {
+        this.logger.warn('Job-facts extraction returned an invalid payload; ignoring');
+        return null;
+      }
+      const facts = normalizeJobFacts(raw);
+      this.logger.log(
+        `Job facts: contact="${facts.contact_name || '—'}", ${facts.company_specifics.length} specifics` +
+          `, salary=${facts.asks_salary}, startDate=${facts.asks_start_date}`,
+      );
+      return facts;
+    } catch (error) {
+      this.logger.warn(`Job-facts extraction failed; continuing without it: ${error.message}`);
+      return null;
+    }
+  }
+
   private async callResumeRewrite(
     tailoredProfile: TailoredProfileDto,
     jobPosting: any,
@@ -1499,16 +1315,197 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
-   * Serialize job posting for LLM consumption
+   * Resume editor pass (#1) — one critique-and-revise pass over the rewritten
+   * resume payload (summary + achievements), mirroring the cover-letter editor.
+   * JSON → JSON. Graceful degradation: on any failure, an invalid edit, or an
+   * edit that drops/changes a `profileExperienceId` / `profileProjectId` (which
+   * would silently lose the rewritten content), we keep the pre-edit payload.
+   */
+  private async runResumeEditorPass(
+    rewrittenProfile: RewrittenProfileDto | null,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    userId: string,
+    jobPostingId: string,
+  ): Promise<RewrittenProfileDto | null> {
+    if (!rewrittenProfile) return rewrittenProfile;
+
+    try {
+      const edited = await this.llmService.callJson<RewrittenProfileDto>(
+        'v1/editor-resume.md',
+        {
+          rewrittenProfile,
+          tailoredProfile,
+          language,
+          userId,
+          jobPostingId,
+        },
+        { temperature: 0.35, maxTokens: 2000 },
+      );
+
+      // Guard: the edit MUST preserve every ID and not gut an entry. Otherwise
+      // the rewritten (often translated) content can't map back to the profile.
+      if (!isValidResumeEdit(rewrittenProfile, edited)) {
+        this.logger.warn(
+          'Resume editor pass produced an invalid or ID-dropping edit; keeping pre-edit payload',
+        );
+        return rewrittenProfile;
+      }
+
+      this.logger.log('Resume editor pass applied');
+      return edited;
+    } catch (error) {
+      this.logger.warn(`Resume editor pass failed; keeping pre-edit payload: ${error.message}`);
+      return rewrittenProfile;
+    }
+  }
+
+  /**
+   * Serialize job posting for LLM consumption.
+   * Delegates to the shared pure serializer so the offline eval harness (#10)
+   * renders identical prompt inputs. See `serialize.util.ts`.
    */
   private serializeJobPosting(job: any): Record<string, any> {
-    return {
-      title: job.title,
-      company: job.company || '',
-      location: job.location || '',
-      fullText: job.fullText || '',
-      language: job.language || 'en',
-    };
+    return serializeJobPostingForLlm(job);
+  }
+
+  /**
+   * Editor/critique pass (#1) — one LLM call that revises a draft cover letter
+   * against the editing rubric (de-cliché, concrete company reference, no
+   * Konjunktiv, honest metrics). Graceful degradation: on any failure or a
+   * suspiciously short result we keep the original draft so generation never
+   * breaks.
+   */
+  private async runCoverLetterEditorPass(
+    draft: string | null,
+    jobPosting: JobPosting,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    userId: string,
+  ): Promise<string | null> {
+    if (!draft || draft.trim() === '') return draft;
+
+    try {
+      const edited = await this.llmService.callText(
+        'v1/editor-cover-letter.md',
+        {
+          draft,
+          job: this.serializeJobPosting(jobPosting),
+          tailoredProfile,
+          language,
+          userId,
+          jobPostingId: jobPosting.id,
+        },
+        { temperature: 0.4, maxTokens: 1500 },
+      );
+
+      // Guard: the editor must not gut the letter. If it returns empty or less
+      // than half the draft length, treat it as a failure and keep the draft.
+      if (!edited || edited.trim().length < draft.trim().length * 0.5) {
+        this.logger.warn(
+          'Cover letter editor pass returned suspiciously short output; keeping original draft',
+        );
+        return draft;
+      }
+
+      this.logger.log('Cover letter editor pass applied');
+      return edited;
+    } catch (error) {
+      this.logger.warn(
+        `Cover letter editor pass failed; keeping original draft: ${error.message}`,
+      );
+      return draft;
+    }
+  }
+
+  /**
+   * Coverage-driven keyword weave (#6) — one guarded pass that weaves the
+   * priority-1, profile-supported keywords still MISSING from the cover letter
+   * into the existing prose. Never adds a keyword the profile doesn't support
+   * (that would be fabrication and would defeat the grounding validator), never
+   * stuffs, and never invents facts.
+   *
+   * Skips the LLM call entirely when there is no profile-supported gap. Graceful
+   * degradation: on any failure or a suspiciously short result we keep the
+   * pre-weave draft so generation never breaks.
+   */
+  private async runKeywordWeavePass(
+    draft: string | null,
+    atsKeywords: any,
+    jobPosting: JobPosting,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    userId: string,
+  ): Promise<string | null> {
+    if (!draft || draft.trim() === '') return draft;
+
+    const keywords = selectKeywordsToWeave(atsKeywords, draft);
+    if (keywords.length === 0) {
+      this.logger.debug(
+        'Keyword weave: no profile-supported priority-1 gaps in cover letter; skipping',
+      );
+      return draft;
+    }
+
+    try {
+      const woven = await this.llmService.callText(
+        'v1/keyword-weave.md',
+        {
+          draft,
+          keywords,
+          tailoredProfile,
+          language,
+          userId,
+          jobPostingId: jobPosting.id,
+        },
+        { temperature: 0.3, maxTokens: 1500 },
+      );
+
+      // Guard: a surgical weave must not gut the letter. If it returns empty or
+      // shrinks below 60% of the draft, treat it as a failure and keep the draft.
+      if (!woven || woven.trim().length < draft.trim().length * 0.6) {
+        this.logger.warn(
+          'Keyword weave returned suspiciously short output; keeping pre-weave draft',
+        );
+        return draft;
+      }
+
+      this.logger.log(`Keyword weave applied (${keywords.length}: ${keywords.join(', ')})`);
+      return woven;
+    } catch (error) {
+      this.logger.warn(`Keyword weave failed; keeping pre-weave draft: ${error.message}`);
+      return draft;
+    }
+  }
+
+  /**
+   * Grounding check (#7) — deterministic, non-destructive. Logs a warning when
+   * the generated documents contain impact numbers that don't appear anywhere
+   * in the source profile (likely fabrications). Never throws.
+   */
+  private runGroundingCheck(
+    applicationId: string,
+    generated: { resume?: string | null; coverLetter?: string | null },
+    profile: ProfileWithRelations,
+  ): void {
+    try {
+      const report = this.groundingValidator.validate(generated, profile);
+      if (!report.grounded) {
+        this.logger.warn(
+          `Grounding check (application ${applicationId}): ${report.unsupported.length}/${report.totalChecked} impact numbers not found in profile (score ${report.score}). Unsupported: ${report.unsupported
+            .map((u) => u.value)
+            .join(', ')}`,
+        );
+      } else {
+        this.logger.debug(
+          `Grounding check (application ${applicationId}): all ${report.totalChecked} impact numbers grounded`,
+        );
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Grounding check failed for application ${applicationId}: ${error.message}`,
+      );
+    }
   }
 
   /**
@@ -1884,6 +1881,7 @@ Summary: ${resume.summary || 'Not provided'}
           matchedKeywords,
           missingKeywords,
           keywords,
+          { targetRole: application.jobPosting?.title },
         );
 
         // Update the cached analysis data
@@ -1924,6 +1922,9 @@ Summary: ${resume.summary || 'Not provided'}
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
     this.ensureNotGenerating(application);
 
+    // Guardrail: enforce char/token limits on the AI instructions (issue #520)
+    assertPromptWithinLimits(dto.instructions, 'editModeAssistant');
+
     const resume = this.parseResume(application.resumeText);
     if (!resume) {
       throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_RESUME);
@@ -1944,33 +1945,27 @@ Summary: ${resume.summary || 'Not provided'}
         companyName: jobPosting.company || 'Unknown Company',
       });
     }
-    // If no content or regenerate without existing content, generate new
+    // If no content or regenerate without existing content, generate fresh using
+    // the v1 pipeline prompt — the same prompt the initial-generation path uses —
+    // so edit-mode regenerate gets the #1/#5/#6 quality improvements (editor pass,
+    // job-facts personalization, keyword coverage) instead of the retired
+    // cover-letter-ats.md path. The stored resume is already tailored, so we map
+    // it straight into the TailoredProfileDto shape (no extra skill-selector call).
     else if (!content || dto.regenerate) {
-      // Extract keywords from resume for ATS-optimized generation
-      const resumeKeywords = this.extractResumeKeywords(application.resumeText);
-
-      // Get keyword analysis for ATS optimization
-      const { matchedKeywords, missingKeywords } = await this.getKeywordsForGeneration(
-        jobPosting,
-        resumeKeywords,
-      );
-
-      // Use ATS-optimized generation if keywords are available
-      if (matchedKeywords.length > 0 || missingKeywords.length > 0) {
-        this.logger.log('Regenerating cover letter with ATS optimization');
-        const atsContext = this.buildATSCoverLetterContext(
-          resume,
-          jobPosting,
-          matchedKeywords,
-          missingKeywords,
-        );
-        content = await this.llmService.generateCoverLetterATS(atsContext);
-      } else {
-        // Fallback to standard generation
-        this.logger.log('Regenerating cover letter with standard LLM');
-        const context = this.buildCoverLetterContext(resume, jobPosting, dto.instructions);
-        content = await this.llmService.generateCoverLetter(context);
-      }
+      this.logger.log('Regenerating cover letter via v1 pipeline prompt');
+      const language = jobPosting.language || this.detectLanguage(jobPosting.fullText) || 'en';
+      const tailoredProfile = mapStoredResumeToTailoredProfile(resume, jobPosting);
+      const jobFacts = await this.extractJobFacts(jobPosting, language, userId);
+      const markdown = await this.llmService.callText('v1/cover-letter.md', {
+        job: this.serializeJobPosting(jobPosting),
+        tailoredProfile,
+        jobFacts: normalizeJobFacts(jobFacts),
+        salutation: buildSalutation(jobFacts, language),
+        language,
+        userId,
+        jobPostingId: jobPosting.id,
+      });
+      content = this.convertCoverLetterToHtml(markdown) ?? markdown;
     }
 
     const sanitizedContent = this.sanitizeCoverLetter(content);
@@ -2001,6 +1996,9 @@ Summary: ${resume.summary || 'Not provided'}
     this.logger.log(`Generating summary for application ${applicationId}`);
 
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    // Guardrail: enforce char/token limits on the AI instructions (issue #520)
+    assertPromptWithinLimits(dto.instructions, 'editModeAssistant');
 
     const jobPosting = application.jobPosting;
     if (!jobPosting) {
@@ -2065,6 +2063,9 @@ Summary: ${resume.summary || 'Not provided'}
 
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
 
+    // Guardrail: enforce char/token limits on the AI instructions (issue #520)
+    assertPromptWithinLimits(dto.instructions, 'editModeAssistant');
+
     const jobPosting = application.jobPosting;
     if (!jobPosting) {
       throw new BadRequestWithCode(ErrorCode.APPLICATION_NO_JOB);
@@ -2120,6 +2121,9 @@ Summary: ${resume.summary || 'Not provided'}
     );
 
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
+
+    // Guardrail: enforce char/token limits on the AI instructions (issue #520)
+    assertPromptWithinLimits(dto.instructions, 'editModeAssistant');
 
     const jobPosting = application.jobPosting;
     if (!jobPosting) {
@@ -2856,6 +2860,7 @@ Summary: ${resume.summary || 'Not provided'}
           matchedKeywords,
           missingKeywords,
           keywords,
+          { targetRole: application.jobPosting.title },
         );
 
         this.logger.log(
@@ -2948,7 +2953,9 @@ Summary: ${resume.summary || 'Not provided'}
     const { matchedKeywords, missingKeywords } = this.matchKeywords(keywords, candidateKeywords);
 
     // Calculate match analysis
-    const matchAnalysis = this.calculateMatchAnalysis(matchedKeywords, missingKeywords, keywords);
+    const matchAnalysis = this.calculateMatchAnalysis(matchedKeywords, missingKeywords, keywords, {
+      targetRole: jobPosting.title,
+    });
 
     // Cache the results
     const analysisData = {
@@ -3262,12 +3269,17 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
-   * Calculate match analysis from matched/missing keywords
+   * Calculate match analysis from matched/missing keywords.
+   *
+   * The `overallScore` is purely deterministic (keyword coverage) — it is NEVER
+   * an LLM self-report. `context.targetRole` (the job title) lets the suggestions
+   * name the role the user is applying for.
    */
   private calculateMatchAnalysis(
     matchedKeywords: any[],
     missingKeywords: any[],
     keywords: any,
+    context?: { targetRole?: string },
   ): any {
     // Support both old and new field names for counting totals
     // Only count hard skills (technical) - soft skills removed
@@ -3303,37 +3315,12 @@ Summary: ${resume.summary || 'Not provided'}
     // No more soft skills weighting
     const overallScore = technicalScore;
 
-    const suggestions: string[] = [];
-    const strengths: string[] = [];
-    const weaknesses: string[] = [];
-
-    if (technicalScore >= 70) {
-      strengths.push('Gute Übereinstimmung bei Kernkompetenzen');
-    } else if (technicalScore < 50) {
-      const missingCore = missingKeywords
-        .filter(
-          (k) =>
-            k.category === 'core' || k.category === 'methodology' || k.category === 'technical',
-        )
-        .slice(0, 3)
-        .map((k) => k.keyword);
-      if (missingCore.length > 0) {
-        suggestions.push(
-          `Relevante Qualifikationen könnten ergänzt werden: ${missingCore.join(', ')}`,
-        );
-        weaknesses.push('Einige Kernkompetenzen nicht gefunden');
-      }
-    }
-
-    if (experienceScore >= 70) {
-      strengths.push('Berufserfahrung entspricht den Anforderungen');
-    }
-
-    if (overallScore >= 75) {
-      strengths.push('Profil passt gut zur Stellenausschreibung');
-    } else if (overallScore < 50) {
-      suggestions.push('Das Profil könnte detaillierter auf die Stelle zugeschnitten werden');
-    }
+    const { suggestions, strengths, weaknesses } = buildMatchInsights(
+      matchedKeywords,
+      missingKeywords,
+      { overallScore, experienceScore },
+      context?.targetRole,
+    );
 
     return {
       overallScore,

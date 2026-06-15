@@ -8,7 +8,7 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 
 - **Profile management** — Skills, Experience, Education, Certificates, Projects, Languages
 - **Smart job ingestion** — Paste text, URL, or upload (PDF/DOCX); URL parsing via Azure AI Foundry agents (Indeed, LinkedIn, Glassdoor)
-- **AI generation** — Azure OpenAI (GPT-4o) with LangChain/LangGraph orchestration; pluggable providers (Azure OpenAI, Hugging Face, mock)
+- **AI generation** — Azure OpenAI with pluggable providers (`azure-openai` | `azure-ai-foundry` | `mock`), wrapped in an opossum circuit breaker; JSON calls use Azure structured outputs (strict `json_schema` / JSON mode) so responses are schema-valid by construction; a self-review editor pass refines the cover letter, a coverage-driven keyword loop weaves in missing profile-supported ATS keywords, and a deterministic grounding check flags fabricated metrics
 - **Multi-language** — Automatic language detection (DE/EN) for prompts and templates
 - **ATS-optimized PDFs** — 50 templates (5 designs × 5 languages × 2 types) rendered via `@react-pdf/renderer` (TSX). Template previews via `pdfjs-dist` + `@napi-rs/canvas`.
 - **Resume parser** — Upload an existing resume to bootstrap your profile
@@ -126,7 +126,7 @@ smart-apply/
 │   │   │   └── user-preferences/
 │   │   └── prisma/               # Schema, migrations, seeds
 │   └── web/                      # Next.js 16 frontend (Port 3001)
-├── packages/shared/              # Shared types
+├── packages/shared/              # Shared types (+ AI prompt guardrail config)
 ├── docs/                         # Feature, guide & security docs
 ├── infra/                        # Docker & Compose
 └── scripts/                      # Deploy & maintenance
@@ -157,6 +157,10 @@ pnpm test:integration
 pnpm test:e2e
 pnpm test:all          # unit + integration + e2e
 
+# LLM output-quality eval harness (from apps/api; LLM-as-judge over golden fixtures)
+pnpm --filter @smart-apply/api eval:validate   # token-free fixture check
+pnpm --filter @smart-apply/api eval:llm        # real baseline (needs Azure creds)
+
 # Lint & typecheck
 pnpm lint
 pnpm typecheck
@@ -171,6 +175,7 @@ pnpm typecheck
 - Helmet, restrictive CORS whitelist, optional CSRF (csrf-csrf)
 - Rate limiting (5/15min auth · 100/15min standard)
 - Input sanitization (`@Sanitize()` + DOMPurify)
+- AI prompt guardrails — per-surface character + token limits on every AI input, enforced live in the UI and authoritatively on the server (cost & abuse control)
 - Winston audit logs (daily rotation, 90-day retention)
 - Sentry error & performance monitoring
 

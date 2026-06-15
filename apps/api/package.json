@@ -42,7 +42,9 @@
     "templates:regenerate-previews": "dotenv -e .env -- ts-node -r tsconfig-paths/register scripts/generate-template-previews.ts --force",
     "templates:seed-with-previews": "pnpm run prisma:seed:templates && pnpm run templates:generate-previews",
     "templates:cleanup": "ts-node -r tsconfig-paths/register scripts/cleanup-legacy-templates.ts",
-    "create-agents": "ts-node -r tsconfig-paths/register scripts/create-agents.ts"
+    "create-agents": "ts-node -r tsconfig-paths/register scripts/create-agents.ts",
+    "eval:llm": "dotenv -e .env -- ts-node -r tsconfig-paths/register scripts/eval/run-eval.ts",
+    "eval:validate": "ts-node -r tsconfig-paths/register scripts/eval/run-eval.ts --validate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1057.0",
@@ -82,6 +84,7 @@
     "cookie-parser": "^1.4.7",
     "cron-parser": "^5.5.0",
     "csrf-csrf": "^4.0.3",
+    "gpt-tokenizer": "^3.4.0",
     "handlebars": "^4.7.8",
     "helmet": "^8.2.0",
     "mammoth": "^1.6.0",

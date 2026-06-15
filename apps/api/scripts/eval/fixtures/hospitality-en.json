@@ -1,0 +1,74 @@
+{
+  "id": "hospitality-en",
+  "profession": "Hospitality / Hotel Operations",
+  "language": "en",
+  "profile": {
+    "firstName": "Olivia",
+    "lastName": "Martin",
+    "email": "olivia.martin@example.com",
+    "phone": "+44 7700 978654",
+    "city": "Edinburgh",
+    "country": "United Kingdom",
+    "linkedinUrl": "https://linkedin.com/in/olivia-martin-hospitality",
+    "summary": "Hotel Operations Manager with 10 years of experience in four- and five-star properties. Oversaw a 160-room hotel with a team of 45 and lifted guest-satisfaction scores from 8.2 to 9.1 out of 10 over two years.",
+    "skills": [
+      { "name": "Hotel Operations Management", "level": "Expert" },
+      { "name": "Revenue & Occupancy Management", "level": "Advanced" },
+      { "name": "Guest Experience & Service Recovery", "level": "Expert" },
+      { "name": "Staff Scheduling & Training", "level": "Advanced" },
+      { "name": "Budgeting & Cost Control", "level": "Advanced" },
+      { "name": "Property Management Systems (Opera)", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Hotel Operations Manager",
+        "company": "The Caledonian Grand Hotel",
+        "startDate": "2018-04-01",
+        "endDate": null,
+        "description": "Operational leadership of a 160-room four-star hotel across front office, housekeeping and F&B.",
+        "achievements": [
+          "Lifted guest-satisfaction scores from 8.2 to 9.1 out of 10 within two years through a service-recovery program.",
+          "Increased average occupancy from 74 to 86 percent by reworking the room-revenue and channel strategy.",
+          "Led a team of 45 across four departments and reduced staff turnover by 22 percent."
+        ]
+      },
+      {
+        "title": "Front Office Manager",
+        "company": "Riverside Boutique Hotel",
+        "startDate": "2014-06-01",
+        "endDate": "2018-03-31",
+        "description": "Managed front-office operations and the reservations team of an 80-room boutique hotel.",
+        "achievements": [
+          "Managed a front-office team of 12 and improved check-in satisfaction scores from 85 to 94 percent.",
+          "Grew direct-booking share from 28 to 41 percent by training the team on upsell and loyalty enrolment."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA (Hons) International Hospitality Management",
+        "institution": "Edinburgh Napier University",
+        "startYear": "2010-09-01",
+        "endYear": "2014-05-31"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Certified Hotel Administrator (CHA)",
+        "issuer": "American Hotel & Lodging Educational Institute",
+        "issueDate": "2019-07-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" },
+      { "name": "German", "level": "B2" }
+    ]
+  },
+  "jobPosting": {
+    "title": "General Manager (Hotel)",
+    "company": "Highland Crown Hotels",
+    "location": "Glasgow, United Kingdom",
+    "language": "en",
+    "fullText": "Highland Crown Hotels is a Scottish hospitality group operating 6 properties and employing around 700 people. We are seeking a General Manager for our flagship 200-room city-centre hotel in Glasgow. Responsibilities: full operational and commercial accountability for the property, leadership of a team of around 70 across all departments, ownership of revenue, cost and guest-satisfaction targets, and delivery of the annual business plan. Requirements: several years of senior hotel-operations experience, a strong commercial track record, demonstrable leadership skills, and a guest-first mindset. We offer a competitive salary with performance bonus, private healthcare, and clear group-wide progression. Your point of contact is Mr. Callum Fraser, Operations Director. Please indicate your earliest possible start date and salary expectation."
+  }
+}

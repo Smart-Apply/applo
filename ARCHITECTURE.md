@@ -99,7 +99,7 @@ smart-apply/
 │       │   └── types/             # Shared TS types
 │       └── public/                # Static assets
 │
-├── packages/shared/          # Shared types/utils
+├── packages/shared/          # Shared types/utils (+ AI prompt guardrail config)
 ├── docs/                     # Feature, guide, security, implementation docs
 ├── infra/                    # Dockerfiles, docker-compose, nginx
 └── scripts/                  # Deploy & maintenance
@@ -141,8 +141,18 @@ User → Frontend (Next.js)
 │ Provider: Azure OpenAI (GPT-4o) /    │
 │           Azure AI Foundry / mock    │
 │ Circuit-breaker + retries (opossum)  │
+│ Structured outputs: json_schema /    │
+│   json_object (schema-valid JSON)     │
+│ 0. Job facts: contact + company       │
+│    specifics + salary/start asks (#5)  │
 │ 1. Generate cover letter             │
 │ 2. Generate resume                   │
+│ 3. Editor pass: critique + revise    │
+│    the cover letter AND resume        │
+│ 4. Keyword weave: add missing        │
+│    profile-supported ATS keywords    │
+│ 5. Grounding check: flag fabricated  │
+│    impact numbers vs. the profile    │
 └──────────────────────────────────────┘
         │
         ▼
@@ -166,6 +176,27 @@ User → Frontend (Next.js)
 │ 4. Status → READY (SSE push)         │
 └──────────────────────────────────────┘
 ```
+
+> **Edit-mode regenerate (single cover-letter path).** The editor's "regenerate
+> cover letter" action (`upsertCoverLetter`) reuses the same `v1/cover-letter.md`
+> prompt as the create pipeline: the saved editor resume is mapped back into the
+> skill-selector `TailoredProfileDto` shape by `stored-resume.util.ts`, then runs
+> through job-facts extraction + the deterministic salutation. The legacy `*-ats.md`
+> prompts and their `generate*ATS` methods were retired (#2), so there is one
+> cover-letter generation path.
+
+### Output-quality measurement (offline eval harness)
+
+Generation quality is the product's main driver, so it is measured rather than
+assumed. `apps/api/scripts/eval/` runs the **real v1 prompt chain** over ~24
+profession-diverse German + English golden fixtures, scores each output with an
+**LLM-as-judge** rubric (action-verb bullets, quantified achievements, targeted
+summary, cover-letter personalization, no clichés/Konjunktiv, language
+correctness) and the deterministic **grounding validator**, and writes a
+timestamped report. Run `pnpm --filter @smart-apply/api eval:llm` to capture a
+baseline before a prompt change and re-run after to prove the lift. The roadmap +
+recorded baselines live in
+[docs/implementation/LLM_OUTPUT_QUALITY.md](docs/implementation/LLM_OUTPUT_QUALITY.md).
 
 ## 🗄️ Database Schema (Prisma 6)
 
@@ -227,6 +258,7 @@ User 1:1 Subscription
 | **OAuth**      | Google, Microsoft, Azure AD (passport)             |
 | **Rate Limit** | 5/15min auth · 100/15min standard (`@nestjs/throttler`) |
 | **Input**      | class-validator DTOs, `@Sanitize()` + DOMPurify    |
+| **AI Guardrails** | per-surface char + token limits on AI prompt inputs (`@smart-apply/shared` + `gpt-tokenizer` model `gpt-4.1`) |
 | **CSRF**       | csrf-csrf (Double Submit Cookie, optional)         |
 | **Passwords**  | argon2id, strength regex                           |
 | **Audit**      | Winston daily-rotated logs (90-day retention)      |
@@ -252,6 +284,7 @@ User 1:1 Subscription
 | Logging     | Pino (req logs) + Winston (audit, daily rotation)    |
 | Monitoring  | Sentry (`@sentry/node` + profiling)                  |
 | Validation  | class-validator · Zod · sanitize-html                |
+| AI guardrails | `@smart-apply/shared` (limits) · `gpt-tokenizer` (model `gpt-4.1`) |
 | Resilience  | opossum (circuit breaker) |
 | Scheduling  | `@nestjs/schedule` (cron jobs)                       |
 | Health      | `@nestjs/terminus`                                   |

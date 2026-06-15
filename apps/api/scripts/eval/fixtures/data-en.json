@@ -1,0 +1,74 @@
+{
+  "id": "data-en",
+  "profession": "Data / Analytics",
+  "language": "en",
+  "profile": {
+    "firstName": "Daniel",
+    "lastName": "Brooks",
+    "email": "daniel.brooks@example.com",
+    "phone": "+1 206 555 0188",
+    "city": "Seattle",
+    "country": "United States",
+    "linkedinUrl": "https://linkedin.com/in/daniel-brooks-data",
+    "summary": "Data Analyst with 6 years of experience turning operational data into business decisions. Built 25 production dashboards used by over 300 stakeholders and identified efficiencies that saved roughly 1.4 million dollars annually.",
+    "skills": [
+      { "name": "SQL", "level": "Expert" },
+      { "name": "Python (pandas, NumPy)", "level": "Advanced" },
+      { "name": "Data Visualization (Tableau, Power BI)", "level": "Expert" },
+      { "name": "Statistical Analysis & A/B Testing", "level": "Advanced" },
+      { "name": "Data Modeling & ETL (dbt)", "level": "Advanced" },
+      { "name": "Stakeholder Communication", "level": "Advanced" },
+      { "name": "Cloud Data Warehouses (Snowflake)", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Senior Data Analyst",
+        "company": "Cascade Retail Analytics Inc.",
+        "startDate": "2020-03-01",
+        "endDate": null,
+        "description": "Analytics partner to the operations and merchandising teams of a national retailer.",
+        "achievements": [
+          "Identified pricing and inventory efficiencies through analysis that saved roughly 1.4 million dollars annually.",
+          "Built 25 production dashboards in Tableau used by over 300 stakeholders across 5 departments.",
+          "Designed an A/B testing framework that increased email conversion by 12 percent across 8 campaigns."
+        ]
+      },
+      {
+        "title": "Data Analyst",
+        "company": "Rainier Logistics Group",
+        "startDate": "2017-07-01",
+        "endDate": "2020-02-29",
+        "description": "Provided reporting and ad-hoc analysis for the supply-chain organization.",
+        "achievements": [
+          "Automated a weekly reporting process with SQL and Python, saving the team around 10 hours per week.",
+          "Reduced report errors by 90 percent by building validated, version-controlled data models."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Science in Statistics",
+        "institution": "University of Washington",
+        "startYear": "2013-09-01",
+        "endYear": "2017-06-30"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Tableau Desktop Specialist",
+        "issuer": "Tableau",
+        "issueDate": "2021-04-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Analytics Lead",
+    "company": "Evergreen Commerce Inc.",
+    "location": "Seattle, Washington, United States",
+    "language": "en",
+    "fullText": "Evergreen Commerce Inc. is an e-commerce company with 340 employees and over 2 million active customers. We are hiring an Analytics Lead for our Seattle headquarters. Responsibilities: lead a team of 3 analysts, own the company's reporting and experimentation framework, partner with product and marketing on data-driven decisions, and build self-service analytics on our Snowflake warehouse. Requirements: several years of analytics experience, expert SQL, strong data-visualization skills, experience with experimentation, and the ability to communicate insight to non-technical stakeholders. We offer fully remote work, an annual learning budget, and a clear technical-leadership track. Your point of contact is Ms. Rachel Nguyen, Director of Data. Please indicate your earliest possible start date and salary expectation."
+  }
+}

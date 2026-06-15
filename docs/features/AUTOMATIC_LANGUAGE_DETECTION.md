@@ -79,13 +79,12 @@ Translated (en): "Experienced Full-Stack Developer with 5+ years of experience i
    - Helper: `Handlebars.registerHelper('t', ...)`
 
 3. **LLM Context Builders**
-   - File: `apps/api/src/llm/llm.service.ts`
-   - Methods: `buildATSCoverLetterContext()`, `buildATSResumeContext()`
-   - Adds: `language` and `languageName` to template context
+   - File: `apps/api/src/applications/serialize.util.ts` (`serializeJobPostingForLlm`)
+   - The detected `language` is passed into the v1 prompt calls in `applications.service.ts`
 
 4. **LLM Prompts**
-   - Files: `apps/api/prompts/cover-letter-ats.md`, `apps/api/prompts/resume-ats.md`
-   - Variables: `{{language}}`, `{{languageName}}`
+   - Files: `apps/api/prompts/v1/*.md` (e.g. `cover-letter.md`, `resume.md`, `resume-rewrite.md`)
+   - Variables: `{{language}}`
 
 5. **Summary Translation**
    - File: `apps/api/src/llm/llm.service.ts`

@@ -1,0 +1,75 @@
+{
+  "id": "marketing-en",
+  "profession": "Marketing / Digital Marketing",
+  "language": "en",
+  "profile": {
+    "firstName": "Sarah",
+    "lastName": "Thompson",
+    "email": "sarah.thompson@example.com",
+    "phone": "+44 7700 934512",
+    "city": "London",
+    "country": "United Kingdom",
+    "linkedinUrl": "https://linkedin.com/in/sarah-thompson-marketing",
+    "summary": "Digital Marketing Manager with 7 years of experience across paid media, SEO and lifecycle marketing. Managed an annual media budget of 750,000 pounds and improved blended return on ad spend (ROAS) from 3.1 to 4.6 over 12 months.",
+    "skills": [
+      { "name": "Paid Media (Google & Meta Ads)", "level": "Expert" },
+      { "name": "Search Engine Optimization (SEO)", "level": "Advanced" },
+      { "name": "Marketing Analytics (GA4, Looker)", "level": "Advanced" },
+      { "name": "Email & Lifecycle Marketing", "level": "Advanced" },
+      { "name": "Conversion Rate Optimization", "level": "Advanced" },
+      { "name": "Content Strategy", "level": "Advanced" },
+      { "name": "Budget & Agency Management", "level": "Advanced" }
+    ],
+    "experiences": [
+      {
+        "title": "Digital Marketing Manager",
+        "company": "Brightside Retail Ltd.",
+        "startDate": "2020-03-01",
+        "endDate": null,
+        "description": "Owned paid, organic and lifecycle channels for a direct-to-consumer e-commerce brand.",
+        "achievements": [
+          "Improved blended return on ad spend (ROAS) from 3.1 to 4.6 over 12 months while scaling spend by 40 percent.",
+          "Grew organic search traffic by 58 percent in a year through a technical-SEO and content overhaul.",
+          "Managed an annual media budget of 750,000 pounds and led a team of 3 specialists plus two agencies."
+        ]
+      },
+      {
+        "title": "Performance Marketing Executive",
+        "company": "Capital Media Agency",
+        "startDate": "2017-05-01",
+        "endDate": "2020-02-29",
+        "description": "Planned and optimized paid-search and paid-social campaigns for mid-market clients.",
+        "achievements": [
+          "Lowered average cost per acquisition by 27 percent across a portfolio of 6 client accounts.",
+          "Scaled one client's paid-social revenue from 90,000 to 240,000 pounds per quarter within a year."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA (Hons) Marketing Management",
+        "institution": "University of Leeds",
+        "startYear": "2013-09-01",
+        "endYear": "2016-06-30"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "Google Ads Search Certification",
+        "issuer": "Google",
+        "issueDate": "2021-03-01"
+      }
+    ],
+    "languages": [
+      { "name": "English", "level": "Native" },
+      { "name": "French", "level": "B2" }
+    ]
+  },
+  "jobPosting": {
+    "title": "Head of Digital Marketing",
+    "company": "Aurora Commerce Group",
+    "location": "London, United Kingdom",
+    "language": "en",
+    "fullText": "Aurora Commerce Group is a multi-brand online retailer with 120 employees and year-on-year revenue growth of around 30 percent. We are looking for a Head of Digital Marketing to join our London team. Responsibilities: lead a digital team of 5, own all performance channels (paid, SEO, email and social), manage an annual budget of roughly 2 million pounds, and shape our customer-acquisition strategy. Requirements: several years of digital-marketing experience, strong command of paid media and analytics, proven budget and agency management, and a data-driven mindset. We offer 4 days of remote work per week, a modern office in Shoreditch, and an annual learning budget. Your point of contact is Mr. Daniel Foster, Marketing Director. Please indicate your earliest possible start date."
+  }
+}

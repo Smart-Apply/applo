@@ -1,5 +1,7 @@
-import { IsString, IsOptional, IsInt, Min } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { AI_PROMPT_HARD_CEILING_CHARS } from '@smart-apply/shared';
+import { Sanitize } from '../../common/decorators/sanitize.decorator';
 
 /**
  * DTO for submitting an answer to a question
@@ -10,6 +12,8 @@ export class SubmitAnswerDto {
     example: 'In meiner vorherigen Position habe ich ein Team von 5 Entwicklern geleitet...',
   })
   @IsString()
+  @MaxLength(AI_PROMPT_HARD_CEILING_CHARS, { message: 'Die Antwort ist zu lang.' })
+  @Sanitize()
   answer: string;
 
   @ApiPropertyOptional({
