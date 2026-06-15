@@ -16,12 +16,26 @@ export interface FixtureGroundingSummary {
   unsupportedValues: string[];
 }
 
+export interface FixtureCoverageSummary {
+  /** Priority-1 profile-supported keywords (the set we want covered). */
+  wanted: number;
+  /** Coverage rate BEFORE the weave pass (0-100). */
+  beforeRate: number;
+  /** Coverage rate of the FINAL cover letter, after weave (0-100). */
+  afterRate: number;
+  /** Whether the weave pass actually ran. */
+  weaveApplied: boolean;
+  /** Keywords the weave attempted to add. */
+  weaveKeywords: string[];
+}
+
 export interface FixtureResult {
   id: string;
   profession: string;
   language: EvalLanguage;
   judge?: JudgeResult;
   grounding?: FixtureGroundingSummary;
+  coverage?: FixtureCoverageSummary;
   durationMs: number;
   editorApplied: boolean;
   resumeRewriteSucceeded: boolean;
@@ -47,6 +61,16 @@ export interface EvalSummary {
     passRate: number;
     meanScore: number;
     fixturesWithUnsupported: number;
+  };
+  coverage: {
+    /** Fixtures that had at least one priority-1 profile-supported keyword. */
+    fixturesWithWanted: number;
+    /** Mean priority-1 coverage BEFORE the weave (over fixtures with wanted). */
+    meanBeforeRate: number;
+    /** Mean priority-1 coverage AFTER the weave (over fixtures with wanted). */
+    meanAfterRate: number;
+    /** Number of fixtures where the weave pass ran. */
+    weaveAppliedCount: number;
   };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
@@ -76,6 +100,15 @@ export function summarize(
   const groundingMeanScore = mean(ok.map((r) => r.grounding!.score));
   const fixturesWithUnsupported = ok.filter((r) => r.grounding!.unsupportedCount > 0).length;
 
+  // Coverage (#6) — only over fixtures that actually had priority-1 supported keywords.
+  const withWanted = ok.filter((r) => r.coverage && r.coverage.wanted > 0);
+  const coverage = {
+    fixturesWithWanted: withWanted.length,
+    meanBeforeRate: mean(withWanted.map((r) => r.coverage!.beforeRate)),
+    meanAfterRate: mean(withWanted.map((r) => r.coverage!.afterRate)),
+    weaveAppliedCount: ok.filter((r) => r.coverage?.weaveApplied).length,
+  };
+
   const byLanguage: Record<string, LanguageBreakdown> = {};
   for (const lang of ['de', 'en'] as EvalLanguage[]) {
     const subset = ok.filter((r) => r.language === lang);
@@ -103,6 +136,7 @@ export function summarize(
       meanScore: groundingMeanScore,
       fixturesWithUnsupported,
     },
+    coverage,
     byLanguage,
     results,
   };
@@ -131,6 +165,12 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    mean grounding score           ${summary.grounding.meanScore.toFixed(2)}`);
   lines.push(`    fixtures with unsupported #s   ${summary.grounding.fixturesWithUnsupported}`);
   lines.push('');
+  lines.push('  Priority-1 keyword coverage (#6, deterministic):');
+  lines.push(`    fixtures with supported gaps   ${summary.coverage.fixturesWithWanted}`);
+  lines.push(`    mean coverage before weave     ${summary.coverage.meanBeforeRate.toFixed(2)}%`);
+  lines.push(`    mean coverage after weave      ${summary.coverage.meanAfterRate.toFixed(2)}%`);
+  lines.push(`    weave pass applied             ${summary.coverage.weaveAppliedCount} fixtures`);
+  lines.push('');
   lines.push('  By language:');
   for (const [lang, b] of Object.entries(summary.byLanguage)) {
     lines.push(
@@ -146,6 +186,7 @@ export function formatReport(summary: EvalSummary): string {
     }
     const flags = [
       r.editorApplied ? 'editor' : '',
+      r.coverage?.weaveApplied ? `weave:${r.coverage.weaveKeywords.join('/')}` : '',
       r.resumeRewriteSucceeded ? '' : 'rewrite-degraded',
       r.grounding && r.grounding.unsupportedCount > 0
         ? `unsupported:${r.grounding.unsupportedValues.join('/')}`
@@ -153,10 +194,14 @@ export function formatReport(summary: EvalSummary): string {
     ]
       .filter(Boolean)
       .join(' ');
+    const cov = r.coverage && r.coverage.wanted > 0
+      ? `C=${r.coverage.beforeRate}→${r.coverage.afterRate}% `
+      : '';
     lines.push(
       `    ✓ ${r.id.padEnd(22)} ` +
         `O=${r.judge!.overall} ` +
         `G=${r.grounding!.score}% ` +
+        `${cov}` +
         `${flags}`,
     );
   }

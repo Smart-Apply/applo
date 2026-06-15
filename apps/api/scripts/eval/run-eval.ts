@@ -48,6 +48,7 @@ interface CliArgs {
   retries: number;
   out?: string;
   validate: boolean;
+  applyWeave: boolean;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -57,6 +58,7 @@ function parseArgs(argv: string[]): CliArgs {
     delayMs: 1500,
     retries: 5,
     validate: false,
+    applyWeave: true,
   };
   for (const arg of argv) {
     const [key, value] = arg.replace(/^--/, '').split('=');
@@ -68,6 +70,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (key === 'retries' && value) args.retries = Math.max(0, Number(value));
     else if (key === 'out' && value) args.out = value;
     else if (key === 'validate') args.validate = true;
+    else if (key === 'no-weave') args.applyWeave = false;
   }
   return args;
 }
@@ -127,6 +130,7 @@ async function runOne(
   llm: LLMService,
   fixture: EvalFixture,
   retries: number,
+  applyWeave: boolean,
 ): Promise<FixtureResult> {
   const base = {
     id: fixture.id,
@@ -134,7 +138,7 @@ async function runOne(
     language: fixture.language,
   };
   try {
-    const docs = await withRetry(() => generateForFixture(llm, fixture), retries);
+    const docs = await withRetry(() => generateForFixture(llm, fixture, { applyWeave }), retries);
     const grounding = groundDocuments(fixture, docs);
     const judge = await withRetry(() => judgeDocuments(llm, fixture, docs), retries);
     return {
@@ -146,6 +150,13 @@ async function runOne(
         totalChecked: grounding.totalChecked,
         unsupportedCount: grounding.unsupported.length,
         unsupportedValues: grounding.unsupported.map((u) => u.value),
+      },
+      coverage: {
+        wanted: docs.coverageAfterWeave.wanted,
+        beforeRate: docs.coverageBeforeWeave.rate,
+        afterRate: docs.coverageAfterWeave.rate,
+        weaveApplied: docs.weaveApplied,
+        weaveKeywords: docs.weaveKeywords,
       },
       durationMs: docs.durationMs,
       editorApplied: docs.editorApplied,
@@ -177,7 +188,7 @@ async function runPool(
       if (index >= fixtures.length) return;
       const fixture = fixtures[index];
       process.stdout.write(`  → [${index + 1}/${fixtures.length}] ${fixture.id} ... `);
-      const result = await runOne(llm, fixture, args.retries);
+      const result = await runOne(llm, fixture, args.retries, args.applyWeave);
       process.stdout.write(result.error ? `ERROR\n` : `overall ${result.judge?.overall}\n`);
       results[index] = result;
       if (args.delayMs > 0 && index + 1 < fixtures.length) await sleep(args.delayMs);
@@ -254,7 +265,7 @@ async function main(): Promise<void> {
 
   console.log(
     `\n🧪 Running eval (provider=${provider}, fixtures=${fixtures.length}, ` +
-      `concurrency=${args.concurrency}, tag=${args.tag})\n`,
+      `concurrency=${args.concurrency}, weave=${args.applyWeave ? 'on' : 'off'}, tag=${args.tag})\n`,
   );
 
   const app = await NestFactory.createApplicationContext(EvalHarnessModule, {

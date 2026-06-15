@@ -182,7 +182,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 ## Backend Modules (`apps/api/src/`)
 - `admin` — allow-listed admin endpoints (gated by `ADMIN_EMAILS` env), e.g. `POST /admin/users/:email/tier`, `DELETE /admin/users/:email`
 - `agents` — Azure AI Foundry agents (URL parsing, etc.)
-- `applications` — generation pipeline (profile + job → LLM → editor pass → grounding check → PDF → storage), SSE status stream. Owns the `grounding/` sub-service (`GroundingValidatorService`) — a deterministic, non-destructive anti-hallucination check that flags impact numbers (%, currency, counts) absent from the source profile (logs only; never strips).
+- `applications` — generation pipeline (profile + job → LLM → editor pass → keyword weave → grounding check → PDF → storage), SSE status stream. Owns the `grounding/` sub-service (`GroundingValidatorService`) — a deterministic, non-destructive anti-hallucination check that flags impact numbers (%, currency, counts) absent from the source profile (logs only; never strips). Also owns the coverage-driven keyword loop (#6): `keyword-coverage.util.ts` selects the priority-1, **profile-supported** ATS keywords still missing from the cover letter and a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (never invents unsupported keywords; graceful fallback to the pre-weave draft).
 - `auth` — JWT, refresh-token rotation, OAuth (Google/Microsoft/Azure AD), TOTP 2FA, password reset
 - `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@smart-apply/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`)
 - `config` — Zod env schema
@@ -514,11 +514,12 @@ PUT /api/v1/profile
 3. Render the v1 prompt chain: `skill-selector` → parallel(`cover-letter`, `resume-rewrite`, `ats-keywords`) under `prompts/v1/*`
 4. Call LLM via provider abstraction wrapped in **opossum** circuit breaker → Markdown/JSON
 5. **Editor pass (#1):** `prompts/v1/editor-cover-letter.md` critiques + revises the cover letter (graceful fallback to the draft on failure / suspiciously short output)
-6. **Grounding check (#7):** `GroundingValidatorService` flags fabricated impact numbers vs. the profile (non-destructive, logs a warning only)
-7. TSX → PDF via `@react-pdf/renderer` (no browser, no post-processing)
-8. Upload PDFs via storage provider (Blob/S3/disk); persist keys + signed URLs
-9. Status: `PENDING → GENERATING → READY | FAILED` (pushed to client via **SSE**)
-10. Background work via pluggable queue (`qstash` | `in-memory`)
+6. **Keyword weave (#6):** `keyword-coverage.util.ts` finds priority-1 **profile-supported** ATS keywords still missing from the cover letter; a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (no stuffing, never an unsupported keyword, graceful fallback to the pre-weave draft)
+7. **Grounding check (#7):** `GroundingValidatorService` flags fabricated impact numbers vs. the profile (non-destructive, logs a warning only)
+8. TSX → PDF via `@react-pdf/renderer` (no browser, no post-processing)
+9. Upload PDFs via storage provider (Blob/S3/disk); persist keys + signed URLs
+10. Status: `PENDING → GENERATING → READY | FAILED` (pushed to client via **SSE**)
+11. Background work via pluggable queue (`qstash` | `in-memory`)
 
 > See [docs/implementation/LLM_OUTPUT_QUALITY.md](../docs/implementation/LLM_OUTPUT_QUALITY.md) for the LLM output-quality roadmap (the 10 improvements to generated CVs/cover letters) and its living status tracker.
 

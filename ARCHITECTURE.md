@@ -145,7 +145,9 @@ User → Frontend (Next.js)
 │ 2. Generate resume                   │
 │ 3. Editor pass: critique + revise    │
 │    the cover letter                  │
-│ 4. Grounding check: flag fabricated  │
+│ 4. Keyword weave: add missing        │
+│    profile-supported ATS keywords    │
+│ 5. Grounding check: flag fabricated  │
 │    impact numbers vs. the profile    │
 └──────────────────────────────────────┘
         │

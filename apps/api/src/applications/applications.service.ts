@@ -47,6 +47,7 @@ import {
 } from './resume-template.util';
 import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.util';
 import { buildMatchInsights } from './match-insights.util';
+import { matchAtsKeywordsToProfile, selectKeywordsToWeave } from './keyword-coverage.util';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -1045,15 +1046,27 @@ Summary: ${resume.summary || 'Not provided'}
           )
         : coverLetterMarkdown;
 
+      // Keyword weave (#6): close profile-supported priority-1 keyword gaps.
+      const wovenCoverLetterMarkdown = shouldGenerateCoverLetter
+        ? await this.runKeywordWeavePass(
+            editedCoverLetterMarkdown,
+            atsKeywords,
+            jobPosting,
+            tailoredProfile,
+            detectedLanguage,
+            userId,
+          )
+        : editedCoverLetterMarkdown;
+
       // Grounding check (#7): flag any fabricated impact numbers (non-destructive).
       this.runGroundingCheck(
         application.id,
-        { resume: JSON.stringify(resumeJson), coverLetter: editedCoverLetterMarkdown },
+        { resume: JSON.stringify(resumeJson), coverLetter: wovenCoverLetterMarkdown },
         profile,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = this.convertCoverLetterToHtml(editedCoverLetterMarkdown);
+      const coverLetterHtml = this.convertCoverLetterToHtml(wovenCoverLetterMarkdown);
 
       const updatedApplication = await this.prisma.application.update({
         where: { id: application.id },
@@ -1257,15 +1270,28 @@ Summary: ${resume.summary || 'Not provided'}
           )
         : coverLetterMarkdown;
 
+      // Keyword weave (#6): close profile-supported priority-1 keyword gaps.
+      // No-ops gracefully when atsKeywords has no priority-1 'both' hard skills.
+      const wovenCoverLetter = shouldGenerateCoverLetter
+        ? await this.runKeywordWeavePass(
+            editedCoverLetter,
+            atsKeywords,
+            jobPosting,
+            tailoredProfile,
+            language,
+            userId,
+          )
+        : editedCoverLetter;
+
       // Grounding check (#7): flag fabricated impact numbers (non-destructive).
       this.runGroundingCheck(
         applicationId,
-        { resume: resumeMarkdown, coverLetter: editedCoverLetter },
+        { resume: resumeMarkdown, coverLetter: wovenCoverLetter },
         profile,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = this.convertCoverLetterToHtml(editedCoverLetter);
+      const coverLetterHtml = this.convertCoverLetterToHtml(wovenCoverLetter);
 
       emitProgress(95, 'Speichere Ergebnisse...');
       const updated = await this.prisma.application.update({
@@ -1348,82 +1374,18 @@ Summary: ${resume.summary || 'Not provided'}
   }
 
   /**
-   * Deterministically match extracted keywords against profile data
-   * Returns keywords with "source" field: "job" (missing) or "both" (matched)
-   * Also deduplicates keywords (case-insensitive)
-   * SIMPLIFIED: Only hard_skills now (soft skills removed)
+   * Deterministically match extracted keywords against profile data.
+   * Delegates to the shared pure matcher (`keyword-coverage.util.ts`) so the
+   * offline eval harness (#10) measures coverage with the identical matcher.
+   * Returns keywords with a "source" field: "job" (missing) or "both" (matched).
    */
   private matchKeywordsAgainstProfile(extractedKeywords: any, profile: ProfileWithRelations): any {
-    const matchKeyword = (kw: any): any => {
-      const keyword = kw.keyword.toLowerCase();
-
-      // Check if keyword exists in profile skills (exact or partial match)
-      const inSkills = profile.skills.some((s) => {
-        const skillName = s.name.toLowerCase();
-        // Exact match or keyword is part of skill name
-        return skillName === keyword || skillName.includes(keyword) || keyword.includes(skillName);
-      });
-
-      // Check if keyword exists in experience descriptions or titles
-      const inExperiences = profile.experiences.some(
-        (e) =>
-          e.description?.toLowerCase().includes(keyword) || e.title.toLowerCase().includes(keyword),
-      );
-
-      // Check if keyword exists in project descriptions, technologies, or names
-      const inProjects = profile.projects.some(
-        (p) =>
-          p.description?.toLowerCase().includes(keyword) ||
-          p.technologies?.some((t) => t.toLowerCase().includes(keyword)) ||
-          p.name.toLowerCase().includes(keyword),
-      );
-
-      // Check if keyword exists in certificates
-      const inCertificates = profile.certificates.some(
-        (c) => c.name.toLowerCase().includes(keyword) || c.issuer?.toLowerCase().includes(keyword),
-      );
-
-      const isMatched = inSkills || inExperiences || inProjects || inCertificates;
-
-      return {
-        ...kw,
-        source: isMatched ? 'both' : 'job',
-      };
-    };
-
-    // Deduplicate function (case-insensitive, preserves original casing, prefers "both" over "job")
-    const deduplicateKeywords = (keywords: any[]): any[] => {
-      const seen = new Map<string, any>();
-      keywords.forEach((kw) => {
-        const lowerKey = kw.keyword.toLowerCase();
-        if (!seen.has(lowerKey)) {
-          seen.set(lowerKey, kw);
-        } else {
-          // If duplicate found, prefer "both" over "job" for source
-          const existing = seen.get(lowerKey)!;
-          if (kw.source === 'both' && existing.source === 'job') {
-            seen.set(lowerKey, kw);
-          }
-        }
-      });
-      return Array.from(seen.values());
-    };
-
-    // Match keywords against profile (only hard_skills now)
-    const hard_skills = (extractedKeywords.hard_skills || []).map(matchKeyword);
-
-    this.logger.debug(`Before deduplication: ${hard_skills.length} hard_skills`);
-    this.logger.debug(`Hard skills: ${JSON.stringify(hard_skills.map((k) => k.keyword))}`);
-
-    // Deduplicate (LLM might return duplicates)
-    const deduplicatedHard = deduplicateKeywords(hard_skills);
-
-    this.logger.debug(`After deduplication: ${deduplicatedHard.length} hard_skills`);
-
-    return {
-      hard_skills: deduplicatedHard,
-      soft_skills: [], // No longer extracting soft skills
-    };
+    const matched = matchAtsKeywordsToProfile(extractedKeywords, profile);
+    this.logger.debug(
+      `Matched ${matched.hard_skills?.length || 0} hard_skills against profile ` +
+        `(${this.countMatchedKeywords(matched)} supported)`,
+    );
+    return matched;
   }
 
   /**
@@ -1540,6 +1502,66 @@ Summary: ${resume.summary || 'Not provided'}
       this.logger.warn(
         `Cover letter editor pass failed; keeping original draft: ${error.message}`,
       );
+      return draft;
+    }
+  }
+
+  /**
+   * Coverage-driven keyword weave (#6) — one guarded pass that weaves the
+   * priority-1, profile-supported keywords still MISSING from the cover letter
+   * into the existing prose. Never adds a keyword the profile doesn't support
+   * (that would be fabrication and would defeat the grounding validator), never
+   * stuffs, and never invents facts.
+   *
+   * Skips the LLM call entirely when there is no profile-supported gap. Graceful
+   * degradation: on any failure or a suspiciously short result we keep the
+   * pre-weave draft so generation never breaks.
+   */
+  private async runKeywordWeavePass(
+    draft: string | null,
+    atsKeywords: any,
+    jobPosting: JobPosting,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    userId: string,
+  ): Promise<string | null> {
+    if (!draft || draft.trim() === '') return draft;
+
+    const keywords = selectKeywordsToWeave(atsKeywords, draft);
+    if (keywords.length === 0) {
+      this.logger.debug(
+        'Keyword weave: no profile-supported priority-1 gaps in cover letter; skipping',
+      );
+      return draft;
+    }
+
+    try {
+      const woven = await this.llmService.callText(
+        'v1/keyword-weave.md',
+        {
+          draft,
+          keywords,
+          tailoredProfile,
+          language,
+          userId,
+          jobPostingId: jobPosting.id,
+        },
+        { temperature: 0.3, maxTokens: 1500 },
+      );
+
+      // Guard: a surgical weave must not gut the letter. If it returns empty or
+      // shrinks below 60% of the draft, treat it as a failure and keep the draft.
+      if (!woven || woven.trim().length < draft.trim().length * 0.6) {
+        this.logger.warn(
+          'Keyword weave returned suspiciously short output; keeping pre-weave draft',
+        );
+        return draft;
+      }
+
+      this.logger.log(`Keyword weave applied (${keywords.length}: ${keywords.join(', ')})`);
+      return woven;
+    } catch (error) {
+      this.logger.warn(`Keyword weave failed; keeping pre-weave draft: ${error.message}`);
       return draft;
     }
   }

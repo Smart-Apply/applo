@@ -9,9 +9,6 @@
  * byte-for-byte identical to production.
  *
  * What it intentionally omits vs. the live path:
- * - `v1/ats-keywords.md` + `matchKeywordsAgainstProfile` — not part of the judged
- *   resume/cover-letter prose, and the deterministic match relies on a private
- *   service method. (Add it here when item #6 needs measuring.)
  * - PDF rendering + persistence — irrelevant to output quality.
  */
 import type { LLMService } from '../../src/llm/llm.service';
@@ -19,6 +16,13 @@ import {
   serializeProfileForLlm,
   serializeJobPostingForLlm,
 } from '../../src/applications/serialize.util';
+import {
+  matchAtsKeywordsToProfile,
+  selectKeywordsToWeave,
+  computePriority1Coverage,
+  type MatchedAtsKeywords,
+  type CoverageReport,
+} from '../../src/applications/keyword-coverage.util';
 import type {
   TailoredProfileDto,
   RewrittenProfileDto,
@@ -61,7 +65,20 @@ export interface GeneratedDocuments {
   editorApplied: boolean;
   /** Whether the resume-rewrite call succeeded (false = degraded fallback). */
   resumeRewriteSucceeded: boolean;
+  /** True when the keyword weave pass actually ran (had a gap + succeeded). */
+  weaveApplied: boolean;
+  /** The profile-supported priority-1 keywords the weave attempted to add. */
+  weaveKeywords: string[];
+  /** Priority-1 coverage of the cover letter BEFORE the weave pass. */
+  coverageBeforeWeave: CoverageReport;
+  /** Priority-1 coverage of the FINAL cover letter (after weave, if applied). */
+  coverageAfterWeave: CoverageReport;
   durationMs: number;
+}
+
+export interface GenerateOptions {
+  /** When false, skip the keyword weave pass (#6) — for before/after A/B runs. */
+  applyWeave?: boolean;
 }
 
 /**
@@ -86,6 +103,35 @@ async function runEditorPass(
       return { text: draft, applied: false };
     }
     return { text: edited, applied: true };
+  } catch {
+    return { text: draft, applied: false };
+  }
+}
+
+/**
+ * Replicates `runKeywordWeavePass` (#6): weave the listed profile-supported
+ * priority-1 keywords into the draft, keeping the pre-weave draft on failure or
+ * a suspiciously short result.
+ */
+async function runWeavePass(
+  llm: LLMService,
+  draft: string,
+  keywords: string[],
+  tailoredProfile: TailoredProfileDto,
+  language: string,
+  fixtureId: string,
+): Promise<{ text: string; applied: boolean }> {
+  if (keywords.length === 0) return { text: draft, applied: false };
+  try {
+    const woven = await llm.callText(
+      'v1/keyword-weave.md',
+      { draft, keywords, tailoredProfile, language, userId: fixtureId, jobPostingId: fixtureId },
+      { temperature: 0.3, maxTokens: 1500 },
+    );
+    if (!woven || woven.trim().length < draft.trim().length * 0.6) {
+      return { text: draft, applied: false };
+    }
+    return { text: woven, applied: true };
   } catch {
     return { text: draft, applied: false };
   }
@@ -159,7 +205,9 @@ function assembleResumeView(
 export async function generateForFixture(
   llm: LLMService,
   fixture: EvalFixture,
+  options: GenerateOptions = {},
 ): Promise<GeneratedDocuments> {
+  const applyWeave = options.applyWeave !== false;
   const start = Date.now();
   const profile = hydrateProfile(fixture);
   const serializedProfile = serializeProfileForLlm(profile);
@@ -179,7 +227,7 @@ export async function generateForFixture(
     { temperature: 0.2, maxTokens: 3000 },
   );
 
-  // Step 2: parallel cover letter (text) + resume rewrite (json, temp 0.35).
+  // Step 2: parallel cover letter (text) + resume rewrite (json) + ATS keywords.
   const coverLetterPromise = llm.callText('v1/cover-letter.md', {
     job: serializedJob,
     tailoredProfile,
@@ -203,15 +251,38 @@ export async function generateForFixture(
     .then((r) => (r && typeof r === 'object' ? r : null))
     .catch(() => null);
 
-  const [coverLetterDraft, rewrittenProfile] = await Promise.all([
+  const atsKeywordsPromise = llm
+    .callJson<{ hard_skills?: { keyword: string; priority?: number }[] }>('v1/ats-keywords.md', {
+      job: serializedJob,
+      userId: fixture.id,
+      jobPostingId: fixture.id,
+    })
+    .then((extracted) => matchAtsKeywordsToProfile(extracted, profile))
+    .catch((): MatchedAtsKeywords => ({ hard_skills: [] }));
+
+  const [coverLetterDraft, rewrittenProfile, atsKeywords] = await Promise.all([
     coverLetterPromise,
     resumeRewritePromise,
+    atsKeywordsPromise,
   ]);
 
   // Step 3: cover-letter editor pass (#1).
   const editor = coverLetterDraft
     ? await runEditorPass(llm, coverLetterDraft, serializedJob, tailoredProfile, language, fixture.id)
     : { text: '', applied: false };
+
+  // Coverage BEFORE the weave (priority-1 profile-supported keywords).
+  const coverageBeforeWeave = computePriority1Coverage(atsKeywords, editor.text);
+
+  // Step 4: keyword weave pass (#6) — close profile-supported priority-1 gaps.
+  const weaveKeywords = applyWeave ? selectKeywordsToWeave(atsKeywords, editor.text) : [];
+  const weave =
+    coverLetterDraft && weaveKeywords.length > 0
+      ? await runWeavePass(llm, editor.text, weaveKeywords, tailoredProfile, language, fixture.id)
+      : { text: editor.text, applied: false };
+
+  const finalCoverLetter = coverLetterDraft ? weave.text : null;
+  const coverageAfterWeave = computePriority1Coverage(atsKeywords, finalCoverLetter);
 
   const resumeView = assembleResumeView(
     tailoredProfile,
@@ -233,11 +304,15 @@ export async function generateForFixture(
   });
 
   return {
-    coverLetter: coverLetterDraft ? editor.text : null,
+    coverLetter: finalCoverLetter,
     resumeView,
     resumeJsonForGrounding,
     editorApplied: editor.applied,
     resumeRewriteSucceeded: rewrittenProfile !== null,
+    weaveApplied: weave.applied,
+    weaveKeywords,
+    coverageBeforeWeave,
+    coverageAfterWeave,
     durationMs: Date.now() - start,
   };
 }

@@ -84,10 +84,10 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 | 3 | XYZ/STAR achievement-bullet formula | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
 | 4 | Make the professional summary / Kurzprofil do real work | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
 | 5 | Real cover-letter personalization | 1 | Low | 🟡 In progress | `prompts/v1/cover-letter.md`, (later) data layer |
-| 1 | Self-critique / editor pass | 2 | Med | � In progress | `prompts/v1/editor-cover-letter.md`, `applications.service.ts` |
+| 1 | Self-critique / editor pass | 2 | Med | 🟡 In progress | `prompts/v1/editor-cover-letter.md`, `applications.service.ts` |
 | 7 | Anti-hallucination grounding validator | 2 | Med | 🟢 Shipped | `grounding/grounding-validator.service.ts`, `applications.service.ts` |
-| 6 | Coverage-driven keyword loop | 3 | Med | 🔴 Planned | `applications.service.ts`, `keywords/**` |
-| 9 | Trustworthy + actionable match score | 3 | Low | � Shipped | `applications.service.ts`, `match-insights.util.ts`, web ATS panel |
+| 6 | Coverage-driven keyword loop | 3 | Med | 🟢 Shipped | `applications.service.ts`, `keyword-coverage.util.ts`, `prompts/v1/keyword-weave.md` |
+| 9 | Trustworthy + actionable match score | 3 | Low | 🟢 Shipped | `applications.service.ts`, `match-insights.util.ts`, web ATS panel |
 | 8 | Structured outputs (JSON schema) instead of regex repair | 4 | Med-High | 🔴 Planned | `llm/providers/azure-openai.provider.ts`, `llm.service.ts` |
 | 10 | LLM-as-judge evaluation harness | 4 (start early) | Low | � Shipped | `apps/api/scripts/eval/**`, `prompts/eval/judge-rubric.md` |
 
@@ -227,7 +227,7 @@ no Konjunktiv/hedging; expanded quality-check list.
 
 ---
 
-### 6. Coverage-driven keyword loop 🔴
+### 6. Coverage-driven keyword loop �
 **Problem.** We extract keywords and *measure* match after the fact; we never close the
 loop by weaving in high-priority keywords the profile genuinely supports.
 
@@ -240,10 +240,40 @@ the profile doesn't support (that would be fabrication).
 **Files.** `applications.service.ts` (post-generation step), `keywords/**`, possibly a
 small `prompts/v1/keyword-weave.md`.
 
+**Shipped.** [`keyword-coverage.util.ts`](../../apps/api/src/applications/keyword-coverage.util.ts)
+is a pure, unit-tested module that (a) matches extracted ATS keywords against the profile
+(`matchAtsKeywordsToProfile` — extracted from the service so the eval harness reuses the
+identical matcher), (b) selects the priority-1, `source: 'both'` keywords still missing from
+the cover letter (`selectKeywordsToWeave`, capped at 3, word-boundary aware), and
+(c) computes priority-1 coverage (`computePriority1Coverage`). `runKeywordWeavePass` in
+`applications.service.ts` runs **one** guarded `prompts/v1/keyword-weave.md` pass that weaves
+only those profile-supported gaps into the existing prose — no stuffing, never an
+unsupported keyword, never a new number. It is wired into **both** live paths after the
+editor pass, **skips the LLM call entirely when there is no gap**, and degrades gracefully
+(keeps the pre-weave draft on failure or a <60%-length result). The grounding check runs on
+the woven output. 13 unit tests. The eval harness (#10) gained a deterministic priority-1
+coverage metric (before/after weave) + a `--no-weave` A/B flag.
+
+**Measured impact (full eval, gpt-4.1, 24 fixtures, tag `phase3-weave`).** The improved
+Phase 1 cover-letter prompt already includes most priority-1 profile-supported keywords, so
+mean priority-1 coverage starts high (**87.33%**). The weave pass fired on **4 / 24**
+fixtures — the minority with a genuine gap — and lifted mean coverage to **100%** (e.g.
+`sales-de` 0→100% weaving *Neukundengewinnung*, `sales-en` 0→100% *B2B sales*, `logistics-de`
+67→100% *Fachwirt*, `marketing-en` 67→100% *email/agency management*). Grounding still passed
+on every woven letter (no new ungrounded numbers), and the 20 fixtures with no gap were left
+byte-identical (the LLM call is skipped entirely). So the loop is a **targeted safety net**:
+it does nothing when the draft is already complete and closes real gaps when they exist,
+never stuffing or fabricating. The coverage metric also guards against future regressions
+(e.g. a prompt change that starts dropping priority-1 keywords).
+
 **Acceptance.**
-- [ ] Priority-1 coverage computed post-generation.
-- [ ] Single guarded weave-in pass for profile-supported gaps only.
-- [ ] Eval shows higher match rate **without** stuffing (readability preserved).
+- [x] Priority-1 coverage computed post-generation (deterministic, in the harness).
+- [x] Single guarded weave-in pass for profile-supported gaps only; no stuffing; never adds
+      an unsupported keyword; graceful degradation.
+- [x] Eval shows the lift (mean priority-1 coverage 87.33% → 100%, weave fired on 4/24);
+      grounding still passes on woven output; no-gap fixtures left untouched.
+- [x] Unit test for the "which keywords qualify for weaving" selection logic.
+- [x] Doc-sync: README + ARCHITECTURE + copilot-instructions + tracker.
 
 ---
 
@@ -374,6 +404,32 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-15 — Phase 3: coverage-driven keyword loop (#6)
+- **#6 Shipped** — [`keyword-coverage.util.ts`](../../apps/api/src/applications/keyword-coverage.util.ts)
+  (pure, 13 unit tests) + `runKeywordWeavePass` in `applications.service.ts` + a new guarded
+  prompt [`v1/keyword-weave.md`](../../apps/api/prompts/v1/keyword-weave.md). After the
+  editor pass (both live pipelines), the loop selects the priority-1, **profile-supported**
+  (`source: 'both'`) ATS keywords still missing from the cover letter (cap 3,
+  word-boundary-aware) and runs **one** surgical weave pass — no stuffing, never an
+  unsupported keyword, never a new number, graceful fallback to the pre-weave draft. The LLM
+  call is **skipped entirely when there is no gap**.
+- The ATS keyword matcher was extracted from the service into the util
+  (`matchAtsKeywordsToProfile`, delegating wrapper kept) so the eval harness measures
+  coverage with the identical matcher (drops `applications.service.ts` lint warnings 66 → 62).
+- **Eval harness (#10) extended** with a deterministic priority-1 coverage metric
+  (before/after weave) and a `--no-weave` A/B flag.
+- **Measured lift (gpt-4.1, 24 fixtures, tag `phase3-weave`):** mean priority-1 coverage
+  **87.33% → 100%**; weave fired on **4 / 24** fixtures (`sales-de` 0→100% *Neukundengewinnung*,
+  `sales-en` 0→100% *B2B sales*, `logistics-de` 67→100% *Fachwirt*, `marketing-en` 67→100%
+  *email/agency management*); grounding still passed on every woven letter; rubric + OVERALL
+  unchanged from baseline (action 4.58, quantified 4.33, clichés 4.63, OVERALL 5.00).
+- **Doc-sync** — README + ARCHITECTURE (pipeline diagram) + copilot-instructions (module +
+  pipeline step) + harness README + this tracker.
+- Files: `apps/api/src/applications/keyword-coverage.util.ts`,
+  `apps/api/src/applications/__tests__/unit/keyword-coverage.unit.spec.ts`,
+  `apps/api/prompts/v1/keyword-weave.md`, `apps/api/src/applications/applications.service.ts`,
+  `apps/api/scripts/eval/{pipeline-runner,aggregate,run-eval}.ts`, `apps/api/scripts/eval/README.md`.
 
 ### 2026-06-15 — Phase 3: trustworthy + actionable match score (#9)
 - **#9 Shipped** — the user-facing ATS `overallScore` was audited and confirmed **already
