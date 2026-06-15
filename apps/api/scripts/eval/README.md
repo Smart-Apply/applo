@@ -53,6 +53,7 @@ With `LLM_PROVIDER=mock` (or unset) the harness **skips gracefully** (exit 0).
 | `--concurrency=N` | `1` | Fixtures in flight at once. **Keep at 1** on small Azure deployments — higher values trip the rate limit + circuit breaker. |
 | `--delay=MS` | `1500` | Pause between fixtures. |
 | `--retries=N` | `5` | Retries on transient throttling (429/503/breaker-open) with exponential backoff (4s→64s, long enough to clear the 30s breaker reset). |
+| `--no-weave` | off | Skip the #6 keyword weave pass. Use for an A/B run: compare coverage with vs. without the loop. |
 | `--out=PATH` | `results/eval-<tag>-<ts>.json` | Override the output path. |
 
 ## What it measures
@@ -60,10 +61,13 @@ With `LLM_PROVIDER=mock` (or unset) the harness **skips gracefully** (exit 0).
 For each fixture the runner mirrors `ApplicationsService.createWithGeneration`:
 
 1. `v1/skill-selector.md` (temp 0.2) → tailored profile
-2. parallel `v1/cover-letter.md` + `v1/resume-rewrite.md` (temp 0.35)
+2. parallel `v1/cover-letter.md` + `v1/resume-rewrite.md` (temp 0.35) + `v1/ats-keywords.md`
+   (then deterministic `matchAtsKeywordsToProfile`)
 3. `v1/editor-cover-letter.md` (temp 0.4) — the #1 editor pass
+4. `v1/keyword-weave.md` (temp 0.3) — the #6 keyword weave pass (skipped with `--no-weave`,
+   or when there is no profile-supported priority-1 gap)
 
-It then scores the output two ways:
+It then scores the output three ways:
 
 - **LLM judge** (`prompts/eval/judge-rubric.md`, temp 0) — 6 rubric dimensions
   scored 1–5: `action_verb_bullets`, `quantified_or_qualitative`,
@@ -71,14 +75,24 @@ It then scores the output two ways:
   `language_correctness`, plus a holistic `overall`.
 - **Grounding** (`GroundingValidatorService`, #7) — deterministic share of
   impact numbers in the output that trace back to the candidate profile.
+- **Priority-1 keyword coverage** (#6, deterministic) — of the priority-1 ATS
+  keywords the profile supports, the share that appear in the cover letter, both
+  **before** and **after** the weave pass (so the lift is visible).
 
-> The runner deliberately omits `v1/ats-keywords.md` (not part of the judged
-> prose) and PDF/persistence. Add keyword coverage here when item #6 needs
-> measuring.
+> The runner omits only PDF rendering + persistence (irrelevant to output
+> quality). The keyword weave shares `keyword-coverage.util.ts` with the live
+> service, so the harness measures the real loop.
 
 > **Grounding caveat:** the validator checks the **profile only**, not the job
 > posting. A number the model legitimately quotes from the posting (e.g. company
 > size) is reported as `unsupported`. Read flagged values in that light.
+
+> **Coverage caveat:** the improved Phase 1 cover-letter prompt already includes
+> most priority-1 profile-supported keywords, so mean coverage starts high
+> (~87% in the full eval) and the weave fires only on the minority of fixtures
+> with a genuine gap (4/24 in the `phase3-weave` baseline, lifting the mean to
+> 100%). No-gap fixtures are left byte-identical (the LLM call is skipped). The
+> metric mainly exists to prove the lift and to catch regressions.
 
 ## Output
 
