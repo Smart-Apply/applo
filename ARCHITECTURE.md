@@ -143,6 +143,8 @@ User → Frontend (Next.js)
 │ Circuit-breaker + retries (opossum)  │
 │ Structured outputs: json_schema /    │
 │   json_object (schema-valid JSON)     │
+│ 0. Job facts: contact + company       │
+│    specifics + salary/start asks (#5)  │
 │ 1. Generate cover letter             │
 │ 2. Generate resume                   │
 │ 3. Editor pass: critique + revise    │

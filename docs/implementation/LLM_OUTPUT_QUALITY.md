@@ -84,7 +84,7 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 | 2 | Consolidate onto one pipeline; retire dead/legacy paths | 1 | Low | 🟡 In progress | `agents/**`, `prompts/*-ats.md`, `applications.service.ts` |
 | 3 | XYZ/STAR achievement-bullet formula | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
 | 4 | Make the professional summary / Kurzprofil do real work | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
-| 5 | Real cover-letter personalization | 1 | Low | 🟡 In progress | `prompts/v1/cover-letter.md`, (later) data layer |
+| 5 | Real cover-letter personalization | 1 | Low | � Shipped | `prompts/v1/cover-letter.md`, `prompts/v1/job-facts.md`, `job-facts.util.ts` |
 | 1 | Self-critique / editor pass | 2 | Med | 🟡 In progress | `prompts/v1/editor-cover-letter.md`, `applications.service.ts` |
 | 7 | Anti-hallucination grounding validator | 2 | Med | 🟢 Shipped | `grounding/grounding-validator.service.ts`, `applications.service.ts` |
 | 6 | Coverage-driven keyword loop | 3 | Med | 🟢 Shipped | `applications.service.ts`, `keyword-coverage.util.ts`, `prompts/v1/keyword-weave.md` |
@@ -222,7 +222,7 @@ clichés. Tightened the `rewritten_summary` JSON field hint to match.
 
 ---
 
-### 5. Real cover-letter personalization 🟡
+### 5. Real cover-letter personalization �
 **Problem.** Letters used "Sehr geehrte Damen und Herren", lacked a concrete company
 reference (the #1 auto-reject signal), and ignored explicit salary / start-date asks.
 
@@ -231,21 +231,36 @@ named-salutation selection from the posting `fullText`; mandatory concrete compa
 reference; salary/start-date only when explicitly requested; tone-down of enthusiasm;
 no Konjunktiv/hedging; expanded quality-check list.
 
-**Still to do (data layer).**
-- [ ] Extract the contact person (Ansprechpartner) + key company facts as a dedicated
-      step and pass into the prompt (more reliable than the LLM scanning `fullText`).
-- [ ] Decide whether to render a **Betreffzeile** — the `CoverLetterTemplateData`
-      contract has no `subject` field today, so this is a **template** change, not a
-      prompt change. Track under PDF templates if pursued.
+**Shipped (data layer).** A dedicated extraction step
+([`v1/job-facts.md`](../../apps/api/prompts/v1/job-facts.md) + `extractJobFacts`) now pulls
+structured facts from the posting — the named contact person, 1-3 concrete company
+specifics, and explicit `asks_salary` / `asks_start_date` flags — **before** the cover
+letter is written, instead of asking the writer to scan `fullText` mid-draft. It runs **in
+parallel with `skill-selector`** in both live pipelines (no added critical-path latency),
+uses Azure strict `json_schema` (#8), and degrades gracefully (a failed/invalid extraction
+falls back to the prompt scanning `fullText` itself). The salutation is then built
+**deterministically** in code ([`job-facts.util.ts`](../../apps/api/src/applications/job-facts.util.ts)
+`buildSalutation`: gendered "Sehr geehrte Frau …" / "Dear Mr. …", English-name fallback,
+generic otherwise) and passed to the prompt as a verbatim line, so the greeting no longer
+depends on the LLM. Verified on real Azure (job-facts parses clean, personalization 5.00).
+13 unit tests.
+
+**Betreffzeile decision (recorded).** **Skip for now.** A subject line is a *template*
+change, not a prompt change — `CoverLetterTemplateData`
+([`pdf-v2/template-data.ts`](../../apps/api/src/pdf-v2/template-data.ts)) has no `subject`
+field, and the PDF template owns the letter header (recipient, date). Adding one means a
+schema + template + renderer change across all cover-letter templates for low marginal
+value now that the salutation + company reference are solid. Revisit under PDF templates if
+requested.
 
 **Acceptance.**
 - [x] Named salutation + concrete company reference + salary/start-date guardrails live.
-- [ ] Ansprechpartner/company-facts extraction step feeding the prompt.
-- [ ] Betreffzeile decision recorded (template vs. skip).
+- [x] Ansprechpartner/company-facts extraction step feeding the prompt.
+- [x] Betreffzeile decision recorded (template vs. skip) — **skip** (template change, deferred).
 
 ---
 
-### 6. Coverage-driven keyword loop �
+### 6. Coverage-driven keyword loop 🟢
 **Problem.** We extract keywords and *measure* match after the fact; we never close the
 loop by weaving in high-priority keywords the profile genuinely supports.
 
@@ -441,12 +456,42 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 - **Grounding strictness (#7)** — ✅ RESOLVED 2026-06-15: **flag + log** (non-destructive).
   Stripping numbers from prose mangles sentences; flagging gives telemetry now and can feed
   the editor pass later. Revisit if we want auto-correction.
+- **Betreffzeile / subject line (#5)** — ✅ RESOLVED 2026-06-15: **skip for now.** It's a
+  *template* change (no `subject` field in `CoverLetterTemplateData`; the PDF template owns
+  the header), not a prompt change — low marginal value now the salutation + company
+  reference are solid. Revisit under PDF templates if requested.
 
 ---
 
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-15 — Cover-letter data layer + Betreffzeile decision (#5 complete)
+- **#5 Shipped (data layer).** A dedicated extraction step
+  [`v1/job-facts.md`](../../apps/api/prompts/v1/job-facts.md) + `extractJobFacts` pulls
+  structured facts from the posting — named contact person, 1-3 concrete company specifics,
+  explicit `asks_salary` / `asks_start_date` flags — **before** the cover letter is written,
+  replacing the writer scanning `fullText` mid-draft. Runs **in parallel with
+  `skill-selector`** in both live pipelines (no added critical-path latency), uses Azure
+  strict `json_schema` (#8), degrades gracefully (failed/invalid extraction → prompt scans
+  `fullText` itself).
+- The salutation is now built **deterministically in code**
+  ([`job-facts.util.ts`](../../apps/api/src/applications/job-facts.util.ts) `buildSalutation`)
+  and passed to `v1/cover-letter.md` as a verbatim line, so the greeting no longer depends on
+  the LLM. `v1/cover-letter.md` updated to consume `{{json jobFacts}}` + `{{salutation}}`.
+- **Betreffzeile decision: skip** — it's a template change (no `subject` in
+  `CoverLetterTemplateData`), deferred to PDF templates.
+- Verified on real Azure: `job-facts.md` parses clean (strict schema), cover-letter
+  personalization 5.00. 13 unit tests (salutation + validation/normalize). Eval harness
+  pipeline-runner extended to run job-facts.
+- Doc-sync: tracker (#5 Shipped + acceptance + open-decision) + copilot-instructions +
+  ARCHITECTURE.
+- Files: `apps/api/prompts/v1/job-facts.md`, `apps/api/prompts/v1/cover-letter.md`,
+  `apps/api/src/applications/job-facts.util.ts`,
+  `apps/api/src/applications/__tests__/unit/job-facts.unit.spec.ts`,
+  `apps/api/src/applications/applications.service.ts`,
+  `apps/api/src/llm/schemas/v1-schemas.ts`, `apps/api/scripts/eval/pipeline-runner.ts`.
 
 ### 2026-06-15 — Resume editor pass (#1, second variant)
 - The resume half of #1 shipped: [`prompts/v1/editor-resume.md`](../../apps/api/prompts/v1/editor-resume.md)
