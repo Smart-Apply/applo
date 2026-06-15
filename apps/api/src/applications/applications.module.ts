@@ -4,7 +4,6 @@ import { JobsModule } from '../jobs/jobs.module';
 import { StorageModule } from '../storage/storage.module';
 import { LLMModule } from '../llm/llm.module';
 import { KeywordsModule } from '../keywords/keywords.module';
-import { AgentsModule } from '../agents/agents.module';
 import { TemplatesModule } from '../templates/templates.module';
 import { SubscriptionModule } from '../subscription/subscription.module';
 import { ApplicationsController } from './applications.controller';
@@ -19,7 +18,6 @@ import { GroundingValidatorService } from './grounding/grounding-validator.servi
     StorageModule,
     LLMModule,
     KeywordsModule,
-    AgentsModule,
     TemplatesModule,
     SubscriptionModule,
   ],

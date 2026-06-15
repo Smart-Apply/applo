@@ -182,7 +182,6 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 
 ## Backend Modules (`apps/api/src/`)
 - `admin` — allow-listed admin endpoints (gated by `ADMIN_EMAILS` env), e.g. `POST /admin/users/:email/tier`, `DELETE /admin/users/:email`
-- `agents` — Azure AI Foundry agents (URL parsing, etc.)
 - `applications` — generation pipeline (profile + job → LLM → editor pass → keyword weave → grounding check → PDF → storage), SSE status stream. Owns the `grounding/` sub-service (`GroundingValidatorService`) — a deterministic, non-destructive anti-hallucination check that flags impact numbers (%, currency, counts) absent from the source profile (logs only; never strips). Also owns the coverage-driven keyword loop (#6): `keyword-coverage.util.ts` selects the priority-1, **profile-supported** ATS keywords still missing from the cover letter and a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (never invents unsupported keywords; graceful fallback to the pre-weave draft).
 - `auth` — JWT, refresh-token rotation, OAuth (Google/Microsoft/Azure AD), TOTP 2FA, password reset
 - `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@smart-apply/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`)

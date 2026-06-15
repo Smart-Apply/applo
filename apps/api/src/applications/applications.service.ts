@@ -21,7 +21,7 @@ import { KeywordsService } from '../keywords/keywords.service';
 import { TemplatesService } from '../templates/templates.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { GroundingValidatorService } from './grounding/grounding-validator.service';
-import { ATSAgentOutput } from '../agents/agents.interface';
+import { ATSAgentOutput } from '../keywords/keywords.types';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
