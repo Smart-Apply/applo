@@ -5,6 +5,7 @@ import CircuitBreaker from 'opossum';
 import { LLMProvider } from './llm.interface';
 import { ConfigService } from '../config/config.service';
 import { stripClosingPhrase } from '../common/services/html-sanitizer';
+import { resolveResponseFormat } from './schemas/v1-schemas';
 
 @Injectable()
 export class LLMService {
@@ -385,8 +386,17 @@ Translated text in ${targetLangName}:`;
       ...options,
     };
 
+    // Structured outputs (#8): constrain the response by construction. A strict
+    // JSON schema for registered templates (ats-keywords, resume-rewrite),
+    // otherwise JSON mode when the prompt mentions "json". The mock provider
+    // ignores this; the regex repair in parseJsonResponse stays as a fallback.
+    const responseFormat = resolveResponseFormat(templatePath, prompt);
+    const providerOptions = responseFormat
+      ? { ...defaultOptions, responseFormat }
+      : defaultOptions;
+
     try {
-      const response = await this.callProvider(prompt, defaultOptions);
+      const response = await this.callProvider(prompt, providerOptions);
       const parsed = this.parseJsonResponse<T>(response, templatePath);
       const duration = Date.now() - startTime;
 
@@ -410,6 +420,17 @@ Translated text in ${targetLangName}:`;
       // Trim whitespace
       let cleaned = response.trim();
 
+      // Telemetry (#8): does the raw response parse as-is, or does it still need
+      // the regex/fence repair below? With structured outputs the model should
+      // emit clean JSON, so "recovery needed" should trend towards zero. Logged
+      // so we can measure the structured-output rollout.
+      let recoveryNeeded = false;
+      try {
+        JSON.parse(cleaned);
+      } catch {
+        recoveryNeeded = true;
+      }
+
       // Remove markdown code blocks (```json ... ``` or ``` ... ```)
       if (cleaned.startsWith('```')) {
         cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '');
@@ -428,6 +449,14 @@ Translated text in ${targetLangName}:`;
 
       // Parse JSON
       const parsed = JSON.parse(cleaned);
+
+      if (process.env.LOG_LLM_CALLS === 'true') {
+        this.logger.log(
+          `JSON parse for ${templatePath}: ${recoveryNeeded ? 'RECOVERY (regex repair used)' : 'clean'}`,
+        );
+      } else if (recoveryNeeded) {
+        this.logger.debug(`JSON parse for ${templatePath} needed regex recovery`);
+      }
 
       // Apply validation if template path matches known types
       if (templatePath.includes('skill-selector')) {
