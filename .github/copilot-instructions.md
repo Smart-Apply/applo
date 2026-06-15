@@ -149,7 +149,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - Direct Azure OpenAI HTTP calls (`@nestjs/axios`)
   - Azure AI Foundry agents (`@azure/ai-agents`) for ATS keyword extraction, CV/CL writing
   - **opossum** circuit breaker around LLM calls
-  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Needs `AZURE_OPENAI_API_VERSION` ≥ `2024-08-01-preview` (default is `2025-01-01-preview`).
+  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Needs `AZURE_OPENAI_API_VERSION` ≥ `2024-08-01-preview` (default is `2025-01-01-preview`).
 - **PDF:**
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
@@ -511,7 +511,7 @@ PUT /api/v1/profile
 ### Application Pipeline
 1. Load Profile + JobPosting; enforce subscription usage limits
 2. Detect language (DE/EN), select template (lang × design), extract ATS keywords
-3. Render the v1 prompt chain: `skill-selector` → parallel(`cover-letter`, `resume-rewrite`, `ats-keywords`) under `prompts/v1/*`
+3. Render the v1 prompt chain: parallel(`skill-selector`, `job-facts`) → parallel(`cover-letter`, `resume-rewrite`, `ats-keywords`) under `prompts/v1/*`. `job-facts` (#5) extracts the contact person + concrete company specifics + explicit salary/start-date asks; the salutation is then built deterministically in `job-facts.util.ts` and the cover-letter prompt consumes both (graceful fallback to scanning `fullText`).
 4. Call LLM via provider abstraction wrapped in **opossum** circuit breaker → Markdown/JSON
 5. **Editor pass (#1):** `prompts/v1/editor-cover-letter.md` critiques + revises the cover letter, and `prompts/v1/editor-resume.md` critiques + revises the rewritten resume payload (JSON→JSON, guarded by `resume-editor.util.ts` `isValidResumeEdit` so a dropped/mangled `profileExperienceId`/`profileProjectId` falls back to the pre-edit payload). Both degrade gracefully to the draft on failure.
 6. **Keyword weave (#6):** `keyword-coverage.util.ts` finds priority-1 **profile-supported** ATS keywords still missing from the cover letter; a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (no stuffing, never an unsupported keyword, graceful fallback to the pre-weave draft)
