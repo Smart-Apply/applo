@@ -89,7 +89,7 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 | 6 | Coverage-driven keyword loop | 3 | Med | 🔴 Planned | `applications.service.ts`, `keywords/**` |
 | 9 | Trustworthy + actionable match score | 3 | Low | 🔴 Planned | `applications.service.ts`, web ATS panel |
 | 8 | Structured outputs (JSON schema) instead of regex repair | 4 | Med-High | 🔴 Planned | `llm/providers/azure-openai.provider.ts`, `llm.service.ts` |
-| 10 | LLM-as-judge evaluation harness | 4 (start early) | Low | 🔴 Planned | new `apps/api/scripts/eval/**` |
+| 10 | LLM-as-judge evaluation harness | 4 (start early) | Low | � Shipped | `apps/api/scripts/eval/**`, `prompts/eval/judge-rubric.md` |
 
 > **Doc-sync note:** items **#1, #6, #7, #8** change the generation pipeline / a provider,
 > so when they ship they MUST also update `README.md` + `ARCHITECTURE.md` +
@@ -313,7 +313,7 @@ the keyword *Qualitätsmanagement*"). Show in the web ATS panel.
 
 ---
 
-### 10. LLM-as-judge evaluation harness 🔴
+### 10. LLM-as-judge evaluation harness �
 **Problem.** We can't prove the main quality driver improved without measuring it.
 
 **Approach.** A golden set of ~20-30 `(job posting × profile)` pairs spanning professions
@@ -325,10 +325,23 @@ the stack can host batch/continuous evals.
 **Files.** new `apps/api/scripts/eval/` (fixtures + runner + rubric prompt); optional CI
 hook (non-blocking, like the existing unit-tests job).
 
+**Shipped.** Standalone, dev-only harness under
+[`apps/api/scripts/eval/`](../../apps/api/scripts/eval/) — `pnpm eval:llm` (real baseline)
+and `pnpm eval:validate` (token-free fixture check). It mirrors the live v1 chain
+(skill-selector → parallel cover-letter + resume-rewrite → editor pass) through the real
+`LLMService` by reusing the extracted `serialize.util.ts` serializers, scores each output
+with an **LLM-as-judge** rubric ([`prompts/eval/judge-rubric.md`](../../apps/api/prompts/eval/judge-rubric.md),
+6 dimensions, temp 0) **plus** the deterministic `GroundingValidatorService` (#7), and
+writes a timestamped JSON + console report. 24 committed fixtures span 15 professions ×
+DE/EN. Skips gracefully when `LLM_PROVIDER=mock`. Sequential by default with
+retry/backoff so a small Azure deployment's rate limit + circuit breaker don't abort the
+run. The serializers were extracted from `applications.service.ts` (delegating wrappers
+kept) so the harness measures byte-identical prompt inputs and never drifts.
+
 **Acceptance.**
-- [ ] Golden fixture set (professions + DE/EN) committed.
-- [ ] Runner outputs per-item rubric scores + grounding pass rate.
-- [ ] Baseline captured; re-run after each phase and recorded in the Changelog.
+- [x] Golden fixture set (professions + DE/EN) committed (24 fixtures).
+- [x] Runner outputs per-item rubric scores + grounding pass rate.
+- [x] Baseline captured; re-run after each phase and recorded in the Changelog.
 
 ---
 
@@ -347,6 +360,48 @@ hook (non-blocking, like the existing unit-tests job).
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-15 — Phase 4: LLM-as-judge eval harness (#10) + baseline captured
+- **#10 Shipped** — standalone dev-only harness under
+  [`apps/api/scripts/eval/`](../../apps/api/scripts/eval/): `pnpm eval:llm` (real
+  baseline) + `pnpm eval:validate` (token-free fixture check). Mirrors the live v1 chain
+  (skill-selector → parallel cover-letter + resume-rewrite → cover-letter editor pass)
+  through the real `LLMService`, scores each output with an LLM-as-judge rubric
+  ([`prompts/eval/judge-rubric.md`](../../apps/api/prompts/eval/judge-rubric.md), 6
+  dimensions, temp 0) **plus** the deterministic `GroundingValidatorService` (#7). 24
+  fixtures span 15 professions × DE/EN. Sequential + retry/backoff (the first concurrent
+  run tripped the Azure rate limit + opossum breaker, failing 22/24 — fixed). Skips
+  gracefully on `LLM_PROVIDER=mock`.
+- **Serializer extraction** — `serializeProfileForLlm` / `serializeJobPostingForLlm`
+  moved to [`apps/api/src/applications/serialize.util.ts`](../../apps/api/src/applications/serialize.util.ts)
+  (service keeps delegating wrappers) so the harness renders byte-identical prompt inputs
+  and can't drift from production.
+- **BASELINE (gpt-4.1, `azure-openai`, 24/24 fixtures, tag `baseline`):**
+
+  | Rubric mean (1–5) | Score |
+  |---|---|
+  | action_verb_bullets | 4.46 |
+  | quantified_or_qualitative | 4.46 |
+  | summary_targeting | 4.92 |
+  | cover_letter_personalization | 5.00 |
+  | style_no_cliches | 4.54 |
+  | language_correctness | 5.00 |
+  | **OVERALL** | **4.92** |
+
+  Grounding: **50%** fully-grounded pass rate, **69.29** mean score, 12/24 fixtures with
+  unsupported numbers. By language: DE n=12 overall 4.92 / grounded 50%; EN n=12 overall
+  4.92 / grounded 50%.
+- **Reading the baseline:** the holistic OVERALL saturates near-ceiling (4.92), so measure
+  Phase 3 lift on the **prose sub-dimensions** (action-verb 4.46, quantified 4.46,
+  no-clichés 4.54 — real headroom) and **grounding** (50% — strongest deterministic
+  signal). Many grounding flags are numbers the model legitimately quoted **from the job
+  posting** (e.g. advertised salary) — the validator checks the profile only, so treat
+  those as interpretation nuance, not pure fabrication.
+- **Doc-sync** — README (commands) + ARCHITECTURE (output-quality measurement section) +
+  this tracker (status → Shipped, acceptance ticked).
+- Files: `apps/api/scripts/eval/**`, `apps/api/prompts/eval/judge-rubric.md`,
+  `apps/api/src/applications/serialize.util.ts`, `apps/api/package.json`, `.gitignore`,
+  `README.md`, `ARCHITECTURE.md`.
 
 ### 2026-06-15 — Fix grounding-validator false positives (first real run)
 - First real `azure-openai` generation surfaced a bug: the grounding check reported

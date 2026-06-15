@@ -157,6 +157,10 @@ pnpm test:integration
 pnpm test:e2e
 pnpm test:all          # unit + integration + e2e
 
+# LLM output-quality eval harness (from apps/api; LLM-as-judge over golden fixtures)
+pnpm --filter @smart-apply/api eval:validate   # token-free fixture check
+pnpm --filter @smart-apply/api eval:llm        # real baseline (needs Azure creds)
+
 # Lint & typecheck
 pnpm lint
 pnpm typecheck
