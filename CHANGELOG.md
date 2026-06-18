@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.5.0](https://github.com/Smart-Apply/smart-apply/compare/v3.4.16...v3.5.0) (2026-06-18)
+
+
+### Features
+
+* **ai-guardrails:** add token + character limits with live counters across all AI prompt inputs ([#552](https://github.com/Smart-Apply/smart-apply/issues/552)) ([8f6f5fa](https://github.com/Smart-Apply/smart-apply/commit/8f6f5fa5d9b78a1578c205be5390dc44f768043a)), closes [#520](https://github.com/Smart-Apply/smart-apply/issues/520)
+* **applications:** specific, actionable ATS match suggestions ([#9](https://github.com/Smart-Apply/smart-apply/issues/9)) ([#554](https://github.com/Smart-Apply/smart-apply/issues/554)) ([8d227ef](https://github.com/Smart-Apply/smart-apply/commit/8d227efd7c1b26ccf49c943c9929bb6fe8dd96d5))
+* **llm:** add null safety check for Azure OpenAI provider configuration ([6cfc0c6](https://github.com/Smart-Apply/smart-apply/commit/6cfc0c63fbb17d4914f90ed571e4689cc120b16d))
+* **llm:** add null safety check for Azure OpenAI provider configuration ([6cfc0c6](https://github.com/Smart-Apply/smart-apply/commit/6cfc0c63fbb17d4914f90ed571e4689cc120b16d))
+* **llm:** add null safety check for Azure OpenAI provider configuration ([0998ae6](https://github.com/Smart-Apply/smart-apply/commit/0998ae6f516b1a2a0ca281d391e66b4c1776f510))
+* **llm:** add null safety check for Azure OpenAI provider configuration ([fea1815](https://github.com/Smart-Apply/smart-apply/commit/fea1815d5aff2faf25834ac3bcde76a5d3760833))
+* **llm:** add null safety check for Azure OpenAI provider configuration ([ca5c723](https://github.com/Smart-Apply/smart-apply/commit/ca5c7231cf1f0c40a65a06e28d3e4eecdfdf13d2))
+* **llm:** add null safety check for Azure OpenAI provider configuration ([21891e0](https://github.com/Smart-Apply/smart-apply/commit/21891e06aa26bd3e8e0030eb1ee80d79006d8988))
+* **llm:** Azure structured outputs for JSON calls ([#8](https://github.com/Smart-Apply/smart-apply/issues/8)) ([#556](https://github.com/Smart-Apply/smart-apply/issues/556)) ([b5beec6](https://github.com/Smart-Apply/smart-apply/commit/b5beec643bafb3fc5433e24fe4e65921bf4f9139))
+* **llm:** cover-letter job-facts extraction + deterministic salutation ([#5](https://github.com/Smart-Apply/smart-apply/issues/5)) ([#559](https://github.com/Smart-Apply/smart-apply/issues/559)) ([92f48e4](https://github.com/Smart-Apply/smart-apply/commit/92f48e412752e3b240b2c0224829e7d0446d8a86))
+* **llm:** coverage-driven keyword weave loop ([#6](https://github.com/Smart-Apply/smart-apply/issues/6)) ([#555](https://github.com/Smart-Apply/smart-apply/issues/555)) ([501ead5](https://github.com/Smart-Apply/smart-apply/commit/501ead553f91cbfa19405850fe657e472b56a8a6))
+* **llm:** output-quality phases 1–2 + LLM-as-judge eval harness ([#553](https://github.com/Smart-Apply/smart-apply/issues/553)) ([0af9b02](https://github.com/Smart-Apply/smart-apply/commit/0af9b02b729efe0493bedcae3758da818e959c5a))
+* **llm:** resume editor pass with ID-preservation guard ([#1](https://github.com/Smart-Apply/smart-apply/issues/1)) ([#558](https://github.com/Smart-Apply/smart-apply/issues/558)) ([1321ef6](https://github.com/Smart-Apply/smart-apply/commit/1321ef6a1dbffcbcd201f1f1e22e8c9de7f1f1b2))
+
+
+### Bug Fixes
+
+* **applications:** reflect bulk status changes immediately and drop summary cards ([#543](https://github.com/Smart-Apply/smart-apply/issues/543)) ([b988c06](https://github.com/Smart-Apply/smart-apply/commit/b988c06157babf300c46577ebce70c5a83365eaa))
+* **llm:** de-duplicate gender honorific in cover-letter salutation ([#561](https://github.com/Smart-Apply/smart-apply/issues/561)) ([0ea7b33](https://github.com/Smart-Apply/smart-apply/commit/0ea7b33748683d8f67b1c60da3c7eafebf00e362))
+
 ## [3.4.16](https://github.com/Smart-Apply/smart-apply/compare/v3.4.15...v3.4.16) (2026-05-31)
 
 
