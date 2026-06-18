@@ -907,9 +907,14 @@ export const api = {
       resumeTemplateId?: string;
       generateCoverLetter?: boolean;
     }) =>
+      // Non-idempotent: the backend guards against duplicate (user, job)
+      // applications with a 409. Never auto-retry on a network blip, or a
+      // request that already succeeded server-side would resurface as a
+      // confusing duplicate conflict.
       apiRequest<Application>('/applications', {
         method: 'POST',
         body: JSON.stringify(data),
+        retry: false,
       }),
 
     createWithGeneration: (data: {
@@ -919,9 +924,14 @@ export const api = {
       generateCoverLetter?: boolean;
       language?: string;
     }) =>
+      // Non-idempotent AND slow (blocks until the LLM pipeline finishes).
+      // Auto-retrying on a dropped connection would fire a second POST while
+      // the first is still generating server-side — the retry then hits the
+      // duplicate guard (409) even though generation actually succeeded.
       apiRequest<Application>('/applications/create-with-generation', {
         method: 'POST',
         body: JSON.stringify(data),
+        retry: false,
       }),
 
     list: (options?: { includeJobPosting?: boolean }) =>

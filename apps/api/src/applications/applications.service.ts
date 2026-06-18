@@ -665,7 +665,9 @@ export class ApplicationsService {
     );
 
     // 4. Check if application already exists (prevent duplicates BEFORE generation)
-    // Note: Only check non-deleted applications (deletedAt: null)
+    // Note: Only check non-deleted applications (deletedAt: null). A previously
+    // FAILED attempt is treated as recyclable below (step 7) so a failed
+    // generation never permanently blocks re-creating for the same posting.
     const existingApplication = await this.prisma.application.findFirst({
       where: {
         userId,
@@ -674,15 +676,19 @@ export class ApplicationsService {
       },
       select: {
         id: true,
-        title: true,
+        status: true,
       },
     });
 
-    if (existingApplication) {
-      // Provide application ID in error metadata for frontend to navigate to it
-      const error: any = new ConflictException(
+    if (existingApplication && existingApplication.status !== ApplicationStatus.FAILED) {
+      // A READY (genuine duplicate) or in-progress (PENDING/GENERATING) row
+      // exists. The in-progress case also covers a retry of a slow request
+      // whose first attempt already succeeded server-side after the client
+      // connection dropped. Surface the existing id so the frontend navigates
+      // straight into it instead of starting a second generation.
+      const error = new ConflictException(
         'Du hast bereits eine Bewerbung für diese Stelle erstellt.',
-      );
+      ) as ConflictException & { applicationId: string };
       error.applicationId = existingApplication.id;
       throw error;
     }
@@ -704,25 +710,43 @@ export class ApplicationsService {
         )
       : null;
 
-    // 7. Create application (initially empty, will be populated by pipeline)
-    let application: any;
+    // 7. Create application (initially empty, will be populated by pipeline).
+    // If a previously FAILED attempt for this (user, job) exists, reuse that
+    // row instead of inserting a new one — a failed generation must never
+    // permanently block the user from re-creating an application.
+    let application: Prisma.ApplicationGetPayload<{ include: { jobPosting: true } }>;
     try {
-      application = await this.prisma.application.create({
-        data: {
-          userId,
-          jobPostingId: dto.jobPostingId,
-          title,
-          applicationStatus: ApplicationTrackingStatus.CREATED,
-          status: ApplicationStatus.PENDING,
-          notes: dto.notes,
-          coverLetterTemplateId: resolvedCoverLetterTemplateId,
-          resumeTemplateId: resolvedResumeTemplateId,
-          language: detectedLanguage,
-        },
-        include: {
-          jobPosting: true,
-        },
-      });
+      const applicationData = {
+        title,
+        applicationStatus: ApplicationTrackingStatus.CREATED,
+        status: ApplicationStatus.PENDING,
+        notes: dto.notes,
+        coverLetterTemplateId: resolvedCoverLetterTemplateId,
+        resumeTemplateId: resolvedResumeTemplateId,
+        language: detectedLanguage,
+      };
+
+      if (existingApplication) {
+        // Only a FAILED row reaches here (READY/in-progress threw at step 4).
+        application = await this.prisma.application.update({
+          where: { id: existingApplication.id },
+          data: { ...applicationData, errorMessage: null },
+          include: {
+            jobPosting: true,
+          },
+        });
+      } else {
+        application = await this.prisma.application.create({
+          data: {
+            userId,
+            jobPostingId: dto.jobPostingId,
+            ...applicationData,
+          },
+          include: {
+            jobPosting: true,
+          },
+        });
+      }
     } catch (error) {
       // Handle Prisma unique constraint violation (defense in depth)
       if (error.code === 'P2002') {
@@ -1940,10 +1964,18 @@ export class ApplicationsService {
     // If regenerate is true and instructions are provided, modify existing content
     if (dto.regenerate && dto.instructions && dto.content) {
       this.logger.log('Modifying cover letter with AI based on instructions');
-      content = await this.llmService.modifyCoverLetterContent(dto.content, dto.instructions, {
-        jobTitle: jobPosting.title,
-        companyName: jobPosting.company || 'Unknown Company',
-      });
+      const modified = await this.llmService.modifyCoverLetterContent(
+        dto.content,
+        dto.instructions,
+        {
+          jobTitle: jobPosting.title,
+          companyName: jobPosting.company || 'Unknown Company',
+        },
+      );
+      // modifyCoverLetterContent returns Markdown — convert it to HTML like the
+      // fresh-regenerate branch below, otherwise the editor receives raw Markdown
+      // and renders it as a monospaced code block with double-escaped entities.
+      content = this.convertCoverLetterToHtml(modified) ?? modified;
     }
     // If no content or regenerate without existing content, generate fresh using
     // the v1 pipeline prompt — the same prompt the initial-generation path uses —
