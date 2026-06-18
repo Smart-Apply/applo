@@ -164,6 +164,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.logger.warn(logMessage, logDetails);
     }
 
+    // If the response has already started (e.g. a long-running handler whose
+    // socket was reused/torn down by a dev watch-restart, a client retry, or
+    // any other upstream double-send), writing again throws
+    // ERR_HTTP_HEADERS_SENT and masks the original error in a confusing
+    // cascade. The first response has already gone out — stop here.
+    if (response.headersSent) {
+      this.logger.warn(`${logMessage} — response already sent; skipping error body`);
+      return;
+    }
+
     response.status(status).json(errorResponse);
   }
 }

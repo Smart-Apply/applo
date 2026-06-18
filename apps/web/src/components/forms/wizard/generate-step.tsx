@@ -192,16 +192,19 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
       }
 
       if (applicationId) {
-        toast.error(message, {
-          duration: 8000,
-          action: {
-            label: 'Zur Bewerbung',
-            onClick: () => router.push(`/applications/${applicationId}`),
-          },
-        });
-      } else {
-        toast.error(message);
+        // The application already exists for this posting — typically a slow
+        // generation whose first attempt completed server-side after the
+        // connection dropped, or a previously created application. Take the
+        // user straight into edit mode instead of stranding them on the
+        // wizard with a duplicate-conflict error.
+        setIsRedirecting(true);
+        queryClient.invalidateQueries({ queryKey: ['applications'] });
+        toast.info('Für diese Stelle besteht bereits eine Bewerbung. Wir öffnen sie für dich.');
+        router.push(`/applications/${applicationId}/edit`);
+        return;
       }
+
+      toast.error(message);
     }
   };
 
