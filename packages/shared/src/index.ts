@@ -722,6 +722,8 @@ export type InterviewType = 'BEHAVIORAL' | 'TECHNICAL' | 'CASE_STUDY' | 'MIXED';
 export type InterviewDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type InterviewSessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED';
 export type InterviewQuestionType = 'OPEN' | 'SITUATIONAL' | 'TECHNICAL' | 'BEHAVIORAL' | 'FOLLOW_UP';
+/** How an interview session is conducted: typed text chat or spoken (voice) interview. */
+export type InterviewMode = 'TEXT' | 'VOICE';
 
 export interface InterviewQuestion {
   id: string;
@@ -755,6 +757,8 @@ export interface InterviewFeedback {
 export interface InterviewSession {
   id: string;
   type: InterviewType;
+  /** Conducted as text chat (default) or spoken voice interview. */
+  mode?: InterviewMode;
   industry?: string;
   difficulty: InterviewDifficulty;
   language: string;
@@ -833,6 +837,77 @@ export interface InterviewStats {
 export interface InterviewSessionsResponse {
   sessions: InterviewSession[];
   total: number;
+}
+
+// ============================================
+// Voice Interview Types (Realtime / WebRTC)
+// ============================================
+
+/** TTS voices supported by the Azure OpenAI Realtime API. */
+export type RealtimeVoice =
+  | 'alloy'
+  | 'ash'
+  | 'ballad'
+  | 'coral'
+  | 'echo'
+  | 'sage'
+  | 'shimmer'
+  | 'verse';
+
+/**
+ * Runtime availability + limits for the voice interview mode. Fetched before
+ * rendering the "Sprach-Interview" option so FREE-tier or mock-provider
+ * environments hide it cleanly instead of failing on connect.
+ */
+export interface VoiceInterviewConfig {
+  /** True when a real voice provider is configured (not the mock/offline one). */
+  available: boolean;
+  defaultVoice: RealtimeVoice;
+  voices: RealtimeVoice[];
+  /** Hard per-session ceiling (minutes) enforced client- and server-side. */
+  maxSessionMinutes: number;
+  /** Monthly voice budget for the tier (-1 = unlimited). */
+  minutesPerMonth: number;
+  /** Minutes left in the current billing period. */
+  remainingMinutes: number;
+}
+
+/**
+ * Ephemeral session descriptor returned to the browser. The `token` is a
+ * short-lived realtime client secret (never the standing Azure API key) used
+ * to authenticate the browser's WebRTC SDP exchange with `webrtcUrl`.
+ */
+export interface VoiceSessionDescriptor {
+  token: string;
+  /** ISO timestamp after which the ephemeral token is rejected. */
+  expiresAt: string;
+  /** GA realtime calls endpoint (already includes `?webrtcfilter=on`). */
+  webrtcUrl: string;
+  model: string;
+  voice: RealtimeVoice;
+  /** Maximum allowed call length for this session (seconds). */
+  maxSessionSeconds: number;
+  /** Minutes left in the current billing period after this session is granted. */
+  remainingMinutes: number;
+}
+
+export type VoiceTranscriptRole = 'interviewer' | 'candidate';
+
+export interface VoiceTranscriptTurn {
+  role: VoiceTranscriptRole;
+  text: string;
+  /** Offset from call start when the turn began (seconds), if known. */
+  atSeconds?: number;
+}
+
+export interface StartVoiceSessionPayload {
+  /** Optional voice override; falls back to the server default when omitted. */
+  voice?: RealtimeVoice;
+}
+
+export interface SubmitVoiceTranscriptPayload {
+  durationSeconds: number;
+  turns: VoiceTranscriptTurn[];
 }
 
 // ============================================

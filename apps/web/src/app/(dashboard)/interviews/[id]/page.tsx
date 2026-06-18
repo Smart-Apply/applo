@@ -1,13 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useInterviewSession } from '@/hooks/use-interviews';
+import { useVoiceInterviewConfig } from '@/hooks/use-voice-interview';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { InterviewChat, InterviewFeedbackDisplay } from '@/components/interviews';
-import { ArrowLeft, MessageSquare, Trophy } from 'lucide-react';
+import { InterviewChat, InterviewVoice, InterviewFeedbackDisplay } from '@/components/interviews';
+import { ArrowLeft, MessageSquare, Mic, Trophy } from 'lucide-react';
 
 const statusConfig = {
   IN_PROGRESS: { label: 'Laufend', variant: 'default' as const },
@@ -34,6 +36,9 @@ export default function InterviewSessionPage() {
   const sessionId = params.id as string;
 
   const { data: session, isLoading, refetch } = useInterviewSession(sessionId);
+  const isInProgressSession = session?.status === 'IN_PROGRESS';
+  const { data: voiceConfig } = useVoiceInterviewConfig({ enabled: isInProgressSession });
+  const [mode, setMode] = useState<'text' | 'voice'>('text');
 
   if (isLoading) {
     return (
@@ -114,11 +119,45 @@ export default function InterviewSessionPage() {
 
       {/* Main Content */}
       {isInProgress ? (
-        <InterviewChat 
-          session={session} 
-          onComplete={() => refetch()} 
-          onAbandon={() => router.push('/interviews')} 
-        />
+        <div className="space-y-4">
+          {voiceConfig?.available && (
+            <div className="inline-flex rounded-lg border p-1">
+              <Button
+                variant={mode === 'text' ? 'default' : 'ghost'}
+                size="sm"
+                className="gap-2"
+                onClick={() => setMode('text')}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Text-Chat
+              </Button>
+              <Button
+                variant={mode === 'voice' ? 'default' : 'ghost'}
+                size="sm"
+                className="gap-2"
+                onClick={() => setMode('voice')}
+              >
+                <Mic className="h-4 w-4" />
+                Sprach-Interview
+              </Button>
+            </div>
+          )}
+          {mode === 'voice' && voiceConfig?.available ? (
+            <InterviewVoice
+              session={session}
+              maxSessionMinutes={voiceConfig.maxSessionMinutes}
+              remainingMinutes={voiceConfig.remainingMinutes}
+              onComplete={() => refetch()}
+              onSwitchToText={() => setMode('text')}
+            />
+          ) : (
+            <InterviewChat
+              session={session}
+              onComplete={() => refetch()}
+              onAbandon={() => router.push('/interviews')}
+            />
+          )}
+        </div>
       ) : isCompleted && session.feedback ? (
         <InterviewFeedbackDisplay session={session} />
       ) : (

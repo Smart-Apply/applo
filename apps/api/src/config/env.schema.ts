@@ -82,6 +82,20 @@ const envSchema = z.object({
   AZURE_OPENAI_API_VERSION: z.string().default('2025-01-01-preview'),
   LLM_PROVIDER: z.enum(['azure-openai', 'azure-ai-foundry', 'mock']).default('mock'),
 
+  // Voice Interview (Azure OpenAI Realtime API via WebRTC)
+  VOICE_PROVIDER: z.enum(['azure-realtime', 'mock']).default('mock'),
+  // Realtime endpoint/key. Fall back to AZURE_OPENAI_* when unset. Realtime
+  // models are only available in East US 2 and Sweden Central — use a Sweden
+  // Central resource for EU/GDPR data residency.
+  AZURE_OPENAI_REALTIME_ENDPOINT: z.string().optional(),
+  AZURE_OPENAI_REALTIME_API_KEY: z.string().optional(),
+  AZURE_OPENAI_REALTIME_DEPLOYMENT: z.string().default('gpt-realtime'),
+  AZURE_OPENAI_REALTIME_VOICE: z.string().default('alloy'),
+  // Per-session hard ceiling (minutes). Azure caps a realtime session at 60.
+  VOICE_INTERVIEW_MAX_SESSION_MINUTES: z.string().default('15'),
+  // Monthly voice budget per user (minutes); -1 = unlimited.
+  VOICE_INTERVIEW_MINUTES_PER_MONTH: z.string().default('60'),
+
   // LLM Configuration (reuses AZURE_OPENAI_DEPLOYMENT_NAME for model)
   LLM_TEMPERATURE_DEFAULT: z.string().optional(),
   LLM_MAX_TOKENS_DEFAULT: z.string().optional(),

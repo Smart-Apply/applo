@@ -127,6 +127,47 @@ export class ConfigService {
     return this.nestConfig.get('AZURE_OPENAI_API_VERSION', { infer: true });
   }
 
+  // Voice Interview (Azure OpenAI Realtime API)
+  get voiceProvider(): 'azure-realtime' | 'mock' {
+    return this.nestConfig.get('VOICE_PROVIDER', { infer: true });
+  }
+
+  get azureOpenAIRealtimeEndpoint(): string | undefined {
+    return (
+      this.nestConfig.get('AZURE_OPENAI_REALTIME_ENDPOINT', { infer: true }) ??
+      this.azureOpenAIEndpoint
+    );
+  }
+
+  get azureOpenAIRealtimeApiKey(): string | undefined {
+    return (
+      this.nestConfig.get('AZURE_OPENAI_REALTIME_API_KEY', { infer: true }) ??
+      this.azureOpenAIApiKey
+    );
+  }
+
+  get azureOpenAIRealtimeDeployment(): string {
+    return this.nestConfig.get('AZURE_OPENAI_REALTIME_DEPLOYMENT', { infer: true });
+  }
+
+  get azureOpenAIRealtimeVoice(): string {
+    return this.nestConfig.get('AZURE_OPENAI_REALTIME_VOICE', { infer: true });
+  }
+
+  get voiceInterviewMaxSessionMinutes(): number {
+    return parseInt(
+      this.nestConfig.get('VOICE_INTERVIEW_MAX_SESSION_MINUTES', { infer: true }) ?? '15',
+      10,
+    );
+  }
+
+  get voiceInterviewMinutesPerMonth(): number {
+    return parseInt(
+      this.nestConfig.get('VOICE_INTERVIEW_MINUTES_PER_MONTH', { infer: true }) ?? '60',
+      10,
+    );
+  }
+
   get llmProvider(): 'azure-openai' | 'azure-ai-foundry' | 'mock' {
     return this.nestConfig.get('LLM_PROVIDER', { infer: true });
   }

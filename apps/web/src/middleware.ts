@@ -74,6 +74,12 @@ export function middleware(_request: NextRequest) {
   const sentryIngestOrigins =
     'https://*.ingest.sentry.io https://*.ingest.de.sentry.io';
 
+  // Azure OpenAI Realtime API (voice interview). The browser POSTs its WebRTC
+  // SDP offer directly to the Azure resource host (`<resource>.openai.azure.com`)
+  // using a short-lived ephemeral token. A wildcard keeps the exact resource
+  // name out of the build so it can change without a redeploy.
+  const azureRealtimeOrigin = 'https://*.openai.azure.com';
+
   // Set CSP header dynamically based on runtime environment
   // Note: 'unsafe-eval' is required for Handlebars template compilation in the browser
   // This is needed for the template preview feature which renders Handlebars templates client-side
@@ -83,7 +89,9 @@ export function middleware(_request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: https: ${apiOriginList}`,
     "font-src 'self' data:",
-    `connect-src ${connectSrc} ${turnstileOrigin} ${cloudflareInsightsOrigin} ${sentryIngestOrigins}`,
+    // blob:/MediaStream playback for the voice interview's remote audio track.
+    "media-src 'self' blob:",
+    `connect-src ${connectSrc} ${turnstileOrigin} ${cloudflareInsightsOrigin} ${sentryIngestOrigins} ${azureRealtimeOrigin}`,
     `frame-src ${turnstileOrigin}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",

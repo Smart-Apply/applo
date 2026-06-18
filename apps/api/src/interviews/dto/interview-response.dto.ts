@@ -4,6 +4,7 @@ import {
   InterviewDifficulty,
   InterviewSessionStatus,
   InterviewQuestionType,
+  InterviewMode,
 } from '../../generated/prisma/client';
 
 /**
@@ -94,6 +95,9 @@ export class InterviewSessionResponseDto {
 
   @ApiProperty({ enum: InterviewType })
   type: InterviewType;
+
+  @ApiPropertyOptional({ enum: InterviewMode, description: 'text chat vs spoken voice interview' })
+  mode?: InterviewMode;
 
   @ApiPropertyOptional()
   industry?: string;

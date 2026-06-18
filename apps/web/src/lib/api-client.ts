@@ -35,6 +35,10 @@ import type {
   NextQuestionResponse,
   AnswerResponse,
   InterviewSessionStatus,
+  VoiceInterviewConfig,
+  VoiceSessionDescriptor,
+  StartVoiceSessionPayload,
+  SubmitVoiceTranscriptPayload,
   TwoFactorStatus,
   Setup2FAResponse,
   Verify2FASetupDto,
@@ -1126,6 +1130,21 @@ export const api = {
     abandon: (sessionId: string) =>
       apiRequest<InterviewSession>(`/interviews/${sessionId}/abandon`, {
         method: 'POST',
+      }),
+
+    // Voice interview (Azure Realtime / WebRTC)
+    voiceConfig: () => apiRequest<VoiceInterviewConfig>('/interviews/voice/config'),
+
+    startVoiceSession: (sessionId: string, data: StartVoiceSessionPayload = {}) =>
+      apiRequest<VoiceSessionDescriptor>(`/interviews/${sessionId}/voice/session`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    submitVoiceTranscript: (sessionId: string, data: SubmitVoiceTranscriptPayload) =>
+      apiRequest<InterviewSessionDetail>(`/interviews/${sessionId}/voice/transcript`, {
+        method: 'POST',
+        body: JSON.stringify(data),
       }),
   },
 
