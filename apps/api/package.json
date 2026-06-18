@@ -100,7 +100,7 @@
     "passport-jwt": "^4.0.1",
     "passport-microsoft": "^2.1.0",
     "pdf-parse": "^2.4.5",
-    "pdfjs-dist": "^5.7.284",
+    "pdfjs-dist": "^6.0.227",
     "pg": "^8.21.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",

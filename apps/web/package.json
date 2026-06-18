@@ -51,7 +51,7 @@
     "lucide-react": "^0.577.0",
     "marked": "^18.0.5",
     "next": "^16.2.9",
-    "pdfjs-dist": "5.4.296",
+    "pdfjs-dist": "6.0.227",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-dropzone": "^15.0.0",
