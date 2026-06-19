@@ -41,6 +41,8 @@ export function InterviewVoice({
   const [captions, setCaptions] = useState<VoiceTranscriptTurn[]>([]);
   const [interviewerSpeaking, setInterviewerSpeaking] = useState(false);
   const [candidateSpeaking, setCandidateSpeaking] = useState(false);
+  const [micLevel, setMicLevel] = useState(0);
+  const [heardSpeech, setHeardSpeech] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
@@ -50,6 +52,8 @@ export function InterviewVoice({
   const startedAtRef = useRef<number | null>(null);
   const endTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const finalizedRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const levelRafRef = useRef<number | null>(null);
 
   const startMutation = useStartVoiceSession(session.id);
   const submitMutation = useSubmitVoiceTranscript(session.id);
@@ -70,6 +74,17 @@ export function InterviewVoice({
       // already closed
     }
     micStreamRef.current?.getTracks().forEach((track) => track.stop());
+    if (levelRafRef.current) {
+      cancelAnimationFrame(levelRafRef.current);
+      levelRafRef.current = null;
+    }
+    try {
+      void audioContextRef.current?.close();
+    } catch {
+      // already closed
+    }
+    audioContextRef.current = null;
+    setMicLevel(0);
     dcRef.current = null;
     pcRef.current = null;
     micStreamRef.current = null;
@@ -93,8 +108,13 @@ export function InterviewVoice({
         return;
       }
 
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[voice] event:', event.type);
+      }
+
       switch (event.type) {
         case 'input_audio_buffer.speech_started':
+          setHeardSpeech(true);
           setCandidateSpeaking(true);
           break;
         case 'input_audio_buffer.speech_stopped':
@@ -158,6 +178,7 @@ export function InterviewVoice({
     finalizedRef.current = false;
     turnsRef.current = [];
     setCaptions([]);
+    setHeardSpeech(false);
 
     let descriptor;
     try {
@@ -175,18 +196,92 @@ export function InterviewVoice({
         if (audioRef.current) audioRef.current.srcObject = event.streams[0];
       };
 
+      pc.onconnectionstatechange = () => {
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug('[voice] connection:', pc.connectionState);
+        }
+      };
+      pc.oniceconnectionstatechange = () => {
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug('[voice] ice:', pc.iceConnectionState);
+        }
+      };
+
       const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
       micStreamRef.current = mic;
       mic.getAudioTracks().forEach((track) => pc.addTrack(track, mic));
 
+      const micTrack = mic.getAudioTracks()[0];
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[voice] mic track:', {
+          label: micTrack?.label,
+          enabled: micTrack?.enabled,
+          muted: micTrack?.muted,
+          readyState: micTrack?.readyState,
+        });
+      }
+
+      // Local mic-level meter so the user can confirm the microphone is live
+      // (independent of whether audio reaches Azure).
+      try {
+        const audioContext = new AudioContext();
+        audioContextRef.current = audioContext;
+        void audioContext.resume();
+        const sourceNode = audioContext.createMediaStreamSource(mic);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 512;
+        sourceNode.connect(analyser);
+        const samples = new Uint8Array(analyser.frequencyBinCount);
+        const measure = () => {
+          analyser.getByteTimeDomainData(samples);
+          let sumSquares = 0;
+          for (let i = 0; i < samples.length; i += 1) {
+            const deviation = (samples[i] - 128) / 128;
+            sumSquares += deviation * deviation;
+          }
+          const rms = Math.sqrt(sumSquares / samples.length);
+          setMicLevel(Math.min(1, rms * 3));
+          levelRafRef.current = requestAnimationFrame(measure);
+        };
+        levelRafRef.current = requestAnimationFrame(measure);
+      } catch {
+        // Web Audio unavailable — the meter is a nicety, not required.
+      }
+
       const dc = pc.createDataChannel('realtime-channel');
       dcRef.current = dc;
       dc.addEventListener('open', () => {
-        // Trigger the interviewer's opening greeting + first question.
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug('[voice] data channel open');
+        }
         try {
+          // Re-assert input config so the model auto-responds when you stop
+          // speaking (server VAD) and transcribes your answers.
+          dc.send(
+            JSON.stringify({
+              type: 'session.update',
+              session: {
+                type: 'realtime',
+                audio: {
+                  input: {
+                    turn_detection: {
+                      type: 'server_vad',
+                      threshold: 0.5,
+                      prefix_padding_ms: 300,
+                      silence_duration_ms: 500,
+                      create_response: true,
+                      interrupt_response: true,
+                    },
+                    transcription: { model: 'whisper-1' },
+                  },
+                },
+              },
+            }),
+          );
+          // Trigger the interviewer's opening greeting + first question.
           dc.send(JSON.stringify({ type: 'response.create' }));
         } catch {
-          // channel closed before we could greet
+          // channel closed before we could configure/greet
         }
       });
       dc.addEventListener('message', (event) => handleRealtimeEvent(event.data));
@@ -321,6 +416,26 @@ export function InterviewVoice({
             </p>
           )}
         </div>
+
+        {phase === 'live' && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Mic className="h-3.5 w-3.5" />
+              <span>Mikrofon</span>
+              {heardSpeech ? (
+                <span className="ml-auto font-medium text-green-600">✓ Stimme erkannt</span>
+              ) : (
+                <span className="ml-auto">Sprich, damit der Interviewer reagiert …</span>
+              )}
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-75"
+                style={{ width: `${Math.round(micLevel * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {error !== null && (
           <div className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">

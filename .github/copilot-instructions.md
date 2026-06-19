@@ -146,10 +146,10 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Queue (pluggable via `JOBS_DRIVER`):** `in-memory` | `qstash` (`@upstash/qstash`). Boot refuses to start when `NODE_ENV=production` and the driver isn't `qstash`.
 - **Cache:** Upstash Redis (`@upstash/redis`) + `node-cache`
 - **LLM (pluggable via `LLM_PROVIDER`):** `azure-openai` | `azure-ai-foundry` | `mock`
-  - Direct Azure OpenAI HTTP calls (`@nestjs/axios`)
+  - Direct Azure OpenAI **v1 Foundry API** HTTP calls (`@nestjs/axios`) — `POST {endpoint}/openai/v1/chat/completions` with the deployment passed as `model` in the body (no legacy `/openai/deployments/{name}` path); URL built by `llm/providers/azure-v1-url.util.ts`
   - Azure AI Foundry agents (`@azure/ai-agents`) for ATS keyword extraction, CV/CL writing
   - **opossum** circuit breaker around LLM calls
-  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Needs `AZURE_OPENAI_API_VERSION` ≥ `2024-08-01-preview` (default is `2025-01-01-preview`).
+  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Runs on the v1 Foundry API: `AZURE_OPENAI_API_VERSION` is the v1 channel (`preview` default | `v1`); legacy dated values auto-map to `preview` (`azure-v1-url.util.ts`).
 - **PDF:**
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
@@ -666,8 +666,9 @@ LLM_PROVIDER=mock            # azure-openai | azure-ai-foundry | mock
 AZURE_OPENAI_ENDPOINT=https://your-aoai.openai.azure.com/
 AZURE_OPENAI_API_KEY=<key>
 AZURE_OPENAI_DEPLOYMENT_NAME=<deployment>
-# Structured outputs (#8) need 2024-08-01-preview+. Default: 2025-01-01-preview.
-AZURE_OPENAI_API_VERSION=2025-01-01-preview
+# v1 Foundry API channel: 'preview' (always-latest) or 'v1' (latest GA).
+# Legacy dated values auto-map to 'preview' at call time.
+AZURE_OPENAI_API_VERSION=preview
 
 # Voice Interview (Azure OpenAI Realtime API via WebRTC) — Premium feature.
 # Realtime models only exist in East US 2 + Sweden Central → use Sweden Central

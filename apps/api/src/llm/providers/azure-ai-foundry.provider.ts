@@ -5,6 +5,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '../../config/config.service';
 import { LLMProvider, GenerateOptions } from '../llm.interface';
+import { buildV1ChatCompletionsUrl } from './azure-v1-url.util';
 
 /**
  * Azure AI Foundry Agent Provider
@@ -197,7 +198,7 @@ export class AzureAIFoundryProvider implements LLMProvider, OnModuleInit {
       );
     }
 
-    const url = `${this.azureOpenAIEndpoint}/openai/deployments/${this.azureOpenAIDeploymentName}/chat/completions?api-version=${this.azureOpenAIApiVersion}`;
+    const url = buildV1ChatCompletionsUrl(this.azureOpenAIEndpoint, this.azureOpenAIApiVersion);
 
     const messages: any[] = [];
 
@@ -218,6 +219,7 @@ export class AzureAIFoundryProvider implements LLMProvider, OnModuleInit {
         this.httpService.post(
           url,
           {
+            model: this.azureOpenAIDeploymentName,
             messages,
             temperature: options?.temperature ?? 0.7,
             max_tokens: options?.maxTokens ?? 2000,

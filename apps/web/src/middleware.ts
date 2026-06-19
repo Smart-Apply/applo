@@ -75,10 +75,12 @@ export function middleware(_request: NextRequest) {
     'https://*.ingest.sentry.io https://*.ingest.de.sentry.io';
 
   // Azure OpenAI Realtime API (voice interview). The browser POSTs its WebRTC
-  // SDP offer directly to the Azure resource host (`<resource>.openai.azure.com`)
-  // using a short-lived ephemeral token. A wildcard keeps the exact resource
-  // name out of the build so it can change without a redeploy.
-  const azureRealtimeOrigin = 'https://*.openai.azure.com';
+  // SDP offer directly to the Azure resource host using a short-lived ephemeral
+  // token. Foundry/Azure OpenAI resources expose the data plane under any of
+  // these hostnames depending on resource kind, so allow all three; a wildcard
+  // keeps the exact resource name out of the build so it can change freely.
+  const azureRealtimeOrigin =
+    'https://*.openai.azure.com https://*.cognitiveservices.azure.com https://*.services.ai.azure.com';
 
   // Set CSP header dynamically based on runtime environment
   // Note: 'unsafe-eval' is required for Handlebars template compilation in the browser

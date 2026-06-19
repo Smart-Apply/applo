@@ -77,9 +77,10 @@ const envSchema = z.object({
   AZURE_OPENAI_ENDPOINT: z.string().optional(),
   AZURE_OPENAI_API_KEY: z.string().optional(),
   AZURE_OPENAI_DEPLOYMENT_NAME: z.string().default('gpt-4o'),
-  // 2024-08-01-preview+ is required for structured outputs (json_schema, #8).
-  // Bumped from 2024-02-15-preview so prod/staging get schema-constrained JSON.
-  AZURE_OPENAI_API_VERSION: z.string().default('2025-01-01-preview'),
+  // v1 Foundry API channel: 'preview' (always-latest, incl. structured outputs)
+  // or 'v1' (latest GA). Legacy dated values (e.g. 2025-01-01-preview) are
+  // auto-mapped to 'preview' at call time (see llm/providers/azure-v1-url.util.ts).
+  AZURE_OPENAI_API_VERSION: z.string().default('preview'),
   LLM_PROVIDER: z.enum(['azure-openai', 'azure-ai-foundry', 'mock']).default('mock'),
 
   // Voice Interview (Azure OpenAI Realtime API via WebRTC)
