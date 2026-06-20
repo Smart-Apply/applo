@@ -95,8 +95,6 @@ const { useState, useEffect } = React;
 const POSES = [
   { state:'wave',    feat:'Dashboard',          when:'Begrüßt dich beim Login',          neu:false },
   { state:'think',   feat:'Profil-Coach',       when:'Erklärt Felder & gibt Tipps',      neu:false },
-  { state:'search',  feat:'Job-Suche',          when:'Scannt passende Stellen für dich', neu:true  },
-  { state:'auto',    feat:'Auto-Apply',         when:'Bewirbt dich automatisch',         neu:true  },
   { state:'coach',   feat:'Interview-Coach',    when:'Übt Interviews mit dir',           neu:true  },
   { state:'process', feat:'KI arbeitet',        when:'Verarbeitet im Hintergrund',       neu:false },
   { state:'success', feat:'Erfolg',             when:'Bewerbung abgeschickt',            neu:false },
@@ -132,21 +130,19 @@ function Page(){
       {/* Hero */}
       <div className="hero">
         <div className="hero-stage">
-          <window.ApploRig key="hero" state="search" size={280} id="hero" />
+          <window.ApploRig key="hero" state="coach" size={280} id="hero" />
         </div>
         <div className="hero-info">
-          <span className="hero-badge">Neu · Job-Suche</span>
+          <span className="hero-badge">Neu · Interview-Coach</span>
           <h3>Eine Pose pro Feature</h3>
           <p>
-            Vom scannenden Blick durch die Lupe bei der Job-Suche über das fokussierte
-            Schreiben bis zum stolzen Präsentieren der Analytics — jede Animation
+            Vom erklärenden Coach-Moment über das fokussierte Schreiben bis zum
+            stolzen Präsentieren der Analytics — jede Animation
             erzählt, was Applo gerade für dich tut. Das schafft Vertrauen und macht
             die Oberfläche lebendig, ohne abzulenken.
           </p>
           <div className="pills">
-            <span className="pill neu">Lupe scannen</span>
             <span className="pill neu">Schreiben</span>
-            <span className="pill neu">Blitz / Auto</span>
             <span className="pill neu">Diagramm</span>
             <span className="pill neu">Headset / Coach</span>
           </div>
