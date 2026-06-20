@@ -28,7 +28,15 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
+// Base URL used to resolve relative metadata (OG/Twitter images, canonicals)
+// into absolute URLs. Falls back to the production origin so social previews
+// work even when NEXT_PUBLIC_APP_URL isn't set (e.g. Cloudflare prod bundle).
+const metadataBase = new URL(
+  process.env.NEXT_PUBLIC_APP_URL ?? 'https://smart-apply.io',
+);
+
 export const metadata: Metadata = {
+  metadataBase,
   title: "Smart Apply - KI-gestützte Bewerbungen",
   description: "Erstelle personalisierte Bewerbungen mit KI-Unterstützung",
   manifest: '/manifest.json',
