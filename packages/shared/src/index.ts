@@ -77,6 +77,8 @@ export interface SubscriptionUsageStats {
   status: SubscriptionStatus;
   applications: UsageStat;
   interviewSessions: UsageStat;
+  /** Monthly cap on AI application validations (Free: 5, Pro+: unlimited) */
+  validations?: UsageStat;
   /** Rolling 24h cap on full application generations (cost protection) */
   applicationsToday?: DailyUsageStat;
   periodStart: string;
@@ -373,9 +375,71 @@ export interface Application {
   coverLetterTemplateId?: string;
   resumeTemplateId?: string;
   language?: string;
+  /** Latest AI validation result, if the user has run a validation. */
+  validationResult?: ApplicationValidationResult;
+  /** Overall validation score (0-100) from the latest run. */
+  validationScore?: number;
+  /** When the stored validationResult was produced (ISO timestamp). */
+  validatedAt?: string;
   createdAt: string;
   updatedAt: string;
   jobPosting?: JobPosting;
+}
+
+// ============================================
+// Application Validation (AI quality + ATS review)
+// ============================================
+
+/** Headline verdict for a validated application. */
+export type ApplicationValidationVerdict = 'strong' | 'good' | 'needs_work';
+
+/** Per-category traffic-light status. */
+export type ApplicationValidationStatus = 'pass' | 'warn' | 'fail';
+
+/** Fixed set of categories every validation scores. */
+export type ApplicationValidationCategoryId =
+  | 'job_match'
+  | 'ats_readability'
+  | 'impact'
+  | 'clarity'
+  | 'completeness';
+
+export interface ApplicationValidationCategory {
+  id: ApplicationValidationCategoryId;
+  /** Localized human-readable label. */
+  label: string;
+  /** 0-100 score for this category. */
+  score: number;
+  status: ApplicationValidationStatus;
+}
+
+export interface ApplicationValidationIssue {
+  title: string;
+  detail: string;
+}
+
+/**
+ * Structured result of an AI quality + ATS review of a generated application
+ * (résumé + optional cover letter) against its job posting. Produced by
+ * `POST /applications/:id/validate` and cached on the application.
+ */
+export interface ApplicationValidationResult {
+  /** Holistic fit of the documents to the posting (0-100). */
+  overallScore: number;
+  /** Heuristic ATS keyword/structure friendliness estimate (0-100), not a real ATS parse. */
+  atsScore: number;
+  verdict: ApplicationValidationVerdict;
+  /** 1-2 sentence headline takeaway. */
+  summary: string;
+  categories: ApplicationValidationCategory[];
+  /** Critical issues to fix before sending. */
+  blockers: ApplicationValidationIssue[];
+  /** Non-blocking, concrete improvements. */
+  recommendations: ApplicationValidationIssue[];
+  /** What already works well. */
+  strengths: string[];
+  /** ISO timestamp the validation was produced. */
+  validatedAt?: string;
 }
 
 export interface ApplicationStatusResponse {

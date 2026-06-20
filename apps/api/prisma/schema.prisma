@@ -354,6 +354,13 @@ model Application {
   // Source language tracking (for initial generation)
   sourceLanguage String? // Original content language when app was created (ISO 639-1)
 
+  // Application validation (KI quality + ATS check of the generated documents
+  // against the job posting). Stores the latest result so it can be re-read
+  // without spending another metered validation; re-running overwrites it.
+  validationResult Json? // ApplicationValidationResult (scores, blockers, recommendations)
+  validationScore  Float? // Overall score 0-100 (denormalized for list/sorting)
+  validatedAt      DateTime? // When the stored validationResult was produced
+
   // Interview sessions for this application
   interviewSessions InterviewSession[]
 
@@ -725,6 +732,7 @@ model SubscriptionUsage {
   resumesGenerated      Int @default(0) // KI-Lebensläufe count
   jobParsingUsed        Int @default(0) // URL/text parsing count
   interviewSessionsUsed Int @default(0) // Interview Coach sessions
+  validationsUsed       Int @default(0) // Bewerbungs-Validierungen (Free: 5/Monat, Pro+: unbegrenzt)
 
   // Rolling 24h window (cost-protection cap, independent of monthly period)
   dailyApplicationsUsed Int      @default(0)

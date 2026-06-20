@@ -17,6 +17,7 @@ import type {
   Template,
   TemplateWithContent,
   ApplicationKeywordsResponse,
+  ApplicationValidationResult,
   UserPreferences,
   UpdateUserPreferencesDto,
   PaginatedResponse,
@@ -976,6 +977,15 @@ export const api = {
 
     getKeywordsAnalysis: (id: string) =>
       apiRequest<ApplicationKeywordsResponse>(`/applications/${id}/keywords`),
+
+    // Application validation (AI quality + ATS review). Non-idempotent and
+    // metered (Free: 5/month, Pro+: unlimited) — never auto-retry a network
+    // blip, or a run that already spent quota server-side would re-spend it.
+    validate: (id: string) =>
+      apiRequest<ApplicationValidationResult>(`/applications/${id}/validate`, {
+        method: 'POST',
+        retry: false,
+      }),
   },
 
   // Sessions

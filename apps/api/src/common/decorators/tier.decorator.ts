@@ -23,7 +23,8 @@ export type UsageAction =
   | 'coverLetter'
   | 'resume'
   | 'jobParsing'
-  | 'interview';
+  | 'interview'
+  | 'validation';
 
 /**
  * Feature flags that can be checked

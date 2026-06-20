@@ -211,7 +211,7 @@ recorded baselines live in
 | **Project**        | Portfolio projects                     |
 | **Language**       | Language proficiency                   |
 | **JobPosting**     | Parsed job listings                    |
-| **Application**    | Generated applications + PDFs          |
+| **Application**    | Generated applications + PDFs + cached AI validation result |
 | **ResumeTemplate** | PDF templates (50 variants)            |
 | **Interview**      | AI-generated interview Q&A             |
 | **RefreshToken**   | Rotated refresh tokens                 |
@@ -348,6 +348,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET/POST | `/job-postings`                | Job CRUD                 |
 | POST     | `/job-postings/parse`          | Parse text/URL/file      |
 | GET/POST | `/applications`                | Application pipeline     |
+| POST     | `/applications/:id/validate`   | AI quality + ATS validation (Free: 5/mo, Pro+: unlimited) |
 | GET      | `/applications/:id/files`      | SAS download URLs        |
 | GET      | `/applications/:id/stream`     | SSE status stream        |
 | POST     | `/interviews`                  | Generate mock interview  |
