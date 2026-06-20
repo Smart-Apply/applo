@@ -13,7 +13,6 @@ import {
   Lock,
   Loader2,
   Pencil,
-  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
@@ -23,7 +22,6 @@ import { CenteredLoader } from '@/components/shared/loading';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EditableResume, resolveResumeDesign } from '@/components/applications/editable-resume';
 import { AtsOptimizer } from '@/components/applications/ats-optimizer';
-import { ApplicationValidationSection } from '@/components/applications/application-validation-section';
 import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
 import { LanguageSelector } from '@/components/applications/language-selector';
 import {
@@ -86,7 +84,7 @@ const EMPTY_RESUME: ResumeData = {
 };
 
 const AUTOSAVE_MS = 800;
-type Tab = 'resume' | 'cover-letter' | 'ats' | 'validate';
+type Tab = 'resume' | 'cover-letter' | 'ats';
 
 export default function ApplicationResumeEditorPage() {
   const params = useParams();
@@ -438,7 +436,6 @@ export default function ApplicationResumeEditorPage() {
     { id: 'resume', label: 'Lebenslauf', icon: FileText },
     { id: 'cover-letter', label: 'Anschreiben', icon: Mail },
     { id: 'ats', label: 'Optimieren', icon: Target, locked: isAtsLocked },
-    { id: 'validate', label: 'Prüfen', icon: ShieldCheck },
   ];
 
   return (
@@ -546,7 +543,7 @@ export default function ApplicationResumeEditorPage() {
         </div>
 
         {/* Edit hint + auto-save status (document tabs only) */}
-        {activeTab !== 'ats' && activeTab !== 'validate' && (
+        {activeTab !== 'ats' && (
           <div className="mx-auto mb-4 flex max-w-[820px] flex-wrap items-center justify-between gap-3 rounded-xl bg-primary/5 px-4 py-2.5 text-sm">
             <span className="inline-flex items-center gap-2 font-medium text-foreground/80">
               <Pencil className="h-4 w-4 text-primary" />
@@ -621,17 +618,6 @@ export default function ApplicationResumeEditorPage() {
               onAddKeyword={handleAddKeyword}
               onExport={handleExport}
               exportDisabled={!canExport}
-            />
-          </div>
-        )}
-
-        {activeTab === 'validate' && (
-          <div className="mx-auto max-w-[820px] pb-10">
-            <ApplicationValidationSection
-              applicationId={applicationId}
-              status={application.status}
-              result={application.validationResult}
-              validatedAt={application.validatedAt}
             />
           </div>
         )}

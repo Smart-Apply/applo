@@ -31,7 +31,6 @@ export enum ErrorCode {
   APPLICATION_GENERATING = 'APPLICATION_GENERATING',
   APPLICATION_GENERATION_FAILED = 'APPLICATION_GENERATION_FAILED',
   APPLICATION_NOT_FAILED = 'APPLICATION_NOT_FAILED',
-  APPLICATION_NOT_READY = 'APPLICATION_NOT_READY',
   APPLICATION_NO_RESUME = 'APPLICATION_NO_RESUME',
   APPLICATION_NO_JOB = 'APPLICATION_NO_JOB',
   APPLICATION_RESUME_CORRUPTED = 'APPLICATION_RESUME_CORRUPTED',
@@ -114,8 +113,6 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Die Bewerbung konnte nicht erstellt werden. Bitte versuche es erneut.',
   [ErrorCode.APPLICATION_NOT_FAILED]:
     'Die Bewerbung ist nicht fehlgeschlagen. Erneutes Generieren ist nur bei fehlgeschlagenen Bewerbungen möglich.',
-  [ErrorCode.APPLICATION_NOT_READY]:
-    'Die Bewerbung muss fertig generiert sein, bevor sie validiert werden kann.',
   [ErrorCode.APPLICATION_NO_RESUME]: 'Bitte speichere zuerst deinen Lebenslauf.',
   [ErrorCode.APPLICATION_NO_JOB]: 'Keine Stellenanzeige verknüpft. Bitte wähle eine Stelle aus.',
   [ErrorCode.APPLICATION_RESUME_CORRUPTED]:

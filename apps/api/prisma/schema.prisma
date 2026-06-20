@@ -39,6 +39,7 @@ model User {
   preferences          UserPreferences?
   jobPostings          JobPosting[]
   applications         Application[]
+  validations          Validation[] // Standalone AI checks of externally-created applications
   refreshTokens        RefreshToken[]
   sessions             Session[]
   auditLogs            AuditLog[]
@@ -354,13 +355,6 @@ model Application {
   // Source language tracking (for initial generation)
   sourceLanguage String? // Original content language when app was created (ISO 639-1)
 
-  // Application validation (KI quality + ATS check of the generated documents
-  // against the job posting). Stores the latest result so it can be re-read
-  // without spending another metered validation; re-running overwrites it.
-  validationResult Json? // ApplicationValidationResult (scores, blockers, recommendations)
-  validationScore  Float? // Overall score 0-100 (denormalized for list/sorting)
-  validatedAt      DateTime? // When the stored validationResult was produced
-
   // Interview sessions for this application
   interviewSessions InterviewSession[]
 
@@ -408,6 +402,38 @@ enum ApplicationGenerationStatus {
   READY // PDFs generated and stored
   FAILED // Generation failed
 }
+
+// Standalone application check (issue #569): an AI quality + ATS review of an
+// application the user created OUTSIDE Smart Apply. The user pastes/uploads
+// their own résumé (+ optional cover letter + optional job context) and gets
+// actionable feedback. NOT linked to a generated Application/JobPosting.
+// Metered via SubscriptionUsage.validationsUsed (Free 5/month, Pro+ unlimited).
+model Validation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Optional user-facing label (defaults to a generated title on the client)
+  title String?
+
+  // User-provided inputs (their own external application). Stored so the check
+  // can be revisited without re-spending quota.
+  resumeText      String  @db.Text
+  coverLetterText String? @db.Text
+  jobContext      String? @db.Text // pasted job description and/or target role
+  language        String? // Detected/selected language (ISO 639-1)
+
+  // Result
+  result Json // ApplicationValidationResult (scores, categories, blockers, recommendations, strengths)
+  score  Float // Overall score 0-100 (denormalized for list/sorting)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("validations")
+}
+
 
 model Template {
   id          String       @id @default(cuid())

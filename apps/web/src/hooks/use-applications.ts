@@ -238,39 +238,6 @@ export function useUpsertCoverLetter(applicationId: string) {
 }
 
 /**
- * Run an AI quality + ATS validation of an existing application.
- *
- * Metered (Free: 5/month, Pro+: unlimited). On success we patch the cached
- * application with the fresh result so the detail page reflects it without a
- * refetch, and invalidate the subscription query so the remaining-quota badge
- * updates for free-tier users.
- */
-export function useValidateApplication(applicationId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => api.applications.validate(applicationId),
-    onSuccess: (result) => {
-      queryClient.setQueryData(['applications', applicationId], (old: Application | undefined) =>
-        old
-          ? {
-              ...old,
-              validationResult: result,
-              validationScore: result.overallScore,
-              validatedAt: result.validatedAt,
-            }
-          : old,
-      );
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      toastSuccess('Bewerbung validiert');
-    },
-    onError: (error: unknown) => {
-      toastError(error, 'Validierung fehlgeschlagen');
-    },
-  });
-}
-
-/**
  * Hook to generate/modify professional summary using AI
  * Returns the generated summary text (not persisted - user applies in editor)
  */

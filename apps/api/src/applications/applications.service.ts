@@ -57,7 +57,6 @@ import {
   type JobFactsDto,
 } from './job-facts.util';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
-import type { ApplicationValidationResult } from '@smart-apply/shared';
 
 // Type for progress callback function
 export type ProgressCallback = (progress: number, message: string) => void;
@@ -2321,147 +2320,6 @@ export class ApplicationsService {
   }
 
   /**
-   * Validate an existing, generated application: run an AI quality + ATS review
-   * of the résumé + cover letter against its job posting and return a structured,
-   * actionable result.
-   *
-   * Metered: the controller's `UsageLimitGuard` + `@CheckUsage('validation')`
-   * enforces the monthly cap (Free: 5, Pro+: unlimited) BEFORE this runs. Usage
-   * is only recorded AFTER a successful run, so a failed validation never burns
-   * the quota. The result is cached on the application so it can be re-read via
-   * `GET /applications/:id` without spending another validation; re-running
-   * overwrites it.
-   */
-  async validateApplication(
-    userId: string,
-    applicationId: string,
-  ): Promise<ApplicationValidationResult> {
-    const application = await this.prisma.application.findFirst({
-      where: { id: applicationId, userId },
-      include: { jobPosting: true },
-    });
-
-    if (!application) {
-      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
-    }
-
-    // Validation only makes sense once content has been generated.
-    if (application.status !== ApplicationStatus.READY) {
-      throw new BadRequestWithCode(
-        ErrorCode.APPLICATION_NOT_READY,
-        'Die Bewerbung muss fertig generiert sein, bevor sie validiert werden kann.',
-      );
-    }
-
-    if (!application.resumeText) {
-      throw new BadRequestWithCode(
-        ErrorCode.APPLICATION_NO_RESUME,
-        'Es sind noch keine Bewerbungsunterlagen vorhanden, die validiert werden könnten.',
-      );
-    }
-
-    // Resume is stored as a JSON string (editor payload). Hand the parsed object
-    // to the prompt; fall back to the raw string if it isn't JSON.
-    let resume: unknown = application.resumeText;
-    try {
-      resume = JSON.parse(application.resumeText);
-    } catch {
-      // keep the raw string
-    }
-
-    // Cover letter is stored as HTML — strip tags to plain text for the review.
-    const coverLetter = application.coverLetterText
-      ? application.coverLetterText
-          .replace(/<[^>]+>/g, ' ')
-          .replace(/&nbsp;/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim()
-      : '';
-
-    const language = application.language || application.sourceLanguage || 'de';
-
-    const raw = await this.llmService.callJson<ApplicationValidationResult>(
-      'v1/application-validation.md',
-      {
-        job: {
-          title: application.jobPosting.title,
-          company: application.jobPosting.company,
-          location: application.jobPosting.location,
-          fullText: application.jobPosting.fullText,
-        },
-        resume,
-        coverLetter,
-        language,
-      },
-      { temperature: 0.2, maxTokens: 2000 },
-    );
-
-    const result = this.normalizeValidationResult(raw);
-
-    await this.prisma.application.update({
-      where: { id: application.id },
-      data: {
-        validationResult: result as unknown as Prisma.InputJsonValue,
-        validationScore: result.overallScore,
-        validatedAt: new Date(result.validatedAt as string),
-      },
-    });
-
-    // Record usage AFTER success so a failed validation doesn't burn the cap.
-    // Best-effort: a metering hiccup must not fail the user-facing response.
-    try {
-      await this.subscriptionService.recordUsage(userId, 'validation');
-    } catch (usageError) {
-      this.logger.warn(
-        `Failed to record validation usage for user ${userId} (application ${application.id})`,
-        usageError,
-      );
-    }
-
-    this.logger.log(
-      `Validated application ${application.id} for user ${userId} (overall=${result.overallScore}, verdict=${result.verdict})`,
-    );
-
-    return result;
-  }
-
-  /**
-   * Defensive normalization of the LLM validation payload. With Azure structured
-   * outputs the shape is already guaranteed, but this clamps scores into 0-100,
-   * guarantees the four list fields are arrays, and stamps `validatedAt` so the
-   * result is self-describing and safe to persist + return.
-   */
-  private normalizeValidationResult(raw: ApplicationValidationResult): ApplicationValidationResult {
-    const clamp = (n: unknown): number => {
-      const v = Math.round(Number(n));
-      if (Number.isNaN(v)) return 0;
-      return Math.min(100, Math.max(0, v));
-    };
-
-    const verdicts = ['strong', 'good', 'needs_work'];
-    const verdict = verdicts.includes(raw?.verdict) ? raw.verdict : 'needs_work';
-
-    return {
-      overallScore: clamp(raw?.overallScore),
-      atsScore: clamp(raw?.atsScore),
-      verdict,
-      summary: typeof raw?.summary === 'string' ? raw.summary : '',
-      categories: Array.isArray(raw?.categories)
-        ? raw.categories.map((c) => ({
-            id: c.id,
-            label: typeof c.label === 'string' ? c.label : c.id,
-            score: clamp(c.score),
-            status: ['pass', 'warn', 'fail'].includes(c.status) ? c.status : 'warn',
-          }))
-        : [],
-      blockers: Array.isArray(raw?.blockers) ? raw.blockers : [],
-      recommendations: Array.isArray(raw?.recommendations) ? raw.recommendations : [],
-      strengths: Array.isArray(raw?.strengths) ? raw.strengths : [],
-      validatedAt: new Date().toISOString(),
-    };
-  }
-
-  /**
    * Get all applications for a user with pagination
    *
    * Uses Prisma's `include` to prevent N+1 query problems:
@@ -2865,9 +2723,6 @@ export class ApplicationsService {
       updatedAt: application.updatedAt,
       atsKeywords: application.atsKeywords,
       tailoredProfile: application.tailoredProfile,
-      validationResult: application.validationResult,
-      validationScore: application.validationScore ?? undefined,
-      validatedAt: application.validatedAt ?? undefined,
       jobPosting: application.jobPosting
         ? {
             id: application.jobPosting.id,

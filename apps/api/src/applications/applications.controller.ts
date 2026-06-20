@@ -44,7 +44,6 @@ import { SummaryDto } from './dto/summary.dto';
 import { ExperienceDescriptionDto } from './dto/experience-description.dto';
 import { ProjectDescriptionDto } from './dto/project-description.dto';
 import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
-import { ApplicationValidationResultDto } from './dto/application-validation.dto';
 
 @ApiTags('applications')
 @ApiBearerAuth()
@@ -569,33 +568,6 @@ export class ApplicationsController {
     @Param('id') id: string,
   ): Promise<ApplicationKeywordsResponseDto> {
     return this.applicationsService.analyzeKeywords(user.id, id);
-  }
-
-  @Post(':id/validate')
-  @UseGuards(EmailVerifiedGuard, UsageLimitGuard)
-  @CheckUsage('validation')
-  @ApiOperation({
-    summary: 'Validate a generated application (AI quality + ATS review)',
-    description:
-      'Runs an AI quality + ATS review of the generated résumé and cover letter against the job posting. ' +
-      'Metered: Free tier gets 5 validations/month, Pro and above are unlimited. The result is cached on ' +
-      'the application (returned by GET /applications/:id) so it can be re-read without spending another ' +
-      'validation; calling this again overwrites it.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Validation completed',
-    type: ApplicationValidationResultDto,
-  })
-  @ApiResponse({ status: 400, description: 'Application is not ready / has no documents' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Monthly validation limit reached (free tier)' })
-  @ApiResponse({ status: 404, description: 'Application not found' })
-  async validate(
-    @CurrentUser('id') userId: string,
-    @Param('id') id: string,
-  ): Promise<ApplicationValidationResultDto> {
-    return this.applicationsService.validateApplication(userId, id);
   }
 
   @Get(':id/stream')

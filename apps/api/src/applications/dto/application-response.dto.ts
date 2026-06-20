@@ -171,24 +171,6 @@ export class ApplicationResponseDto {
   tailoredProfile?: any;
 
   @ApiPropertyOptional({
-    description:
-      'Latest AI validation result (quality + ATS review). Present once the user has run a validation.',
-  })
-  validationResult?: any;
-
-  @ApiPropertyOptional({
-    example: 82,
-    description: 'Overall score (0-100) from the latest validation run',
-  })
-  validationScore?: number;
-
-  @ApiPropertyOptional({
-    example: '2026-06-20T16:00:00Z',
-    description: 'When the stored validationResult was produced',
-  })
-  validatedAt?: Date;
-
-  @ApiPropertyOptional({
     description: 'Job Posting Details (falls include=jobPosting)',
   })
   jobPosting?: {

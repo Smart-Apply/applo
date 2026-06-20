@@ -35,7 +35,6 @@ import { handleDownload, handleZipDownload, generateFilename } from '@/lib/pdf-u
 import { EditableTitle } from '@/components/applications/editable-title';
 import { StatusDropdown } from '@/components/applications/status-dropdown';
 import { ATSAnalysisPanel } from '@/components/applications/ats-analysis-panel';
-import { ApplicationValidationSection } from '@/components/applications/application-validation-section';
 import { UpgradePrompt } from '@/components/subscription/upgrade-prompt';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
 import { formatFullTimestamp, formatDate } from '@/lib/format-date';
@@ -782,16 +781,6 @@ export default function ApplicationDetailPage() {
 
       {/* ATS Analysis Panel — Pro/Premium only */}
       <AtsAnalysisSection applicationId={applicationId} />
-
-      {/* Application Validation — AI quality + ATS review (Free: 5/month, Pro+: unlimited) */}
-      {application.status === 'READY' && (
-        <ApplicationValidationSection
-          applicationId={applicationId}
-          status={application.status}
-          result={application.validationResult}
-          validatedAt={application.validatedAt}
-        />
-      )}
 
       {/* Application Info */}
       <Card>

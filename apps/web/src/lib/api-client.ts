@@ -17,7 +17,9 @@ import type {
   Template,
   TemplateWithContent,
   ApplicationKeywordsResponse,
-  ApplicationValidationResult,
+  Validation,
+  ValidationSummary,
+  CreateValidationInput,
   UserPreferences,
   UpdateUserPreferencesDto,
   PaginatedResponse,
@@ -977,14 +979,27 @@ export const api = {
 
     getKeywordsAnalysis: (id: string) =>
       apiRequest<ApplicationKeywordsResponse>(`/applications/${id}/keywords`),
+  },
 
-    // Application validation (AI quality + ATS review). Non-idempotent and
-    // metered (Free: 5/month, Pro+: unlimited) — never auto-retry a network
-    // blip, or a run that already spent quota server-side would re-spend it.
-    validate: (id: string) =>
-      apiRequest<ApplicationValidationResult>(`/applications/${id}/validate`, {
+  // Standalone application check (AI quality + ATS review of the user's OWN,
+  // externally-created application). Metered: Free 5/month, Pro+ unlimited.
+  validation: {
+    // Non-idempotent + metered — never auto-retry a network blip, or a run that
+    // already spent quota server-side would re-spend it.
+    create: (data: CreateValidationInput) =>
+      apiRequest<Validation>('/validation', {
         method: 'POST',
+        body: JSON.stringify(data),
         retry: false,
+      }),
+
+    list: () => apiRequest<ValidationSummary[]>('/validation'),
+
+    getById: (id: string) => apiRequest<Validation>(`/validation/${id}`),
+
+    delete: (id: string) =>
+      apiRequest<void>(`/validation/${id}`, {
+        method: 'DELETE',
       }),
   },
 

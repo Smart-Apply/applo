@@ -375,12 +375,6 @@ export interface Application {
   coverLetterTemplateId?: string;
   resumeTemplateId?: string;
   language?: string;
-  /** Latest AI validation result, if the user has run a validation. */
-  validationResult?: ApplicationValidationResult;
-  /** Overall validation score (0-100) from the latest run. */
-  validationScore?: number;
-  /** When the stored validationResult was produced (ISO timestamp). */
-  validatedAt?: string;
   createdAt: string;
   updatedAt: string;
   jobPosting?: JobPosting;
@@ -419,12 +413,11 @@ export interface ApplicationValidationIssue {
 }
 
 /**
- * Structured result of an AI quality + ATS review of a generated application
- * (résumé + optional cover letter) against its job posting. Produced by
- * `POST /applications/:id/validate` and cached on the application.
+ * Structured result of an AI quality + ATS review of an application
+ * (résumé + optional cover letter). Produced by `POST /validation`.
  */
 export interface ApplicationValidationResult {
-  /** Holistic fit of the documents to the posting (0-100). */
+  /** Holistic quality of the application (0-100). */
   overallScore: number;
   /** Heuristic ATS keyword/structure friendliness estimate (0-100), not a real ATS parse. */
   atsScore: number;
@@ -440,6 +433,51 @@ export interface ApplicationValidationResult {
   strengths: string[];
   /** ISO timestamp the validation was produced. */
   validatedAt?: string;
+}
+
+/**
+ * Input for a standalone application check: the user's own externally-created
+ * documents. `resumeText` is required; everything else is optional context.
+ * Sent to `POST /validation`.
+ */
+export interface CreateValidationInput {
+  /** The user's résumé / CV as plain text (pasted or extracted from a file). */
+  resumeText: string;
+  /** Optional cover letter text. */
+  coverLetterText?: string;
+  /** Optional target role and/or pasted job posting to evaluate fit against. */
+  jobContext?: string;
+  /** Optional language override (ISO 639-1). Auto-detected when omitted. */
+  language?: string;
+  /** Optional user-facing label for this check. */
+  title?: string;
+}
+
+/**
+ * A persisted standalone application check (history record). Stores the inputs
+ * plus the AI result so it can be revisited without re-spending quota.
+ */
+export interface Validation {
+  id: string;
+  /** Optional user-facing label (e.g. "Bewerbungs-Check · 20.06.2026"). */
+  title?: string;
+  resumeText: string;
+  coverLetterText?: string;
+  jobContext?: string;
+  language?: string;
+  result: ApplicationValidationResult;
+  /** Overall score (0-100), denormalized for the history list. */
+  score: number;
+  createdAt: string;
+}
+
+/** Lightweight history-list item (omits the heavy input/result blobs). */
+export interface ValidationSummary {
+  id: string;
+  title?: string;
+  score: number;
+  verdict: ApplicationValidationVerdict;
+  createdAt: string;
 }
 
 export interface ApplicationStatusResponse {
