@@ -2,9 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, PhoneOff, Loader2, AlertTriangle, Clock, Keyboard } from 'lucide-react';
+import {
+  Mic,
+  MicOff,
+  PhoneOff,
+  Loader2,
+  AlertTriangle,
+  Clock,
+  Keyboard,
+  Check,
+  Headphones,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { InterviewSessionDetail, VoiceTranscriptTurn } from '@/types';
 import { useStartVoiceSession, useSubmitVoiceTranscript } from '@/hooks/use-voice-interview';
 import { Applo, type ApploState } from './applo';
@@ -366,153 +377,267 @@ export function InterviewVoice({
               : 'wave';
 
   const maxSessionSeconds = maxSessionMinutes * 60;
-  const remaining = Math.max(0, maxSessionSeconds - elapsed);
+  const isSpeaking = interviewerSpeaking || candidateSpeaking;
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">
-            {session.jobTitle ? `Sprach-Interview · ${session.jobTitle}` : 'Sprach-Interview'}
-          </CardTitle>
-          {phase === 'live' && (
-            <Badge variant="outline" className="gap-1 font-mono">
-              <Clock className="h-3 w-3" />
-              {formatTime(elapsed)} / {formatTime(maxSessionSeconds)}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        <div className="flex flex-col items-center gap-3 py-2">
-          <div className="h-32 w-32">
-            <Applo state={apploState} />
+  // ============================ PRE-CALL ============================
+  if (phase === 'idle' || phase === 'connecting') {
+    return (
+      <Card className="overflow-hidden p-0">
+        <div className="grid md:grid-cols-[300px_1fr]">
+          {/* Mascot panel — sits in its own column, never overlaps text */}
+          <div className="flex items-center justify-center border-b bg-gradient-to-b from-[#EEF3FB] to-[#F6F9FE] p-8 md:border-b-0 md:border-r dark:from-[#1E293B] dark:to-[#0F172A]">
+            <Applo state={phase === 'connecting' ? 'process' : 'wave'} size={200} />
           </div>
-          {phase === 'idle' && error === null && (
-            <p className="max-w-md text-center text-sm text-muted-foreground">
-              Führe ein realistisches Gespräch mit deinem KI-Interviewer. Sprich frei – am Ende
-              erhältst du eine vollständige Auswertung. Du brauchst ein Mikrofon und eine ruhige
-              Umgebung.
+
+          {/* Content */}
+          <div className="flex flex-col p-8 md:p-10">
+            <h2 className="text-[23px] font-bold tracking-tight">
+              Bereit für dein Sprach-Interview?
+            </h2>
+            <p className="mt-2.5 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+              Du führst ein realistisches Gespräch mit Applo, deinem KI-Interviewer. Sprich frei und
+              natürlich — am Ende erhältst du eine vollständige Auswertung.
             </p>
+
+            {error !== null && (
+              <div className="mt-5 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  {error === 'mic' &&
+                    'Kein Mikrofonzugriff. Bitte erlaube den Mikrofonzugriff in deinem Browser und versuche es erneut – oder wechsle zum Text-Chat.'}
+                  {error === 'unsupported' &&
+                    'Dein Browser unterstützt keine Sprach-Interviews. Bitte nutze einen aktuellen Browser oder wechsle zum Text-Chat.'}
+                  {error === 'connect' &&
+                    'Die Sprachverbindung konnte nicht aufgebaut werden. Bitte versuche es erneut oder wechsle zum Text-Chat.'}
+                </div>
+              </div>
+            )}
+
+            {/* Readiness checklist */}
+            <div className="mt-6 space-y-3">
+              {[
+                {
+                  icon: <Mic className="h-[18px] w-[18px] text-primary" />,
+                  title: 'Mikrofon bereit',
+                  sub: 'Zugriff wird beim Start abgefragt',
+                },
+                {
+                  icon: <Headphones className="h-[18px] w-[18px] text-primary" />,
+                  title: 'Ruhige Umgebung',
+                  sub: 'Kopfhörer empfohlen, um Echo zu vermeiden',
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="flex items-center gap-3.5 rounded-xl border bg-muted px-4 py-3.5"
+                >
+                  <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg border bg-card">
+                    {item.icon}
+                  </span>
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold">{item.title}</div>
+                    <div className="text-[12.5px] text-muted-foreground">{item.sub}</div>
+                  </div>
+                  <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer actions */}
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Button
+                size="lg"
+                className="h-[54px] rounded-xl px-7 text-base"
+                onClick={() => void start()}
+                loading={startMutation.isPending || phase === 'connecting'}
+              >
+                {!(startMutation.isPending || phase === 'connecting') && <Mic className="h-5 w-5" />}
+                {phase === 'connecting' ? 'Verbindung wird hergestellt …' : 'Gespräch starten'}
+              </Button>
+
+              {remainingMinutes >= 0 && (
+                <span className="inline-flex h-[38px] items-center gap-2 rounded-full bg-green-50 px-3.5 text-[13.5px] font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-400">
+                  <Clock className="h-4 w-4" />
+                  {remainingMinutes} Min. verbleibend
+                </span>
+              )}
+
+              <Button
+                variant="ghost"
+                onClick={switchToText}
+                className="ml-auto gap-2 text-secondary hover:text-primary"
+              >
+                <Keyboard className="h-[17px] w-[17px]" />
+                Lieber tippen? Zum Text-Chat
+              </Button>
+            </div>
+          </div>
+        </div>
+        <audio ref={audioRef} autoPlay className="hidden" />
+      </Card>
+    );
+  }
+
+  // ============================ LIVE / ENDING ============================
+  return (
+    <Card className="overflow-hidden p-0">
+      <div className="flex items-center justify-between border-b px-6 py-5">
+        <div className="flex items-center gap-2.5 text-[17px] font-bold">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-primary">
+            <Mic className="h-[18px] w-[18px]" />
+          </span>
+          {session.jobTitle ? `Sprach-Interview · ${session.jobTitle}` : 'Sprach-Interview'}
+        </div>
+        {phase === 'live' && (
+          <Badge className="gap-1.5 bg-primary text-primary-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+            Verbunden
+          </Badge>
+        )}
+      </div>
+
+      <div className="flex flex-col items-center px-6 py-9 md:px-10">
+        {/* Mascot stage with animated rings */}
+        <div className="relative grid place-items-center">
+          {phase === 'live' && isSpeaking && (
+            <>
+              <span className="absolute h-[170px] w-[170px] animate-ping rounded-full border-2 border-accent/40 [animation-duration:2.4s]" />
+              <span className="absolute h-[200px] w-[200px] rounded-full border-2 border-accent/20" />
+            </>
           )}
-          {phase === 'connecting' && (
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Verbindung wird hergestellt …
-            </p>
-          )}
-          {phase === 'live' && (
-            <p className="text-sm font-medium text-muted-foreground">
-              {interviewerSpeaking
-                ? 'Interviewer spricht …'
-                : candidateSpeaking
-                  ? 'Du sprichst …'
-                  : 'Sprich, wenn du bereit bist.'}
-            </p>
-          )}
-          {phase === 'ending' && (
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Auswertung wird erstellt …
-            </p>
+          <div className="relative z-10 drop-shadow-[0_12px_22px_rgba(27,42,73,0.14)]">
+            <Applo state={apploState} size={190} />
+          </div>
+        </div>
+
+        {/* Status pill */}
+        <div className="mt-3 inline-flex h-[38px] items-center gap-2.5 rounded-full bg-blue-50 px-4 text-[14.5px] font-semibold text-[#28456f] dark:bg-blue-950/40 dark:text-blue-200">
+          {phase === 'ending' ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Auswertung wird erstellt …
+            </>
+          ) : interviewerSpeaking ? (
+            <>
+              <span className="flex h-[15px] items-end gap-0.5">
+                {[0, 1, 2, 3].map((i) => (
+                  <span
+                    key={i}
+                    className="w-[3px] rounded-sm bg-accent"
+                    style={{
+                      animation: 'voiceEq 1s ease-in-out infinite',
+                      animationDelay: `${i * 0.15}s`,
+                      height: '6px',
+                    }}
+                  />
+                ))}
+              </span>
+              Applo spricht …
+            </>
+          ) : candidateSpeaking ? (
+            'Du sprichst …'
+          ) : (
+            'Sprich, wenn du bereit bist.'
           )}
         </div>
 
+        {/* Timer */}
         {phase === 'live' && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Mic className="h-3.5 w-3.5" />
-              <span>Mikrofon</span>
+          <div className="mt-5 inline-flex h-[38px] items-center gap-2 rounded-full border bg-muted px-4 font-mono text-[15px] tabular-nums">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            {formatTime(elapsed)} <span className="text-muted-foreground">/</span>{' '}
+            {formatTime(maxSessionSeconds)}
+          </div>
+        )}
+
+        {/* Mic level */}
+        {phase === 'live' && (
+          <div className="mt-6 w-full max-w-[520px]">
+            <div className="mb-2 flex items-center gap-2 text-[13px] text-muted-foreground">
+              <Mic className="h-4 w-4" />
+              <span>Dein Mikrofon</span>
               {heardSpeech ? (
-                <span className="ml-auto font-medium text-green-600">✓ Stimme erkannt</span>
+                <span className="ml-auto inline-flex items-center gap-1 font-semibold text-green-600">
+                  <Check className="h-[15px] w-[15px]" strokeWidth={3} />
+                  Stimme erkannt
+                </span>
               ) : (
                 <span className="ml-auto">Sprich, damit der Interviewer reagiert …</span>
               )}
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-primary transition-[width] duration-75"
+                className="h-full rounded-full bg-accent transition-[width] duration-75"
                 style={{ width: `${Math.round(micLevel * 100)}%` }}
               />
             </div>
           </div>
         )}
 
-        {error !== null && (
-          <div className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <div>
-              {error === 'mic' &&
-                'Kein Mikrofonzugriff. Bitte erlaube den Mikrofonzugriff in deinem Browser und versuche es erneut – oder wechsle zum Text-Chat.'}
-              {error === 'unsupported' &&
-                'Dein Browser unterstützt keine Sprach-Interviews. Bitte nutze einen aktuellen Browser oder wechsle zum Text-Chat.'}
-              {error === 'connect' &&
-                'Die Sprachverbindung konnte nicht aufgebaut werden. Bitte versuche es erneut oder wechsle zum Text-Chat.'}
-            </div>
-          </div>
-        )}
-
+        {/* Captions */}
         {captions.length > 0 && (
-          <div className="space-y-2 rounded-md border bg-muted/30 p-4">
+          <div className="mt-6 w-full max-w-[560px] space-y-3 rounded-2xl border bg-muted p-5">
             {captions.map((turn, index) => (
-              <div key={`${turn.role}-${index}`} className="text-sm">
+              <div key={`${turn.role}-${index}`} className="text-[14.5px] leading-relaxed">
                 <span
-                  className={
-                    turn.role === 'interviewer'
-                      ? 'font-semibold text-primary'
-                      : 'font-semibold text-foreground'
-                  }
+                  className={cn(
+                    'font-bold',
+                    turn.role === 'interviewer' ? 'text-accent' : 'text-primary',
+                  )}
                 >
-                  {turn.role === 'interviewer' ? 'Interviewer' : 'Du'}:
+                  {turn.role === 'interviewer' ? 'Applo' : 'Du'}:
                 </span>{' '}
-                <span className="text-muted-foreground">{turn.text}</span>
+                <span className="text-secondary">{turn.text}</span>
               </div>
             ))}
           </div>
         )}
 
-        {/* Remote interviewer audio. */}
-        <audio ref={audioRef} autoPlay className="hidden" />
-      </CardContent>
-
-      <CardFooter className="flex flex-wrap items-center justify-between gap-3">
-        {phase === 'idle' && (
-          <>
-            <Button onClick={() => void start()} disabled={startMutation.isPending} className="gap-2">
-              <Mic className="h-4 w-4" />
-              Gespräch starten
-            </Button>
-            <div className="flex items-center gap-3">
-              {remainingMinutes >= 0 && (
-                <span className="text-xs text-muted-foreground">
-                  Verbleibendes Kontingent: {remainingMinutes} Min.
-                </span>
-              )}
-              <Button variant="ghost" size="sm" onClick={switchToText} className="gap-2">
-                <Keyboard className="h-4 w-4" />
-                Zum Text-Chat
-              </Button>
-            </div>
-          </>
-        )}
-
+        {/* Controls */}
         {phase === 'live' && (
-          <>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={toggleMute} className="gap-2">
-                {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                {isMuted ? 'Stumm' : 'Mikrofon an'}
-              </Button>
-              <span className="text-xs text-muted-foreground">
-                Noch {formatTime(remaining)}
-              </span>
-            </div>
-            <Button variant="destructive" onClick={() => void stop()} className="gap-2">
-              <PhoneOff className="h-4 w-4" />
+          <div className="mt-8 flex items-center justify-center gap-3.5">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={toggleMute}
+              className={cn(
+                'h-[52px] rounded-xl px-6',
+                isMuted &&
+                  'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200',
+              )}
+            >
+              {isMuted ? <MicOff className="h-[19px] w-[19px]" /> : <Mic className="h-[19px] w-[19px]" />}
+              {isMuted ? 'Stumm' : 'Mikrofon an'}
+            </Button>
+            <Button
+              variant="destructive"
+              size="lg"
+              onClick={() => void stop()}
+              className="h-[52px] rounded-xl px-6"
+            >
+              <PhoneOff className="h-[19px] w-[19px]" />
               Gespräch beenden
             </Button>
-          </>
+          </div>
         )}
-      </CardFooter>
+      </div>
+
+      {/* Remote interviewer audio. */}
+      <audio ref={audioRef} autoPlay className="hidden" />
+
+      <style jsx>{`
+        @keyframes voiceEq {
+          0%,
+          100% {
+            height: 5px;
+          }
+          50% {
+            height: 15px;
+          }
+        }
+      `}</style>
     </Card>
   );
 }
