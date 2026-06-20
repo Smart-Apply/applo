@@ -13,7 +13,7 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 - **ATS-optimized PDFs** — 50 templates (5 designs × 5 languages × 2 types) rendered via `@react-pdf/renderer` (TSX). Template previews via `pdfjs-dist` + `@napi-rs/canvas`.
 - **Resume parser** — Upload an existing resume to bootstrap your profile
 - **Real-time updates** — SSE for live application pipeline status
-- **Mock interviews** — AI-generated interview questions per job
+- **Mock interviews (Premium)** — Practice by **text chat or a natural voice conversation** (Azure OpenAI Realtime API via WebRTC, Sweden Central/EU). The AI interviewer adapts to the job and scores your answers with the same feedback engine as the text flow. No audio is stored — only the transcript + feedback.
 - **Email tracking (Premium)** — Connect Outlook/Microsoft 365; smart-apply detects company replies (interview invites, confirmations, rejections) and updates the application status automatically. No email bodies are persisted.
 - **Auth & security** — JWT in HttpOnly cookies, refresh-token rotation, multi-device sessions, OAuth (Google, Microsoft, Azure AD), 2FA (TOTP), CSRF, rate limiting, audit logs, Sentry
 - **Closed-beta gate** — Optional database-backed invite-code system on `POST /auth/register` (single-use, hashed, atomic redemption). Toggled at runtime via `REQUIRE_INVITE_CODES` Fly secret; admins issue codes via `POST /admin/invite-codes`. See [docs/guides/CLOSED_BETA_PLAN.md](./docs/guides/CLOSED_BETA_PLAN.md).
@@ -107,7 +107,7 @@ smart-apply/
 │   │   │   ├── contact/          # Contact form
 │   │   │   ├── email/            # Resend transactional email
 │   │   │   ├── health/           # Terminus health checks
-│   │   │   ├── interviews/       # AI mock interviews
+│   │   │   ├── interviews/       # AI mock interviews (text + voice/WebRTC)
 │   │   │   ├── job-postings/     # Text/URL/file parsers
 │   │   │   ├── jobs/             # Queue providers
 │   │   │   ├── keywords/         # ATS keyword matching

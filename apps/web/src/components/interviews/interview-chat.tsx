@@ -2,10 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,10 +22,16 @@ import {
   User,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
+  Info,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { InterviewSessionDetail, InterviewQuestion } from '@/types';
-import { useSubmitAnswer, useGetNextQuestion, useCompleteInterview, useAbandonInterview } from '@/hooks/use-interviews';
+import {
+  useSubmitAnswer,
+  useGetNextQuestion,
+  useCompleteInterview,
+  useAbandonInterview,
+} from '@/hooks/use-interviews';
 import { usePromptUsage } from '@/hooks/use-prompt-usage';
 import { PromptUsageMeter } from '@/components/ui/prompt-usage-meter';
 import { toast } from 'sonner';
@@ -47,10 +51,19 @@ type ChatMessage = {
   score?: number;
 };
 
+const questionTypeLabel = (type: InterviewQuestion['questionType']) =>
+  ({
+    BEHAVIORAL: 'Verhalten',
+    TECHNICAL: 'Technisch',
+    SITUATIONAL: 'Situativ',
+    OPEN: 'Offen',
+    FOLLOW_UP: 'Nachfrage',
+  })[type] ?? 'Frage';
+
 export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatProps) {
   // Find first unanswered question for initialization
   const initialQuestion = session.questions.find((q) => !q.answeredAt) || null;
-  
+
   const [answer, setAnswer] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (!initialQuestion) return [];
@@ -58,7 +71,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
       {
         id: 'welcome',
         type: 'system',
-        content: `Willkommen zum Interview! Du wirst ${session.maxQuestions} Fragen beantworten. Nimm dir Zeit für durchdachte Antworten.`,
+        content: `Willkommen zum Interview! Du beantwortest ${session.maxQuestions} Fragen. Nimm dir Zeit für durchdachte Antworten.`,
         timestamp: new Date(),
       },
       {
@@ -89,6 +102,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
   const totalQuestions = session.maxQuestions;
   const answeredQuestions = session.answeredCount;
   const progress = (answeredQuestions / totalQuestions) * 100;
+  const currentIndex = answeredQuestions + (currentQuestion ? 1 : 0);
   const isLastQuestion = answeredQuestions === totalQuestions - 1 && currentQuestion;
 
   // Timer
@@ -160,7 +174,8 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
           {
             id: 'complete',
             type: 'system',
-            content: 'Alle Fragen beantwortet! Klicke auf "Interview abschließen", um deine Gesamtbewertung zu sehen.',
+            content:
+              'Alle Fragen beantwortet! Klicke auf "Interview abschließen", um deine Gesamtbewertung zu sehen.',
             timestamp: new Date(),
           },
         ]);
@@ -186,7 +201,15 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
       // Restore the answer
       setAnswer(answerContent);
     }
-  }, [answer, currentQuestion, timer, isLastQuestion, usage.isOverLimit, submitAnswerMutation, getNextQuestionMutation]);
+  }, [
+    answer,
+    currentQuestion,
+    timer,
+    isLastQuestion,
+    usage.isOverLimit,
+    submitAnswerMutation,
+    getNextQuestionMutation,
+  ]);
 
   const handleComplete = async () => {
     try {
@@ -220,159 +243,190 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
 
   return (
     <>
-      <Card className="flex flex-col h-[calc(100vh-12rem)] max-h-[800px]">
-        <CardHeader className="flex-shrink-0 pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Interview-Simulation</CardTitle>
-            <div className="flex items-center gap-4">
-              {/* Timer */}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span className="font-mono">{formatTime(timer)}</span>
-              </div>
-              {/* Abandon button */}
+      <Card className="flex h-[calc(100vh-16rem)] max-h-[760px] min-h-[520px] flex-col overflow-hidden p-0">
+        {/* ---- Header: title + timer + prominent progress ---- */}
+        <div className="flex-shrink-0 border-b px-6 py-5">
+          <div className="mb-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 text-[17px] font-bold">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-primary">
+                <Bot className="h-[18px] w-[18px]" />
+              </span>
+              Interview-Simulation
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-muted px-3 font-mono text-sm tabular-nums">
+                <Clock className="h-[15px] w-[15px] text-muted-foreground" />
+                {formatTime(timer)}
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAbandonDialog(true)}
-                className="text-destructive hover:text-destructive"
+                className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
-                <XCircle className="h-4 w-4 mr-1" />
+                <XCircle className="mr-1 h-4 w-4" />
                 Abbrechen
               </Button>
             </div>
           </div>
-          {/* Progress bar */}
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>
-                Frage {answeredQuestions + (currentQuestion ? 1 : 0)} von {totalQuestions}
-              </span>
-              <span>{Math.round(progress)}% abgeschlossen</span>
-            </div>
-            <Progress value={progress} className="h-2" />
+
+          {/* Progress */}
+          <div className="mb-2 flex items-center justify-between text-[13px]">
+            <span className="font-semibold">
+              Frage {Math.min(currentIndex, totalQuestions)} von {totalQuestions}
+            </span>
+            <span className="font-medium text-muted-foreground">
+              {Math.round(progress)}&nbsp;% abgeschlossen
+            </span>
           </div>
-        </CardHeader>
-
-        <CardContent className="flex-1 overflow-y-auto space-y-4 px-4">
-          {messages.map((message) => (
+          <div className="relative h-2.5 overflow-hidden rounded-full bg-muted">
             <div
-              key={message.id}
-              className={`flex gap-3 ${message.type === 'answer' ? 'flex-row-reverse' : ''}`}
-            >
-              {/* Avatar */}
-              <div
-                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                  message.type === 'question'
-                    ? 'bg-primary text-primary-foreground'
-                    : message.type === 'answer'
-                      ? 'bg-secondary'
-                      : message.type === 'feedback'
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-muted'
-                }`}
-              >
-                {message.type === 'question' && <Bot className="h-4 w-4" />}
-                {message.type === 'answer' && <User className="h-4 w-4" />}
-                {message.type === 'feedback' && <CheckCircle2 className="h-4 w-4" />}
-                {message.type === 'system' && <AlertTriangle className="h-4 w-4" />}
-              </div>
+              className="absolute inset-y-0 left-0 rounded-full bg-accent transition-[width] duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          {/* Per-question step dots */}
+          <div className="mt-2.5 flex gap-1">
+            {Array.from({ length: totalQuestions }).map((_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  'h-1 flex-1 rounded-full',
+                  i < answeredQuestions
+                    ? 'bg-accent'
+                    : i === answeredQuestions && currentQuestion
+                      ? 'bg-accent/40'
+                      : 'bg-border',
+                )}
+              />
+            ))}
+          </div>
+        </div>
 
-              {/* Message content */}
-              <div
-                className={`flex-1 max-w-[85%] ${message.type === 'answer' ? 'text-right' : ''}`}
-              >
+        {/* ---- Messages ---- */}
+        <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-6">
+          {messages.map((message) => {
+            if (message.type === 'system') {
+              return (
                 <div
-                  className={`inline-block rounded-lg px-4 py-2 ${
-                    message.type === 'question'
-                      ? 'bg-muted'
-                      : message.type === 'answer'
-                        ? 'bg-primary text-primary-foreground'
-                        : message.type === 'feedback'
-                          ? 'bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-100'
-                          : 'bg-muted/50 text-muted-foreground text-sm italic'
-                  }`}
+                  key={message.id}
+                  className="mx-auto flex max-w-[90%] items-center gap-2.5 rounded-xl bg-blue-50 px-4 py-2.5 text-[13.5px] italic text-[#28456f] dark:bg-blue-950/40 dark:text-blue-200"
+                >
+                  <Info className="h-[17px] w-[17px] shrink-0 text-accent" />
+                  {message.content}
+                </div>
+              );
+            }
+            if (message.type === 'feedback') {
+              return (
+                <div key={message.id} className="flex max-w-[82%] gap-3 self-start">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </span>
+                  <div className="rounded-2xl rounded-tl-sm border border-green-200 bg-green-50 px-4 py-3 text-[15px] leading-relaxed text-green-900 dark:border-green-900 dark:bg-green-950/40 dark:text-green-100">
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    {message.score !== undefined && (
+                      <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
+                        <span>Score:</span>
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 text-white',
+                            message.score >= 80
+                              ? 'bg-green-600'
+                              : message.score >= 60
+                                ? 'bg-amber-500'
+                                : 'bg-destructive',
+                          )}
+                        >
+                          {message.score}/100
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+            const isAnswer = message.type === 'answer';
+            return (
+              <div
+                key={message.id}
+                className={cn('flex max-w-[82%] gap-3', isAnswer ? 'flex-row-reverse self-end' : 'self-start')}
+              >
+                <span
+                  className={cn(
+                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
+                    isAnswer ? 'bg-blue-50 text-accent dark:bg-blue-950/40' : 'bg-primary text-primary-foreground',
+                  )}
+                >
+                  {isAnswer ? <User className="h-5 w-5" /> : <Bot className="h-[21px] w-[21px]" />}
+                </span>
+                <div
+                  className={cn(
+                    'rounded-2xl px-4 py-3 text-[15px] leading-relaxed',
+                    isAnswer
+                      ? 'rounded-tr-sm bg-primary text-primary-foreground'
+                      : 'rounded-tl-sm bg-muted text-foreground',
+                  )}
                 >
                   {message.type === 'question' && message.question && (
-                    <Badge variant="outline" className="mb-2">
-                      {message.question.questionType === 'BEHAVIORAL' && 'Verhalten'}
-                      {message.question.questionType === 'TECHNICAL' && 'Technisch'}
-                      {message.question.questionType === 'SITUATIONAL' && 'Situativ'}
-                      {message.question.questionType === 'OPEN' && 'Offen'}
-                      {message.question.questionType === 'FOLLOW_UP' && 'Nachfrage'}
-                    </Badge>
+                    <span className="mb-2.5 inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 text-[11.5px] font-semibold text-secondary">
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                      {questionTypeLabel(message.question.questionType)}
+                    </span>
                   )}
                   <p className="whitespace-pre-wrap">{message.content}</p>
-                  {message.type === 'feedback' && message.score !== undefined && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-xs font-medium">Score:</span>
-                      <Badge
-                        variant={
-                          message.score >= 80
-                            ? 'default'
-                            : message.score >= 60
-                              ? 'secondary'
-                              : 'destructive'
-                        }
-                      >
-                        {message.score}/100
-                      </Badge>
-                    </div>
-                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
-        </CardContent>
+        </div>
 
-        <CardFooter className="flex-shrink-0 border-t pt-4">
+        {/* ---- Composer ---- */}
+        <div className="flex-shrink-0 border-t px-5 pb-4 pt-4">
           {allQuestionsAnswered ? (
-            <div className="w-full flex flex-col items-center gap-4">
-              <p className="text-sm text-muted-foreground text-center">
+            <div className="flex w-full flex-col items-center gap-4 py-1">
+              <p className="text-center text-sm text-muted-foreground">
                 Du hast alle Fragen beantwortet. Schließe das Interview ab, um deine Gesamtbewertung
                 zu erhalten.
               </p>
-              <Button onClick={handleComplete} disabled={completeMutation.isPending}>
-                {completeMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                )}
+              <Button size="lg" onClick={handleComplete} loading={completeMutation.isPending}>
+                {!completeMutation.isPending && <CheckCircle2 className="h-4 w-4" />}
                 Interview abschließen
               </Button>
             </div>
           ) : (
-            <div className="w-full flex gap-2">
-              <div className="flex-1 space-y-1">
+            <div className="flex w-full items-end gap-3">
+              <div className="flex-1 space-y-2">
                 <Textarea
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Deine Antwort eingeben... (Enter zum Senden, Shift+Enter für Zeilenumbruch)"
-                  className="w-full min-h-[80px] max-h-[200px] resize-none"
+                  placeholder="Deine Antwort eingeben…  (Enter zum Senden · Shift+Enter für Zeilenumbruch)"
+                  className="max-h-[200px] min-h-[84px] w-full resize-none rounded-xl text-[15px]"
                   disabled={isLoading || !currentQuestion}
                   aria-invalid={usage.isOverLimit}
                 />
                 <PromptUsageMeter usage={usage} />
               </div>
               <Button
+                size="lg"
+                className="h-[52px] rounded-xl px-6"
                 onClick={handleSubmitAnswer}
                 disabled={!answer.trim() || isLoading || !currentQuestion || usage.isOverLimit}
-                className="self-start"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    <Send className="h-4 w-4 mr-2" />
+                    <Send className="h-4 w-4" />
                     Senden
                   </>
                 )}
               </Button>
             </div>
           )}
-        </CardFooter>
+        </div>
       </Card>
 
       {/* Abandon confirmation dialog */}
@@ -391,9 +445,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
               onClick={handleAbandon}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {abandonMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : null}
+              {abandonMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Abbrechen
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -66,7 +66,7 @@ smart-apply/
 │   │   │   ├── contact/           # Contact form
 │   │   │   ├── email/             # Resend transactional email
 │   │   │   ├── health/            # Terminus health checks
-│   │   │   ├── interviews/        # AI mock interview generator
+│   │   │   ├── interviews/        # AI mock interviews (text + voice/WebRTC)
 │   │   │   ├── invite-codes/      # Closed-beta invite-code gate (hashed, single-use)
 │   │   │   ├── job-postings/      # Text/URL/file parsers
 │   │   │   ├── jobs/              # Queue providers (QStash / mem)
@@ -357,6 +357,8 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/applications/:id/files`      | SAS download URLs        |
 | GET      | `/applications/:id/stream`     | SSE status stream        |
 | POST     | `/interviews`                  | Generate mock interview  |
+| POST     | `/interviews/:id/voice/session`    | Mint voice (realtime) session (Premium) |
+| POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Premium) |
 | GET      | `/mailbox-sync/connections`    | List connected mailboxes (Premium)         |
 | GET      | `/mailbox-sync/microsoft/connect` | Start MS Graph OAuth (Premium)          |
 | GET      | `/mailbox-sync/microsoft/callback` | OAuth redirect target (public)         |

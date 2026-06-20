@@ -146,10 +146,10 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Queue (pluggable via `JOBS_DRIVER`):** `in-memory` | `qstash` (`@upstash/qstash`). Boot refuses to start when `NODE_ENV=production` and the driver isn't `qstash`.
 - **Cache:** Upstash Redis (`@upstash/redis`) + `node-cache`
 - **LLM (pluggable via `LLM_PROVIDER`):** `azure-openai` | `azure-ai-foundry` | `mock`
-  - Direct Azure OpenAI HTTP calls (`@nestjs/axios`)
+  - Direct Azure OpenAI **v1 Foundry API** HTTP calls (`@nestjs/axios`) — `POST {endpoint}/openai/v1/chat/completions` with the deployment passed as `model` in the body (no legacy `/openai/deployments/{name}` path); URL built by `llm/providers/azure-v1-url.util.ts`
   - Azure AI Foundry agents (`@azure/ai-agents`) for ATS keyword extraction, CV/CL writing
   - **opossum** circuit breaker around LLM calls
-  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Needs `AZURE_OPENAI_API_VERSION` ≥ `2024-08-01-preview` (default is `2025-01-01-preview`).
+  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Runs on the v1 Foundry API: `AZURE_OPENAI_API_VERSION` is the v1 channel (`preview` default | `v1`); legacy dated values auto-map to `preview` (`azure-v1-url.util.ts`).
 - **PDF:**
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
@@ -189,7 +189,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `contact` — contact form
 - `email` — Resend transactional email
 - `health` — Terminus health checks
-- `interviews` — AI mock-interview Q&A generator
+- `interviews` — AI mock interviews in **two modes**: typed text Q&A and a spoken **voice interview** (`voice/` sub-folder — pluggable `VOICE_PROVIDER` = `azure-realtime` | `mock`; Azure OpenAI Realtime API over browser-direct WebRTC, Sweden Central/EU). The backend only mints a short-lived ephemeral token (`POST /openai/v1/realtime/client_secrets`) and finalizes the transcript; the browser talks WebRTC to Azure directly (`?webrtcfilter=on` keeps the interviewer instructions private). Both modes reuse the same answer-analyzer/feedback-generator scoring. Premium-gated (`interviewCoach`), with a per-user monthly voice-minute cap computed on the fly from `InterviewSession.voiceDurationSeconds`. No audio is persisted — transcript + scores only.
 - `invite-codes` — Closed-beta invite-code gate. Hashed-at-rest (sha256), single-use, atomic redemption inside the registration transaction so failed signups never burn a code. Toggle via `REQUIRE_INVITE_CODES` (default `true`). Admins issue codes via `POST /admin/invite-codes`; plaintexts are returned **once** at issuance and never readable again.
 - `job-postings` — parse text/URL/file → normalized JobPosting
 - `jobs` — pluggable queue providers (`in-memory` | `qstash`)
@@ -340,10 +340,14 @@ Gated by `ADMIN_EMAILS` (comma-separated, case-insensitive). Returns 403 when th
 
 **GET/PUT /api/v1/user-preferences** — per-user settings
 
-### Interviews (Protected)
+### Interviews (Protected, Premium — `@RequiresFeature('interviewCoach')`)
 
-**POST /api/v1/interviews** — generate AI mock-interview Q&A for a job posting
-**GET /api/v1/interviews/:id** — fetch saved interview
+**POST /api/v1/interviews/start** — start a session (text mode by default). Text flow: **POST /:id/questions/:questionId/answer**, **/:id/next**, **/:id/complete**, **/:id/abandon**; **GET /interviews**, **/interviews/:id**, **/interviews/stats**.
+
+Voice interview (Azure OpenAI Realtime API via browser-direct WebRTC):
+**GET /api/v1/interviews/voice/config** — availability + remaining monthly voice minutes. Returns `available:false` when `VOICE_PROVIDER=mock`, so the frontend hides the voice toggle cleanly.
+**POST /api/v1/interviews/:id/voice/session** — mint a short-lived ephemeral realtime token (never the standing Azure key); the browser runs the WebRTC SDP exchange directly with Azure. Throttled 10/min.
+**POST /api/v1/interviews/:id/voice/transcript** — submit the spoken transcript + duration; the server pairs it into Q&A, scores it with the shared feedback engine, records the call length against the monthly voice-minute cap, and completes the session. Throttled 20/min.
 
 ### LinkedIn Jobs (Protected, legacy single-source)
 
@@ -662,8 +666,20 @@ LLM_PROVIDER=mock            # azure-openai | azure-ai-foundry | mock
 AZURE_OPENAI_ENDPOINT=https://your-aoai.openai.azure.com/
 AZURE_OPENAI_API_KEY=<key>
 AZURE_OPENAI_DEPLOYMENT_NAME=<deployment>
-# Structured outputs (#8) need 2024-08-01-preview+. Default: 2025-01-01-preview.
-AZURE_OPENAI_API_VERSION=2025-01-01-preview
+# v1 Foundry API channel: 'preview' (always-latest) or 'v1' (latest GA).
+# Legacy dated values auto-map to 'preview' at call time.
+AZURE_OPENAI_API_VERSION=preview
+
+# Voice Interview (Azure OpenAI Realtime API via WebRTC) — Premium feature.
+# Realtime models only exist in East US 2 + Sweden Central → use Sweden Central
+# for EU/GDPR. Endpoint/key fall back to AZURE_OPENAI_* when unset.
+VOICE_PROVIDER=mock          # azure-realtime | mock (mock hides the voice mode)
+AZURE_OPENAI_REALTIME_ENDPOINT=<sweden-central-resource>
+AZURE_OPENAI_REALTIME_API_KEY=<key>
+AZURE_OPENAI_REALTIME_DEPLOYMENT=gpt-realtime
+AZURE_OPENAI_REALTIME_VOICE=alloy
+VOICE_INTERVIEW_MAX_SESSION_MINUTES=15
+VOICE_INTERVIEW_MINUTES_PER_MONTH=60
 
 # Azure AI Foundry (URL parsing agents)
 AZURE_AI_FOUNDRY_ENDPOINT=<endpoint>

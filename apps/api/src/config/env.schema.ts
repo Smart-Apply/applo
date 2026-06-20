@@ -77,10 +77,25 @@ const envSchema = z.object({
   AZURE_OPENAI_ENDPOINT: z.string().optional(),
   AZURE_OPENAI_API_KEY: z.string().optional(),
   AZURE_OPENAI_DEPLOYMENT_NAME: z.string().default('gpt-4o'),
-  // 2024-08-01-preview+ is required for structured outputs (json_schema, #8).
-  // Bumped from 2024-02-15-preview so prod/staging get schema-constrained JSON.
-  AZURE_OPENAI_API_VERSION: z.string().default('2025-01-01-preview'),
+  // v1 Foundry API channel: 'preview' (always-latest, incl. structured outputs)
+  // or 'v1' (latest GA). Legacy dated values (e.g. 2025-01-01-preview) are
+  // auto-mapped to 'preview' at call time (see llm/providers/azure-v1-url.util.ts).
+  AZURE_OPENAI_API_VERSION: z.string().default('preview'),
   LLM_PROVIDER: z.enum(['azure-openai', 'azure-ai-foundry', 'mock']).default('mock'),
+
+  // Voice Interview (Azure OpenAI Realtime API via WebRTC)
+  VOICE_PROVIDER: z.enum(['azure-realtime', 'mock']).default('mock'),
+  // Realtime endpoint/key. Fall back to AZURE_OPENAI_* when unset. Realtime
+  // models are only available in East US 2 and Sweden Central — use a Sweden
+  // Central resource for EU/GDPR data residency.
+  AZURE_OPENAI_REALTIME_ENDPOINT: z.string().optional(),
+  AZURE_OPENAI_REALTIME_API_KEY: z.string().optional(),
+  AZURE_OPENAI_REALTIME_DEPLOYMENT: z.string().default('gpt-realtime'),
+  AZURE_OPENAI_REALTIME_VOICE: z.string().default('alloy'),
+  // Per-session hard ceiling (minutes). Azure caps a realtime session at 60.
+  VOICE_INTERVIEW_MAX_SESSION_MINUTES: z.string().default('15'),
+  // Monthly voice budget per user (minutes); -1 = unlimited.
+  VOICE_INTERVIEW_MINUTES_PER_MONTH: z.string().default('60'),
 
   // LLM Configuration (reuses AZURE_OPENAI_DEPLOYMENT_NAME for model)
   LLM_TEMPERATURE_DEFAULT: z.string().optional(),

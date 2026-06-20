@@ -91,10 +91,11 @@ const nextConfig: NextConfig = {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
           },
-          // Restrict access to sensitive browser features
+          // Restrict access to sensitive browser features. Microphone is
+          // allowed for same-origin (the voice interview needs getUserMedia).
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(), microphone=(self), geolocation=()',
           },
           // Strict Transport Security (HSTS) - only in production with HTTPS
           // Forces browsers to use HTTPS for all future requests

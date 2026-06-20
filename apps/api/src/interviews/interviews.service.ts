@@ -13,8 +13,13 @@ import {
   InterviewSessionStatus,
   InterviewType,
   InterviewDifficulty,
+  InterviewQuestionType,
+  Prisma,
 } from '../generated/prisma/client';
+import type { SubmitVoiceTranscriptPayload } from '@smart-apply/shared';
 import { StartInterviewDto, SubmitAnswerDto } from './dto';
+import { ConfigService } from '../config/config.service';
+import { pairTranscript } from './voice/transcript.util';
 import { assertPromptWithinLimits } from '../common/guardrails/prompt-guardrail';
 import {
   InterviewQuestionGeneratorService,
@@ -68,6 +73,7 @@ export class InterviewsService {
     private readonly questionGenerator: InterviewQuestionGeneratorService,
     private readonly answerAnalyzer: InterviewAnswerAnalyzerService,
     private readonly feedbackGenerator: InterviewFeedbackGeneratorService,
+    private readonly config: ConfigService,
   ) {}
 
   /**
@@ -319,12 +325,25 @@ export class InterviewsService {
       );
     }
 
-    // Get profile summary for feedback context
+    await this.generateAndStoreFeedback(userId, session);
+
+    // Return updated session
+    return this.getSession(userId, sessionId);
+  }
+
+  /**
+   * Generate comprehensive feedback for a session and mark it COMPLETED.
+   * Shared by the text flow (completeSession) and the voice flow
+   * (finalizeVoiceSession).
+   */
+  private async generateAndStoreFeedback(
+    userId: string,
+    session: SessionWithQuestions,
+  ): Promise<void> {
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
     });
 
-    // Generate comprehensive feedback
     const feedbackContext: FeedbackGenerationContext = {
       session,
       profileSummary: profile?.summary || undefined,
@@ -332,11 +351,10 @@ export class InterviewsService {
 
     const feedback = await this.feedbackGenerator.generateFeedback(feedbackContext);
 
-    // Save feedback and update session
     await this.prisma.$transaction([
       this.prisma.interviewFeedback.create({
         data: {
-          sessionId,
+          sessionId: session.id,
           overallScore: feedback.overallScore,
           technicalScore: feedback.categoryScores.technicalScore,
           communicationScore: feedback.categoryScores.communicationScore,
@@ -350,7 +368,7 @@ export class InterviewsService {
         },
       }),
       this.prisma.interviewSession.update({
-        where: { id: sessionId },
+        where: { id: session.id },
         data: {
           status: InterviewSessionStatus.COMPLETED,
           completedAt: new Date(),
@@ -358,8 +376,68 @@ export class InterviewsService {
         },
       }),
     ]);
+  }
 
-    // Return updated session
+  /**
+   * Finalize a spoken (voice) interview: persist the transcript, materialize
+   * the spoken question/answer pairs as InterviewQuestion rows so the existing
+   * feedback generator can score them, record the call duration (for the
+   * monthly minute cap), and mark the session COMPLETED.
+   */
+  async finalizeVoiceSession(
+    userId: string,
+    sessionId: string,
+    dto: SubmitVoiceTranscriptPayload,
+  ): Promise<SessionWithQuestions> {
+    const session = await this.getSession(userId, sessionId);
+
+    if (session.status !== InterviewSessionStatus.IN_PROGRESS) {
+      throw new BadRequestException('Interview-Session ist nicht mehr aktiv');
+    }
+
+    const pairs = pairTranscript(dto.turns ?? []);
+    if (pairs.length === 0) {
+      throw new BadRequestException('Es wurde kein gesprochener Beitrag aufgezeichnet.');
+    }
+
+    // Clamp the client-reported duration to the configured per-session ceiling
+    // so a malicious client can't over-report against the monthly minute cap.
+    const maxSeconds = this.config.voiceInterviewMaxSessionMinutes * 60;
+    const duration = Math.max(0, Math.min(Math.round(dto.durationSeconds || 0), maxSeconds));
+
+    // Replace the placeholder text question generated at session start with the
+    // spoken Q&A so the transcript reads cleanly.
+    await this.prisma.interviewQuestion.deleteMany({
+      where: { sessionId, userAnswer: null },
+    });
+
+    await this.prisma.interviewSession.update({
+      where: { id: sessionId },
+      data: {
+        mode: 'VOICE',
+        voiceDurationSeconds: duration,
+        transcript: dto.turns as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    const existingCount = await this.prisma.interviewQuestion.count({ where: { sessionId } });
+    let order = existingCount;
+    for (const pair of pairs) {
+      order += 1;
+      await this.prisma.interviewQuestion.create({
+        data: {
+          sessionId,
+          questionText: pair.question,
+          questionType: InterviewQuestionType.OPEN,
+          userAnswer: pair.answer,
+          order,
+          answeredAt: new Date(),
+        },
+      });
+    }
+
+    const updated = await this.getSession(userId, sessionId);
+    await this.generateAndStoreFeedback(userId, updated);
     return this.getSession(userId, sessionId);
   }
 

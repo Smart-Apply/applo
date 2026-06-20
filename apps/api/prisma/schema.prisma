@@ -782,6 +782,12 @@ enum InterviewQuestionType {
   FOLLOW_UP // Nachfrage
 }
 
+// How an interview session is conducted
+enum InterviewMode {
+  TEXT // Typed text chat (default)
+  VOICE // Spoken voice interview (Azure Realtime / WebRTC)
+}
+
 // Interview session with KI coach
 model InterviewSession {
   id     String @id @default(cuid())
@@ -794,6 +800,7 @@ model InterviewSession {
 
   // Interview configuration
   type       InterviewType       @default(MIXED)
+  mode       InterviewMode       @default(TEXT) // text chat vs spoken voice interview
   industry   String? // e.g., "IT", "Healthcare", "Finance"
   difficulty InterviewDifficulty @default(MEDIUM)
   language   String              @default("de") // ISO 639-1: "de", "en"
@@ -814,6 +821,12 @@ model InterviewSession {
 
   // Results
   overallScore Int? // 1-100 overall score
+
+  // Voice interview metadata (mode == VOICE)
+  voice                String? // chosen TTS voice (e.g. "alloy")
+  realtimeModel        String? // realtime deployment used (e.g. "gpt-realtime")
+  voiceDurationSeconds Int? // recorded spoken-call length (for the monthly minute cap)
+  transcript           Json? // [{ role: "interviewer"|"candidate", text, atSeconds }]
 
   // Relations
   questions InterviewQuestion[]

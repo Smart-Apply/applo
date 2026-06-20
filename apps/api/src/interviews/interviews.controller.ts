@@ -25,6 +25,7 @@ import { UsageLimitGuard } from '../common/guards/usage-limit.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { RequiresPremium, RequiresFeature, CheckUsage } from '../common/decorators/tier.decorator';
 import { InterviewsService } from './interviews.service';
+import { VoiceInterviewService } from './voice/voice-interview.service';
 import {
   StartInterviewDto,
   SubmitAnswerDto,
@@ -34,6 +35,10 @@ import {
   AnswerResponseDto,
   InterviewStatsResponseDto,
   InterviewQuestionResponseDto,
+  StartVoiceSessionDto,
+  SubmitVoiceTranscriptDto,
+  VoiceSessionResponseDto,
+  VoiceConfigResponseDto,
 } from './dto';
 import { InterviewSessionStatus } from '../generated/prisma/client';
 
@@ -47,7 +52,10 @@ interface AuthenticatedUser {
 @Controller('interviews')
 @UseGuards(JwtAuthGuard)
 export class InterviewsController {
-  constructor(private readonly interviewsService: InterviewsService) {}
+  constructor(
+    private readonly interviewsService: InterviewsService,
+    private readonly voiceService: VoiceInterviewService,
+  ) {}
 
   /**
    * Start a new interview session
@@ -296,6 +304,79 @@ export class InterviewsController {
     return this.mapSessionToResponse(session);
   }
 
+  // ---- Voice interview (Azure OpenAI Realtime API via WebRTC) ----
+
+  /**
+   * Voice interview availability + remaining monthly voice budget.
+   */
+  @Get('voice/config')
+  @UseGuards(TierGuard, FeatureGuard)
+  @RequiresPremium()
+  @RequiresFeature('interviewCoach')
+  @ApiOperation({
+    summary: 'Voice interview config',
+    description:
+      'Returns whether the spoken (voice) interview mode is available and the remaining monthly voice budget for the user.',
+  })
+  @ApiResponse({ status: 200, description: 'Voice interview config', type: VoiceConfigResponseDto })
+  async getVoiceConfig(@CurrentUser() user: AuthenticatedUser): Promise<VoiceConfigResponseDto> {
+    return this.voiceService.getConfig(user.id);
+  }
+
+  /**
+   * Mint an ephemeral realtime session for a spoken interview.
+   */
+  @Post(':id/voice/session')
+  @UseGuards(TierGuard, FeatureGuard)
+  @RequiresPremium()
+  @RequiresFeature('interviewCoach')
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 mints per minute
+  @ApiOperation({
+    summary: 'Start a voice interview session',
+    description:
+      'Mints a short-lived realtime token the browser uses to establish a WebRTC voice session with the AI interviewer. The standing Azure key is never exposed.',
+  })
+  @ApiParam({ name: 'id', description: 'Interview session ID' })
+  @ApiResponse({ status: 201, description: 'Ephemeral voice session', type: VoiceSessionResponseDto })
+  @ApiResponse({ status: 403, description: 'Voice quota exceeded or Premium required' })
+  @ApiResponse({ status: 503, description: 'Voice interview not available' })
+  async startVoiceSession(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') sessionId: string,
+    @Body() dto: StartVoiceSessionDto,
+  ): Promise<VoiceSessionResponseDto> {
+    return this.voiceService.createSession(user.id, sessionId, dto);
+  }
+
+  /**
+   * Finalize a voice interview: persist the transcript and generate feedback.
+   */
+  @Post(':id/voice/transcript')
+  @UseGuards(TierGuard, FeatureGuard)
+  @RequiresPremium()
+  @RequiresFeature('interviewCoach')
+  @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20 finalizes per minute
+  @ApiOperation({
+    summary: 'Finalize a voice interview session',
+    description:
+      'Submits the spoken transcript and call duration, scores the conversation with the same AI feedback engine as the text flow, and completes the session.',
+  })
+  @ApiParam({ name: 'id', description: 'Interview session ID' })
+  @ApiResponse({
+    status: 201,
+    description: 'Session completed with feedback',
+    type: InterviewSessionDetailResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Empty transcript or session not active' })
+  async submitVoiceTranscript(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') sessionId: string,
+    @Body() dto: SubmitVoiceTranscriptDto,
+  ): Promise<InterviewSessionDetailResponseDto> {
+    const session = await this.interviewsService.finalizeVoiceSession(user.id, sessionId, dto);
+    return this.mapSessionToDetailResponse(session);
+  }
+
   /**
    * Map session to response DTO
    */
@@ -303,6 +384,7 @@ export class InterviewsController {
     return {
       id: session.id,
       type: session.type,
+      mode: session.mode,
       industry: session.industry,
       difficulty: session.difficulty,
       language: session.language,
