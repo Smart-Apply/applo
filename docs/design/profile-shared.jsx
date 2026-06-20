@@ -24,8 +24,6 @@ const NavRail = ({ accent }) => {
     { icon: I.home,      label: 'Dashboard' },
     { icon: I.user,      label: 'Profil', active: true },
     { icon: I.doc,       label: 'Bewerbungen', count: 12 },
-    { icon: I.spark,     label: 'Job-Suche' },
-    { icon: I.bolt,      label: 'Auto-Apply' },
     { icon: I.chart,     label: 'Analytics' },
     { icon: I.chat,      label: 'Interview-Coach' },
     { icon: I.cog,       label: 'Einstellungen' },
