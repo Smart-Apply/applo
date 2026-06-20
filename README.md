@@ -111,8 +111,6 @@ smart-apply/
 │   │   │   ├── job-postings/     # Text/URL/file parsers
 │   │   │   ├── jobs/             # Queue providers
 │   │   │   ├── keywords/         # ATS keyword matching
-│   │   │   ├── linkedin-jobs/    # LinkedIn job search (Apify, Premium)
-│   │   │   ├── job-search/       # Unified multi-source search (LinkedIn + Arbeitnow, pluggable)
 │   │   │   ├── llm/              # LLM provider abstraction
 │   │   │   ├── mailbox-sync/     # Email Tracking (Premium): MS Graph OAuth + classifier
 │   │   │   ├── pdf/              # Thin façade over pdf-v2 (kept for API stability)

@@ -23,8 +23,7 @@ export type UsageAction =
   | 'coverLetter'
   | 'resume'
   | 'jobParsing'
-  | 'interview'
-  | 'autoApply';
+  | 'interview';
 
 /**
  * Feature flags that can be checked
@@ -40,7 +39,6 @@ export type FeatureFlag =
   | 'extendedProfile'
   | 'linkedinImport'
   | 'interviewCoach'
-  | 'autoApplyAgent'
   | 'emailParsing'
   | 'prioritySupport'
   | 'noAds';

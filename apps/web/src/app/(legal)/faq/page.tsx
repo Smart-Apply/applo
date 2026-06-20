@@ -63,7 +63,7 @@ const betaFaqs: FaqItem[] = [
     a: (
       <>
         Für alle Beta-Tester ist Smart Apply kostenlos — inklusive aller
-        Pro- und Premium-Features (Auto-Apply, E-Mail-Tracking,
+        Pro- und Premium-Features (E-Mail-Tracking,
         Interview-Coach, unbegrenzte Bewerbungen). Wenn du in der Beta
         aktiv mitgetestet hast, behältst du Premium auch nach dem offenen
         Launch ein Stück weit kostenlos — wir geben rechtzeitig Bescheid,
@@ -188,8 +188,8 @@ const faqs: FaqItem[] = [
         Der Einstieg ist kostenlos und ohne Kreditkarte. Im Free-Plan kannst
         du Smart Apply mit 3 Bewerbungen pro Monat in Ruhe ausprobieren. Pro
         (9,99 € / Monat) hilft dir, jede Bewerbung mit KI zu optimieren.
-        Premium (19,99 € / Monat) automatisiert deine Jobsuche mit
-        Auto-Apply, E-Mail-Tracking und Interview-Coach. Alle Preise sind
+        Premium (19,99 € / Monat) ergänzt das um
+        E-Mail-Tracking und Interview-Coach. Alle Preise sind
         transparent, monatlich kündbar und ohne versteckte Kosten — Details
         auf unserer{" "}
         <Link href="/#pricing" className="underline">
@@ -293,7 +293,7 @@ const faqsForJsonLd: { q: string; a: string }[] = [
   },
   {
     q: "Was kostet Smart Apply?",
-    a: "Der Einstieg ist kostenlos und ohne Kreditkarte: Free umfasst 3 Bewerbungen pro Monat. Pro kostet 9,99 € / Monat und optimiert jede Bewerbung mit KI. Premium kostet 19,99 € / Monat und automatisiert die Jobsuche mit Auto-Apply, E-Mail-Tracking und Interview-Coach. Monatlich kündbar, keine versteckten Kosten.",
+    a: "Der Einstieg ist kostenlos und ohne Kreditkarte: Free umfasst 3 Bewerbungen pro Monat. Pro kostet 9,99 € / Monat und optimiert jede Bewerbung mit KI. Premium kostet 19,99 € / Monat und ergänzt das um E-Mail-Tracking und Interview-Coach. Monatlich kündbar, keine versteckten Kosten.",
   },
   {
     q: "Wie kann ich meine Bewerbung nach der Generierung noch anpassen?",

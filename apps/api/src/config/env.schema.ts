@@ -227,13 +227,6 @@ const envSchema = z.object({
   SENTRY_DSN: z.string().optional(),
   SENTRY_RELEASE: z.string().optional(), // commit SHA from CI for source-map matching
 
-  // Apify (LinkedIn job search — Pro feature)
-  // Get token from https://console.apify.com/account/integrations
-  // When unset, the LinkedIn job search endpoint returns 503.
-  APIFY_TOKEN: z.string().optional(),
-  // Default actor: curious_coder/linkedin-jobs-scraper (id: hKByXkMQaC5Qt9UMN)
-  APIFY_LINKEDIN_ACTOR_ID: z.string().default('hKByXkMQaC5Qt9UMN'),
-
   // Admin allow-list (comma-separated emails). Users whose `email` matches
   // one of these (case-insensitive) can call the /admin/* endpoints. When
   // unset, all /admin/* routes return 403.

@@ -425,15 +425,6 @@ export class ConfigService {
     return this.nestConfig.get('TURNSTILE_SECRET_KEY', { infer: true });
   }
 
-  // Apify (LinkedIn job search — Pro feature)
-  get apifyToken(): string | undefined {
-    return this.nestConfig.get('APIFY_TOKEN', { infer: true });
-  }
-
-  get apifyLinkedInActorId(): string {
-    return this.nestConfig.get('APIFY_LINKEDIN_ACTOR_ID', { infer: true });
-  }
-
   // ---------------------------------------------------------------------------
   // Email Tracking (Premium feature) — OAuth Inbox Sync
   // ---------------------------------------------------------------------------

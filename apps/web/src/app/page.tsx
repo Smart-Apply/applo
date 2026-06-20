@@ -243,7 +243,7 @@ export default function Home() {
                 Wähle deinen Weg zum nächsten Job
               </h2>
               <p className="font-poppins text-base md:text-lg text-[#1B2A49]/80">
-                Vom risikofreien Einstieg bis zur vollautomatisierten Jobsuche —
+                Vom risikofreien Einstieg bis zur KI-optimierten Bewerbung —
                 transparent, monatlich kündbar, ohne versteckte Kosten.
               </p>
             </div>
@@ -356,10 +356,6 @@ export default function Home() {
                     <span className={`mt-1 ${selectedPlan === 'pro' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
                     <span>Analytics: ATS-Score, Keyword-Score, Match-Insights</span>
                   </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'pro' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Zugang zur integrierten Jobsuche</span>
-                  </li>
                 </ul>
                 <div className="mt-8 flex justify-center">
                   <Button
@@ -375,7 +371,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* PREMIUM Plan — Jobsuche automatisieren (recommended) */}
+              {/* PREMIUM Plan — Premium-Tools (recommended) */}
               <div
                 onClick={() => setSelectedPlan('premium')}
                 className={`relative rounded-3xl p-8 w-full max-w-[420px] mx-auto lg:mx-0 flex flex-col min-h-[685px] cursor-pointer transition-all duration-300 ring-2 ring-offset-2 ring-offset-transparent ${
@@ -389,7 +385,7 @@ export default function Home() {
                   <span className={`inline-block font-poppins font-semibold text-xs md:text-sm uppercase tracking-wide px-4 py-1.5 rounded-full shadow-md whitespace-nowrap transition-colors duration-300 ${
                     selectedPlan === 'premium' ? 'bg-[#E5EEFD] text-[#1B2A49]' : 'bg-[#1B2A49] text-[#E5EEFD]'
                   }`}>
-                    Beste Wahl für aktive Jobsuche
+                    Beste Wahl für deine Bewerbung
                   </span>
                 </div>
 
@@ -400,7 +396,7 @@ export default function Home() {
                   <p className={`font-poppins text-sm md:text-base mb-4 transition-colors duration-300 ${
                     selectedPlan === 'premium' ? 'text-white/80' : 'text-[#1B2A49]/70'
                   }`}>
-                    Deine Jobsuche läuft auf Autopilot
+                    Maximale Unterstützung für deine Bewerbung
                   </p>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className={`font-poppins font-bold text-4xl md:text-5xl transition-colors duration-300 ${
@@ -417,10 +413,6 @@ export default function Home() {
                   <li className="flex items-start gap-3">
                     <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
                     <span>Alles aus Pro</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span><span className="font-semibold">Auto-Apply Agent</span> — bewirbt sich für dich</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>

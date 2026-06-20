@@ -47,19 +47,7 @@ import type {
   Disable2FADto,
   RegenerateBackupCodesDto,
   TrustedDevice,
-  LinkedInJob,
-  LinkedInJobSearchFilters,
-  LinkedInJobSearchResponse,
-  UnifiedJob,
-  UnifiedJobSearchRequest,
-  UnifiedJobSearchResponse,
-  JobSearchSourcesResponse,
   AnalyticsOverview,
-  AutoApplyConfig,
-  UpsertAutoApplyConfigPayload,
-  AutoApplySuggestionsResponse,
-  AutoApplySuggestionStatus,
-  ApproveAutoApplySuggestionResponse,
   MailboxConnection,
   ConnectMailboxResponse,
 } from '@/types';
@@ -835,66 +823,6 @@ export const api = {
       }),
   },
 
-  // LinkedIn Jobs (Pro feature)
-  linkedinJobs: {
-    /**
-     * Search LinkedIn job postings via the configured Apify actor.
-     * Throttled server-side to 10 searches/hour to keep Apify costs bounded.
-     */
-    search: (filters: LinkedInJobSearchFilters) =>
-      apiRequest<LinkedInJobSearchResponse>('/linkedin-jobs/search', {
-        method: 'POST',
-        body: JSON.stringify(filters),
-      }),
-
-    /**
-     * Persist a LinkedIn job result as a JobPosting.
-     * Returns the JobPosting so the caller can navigate into the
-     * application wizard (e.g. /applications/new?jobPostingId=...).
-     */
-    import: (job: LinkedInJob) =>
-      apiRequest<JobPosting>('/linkedin-jobs/import', {
-        method: 'POST',
-        body: JSON.stringify({ job }),
-      }),
-  },
-
-  // Unified Job Search (multi-source: LinkedIn + Arbeitnow)
-  // Pluggable backend; the legacy `linkedinJobs` namespace above is kept
-  // alive for any code path that hasn't migrated yet.
-  jobSearch: {
-    /**
-     * List configured providers + per-tier availability so the UI can
-     * grey out sources the current user can't actually use.
-     */
-    sources: () => apiRequest<JobSearchSourcesResponse>('/job-search/sources'),
-
-    /**
-     * Fan-out search across all configured providers. Per-source
-     * try/catch on the backend means partial failures still return
-     * useful results — inspect `response.sources[]` to see which
-     * sources contributed and which were skipped/errored.
-     *
-     * Throttled server-side to 30 requests/hour per user.
-     */
-    search: (request: UnifiedJobSearchRequest) =>
-      apiRequest<UnifiedJobSearchResponse>('/job-search', {
-        method: 'POST',
-        body: JSON.stringify(request),
-      }),
-
-    /**
-     * Persist a search result via its originating provider so the
-     * application wizard can consume it. The backend dispatches on
-     * `job.source` to compose the right `fullText` per source.
-     */
-    import: (job: UnifiedJob) =>
-      apiRequest<JobPosting>('/job-search/import', {
-        method: 'POST',
-        body: JSON.stringify({ job }),
-      }),
-  },
-
   // Templates
   templates: {
     list: (type?: 'COVER_LETTER' | 'RESUME' | 'BOTH') =>
@@ -1212,68 +1140,6 @@ export const api = {
      * non-premium users get a 403 which the page handles via useFeatureGate.
      */
     getOverview: () => apiRequest<AnalyticsOverview>('/analytics/overview'),
-  },
-
-  // Auto-Apply Agent (Premium feature)
-  autoApply: {
-    getConfig: () => apiRequest<AutoApplyConfig | null>('/auto-apply/config'),
-
-    upsertConfig: (payload: UpsertAutoApplyConfigPayload) =>
-      apiRequest<AutoApplyConfig>('/auto-apply/config', {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      }),
-
-    pause: () =>
-      apiRequest<AutoApplyConfig>('/auto-apply/config/pause', { method: 'POST' }),
-
-    resume: () =>
-      apiRequest<AutoApplyConfig>('/auto-apply/config/resume', { method: 'POST' }),
-
-    deleteConfig: () =>
-      apiRequest<void>('/auto-apply/config', { method: 'DELETE' }),
-
-    /**
-     * Manually trigger one recommendation run (1/hour).
-     *
-     * Fire-and-forget on the backend — returns 202 immediately while the
-     * LinkedIn search + scoring run in the background. The caller should
-     * poll `listSuggestions()` to surface new results.
-     */
-    runNow: () =>
-      apiRequest<{ ok: boolean; dispatched: boolean }>(
-        '/auto-apply/config/run-now',
-        { method: 'POST' },
-      ),
-
-    listSuggestions: (opts?: {
-      status?: AutoApplySuggestionStatus;
-      page?: number;
-      pageSize?: number;
-    }) => {
-      const qs = new URLSearchParams();
-      if (opts?.status) qs.set('status', opts.status);
-      if (opts?.page) qs.set('page', String(opts.page));
-      if (opts?.pageSize) qs.set('pageSize', String(opts.pageSize));
-      const suffix = qs.toString() ? `?${qs.toString()}` : '';
-      return apiRequest<AutoApplySuggestionsResponse>(`/auto-apply/suggestions${suffix}`);
-    },
-
-    approve: (suggestionId: string) =>
-      apiRequest<ApproveAutoApplySuggestionResponse>(
-        `/auto-apply/suggestions/${suggestionId}/approve`,
-        { method: 'POST' },
-      ),
-
-    skip: (suggestionId: string) =>
-      apiRequest<void>(`/auto-apply/suggestions/${suggestionId}/skip`, {
-        method: 'POST',
-      }),
-
-    block: (suggestionId: string) =>
-      apiRequest<void>(`/auto-apply/suggestions/${suggestionId}/block`, {
-        method: 'POST',
-      }),
   },
 
   // Email Tracking — OAuth Inbox Sync (Premium feature)

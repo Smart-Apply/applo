@@ -11,7 +11,6 @@ export interface SendEmailOptions {
   template:
     | 'verification-email'
     | 'password-reset-email'
-    | 'auto-apply-digest'
     | 'application-status-changed';
   context: Record<string, unknown>;
 }
@@ -38,7 +37,6 @@ export class EmailService {
     const templateNames = [
       'verification-email',
       'password-reset-email',
-      'auto-apply-digest',
       'application-status-changed',
     ];
 

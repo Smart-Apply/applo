@@ -13,8 +13,7 @@
 .applo .a-l-up,.applo .a-r-up,.applo .a-r-wave,.applo .a-r-thumb,.applo .a-r-chin,
 .applo .mo-happy,.applo .mo-o,.applo .ey-happy,.applo .brow-think,
 .applo .fx-dots,.applo .fx-confetti,.applo .fx-gears,
-.applo .tool-search,.applo .tool-coach,
-.applo .fx-auto{display:none;}
+.applo .tool-coach{display:none;}
 .applo .fx-check{opacity:0;stroke-dasharray:46;stroke-dashoffset:46;}
 
 /* IDLE — always on */
@@ -99,31 +98,6 @@
    FEATURE-POSEN — passend zu den App-Bereichen
    ============================================================ */
 @keyframes fxFade{from{opacity:0}to{opacity:1}}
-
-/* SEARCH — Job-Suche: Lupe halten, Augen scannen */
-.applo.state-search .a-r-down{display:none;}
-.applo.state-search .tool-search{display:block;animation:lensbob 3s ease-in-out infinite;transform-origin:150px 150px;}
-.applo.state-search .search-eye{animation:pupilscan 2.4s ease-in-out infinite;}
-.applo.state-search .rig{animation:tilt 4.2s ease-in-out infinite;transform-origin:120px 250px;}
-@keyframes lensbob{0%,100%{transform:translate(0,0) rotate(-1.5deg)}50%{transform:translate(2px,-2px) rotate(1.5deg)}}
-@keyframes pupilscan{0%,100%{transform:translateX(-4px)}25%{transform:translate(4px,1px)}60%{transform:translate(3px,-1px)}}
-
-/* AUTO — Auto-Apply: Blitz, Speed-Lines, beide Arme hoch, vibrieren */
-.applo.state-auto .a-l-down,.applo.state-auto .a-r-down{display:none;}
-.applo.state-auto .a-l-up,.applo.state-auto .a-r-up{display:block;}
-.applo.state-auto .mo-neutral{display:none;}
-.applo.state-auto .mo-happy{display:block;}
-.applo.state-auto .ey-open{display:none;}
-.applo.state-auto .ey-happy{display:block;}
-.applo.state-auto .fx-auto{display:block;}
-.applo.state-auto .bolt{animation:boltflash .85s ease-in-out infinite;transform-origin:126px 42px;}
-.applo.state-auto .speed-l{animation:speedL .85s linear infinite;}
-.applo.state-auto .speed-r{animation:speedR .85s linear infinite;}
-.applo.state-auto .rig{animation:buzz .5s ease-in-out infinite;transform-origin:120px 250px;}
-@keyframes boltflash{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.14)}}
-@keyframes speedL{0%{opacity:0;transform:translateX(6px)}40%{opacity:1}100%{opacity:0;transform:translateX(-8px)}}
-@keyframes speedR{0%{opacity:0;transform:translateX(-6px)}40%{opacity:1}100%{opacity:0;transform:translateX(8px)}}
-@keyframes buzz{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-1.6px) rotate(-1deg)}75%{transform:translateX(1.6px) rotate(1deg)}}
 
 /* COACH — spricht mit dem Nutzer: redender Mund, Geste, Sprechblase, nicken */
 .applo.state-coach .a-r-down{display:none;}

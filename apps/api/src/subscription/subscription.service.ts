@@ -25,10 +25,6 @@ export interface TierLimits {
   jobParsingPerMonth: number; // URL parsing limit
   interviewSessionsPerMonth: number;
 
-  // Auto-Apply: hard cap on approvals per billing period (cost protection).
-  // 0 disables the feature, -1 = unlimited. Defaults to 50 on PREMIUM.
-  autoApplyApprovalsPerMonth: number;
-
   // Cost-protection cap (rolling 24h window): one "application" =
   // create-with-generation call. -1 = unlimited.
   applicationsPerDay: number;
@@ -62,7 +58,6 @@ export interface TierLimits {
 
     // Premium features
     interviewCoach: boolean; // KI Interview Coach
-    autoApplyAgent: boolean; // Auto-apply bot
     emailParsing: boolean; // Gmail/Outlook tracking
     prioritySupport: boolean; // Premium support
     noAds: boolean; // Ad-free experience
@@ -75,7 +70,6 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: 3,
     jobParsingPerMonth: 10,
     interviewSessionsPerMonth: 0,
-    autoApplyApprovalsPerMonth: 0,
     applicationsPerDay: 5,
     priority: 'low',
     features: {
@@ -92,7 +86,6 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
       linkedinImport: false,
       multiLanguage: 'none',
       interviewCoach: false,
-      autoApplyAgent: false,
       emailParsing: false,
       prioritySupport: false,
       noAds: false,
@@ -103,7 +96,6 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: 50,
     jobParsingPerMonth: -1, // Unlimited
     interviewSessionsPerMonth: 0, // Not included in Pro
-    autoApplyApprovalsPerMonth: 0, // Premium-only feature
     applicationsPerDay: -1,
     priority: 'normal',
     features: {
@@ -120,7 +112,6 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
       linkedinImport: false, // Premium-only feature
       multiLanguage: 'de-en',
       interviewCoach: false,
-      autoApplyAgent: false,
       emailParsing: false,
       prioritySupport: false,
       noAds: true,
@@ -131,7 +122,6 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: -1, // Unlimited
     jobParsingPerMonth: -1, // Unlimited
     interviewSessionsPerMonth: -1, // Unlimited
-    autoApplyApprovalsPerMonth: 50, // Hard cap to keep Apify cost predictable
     applicationsPerDay: -1,
     priority: 'high',
     features: {
@@ -148,7 +138,6 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
       linkedinImport: true,
       multiLanguage: 'all',
       interviewCoach: true,
-      autoApplyAgent: true,
       emailParsing: true,
       prioritySupport: true,
       noAds: true,
@@ -313,7 +302,7 @@ export class SubscriptionService {
    */
   async canPerformAction(
     userId: string,
-    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview' | 'autoApply',
+    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview',
   ): Promise<CanPerformActionResult> {
     const subscription = await this.getOrCreateSubscription(userId);
     const limits = this.getTierLimits(subscription.tier);
@@ -355,11 +344,6 @@ export class SubscriptionService {
         limit = limits.interviewSessionsPerMonth;
         actionName = 'Interview-Sessions';
         break;
-      case 'autoApply':
-        used = usage.autoApplyApprovedUsed;
-        limit = limits.autoApplyApprovalsPerMonth;
-        actionName = 'Auto-Apply Bewerbungen';
-        break;
     }
 
     // -1 means unlimited
@@ -396,7 +380,7 @@ export class SubscriptionService {
    */
   async recordUsage(
     userId: string,
-    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview' | 'autoApply',
+    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview',
   ): Promise<void> {
     const subscription = await this.getOrCreateSubscription(userId);
     let usage = await this.ensureCurrentUsagePeriod(subscription.id);
@@ -425,13 +409,6 @@ export class SubscriptionService {
         break;
       case 'interview':
         updateData.interviewSessionsUsed = { increment: 1 };
-        break;
-      case 'autoApply':
-        // One "approval" = one auto-apply suggestion the user said yes to.
-        // Independent from the regular monthly cover-letter / resume quota:
-        // when the resulting Application generates PDFs those counters are
-        // also bumped via the normal pipeline.
-        updateData.autoApplyApprovedUsed = { increment: 1 };
         break;
     }
 
