@@ -632,7 +632,8 @@
 /* visibility defaults */
 .applo .a-l-up, .applo .a-r-up, .applo .a-r-wave, .applo .a-r-thumb, .applo .a-r-chin,
 .applo .mo-happy, .applo .mo-o, .applo .ey-happy, .applo .brow-think,
-.applo .fx-dots, .applo .fx-confetti, .applo .fx-gears { display: none; }
+.applo .fx-dots, .applo .fx-confetti, .applo .fx-gears,
+.applo .tool-search, .applo .tool-coach, .applo .fx-auto { display: none; }
 .applo .fx-check { opacity: 0; stroke-dasharray: 46; stroke-dashoffset: 46; }
 
 /* IDLE */
@@ -714,6 +715,45 @@
 .applo.state-done .rig { animation: apploNod 1s ease-in-out both; transform-origin: 120px 250px; }
 @keyframes apploThumb { 0% { transform: rotate(40deg) } 35% { transform: rotate(-8deg) } 55% { transform: rotate(2deg) } 72% { transform: rotate(-3deg) } 100% { transform: rotate(0) } }
 @keyframes apploNod { 0%,100% { transform: rotate(0) } 28% { transform: rotate(2.8deg) } 55% { transform: rotate(0) } 78% { transform: rotate(1.6deg) } }
+
+/* SEARCH — hold magnifier, pupil scans */
+.applo.state-search .a-r-down { display: none; }
+.applo.state-search .tool-search { display: block; animation: apploLensBob 3s ease-in-out infinite; transform-origin: 150px 150px; }
+.applo.state-search .search-eye { animation: apploPupilScan 2.4s ease-in-out infinite; }
+.applo.state-search .rig { animation: apploTilt 4.2s ease-in-out infinite; transform-origin: 120px 250px; }
+@keyframes apploLensBob { 0%,100% { transform: translate(0,0) rotate(-1.5deg) } 50% { transform: translate(2px,-2px) rotate(1.5deg) } }
+@keyframes apploPupilScan { 0%,100% { transform: translateX(-4px) } 25% { transform: translate(4px,1px) } 60% { transform: translate(3px,-1px) } }
+
+/* AUTO — bolt, speed lines, arms up, buzz */
+.applo.state-auto .a-l-down, .applo.state-auto .a-r-down { display: none; }
+.applo.state-auto .a-l-up, .applo.state-auto .a-r-up { display: block; }
+.applo.state-auto .mo-neutral { display: none; }
+.applo.state-auto .mo-happy { display: block; }
+.applo.state-auto .ey-open { display: none; }
+.applo.state-auto .ey-happy { display: block; }
+.applo.state-auto .fx-auto { display: block; }
+.applo.state-auto .bolt { animation: apploBoltFlash .85s ease-in-out infinite; transform-origin: 126px 42px; }
+.applo.state-auto .speed-l { animation: apploSpeedL .85s linear infinite; }
+.applo.state-auto .speed-r { animation: apploSpeedR .85s linear infinite; }
+.applo.state-auto .rig { animation: apploBuzz .5s ease-in-out infinite; transform-origin: 120px 250px; }
+@keyframes apploBoltFlash { 0%,100% { opacity: .85; transform: scale(1) } 50% { opacity: 1; transform: scale(1.14) } }
+@keyframes apploSpeedL { 0% { opacity: 0; transform: translateX(6px) } 40% { opacity: 1 } 100% { opacity: 0; transform: translateX(-8px) } }
+@keyframes apploSpeedR { 0% { opacity: 0; transform: translateX(-6px) } 40% { opacity: 1 } 100% { opacity: 0; transform: translateX(8px) } }
+@keyframes apploBuzz { 0%,100% { transform: translateX(0) rotate(0) } 25% { transform: translateX(-1.6px) rotate(-1deg) } 75% { transform: translateX(1.6px) rotate(1deg) } }
+
+/* COACH — talking mouth, gesture, sound waves, nod */
+.applo.state-coach .a-r-down { display: none; }
+.applo.state-coach .tool-coach { display: block; }
+.applo.state-coach .mo-neutral { display: none; }
+.applo.state-coach .mo-o { display: block; animation: apploTalk .5s ease-in-out infinite; transform-origin: 120px 134px; }
+.applo.state-coach .coach-arm { animation: apploGesture 2.2s ease-in-out infinite; transform-origin: 154px 178px; }
+.applo.state-coach .sw1 { animation: apploSayOut 1.5s ease-out infinite; transform-origin: 198px 133px; }
+.applo.state-coach .sw2 { animation: apploSayOut 1.5s ease-out .25s infinite; transform-origin: 209px 133px; }
+.applo.state-coach .rig { animation: apploNodLoop 3.2s ease-in-out infinite; transform-origin: 120px 250px; }
+@keyframes apploTalk { 0%,100% { transform: scaleY(.55) } 50% { transform: scaleY(1.05) } }
+@keyframes apploGesture { 0%,100% { transform: rotate(0) } 50% { transform: rotate(-8deg) } }
+@keyframes apploSayOut { 0% { opacity: 0; transform: translateX(-3px) scale(.7) } 40% { opacity: .95 } 100% { opacity: 0; transform: translateX(5px) scale(1.1) } }
+@keyframes apploNodLoop { 0%,100% { transform: rotate(0) } 50% { transform: rotate(1.8deg) } }
 
 @media (prefers-reduced-motion: reduce) {
   .applo, .applo * { animation: none !important; }

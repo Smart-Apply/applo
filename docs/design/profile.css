@@ -1,0 +1,204 @@
+/* SmartApply profile redesign — shared base styles
+   Loaded once at the top of profile.html so all three variants pick up the
+   navy palette + typography defaults. Per-variant flourishes live inside
+   each variant's component using scoped class prefixes (v1-, v2-, v3-).
+*/
+
+:root {
+  /* Navy palette — anchored on the existing brand */
+  --ink-950: #0a1124;
+  --ink-900: #0f172a;
+  --ink-800: #1e293b;
+  --ink-700: #334155;
+  --ink-600: #475569;
+  --ink-500: #64748b;
+  --ink-400: #94a3b8;
+  --ink-300: #cbd5e1;
+  --ink-200: #e2e8f0;
+  --ink-100: #f1f5f9;
+  --ink-50:  #f8fafc;
+
+  /* Surfaces */
+  --paper: #ffffff;
+  --canvas: #f6f7f9;
+  --canvas-warm: #f4f3ef;
+  --hairline: rgba(15, 23, 42, 0.08);
+  --hairline-strong: rgba(15, 23, 42, 0.14);
+
+  /* Brand navy (matches the SmartApply logo) */
+  --navy: #11204a;
+  --navy-soft: #1d2e5e;
+  --navy-deep: #0a1838;
+
+  /* Default accent — overridden by Tweaks */
+  --accent: #11204a;
+  --accent-tint: rgba(17, 32, 74, 0.08);
+  --accent-strong: #0a1838;
+
+  /* Status / signal */
+  --good: #166534;
+  --good-tint: #dcfce7;
+
+  /* Typography */
+  --font-sans: 'Geist', 'Söhne', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: 'Instrument Serif', 'Times New Roman', Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+.sa-root {
+  font-family: var(--font-sans);
+  color: var(--ink-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+  letter-spacing: -0.005em;
+}
+
+.sa-root, .sa-root * { box-sizing: border-box; }
+
+/* Inline-edit affordance — shared across all three variants */
+.sa-edit {
+  border-radius: 4px;
+  padding: 1px 3px;
+  margin: -1px -3px;
+  cursor: text;
+  outline: none;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+.sa-edit:hover { background: rgba(17, 32, 74, 0.04); }
+.sa-edit:focus {
+  background: #fff;
+  box-shadow: 0 0 0 1.5px var(--accent), 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* Generic image placeholder — striped, monospace label */
+.sa-placeholder {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.04) 0px,
+    rgba(15, 23, 42, 0.04) 8px,
+    rgba(15, 23, 42, 0.07) 8px,
+    rgba(15, 23, 42, 0.07) 16px
+  );
+  border: 1px dashed var(--hairline-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-500);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Tabular numerics where dates / counters live */
+.sa-tnum { font-variant-numeric: tabular-nums; }
+
+/* Faux nav rail (shared by all three so the variants frame consistently) */
+.sa-rail {
+  width: 224px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid var(--hairline);
+  padding: 22px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.sa-rail__brand {
+  display: flex; align-items: center; gap: 9px;
+  padding: 4px 8px;
+  font-weight: 600; font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+}
+.sa-rail__brand-mark {
+  width: 28px; height: 28px;
+  background: var(--navy);
+  border-radius: 7px;
+  display: grid; place-items: center;
+  color: #fff; font-size: 14px;
+}
+.sa-rail__group { display: flex; flex-direction: column; gap: 2px; }
+.sa-rail__group-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--ink-400);
+  padding: 0 10px 6px;
+}
+.sa-rail__item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 7px;
+  font-size: 13.5px; font-weight: 500; color: var(--ink-600);
+  cursor: default;
+  position: relative;
+}
+.sa-rail__item:hover { background: var(--ink-50); color: var(--ink-900); }
+.sa-rail__item--active {
+  background: var(--ink-100);
+  color: var(--navy);
+  font-weight: 600;
+}
+.sa-rail__item svg {
+  width: 16px; height: 16px; color: currentColor; opacity: 0.7;
+}
+.sa-rail__item--active svg { opacity: 1; color: var(--accent); }
+.sa-rail__footer {
+  margin-top: auto;
+  padding: 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sa-rail__avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #1e3a8a, #11204a);
+  color: #fff; font-weight: 600; font-size: 13px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.sa-rail__user {
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 0; flex: 1;
+}
+.sa-rail__user-name {
+  font-size: 12.5px; font-weight: 600;
+  color: var(--ink-900);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sa-rail__user-mail {
+  font-size: 11px; color: var(--ink-500);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sa-rail__premium {
+  font-size: 9.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: var(--accent-tint); color: var(--accent);
+  padding: 2px 6px; border-radius: 4px;
+  margin-top: 2px;
+  display: inline-flex; align-items: center; gap: 4px;
+  width: fit-content;
+}
+
+/* Generic icons (kept simple — drawn as inline strokes) */
+.sa-i {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Reusable section card */
+.sa-card {
+  background: #fff;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+}
+
+/* Row dot used by timeline rails */
+.sa-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--accent);
+}
+.sa-dot--filled { background: var(--accent); }

@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { useProfile, useUpdateProfile } from '@/hooks/use-profile';
 import { useAuthStore } from '@/stores/auth-store';
-import { calculateProfileStrength } from '@/lib/profile-utils';
 import { getLanguageLevelLabel } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,9 +10,7 @@ import { ProfileSkeleton } from '@/components/shared/skeletons';
 import { ApploRig } from '@/components/ui/applo-rig';
 import type { ApploState } from '@/components/ui/applo-rig';
 import { sanitizeUrl } from '@/lib/sanitize';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
-import type { AnalyticsOverview } from '@/types';
+import { cn } from '@/lib/utils';
 import {
   MapPin,
   Phone,
@@ -23,15 +20,20 @@ import {
   Plus,
   Upload,
   X,
-  Star,
   Pencil,
   Languages,
   Code2,
-  BarChart3,
+  ChevronDown,
   Award,
   Loader2,
   FolderKanban,
   ExternalLink,
+  GraduationCap,
+  Sparkles,
+  ArrowRight,
+  Check,
+  HelpCircle,
+  Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/format-date';
@@ -47,7 +49,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { FileUpload } from '@/components/ui/file-upload';
-import type { UpdateProfileDto } from '@/types';
+import type { UpdateProfileDto, EducationDto } from '@/types';
 
 const SKILL_SUGGESTIONS = [
   'JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'C++', 'Go', 'Rust', 'PHP', 'Ruby',
@@ -79,7 +81,10 @@ function InlineSkillInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const existing = new Set(existingSkills.map((s) => s.toLowerCase()));
+  const existing = useMemo(
+    () => new Set(existingSkills.map((s) => s.toLowerCase())),
+    [existingSkills],
+  );
 
   const suggestions =
     value.trim().length > 0
@@ -234,7 +239,10 @@ function InlineLanguageInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const existing = new Set(existingLanguages.map((s) => s.toLowerCase()));
+  const existing = useMemo(
+    () => new Set(existingLanguages.map((s) => s.toLowerCase())),
+    [existingLanguages],
+  );
 
   const suggestions =
     name.trim().length > 0
@@ -469,30 +477,6 @@ function LanguageRow({
   );
 }
 
-function ApploWaveOnClick({ size = 200 }: { size?: number }) {
-  const [state, setState] = useState<ApploState>('idle');
-  const [nonce, setNonce] = useState(0);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleClick = useCallback(() => {
-    if (timer.current) clearTimeout(timer.current);
-    setNonce((n) => n + 1);
-    setState('wave');
-    timer.current = setTimeout(() => {
-      setState('idle');
-      setNonce((n) => n + 1);
-      timer.current = null;
-    }, 1260);
-  }, []);
-
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-
-  return (
-    <button type="button" onClick={handleClick} aria-label="Applo winken lassen">
-      <ApploRig key={nonce} state={state} size={size} />
-    </button>
-  );
-}
 function CompanyMark({ name }: { name: string }) {
   const initials = name
     .split(/[\s]+/)
@@ -507,31 +491,102 @@ function CompanyMark({ name }: { name: string }) {
   );
 }
 
-function MiniDonut({ value }: { value: number }) {
-  const r = 16;
-  const circumference = 2 * Math.PI * r;
-  const offset = circumference - (value / 100) * circumference;
+/** Profile-strength ring — Applo-blue until complete, then green. */
+function StrengthRing({ pct }: { pct: number }) {
+  const done = pct >= 100;
+  const color = done ? '#16a34a' : '#2563eb';
   return (
-    <svg width="40" height="40" viewBox="0 0 40 40" className="shrink-0">
-      <circle cx="20" cy="20" r={r} fill="none" stroke="currentColor" strokeWidth="4" className="text-muted-foreground/40" />
-      <circle
-        cx="20"
-        cy="20"
-        r={r}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="4"
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        transform="rotate(-90 20 20)"
-        className="text-primary"
-      />
-      <text x="20" y="21" textAnchor="middle" dominantBaseline="central" className="fill-foreground text-[11px] font-bold">
-        {value}%
-      </text>
-    </svg>
+    <div
+      className="grid h-[84px] w-[84px] place-items-center rounded-full"
+      style={{ background: `conic-gradient(${color} ${pct * 3.6}deg, var(--muted) 0deg)` }}
+    >
+      <div className="grid h-16 w-16 place-items-center rounded-full bg-card">
+        <span className="text-xl font-bold tabular-nums" style={{ color }}>
+          {pct}
+          <small className="ml-0.5 text-xs font-semibold">%</small>
+        </span>
+      </div>
+    </div>
   );
+}
+
+/** Collapsible profile section card with an optional Applo "Was bringt das?" trigger. */
+function CollapsibleCard({
+  cardRef,
+  icon: Icon,
+  title,
+  meta,
+  active = false,
+  open,
+  onToggle,
+  onAsk,
+  action,
+  children,
+}: {
+  cardRef?: (el: HTMLDivElement | null) => void;
+  icon: typeof Briefcase;
+  title: string;
+  meta?: string;
+  active?: boolean;
+  open: boolean;
+  onToggle: () => void;
+  onAsk?: () => void;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      ref={cardRef}
+      className={cn(
+        'scroll-mt-24 rounded-2xl border bg-card shadow-sm transition-all duration-200',
+        active ? 'border-primary/40 ring-2 ring-primary/15' : 'border-border',
+      )}
+    >
+      <div className="flex items-center gap-2.5 px-6 py-5">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        >
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+              open ? '' : '-rotate-90',
+            )}
+          />
+          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <h2 className="font-semibold text-foreground">{title}</h2>
+          {meta && <span className="text-sm text-muted-foreground">{meta}</span>}
+        </button>
+        {onAsk && (
+          <button
+            type="button"
+            onClick={onAsk}
+            title="Was bringt das?"
+            className={cn(
+              'grid h-7 w-7 shrink-0 place-items-center rounded-md border transition-colors',
+              active
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border text-muted-foreground hover:border-primary hover:text-primary',
+            )}
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {action}
+      </div>
+      {open && <div className="px-6 pb-6">{children}</div>}
+    </div>
+  );
+}
+
+interface Criterion {
+  id: string;
+  label: string;
+  weight: number;
+  done: boolean;
+  hint: string;
 }
 
 export default function ProfilePage() {
@@ -539,15 +594,17 @@ export default function ProfilePage() {
   const { data: profile, isLoading, error } = useProfile();
   const updateProfile = useUpdateProfile();
   const user = useAuthStore((state) => state.user);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const [tipDismissed, setTipDismissed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('profile-tip-dismissed') === 'true';
-    }
-    return false;
-  });
   const [cvDialogOpen, setCvDialogOpen] = useState(false);
   const parseResume = useParseResume();
+
+  // ── Applo coach state ──────────────────────────────────────────────────
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [tourStep, setTourStep] = useState<number | null>(null);
+  const [introDone, setIntroDone] = useState(false);
+  const [celebrated, setCelebrated] = useState(false);
+  // Section ids the user has collapsed (empty = everything expanded).
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const cvUploading = parseResume.isPending || updateProfile.isPending;
 
@@ -598,14 +655,6 @@ export default function ProfilePage() {
     [parseResume, updateProfile],
   );
 
-  const { data: analytics } = useQuery<AnalyticsOverview>({
-    queryKey: ['analytics-overview'],
-    queryFn: () => api.analytics.getOverview(),
-    enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
-
   const handleAddSkill = useCallback(
     (name: string) => {
       const currentSkills = profile?.skills ?? [];
@@ -651,6 +700,27 @@ export default function ProfilePage() {
     [profile?.certificates, updateProfile],
   );
 
+  const handleRemoveEducation = useCallback(
+    (index: number) => {
+      // Map the read model (numeric years) back to the write DTO (string years),
+      // mirroring how the edit page persists education.
+      const updated: EducationDto[] = (profile?.education ?? [])
+        .filter((_, i) => i !== index)
+        .map((e) => ({
+          id: e.id,
+          degree: e.degree,
+          institution: e.institution,
+          fieldOfStudy: e.fieldOfStudy,
+          startYear: e.startYear ? `${e.startYear}-01-01` : undefined,
+          endYear: e.endYear ? `${e.endYear}-01-01` : undefined,
+          gpa: e.gpa,
+          description: e.description,
+        }));
+      updateProfile.mutate({ education: updated });
+    },
+    [profile?.education, updateProfile],
+  );
+
   const handleRemoveLanguage = useCallback(
     (index: number) => {
       const updated = (profile?.languages ?? []).filter((_, i) => i !== index);
@@ -668,6 +738,139 @@ export default function ProfilePage() {
     [profile?.languages, updateProfile],
   );
 
+  // ── Transparent, weighted profile-check (mirrors calculateProfileStrength) ──
+  const criteria: Criterion[] = useMemo(() => {
+    const hasBasic = !!(user?.firstName && user?.lastName && user?.email);
+    const hasPhone = !!profile?.phone;
+    const hasAddress = !!(profile?.city || profile?.street);
+    const hasSummary = !!profile?.summary;
+    const hasSkills = (profile?.skills?.length ?? 0) > 0;
+    const hasExperience = (profile?.experiences?.length ?? 0) > 0;
+    const hasEducation = (profile?.education?.length ?? 0) > 0;
+    const hasLinkedin = !!profile?.linkedinUrl;
+    return [
+      { id: 'identity', label: 'Kontaktdaten', weight: 10, done: hasBasic, hint: 'Name & E-Mail landen in jeder Bewerbung.' },
+      { id: 'identity', label: 'Telefonnummer', weight: 10, done: hasPhone, hint: 'Erhöht deine Rückmeldequote spürbar.' },
+      { id: 'identity', label: 'Adresse', weight: 10, done: hasAddress, hint: 'Dein Ort hilft beim Matching regionaler Stellen.' },
+      { id: 'about', label: 'Über mich', weight: 15, done: hasSummary, hint: 'Mein wichtigster Input für deine Anschreiben.' },
+      { id: 'skills', label: 'Fähigkeiten', weight: 15, done: hasSkills, hint: 'Recruiter filtern zuerst nach Skills.' },
+      { id: 'experience', label: 'Berufserfahrung', weight: 15, done: hasExperience, hint: 'Konkrete Erfolge überzeugen am meisten.' },
+      { id: 'education', label: 'Ausbildung', weight: 15, done: hasEducation, hint: 'Schaltet passende Stellenfilter frei.' },
+      { id: 'identity', label: 'LinkedIn', weight: 10, done: hasLinkedin, hint: 'Verknüpft dein öffentliches Profil.' },
+    ];
+  }, [profile, user]);
+
+  const profileStrength = criteria.reduce((sum, c) => sum + (c.done ? c.weight : 0), 0);
+  const openItems = criteria.filter((c) => !c.done);
+  const nextOpen = openItems[0] ?? null;
+  const isComplete = profileStrength >= 100;
+
+  // ── Applo tour script (main-column sections) ───────────────────────────
+  const tour = useMemo(
+    () => [
+      { id: 'identity', msg: <>Fangen wir oben an: deine <b>Kontaktdaten</b> übernehme ich 1:1 in jede Bewerbung. Eine Telefonnummer bringt dir mehr Rückmeldungen.</> },
+      { id: 'about', msg: <>Dein <b>Steckbrief</b> ist mein wichtigster Input. 2–3 Sätze über deine Stärken reichen — den Rest formuliere ich pro Stelle neu.</> },
+      { id: 'experience', msg: <>Bei der <b>Berufserfahrung</b> zählen konkrete Erfolge mit Zahlen. Ich hebe automatisch hervor, was zur jeweiligen Stelle passt.</> },
+      { id: 'skills', msg: <>Pflege deine <b>Fähigkeiten</b> — Recruiter filtern zuerst danach, und ich matche dich gezielter auf passende Stellen.</> },
+      { id: 'education', msg: <>Zum Schluss deine <b>Ausbildung</b> — sie rundet das Profil ab und schaltet weitere Stellenfilter frei.</> },
+    ],
+    [],
+  );
+
+  const firstName = user?.firstName || user?.email?.split('@')[0] || 'du';
+
+  const sectionMsg: Record<string, ReactNode> = {
+    identity: <>Deine <b>Kontaktdaten</b> landen direkt in jeder Bewerbung. {profile?.phone ? 'Top — alles vollständig.' : 'Ergänze deine Telefonnummer für mehr Rückmeldungen.'}</>,
+    about: <>Dein <b>Steckbrief</b> ist mein wichtigster Input. Schreib 2–3 Sätze über deine Stärken — pro Stelle texte ich daraus ein passendes Anschreiben.</>,
+    experience: <>Konkrete Erfolge mit <b>Zahlen</b> überzeugen am meisten. Ich wähle pro Bewerbung automatisch die relevantesten Punkte aus.</>,
+    skills: <>Recruiter filtern zuerst nach <b>Skills</b>. Je vollständiger deine Liste, desto besser matche ich dich auf passende Stellen.</>,
+    education: <>Deine <b>Ausbildung</b> rundet das Profil ab und passt zu mehr Stellenfiltern.</>,
+  };
+
+  let message: ReactNode;
+  if (tourStep !== null) {
+    message = tour[tourStep].msg;
+  } else if (isComplete) {
+    message = <>Stark, {firstName}! Dein Profil ist zu <b>100 %</b> vollständig. Jetzt kann ich deine Bewerbungen so treffsicher wie möglich für dich schreiben.</>;
+  } else if (activeSection && sectionMsg[activeSection]) {
+    message = sectionMsg[activeSection];
+  } else {
+    message = <>Hi, ich bin <b>Applo</b> — dein Profil-Coach. Je mehr ich über dich weiß, desto besser passe ich deine Bewerbungen an. Lass uns dein Profil startklar machen.</>;
+  }
+
+  // ── Applo pose — derived from coach state, with two one-shot timers ──────
+  // The timers mutate state only inside setTimeout (never synchronously in an
+  // effect body) so we stay clear of react-hooks/set-state-in-effect.
+  useEffect(() => {
+    const t = setTimeout(() => setIntroDone(true), 1500);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (!isComplete) return;
+    const t = setTimeout(() => setCelebrated(true), 1400);
+    return () => clearTimeout(t);
+  }, [isComplete]);
+
+  const pose: ApploState = !introDone
+    ? 'wave'
+    : isComplete
+      ? celebrated
+        ? 'done'
+        : 'success'
+      : tourStep !== null || activeSection
+        ? 'think'
+        : 'idle';
+
+  // ── Navigation / hand-holding ──────────────────────────────────────────
+  const setRef = (id: string) => (el: HTMLDivElement | null) => {
+    sectionRefs.current[id] = el;
+  };
+  const scrollToSection = useCallback((id: string) => {
+    sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+  const isOpen = (id: string) => !collapsed.has(id);
+  const toggleSection = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const openSection = useCallback((id: string) => {
+    setCollapsed((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+  const focusSection = useCallback(
+    (id: string) => {
+      openSection(id);
+      setActiveSection(id);
+      scrollToSection(id);
+    },
+    [openSection, scrollToSection],
+  );
+  const goToNext = () => { if (nextOpen) focusSection(nextOpen.id); };
+  const startTour = () => { setTourStep(0); openSection(tour[0].id); setActiveSection(tour[0].id); scrollToSection(tour[0].id); };
+  const tourNext = () => {
+    if (tourStep === null) return;
+    if (tourStep >= tour.length - 1) {
+      setTourStep(null);
+      setActiveSection(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const n = tourStep + 1;
+    setTourStep(n);
+    openSection(tour[n].id);
+    setActiveSection(tour[n].id);
+    scrollToSection(tour[n].id);
+  };
+  const endTour = () => { setTourStep(null); setActiveSection(null); };
+
   if (isLoading) return <ProfileSkeleton />;
 
   if (error) {
@@ -677,8 +880,6 @@ export default function ProfilePage() {
       </div>
     );
   }
-
-  const { score: profileStrength } = calculateProfileStrength(profile, user);
 
   const initials =
     `${user?.firstName?.charAt(0) ?? ''}${user?.lastName?.charAt(0) ?? ''}`
@@ -695,10 +896,11 @@ export default function ProfilePage() {
     ?.replace(/^https?:\/\/(www\.)?/, '')
     .replace(/\/$/, '');
 
-  const totalApps = analytics?.totals.applications ?? 0;
-  const totalInterviews = analytics?.totals.interviews ?? 0;
-  const responseRate = analytics ? Math.round(analytics.responseRate * 100) : 0;
-  const interviewRate = analytics ? Math.round(analytics.interviewRate * 100) : 0;
+  const sectionCard = (id: string) =>
+    cn(
+      'scroll-mt-24 rounded-2xl border bg-card p-6 shadow-sm transition-all duration-200',
+      activeSection === id ? 'border-primary/40 ring-2 ring-primary/15' : 'border-border',
+    );
 
   return (
     <div className="space-y-5 pb-10">
@@ -722,42 +924,84 @@ export default function ProfilePage() {
         </Button>
       </div>
 
-      {/* ── Tip banner ── */}
-      {!tipDismissed && (
-        <div className="flex items-start gap-3 rounded-xl border border-border bg-card px-5 py-4 shadow-sm">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Star className="h-4 w-4 text-primary" />
-          </div>
-          <p className="flex-1 text-sm leading-relaxed">
-            <span className="font-semibold">Tipp · So bearbeitest du dein Profil</span>{' '}
-            Klicke auf jedes Feld um es zu ändern. Mit{' '}
-            <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-xs">
-              + hinzufügen
-            </kbd>{' '}
-            fügst du Einträge hinzu, mit{' '}
-            <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-xs">
-              −
-            </kbd>{' '}
-            löschst du sie.
-          </p>
-          <button
-            onClick={() => {
-              setTipDismissed(true);
-              localStorage.setItem('profile-tip-dismissed', 'true');
-            }}
-            className="text-muted-foreground transition-colors hover:text-foreground"
+      {/* ── Applo coach ── */}
+      <div
+        className={cn(
+          'relative overflow-hidden rounded-2xl border bg-card p-4 shadow-sm sm:p-5',
+          isComplete ? 'border-green-200' : 'border-border',
+        )}
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: isComplete
+              ? 'radial-gradient(420px 150px at 8% 0%, rgba(22,163,74,0.08), transparent 70%)'
+              : 'radial-gradient(420px 150px at 8% 0%, rgba(37,99,235,0.06), transparent 70%)',
+          }}
+        />
+        <div className="relative grid grid-cols-[auto_1fr] items-center gap-4 sm:gap-5 lg:grid-cols-[auto_1fr_auto]">
+          <div
+            className="grid h-[140px] w-[120px] place-items-center rounded-xl"
+            style={{ background: 'radial-gradient(58% 52% at 50% 45%, rgba(37,99,235,0.10), transparent 72%)' }}
           >
-            <X className="h-4 w-4" />
-          </button>
+            <ApploRig key={pose} state={pose} size={120} />
+          </div>
+          <div className="min-w-0">
+            <div className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_0_3px_rgba(37,99,235,0.15)]" />
+              Applo · dein Profil-Coach
+            </div>
+            <p key={`${tourStep}-${activeSection}-${isComplete}`} className="mb-3.5 max-w-[60ch] text-[15px] leading-relaxed text-foreground">
+              {message}
+            </p>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {tourStep !== null ? (
+                <>
+                  <Button size="sm" className="gap-1.5" onClick={tourNext}>
+                    {tourStep >= tour.length - 1 ? 'Rundgang beenden' : 'Weiter'}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={endTour}>
+                    Überspringen
+                  </Button>
+                  <span className="text-xs font-semibold tabular-nums text-muted-foreground">
+                    {tourStep + 1} / {tour.length}
+                  </span>
+                </>
+              ) : isComplete ? (
+                <Button size="sm" className="gap-1.5" onClick={startTour}>
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Profil noch einmal durchgehen
+                </Button>
+              ) : (
+                <>
+                  {nextOpen && (
+                    <Button size="sm" className="gap-1.5" onClick={goToNext}>
+                      Als Nächstes: {nextOpen.label}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" className="gap-1.5 text-primary hover:text-primary" onClick={startTour}>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Geführter Rundgang
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="hidden flex-col items-center gap-2 self-center border-l border-border pl-5 lg:flex">
+            <StrengthRing pct={profileStrength} />
+            <span className="text-[11px] font-semibold text-muted-foreground">Profil-Stärke</span>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* ── Main grid ── */}
       <div className="grid gap-5 lg:grid-cols-3">
         {/* ════════ Left column (2/3) ════════ */}
         <div className="space-y-5 lg:col-span-2">
-          {/* Profile info card */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          {/* Identity */}
+          <div ref={setRef('identity')} className={sectionCard('identity')}>
             <div className="mb-6 flex items-start gap-4">
               <div className="relative shrink-0">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#0c1d3f] text-xl font-bold text-white">
@@ -802,139 +1046,117 @@ export default function ProfilePage() {
                   <span className="font-medium text-foreground">{currentPosition}</span>
                 </div>
               )}
-              {profile?.phone && (
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
-                    <Phone className="h-4 w-4" />
-                    <span>Telefon</span>
-                  </div>
-                  <span className="font-medium text-foreground">{profile.phone}</span>
-                </div>
-              )}
               {user?.email && (
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
                     <Mail className="h-4 w-4" />
                     <span>E-Mail</span>
                   </div>
-                  <span className="font-medium text-foreground">{user.email}</span>
+                  <span className="flex-1 font-medium text-foreground">{user.email}</span>
+                  <Check className="h-4 w-4 text-green-600" />
                 </div>
               )}
-              {profile?.linkedinUrl && (
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
-                    <Linkedin className="h-4 w-4" />
-                    <span>LinkedIn</span>
-                  </div>
-                  {sanitizeUrl(profile.linkedinUrl) ? (
-                    <a
-                      href={sanitizeUrl(profile.linkedinUrl)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-foreground transition-colors hover:text-primary"
-                    >
-                      {linkedinDisplay}
-                    </a>
-                  ) : (
-                    <span className="font-medium text-foreground">{linkedinDisplay}</span>
-                  )}
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  <span>Telefon</span>
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* ── Aktivität ── */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                <h2 className="font-semibold text-foreground">Aktivität</h2>
-                <span className="text-sm text-muted-foreground">letzte 3 Monate</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
-                <div className="flex-1">
-                  <p className="text-2xl font-bold text-foreground">{totalApps}</p>
-                  <p className="text-xs text-muted-foreground">Bewerbungen</p>
-                </div>
-                <MiniDonut value={responseRate} />
-              </div>
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
-                <div className="flex-1">
-                  <p className="text-2xl font-bold text-foreground">{analytics?.totals.activelyTracked ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">Aktiv verfolgt</p>
-                </div>
-                <MiniDonut value={interviewRate} />
-              </div>
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-4">
-                <div className="flex-1">
-                  <p className="text-2xl font-bold text-foreground">{totalInterviews}</p>
-                  <p className="text-xs text-muted-foreground">Einladungen</p>
-                </div>
-                <MiniDonut value={analytics ? Math.round(analytics.offerRate * 100) : 0} />
-              </div>
-            </div>
-          </div>
-
-          {/* ── Fähigkeiten ── */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Code2 className="h-4 w-4 text-muted-foreground" />
-                <h2 className="font-semibold text-foreground">Fähigkeiten</h2>
-                {(profile?.skills?.length ?? 0) > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {profile!.skills!.length} Skills
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {(profile?.skills?.length ?? 0) > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {profile!.skills!.map((skill, i) => (
-                  <span
-                    key={i}
-                    className="group relative inline-flex items-center rounded-md border border-primary bg-primary/10 py-1.5 pl-3 pr-7 text-xs font-medium text-primary transition-all duration-300 ease-in-out hover:bg-primary hover:text-primary-foreground"
-                  >
-                    {skill.name}
+                {profile?.phone ? (
+                  <>
+                    <span className="flex-1 font-medium text-foreground">{profile.phone}</span>
+                    <Check className="h-4 w-4 text-green-600" />
+                  </>
+                ) : (
+                  <>
+                    <span className="flex-1" />
                     <button
-                      onClick={() => handleRemoveSkill(skill.name)}
-                      className="absolute right-1.5 shrink-0 rounded-full p-0.5 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100"
+                      onClick={() => router.push('/profile/edit')}
+                      className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 transition-colors hover:bg-amber-200"
                     >
-                      <X className="h-3 w-3" />
+                      fehlt
                     </button>
-                  </span>
-                ))}
+                  </>
+                )}
               </div>
-            ) : (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                Noch keine Fähigkeiten eingetragen.
-              </p>
-            )}
-
-            <InlineSkillInput
-              existingSkills={(profile?.skills ?? []).map((s) => s.name)}
-              onAdd={handleAddSkill}
-            />
-          </div>
-
-          {/* ── Berufserfahrung ── */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <h2 className="font-semibold text-foreground">Berufserfahrung</h2>
-                {(profile?.experiences?.length ?? 0) > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {profile!.experiences!.length} Stationen
-                  </span>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
+                  <Linkedin className="h-4 w-4" />
+                  <span>LinkedIn</span>
+                </div>
+                {profile?.linkedinUrl ? (
+                  <>
+                    {sanitizeUrl(profile.linkedinUrl) ? (
+                      <a
+                        href={sanitizeUrl(profile.linkedinUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 font-medium text-foreground transition-colors hover:text-primary"
+                      >
+                        {linkedinDisplay}
+                      </a>
+                    ) : (
+                      <span className="flex-1 font-medium text-foreground">{linkedinDisplay}</span>
+                    )}
+                    <Check className="h-4 w-4 text-green-600" />
+                  </>
+                ) : (
+                  <>
+                    <span className="flex-1" />
+                    <button
+                      onClick={() => router.push('/profile/edit')}
+                      className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 transition-colors hover:bg-amber-200"
+                    >
+                      fehlt
+                    </button>
+                  </>
                 )}
               </div>
             </div>
+          </div>
 
+          {/* Über mich */}
+          <CollapsibleCard
+            cardRef={setRef('about')}
+            icon={Sparkles}
+            title="Über mich"
+            meta={profile?.summary ? `${profile.summary.length} Zeichen` : undefined}
+            active={activeSection === 'about'}
+            open={isOpen('about')}
+            onToggle={() => toggleSection('about')}
+            onAsk={() => setActiveSection('about')}
+            action={
+              <button
+                onClick={() => router.push('/profile/edit')}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            }
+          >
+            {profile?.summary ? (
+              <p className="text-sm leading-relaxed text-muted-foreground">{profile.summary}</p>
+            ) : (
+              <button
+                onClick={() => router.push('/profile/edit')}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-4 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Steckbrief schreiben — Applos wichtigster Input
+              </button>
+            )}
+          </CollapsibleCard>
+
+          {/* Berufserfahrung */}
+          <CollapsibleCard
+            cardRef={setRef('experience')}
+            icon={Briefcase}
+            title="Berufserfahrung"
+            meta={(profile?.experiences?.length ?? 0) > 0 ? `${profile!.experiences!.length} Stationen` : undefined}
+            active={activeSection === 'experience'}
+            open={isOpen('experience')}
+            onToggle={() => toggleSection('experience')}
+            onAsk={() => setActiveSection('experience')}
+          >
             {(profile?.experiences?.length ?? 0) > 0 ? (
               <div className="space-y-6">
                 {profile!.experiences!.map((exp, i) => (
@@ -981,21 +1203,120 @@ export default function ProfilePage() {
               <Plus className="h-3.5 w-3.5" />
               Berufserfahrung hinzufügen
             </button>
-          </div>
+          </CollapsibleCard>
 
-          {/* ── Projekte ── */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FolderKanban className="h-4 w-4 text-muted-foreground" />
-                <h2 className="font-semibold text-foreground">Projekte</h2>
-                {(profile?.projects?.length ?? 0) > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {profile!.projects!.length} Projekte
+          {/* Fähigkeiten */}
+          <CollapsibleCard
+            cardRef={setRef('skills')}
+            icon={Code2}
+            title="Fähigkeiten"
+            meta={(profile?.skills?.length ?? 0) > 0 ? `${profile!.skills!.length} Skills` : undefined}
+            active={activeSection === 'skills'}
+            open={isOpen('skills')}
+            onToggle={() => toggleSection('skills')}
+            onAsk={() => setActiveSection('skills')}
+          >
+
+            {(profile?.skills?.length ?? 0) > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {profile!.skills!.map((skill, i) => (
+                  <span
+                    key={i}
+                    className="group relative inline-flex items-center rounded-md border border-primary bg-primary/10 py-1.5 pl-3 pr-7 text-xs font-medium text-primary transition-all duration-300 ease-in-out hover:bg-primary hover:text-primary-foreground"
+                  >
+                    {skill.name}
+                    <button
+                      onClick={() => handleRemoveSkill(skill.name)}
+                      className="absolute right-1.5 shrink-0 rounded-full p-0.5 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </span>
-                )}
+                ))}
               </div>
-            </div>
+            ) : (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Noch keine Fähigkeiten eingetragen.
+              </p>
+            )}
+
+            <InlineSkillInput
+              existingSkills={(profile?.skills ?? []).map((s) => s.name)}
+              onAdd={handleAddSkill}
+            />
+          </CollapsibleCard>
+
+          {/* Ausbildung */}
+          <CollapsibleCard
+            cardRef={setRef('education')}
+            icon={GraduationCap}
+            title="Ausbildung"
+            meta={(profile?.education?.length ?? 0) > 0 ? `${profile!.education!.length} Abschlüsse` : undefined}
+            active={activeSection === 'education'}
+            open={isOpen('education')}
+            onToggle={() => toggleSection('education')}
+            onAsk={() => setActiveSection('education')}
+          >
+
+            {(profile?.education?.length ?? 0) > 0 ? (
+              <div className="space-y-5">
+                {profile!.education!.map((edu, i) => (
+                  <div key={i} className="group/edu flex gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <GraduationCap className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{edu.degree}</p>
+                          <p className="text-sm text-muted-foreground">{edu.institution}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {(edu.startYear || edu.endYear) && (
+                            <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                              {[edu.startYear, edu.endYear ?? 'heute'].filter(Boolean).join(' – ')}
+                            </span>
+                          )}
+                          <button
+                            onClick={() => handleRemoveEducation(i)}
+                            className="rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/edu:opacity-100"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      {(edu.fieldOfStudy || edu.description) && (
+                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground line-clamp-2">
+                          {[edu.fieldOfStudy, edu.description].filter(Boolean).join(' · ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Noch keine Ausbildung eingetragen.
+              </p>
+            )}
+
+            <button
+              onClick={() => router.push('/profile/edit?tab=education')}
+              className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Ausbildung hinzufügen
+            </button>
+          </CollapsibleCard>
+
+          {/* Projekte */}
+          <CollapsibleCard
+            icon={FolderKanban}
+            title="Projekte"
+            meta={(profile?.projects?.length ?? 0) > 0 ? `${profile!.projects!.length} Projekte` : undefined}
+            open={isOpen('projects')}
+            onToggle={() => toggleSection('projects')}
+          >
 
             {(profile?.projects?.length ?? 0) > 0 ? (
               <div className="space-y-5">
@@ -1062,21 +1383,16 @@ export default function ProfilePage() {
               <Plus className="h-3.5 w-3.5" />
               Projekt hinzufügen
             </button>
-          </div>
+          </CollapsibleCard>
 
-          {/* ── Zertifikate ── */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Award className="h-4 w-4 text-muted-foreground" />
-                <h2 className="font-semibold text-foreground">Zertifikate</h2>
-                {(profile?.certificates?.length ?? 0) > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {profile!.certificates!.length} Zertifikate
-                  </span>
-                )}
-              </div>
-            </div>
+          {/* Zertifikate */}
+          <CollapsibleCard
+            icon={Award}
+            title="Zertifikate"
+            meta={(profile?.certificates?.length ?? 0) > 0 ? `${profile!.certificates!.length} Zertifikate` : undefined}
+            open={isOpen('certificates')}
+            onToggle={() => toggleSection('certificates')}
+          >
 
             {(profile?.certificates?.length ?? 0) > 0 ? (
               <div className="space-y-4">
@@ -1127,42 +1443,79 @@ export default function ProfilePage() {
               <Plus className="h-3.5 w-3.5" />
               Zertifikat hinzufügen
             </button>
-          </div>
-
+          </CollapsibleCard>
         </div>
 
         {/* ════════ Right sidebar (1/3) ════════ */}
         <div className="space-y-5">
-          {/* Profile strength – dark card */}
-          <div className="rounded-2xl bg-[#0c1d3f] p-6 text-white shadow-sm">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
-              PROFILSTÄRKE
-            </p>
-            <p className="mb-3 text-5xl font-bold leading-none">
-              {profileStrength}
-              <span className="text-2xl">%</span>
-            </p>
-            <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-white/20">
+          {/* Transparent profile check — hidden once the profile is complete */}
+          {!isComplete && (
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h2 className="font-semibold text-foreground">Profil-Check</h2>
+              </div>
+              <span className={cn('text-xl font-bold tabular-nums', isComplete ? 'text-green-600' : 'text-primary')}>
+                {profileStrength}%
+              </span>
+            </div>
+            <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-white transition-all duration-500"
+                className={cn('h-full rounded-full transition-all duration-500', isComplete ? 'bg-green-600' : 'bg-primary')}
                 style={{ width: `${profileStrength}%` }}
               />
             </div>
-            <p className="text-sm leading-relaxed text-gray-300">
-              {profileStrength === 100
-                ? 'Dein Profil ist vollständig.'
-                : 'Ein vollständiges Profil verbessert deine generierten Bewerbungen.'}
+            <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+              Noch {openItems.length} {openItems.length === 1 ? 'Schritt' : 'Schritte'} bis zum
+              vollständigen Profil.
             </p>
-          </div>
-
-          {/* ── Sprachen ── */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Languages className="h-4 w-4 text-muted-foreground" />
-                <h2 className="font-semibold text-foreground">Sprachen</h2>
-              </div>
+            <div className="mb-4 flex flex-col gap-0.5">
+              {criteria.map((c, i) => (
+                <button
+                  key={i}
+                  onClick={() => focusSection(c.id)}
+                  className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted"
+                >
+                  <span
+                    className={cn(
+                      'grid h-5 w-5 shrink-0 place-items-center rounded-full',
+                      c.done ? 'bg-green-100 text-green-600' : '',
+                    )}
+                  >
+                    {c.done ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <span className="h-3.5 w-3.5 rounded-full border-[1.5px] border-muted-foreground/50" />
+                    )}
+                  </span>
+                  <span className="flex-1 text-[13px] font-medium text-foreground">{c.label}</span>
+                  <span className={cn('text-[11px] font-bold tabular-nums', c.done ? 'text-muted-foreground/60' : 'text-primary')}>
+                    +{c.weight}%
+                  </span>
+                </button>
+              ))}
             </div>
+            <div className="flex gap-2.5 rounded-xl bg-primary/5 p-3 text-[11.5px] leading-relaxed text-foreground">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-card text-primary">
+                <Zap className="h-3 w-3" />
+              </span>
+              <span>
+                <b className="font-bold">Warum?</b> Jedes ausgefüllte Feld macht Applos KI-Bewerbungen
+                genauer und schaltet mehr passende Stellen frei.
+              </span>
+            </div>
+          </div>
+          )}
+
+          {/* Sprachen */}
+          <CollapsibleCard
+            icon={Languages}
+            title="Sprachen"
+            meta={(profile?.languages?.length ?? 0) > 0 ? `${profile!.languages!.length}` : undefined}
+            open={isOpen('languages')}
+            onToggle={() => toggleSection('languages')}
+          >
 
             {(profile?.languages?.length ?? 0) > 0 ? (
               <div className="space-y-2.5">
@@ -1189,11 +1542,18 @@ export default function ProfilePage() {
               existingLanguages={(profile?.languages ?? []).map((l) => l.name)}
               onAdd={handleAddLanguage}
             />
-          </div>
-          {/* ── Applo ── */}
-          <div className="flex flex-col items-center py-4">
-            <ApploWaveOnClick size={200} />
-            <p className="mt-2 text-xs text-muted-foreground">Applo hilft dir weiter!</p>
+          </CollapsibleCard>
+
+          {/* Datenschutz */}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+              Deine Daten, deine Kontrolle
+            </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Applo nutzt dein Profil ausschließlich, um deine Bewerbungen zu schreiben. Du
+              entscheidest pro Bewerbung, welche Angaben mitgeschickt werden.
+            </p>
           </div>
         </div>
       </div>

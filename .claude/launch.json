@@ -21,6 +21,13 @@
       "runtimeArgs": ["--filter", "@smart-apply/api", "dev"],
       "port": 3000,
       "autoPort": false
+    },
+    {
+      "name": "design-proto",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4321", "--directory", "docs/design"],
+      "port": 4321,
+      "autoPort": false
     }
   ]
 }
