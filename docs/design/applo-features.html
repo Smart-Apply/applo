@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Applo · Feature-Animationen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="applo.css" />
+<style>
+  :root{
+    --navy:#0c1d3f; --navy-soft:#1c2d52; --blue:#2563eb; --blue-tint:#eef3ff;
+    --line:#eef0f4; --muted:#7d859e; --muted-2:#a3aac4; --bg:#fafbfc;
+    --good:#16a34a;
+    --stage:linear-gradient(165deg,#f3f6fc 0%,#dde6f4 100%);
+    --shadow:0 1px 2px rgba(15,23,42,.05);
+    --shadow-lg:0 18px 48px rgba(12,29,63,.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:'Geist',system-ui,sans-serif;background:var(--bg);color:var(--navy);
+    -webkit-font-smoothing:antialiased;letter-spacing:-.005em;}
+  .wrap{max-width:1200px;margin:0 auto;padding:52px 40px 90px;}
+
+  .head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin:0 0 14px;}
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--blue);
+    box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+  h1{font-size:38px;line-height:1.06;font-weight:700;letter-spacing:-.03em;margin:0;}
+  .lead{color:var(--muted);font-size:16px;line-height:1.6;margin:16px 0 0;max-width:620px;text-wrap:pretty;}
+  .backlink{font-size:13px;font-weight:600;color:var(--navy);text-decoration:none;background:#fff;
+    border:1px solid var(--line);padding:10px 16px;border-radius:10px;box-shadow:var(--shadow);white-space:nowrap;}
+  .backlink:hover{background:#f5f6f9;}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:420px 1fr;background:#fff;border:1px solid var(--line);
+    border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden;margin-top:36px;}
+  .hero-stage{position:relative;display:grid;place-items:center;padding:36px;background:var(--stage);}
+  .hero-stage svg{filter:drop-shadow(0 16px 22px rgba(12,29,63,.16));}
+  .hero-info{padding:44px 44px;display:flex;flex-direction:column;justify-content:center;}
+  .hero-badge{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--blue);background:var(--blue-tint);padding:5px 11px;border-radius:99px;margin-bottom:14px;}
+  .hero-info h3{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:0;}
+  .hero-info p{color:var(--muted);font-size:15px;line-height:1.6;margin:14px 0 0;max-width:440px;text-wrap:pretty;}
+  .pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:22px;}
+  .pill{font-size:12.5px;font-weight:600;color:var(--navy);background:#f5f6f9;border:1px solid var(--line);
+    padding:6px 12px;border-radius:99px;}
+  .pill.neu{color:var(--blue);background:var(--blue-tint);border-color:#d6e2fb;}
+
+  section{margin-top:54px;}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
+  .sec-head h2{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin:0;color:var(--navy);}
+  .sec-head .rule{flex:1;height:1px;background:var(--line);}
+  .sec-head .hint{font-size:13px;color:var(--muted);}
+
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  .card{border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden;
+    background:#fff;transition:box-shadow .18s,transform .18s;}
+  .card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+  .stage{height:230px;display:grid;place-items:center;padding:12px;background:var(--stage);
+    position:relative;overflow:hidden;}
+  .stage svg{filter:drop-shadow(0 14px 18px rgba(12,29,63,.18));}
+  .neu-badge{position:absolute;top:12px;right:12px;font-size:9.5px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:#fff;background:var(--blue);padding:3px 8px;border-radius:99px;
+    box-shadow:0 2px 6px rgba(37,99,235,.3);}
+  .meta{padding:15px 18px 16px;border-top:1px solid var(--line);}
+  .meta-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .meta-feat{font-size:15px;font-weight:700;letter-spacing:-.01em;}
+  .meta-state{font-size:11px;font-weight:600;color:var(--muted-2);font-family:'Geist Mono',monospace;}
+  .meta-when{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45;}
+
+  .note{margin-top:44px;display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);
+    border-radius:14px;padding:16px 20px;color:var(--muted);font-size:13px;line-height:1.55;box-shadow:var(--shadow);}
+  .note b{color:var(--navy);}
+  .note .d{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--good);margin-top:5px;}
+  .foot{margin-top:50px;color:var(--muted-2);font-size:13px;text-align:center;}
+
+  @media(max-width:980px){.hero{grid-template-columns:1fr;}.grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr;}h1{font-size:30px;}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="applo-rig.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// Jede Pose ist einem App-Bereich zugeordnet.
+const POSES = [
+  { state:'wave',    feat:'Dashboard',          when:'Begrüßt dich beim Login',          neu:false },
+  { state:'think',   feat:'Profil-Coach',       when:'Erklärt Felder & gibt Tipps',      neu:false },
+  { state:'search',  feat:'Job-Suche',          when:'Scannt passende Stellen für dich', neu:true  },
+  { state:'auto',    feat:'Auto-Apply',         when:'Bewirbt dich automatisch',         neu:true  },
+  { state:'coach',   feat:'Interview-Coach',    when:'Übt Interviews mit dir',           neu:true  },
+  { state:'process', feat:'KI arbeitet',        when:'Verarbeitet im Hintergrund',       neu:false },
+  { state:'success', feat:'Erfolg',             when:'Bewerbung abgeschickt',            neu:false },
+  { state:'done',    feat:'Abgeschlossen',      when:'Aufgabe erledigt',                 neu:false },
+];
+
+// Einmal-Animationen (wave/success/done) durch periodisches Remounten loopen.
+function useTick(ms){
+  const [t,setT]=useState(0);
+  useEffect(()=>{const id=setInterval(()=>setT(x=>x+1),ms);return ()=>clearInterval(id);},[ms]);
+  return t;
+}
+
+function Page(){
+  const tick = useTick(4800);
+  const newCount = POSES.filter(p=>p.neu).length;
+  return (
+    <div className="wrap">
+      <div className="head">
+        <div>
+          <p className="eyebrow"><span className="dot"></span> Applo · Motion-System</p>
+          <h1>Applo — Feature-Animationen</h1>
+          <p className="lead">
+            Applo bekommt für jeden Bereich von SmartApply eine eigene, charaktervolle Pose —
+            so weiß man immer, was gerade passiert. Reine CSS-Bewegung auf dem Vektor-Rig,
+            sofort in der App einsetzbar über <code style={{fontFamily:"'Geist Mono',monospace",fontSize:13,color:'var(--blue)'}}>state="…"</code>.
+            {' '}<b style={{color:'var(--blue)'}}>{newCount} neue Posen</b> in diesem Update.
+          </p>
+        </div>
+        <a className="backlink" href="profile-applo.html">← Profil-Coach</a>
+      </div>
+
+      {/* Hero */}
+      <div className="hero">
+        <div className="hero-stage">
+          <window.ApploRig key="hero" state="search" size={280} id="hero" />
+        </div>
+        <div className="hero-info">
+          <span className="hero-badge">Neu · Job-Suche</span>
+          <h3>Eine Pose pro Feature</h3>
+          <p>
+            Vom scannenden Blick durch die Lupe bei der Job-Suche über das fokussierte
+            Schreiben bis zum stolzen Präsentieren der Analytics — jede Animation
+            erzählt, was Applo gerade für dich tut. Das schafft Vertrauen und macht
+            die Oberfläche lebendig, ohne abzulenken.
+          </p>
+          <div className="pills">
+            <span className="pill neu">Lupe scannen</span>
+            <span className="pill neu">Schreiben</span>
+            <span className="pill neu">Blitz / Auto</span>
+            <span className="pill neu">Diagramm</span>
+            <span className="pill neu">Headset / Coach</span>
+          </div>
+        </div>
+      </div>
+
+      <section>
+        <div className="sec-head">
+          <h2>Alle Posen im Überblick</h2>
+          <div className="rule"></div>
+          <span className="hint">Live · loopend</span>
+        </div>
+        <div className="grid">
+          {POSES.map(p=>{
+            // Nur Einmal-Animationen periodisch neu mounten; Loops bleiben stehen.
+            const oneShot = p.state==='wave' || p.state==='success' || p.state==='done';
+            return (
+            <div className="card" key={p.state}>
+              <div className="stage">
+                {p.neu && <span className="neu-badge">Neu</span>}
+                <window.ApploRig key={p.state+(oneShot?'-'+tick:'')} state={p.state} size={150} id={'pose-'+p.state} />
+              </div>
+              <div className="meta">
+                <div className="meta-top">
+                  <span className="meta-feat">{p.feat}</span>
+                  <span className="meta-state">{p.state}</span>
+                </div>
+                <div className="meta-when">{p.when}</div>
+              </div>
+            </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="note">
+        <span className="d"></span>
+        <span>
+          <b>Barrierefrei &amp; leicht:</b> Alle Posen respektieren <b>prefers-reduced-motion</b> —
+          bei aktivierter Systemeinstellung steht Applo ruhig da. Die Bewegung ist reines CSS auf
+          der Vektorgrafik, also ohne Video oder GIF, beliebig skalierbar und in jeder Farbe einsetzbar.
+        </span>
+      </div>
+
+      <p className="foot">SmartApply · Maskottchen „Applo" — Feature-Motion-Set</p>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Page/>);
+</script>
+</body>
+</html>
