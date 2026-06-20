@@ -102,7 +102,6 @@ export class FeatureGuard implements CanActivate {
       'advancedAnalytics',
       'interviewCoach',
       'linkedinImport',
-      'autoApplyAgent',
       'emailParsing',
       'prioritySupport',
     ];

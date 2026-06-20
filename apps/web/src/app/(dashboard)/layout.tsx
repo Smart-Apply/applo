@@ -27,9 +27,7 @@ import {
   Home,
   Settings,
   MessagesSquare,
-  Sparkles,
   BarChart3,
-  Zap,
 } from 'lucide-react';
 import { EmailVerificationBanner } from '@/components/auth/email-verification-banner';
 
@@ -49,8 +47,6 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Profil', href: '/profile', icon: User },
   { name: 'Bewerbungen', href: '/applications', icon: FileText },
-  { name: 'Job-Suche', href: '/job-search', icon: Sparkles, requiresFeature: 'linkedinImport' },
-  { name: 'Auto-Apply', href: '/auto-apply', icon: Zap, requiresFeature: 'autoApplyAgent' },
   { name: 'Analytics', href: '/analytics', icon: BarChart3, requiresFeature: 'advancedAnalytics' },
   { name: 'Interview-Coach', href: '/interviews', icon: MessagesSquare, requiresFeature: 'interviewCoach' },
   { name: 'Einstellungen', href: '/settings', icon: Settings },

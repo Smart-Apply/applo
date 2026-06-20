@@ -1155,27 +1155,6 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          {/* ── Empfohlene Stellen ── */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-semibold text-foreground">Empfohlene Stellen</h2>
-              <Link
-                href="/job-search"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Alle anzeigen
-              </Link>
-            </div>
-
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              Starte eine{' '}
-              <Link href="/job-search" className="font-medium text-primary hover:underline">
-                Job-Suche
-              </Link>{' '}
-              um Empfehlungen basierend auf deinem Profil zu erhalten.
-            </p>
-          </div>
-
           {/* ── Sprachen ── */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
