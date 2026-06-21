@@ -598,17 +598,14 @@ export default function ProfilePage() {
   const cvUploading = parseResume.isPending || updateProfile.isPending;
 
   const [scrolled, setScrolled] = useState(false);
-  const pageTopRef = useRef<HTMLDivElement>(null);
+  // The dashboard layout's <main> grows to fit its content (the md:h-screen is
+  // overridden by the surrounding flex column), so the window is what actually
+  // scrolls — not <main>. Watch window scroll position directly.
   useEffect(() => {
-    const el = pageTopRef.current;
-    const scrollContainer = el?.closest('main') ?? null;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setScrolled(!entry.isIntersecting),
-      { root: scrollContainer, threshold: 0 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    const onScroll = () => setScrolled(window.scrollY > 300);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const handleCvUpload = useCallback(
@@ -775,7 +772,9 @@ export default function ProfilePage() {
       { id: 'about', msg: <>Dein <b>Steckbrief</b> ist mein wichtigster Input. 2–3 Sätze über deine Stärken reichen — den Rest formuliere ich pro Stelle neu.</> },
       { id: 'experience', msg: <>Bei der <b>Berufserfahrung</b> zählen konkrete Erfolge mit Zahlen. Ich hebe automatisch hervor, was zur jeweiligen Stelle passt.</> },
       { id: 'skills', msg: <>Pflege deine <b>Fähigkeiten</b> — Recruiter filtern zuerst danach, und ich matche dich gezielter auf passende Stellen.</> },
-      { id: 'education', msg: <>Zum Schluss deine <b>Ausbildung</b> — sie rundet das Profil ab und schaltet weitere Stellenfilter frei.</> },
+      { id: 'education', msg: <>Deine <b>Ausbildung</b> rundet das Profil ab und schaltet weitere Stellenfilter frei.</> },
+      { id: 'projects', msg: <>Mit <b>Projekten</b> zeigst du, was du praktisch draufhast — gerade ohne lange Berufserfahrung ein starkes Argument. Ich greife sie passend zur Stelle auf.</> },
+      { id: 'certificates', msg: <>Zum Schluss deine <b>Zertifikate</b> — sie belegen dein Können offiziell. Ich erwähne sie dort, wo sie für die Stelle den Unterschied machen.</> },
     ],
     [],
   );
@@ -907,7 +906,6 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-5 pb-10">
-      <div ref={pageTopRef} className="h-0" />
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -1317,9 +1315,11 @@ export default function ProfilePage() {
 
           {/* Projekte */}
           <CollapsibleCard
+            cardRef={setRef('projects')}
             icon={FolderKanban}
             title="Projekte"
             meta={(profile?.projects?.length ?? 0) > 0 ? `${profile!.projects!.length} Projekte` : undefined}
+            active={activeSection === 'projects'}
             open={isOpen('projects')}
             onToggle={() => toggleSection('projects')}
           >
@@ -1393,9 +1393,11 @@ export default function ProfilePage() {
 
           {/* Zertifikate */}
           <CollapsibleCard
+            cardRef={setRef('certificates')}
             icon={Award}
             title="Zertifikate"
             meta={(profile?.certificates?.length ?? 0) > 0 ? `${profile!.certificates!.length} Zertifikate` : undefined}
+            active={activeSection === 'certificates'}
             open={isOpen('certificates')}
             onToggle={() => toggleSection('certificates')}
           >
@@ -1567,7 +1569,7 @@ export default function ProfilePage() {
       {/* ── Floating "back to top" during tour ── */}
       <button
         type="button"
-        onClick={() => pageTopRef.current?.scrollIntoView({ behavior: 'smooth' })}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         className={cn(
           'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full border border-[#0c1d3f] bg-[#0c1d3f] px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:bg-[#162d5a]',
           scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none',
