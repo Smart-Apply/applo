@@ -1464,13 +1464,13 @@ export default function ProfilePage() {
                 <Sparkles className="h-4 w-4 text-primary" />
                 <h2 className="font-semibold text-foreground">Profil-Check</h2>
               </div>
-              <span className={cn('text-xl font-bold tabular-nums', isComplete ? 'text-green-600' : 'text-primary')}>
+              <span className={cn('text-xl font-bold tabular-nums', 'text-primary')}>
                 {profileStrength}%
               </span>
             </div>
             <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
               <div
-                className={cn('h-full rounded-full transition-all duration-500', isComplete ? 'bg-green-600' : 'bg-primary')}
+                className={cn('h-full rounded-full transition-all duration-500', 'bg-primary')}
                 style={{ width: `${profileStrength}%` }}
               />
             </div>
