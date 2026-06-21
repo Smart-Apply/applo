@@ -17,6 +17,9 @@ import type {
   Template,
   TemplateWithContent,
   ApplicationKeywordsResponse,
+  Validation,
+  ValidationSummary,
+  CreateValidationInput,
   UserPreferences,
   UpdateUserPreferencesDto,
   PaginatedResponse,
@@ -976,6 +979,39 @@ export const api = {
 
     getKeywordsAnalysis: (id: string) =>
       apiRequest<ApplicationKeywordsResponse>(`/applications/${id}/keywords`),
+  },
+
+  // Standalone application check (AI quality + ATS review of the user's OWN,
+  // externally-created application). Metered: Free 5/month, Pro+ unlimited.
+  validation: {
+    // Non-idempotent + metered — never auto-retry a network blip, or a run that
+    // already spent quota server-side would re-spend it.
+    create: (data: CreateValidationInput) =>
+      apiRequest<Validation>('/validation', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        retry: false,
+      }),
+
+    // Extract plain text from an uploaded PDF/DOCX so the user can upload
+    // instead of copy-pasting. No AI, not metered.
+    extractText: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return apiRequestFormData<{ text: string }>('/validation/extract-text', {
+        method: 'POST',
+        body: formData,
+      });
+    },
+
+    list: () => apiRequest<ValidationSummary[]>('/validation'),
+
+    getById: (id: string) => apiRequest<Validation>(`/validation/${id}`),
+
+    delete: (id: string) =>
+      apiRequest<void>(`/validation/${id}`, {
+        method: 'DELETE',
+      }),
   },
 
   // Sessions

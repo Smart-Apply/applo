@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@ta
 import { api } from '@/lib/api-client';
 import { toastSuccess, toastError } from '@/lib/toast';
 import type { Application, ResumeData } from '@/types';
-
 /**
  * Hook to fetch all applications
  */

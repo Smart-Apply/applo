@@ -96,6 +96,69 @@ const jobFactsSchema = {
   },
 } as const;
 
+const applicationValidationSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: [
+    'overallScore',
+    'atsScore',
+    'verdict',
+    'summary',
+    'categories',
+    'blockers',
+    'recommendations',
+    'strengths',
+  ],
+  properties: {
+    overallScore: { type: 'integer', minimum: 0, maximum: 100 },
+    atsScore: { type: 'integer', minimum: 0, maximum: 100 },
+    verdict: { type: 'string', enum: ['strong', 'good', 'needs_work'] },
+    summary: { type: 'string' },
+    categories: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['id', 'label', 'score', 'status'],
+        properties: {
+          id: {
+            type: 'string',
+            enum: ['job_match', 'ats_readability', 'impact', 'clarity', 'completeness'],
+          },
+          label: { type: 'string' },
+          score: { type: 'integer', minimum: 0, maximum: 100 },
+          status: { type: 'string', enum: ['pass', 'warn', 'fail'] },
+        },
+      },
+    },
+    blockers: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['title', 'detail'],
+        properties: {
+          title: { type: 'string' },
+          detail: { type: 'string' },
+        },
+      },
+    },
+    recommendations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['title', 'detail'],
+        properties: {
+          title: { type: 'string' },
+          detail: { type: 'string' },
+        },
+      },
+    },
+    strengths: { type: 'array', items: { type: 'string' } },
+  },
+} as const;
+
 /**
  * Registry mapping a prompt template path (suffix-matched) to the strict JSON
  * schema that constrains its output. Consulted by `LLMService.callJson` so call
@@ -105,6 +168,11 @@ const SCHEMA_REGISTRY: { match: string; name: string; schema: Record<string, unk
   { match: 'v1/ats-keywords.md', name: 'ats_keywords', schema: atsKeywordsSchema },
   { match: 'v1/resume-rewrite.md', name: 'resume_rewrite', schema: resumeRewriteSchema },
   { match: 'v1/job-facts.md', name: 'job_facts', schema: jobFactsSchema },
+  {
+    match: 'v1/application-validation.md',
+    name: 'application_validation',
+    schema: applicationValidationSchema,
+  },
 ];
 
 /**
@@ -131,4 +199,9 @@ export function resolveResponseFormat(
   return undefined;
 }
 
-export const __testSchemas = { atsKeywordsSchema, resumeRewriteSchema, jobFactsSchema };
+export const __testSchemas = {
+  atsKeywordsSchema,
+  resumeRewriteSchema,
+  jobFactsSchema,
+  applicationValidationSchema,
+};

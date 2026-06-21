@@ -25,6 +25,10 @@ export interface TierLimits {
   jobParsingPerMonth: number; // URL parsing limit
   interviewSessionsPerMonth: number;
 
+  // Application validation (KI quality + ATS check of an existing application).
+  // Free gets a monthly taster; Pro and above are unlimited. -1 = unlimited.
+  validationsPerMonth: number;
+
   // Cost-protection cap (rolling 24h window): one "application" =
   // create-with-generation call. -1 = unlimited.
   applicationsPerDay: number;
@@ -70,6 +74,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: 3,
     jobParsingPerMonth: 10,
     interviewSessionsPerMonth: 0,
+    validationsPerMonth: 5,
     applicationsPerDay: 5,
     priority: 'low',
     features: {
@@ -96,6 +101,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: 50,
     jobParsingPerMonth: -1, // Unlimited
     interviewSessionsPerMonth: 0, // Not included in Pro
+    validationsPerMonth: -1, // Unlimited
     applicationsPerDay: -1,
     priority: 'normal',
     features: {
@@ -122,6 +128,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: -1, // Unlimited
     jobParsingPerMonth: -1, // Unlimited
     interviewSessionsPerMonth: -1, // Unlimited
+    validationsPerMonth: -1, // Unlimited
     applicationsPerDay: -1,
     priority: 'high',
     features: {
@@ -302,7 +309,7 @@ export class SubscriptionService {
    */
   async canPerformAction(
     userId: string,
-    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview',
+    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview' | 'validation',
   ): Promise<CanPerformActionResult> {
     const subscription = await this.getOrCreateSubscription(userId);
     const limits = this.getTierLimits(subscription.tier);
@@ -344,6 +351,11 @@ export class SubscriptionService {
         limit = limits.interviewSessionsPerMonth;
         actionName = 'Interview-Sessions';
         break;
+      case 'validation':
+        used = usage.validationsUsed;
+        limit = limits.validationsPerMonth;
+        actionName = 'Bewerbungs-Validierungen';
+        break;
     }
 
     // -1 means unlimited
@@ -380,7 +392,7 @@ export class SubscriptionService {
    */
   async recordUsage(
     userId: string,
-    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview',
+    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview' | 'validation',
   ): Promise<void> {
     const subscription = await this.getOrCreateSubscription(userId);
     let usage = await this.ensureCurrentUsagePeriod(subscription.id);
@@ -409,6 +421,9 @@ export class SubscriptionService {
         break;
       case 'interview':
         updateData.interviewSessionsUsed = { increment: 1 };
+        break;
+      case 'validation':
+        updateData.validationsUsed = { increment: 1 };
         break;
     }
 
@@ -463,6 +478,14 @@ export class SubscriptionService {
           limits.interviewSessionsPerMonth === -1
             ? -1
             : Math.max(0, limits.interviewSessionsPerMonth - usage.interviewSessionsUsed),
+      },
+      validations: {
+        used: usage.validationsUsed,
+        limit: limits.validationsPerMonth,
+        remaining:
+          limits.validationsPerMonth === -1
+            ? -1
+            : Math.max(0, limits.validationsPerMonth - usage.validationsUsed),
       },
       // Daily application cap (rolling 24h window, cost protection)
       applicationsToday: {
@@ -526,6 +549,7 @@ export class SubscriptionService {
           resumesGenerated: 0,
           jobParsingUsed: 0,
           interviewSessionsUsed: 0,
+          validationsUsed: 0,
         },
       });
     }
@@ -544,6 +568,7 @@ export class SubscriptionService {
           resumesGenerated: 0,
           jobParsingUsed: 0,
           interviewSessionsUsed: 0,
+          validationsUsed: 0,
         },
       });
     }

@@ -13,6 +13,7 @@ import { JobPostingsModule } from './job-postings/job-postings.module';
 import { PdfModule } from './pdf/pdf.module';
 import { JobsModule } from './jobs/jobs.module';
 import { ApplicationsModule } from './applications/applications.module';
+import { ValidationModule } from './validation/validation.module';
 import { TemplatesModule } from './templates/templates.module';
 import { UserPreferencesModule } from './user-preferences/user-preferences.module';
 import { HealthModule } from './health/health.module';
@@ -105,6 +106,7 @@ import { InviteCodeModule } from './invite-codes/invite-codes.module';
     PdfModule,
     JobsModule,
     ApplicationsModule,
+    ValidationModule,
     TemplatesModule,
     UserPreferencesModule,
     InterviewsModule,

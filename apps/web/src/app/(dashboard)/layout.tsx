@@ -28,6 +28,7 @@ import {
   Settings,
   MessagesSquare,
   BarChart3,
+  ShieldCheck,
 } from 'lucide-react';
 import { EmailVerificationBanner } from '@/components/auth/email-verification-banner';
 
@@ -47,6 +48,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Profil', href: '/profile', icon: User },
   { name: 'Bewerbungen', href: '/applications', icon: FileText },
+  { name: 'Bewerbungs-Check', href: '/validate', icon: ShieldCheck },
   { name: 'Analytics', href: '/analytics', icon: BarChart3, requiresFeature: 'advancedAnalytics' },
   { name: 'Interview-Coach', href: '/interviews', icon: MessagesSquare, requiresFeature: 'interviewCoach' },
   { name: 'Einstellungen', href: '/settings', icon: Settings },

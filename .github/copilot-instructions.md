@@ -207,6 +207,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `templates` — template catalog
 - `uploads` — file uploads
 - `user-preferences` — per-user settings
+- `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Smart Apply. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 5/month, Pro+ unlimited); usage recorded only after success. Each check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
 
 ## Frontend Structure
 - `app/` (App Router with route groups)
@@ -233,9 +234,10 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 16 models in `apps/api/prisma/schema.prisma`:
 - **User**, **Profile**, **Skill**, **Experience**, **Education**, **Certificate**, **Project**, **Language**
 - **JobPosting**, **Application**, **ResumeTemplate**, **Interview**
+- **Validation** (Bewerbungs-Check — standalone AI check of an external application; inputs + cached result, scoped to user)
 - **RefreshToken**, **Session** (auth/security)
 - **InviteCode** (closed-beta gate — hashed, single-use, optional expiry)
-- **Subscription** (plans & usage)
+- **Subscription** (plans & usage) — `SubscriptionUsage.validationsUsed` tracks the monthly Bewerbungs-Check count (Free 5/month, Pro+ unlimited via `validationsPerMonth`)
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
 
@@ -442,8 +444,20 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
 **GET /api/v1/applications/:id/stream**
 - **SSE** stream of pipeline status updates (PENDING → GENERATING → READY/FAILED)
 
-### Rate Limiting
+### Validation — Bewerbungs-Check (Protected)
 
+Standalone AI quality + ATS check of an application the user created **outside** Smart Apply. Not tied to a generated `Application`/`JobPosting`.
+
+**POST /api/v1/validation**
+- Body: `{ resumeText (required), coverLetterText?, jobContext?, language?, title? }` — all `@Sanitize()`d, DTO length-capped (résumé ≤ 24k, cover letter ≤ 12k, jobContext ≤ 24k chars).
+- Runs `v1/application-validation.md` (strict `json_schema`); returns a `Validation` record (inputs + `ApplicationValidationResult`).
+- Metered via `UsageLimitGuard` + `@CheckUsage('validation')`: **Free = 5/month, Pro & above = unlimited** (`validationsPerMonth`). Usage recorded only after success.
+
+**GET /api/v1/validation** — history (newest first, lightweight `ValidationSummary[]`).
+**GET /api/v1/validation/:id** — a single check (inputs + result), ownership-scoped.
+**DELETE /api/v1/validation/:id** — delete a check.
+
+### Rate Limiting
 - **Auth endpoints** (register, login): 5 attempts / 15 minutes (strict)
 - **CSRF token endpoint**: 100 requests / 15 minutes (default, NOT strict)
 - **All other endpoints**: 100 requests / 15 minutes (default)
@@ -508,7 +522,7 @@ PUT /api/v1/profile
 > See [docs/implementation/LLM_OUTPUT_QUALITY.md](../docs/implementation/LLM_OUTPUT_QUALITY.md) for the LLM output-quality roadmap (the 10 improvements to generated CVs/cover letters) and its living status tracker.
 
 ## Prompt Templates
-The active generation prompts live under `apps/api/prompts/v1/*` and are described in the **Application Pipeline** above: `skill-selector`, `job-facts`, `cover-letter`, `resume`, `resume-rewrite`, `ats-keywords`, `editor-cover-letter`, `editor-resume`, `keyword-weave`. The legacy top-level `cover-letter.md`, `resume.md`, `cover-letter-ats.md` and `resume-ats.md` prompts were **retired (#2)**. The editor's "regenerate cover letter" action now reuses `v1/cover-letter.md` via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile` maps the saved editor resume back into the `TailoredProfileDto` the v1 prompt expects), so there is a single cover-letter generation path.
+The active generation prompts live under `apps/api/prompts/v1/*` and are described in the **Application Pipeline** above: `skill-selector`, `job-facts`, `cover-letter`, `resume`, `resume-rewrite`, `ats-keywords`, `editor-cover-letter`, `editor-resume`, `keyword-weave`. A separate on-demand `application-validation` prompt (strict `json_schema`) powers `POST /validation` (the standalone Bewerbungs-Check of an application the user created outside Smart Apply; not part of the create pipeline). The legacy top-level `cover-letter.md`, `resume.md`, `cover-letter-ats.md` and `resume-ats.md` prompts were **retired (#2)**. The editor's "regenerate cover letter" action now reuses `v1/cover-letter.md` via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile` maps the saved editor resume back into the `TailoredProfileDto` the v1 prompt expects), so there is a single cover-letter generation path.
 
 ## Validation & Errors
 - DTO validation (class-validator or Zod)

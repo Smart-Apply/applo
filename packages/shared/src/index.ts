@@ -77,6 +77,8 @@ export interface SubscriptionUsageStats {
   status: SubscriptionStatus;
   applications: UsageStat;
   interviewSessions: UsageStat;
+  /** Monthly cap on AI application validations (Free: 5, Pro+: unlimited) */
+  validations?: UsageStat;
   /** Rolling 24h cap on full application generations (cost protection) */
   applicationsToday?: DailyUsageStat;
   periodStart: string;
@@ -376,6 +378,106 @@ export interface Application {
   createdAt: string;
   updatedAt: string;
   jobPosting?: JobPosting;
+}
+
+// ============================================
+// Application Validation (AI quality + ATS review)
+// ============================================
+
+/** Headline verdict for a validated application. */
+export type ApplicationValidationVerdict = 'strong' | 'good' | 'needs_work';
+
+/** Per-category traffic-light status. */
+export type ApplicationValidationStatus = 'pass' | 'warn' | 'fail';
+
+/** Fixed set of categories every validation scores. */
+export type ApplicationValidationCategoryId =
+  | 'job_match'
+  | 'ats_readability'
+  | 'impact'
+  | 'clarity'
+  | 'completeness';
+
+export interface ApplicationValidationCategory {
+  id: ApplicationValidationCategoryId;
+  /** Localized human-readable label. */
+  label: string;
+  /** 0-100 score for this category. */
+  score: number;
+  status: ApplicationValidationStatus;
+}
+
+export interface ApplicationValidationIssue {
+  title: string;
+  detail: string;
+}
+
+/**
+ * Structured result of an AI quality + ATS review of an application
+ * (résumé + optional cover letter). Produced by `POST /validation`.
+ */
+export interface ApplicationValidationResult {
+  /** Holistic quality of the application (0-100). */
+  overallScore: number;
+  /** Heuristic ATS keyword/structure friendliness estimate (0-100), not a real ATS parse. */
+  atsScore: number;
+  verdict: ApplicationValidationVerdict;
+  /** 1-2 sentence headline takeaway. */
+  summary: string;
+  categories: ApplicationValidationCategory[];
+  /** Critical issues to fix before sending. */
+  blockers: ApplicationValidationIssue[];
+  /** Non-blocking, concrete improvements. */
+  recommendations: ApplicationValidationIssue[];
+  /** What already works well. */
+  strengths: string[];
+  /** ISO timestamp the validation was produced. */
+  validatedAt?: string;
+}
+
+/**
+ * Input for a standalone application check: the user's own externally-created
+ * documents. `resumeText` is required; everything else is optional context.
+ * Sent to `POST /validation`.
+ */
+export interface CreateValidationInput {
+  /** The user's résumé / CV as plain text (pasted or extracted from a file). */
+  resumeText: string;
+  /** Optional cover letter text. */
+  coverLetterText?: string;
+  /** Optional target role and/or pasted job posting to evaluate fit against. */
+  jobContext?: string;
+  /** Optional language override (ISO 639-1). Auto-detected when omitted. */
+  language?: string;
+  /** Optional user-facing label for this check. */
+  title?: string;
+}
+
+/**
+ * A persisted standalone application check (history record). Stores the inputs
+ * plus the AI result so it can be revisited without re-spending quota.
+ */
+export interface Validation {
+  id: string;
+  /** Optional user-facing label (e.g. "Bewerbungs-Check · 20.06.2026"). */
+  title?: string;
+  resumeText: string;
+  coverLetterText?: string;
+  jobContext?: string;
+  language?: string;
+  result: ApplicationValidationResult;
+  /** Overall score (0-100), denormalized for the history list. */
+  score: number;
+  createdAt: string;
+}
+
+/** Lightweight history-list item (omits the heavy input/result blobs). */
+export interface ValidationSummary {
+  id: string;
+  title?: string;
+  score: number;
+  verdict: ApplicationValidationVerdict;
+  createdAt: string;
 }
 
 export interface ApplicationStatusResponse {

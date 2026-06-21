@@ -83,7 +83,8 @@ smart-apply/
 │   │   │   ├── subscription/      # Plans & usage limits
 │   │   │   ├── templates/         # Template catalog
 │   │   │   ├── uploads/           # Upload endpoints
-│   │   │   └── user-preferences/  # Per-user settings
+│   │   │   ├── user-preferences/  # Per-user settings
+│   │   │   └── validation/        # Bewerbungs-Check (review external applications)
 │   │   ├── prisma/                # Schema, migrations, seeds
 │   │   └── test/                  # Unit / integration / e2e
 │   │
@@ -212,6 +213,7 @@ recorded baselines live in
 | **Language**       | Language proficiency                   |
 | **JobPosting**     | Parsed job listings                    |
 | **Application**    | Generated applications + PDFs          |
+| **Validation**     | Standalone AI check of an external application |
 | **ResumeTemplate** | PDF templates (50 variants)            |
 | **Interview**      | AI-generated interview Q&A             |
 | **RefreshToken**   | Rotated refresh tokens                 |
@@ -350,6 +352,8 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET/POST | `/applications`                | Application pipeline     |
 | GET      | `/applications/:id/files`      | SAS download URLs        |
 | GET      | `/applications/:id/stream`     | SSE status stream        |
+| POST     | `/validation`                  | Check an external application (AI quality + ATS; Free 5/mo, Pro+ unlimited) |
+| GET      | `/validation`                  | Validation history       |
 | POST     | `/interviews`                  | Generate mock interview  |
 | POST     | `/interviews/:id/voice/session`    | Mint voice (realtime) session (Premium) |
 | POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Premium) |
