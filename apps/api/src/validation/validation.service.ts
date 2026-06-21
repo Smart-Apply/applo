@@ -1,8 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { LLMService } from '../llm/llm.service';
 import { SubscriptionService } from '../subscription/subscription.service';
+import { PdfParser } from '../job-postings/parsers/pdf.parser';
+import { DocxParser } from '../job-postings/parsers/docx.parser';
 import { ErrorCode } from '../common/constants/error-codes';
 import { NotFoundWithCode } from '../common/exceptions/coded-http.exception';
 import { CreateValidationDto } from './dto/create-validation.dto';
@@ -12,6 +14,8 @@ import type {
   ValidationSummary,
 } from '@smart-apply/shared';
 
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
 @Injectable()
 export class ValidationService {
   private readonly logger = new Logger(ValidationService.name);
@@ -20,7 +24,27 @@ export class ValidationService {
     private readonly prisma: PrismaService,
     private readonly llmService: LLMService,
     private readonly subscriptionService: SubscriptionService,
+    private readonly pdfParser: PdfParser,
+    private readonly docxParser: DocxParser,
   ) {}
+
+  /**
+   * Extract plain text from an uploaded PDF or DOCX so the user can run a check
+   * on an existing document without copy-pasting. No LLM, no persistence.
+   */
+  async extractText(buffer: Buffer, mimeType: string): Promise<{ text: string }> {
+    let text: string;
+    if (mimeType === 'application/pdf') {
+      text = await this.pdfParser.parse(buffer);
+    } else if (mimeType === DOCX_MIME) {
+      text = await this.docxParser.parse(buffer);
+    } else {
+      throw new BadRequestException(
+        'Nicht unterstützter Dateityp. Bitte lade eine PDF- oder DOCX-Datei hoch.',
+      );
+    }
+    return { text: text.trim() };
+  }
 
   /**
    * Run a standalone AI quality + ATS check on an application the user created

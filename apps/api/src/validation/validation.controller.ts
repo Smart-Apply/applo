@@ -6,10 +6,24 @@ import {
   Body,
   Param,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UsageLimitGuard } from '../common/guards/usage-limit.guard';
 import { EmailVerifiedGuard } from '../common/guards/email-verified.guard';
@@ -25,6 +39,48 @@ import type { Validation, ValidationSummary } from '@smart-apply/shared';
 @Controller('validation')
 export class ValidationController {
   constructor(private readonly validationService: ValidationService) {}
+
+  @Post('extract-text')
+  @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20 uploads/min
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({
+    summary: 'Extract plain text from an uploaded PDF/DOCX',
+    description:
+      'Extracts the raw text from an uploaded résumé or cover letter (PDF or DOCX) so the user can ' +
+      'run a Bewerbungs-Check without copy-pasting. No AI, not metered.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: { type: 'string', format: 'binary', description: 'PDF or DOCX file (max 10MB)' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Extracted text' })
+  @ApiResponse({ status: 400, description: 'Invalid file type or size' })
+  async extractText(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 10 * 1024 * 1024,
+            message: 'Die Datei ist zu groß. Bitte lade eine Datei mit maximal 10 MB hoch.',
+          }),
+          new FileTypeValidator({
+            fileType: /(pdf|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/,
+          }),
+        ],
+        fileIsRequired: true,
+        errorHttpStatusCode: 400,
+      }),
+    )
+    file: Express.Multer.File,
+  ): Promise<{ text: string }> {
+    return this.validationService.extractText(file.buffer, file.mimetype);
+  }
 
   @Post()
   @UseGuards(EmailVerifiedGuard, UsageLimitGuard)

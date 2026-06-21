@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FileUpload } from '@/components/ui/file-upload';
 import {
   Select,
   SelectContent,
@@ -28,6 +29,8 @@ import {
   useDeleteValidation,
 } from '@/hooks/use-validations';
 import { useSubscription } from '@/hooks/use-subscription';
+import { api } from '@/lib/api-client';
+import { toastSuccess, toastError } from '@/lib/toast';
 import { formatDate } from '@/lib/format-date';
 import type { ApplicationValidationVerdict } from '@/types';
 
@@ -52,6 +55,8 @@ function verdictDot(verdict: ApplicationValidationVerdict): string {
 export default function ValidatePage() {
   const [language, setLanguage] = useState<string>('auto');
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [resumeUploading, setResumeUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
 
   const { subscription, tier } = useSubscription();
   const { data: history, isLoading: historyLoading } = useValidations();
@@ -67,8 +72,26 @@ export default function ValidatePage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  const handleFileUpload = async (
+    file: File,
+    field: 'resumeText' | 'coverLetterText',
+    setUploading: (v: boolean) => void,
+  ) => {
+    setUploading(true);
+    try {
+      const { text } = await api.validation.extractText(file);
+      setValue(field, text, { shouldValidate: true, shouldDirty: true });
+      toastSuccess('Text aus Datei übernommen');
+    } catch (err) {
+      toastError(err, 'Die Datei konnte nicht gelesen werden');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const onSubmit = (values: FormValues) => {
     createValidation.mutate(
@@ -140,10 +163,15 @@ export default function ValidatePage() {
                 <Label htmlFor="resumeText">
                   Lebenslauf <span className="text-red-500">*</span>
                 </Label>
+                <FileUpload
+                  onFileSelect={(file) => handleFileUpload(file, 'resumeText', setResumeUploading)}
+                  isUploading={resumeUploading}
+                  hint="PDF oder DOCX hochladen — oder Text unten einfügen (max. 10 MB)"
+                />
                 <Textarea
                   id="resumeText"
                   rows={10}
-                  placeholder="Füge hier den Text deines Lebenslaufs ein…"
+                  placeholder="… oder füge hier den Text deines Lebenslaufs ein…"
                   {...register('resumeText')}
                 />
                 {errors.resumeText && (
@@ -153,10 +181,17 @@ export default function ValidatePage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="coverLetterText">Anschreiben (optional)</Label>
+                <FileUpload
+                  onFileSelect={(file) =>
+                    handleFileUpload(file, 'coverLetterText', setCoverUploading)
+                  }
+                  isUploading={coverUploading}
+                  hint="PDF oder DOCX hochladen — oder Text unten einfügen (max. 10 MB)"
+                />
                 <Textarea
                   id="coverLetterText"
                   rows={6}
-                  placeholder="Optional: Text deines Anschreibens…"
+                  placeholder="… oder füge hier den Text deines Anschreibens ein…"
                   {...register('coverLetterText')}
                 />
                 {errors.coverLetterText && (

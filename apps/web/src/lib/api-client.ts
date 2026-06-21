@@ -993,6 +993,17 @@ export const api = {
         retry: false,
       }),
 
+    // Extract plain text from an uploaded PDF/DOCX so the user can upload
+    // instead of copy-pasting. No AI, not metered.
+    extractText: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return apiRequestFormData<{ text: string }>('/validation/extract-text', {
+        method: 'POST',
+        body: formData,
+      });
+    },
+
     list: () => apiRequest<ValidationSummary[]>('/validation'),
 
     getById: (id: string) => apiRequest<Validation>(`/validation/${id}`),
