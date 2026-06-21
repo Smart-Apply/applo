@@ -180,6 +180,7 @@ const ProfileApplo = () => {
             <div className="pf-nav-item"><I.home size={17} />Dashboard</div>
             <div className="pf-nav-item pf-nav-item--active"><I.user size={17} />Profil</div>
             <div className="pf-nav-item"><I.doc size={17} />Bewerbungen<span className="pf-nav-badge">7</span></div>
+
             <div className="pf-nav-item"><I.chart size={17} />Analytics</div>
             <div className="pf-nav-item"><I.chat size={17} />Interview-Coach</div>
             <div className="pf-nav-item"><I.cog size={17} />Einstellungen</div>

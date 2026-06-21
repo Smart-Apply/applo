@@ -180,6 +180,7 @@
                  wird nur über die jeweilige state-* Klasse gezeigt.
                ====================================================== */}
 
+>>>>>>> origin/main
             {/* ---- TOOL: Applo spricht mit dem Nutzer (Interview-Coach / coach) ---- */}
             <g className="tool-coach">
               {/* offene, erklärende Handgeste */}
@@ -194,6 +195,7 @@
               </g>
             </g>
 
+>>>>>>> origin/main
           </g>{/* /rig */}
         </g>{/* /root-float */}
       </svg>

@@ -519,6 +519,7 @@ function CollapsibleCard({
   active = false,
   open,
   onToggle,
+  collapsible = true,
   onAsk,
   action,
   children,
@@ -530,6 +531,7 @@ function CollapsibleCard({
   active?: boolean;
   open: boolean;
   onToggle: () => void;
+  collapsible?: boolean;
   onAsk?: () => void;
   action?: ReactNode;
   children: ReactNode;
@@ -539,22 +541,24 @@ function CollapsibleCard({
       ref={cardRef}
       className={cn(
         'scroll-mt-24 rounded-2xl border bg-card shadow-sm transition-all duration-200',
-        active ? 'border-primary/40 ring-2 ring-primary/15' : 'border-border',
+        active ? 'tour-active border-[#2563eb]' : 'border-border',
       )}
     >
       <div className="flex items-center gap-2.5 px-6 py-5">
         <button
           type="button"
-          onClick={onToggle}
-          aria-expanded={open}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          onClick={collapsible ? onToggle : undefined}
+          aria-expanded={collapsible ? open : undefined}
+          className={cn('flex min-w-0 flex-1 items-center gap-2 text-left', !collapsible && 'cursor-default')}
         >
-          <ChevronDown
-            className={cn(
-              'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
-              open ? '' : '-rotate-90',
-            )}
-          />
+          {collapsible && (
+            <ChevronDown
+              className={cn(
+                'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+                open ? '' : '-rotate-90',
+              )}
+            />
+          )}
           <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
           <h2 className="font-semibold text-foreground">{title}</h2>
           {meta && <span className="text-sm text-muted-foreground">{meta}</span>}
@@ -602,11 +606,24 @@ export default function ProfilePage() {
   const [tourStep, setTourStep] = useState<number | null>(null);
   const [introDone, setIntroDone] = useState(false);
   const [celebrated, setCelebrated] = useState(false);
-  // Section ids the user has collapsed (empty = everything expanded).
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  // Section ids the user has collapsed; all except "about" start collapsed.
+  const [collapsed, setCollapsed] = useState<Set<string>>(
+    () => new Set(['experience', 'skills', 'education', 'projects', 'certificates', 'languages']),
+  );
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const cvUploading = parseResume.isPending || updateProfile.isPending;
+
+  const [scrolled, setScrolled] = useState(false);
+  // The dashboard layout's <main> grows to fit its content (the md:h-screen is
+  // overridden by the surrounding flex column), so the window is what actually
+  // scrolls — not <main>. Watch window scroll position directly.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 300);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleCvUpload = useCallback(
     async (file: File) => {
@@ -772,7 +789,9 @@ export default function ProfilePage() {
       { id: 'about', msg: <>Dein <b>Steckbrief</b> ist mein wichtigster Input. 2–3 Sätze über deine Stärken reichen — den Rest formuliere ich pro Stelle neu.</> },
       { id: 'experience', msg: <>Bei der <b>Berufserfahrung</b> zählen konkrete Erfolge mit Zahlen. Ich hebe automatisch hervor, was zur jeweiligen Stelle passt.</> },
       { id: 'skills', msg: <>Pflege deine <b>Fähigkeiten</b> — Recruiter filtern zuerst danach, und ich matche dich gezielter auf passende Stellen.</> },
-      { id: 'education', msg: <>Zum Schluss deine <b>Ausbildung</b> — sie rundet das Profil ab und schaltet weitere Stellenfilter frei.</> },
+      { id: 'education', msg: <>Deine <b>Ausbildung</b> rundet das Profil ab und schaltet weitere Stellenfilter frei.</> },
+      { id: 'projects', msg: <>Mit <b>Projekten</b> zeigst du, was du praktisch draufhast — gerade ohne lange Berufserfahrung ein starkes Argument. Ich greife sie passend zur Stelle auf.</> },
+      { id: 'certificates', msg: <>Zum Schluss deine <b>Zertifikate</b> — sie belegen dein Können offiziell. Ich erwähne sie dort, wo sie für die Stelle den Unterschied machen.</> },
     ],
     [],
   );
@@ -899,7 +918,7 @@ export default function ProfilePage() {
   const sectionCard = (id: string) =>
     cn(
       'scroll-mt-24 rounded-2xl border bg-card p-6 shadow-sm transition-all duration-200',
-      activeSection === id ? 'border-primary/40 ring-2 ring-primary/15' : 'border-border',
+      activeSection === id ? 'tour-active border-[#2563eb]' : 'border-border',
     );
 
   return (
@@ -925,10 +944,12 @@ export default function ProfilePage() {
       </div>
 
       {/* ── Applo coach ── */}
+      {tourStep !== null && <div className="h-[188px] sm:h-[196px]" />}
       <div
         className={cn(
           'relative overflow-hidden rounded-2xl border bg-card p-4 shadow-sm sm:p-5',
           isComplete ? 'border-green-200' : 'border-border',
+          tourStep !== null && 'fixed left-4 right-4 top-4 z-30 shadow-xl md:left-[336px]',
         )}
       >
         <div
@@ -1121,8 +1142,9 @@ export default function ProfilePage() {
             title="Über mich"
             meta={profile?.summary ? `${profile.summary.length} Zeichen` : undefined}
             active={activeSection === 'about'}
-            open={isOpen('about')}
-            onToggle={() => toggleSection('about')}
+            open={true}
+            onToggle={() => {}}
+            collapsible={false}
             onAsk={() => setActiveSection('about')}
             action={
               <button
@@ -1311,9 +1333,12 @@ export default function ProfilePage() {
 
           {/* Projekte */}
           <CollapsibleCard
+            cardRef={setRef('projects')}
             icon={FolderKanban}
             title="Projekte"
             meta={(profile?.projects?.length ?? 0) > 0 ? `${profile!.projects!.length} Projekte` : undefined}
+            active={activeSection === 'projects'}
+            onAsk={() => setActiveSection('projects')}
             open={isOpen('projects')}
             onToggle={() => toggleSection('projects')}
           >
@@ -1387,9 +1412,12 @@ export default function ProfilePage() {
 
           {/* Zertifikate */}
           <CollapsibleCard
+            cardRef={setRef('certificates')}
             icon={Award}
             title="Zertifikate"
             meta={(profile?.certificates?.length ?? 0) > 0 ? `${profile!.certificates!.length} Zertifikate` : undefined}
+            active={activeSection === 'certificates'}
+            onAsk={() => setActiveSection('certificates')}
             open={isOpen('certificates')}
             onToggle={() => toggleSection('certificates')}
           >
@@ -1557,6 +1585,19 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* ── Floating "back to top" during tour ── */}
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className={cn(
+          'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full border border-[#0c1d3f] bg-[#0c1d3f] px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:bg-[#162d5a]',
+          scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none',
+        )}
+      >
+        <ChevronDown className="h-4 w-4 rotate-180" />
+        Nach oben
+      </button>
 
       {/* ── CV Upload Dialog ── */}
       <Dialog

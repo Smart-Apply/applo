@@ -719,6 +719,7 @@
 @keyframes apploThumb { 0% { transform: rotate(40deg) } 35% { transform: rotate(-8deg) } 55% { transform: rotate(2deg) } 72% { transform: rotate(-3deg) } 100% { transform: rotate(0) } }
 @keyframes apploNod { 0%,100% { transform: rotate(0) } 28% { transform: rotate(2.8deg) } 55% { transform: rotate(0) } 78% { transform: rotate(1.6deg) } }
 
+
 /* COACH — talking mouth, gesture, sound waves, nod */
 .applo.state-coach .a-r-down { display: none; }
 .applo.state-coach .tool-coach { display: block; }
@@ -855,4 +856,13 @@
 .applo-guide--compact .ab-msg {
   font-size: 14px;
   line-height: 1.5;
+}
+
+@keyframes tour-glow {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25); }
+  50%       { box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.45); }
+}
+
+.tour-active {
+  animation: tour-glow 2s ease-in-out infinite;
 }

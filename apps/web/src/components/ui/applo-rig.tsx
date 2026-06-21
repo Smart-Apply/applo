@@ -7,6 +7,7 @@ export type ApploState =
   | 'process'
   | 'success'
   | 'done'
+
   | 'coach';
 
 const NAVY = '#15233f';
@@ -207,6 +208,7 @@ export function ApploRig({
             <circle className="c3" cx="120" cy="30" r="4.5" fill={GREEN} />
           </g>
 
+
           {/* TOOL: speaking gesture + sound waves (coach) */}
           <g className="tool-coach">
             <g className="coach-arm">
@@ -218,6 +220,7 @@ export function ApploRig({
               <path className="sw sw2" d="M209 115 q14 16 0 36" fill="none" stroke={BLUE} strokeWidth="3.2" strokeLinecap="round" />
             </g>
           </g>
+
 
         </g>
       </g>
