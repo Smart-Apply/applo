@@ -32,7 +32,6 @@ import {
   Sparkles,
   ArrowRight,
   Check,
-  HelpCircle,
   Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -519,7 +518,8 @@ function CollapsibleCard({
   active = false,
   open,
   onToggle,
-  onAsk,
+  collapsible = true,
+
   action,
   children,
 }: {
@@ -530,7 +530,7 @@ function CollapsibleCard({
   active?: boolean;
   open: boolean;
   onToggle: () => void;
-  onAsk?: () => void;
+  collapsible?: boolean;
   action?: ReactNode;
   children: ReactNode;
 }) {
@@ -539,41 +539,28 @@ function CollapsibleCard({
       ref={cardRef}
       className={cn(
         'scroll-mt-24 rounded-2xl border bg-card shadow-sm transition-all duration-200',
-        active ? 'border-primary/40 ring-2 ring-primary/15' : 'border-border',
+        active ? 'tour-active border-[#2563eb]' : 'border-border',
       )}
     >
       <div className="flex items-center gap-2.5 px-6 py-5">
         <button
           type="button"
-          onClick={onToggle}
-          aria-expanded={open}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          onClick={collapsible ? onToggle : undefined}
+          aria-expanded={collapsible ? open : undefined}
+          className={cn('flex min-w-0 flex-1 items-center gap-2 text-left', !collapsible && 'cursor-default')}
         >
-          <ChevronDown
-            className={cn(
-              'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
-              open ? '' : '-rotate-90',
-            )}
-          />
+          {collapsible && (
+            <ChevronDown
+              className={cn(
+                'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+                open ? '' : '-rotate-90',
+              )}
+            />
+          )}
           <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
           <h2 className="font-semibold text-foreground">{title}</h2>
           {meta && <span className="text-sm text-muted-foreground">{meta}</span>}
         </button>
-        {onAsk && (
-          <button
-            type="button"
-            onClick={onAsk}
-            title="Was bringt das?"
-            className={cn(
-              'grid h-7 w-7 shrink-0 place-items-center rounded-md border transition-colors',
-              active
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border text-muted-foreground hover:border-primary hover:text-primary',
-            )}
-          >
-            <HelpCircle className="h-3.5 w-3.5" />
-          </button>
-        )}
         {action}
       </div>
       {open && <div className="px-6 pb-6">{children}</div>}
@@ -602,11 +589,27 @@ export default function ProfilePage() {
   const [tourStep, setTourStep] = useState<number | null>(null);
   const [introDone, setIntroDone] = useState(false);
   const [celebrated, setCelebrated] = useState(false);
-  // Section ids the user has collapsed (empty = everything expanded).
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  // Section ids the user has collapsed; all except "about" start collapsed.
+  const [collapsed, setCollapsed] = useState<Set<string>>(
+    () => new Set(['experience', 'skills', 'education', 'projects', 'certificates', 'languages']),
+  );
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const cvUploading = parseResume.isPending || updateProfile.isPending;
+
+  const [scrolled, setScrolled] = useState(false);
+  const pageTopRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = pageTopRef.current;
+    const scrollContainer = el?.closest('main') ?? null;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setScrolled(!entry.isIntersecting),
+      { root: scrollContainer, threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const handleCvUpload = useCallback(
     async (file: File) => {
@@ -899,11 +902,12 @@ export default function ProfilePage() {
   const sectionCard = (id: string) =>
     cn(
       'scroll-mt-24 rounded-2xl border bg-card p-6 shadow-sm transition-all duration-200',
-      activeSection === id ? 'border-primary/40 ring-2 ring-primary/15' : 'border-border',
+      activeSection === id ? 'tour-active border-[#2563eb]' : 'border-border',
     );
 
   return (
     <div className="space-y-5 pb-10">
+      <div ref={pageTopRef} className="h-0" />
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -925,10 +929,12 @@ export default function ProfilePage() {
       </div>
 
       {/* ── Applo coach ── */}
+      {tourStep !== null && <div className="h-[188px] sm:h-[196px]" />}
       <div
         className={cn(
           'relative overflow-hidden rounded-2xl border bg-card p-4 shadow-sm sm:p-5',
           isComplete ? 'border-green-200' : 'border-border',
+          tourStep !== null && 'fixed left-4 right-4 top-4 z-30 shadow-xl md:left-[336px]',
         )}
       >
         <div
@@ -1121,9 +1127,9 @@ export default function ProfilePage() {
             title="Über mich"
             meta={profile?.summary ? `${profile.summary.length} Zeichen` : undefined}
             active={activeSection === 'about'}
-            open={isOpen('about')}
-            onToggle={() => toggleSection('about')}
-            onAsk={() => setActiveSection('about')}
+            open={true}
+            onToggle={() => {}}
+            collapsible={false}
             action={
               <button
                 onClick={() => router.push('/profile/edit')}
@@ -1155,7 +1161,7 @@ export default function ProfilePage() {
             active={activeSection === 'experience'}
             open={isOpen('experience')}
             onToggle={() => toggleSection('experience')}
-            onAsk={() => setActiveSection('experience')}
+
           >
             {(profile?.experiences?.length ?? 0) > 0 ? (
               <div className="space-y-6">
@@ -1214,7 +1220,7 @@ export default function ProfilePage() {
             active={activeSection === 'skills'}
             open={isOpen('skills')}
             onToggle={() => toggleSection('skills')}
-            onAsk={() => setActiveSection('skills')}
+
           >
 
             {(profile?.skills?.length ?? 0) > 0 ? (
@@ -1255,7 +1261,7 @@ export default function ProfilePage() {
             active={activeSection === 'education'}
             open={isOpen('education')}
             onToggle={() => toggleSection('education')}
-            onAsk={() => setActiveSection('education')}
+
           >
 
             {(profile?.education?.length ?? 0) > 0 ? (
@@ -1557,6 +1563,19 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* ── Floating "back to top" during tour ── */}
+      <button
+        type="button"
+        onClick={() => pageTopRef.current?.scrollIntoView({ behavior: 'smooth' })}
+        className={cn(
+          'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full border border-[#0c1d3f] bg-[#0c1d3f] px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:bg-[#162d5a]',
+          scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none',
+        )}
+      >
+        <ChevronDown className="h-4 w-4 rotate-180" />
+        Nach oben
+      </button>
 
       {/* ── CV Upload Dialog ── */}
       <Dialog
