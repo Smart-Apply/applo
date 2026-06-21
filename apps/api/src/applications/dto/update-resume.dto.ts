@@ -160,6 +160,11 @@ class ResumeTemplateDto {
   @IsString()
   candidateName: string;
 
+  @ApiPropertyOptional({ example: 'AI Deployment Engineer' })
+  @IsOptional()
+  @IsString()
+  targetJobTitle?: string;
+
   @ApiProperty({ example: 'arianit@example.com' })
   @IsString()
   email: string;
@@ -173,6 +178,34 @@ class ResumeTemplateDto {
   @IsOptional()
   @IsString()
   location?: string;
+
+  // Structured address fields (replace the legacy single `location` field).
+  // The editor edits these in the Kontaktdaten popover; without them the
+  // global `whitelist: true` pipe silently strips the user's address on save.
+  @ApiPropertyOptional({ example: 'Musterstraße 1' })
+  @IsOptional()
+  @IsString()
+  street?: string;
+
+  @ApiPropertyOptional({ example: '47057' })
+  @IsOptional()
+  @IsString()
+  postalCode?: string;
+
+  @ApiPropertyOptional({ example: 'Duisburg' })
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @ApiPropertyOptional({ example: 'Deutschland' })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @ApiPropertyOptional({ example: 'Musterstraße 1, 47057 Duisburg, Deutschland' })
+  @IsOptional()
+  @IsString()
+  fullAddress?: string;
 
   @ApiPropertyOptional({ example: 'https://linkedin.com/in/arianit' })
   @IsOptional()

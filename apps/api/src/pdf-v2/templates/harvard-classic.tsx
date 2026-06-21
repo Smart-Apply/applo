@@ -262,8 +262,12 @@ function ContactInfoFactory(rp: ReactPdfNamespace) {
     const children: ReactElement[] = [];
     filtered.forEach((p, idx) => {
       if (idx > 0) {
+        // Non-breaking spaces (U+00A0) around the bullet — NBSP is in the
+        // WinAnsi encoding so Helvetica renders it reliably and never trims it
+        // at the inline-run boundary. Figure spaces (U+2007) are dropped by the
+        // built-in font, which collapses the intended breathing room.
         children.push(
-          createElement(Text, { key: `sep-${idx}`, style: separatorStyle }, '\u2007 \u2022 \u2007'),
+          createElement(Text, { key: `sep-${idx}`, style: separatorStyle }, '\u00A0\u2022\u00A0'),
         );
       }
       if (p.href) {
@@ -625,9 +629,12 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
 
     return function HarvardClassicCoverLetter({
       data,
-      meta,
     }: ReactPdfCoverLetterProps): ReactElement {
-      const accent = meta.accentColor || ACCENT_FALLBACK;
+      // Harvard Classic cover letters are intentionally monochrome — the name
+      // and header divider use the same charcoal as the body text rather than
+      // the DB template's accent colour (which renders red/maroon on some
+      // variants). The résumé still honours meta.accentColor.
+      const accent = ACCENT_FALLBACK;
       const styles = buildStyles(rp, accent);
       const contactParts = buildCoverLetterContactParts(data);
 

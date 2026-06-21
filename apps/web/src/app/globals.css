@@ -467,6 +467,9 @@
   .rd-sec:first-child { margin-top: 0; }
   .rd-sec-title { position: relative; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
   .rd-sec-ai { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+  .rd-sec-actions { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 4px; }
+  .rd-sec-rm { display: grid; place-items: center; width: 24px; height: 24px; border: none; background: none; color: var(--muted-2); cursor: pointer; border-radius: 6px; opacity: 0.45; transition: opacity 0.12s, background 0.12s, color 0.12s; }
+  .rd-sec-rm:hover { opacity: 1; background: var(--red-bg); color: var(--red); }
   .rd-p { font-size: 13.5px; line-height: 1.65; color: #374151; }
   .rd-item { position: relative; margin-bottom: 14px; padding-right: 26px; }
   .rd-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }

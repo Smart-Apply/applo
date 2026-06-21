@@ -324,10 +324,13 @@ function ContactInfoFactory(rp: ReactPdfNamespace) {
     const children: ReactElement[] = [];
     filtered.forEach((p, idx) => {
       if (idx > 0) {
-        // Use figure spaces (U+2007) on each side of the pipe to mimic the
-        // `gap: var(--spacing-sm)` flexbox spacing in the source CSS.
+        // Non-breaking spaces (U+00A0) around the pipe. NBSP is part of the
+        // WinAnsi encoding so react-pdf's built-in Helvetica renders it, and it
+        // is never collapsed/trimmed at the inline-run boundary. A figure space
+        // (U+2007) is NOT in WinAnsi → Helvetica drops it, which previously left
+        // the separator glued to the next field (e.g. "phone |email").
         children.push(
-          createElement(Text, { key: `sep-${idx}`, style: separatorStyle }, '\u2007 | \u2007'),
+          createElement(Text, { key: `sep-${idx}`, style: separatorStyle }, '\u00A0|\u00A0'),
         );
       }
       if (p.href) {

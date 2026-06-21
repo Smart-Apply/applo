@@ -57,7 +57,7 @@ export function AiAssistantPopover({
   title = 'AI-Anweisungen',
   description = 'Beschreibe, wie der Inhalt angepasst werden soll.',
   loadingText = 'AI arbeitet...',
-  warningMessage = 'Die AI passt den Inhalt an. Danach musst du manuell speichern.',
+  warningMessage = 'Die AI passt den Inhalt an. Die Änderungen werden automatisch gespeichert.',
   applyButtonText = 'Anwenden',
   buttonVariant = 'outline',
   buttonSize = 'sm',
