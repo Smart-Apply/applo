@@ -31,7 +31,7 @@ Format: `<type>(<scope>): <summary>` — imperative, ≤ 72 chars, no trailing p
 
 - `feat:` → minor bump · `fix:` → patch · `feat!:` or a `BREAKING CHANGE:` footer → major.
 - `chore:` `docs:` `ci:` `refactor:` `test:` `perf:` → no bump, still in the CHANGELOG.
-- Scope = the touched area: `auth`, `profile`, `applications`, `pdf`, `job-search`,
+- Scope = the touched area: `auth`, `profile`, `applications`, `pdf`, `interviews`,
   `mailbox-sync`, `web`, `api`, `ci`, etc.
 - `release-please` parses these to bump SemVer + generate the CHANGELOG, so be accurate.
 

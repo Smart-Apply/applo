@@ -39,14 +39,13 @@ model User {
   preferences          UserPreferences?
   jobPostings          JobPosting[]
   applications         Application[]
+  validations          Validation[] // Standalone AI checks of externally-created applications
   refreshTokens        RefreshToken[]
   sessions             Session[]
   auditLogs            AuditLog[]
   subscription         Subscription?
   interviewSessions    InterviewSession[]
   oauthProviders       OAuthProvider[] // OAuth providers linked to this user
-  autoApplyConfig      AutoApplyConfig?
-  autoApplySuggestions AutoApplySuggestion[]
 
   // Email tracking (Premium feature) — connected mailbox(es) we sync via OAuth
   mailboxConnections MailboxConnection[]
@@ -283,7 +282,6 @@ model JobPosting {
   fullText String @db.Text
 
   applications         Application[]
-  autoApplySuggestions AutoApplySuggestion[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -404,6 +402,38 @@ enum ApplicationGenerationStatus {
   READY // PDFs generated and stored
   FAILED // Generation failed
 }
+
+// Standalone application check (issue #569): an AI quality + ATS review of an
+// application the user created OUTSIDE Smart Apply. The user pastes/uploads
+// their own résumé (+ optional cover letter + optional job context) and gets
+// actionable feedback. NOT linked to a generated Application/JobPosting.
+// Metered via SubscriptionUsage.validationsUsed (Free 5/month, Pro+ unlimited).
+model Validation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Optional user-facing label (defaults to a generated title on the client)
+  title String?
+
+  // User-provided inputs (their own external application). Stored so the check
+  // can be revisited without re-spending quota.
+  resumeText      String  @db.Text
+  coverLetterText String? @db.Text
+  jobContext      String? @db.Text // pasted job description and/or target role
+  language        String? // Detected/selected language (ISO 639-1)
+
+  // Result
+  result Json // ApplicationValidationResult (scores, categories, blockers, recommendations, strengths)
+  score  Float // Overall score 0-100 (denormalized for list/sorting)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("validations")
+}
+
 
 model Template {
   id          String       @id @default(cuid())
@@ -662,8 +692,8 @@ model BackgroundJob {
 
 // Subscription tier levels (3-tier pricing model)
 // FREE (€0)            - Risk-free entry: try Smart Apply with 3 applications/month
-// PRO (€9.99/month)    - Optimise every application with AI (templates, ATS, analytics, job search)
-// PREMIUM (€19.99/month) - Automate the job search (Auto-Apply, email tracking, interview coach)
+// PRO (€9.99/month)    - Optimise every application with AI (templates, ATS, analytics)
+// PREMIUM (€19.99/month) - Premium tooling (email tracking, interview coach)
 enum SubscriptionTier {
   FREE
   PRO
@@ -728,7 +758,7 @@ model SubscriptionUsage {
   resumesGenerated      Int @default(0) // KI-Lebensläufe count
   jobParsingUsed        Int @default(0) // URL/text parsing count
   interviewSessionsUsed Int @default(0) // Interview Coach sessions
-  autoApplyApprovedUsed Int @default(0) // Auto-Apply approvals (PREMIUM-only cost cap)
+  validationsUsed       Int @default(0) // Bewerbungs-Validierungen (Free: 5/Monat, Pro+: unbegrenzt)
 
   // Rolling 24h window (cost-protection cap, independent of monthly period)
   dailyApplicationsUsed Int      @default(0)
@@ -782,6 +812,12 @@ enum InterviewQuestionType {
   FOLLOW_UP // Nachfrage
 }
 
+// How an interview session is conducted
+enum InterviewMode {
+  TEXT // Typed text chat (default)
+  VOICE // Spoken voice interview (Azure Realtime / WebRTC)
+}
+
 // Interview session with KI coach
 model InterviewSession {
   id     String @id @default(cuid())
@@ -794,6 +830,7 @@ model InterviewSession {
 
   // Interview configuration
   type       InterviewType       @default(MIXED)
+  mode       InterviewMode       @default(TEXT) // text chat vs spoken voice interview
   industry   String? // e.g., "IT", "Healthcare", "Finance"
   difficulty InterviewDifficulty @default(MEDIUM)
   language   String              @default("de") // ISO 639-1: "de", "en"
@@ -814,6 +851,12 @@ model InterviewSession {
 
   // Results
   overallScore Int? // 1-100 overall score
+
+  // Voice interview metadata (mode == VOICE)
+  voice                String? // chosen TTS voice (e.g. "alloy")
+  realtimeModel        String? // realtime deployment used (e.g. "gpt-realtime")
+  voiceDurationSeconds Int? // recorded spoken-call length (for the monthly minute cap)
+  transcript           Json? // [{ role: "interviewer"|"candidate", text, atSeconds }]
 
   // Relations
   questions InterviewQuestion[]
@@ -1001,110 +1044,6 @@ model OAuthProvider {
   @@index([userId])
   @@index([provider])
   @@map("oauth_providers")
-}
-
-// =====================================
-// AUTO-APPLY AGENT (Premium Feature)
-// =====================================
-
-// User decision on a job suggestion surfaced by the auto-apply cron.
-enum AutoApplySuggestionStatus {
-  PENDING // Awaiting user decision (shown in inbox)
-  APPROVED // User approved -> Application created
-  SKIPPED // User dismissed this one
-  BLOCKED // User blocked the company - also adds it to blockedCompanies
-  EXPIRED // Auto-cleaned by cron after retention window
-}
-
-// Per-user auto-apply configuration. One per user (keep simple for v1).
-//
-// The cron worker (`AutoApplyCron`) walks active configs every 15 min and
-// runs `searchFilters` against the LinkedIn scraper, materializing fresh
-// candidates as `AutoApplySuggestion` rows for the user to review.
-model AutoApplyConfig {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  isActive Boolean @default(true)
-
-  // LinkedIn search filters (mirrors SearchLinkedInJobsDto shape)
-  searchFilters Json
-
-  // Recommendation rules
-  maxSuggestionsPerDay Int      @default(5)
-  minAtsScore          Int? // 0-100, optional gate
-  requiredKeywords     String[] // Job description must mention all of these
-  blockedCompanies     String[] // Never suggest postings from these companies
-
-  // Schedule (cron expression). Default: 09:00 daily.
-  cronSchedule String    @default("0 9 * * *")
-  lastRunAt    DateTime?
-  nextRunAt    DateTime?
-
-  // Generation preferences for approved suggestions. When set, the
-  // approve flow passes these to ApplicationsService.createWithGeneration
-  // instead of falling back to the auto-pick-by-language defaults — which
-  // is what made every auto-applied application come out with ATS=0%
-  // (the regular `create()` skips the LLM/ATS pipeline entirely).
-  cvTemplateId        String? // Resume template id (null = auto-pick)
-  clTemplateId        String? // Cover-letter template id (null = auto-pick)
-  generateCoverLetter Boolean @default(true) // false = resume-only
-
-  // Daily digest opt-in
-  digestEnabled    Boolean   @default(true)
-  lastDigestSentAt DateTime?
-
-  suggestions AutoApplySuggestion[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([isActive, nextRunAt]) // cron worker query
-  @@map("auto_apply_configs")
-}
-
-// A single recommended job awaiting (or past) user review.
-//
-// `externalJobId` is the LinkedIn posting id and is unique per user so
-// repeated cron runs don't surface the same posting twice. Snapshots
-// (jobTitle / company / location / jobUrl) are stored at suggestion time
-// so the inbox keeps working even if the LinkedIn URL goes 404 later.
-model AutoApplySuggestion {
-  id       String          @id @default(cuid())
-  userId   String
-  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  configId String
-  config   AutoApplyConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
-
-  // The job we found
-  externalJobId String // LinkedIn posting id
-  jobPostingId  String? // FK once approved
-  jobPosting    JobPosting? @relation(fields: [jobPostingId], references: [id], onDelete: SetNull)
-
-  // Snapshot at suggest-time
-  jobTitle String
-  company  String
-  location String?
-  jobUrl   String
-  postedAt DateTime?
-
-  // Pre-computed match data (best-effort; null if scoring failed)
-  matchScore   Float?
-  matchReasons Json? // { matchedSkills, missingSkills, ... }
-
-  // User decision
-  status        AutoApplySuggestionStatus @default(PENDING)
-  decidedAt     DateTime?
-  applicationId String? // set when user approved
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, externalJobId]) // dedup across cron runs
-  @@index([userId, status, createdAt(sort: Desc)])
-  @@index([configId])
-  @@map("auto_apply_suggestions")
 }
 
 // =============================================================================

@@ -48,8 +48,6 @@ export interface TierFeatures {
   interviewCoach: boolean;
   /** LinkedIn job search & import (Premium feature) */
   linkedinImport?: boolean;
-  /** Auto-Apply Agent (Premium feature) */
-  autoApplyAgent?: boolean;
   /** Email-based application tracking (future Premium feature) */
   emailParsing?: boolean;
   /** ATS keyword analysis & match score (Pro & Premium feature) */
@@ -79,6 +77,8 @@ export interface SubscriptionUsageStats {
   status: SubscriptionStatus;
   applications: UsageStat;
   interviewSessions: UsageStat;
+  /** Monthly cap on AI application validations (Free: 5, Pro+: unlimited) */
+  validations?: UsageStat;
   /** Rolling 24h cap on full application generations (cost protection) */
   applicationsToday?: DailyUsageStat;
   periodStart: string;
@@ -378,6 +378,106 @@ export interface Application {
   createdAt: string;
   updatedAt: string;
   jobPosting?: JobPosting;
+}
+
+// ============================================
+// Application Validation (AI quality + ATS review)
+// ============================================
+
+/** Headline verdict for a validated application. */
+export type ApplicationValidationVerdict = 'strong' | 'good' | 'needs_work';
+
+/** Per-category traffic-light status. */
+export type ApplicationValidationStatus = 'pass' | 'warn' | 'fail';
+
+/** Fixed set of categories every validation scores. */
+export type ApplicationValidationCategoryId =
+  | 'job_match'
+  | 'ats_readability'
+  | 'impact'
+  | 'clarity'
+  | 'completeness';
+
+export interface ApplicationValidationCategory {
+  id: ApplicationValidationCategoryId;
+  /** Localized human-readable label. */
+  label: string;
+  /** 0-100 score for this category. */
+  score: number;
+  status: ApplicationValidationStatus;
+}
+
+export interface ApplicationValidationIssue {
+  title: string;
+  detail: string;
+}
+
+/**
+ * Structured result of an AI quality + ATS review of an application
+ * (résumé + optional cover letter). Produced by `POST /validation`.
+ */
+export interface ApplicationValidationResult {
+  /** Holistic quality of the application (0-100). */
+  overallScore: number;
+  /** Heuristic ATS keyword/structure friendliness estimate (0-100), not a real ATS parse. */
+  atsScore: number;
+  verdict: ApplicationValidationVerdict;
+  /** 1-2 sentence headline takeaway. */
+  summary: string;
+  categories: ApplicationValidationCategory[];
+  /** Critical issues to fix before sending. */
+  blockers: ApplicationValidationIssue[];
+  /** Non-blocking, concrete improvements. */
+  recommendations: ApplicationValidationIssue[];
+  /** What already works well. */
+  strengths: string[];
+  /** ISO timestamp the validation was produced. */
+  validatedAt?: string;
+}
+
+/**
+ * Input for a standalone application check: the user's own externally-created
+ * documents. `resumeText` is required; everything else is optional context.
+ * Sent to `POST /validation`.
+ */
+export interface CreateValidationInput {
+  /** The user's résumé / CV as plain text (pasted or extracted from a file). */
+  resumeText: string;
+  /** Optional cover letter text. */
+  coverLetterText?: string;
+  /** Optional target role and/or pasted job posting to evaluate fit against. */
+  jobContext?: string;
+  /** Optional language override (ISO 639-1). Auto-detected when omitted. */
+  language?: string;
+  /** Optional user-facing label for this check. */
+  title?: string;
+}
+
+/**
+ * A persisted standalone application check (history record). Stores the inputs
+ * plus the AI result so it can be revisited without re-spending quota.
+ */
+export interface Validation {
+  id: string;
+  /** Optional user-facing label (e.g. "Bewerbungs-Check · 20.06.2026"). */
+  title?: string;
+  resumeText: string;
+  coverLetterText?: string;
+  jobContext?: string;
+  language?: string;
+  result: ApplicationValidationResult;
+  /** Overall score (0-100), denormalized for the history list. */
+  score: number;
+  createdAt: string;
+}
+
+/** Lightweight history-list item (omits the heavy input/result blobs). */
+export interface ValidationSummary {
+  id: string;
+  title?: string;
+  score: number;
+  verdict: ApplicationValidationVerdict;
+  createdAt: string;
 }
 
 export interface ApplicationStatusResponse {
@@ -722,6 +822,8 @@ export type InterviewType = 'BEHAVIORAL' | 'TECHNICAL' | 'CASE_STUDY' | 'MIXED';
 export type InterviewDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type InterviewSessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED';
 export type InterviewQuestionType = 'OPEN' | 'SITUATIONAL' | 'TECHNICAL' | 'BEHAVIORAL' | 'FOLLOW_UP';
+/** How an interview session is conducted: typed text chat or spoken (voice) interview. */
+export type InterviewMode = 'TEXT' | 'VOICE';
 
 export interface InterviewQuestion {
   id: string;
@@ -755,6 +857,8 @@ export interface InterviewFeedback {
 export interface InterviewSession {
   id: string;
   type: InterviewType;
+  /** Conducted as text chat (default) or spoken voice interview. */
+  mode?: InterviewMode;
   industry?: string;
   difficulty: InterviewDifficulty;
   language: string;
@@ -836,6 +940,77 @@ export interface InterviewSessionsResponse {
 }
 
 // ============================================
+// Voice Interview Types (Realtime / WebRTC)
+// ============================================
+
+/** TTS voices supported by the Azure OpenAI Realtime API. */
+export type RealtimeVoice =
+  | 'alloy'
+  | 'ash'
+  | 'ballad'
+  | 'coral'
+  | 'echo'
+  | 'sage'
+  | 'shimmer'
+  | 'verse';
+
+/**
+ * Runtime availability + limits for the voice interview mode. Fetched before
+ * rendering the "Sprach-Interview" option so FREE-tier or mock-provider
+ * environments hide it cleanly instead of failing on connect.
+ */
+export interface VoiceInterviewConfig {
+  /** True when a real voice provider is configured (not the mock/offline one). */
+  available: boolean;
+  defaultVoice: RealtimeVoice;
+  voices: RealtimeVoice[];
+  /** Hard per-session ceiling (minutes) enforced client- and server-side. */
+  maxSessionMinutes: number;
+  /** Monthly voice budget for the tier (-1 = unlimited). */
+  minutesPerMonth: number;
+  /** Minutes left in the current billing period. */
+  remainingMinutes: number;
+}
+
+/**
+ * Ephemeral session descriptor returned to the browser. The `token` is a
+ * short-lived realtime client secret (never the standing Azure API key) used
+ * to authenticate the browser's WebRTC SDP exchange with `webrtcUrl`.
+ */
+export interface VoiceSessionDescriptor {
+  token: string;
+  /** ISO timestamp after which the ephemeral token is rejected. */
+  expiresAt: string;
+  /** GA realtime calls endpoint (already includes `?webrtcfilter=on`). */
+  webrtcUrl: string;
+  model: string;
+  voice: RealtimeVoice;
+  /** Maximum allowed call length for this session (seconds). */
+  maxSessionSeconds: number;
+  /** Minutes left in the current billing period after this session is granted. */
+  remainingMinutes: number;
+}
+
+export type VoiceTranscriptRole = 'interviewer' | 'candidate';
+
+export interface VoiceTranscriptTurn {
+  role: VoiceTranscriptRole;
+  text: string;
+  /** Offset from call start when the turn began (seconds), if known. */
+  atSeconds?: number;
+}
+
+export interface StartVoiceSessionPayload {
+  /** Optional voice override; falls back to the server default when omitted. */
+  voice?: RealtimeVoice;
+}
+
+export interface SubmitVoiceTranscriptPayload {
+  durationSeconds: number;
+  turns: VoiceTranscriptTurn[];
+}
+
+// ============================================
 // Two-Factor Authentication Types
 // ============================================
 
@@ -896,282 +1071,6 @@ export interface TrustedDevicesResponse {
   devices: TrustedDevice[];
 }
 
-
-// ============================================
-// LinkedIn Job Search Types (Pro Feature)
-// ============================================
-
-export type LinkedInExperienceLevel = '1' | '2' | '3' | '4' | '5' | '6';
-// 1 = Internship, 2 = Entry level, 3 = Associate, 4 = Mid-Senior level,
-// 5 = Director, 6 = Executive
-
-export type LinkedInJobType = 'F' | 'P' | 'C' | 'T' | 'I' | 'V' | 'O';
-// F = Full-time, P = Part-time, C = Contract, T = Temporary,
-// I = Internship, V = Volunteer, O = Other
-
-export type LinkedInRemoteFilter = '1' | '2' | '3';
-// 1 = On-site, 2 = Remote, 3 = Hybrid
-
-export type LinkedInDatePosted = 'r86400' | 'r604800' | 'r2592000';
-// r86400 = past 24 hours, r604800 = past week, r2592000 = past month
-
-export type LinkedInSortBy = 'R' | 'DD';
-// R = Most relevant, DD = Most recent
-
-/**
- * Country scopes the user can pick from. Maps to a LinkedIn geoId
- * server-side. Without this, an ambiguous text-only `location` (e.g.
- * "NRW") falls back to a worldwide LinkedIn search.
- */
-export type LinkedInCountry =
-  | 'de'
-  | 'at'
-  | 'ch'
-  | 'gb'
-  | 'us'
-  | 'nl'
-  | 'fr'
-  | 'es'
-  | 'it'
-  | 'ww';
-
-/**
- * Filters supported by the Apify LinkedIn jobs scraper.
- * Mirrors the actor's URL query parameters.
- */
-export interface LinkedInJobSearchFilters {
-  keywords?: string;
-  location?: string;
-  /** LinkedIn geoId (numeric region/city ID) — overrides `country` */
-  geoId?: string;
-  /** Country scope (defaults to `de` server-side) */
-  country?: LinkedInCountry;
-  experienceLevel?: LinkedInExperienceLevel[];
-  jobType?: LinkedInJobType[];
-  remote?: LinkedInRemoteFilter[];
-  datePosted?: LinkedInDatePosted;
-  sortBy?: LinkedInSortBy;
-  /** "true" = only easy-apply jobs */
-  easyApply?: boolean;
-  /** Maximum number of results to return (1–250) */
-  count?: number;
-}
-
-/**
- * A single LinkedIn job result returned by the search endpoint.
- */
-export interface LinkedInJob {
-  /** Stable identifier returned by Apify (LinkedIn job posting ID) */
-  id: string;
-  title: string;
-  company: string;
-  companyUrl?: string;
-  companyLogoUrl?: string;
-  location?: string;
-  /** Detected work mode: remote / hybrid / on-site */
-  workType?: string;
-  /** Detected employment type: full-time, part-time, contract, etc. */
-  employmentType?: string;
-  /** Experience level seniority */
-  seniority?: string;
-  /** Posted-at timestamp from LinkedIn (ISO) */
-  postedAt?: string;
-  /** Number of applicants (when available) */
-  applicantsCount?: number;
-  /** Salary range string when LinkedIn surfaced it */
-  salary?: string;
-  /** Public LinkedIn URL of the posting */
-  url: string;
-  /** Plain-text description (HTML stripped) */
-  description?: string;
-}
-
-export interface LinkedInJobSearchResponse {
-  results: LinkedInJob[];
-  totalCount: number;
-  /** ISO timestamp the search executed at */
-  searchedAt: string;
-  /** Echo of the filters used */
-  filters: LinkedInJobSearchFilters;
-}
-
-export interface ImportLinkedInJobDto {
-  /** Full LinkedIn job object as returned by /linkedin-jobs/search */
-  job: LinkedInJob;
-}
-
-// ============================================
-// Unified Job Search (multi-source)
-// ============================================
-//
-// Provider-agnostic shapes returned by the new `/job-search/*` endpoints.
-// One implementation per backend `JobSearchProvider`:
-//   - 'linkedin'  → Apify-backed LinkedIn scraper (Premium-only)
-//   - 'arbeitnow' → Free public Arbeitnow REST API (FREE-tier OK)
-//
-// The legacy `LinkedInJob*` types above are kept for backward compatibility
-// with the original `/linkedin-jobs/*` endpoints — new UI code should use
-// the unified types below.
-
-/** Stable identifier for a job source — must match backend `JobSourceId`. */
-export type JobSourceId = 'linkedin' | 'arbeitnow';
-
-/**
- * Provider-agnostic job result. Strict subset of `LinkedInJob` plus a
- * `source` discriminator so the round-trip `/import` call can be routed
- * to the correct provider.
- */
-export interface UnifiedJob {
-  source: JobSourceId;
-  /** Provider-native job ID (LinkedIn jobId, Arbeitnow slug, …) */
-  externalId: string;
-  title: string;
-  company: string;
-  companyLogoUrl?: string;
-  location?: string;
-  workType?: string;
-  employmentType?: string;
-  postedAt?: string;
-  /** LinkedIn only — Arbeitnow doesn't expose this. */
-  applicantsCount?: number;
-  salary?: string;
-  url: string;
-  description?: string;
-  /** Provider-supplied tags / categories (e.g. ["Remote", "Software Development"]). */
-  tags?: string[];
-}
-
-/**
- * Unified search request. Filters that don't apply to a given source
- * are silently ignored — `sources[]` in the response reports which
- * filters actually ran where.
- */
-export interface UnifiedJobSearchRequest {
-  keywords?: string;
-  location?: string;
-  /** LinkedIn only — Arbeitnow ignores country (German-first corpus). */
-  country?: LinkedInCountry;
-  /** Honored by Arbeitnow + translated to LinkedIn's f_WT=2 filter. */
-  remoteOnly?: boolean;
-  /** Omit or pass empty to fan out across all configured providers. */
-  sources?: JobSourceId[];
-  /** Max results PER SOURCE (1–100, default 25). */
-  perSourceLimit?: number;
-}
-
-/** Per-source bookkeeping returned alongside merged results. */
-export interface JobSearchSourceStatus {
-  source: JobSourceId;
-  /** Number of results this source contributed after dedup. */
-  count: number;
-  status: 'ok' | 'skipped' | 'error';
-  /** Reason a source was skipped or errored ("Premium tier required", etc.). */
-  reason?: string;
-}
-
-export interface UnifiedJobSearchResponse {
-  results: UnifiedJob[];
-  /** Total result count across all sources after dedup. */
-  totalCount: number;
-  sources: JobSearchSourceStatus[];
-  searchedAt: string;
-}
-
-/** Single entry returned by `GET /job-search/sources`. */
-export interface JobSearchSource {
-  id: JobSourceId;
-  name: string;
-  requiresPremium: boolean;
-  /** False when the source is misconfigured OR gated behind a tier the user lacks. */
-  available: boolean;
-}
-
-export interface JobSearchSourcesResponse {
-  sources: JobSearchSource[];
-}
-
-// ============================================
-// Auto-Apply Agent (Premium Feature)
-// ============================================
-
-export type AutoApplySuggestionStatus =
-  | 'PENDING'
-  | 'APPROVED'
-  | 'SKIPPED'
-  | 'BLOCKED'
-  | 'EXPIRED';
-
-export interface AutoApplyConfig {
-  id: string;
-  isActive: boolean;
-  /** LinkedInJobSearchFilters payload, stored as JSON server-side */
-  searchFilters: LinkedInJobSearchFilters;
-  maxSuggestionsPerDay: number;
-  minAtsScore?: number;
-  requiredKeywords: string[];
-  blockedCompanies: string[];
-  /** 5-field cron expression (restricted server-side) */
-  cronSchedule: string;
-  digestEnabled: boolean;
-  /**
-   * Resume template id used when the user approves a suggestion. When
-   * undefined the backend auto-picks the language-matched default.
-   */
-  cvTemplateId?: string;
-  /** Cover-letter template id; ignored when generateCoverLetter=false. */
-  clTemplateId?: string;
-  /**
-   * Whether to generate an Anschreiben on approval. False = resume-only,
-   * which keeps the cost lower for users who write their cover letters
-   * manually.
-   */
-  generateCoverLetter: boolean;
-  lastRunAt?: string;
-  nextRunAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UpsertAutoApplyConfigPayload {
-  isActive?: boolean;
-  searchFilters: LinkedInJobSearchFilters;
-  maxSuggestionsPerDay?: number;
-  minAtsScore?: number;
-  requiredKeywords?: string[];
-  blockedCompanies?: string[];
-  cronSchedule?: string;
-  digestEnabled?: boolean;
-  cvTemplateId?: string;
-  clTemplateId?: string;
-  generateCoverLetter?: boolean;
-}
-
-export interface AutoApplySuggestion {
-  id: string;
-  externalJobId: string;
-  jobTitle: string;
-  company: string;
-  location?: string;
-  jobUrl: string;
-  postedAt?: string;
-  matchScore?: number;
-  matchReasons?: { matchedTokens?: string[] };
-  status: AutoApplySuggestionStatus;
-  decidedAt?: string;
-  applicationId?: string;
-  createdAt: string;
-}
-
-export interface AutoApplySuggestionsResponse {
-  items: AutoApplySuggestion[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
-export interface ApproveAutoApplySuggestionResponse {
-  applicationId: string;
-}
 
 // ============================================
 // Email Tracking (Premium feature) — Mailbox Sync

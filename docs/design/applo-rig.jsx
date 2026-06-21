@@ -180,24 +180,7 @@
                  wird nur über die jeweilige state-* Klasse gezeigt.
                ====================================================== */}
 
-            {/* ---- TOOL: Lupe vor dem Gesicht (Job-Suche / search) ---- */}
-            <g className="tool-search">
-              {/* Arm hoch zum Griff */}
-              <path d="M156 182 L162 150" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
-              <circle cx="163" cy="147" r="13" fill={S} />
-              {/* Griff von der Hand zur Linse */}
-              <line x1="160" y1="145" x2="150" y2="124" stroke={S} strokeWidth="8" strokeLinecap="round" />
-              {/* Linse genau über dem rechten Auge */}
-              <circle cx="138" cy="110" r="19" fill="#fff" stroke={S} strokeWidth="6" />
-              {/* vergrößertes Auge im Glas, Pupille scannt */}
-              <g className="search-eye">
-                <circle className="se-pupil" cx="138" cy="110" r="9" fill={S} />
-                <circle className="se-glint" cx="141" cy="106" r="3.4" fill="#fff" />
-              </g>
-              {/* Glanzreflex auf dem Glas */}
-              <path d="M126 100 q4 -7 13 -7" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" opacity="0.7" />
-            </g>
-
+>>>>>>> origin/main
             {/* ---- TOOL: Applo spricht mit dem Nutzer (Interview-Coach / coach) ---- */}
             <g className="tool-coach">
               {/* offene, erklärende Handgeste */}
@@ -212,20 +195,7 @@
               </g>
             </g>
 
-            {/* ---- FX: Blitz + Speed-Lines (Auto-Apply / auto) ---- */}
-            <g className="fx-auto">
-              <path className="bolt" d="M128 6 L106 46 L122 46 L110 78 L146 38 L128 38 Z"
-                    fill={BLUE} stroke="#fff" strokeWidth="2" strokeLinejoin="round" />
-              <g className="speed speed-l">
-                <line x1="28" y1="150" x2="52" y2="150" stroke={BLUE} strokeWidth="4" strokeLinecap="round" />
-                <line x1="24" y1="168" x2="44" y2="168" stroke={BLUE} strokeWidth="4" strokeLinecap="round" opacity="0.55" />
-              </g>
-              <g className="speed speed-r">
-                <line x1="212" y1="150" x2="188" y2="150" stroke={BLUE} strokeWidth="4" strokeLinecap="round" />
-                <line x1="216" y1="168" x2="196" y2="168" stroke={BLUE} strokeWidth="4" strokeLinecap="round" opacity="0.55" />
-              </g>
-            </g>
-
+>>>>>>> origin/main
           </g>{/* /rig */}
         </g>{/* /root-float */}
       </svg>

@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import {
   Home,
   FileText,
-  Sparkles,
   User,
   Menu,
   Lock,
@@ -41,12 +40,6 @@ interface BottomNavItem {
 const BOTTOM_NAV_ITEMS: BottomNavItem[] = [
   { name: 'Start', href: '/dashboard', icon: Home },
   { name: 'Bewerbungen', href: '/applications', icon: FileText },
-  {
-    name: 'Job-Suche',
-    href: '/job-search',
-    icon: Sparkles,
-    requiresFeature: 'linkedinImport',
-  },
   { name: 'Profil', href: '/profile', icon: User },
 ];
 
@@ -54,7 +47,7 @@ interface MobileBottomNavProps {
   /**
    * Called when the user taps the "Mehr" item. The dashboard layout wires
    * this to the existing Sheet trigger so the full menu (Settings,
-   * Analytics, Interview-Coach, Auto-Apply, logout) is one tap away.
+   * Analytics, Interview-Coach, logout) is one tap away.
    */
   onMoreClick: () => void;
 }

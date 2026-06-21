@@ -3,6 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '../../config/config.service';
 import { LLMProvider, GenerateOptions } from '../llm.interface';
+import { buildV1ChatCompletionsUrl } from './azure-v1-url.util';
 
 @Injectable()
 export class AzureOpenAIProvider implements LLMProvider {
@@ -27,7 +28,9 @@ export class AzureOpenAIProvider implements LLMProvider {
   }
 
   async generateText(prompt: string, options?: GenerateOptions): Promise<string> {
-    const url = `${this.endpoint}/openai/deployments/${this.deploymentName}/chat/completions?api-version=${this.apiVersion}`;
+    // v1 Foundry API: hit /openai/v1/chat/completions and pass the deployment
+    // as `model` in the body (no legacy /openai/deployments/{name} path).
+    const url = buildV1ChatCompletionsUrl(this.endpoint, this.apiVersion);
 
     const messages: any[] = [];
 
@@ -50,6 +53,7 @@ export class AzureOpenAIProvider implements LLMProvider {
     // don't support it surface a 400 here, which the LLMService JSON-repair
     // fallback then handles on a retry path.
     const requestBody: Record<string, unknown> = {
+      model: this.deploymentName,
       messages,
       temperature: options?.temperature ?? 0.7,
       max_tokens: options?.maxTokens ?? 2000,
@@ -95,12 +99,13 @@ export class AzureOpenAIProvider implements LLMProvider {
       }
 
       // Make a minimal API call to verify connectivity
-      const url = `${this.endpoint}/openai/deployments/${this.deploymentName}/chat/completions?api-version=${this.apiVersion}`;
+      const url = buildV1ChatCompletionsUrl(this.endpoint, this.apiVersion);
 
       const response = await firstValueFrom(
         this.httpService.post(
           url,
           {
+            model: this.deploymentName,
             messages: [{ role: 'user', content: 'health check' }],
             max_tokens: 1,
           },

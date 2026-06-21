@@ -32,6 +32,7 @@ import {
   Sparkles,
   ArrowRight,
   Check,
+  HelpCircle,
   Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -519,7 +520,7 @@ function CollapsibleCard({
   open,
   onToggle,
   collapsible = true,
-
+  onAsk,
   action,
   children,
 }: {
@@ -531,6 +532,7 @@ function CollapsibleCard({
   open: boolean;
   onToggle: () => void;
   collapsible?: boolean;
+  onAsk?: () => void;
   action?: ReactNode;
   children: ReactNode;
 }) {
@@ -561,6 +563,21 @@ function CollapsibleCard({
           <h2 className="font-semibold text-foreground">{title}</h2>
           {meta && <span className="text-sm text-muted-foreground">{meta}</span>}
         </button>
+        {onAsk && (
+          <button
+            type="button"
+            onClick={onAsk}
+            title="Was bringt das?"
+            className={cn(
+              'grid h-7 w-7 shrink-0 place-items-center rounded-md border transition-colors',
+              active
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border text-muted-foreground hover:border-primary hover:text-primary',
+            )}
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+          </button>
+        )}
         {action}
       </div>
       {open && <div className="px-6 pb-6">{children}</div>}
@@ -1128,6 +1145,7 @@ export default function ProfilePage() {
             open={true}
             onToggle={() => {}}
             collapsible={false}
+            onAsk={() => setActiveSection('about')}
             action={
               <button
                 onClick={() => router.push('/profile/edit')}
@@ -1159,7 +1177,7 @@ export default function ProfilePage() {
             active={activeSection === 'experience'}
             open={isOpen('experience')}
             onToggle={() => toggleSection('experience')}
-
+            onAsk={() => setActiveSection('experience')}
           >
             {(profile?.experiences?.length ?? 0) > 0 ? (
               <div className="space-y-6">
@@ -1218,7 +1236,7 @@ export default function ProfilePage() {
             active={activeSection === 'skills'}
             open={isOpen('skills')}
             onToggle={() => toggleSection('skills')}
-
+            onAsk={() => setActiveSection('skills')}
           >
 
             {(profile?.skills?.length ?? 0) > 0 ? (
@@ -1259,7 +1277,7 @@ export default function ProfilePage() {
             active={activeSection === 'education'}
             open={isOpen('education')}
             onToggle={() => toggleSection('education')}
-
+            onAsk={() => setActiveSection('education')}
           >
 
             {(profile?.education?.length ?? 0) > 0 ? (
@@ -1320,6 +1338,7 @@ export default function ProfilePage() {
             title="Projekte"
             meta={(profile?.projects?.length ?? 0) > 0 ? `${profile!.projects!.length} Projekte` : undefined}
             active={activeSection === 'projects'}
+            onAsk={() => setActiveSection('projects')}
             open={isOpen('projects')}
             onToggle={() => toggleSection('projects')}
           >
@@ -1398,6 +1417,7 @@ export default function ProfilePage() {
             title="Zertifikate"
             meta={(profile?.certificates?.length ?? 0) > 0 ? `${profile!.certificates!.length} Zertifikate` : undefined}
             active={activeSection === 'certificates'}
+            onAsk={() => setActiveSection('certificates')}
             open={isOpen('certificates')}
             onToggle={() => toggleSection('certificates')}
           >
@@ -1464,13 +1484,13 @@ export default function ProfilePage() {
                 <Sparkles className="h-4 w-4 text-primary" />
                 <h2 className="font-semibold text-foreground">Profil-Check</h2>
               </div>
-              <span className={cn('text-xl font-bold tabular-nums', 'text-primary')}>
+              <span className={cn('text-xl font-bold tabular-nums', isComplete ? 'text-green-600' : 'text-primary')}>
                 {profileStrength}%
               </span>
             </div>
             <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
               <div
-                className={cn('h-full rounded-full transition-all duration-500', 'bg-primary')}
+                className={cn('h-full rounded-full transition-all duration-500', isComplete ? 'bg-green-600' : 'bg-primary')}
                 style={{ width: `${profileStrength}%` }}
               />
             </div>

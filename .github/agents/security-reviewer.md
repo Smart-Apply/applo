@@ -36,7 +36,7 @@ Smart Apply convention, with the file + line and a remediation.
   reaches the DOM must stay sanitized (`isomorphic-dompurify`). Watch the resume/job-posting
   parse paths and any LLM-prompt construction from user input.
 - **A04 Insecure Design** — rate limits intact (auth 5/15min strict; standard 100/15min;
-  job-search 30/hr). Subscription/usage limits enforced server-side. The invite-code gate is
+  resume-parser 10/hr). Subscription/usage limits enforced server-side. The invite-code gate is
   **backend-authoritative** regardless of client flags.
 - **A05 Security Misconfiguration** — Helmet on, CORS is a restrictive whitelist (not `*`),
   production rejects `STORAGE_DRIVER=disk` and `JOBS_DRIVER=in-memory`. New secrets land in

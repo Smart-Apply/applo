@@ -66,13 +66,11 @@ smart-apply/
 │   │   │   ├── contact/           # Contact form
 │   │   │   ├── email/             # Resend transactional email
 │   │   │   ├── health/            # Terminus health checks
-│   │   │   ├── interviews/        # AI mock interview generator
+│   │   │   ├── interviews/        # AI mock interviews (text + voice/WebRTC)
 │   │   │   ├── invite-codes/      # Closed-beta invite-code gate (hashed, single-use)
 │   │   │   ├── job-postings/      # Text/URL/file parsers
 │   │   │   ├── jobs/              # Queue providers (QStash / mem)
 │   │   │   ├── keywords/          # ATS keyword extraction & matching
-│   │   │   ├── linkedin-jobs/     # LinkedIn job search (Apify, Premium-only source)
-│   │   │   ├── job-search/        # Unified multi-source search (pluggable JobSearchProvider: LinkedIn + Arbeitnow)
 │   │   │   ├── llm/               # LLM provider abstraction
 │   │   │   ├── logger/            # Pino + Winston audit
 │   │   │   ├── mailbox-sync/      # Email Tracking (Premium): MS Graph OAuth + classifier
@@ -85,7 +83,8 @@ smart-apply/
 │   │   │   ├── subscription/      # Plans & usage limits
 │   │   │   ├── templates/         # Template catalog
 │   │   │   ├── uploads/           # Upload endpoints
-│   │   │   └── user-preferences/  # Per-user settings
+│   │   │   ├── user-preferences/  # Per-user settings
+│   │   │   └── validation/        # Bewerbungs-Check (review external applications)
 │   │   ├── prisma/                # Schema, migrations, seeds
 │   │   └── test/                  # Unit / integration / e2e
 │   │
@@ -214,6 +213,7 @@ recorded baselines live in
 | **Language**       | Language proficiency                   |
 | **JobPosting**     | Parsed job listings                    |
 | **Application**    | Generated applications + PDFs          |
+| **Validation**     | Standalone AI check of an external application |
 | **ResumeTemplate** | PDF templates (50 variants)            |
 | **Interview**      | AI-generated interview Q&A             |
 | **RefreshToken**   | Rotated refresh tokens                 |
@@ -349,14 +349,14 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | POST     | `/resume-parser/parse`         | Resume → profile         |
 | GET/POST | `/job-postings`                | Job CRUD                 |
 | POST     | `/job-postings/parse`          | Parse text/URL/file      |
-| GET      | `/linkedin-jobs/search`        | LinkedIn job search (legacy, single-source) |
-| GET      | `/job-search/sources`          | Configured job-search sources + per-tier availability |
-| POST     | `/job-search`                  | Multi-source job search (LinkedIn + Arbeitnow, deduped) |
-| POST     | `/job-search/import`           | Persist a search result as a JobPosting     |
 | GET/POST | `/applications`                | Application pipeline     |
 | GET      | `/applications/:id/files`      | SAS download URLs        |
 | GET      | `/applications/:id/stream`     | SSE status stream        |
+| POST     | `/validation`                  | Check an external application (AI quality + ATS; Free 5/mo, Pro+ unlimited) |
+| GET      | `/validation`                  | Validation history       |
 | POST     | `/interviews`                  | Generate mock interview  |
+| POST     | `/interviews/:id/voice/session`    | Mint voice (realtime) session (Premium) |
+| POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Premium) |
 | GET      | `/mailbox-sync/connections`    | List connected mailboxes (Premium)         |
 | GET      | `/mailbox-sync/microsoft/connect` | Start MS Graph OAuth (Premium)          |
 | GET      | `/mailbox-sync/microsoft/callback` | OAuth redirect target (public)         |

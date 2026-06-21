@@ -146,10 +146,10 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Queue (pluggable via `JOBS_DRIVER`):** `in-memory` | `qstash` (`@upstash/qstash`). Boot refuses to start when `NODE_ENV=production` and the driver isn't `qstash`.
 - **Cache:** Upstash Redis (`@upstash/redis`) + `node-cache`
 - **LLM (pluggable via `LLM_PROVIDER`):** `azure-openai` | `azure-ai-foundry` | `mock`
-  - Direct Azure OpenAI HTTP calls (`@nestjs/axios`)
+  - Direct Azure OpenAI **v1 Foundry API** HTTP calls (`@nestjs/axios`) — `POST {endpoint}/openai/v1/chat/completions` with the deployment passed as `model` in the body (no legacy `/openai/deployments/{name}` path); URL built by `llm/providers/azure-v1-url.util.ts`
   - Azure AI Foundry agents (`@azure/ai-agents`) for ATS keyword extraction, CV/CL writing
   - **opossum** circuit breaker around LLM calls
-  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Needs `AZURE_OPENAI_API_VERSION` ≥ `2024-08-01-preview` (default is `2025-01-01-preview`).
+  - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Runs on the v1 Foundry API: `AZURE_OPENAI_API_VERSION` is the v1 channel (`preview` default | `v1`); legacy dated values auto-map to `preview` (`azure-v1-url.util.ts`).
 - **PDF:**
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
@@ -189,13 +189,11 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `contact` — contact form
 - `email` — Resend transactional email
 - `health` — Terminus health checks
-- `interviews` — AI mock-interview Q&A generator
+- `interviews` — AI mock interviews in **two modes**: typed text Q&A and a spoken **voice interview** (`voice/` sub-folder — pluggable `VOICE_PROVIDER` = `azure-realtime` | `mock`; Azure OpenAI Realtime API over browser-direct WebRTC, Sweden Central/EU). The backend only mints a short-lived ephemeral token (`POST /openai/v1/realtime/client_secrets`) and finalizes the transcript; the browser talks WebRTC to Azure directly (`?webrtcfilter=on` keeps the interviewer instructions private). Both modes reuse the same answer-analyzer/feedback-generator scoring. Premium-gated (`interviewCoach`), with a per-user monthly voice-minute cap computed on the fly from `InterviewSession.voiceDurationSeconds`. No audio is persisted — transcript + scores only.
 - `invite-codes` — Closed-beta invite-code gate. Hashed-at-rest (sha256), single-use, atomic redemption inside the registration transaction so failed signups never burn a code. Toggle via `REQUIRE_INVITE_CODES` (default `true`). Admins issue codes via `POST /admin/invite-codes`; plaintexts are returned **once** at issuance and never readable again.
 - `job-postings` — parse text/URL/file → normalized JobPosting
 - `jobs` — pluggable queue providers (`in-memory` | `qstash`)
 - `keywords` — ATS keyword extraction & matching with language detection
-- `linkedin-jobs` — LinkedIn job search via Apify scraper (Premium-only single-source endpoint, kept for backward compat)
-- `job-search` — **Pluggable multi-source job search** (`JobSearchProvider` interface). Concrete providers: `linkedin` (Premium, wraps `linkedin-jobs`) and `arbeitnow` (free, German-first public API). Fan-out by default; per-source try/catch; cross-source dedup by `(title, company)`. Add new sources by implementing `JobSearchProvider` and binding under `JOB_SEARCH_PROVIDERS` in `JobSearchModule`.
 - `llm` — pluggable providers (`azure-openai` | `azure-ai-foundry` | `mock`) with automatic language detection, opossum circuit breaker, and Azure **structured outputs** (#8: strict `json_schema` for `ats-keywords`/`resume-rewrite`, `json_object` JSON mode elsewhere, resolved by template path in `schemas/v1-schemas.ts`; regex JSON repair kept as a fallback)
 - `logger` — Pino + Winston audit logger
 - `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification.
@@ -209,6 +207,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `templates` — template catalog
 - `uploads` — file uploads
 - `user-preferences` — per-user settings
+- `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Smart Apply. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 5/month, Pro+ unlimited); usage recorded only after success. Each check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
 
 ## Frontend Structure
 - `app/` (App Router with route groups)
@@ -235,9 +234,10 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 16 models in `apps/api/prisma/schema.prisma`:
 - **User**, **Profile**, **Skill**, **Experience**, **Education**, **Certificate**, **Project**, **Language**
 - **JobPosting**, **Application**, **ResumeTemplate**, **Interview**
+- **Validation** (Bewerbungs-Check — standalone AI check of an external application; inputs + cached result, scoped to user)
 - **RefreshToken**, **Session** (auth/security)
 - **InviteCode** (closed-beta gate — hashed, single-use, optional expiry)
-- **Subscription** (plans & usage)
+- **Subscription** (plans & usage) — `SubscriptionUsage.validationsUsed` tracks the monthly Bewerbungs-Check count (Free 5/month, Pro+ unlimited via `validationsPerMonth`)
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
 
@@ -340,28 +340,14 @@ Gated by `ADMIN_EMAILS` (comma-separated, case-insensitive). Returns 403 when th
 
 **GET/PUT /api/v1/user-preferences** — per-user settings
 
-### Interviews (Protected)
+### Interviews (Protected, Premium — `@RequiresFeature('interviewCoach')`)
 
-**POST /api/v1/interviews** — generate AI mock-interview Q&A for a job posting
-**GET /api/v1/interviews/:id** — fetch saved interview
+**POST /api/v1/interviews/start** — start a session (text mode by default). Text flow: **POST /:id/questions/:questionId/answer**, **/:id/next**, **/:id/complete**, **/:id/abandon**; **GET /interviews**, **/interviews/:id**, **/interviews/stats**.
 
-### LinkedIn Jobs (Protected, legacy single-source)
-
-**GET /api/v1/linkedin-jobs/search** — search LinkedIn job postings via Apify (Premium). Kept for backward compatibility with the existing frontend; new clients should prefer the unified `/job-search` endpoints below.
-
-### Unified Job Search (Protected)
-
-Pluggable multi-source endpoints. Source implementations live in `apps/api/src/job-search/providers/` and are picked up by the `JobSearchService` registry via the `JOB_SEARCH_PROVIDERS` DI token — mirrors the same pattern used for `STORAGE_DRIVER`, `LLM_PROVIDER`, `JOBS_DRIVER`.
-
-**GET /api/v1/job-search/sources** — list configured providers + per-tier availability so the frontend can render the "Search in:" picker accurately.
-
-**POST /api/v1/job-search** — fan-out search across all configured providers. Body: `{ keywords?, location?, country?, remoteOnly?, sources?: ('linkedin'|'arbeitnow')[], perSourceLimit? }`. Returns `{ results, totalCount, sources, searchedAt }` where `sources[]` reports `ok | skipped | error` per provider so partial failures stay visible. Throttled to 30/hour per user.
-
-**POST /api/v1/job-search/import** — persist a `UnifiedJobDto` as a JobPosting via its originating provider. Throttled to 60/hour. 403 if the source requires Premium and the caller isn't on Premium.
-
-Provider gating:
-- `arbeitnow` — free public API (`https://www.arbeitnow.com/api/job-board-api`), no auth, German-first corpus, **available to FREE tier**.
-- `linkedin` — Apify-backed (`APIFY_TOKEN` required), **Premium-only**, costs ~€0.01–0.05 per search.
+Voice interview (Azure OpenAI Realtime API via browser-direct WebRTC):
+**GET /api/v1/interviews/voice/config** — availability + remaining monthly voice minutes. Returns `available:false` when `VOICE_PROVIDER=mock`, so the frontend hides the voice toggle cleanly.
+**POST /api/v1/interviews/:id/voice/session** — mint a short-lived ephemeral realtime token (never the standing Azure key); the browser runs the WebRTC SDP exchange directly with Azure. Throttled 10/min.
+**POST /api/v1/interviews/:id/voice/transcript** — submit the spoken transcript + duration; the server pairs it into Q&A, scores it with the shared feedback engine, records the call length against the monthly voice-minute cap, and completes the session. Throttled 20/min.
 
 ### Email Tracking — Inbox Sync (Premium)
 
@@ -458,8 +444,20 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
 **GET /api/v1/applications/:id/stream**
 - **SSE** stream of pipeline status updates (PENDING → GENERATING → READY/FAILED)
 
-### Rate Limiting
+### Validation — Bewerbungs-Check (Protected)
 
+Standalone AI quality + ATS check of an application the user created **outside** Smart Apply. Not tied to a generated `Application`/`JobPosting`.
+
+**POST /api/v1/validation**
+- Body: `{ resumeText (required), coverLetterText?, jobContext?, language?, title? }` — all `@Sanitize()`d, DTO length-capped (résumé ≤ 24k, cover letter ≤ 12k, jobContext ≤ 24k chars).
+- Runs `v1/application-validation.md` (strict `json_schema`); returns a `Validation` record (inputs + `ApplicationValidationResult`).
+- Metered via `UsageLimitGuard` + `@CheckUsage('validation')`: **Free = 5/month, Pro & above = unlimited** (`validationsPerMonth`). Usage recorded only after success.
+
+**GET /api/v1/validation** — history (newest first, lightweight `ValidationSummary[]`).
+**GET /api/v1/validation/:id** — a single check (inputs + result), ownership-scoped.
+**DELETE /api/v1/validation/:id** — delete a check.
+
+### Rate Limiting
 - **Auth endpoints** (register, login): 5 attempts / 15 minutes (strict)
 - **CSRF token endpoint**: 100 requests / 15 minutes (default, NOT strict)
 - **All other endpoints**: 100 requests / 15 minutes (default)
@@ -524,7 +522,7 @@ PUT /api/v1/profile
 > See [docs/implementation/LLM_OUTPUT_QUALITY.md](../docs/implementation/LLM_OUTPUT_QUALITY.md) for the LLM output-quality roadmap (the 10 improvements to generated CVs/cover letters) and its living status tracker.
 
 ## Prompt Templates
-The active generation prompts live under `apps/api/prompts/v1/*` and are described in the **Application Pipeline** above: `skill-selector`, `job-facts`, `cover-letter`, `resume`, `resume-rewrite`, `ats-keywords`, `editor-cover-letter`, `editor-resume`, `keyword-weave`. The legacy top-level `cover-letter.md`, `resume.md`, `cover-letter-ats.md` and `resume-ats.md` prompts were **retired (#2)**. The editor's "regenerate cover letter" action now reuses `v1/cover-letter.md` via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile` maps the saved editor resume back into the `TailoredProfileDto` the v1 prompt expects), so there is a single cover-letter generation path.
+The active generation prompts live under `apps/api/prompts/v1/*` and are described in the **Application Pipeline** above: `skill-selector`, `job-facts`, `cover-letter`, `resume`, `resume-rewrite`, `ats-keywords`, `editor-cover-letter`, `editor-resume`, `keyword-weave`. A separate on-demand `application-validation` prompt (strict `json_schema`) powers `POST /validation` (the standalone Bewerbungs-Check of an application the user created outside Smart Apply; not part of the create pipeline). The legacy top-level `cover-letter.md`, `resume.md`, `cover-letter-ats.md` and `resume-ats.md` prompts were **retired (#2)**. The editor's "regenerate cover letter" action now reuses `v1/cover-letter.md` via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile` maps the saved editor resume back into the `TailoredProfileDto` the v1 prompt expects), so there is a single cover-letter generation path.
 
 ## Validation & Errors
 - DTO validation (class-validator or Zod)
@@ -662,8 +660,20 @@ LLM_PROVIDER=mock            # azure-openai | azure-ai-foundry | mock
 AZURE_OPENAI_ENDPOINT=https://your-aoai.openai.azure.com/
 AZURE_OPENAI_API_KEY=<key>
 AZURE_OPENAI_DEPLOYMENT_NAME=<deployment>
-# Structured outputs (#8) need 2024-08-01-preview+. Default: 2025-01-01-preview.
-AZURE_OPENAI_API_VERSION=2025-01-01-preview
+# v1 Foundry API channel: 'preview' (always-latest) or 'v1' (latest GA).
+# Legacy dated values auto-map to 'preview' at call time.
+AZURE_OPENAI_API_VERSION=preview
+
+# Voice Interview (Azure OpenAI Realtime API via WebRTC) — Premium feature.
+# Realtime models only exist in East US 2 + Sweden Central → use Sweden Central
+# for EU/GDPR. Endpoint/key fall back to AZURE_OPENAI_* when unset.
+VOICE_PROVIDER=mock          # azure-realtime | mock (mock hides the voice mode)
+AZURE_OPENAI_REALTIME_ENDPOINT=<sweden-central-resource>
+AZURE_OPENAI_REALTIME_API_KEY=<key>
+AZURE_OPENAI_REALTIME_DEPLOYMENT=gpt-realtime
+AZURE_OPENAI_REALTIME_VOICE=alloy
+VOICE_INTERVIEW_MAX_SESSION_MINUTES=15
+VOICE_INTERVIEW_MINUTES_PER_MONTH=60
 
 # Azure AI Foundry (URL parsing agents)
 AZURE_AI_FOUNDRY_ENDPOINT=<endpoint>

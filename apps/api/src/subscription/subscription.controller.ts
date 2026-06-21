@@ -109,6 +109,7 @@ export class SubscriptionController {
           features: [
             '3 Bewerbungen pro Monat',
             'ATS-Score für jede Bewerbung',
+            '5 KI-Bewerbungs-Checks pro Monat (Qualität & ATS)',
             'Übersichtliches Bewerbungstracking',
             'Keine Kreditkarte erforderlich',
           ],
@@ -125,6 +126,7 @@ export class SubscriptionController {
             'KI-generierte Lebensläufe & Anschreiben',
             'Mehrere professionelle Templates',
             'ATS-Optimierung & Keyword-Matching',
+            'Unbegrenzte KI-Bewerbungs-Checks (Qualität & ATS)',
             'Bewerbungstracking mit Statusverlauf',
             'Analytics: ATS-Score, Keyword-Score, Match-Insights',
             'Zugang zur integrierten Jobsuche',
@@ -161,10 +163,10 @@ export class SubscriptionController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Check if user can perform action (legacy)' })
-  @ApiParam({ name: 'action', enum: ['coverLetter', 'resume', 'jobParsing', 'interview', 'autoApply'] })
+  @ApiParam({ name: 'action', enum: ['coverLetter', 'resume', 'jobParsing', 'interview', 'validation'] })
   async canPerformActionGet(
     @CurrentUser('id') userId: string,
-    @Param('action') action: 'coverLetter' | 'resume' | 'jobParsing' | 'interview' | 'autoApply',
+    @Param('action') action: 'coverLetter' | 'resume' | 'jobParsing' | 'interview' | 'validation',
   ) {
     return this.subscriptionService.canPerformAction(userId, action);
   }

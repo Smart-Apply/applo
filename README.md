@@ -9,11 +9,12 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 - **Profile management** — Skills, Experience, Education, Certificates, Projects, Languages
 - **Smart job ingestion** — Paste text, URL, or upload (PDF/DOCX); URL parsing via Azure AI Foundry agents (Indeed, LinkedIn, Glassdoor)
 - **AI generation** — Azure OpenAI with pluggable providers (`azure-openai` | `azure-ai-foundry` | `mock`), wrapped in an opossum circuit breaker; JSON calls use Azure structured outputs (strict `json_schema` / JSON mode) so responses are schema-valid by construction; a self-review editor pass refines the cover letter, a coverage-driven keyword loop weaves in missing profile-supported ATS keywords, and a deterministic grounding check flags fabricated metrics
+- **Application check (Bewerbungs-Check)** — A standalone tool: paste your OWN, externally-created application (résumé + optional cover letter + optional job/target-role context) and the AI returns an overall + ATS score, category traffic-lights, blockers vs. recommendations, and strengths. Independent of the generation pipeline. Metered — Free: 5 checks/month, Pro & above: unlimited. Domain-agnostic (works for any profession).
 - **Multi-language** — Automatic language detection (DE/EN) for prompts and templates
 - **ATS-optimized PDFs** — 50 templates (5 designs × 5 languages × 2 types) rendered via `@react-pdf/renderer` (TSX). Template previews via `pdfjs-dist` + `@napi-rs/canvas`.
 - **Resume parser** — Upload an existing resume to bootstrap your profile
 - **Real-time updates** — SSE for live application pipeline status
-- **Mock interviews** — AI-generated interview questions per job
+- **Mock interviews (Premium)** — Practice by **text chat or a natural voice conversation** (Azure OpenAI Realtime API via WebRTC, Sweden Central/EU). The AI interviewer adapts to the job and scores your answers with the same feedback engine as the text flow. No audio is stored — only the transcript + feedback.
 - **Email tracking (Premium)** — Connect Outlook/Microsoft 365; smart-apply detects company replies (interview invites, confirmations, rejections) and updates the application status automatically. No email bodies are persisted.
 - **Auth & security** — JWT in HttpOnly cookies, refresh-token rotation, multi-device sessions, OAuth (Google, Microsoft, Azure AD), 2FA (TOTP), CSRF, rate limiting, audit logs, Sentry
 - **Closed-beta gate** — Optional database-backed invite-code system on `POST /auth/register` (single-use, hashed, atomic redemption). Toggled at runtime via `REQUIRE_INVITE_CODES` Fly secret; admins issue codes via `POST /admin/invite-codes`. See [docs/guides/CLOSED_BETA_PLAN.md](./docs/guides/CLOSED_BETA_PLAN.md).
@@ -107,12 +108,10 @@ smart-apply/
 │   │   │   ├── contact/          # Contact form
 │   │   │   ├── email/            # Resend transactional email
 │   │   │   ├── health/           # Terminus health checks
-│   │   │   ├── interviews/       # AI mock interviews
+│   │   │   ├── interviews/       # AI mock interviews (text + voice/WebRTC)
 │   │   │   ├── job-postings/     # Text/URL/file parsers
 │   │   │   ├── jobs/             # Queue providers
 │   │   │   ├── keywords/         # ATS keyword matching
-│   │   │   ├── linkedin-jobs/    # LinkedIn job search (Apify, Premium)
-│   │   │   ├── job-search/       # Unified multi-source search (LinkedIn + Arbeitnow, pluggable)
 │   │   │   ├── llm/              # LLM provider abstraction
 │   │   │   ├── mailbox-sync/     # Email Tracking (Premium): MS Graph OAuth + classifier
 │   │   │   ├── pdf/              # Thin façade over pdf-v2 (kept for API stability)
@@ -123,7 +122,8 @@ smart-apply/
 │   │   │   ├── subscription/     # Plans & limits
 │   │   │   ├── templates/        # Template catalog
 │   │   │   ├── uploads/          # File upload endpoints
-│   │   │   └── user-preferences/
+│   │   │   ├── user-preferences/
+│   │   │   └── validation/       # Bewerbungs-Check (review external applications)
 │   │   └── prisma/               # Schema, migrations, seeds
 │   └── web/                      # Next.js 16 frontend (Port 3001)
 ├── packages/shared/              # Shared types (+ AI prompt guardrail config)

@@ -24,7 +24,7 @@ export type UsageAction =
   | 'resume'
   | 'jobParsing'
   | 'interview'
-  | 'autoApply';
+  | 'validation';
 
 /**
  * Feature flags that can be checked
@@ -40,7 +40,6 @@ export type FeatureFlag =
   | 'extendedProfile'
   | 'linkedinImport'
   | 'interviewCoach'
-  | 'autoApplyAgent'
   | 'emailParsing'
   | 'prioritySupport'
   | 'noAds';
