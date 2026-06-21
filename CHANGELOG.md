@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0](https://github.com/Smart-Apply/smart-apply/compare/v3.5.0...v4.0.0) (2026-06-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* removes the /job-search/*, /linkedin-jobs/*, and /auto-apply/* API endpoints, the autoApplyAgent feature flag, the APIFY_TOKEN/APIFY_LINKEDIN_ACTOR_ID env vars, and the auto_apply_configs/auto_apply_suggestions tables plus the subscription_usage.autoApplyApprovedUsed column.
+
+### Features
+
+* **editor:** output optimizations for CV, cover letter & PDF export ([#581](https://github.com/Smart-Apply/smart-apply/issues/581)) ([d6d42b3](https://github.com/Smart-Apply/smart-apply/commit/d6d42b36844ac80d7d81f972f210d46f03f5c692))
+* **profile:** redesign profile page and add user roadmap ([#574](https://github.com/Smart-Apply/smart-apply/issues/574)) ([bb82efa](https://github.com/Smart-Apply/smart-apply/commit/bb82efa31a08c96cae7cadccb5cf18b538c0b63f))
+* remove Job Search and Auto-Apply features ([#576](https://github.com/Smart-Apply/smart-apply/issues/576)) ([cd1d660](https://github.com/Smart-Apply/smart-apply/commit/cd1d660aeff7ece21838d31ede05fc9f195bdd85))
+
+
+### Bug Fixes
+
+* **web:** set metadataBase for social image resolution ([#577](https://github.com/Smart-Apply/smart-apply/issues/577)) ([6bc08f8](https://github.com/Smart-Apply/smart-apply/commit/6bc08f8b30c12750231a17e40d9e2ee627dad023))
+
 ## [3.5.0](https://github.com/Smart-Apply/smart-apply/compare/v3.4.16...v3.5.0) (2026-06-18)
 
 
