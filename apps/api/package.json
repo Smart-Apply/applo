@@ -146,7 +146,7 @@
     "baseline-browser-mapping": "^2.10.37",
     "dotenv": "^17.4.2",
     "eslint": "^9.39.4",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.1"
   },
   "prisma": {
     "seed": "node prisma/dist/seed-all.js"
