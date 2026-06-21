@@ -179,6 +179,25 @@ export function resolveResumeDesign(templateId?: string | null): ResumeDesign {
   return 'classic-ats';
 }
 
+/** Document sections the user can remove / re-add in the editor (P3). */
+type ResumeSection =
+  | 'profile'
+  | 'experience'
+  | 'education'
+  | 'projects'
+  | 'skills'
+  | 'languages'
+  | 'certs';
+const RESUME_SECTIONS: { key: ResumeSection; label: string }[] = [
+  { key: 'profile', label: 'Profil' },
+  { key: 'experience', label: 'Berufserfahrung' },
+  { key: 'education', label: 'Ausbildung' },
+  { key: 'projects', label: 'Projekte' },
+  { key: 'skills', label: 'Fähigkeiten' },
+  { key: 'languages', label: 'Sprachen' },
+  { key: 'certs', label: 'Zertifikate' },
+];
+
 interface GenerateSummaryArgs {
   instructions: string;
   currentSummary?: string;
@@ -395,6 +414,62 @@ export function EditableResume({
 
   const multiCat = lists.skillCats.length > 1;
 
+  // ── removable sections (P3) ──
+  // A section starts hidden when it has no content, mirroring the existing
+  // projects/certs auto-hide. Removing a section clears its data (so it drops
+  // from the saved résumé + export) and the re-add bar below restores it.
+  const [removed, setRemoved] = useState<Set<ResumeSection>>(() => {
+    const s = new Set<ResumeSection>();
+    if (!value.summary || !htmlToText(value.summary).trim()) s.add('profile');
+    if (!value.experiences?.length) s.add('experience');
+    if (!value.education?.length) s.add('education');
+    if (!value.projects?.length) s.add('projects');
+    if (!value.skillCategories?.length) s.add('skills');
+    if (!value.languages?.length) s.add('languages');
+    if (!value.certifications?.length) s.add('certs');
+    return s;
+  });
+  const removeSection = (key: ResumeSection) => {
+    switch (key) {
+      case 'profile':
+        commitMeta({ summary: '' });
+        break;
+      case 'experience':
+        apply('exp', []);
+        break;
+      case 'education':
+        apply('edu', []);
+        break;
+      case 'projects':
+        apply('projects', []);
+        break;
+      case 'skills':
+        apply('skillCats', []);
+        break;
+      case 'languages':
+        apply('langs', []);
+        break;
+      case 'certs':
+        apply('certs', []);
+        break;
+    }
+    setRemoved((prev) => new Set(prev).add(key));
+  };
+  const restoreSection = (key: ResumeSection) => {
+    setRemoved((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    // Seed an empty entry so the restored section is immediately editable.
+    if (key === 'experience' && !lists.exp.length) addStation();
+    else if (key === 'education' && !lists.edu.length) addEdu();
+    else if (key === 'projects' && !lists.projects.length) addProject();
+    else if (key === 'skills' && !lists.skillCats.length) addCategory();
+    else if (key === 'languages' && !lists.langs.length) addLang();
+    else if (key === 'certs' && !lists.certs.length) addCert();
+  };
+
   // ── contact details editor (P2) ──
   const [contactOpen, setContactOpen] = useState(false);
   const displayAddress =
@@ -502,38 +577,56 @@ export function EditableResume({
     </Popover>
   );
 
+  // ── shared section header with a remove button (P3) ──
+  const sectionTitle = (label: string, key: ResumeSection, extra?: React.ReactNode) => (
+    <div className="rd-sec-title" style={{ color: accent }}>
+      {label}
+      <span className="rd-sec-actions">
+        {extra}
+        <button
+          type="button"
+          className="rd-sec-rm"
+          title={`${label} entfernen`}
+          aria-label={`${label} entfernen`}
+          onClick={() => removeSection(key)}
+        >
+          <X className="h-3.5 w-3.5" strokeWidth={2.4} />
+        </button>
+      </span>
+    </div>
+  );
+
   // ── section renderers (shared across the three skins) ──
-  const profileSection = (
+  const profileSection = removed.has('profile') ? null : (
     <div className="rd-sec">
-      <div className="rd-sec-title" style={{ color: accent }}>
-        Profil
-        {onGenerateSummary && (
-          <span className="rd-sec-ai">
-            <AiAssistantPopover
-              open={aiOpenId === 'summary'}
-              onOpenChange={(o) => openAi(o ? 'summary' : null)}
-              instructions={aiInstructions}
-              onInstructionsChange={setAiInstructions}
-              onApply={runSummaryAi}
-              isLoading={aiBusy}
-              title="KI: Profil"
-              description="Beschreibe, wie dein Profil angepasst werden soll."
-              placeholder="Z.B.: Betone meine Führungserfahrung stärker..."
-              applyButtonText="Profil anpassen"
-              buttonSize="sm"
-              buttonVariant="ghost"
-              buttonClassName="h-7 px-2 text-xs text-primary hover:bg-primary/10"
-            />
-          </span>
-        )}
-      </div>
+      {sectionTitle(
+        'Profil',
+        'profile',
+        onGenerateSummary ? (
+          <AiAssistantPopover
+            open={aiOpenId === 'summary'}
+            onOpenChange={(o) => openAi(o ? 'summary' : null)}
+            instructions={aiInstructions}
+            onInstructionsChange={setAiInstructions}
+            onApply={runSummaryAi}
+            isLoading={aiBusy}
+            title="KI: Profil"
+            description="Beschreibe, wie dein Profil angepasst werden soll."
+            placeholder="Z.B.: Betone meine Führungserfahrung stärker..."
+            applyButtonText="Profil anpassen"
+            buttonSize="sm"
+            buttonVariant="ghost"
+            buttonClassName="h-7 px-2 text-xs text-primary hover:bg-primary/10"
+          />
+        ) : null,
+      )}
       <Editable key={`sum-${summaryNonce}`} className="rd-p" initial={meta.summary} placeholder="Kurzes Profil über dich …" onCommit={(v) => commitMeta({ summary: v })} />
     </div>
   );
 
-  const experienceSection = (
+  const experienceSection = removed.has('experience') ? null : (
     <div className="rd-sec">
-      <div className="rd-sec-title" style={{ color: accent }}>Berufserfahrung</div>
+      {sectionTitle('Berufserfahrung', 'experience')}
       {lists.exp.map((x, index) => (
         <div className="rd-item" key={x.id}>
           <button className="ed-rm-sec" title="Station entfernen" onClick={() => rmStation(x.id)}>
@@ -585,9 +678,9 @@ export function EditableResume({
     </div>
   );
 
-  const educationSection = (
+  const educationSection = removed.has('education') ? null : (
     <div className="rd-sec">
-      <div className="rd-sec-title" style={{ color: accent }}>Ausbildung</div>
+      {sectionTitle('Ausbildung', 'education')}
       {lists.edu.map((e) => (
         <div className="rd-item" key={e.id}>
           <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmEdu(e.id)}>
@@ -606,10 +699,9 @@ export function EditableResume({
     </div>
   );
 
-  const projectsSection =
-    lists.projects.length > 0 ? (
+  const projectsSection = removed.has('projects') ? null : (
       <div className="rd-sec">
-        <div className="rd-sec-title" style={{ color: accent }}>Projekte</div>
+        {sectionTitle('Projekte', 'projects')}
         {lists.projects.map((x, index) => (
           <div className="rd-item" key={x.id}>
             <button className="ed-rm-sec" title="Projekt entfernen" onClick={() => rmProject(x.id)}>
@@ -654,12 +746,15 @@ export function EditableResume({
             </div>
           </div>
         ))}
+        <button className="ed-add big" onClick={addProject}>
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Projekt hinzufügen
+        </button>
       </div>
-    ) : null;
+    );
 
-  const skillsSection = (
+  const skillsSection = removed.has('skills') ? null : (
     <div className="rd-sec">
-      <div className="rd-sec-title" style={{ color: accent }}>Fähigkeiten</div>
+      {sectionTitle('Fähigkeiten', 'skills')}
       {lists.skillCats.map((c) => (
         <div key={c.id}>
           {multiCat && (
@@ -696,9 +791,9 @@ export function EditableResume({
     </div>
   );
 
-  const languagesSection = (
+  const languagesSection = removed.has('languages') ? null : (
     <div className="rd-sec">
-      <div className="rd-sec-title" style={{ color: accent }}>Sprachen</div>
+      {sectionTitle('Sprachen', 'languages')}
       <div className="rd-skills">
         {lists.langs.map((l) => (
           <span className="rd-skill" key={l.id}>
@@ -716,10 +811,9 @@ export function EditableResume({
     </div>
   );
 
-  const certsSection =
-    lists.certs.length > 0 ? (
+  const certsSection = removed.has('certs') ? null : (
       <div className="rd-sec">
-        <div className="rd-sec-title" style={{ color: accent }}>Zertifikate</div>
+        {sectionTitle('Zertifikate', 'certs')}
         {lists.certs.map((c) => (
           <div className="rd-item" key={c.id}>
             <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmCert(c.id)}>
@@ -732,8 +826,11 @@ export function EditableResume({
             <Editable className="rd-item-org" oneline initial={c.issuer} placeholder="Aussteller" onCommit={(v) => setC(c.id, { issuer: v })} />
           </div>
         ))}
+        <button className="ed-add big" onClick={addCert}>
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Zertifikat hinzufügen
+        </button>
       </div>
-    ) : null;
+    );
 
   const contactLine = [displayAddress, meta.phone, meta.email, meta.linkedin && 'LinkedIn', meta.github && 'GitHub']
     .filter(Boolean)
@@ -801,22 +898,20 @@ export function EditableResume({
         )}
       </div>
 
-      {/* optional-section adders under the doc */}
-      <div className="mx-auto mt-4 flex max-w-[820px] flex-wrap items-center gap-2 text-xs">
-        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-          <Edit3 className="h-3.5 w-3.5" /> Optionale Abschnitte:
-        </span>
-        {lists.projects.length === 0 && (
-          <button className="ed-add" onClick={addProject}>
-            <Plus className="h-3 w-3" strokeWidth={2.6} /> Projekte
-          </button>
-        )}
-        {lists.certs.length === 0 && (
-          <button className="ed-add" onClick={addCert}>
-            <Plus className="h-3 w-3" strokeWidth={2.6} /> Zertifikate
-          </button>
-        )}
-      </div>
+      {/* section re-add bar — lists every removed section so the user can
+          bring any of them back (P3) */}
+      {removed.size > 0 && (
+        <div className="mx-auto mt-4 flex max-w-[820px] flex-wrap items-center gap-2 text-xs">
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <Edit3 className="h-3.5 w-3.5" /> Abschnitt hinzufügen:
+          </span>
+          {RESUME_SECTIONS.filter((s) => removed.has(s.key)).map((s) => (
+            <button key={s.key} className="ed-add" onClick={() => restoreSection(s.key)}>
+              <Plus className="h-3 w-3" strokeWidth={2.6} /> {s.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

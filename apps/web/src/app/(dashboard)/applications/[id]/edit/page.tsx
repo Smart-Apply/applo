@@ -190,12 +190,16 @@ export default function ApplicationResumeEditorPage() {
   // ── silent auto-save: résumé ──
   const autoSaveResume = useCallback(async () => {
     if (!parsedResume) return;
-    lastAttemptedResume.current = JSON.stringify(parsedResume);
+    const snapshot = JSON.stringify(parsedResume);
+    lastAttemptedResume.current = snapshot;
     try {
       const normalized = normalizeResumeForSave(parsedResume);
       await updateResume.mutateAsync({ resume: normalized, contentLanguage: selectedLanguage });
-      // Sync both to the normalized value so we don't loop on trim/format diffs.
-      setParsedResume(normalized);
+      // Reconcile to the normalized value so we don't loop on trim/format diffs —
+      // but ONLY if nothing was edited (e.g. via the AI assistant) while this save
+      // was in flight, otherwise we'd clobber the newer change. A surviving diff
+      // just triggers the next auto-save cycle.
+      setParsedResume((current) => (JSON.stringify(current) === snapshot ? normalized : current));
       setLastSavedResume(normalized);
     } catch (err) {
       toast.error('Lebenslauf konnte nicht gespeichert werden', {
