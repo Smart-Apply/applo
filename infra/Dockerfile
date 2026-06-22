@@ -115,10 +115,18 @@ RUN apk add --no-cache \
     dumb-init && \
     rm -rf /var/cache/apk/*
 
+# We skip Playwright's bundled Chromium download (PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1)
+# and ship the Alpine `chromium` package instead (much smaller, security-patched
+# by apk). The agent URL parser therefore MUST be told where that binary lives —
+# without CHROMIUM_EXECUTABLE_PATH, chromium.launch() looks for the (absent)
+# bundled browser and throws "Executable doesn't exist", which the parser wraps
+# as a 400 on POST /job-postings/parse. The apk chromium binary is at
+# /usr/bin/chromium-browser (a launcher symlink) on alpine.
 ENV NODE_ENV=production \
     NPM_CONFIG_LOGLEVEL=error \
     PLAYWRIGHT_BROWSERS_PATH=0 \
-    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+    CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
 
