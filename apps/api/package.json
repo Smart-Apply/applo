@@ -143,10 +143,10 @@
     "@types/ua-parser-js": "^0.7.39",
     "@types/uuid": "^11.0.0",
     "@types/validator": "^13.15.9",
-    "baseline-browser-mapping": "^2.10.37",
+    "baseline-browser-mapping": "^2.10.38",
     "dotenv": "^17.4.2",
     "eslint": "^9.39.4",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.1"
   },
   "prisma": {
     "seed": "node prisma/dist/seed-all.js"
