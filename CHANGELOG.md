@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.2](https://github.com/Smart-Apply/smart-apply/compare/v4.0.1...v4.0.2) (2026-06-22)
+
+
+### Bug Fixes
+
+* **docker:** point Playwright at system Chromium for URL parser ([#590](https://github.com/Smart-Apply/smart-apply/issues/590)) ([42e5fef](https://github.com/Smart-Apply/smart-apply/commit/42e5feffe9aa655dedb26d8c7877ccfbd12645ee))
+
 ## [4.0.1](https://github.com/Smart-Apply/smart-apply/compare/v4.0.0...v4.0.1) (2026-06-22)
 
 
