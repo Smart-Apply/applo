@@ -13,6 +13,8 @@
   const BLUE   = '#2563eb';
   const GREEN  = '#15a34a';
   const DASH   = '#9fb0c9';
+  const HEART  = '#ff5a72';
+  const HAND   = '#3a4f76';
 
   function Diamond({ cx, cy, s, fill, o = 1 }) {
     const x = Number(cx), y = Number(cy), r = Number(s);
@@ -25,16 +27,33 @@
     );
   }
 
+  function Heart({ cx, cy, size, fill, o = 1 }) {
+    const sc = Number(size) / 32;
+    return (
+      <g transform={`translate(${Number(cx) - 16 * sc} ${Number(cy) - 14 * sc}) scale(${sc})`} opacity={o}>
+        <path d="M16 28 C16 28 2 18 2 9 C2 4 6 2 9 2 C12 2 14 4 16 7 C18 4 20 2 23 2 C26 2 30 4 30 9 C30 18 16 28 16 28 Z" fill={fill} />
+      </g>
+    );
+  }
+
   function Mascot({ pose = 'wave', variant = 'flat', size = 260, id }) {
     const is3d = variant === '3d';
     const uid = id || pose + '-' + variant;
     const body = is3d ? `url(#navy-${uid})` : NAVY;
     const screen = is3d ? `url(#screen-${uid})` : SCREEN;
+    const hand = is3d ? `url(#hand-${uid})` : HAND;
     const armStroke = NAVY_D;
 
     /* ---- eyes ---- */
     let eyes;
-    if (pose === 'celebrate' || pose === 'done') {
+    if (pose === 'lovestruck') {
+      eyes = (
+        <g className="m-eyes">
+          <Heart cx={101} cy={112} size={19} fill={HEART} />
+          <Heart cx={139} cy={112} size={19} fill={HEART} />
+        </g>
+      );
+    } else if (pose === 'celebrate' || pose === 'done' || pose === 'love') {
       eyes = (
         <g fill="none" stroke={NAVY} strokeWidth="5" strokeLinecap="round">
           <path d="M94 113 Q102 101 110 113" />
@@ -64,7 +83,7 @@
 
     /* ---- mouth ---- */
     let mouth;
-    if (pose === 'wave' || pose === 'celebrate') {
+    if (pose === 'wave' || pose === 'celebrate' || pose === 'love' || pose === 'lovestruck') {
       mouth = <path d="M104 128 Q120 153 136 128 Z" fill={NAVY} />;
     } else if (pose === 'think') {
       mouth = <ellipse cx="129" cy="134" rx="5" ry="4.2" fill={NAVY} />;
@@ -87,11 +106,11 @@
         <g>
           {/* left down */}
           <path d="M86 176 L72 204" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
-          <circle cx="70" cy="208" r="13" fill={body} />
+          <circle cx="70" cy="208" r="13" fill={hand} />
           {/* right raised */}
           <g className="m-wavearm">
             <path d="M154 174 L184 150" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
-            <circle cx="188" cy="146" r="13" fill={body} />
+            <circle cx="188" cy="146" r="13" fill={hand} />
           </g>
         </g>
       );
@@ -99,29 +118,46 @@
       arms = (
         <g>
           <path d="M86 176 L72 204" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
-          <circle cx="70" cy="208" r="13" fill={body} />
+          <circle cx="70" cy="208" r="13" fill={hand} />
           {/* right hand to chin */}
           <path d="M156 178 L150 156" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
-          <circle cx="148" cy="152" r="12" fill={body} />
+          <circle cx="148" cy="152" r="12" fill={hand} />
         </g>
       );
     } else if (pose === 'celebrate') {
       arms = (
         <g className="m-celearms">
           <path d="M86 174 L58 150" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
-          <circle cx="54" cy="146" r="13" fill={body} />
+          <circle cx="54" cy="146" r="13" fill={hand} />
           <path d="M154 174 L182 150" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
-          <circle cx="186" cy="146" r="13" fill={body} />
+          <circle cx="186" cy="146" r="13" fill={hand} />
+        </g>
+      );
+    } else if (pose === 'love' || pose === 'lovestruck') {
+      const heartFill = is3d ? `url(#heart-${uid})` : HEART;
+      arms = (
+        <g>
+          {/* forearms reaching in — drawn behind the heart */}
+          <path d="M86 178 L106 197" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
+          <path d="M154 178 L134 197" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
+          {/* heart cradled in the hands */}
+          <g className="m-heart">
+            <Heart cx={120} cy={176} size={58} fill={heartFill} />
+            {is3d && <ellipse cx="109" cy="166" rx="8" ry="4.5" fill="#fff" opacity="0.35" />}
+          </g>
+          {/* hands cupping the bottom of the heart, in front */}
+          <circle cx="107" cy="199" r="13" fill={hand} />
+          <circle cx="133" cy="199" r="13" fill={hand} />
         </g>
       );
     } else { /* done — thumbs up */
       arms = (
         <g>
           <path d="M86 176 L72 204" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
-          <circle cx="70" cy="208" r="13" fill={body} />
+          <circle cx="70" cy="208" r="13" fill={hand} />
           <path d="M154 176 L176 160" fill="none" stroke={armStroke} strokeWidth="20" strokeLinecap="round" />
-          <circle cx="180" cy="156" r="13" fill={body} />
-          <rect x="175.5" y="139" width="9" height="17" rx="4.5" fill={body} />
+          <circle cx="180" cy="156" r="13" fill={hand} />
+          <rect x="175.5" y="139" width="9" height="17" rx="4.5" fill={hand} />
         </g>
       );
     }
@@ -160,6 +196,14 @@
           <circle cx="214" cy="110" r="2.8" fill={NAVY} opacity=".7" />
         </g>
       );
+    } else if (pose === 'love' || pose === 'lovestruck') {
+      extras = (
+        <g className="m-love">
+          <g className="m-love-h1"><Heart cx={64} cy={96} size={15} fill={HEART} /></g>
+          <g className="m-love-h2"><Heart cx={180} cy={88} size={20} fill={BLUE} /></g>
+          <g className="m-love-h3"><Heart cx={120} cy={36} size={13} fill={HEART} o={0.9} /></g>
+        </g>
+      );
     } else if (pose === 'done') {
       extras = (
         <g className="m-check">
@@ -181,6 +225,15 @@
             <linearGradient id={`screen-${uid}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#ffffff" />
               <stop offset="100%" stopColor="#e4edfb" />
+            </linearGradient>
+            <linearGradient id={`heart-${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ff8094" />
+              <stop offset="55%" stopColor="#ff5a72" />
+              <stop offset="100%" stopColor="#e23a57" />
+            </linearGradient>
+            <linearGradient id={`hand-${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#4a648e" />
+              <stop offset="100%" stopColor="#33486f" />
             </linearGradient>
           </defs>
         )}

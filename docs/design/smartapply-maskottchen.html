@@ -73,6 +73,65 @@
   .pose .label .l{font-size:15px;font-weight:700;}
   .pose .label .n{font-size:12.5px;color:var(--muted-2);}
 
+  /* ====== POSE ANIMATIONS ====== */
+  .stage svg .m-eyes,.stage svg .m-wavearm,.stage svg .m-celearms,
+  .stage svg .m-confetti,.stage svg .m-check,.stage svg .m-ant,
+  .stage svg .m-think,.stage svg [class*="m-think-"],
+  .stage svg .m-heart,.stage svg [class*="m-love-"]{transform-box:view-box;}
+
+  .anim-wave svg{animation:breathe 3.2s ease-in-out infinite;transform-origin:120px 252px;}
+  .anim-wave .m-wavearm{animation:wavehand 1.1s ease-in-out infinite;transform-origin:158px 176px;}
+  .anim-wave .m-eyes{animation:blink 4.6s ease-in-out infinite;transform-origin:120px 110px;}
+  .anim-wave .m-ant-l{animation:antbob 3.2s ease-in-out infinite;transform-origin:100px 60px;}
+  .anim-wave .m-ant-r{animation:antbob 3.2s ease-in-out .25s infinite;transform-origin:140px 60px;}
+
+  .anim-think svg{animation:tilt 4s ease-in-out infinite;transform-origin:120px 200px;}
+  .anim-think .m-think-d1{animation:dotPop 3s ease-in-out infinite;}
+  .anim-think .m-think-d2{animation:dotPop 3s ease-in-out .18s infinite;}
+  .anim-think .m-think-t1{animation:dotBlink 1.5s ease-in-out infinite;}
+  .anim-think .m-think-t2{animation:dotBlink 1.5s ease-in-out .25s infinite;}
+  .anim-think .m-think-t3{animation:dotBlink 1.5s ease-in-out .5s infinite;}
+
+  .anim-celebrate svg{animation:hop 1.5s cubic-bezier(.3,.6,.3,1) infinite;transform-origin:120px 252px;}
+  .anim-celebrate .m-celearms{animation:armcheer 1.5s ease-in-out infinite;transform-origin:120px 180px;}
+  .anim-celebrate .m-confetti{animation:confetti 1.5s ease-in-out infinite;transform-origin:120px 80px;}
+
+  .anim-done svg{animation:nod 3s ease-in-out infinite;transform-origin:120px 252px;}
+  .anim-done .m-check{animation:checkpop 3s cubic-bezier(.34,1.56,.64,1) infinite;transform-origin:186px 66px;}
+  .anim-done .m-eyes{animation:blink 4.6s ease-in-out 1s infinite;transform-origin:120px 110px;}
+
+  .anim-love svg{animation:breathe 3.2s ease-in-out infinite;transform-origin:120px 252px;}
+  .anim-love .m-heart{animation:heartbeat 1.4s ease-in-out infinite;transform-origin:120px 176px;}
+  .anim-love .m-eyes{animation:blink 4.6s ease-in-out infinite;transform-origin:120px 110px;}
+  .anim-love .m-love-h1{animation:floatup 2.6s ease-in-out infinite;transform-origin:64px 96px;}
+  .anim-love .m-love-h2{animation:floatup 2.6s ease-in-out .5s infinite;transform-origin:180px 88px;}
+  .anim-love .m-love-h3{animation:floatup 2.6s ease-in-out 1s infinite;transform-origin:120px 36px;}
+
+  .anim-lovestruck svg{animation:breathe 3.2s ease-in-out infinite;transform-origin:120px 252px;}
+  .anim-lovestruck .m-heart{animation:heartbeat 1.4s ease-in-out infinite;transform-origin:120px 176px;}
+  .anim-lovestruck .m-eyes{animation:eyepulse 1.4s ease-in-out infinite;transform-origin:120px 112px;}
+  .anim-lovestruck .m-love-h1{animation:floatup 2.6s ease-in-out infinite;transform-origin:64px 96px;}
+  .anim-lovestruck .m-love-h2{animation:floatup 2.6s ease-in-out .5s infinite;transform-origin:180px 88px;}
+  .anim-lovestruck .m-love-h3{animation:floatup 2.6s ease-in-out 1s infinite;transform-origin:120px 36px;}
+
+  @keyframes breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.012)}}
+  @keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+  @keyframes wavehand{0%,100%{transform:rotate(2deg)}25%{transform:rotate(20deg)}60%{transform:rotate(-10deg)}}
+  @keyframes antbob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(3deg)}}
+  @keyframes tilt{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+  @keyframes dotPop{0%,70%,100%{opacity:0;transform:translateY(4px) scale(.6)}20%,55%{opacity:.6;transform:translateY(0) scale(1)}}
+  @keyframes dotBlink{0%,100%{opacity:.25}50%{opacity:1}}
+  @keyframes hop{0%,100%{transform:translateY(0) scaleY(1)}15%{transform:translateY(2px) scaleY(.94)}45%{transform:translateY(-20px) scaleY(1.04)}70%{transform:translateY(0) scaleY(.97)}}
+  @keyframes armcheer{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+  @keyframes confetti{0%{opacity:0;transform:translateY(10px) scale(.7) rotate(-8deg)}30%{opacity:1}100%{opacity:0;transform:translateY(-14px) scale(1.1) rotate(10deg)}}
+  @keyframes nod{0%,100%{transform:rotate(0)}50%{transform:rotate(2deg)}}
+  @keyframes checkpop{0%,70%,100%{transform:scale(1)}80%{transform:scale(0)}88%{transform:scale(1.25)}94%{transform:scale(.92)}}
+  @keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.12)}30%{transform:scale(1)}45%{transform:scale(1.12)}}
+  @keyframes eyepulse{0%,100%{transform:scale(1)}25%{transform:scale(1.18)}50%{transform:scale(1)}}
+  @keyframes floatup{0%{opacity:0;transform:translateY(8px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translateY(-16px) scale(1)}}
+
+  @media(prefers-reduced-motion:reduce){.pose svg,[class^="anim-"] *{animation:none !important;}}
+
   /* stickers */
   .stickers{display:flex;gap:22px;flex-wrap:wrap;}
   .sticker{width:150px;text-align:center;}
@@ -117,6 +176,8 @@ const POSES = [
   { key:'think',     l:'Nachdenken', n:'Analyse · Laden' },
   { key:'celebrate', l:'Feiern',     n:'Erfolg · Bewerbung raus' },
   { key:'done',      l:'Fertig',     n:'Abgeschlossen · Häkchen' },
+  { key:'love',      l:'Herz',       n:'Dank · Favorit · Liebe' },
+  { key:'lovestruck',l:'Verliebt',   n:'Herz-Augen · Begeisterung · Fan' },
 ];
 
 function Arrow(){
@@ -181,26 +242,13 @@ function Sheet(){
         </div>
       </section>
 
-      {/* 3D POSES */}
+      {/* POSES — animiert */}
       <section>
-        <div className="sec-head"><h2>Posen · 3D</h2><div className="rule"></div><span className="hint">Für Social Media & Marketing</span></div>
+        <div className="sec-head"><h2>Posen</h2><div className="rule"></div><span className="hint">Animiert · loopende Mikro-Bewegungen</span></div>
         <div className="grid">
           {POSES.map(p=>(
-            <div className="pose threed" key={'3d'+p.key}>
-              <div className="stage"><Mascot pose={p.key} variant="3d" size={170} id={'g3-'+p.key} /></div>
-              <div className="label"><span className="l">{p.l}</span><span className="n">{p.n.split(' · ')[0]}</span></div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 2D POSES */}
-      <section>
-        <div className="sec-head"><h2>Posen · 2D</h2><div className="rule"></div><span className="hint">Für Website & App-UI</span></div>
-        <div className="grid">
-          {POSES.map(p=>(
-            <div className="pose flat" key={'2d'+p.key}>
-              <div className="stage"><Mascot pose={p.key} variant="flat" size={170} id={'g2-'+p.key} /></div>
+            <div className="pose flat" key={p.key}>
+              <div className={"stage anim-"+p.key}><Mascot pose={p.key} variant="flat" size={170} id={'g2-'+p.key} /></div>
               <div className="label"><span className="l">{p.l}</span><span className="n">{p.n.split(' · ')[1]}</span></div>
             </div>
           ))}

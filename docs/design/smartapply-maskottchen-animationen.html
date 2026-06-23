@@ -91,6 +91,22 @@
   .anim-done .m-check{animation:checkpop 3s cubic-bezier(.34,1.56,.64,1) infinite;transform-origin:186px 66px;}
   .anim-done .m-eyes{animation:blink 4.6s ease-in-out 1s infinite;transform-origin:120px 110px;}
 
+  /* LOVE */
+  .anim-love svg{animation:breathe 3.2s ease-in-out infinite;transform-origin:120px 252px;}
+  .anim-love .m-heart{animation:heartbeat 1.4s ease-in-out infinite;transform-origin:120px 176px;}
+  .anim-love .m-eyes{animation:blink 4.6s ease-in-out infinite;transform-origin:120px 110px;}
+  .anim-love .m-love-h1{animation:floatup 2.6s ease-in-out infinite;transform-origin:64px 96px;}
+  .anim-love .m-love-h2{animation:floatup 2.6s ease-in-out .5s infinite;transform-origin:180px 88px;}
+  .anim-love .m-love-h3{animation:floatup 2.6s ease-in-out 1s infinite;transform-origin:120px 36px;}
+
+  /* LOVESTRUCK */
+  .anim-lovestruck svg{animation:breathe 3.2s ease-in-out infinite;transform-origin:120px 252px;}
+  .anim-lovestruck .m-heart{animation:heartbeat 1.4s ease-in-out infinite;transform-origin:120px 176px;}
+  .anim-lovestruck .m-eyes{animation:eyepulse 1.4s ease-in-out infinite;transform-origin:120px 112px;}
+  .anim-lovestruck .m-love-h1{animation:floatup 2.6s ease-in-out infinite;transform-origin:64px 96px;}
+  .anim-lovestruck .m-love-h2{animation:floatup 2.6s ease-in-out .5s infinite;transform-origin:180px 88px;}
+  .anim-lovestruck .m-love-h3{animation:floatup 2.6s ease-in-out 1s infinite;transform-origin:120px 36px;}
+
   @keyframes breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.012)}}
   @keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
   @keyframes wavehand{0%,100%{transform:rotate(2deg)}25%{transform:rotate(20deg)}60%{transform:rotate(-10deg)}}
@@ -102,6 +118,9 @@
   @keyframes armcheer{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
   @keyframes confetti{0%{opacity:0;transform:translateY(10px) scale(.7) rotate(-8deg)}30%{opacity:1}100%{opacity:0;transform:translateY(-14px) scale(1.1) rotate(10deg)}}
   @keyframes nod{0%,100%{transform:rotate(0)}50%{transform:rotate(2deg)}}
+  @keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.12)}30%{transform:scale(1)}45%{transform:scale(1.12)}}
+  @keyframes eyepulse{0%,100%{transform:scale(1)}25%{transform:scale(1.18)}50%{transform:scale(1)}}
+  @keyframes floatup{0%{opacity:0;transform:translateY(8px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translateY(-16px) scale(1)}}
   @keyframes checkpop{0%,70%,100%{transform:scale(1)}80%{transform:scale(0)}88%{transform:scale(1.25)}94%{transform:scale(.92)}}
 
   /* ===== USE CASES (flat, in UI context) ===== */
@@ -144,12 +163,15 @@ const ANIMS = [
   { key:'think',     cls:'anim-think',     l:'Nachdenken', n:'Analyse · Laden' },
   { key:'celebrate', cls:'anim-celebrate', l:'Feiern',     n:'Erfolg' },
   { key:'done',      cls:'anim-done',      l:'Fertig',     n:'Abgeschlossen' },
+  { key:'love',      cls:'anim-love',      l:'Herz',       n:'Dank · Favorit' },
+  { key:'lovestruck',cls:'anim-lovestruck',l:'Verliebt',   n:'Herz-Augen · Fan' },
 ];
 
 const USES = [
   { pose:'wave', cls:'anim-wave', h:'Onboarding', p:'Applo winkt beim ersten Start und begrüßt neue Nutzer.', cta:'Los geht’s' },
   { pose:'think', cls:'anim-think', h:'Ladezustand', p:'Während die Bewerbung analysiert wird, denkt Applo sichtbar nach.', cta:null },
   { pose:'celebrate', cls:'anim-celebrate', h:'Erfolgsmeldung', p:'Bewerbung abgeschickt — Applo feiert mit Konfetti mit.', cta:'Weiter' },
+  { pose:'love', cls:'anim-love', h:'Danke-Moment', p:'Beim Bewerten oder Favorisieren zeigt Applo ein Herz.', cta:null },
 ];
 
 function Hero(){
@@ -180,7 +202,7 @@ function Sheet(){
           <h1>Applo — <span style={{color:'var(--blue)'}}>Animationen</span></h1>
           <p className="lead">Bewegungsstudien für das SmartApply-Maskottchen. Jede Pose bekommt eine charaktervolle, dezent loopende Animation — für lebendige UI-Momente ohne Ablenkung.</p>
         </div>
-        <a className="backlink" href="SmartApply Maskottchen.html">← Charakter-Sheet</a>
+        <a className="backlink" href="smartapply-maskottchen.html">← Charakter-Sheet</a>
       </div>
 
       <Hero/>

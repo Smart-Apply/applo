@@ -636,7 +636,8 @@
 .applo .a-l-up, .applo .a-r-up, .applo .a-r-wave, .applo .a-r-thumb, .applo .a-r-chin,
 .applo .mo-happy, .applo .mo-o, .applo .ey-happy, .applo .brow-think,
 .applo .fx-dots, .applo .fx-confetti, .applo .fx-gears,
-.applo .tool-coach { display: none; }
+.applo .tool-coach, .applo .tool-search, .applo .fx-auto,
+.applo .ey-hearts, .applo .tool-love, .applo .fx-love { display: none; }
 .applo .fx-check { opacity: 0; stroke-dasharray: 46; stroke-dashoffset: 46; }
 
 /* IDLE */
@@ -733,6 +734,50 @@
 @keyframes apploGesture { 0%,100% { transform: rotate(0) } 50% { transform: rotate(-8deg) } }
 @keyframes apploSayOut { 0% { opacity: 0; transform: translateX(-3px) scale(.7) } 40% { opacity: .95 } 100% { opacity: 0; transform: translateX(5px) scale(1.1) } }
 @keyframes apploNodLoop { 0%,100% { transform: rotate(0) } 50% { transform: rotate(1.8deg) } }
+
+
+/* SEARCH — magnifying glass held up, pupil scans */
+.applo.state-search .a-r-down { display: none; }
+.applo.state-search .tool-search { display: block; animation: apploLensBob 3s ease-in-out infinite; transform-origin: 150px 150px; }
+.applo.state-search .search-eye { animation: apploPupilScan 2.4s ease-in-out infinite; }
+.applo.state-search .rig { animation: apploTilt 4.2s ease-in-out infinite; transform-origin: 120px 250px; }
+@keyframes apploLensBob { 0%,100% { transform: translate(0,0) rotate(-1.5deg) } 50% { transform: translate(2px,-2px) rotate(1.5deg) } }
+@keyframes apploPupilScan { 0%,100% { transform: translateX(-4px) } 25% { transform: translate(4px,1px) } 60% { transform: translate(3px,-1px) } }
+
+
+/* AUTO — lightning, speed-lines, both arms up, buzzing */
+.applo.state-auto .a-l-down, .applo.state-auto .a-r-down { display: none; }
+.applo.state-auto .a-l-up, .applo.state-auto .a-r-up { display: block; }
+.applo.state-auto .mo-neutral { display: none; }
+.applo.state-auto .mo-happy { display: block; }
+.applo.state-auto .ey-open { display: none; }
+.applo.state-auto .ey-happy { display: block; }
+.applo.state-auto .fx-auto { display: block; }
+.applo.state-auto .bolt { animation: apploBoltFlash .85s ease-in-out infinite; transform-origin: 126px 42px; }
+.applo.state-auto .speed-l { animation: apploSpeedL .85s linear infinite; }
+.applo.state-auto .speed-r { animation: apploSpeedR .85s linear infinite; }
+.applo.state-auto .rig { animation: apploBuzz .5s ease-in-out infinite; transform-origin: 120px 250px; }
+@keyframes apploBoltFlash { 0%,100% { opacity: .85; transform: scale(1) } 50% { opacity: 1; transform: scale(1.14) } }
+@keyframes apploSpeedL { 0% { opacity: 0; transform: translateX(6px) } 40% { opacity: 1 } 100% { opacity: 0; transform: translateX(-8px) } }
+@keyframes apploSpeedR { 0% { opacity: 0; transform: translateX(-6px) } 40% { opacity: 1 } 100% { opacity: 0; transform: translateX(8px) } }
+@keyframes apploBuzz { 0%,100% { transform: translateX(0) rotate(0) } 25% { transform: translateX(-1.6px) rotate(-1deg) } 75% { transform: translateX(1.6px) rotate(1deg) } }
+
+
+/* LOVE — heart cradled in hands, heart eyes, rising hearts */
+.applo.state-love .a-l-down, .applo.state-love .a-r-down { display: none; }
+.applo.state-love .tool-love { display: block; }
+.applo.state-love .love-heart { animation: apploHeartbeat 1.4s ease-in-out infinite; transform-origin: 120px 176px; }
+.applo.state-love .ey-open { display: none; }
+.applo.state-love .ey-hearts { display: block; animation: apploEyePulse 1.4s ease-in-out infinite; transform-origin: 120px 112px; }
+.applo.state-love .mo-neutral { display: none; }
+.applo.state-love .mo-happy { display: block; }
+.applo.state-love .fx-love { display: block; }
+.applo.state-love .lh1 { animation: apploFloatUp 2.6s ease-in-out infinite; transform-origin: 64px 92px; }
+.applo.state-love .lh2 { animation: apploFloatUp 2.6s ease-in-out .5s infinite; transform-origin: 180px 84px; }
+.applo.state-love .lh3 { animation: apploFloatUp 2.6s ease-in-out 1s infinite; transform-origin: 120px 30px; }
+@keyframes apploHeartbeat { 0%,100% { transform: scale(1) } 15% { transform: scale(1.12) } 30% { transform: scale(1) } 45% { transform: scale(1.12) } }
+@keyframes apploEyePulse { 0%,100% { transform: scale(1) } 25% { transform: scale(1.18) } 50% { transform: scale(1) } }
+@keyframes apploFloatUp { 0% { opacity: 0; transform: translateY(8px) scale(.6) } 25% { opacity: 1 } 100% { opacity: 0; transform: translateY(-16px) scale(1) } }
 
 @media (prefers-reduced-motion: reduce) {
   .applo, .applo * { animation: none !important; }
