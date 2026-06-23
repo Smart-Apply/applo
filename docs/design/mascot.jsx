@@ -13,7 +13,6 @@
   const BLUE   = '#2563eb';
   const GREEN  = '#15a34a';
   const DASH   = '#9fb0c9';
-  const FOLD   = '#d7e0f0';
   const HEART  = '#ff5a72';
   const HAND   = '#3a4f76';
 
