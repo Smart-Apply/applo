@@ -59,6 +59,7 @@ export function InterviewVoice({
   const dcRef = useRef<RTCDataChannel | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
   const turnsRef = useRef<VoiceTranscriptTurn[]>([]);
   const startedAtRef = useRef<number | null>(null);
   const endTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -96,6 +97,8 @@ export function InterviewVoice({
     }
     audioContextRef.current = null;
     setMicLevel(0);
+    if (audioRef.current) audioRef.current.srcObject = null;
+    remoteStreamRef.current = null;
     dcRef.current = null;
     pcRef.current = null;
     micStreamRef.current = null;
@@ -204,7 +207,16 @@ export function InterviewVoice({
       pcRef.current = pc;
 
       pc.ontrack = (event) => {
-        if (audioRef.current) audioRef.current.srcObject = event.streams[0];
+        // Persist the remote interviewer audio so we can re-bind it after the
+        // component swaps from the pre-call <audio> element to the live one.
+        remoteStreamRef.current = event.streams[0];
+        if (audioRef.current) {
+          audioRef.current.srcObject = event.streams[0];
+          void audioRef.current.play().catch(() => {
+            // Autoplay can still be blocked by browser policy on some devices.
+            // The phase→live effect retries play() once the live element mounts.
+          });
+        }
       };
 
       pc.onconnectionstatechange = () => {
@@ -289,7 +301,9 @@ export function InterviewVoice({
               },
             }),
           );
-          // Trigger the interviewer's opening greeting + first question.
+          // Trigger the interviewer's opening greeting + first question. The
+          // session was already configured for audio output at mint time, so a
+          // plain response.create produces spoken audio.
           dc.send(JSON.stringify({ type: 'response.create' }));
         } catch {
           // channel closed before we could configure/greet
@@ -346,6 +360,22 @@ export function InterviewVoice({
     cleanupConnection();
     onSwitchToText();
   }, [cleanupConnection, onSwitchToText]);
+
+  // The pre-call and live phases render SEPARATE <audio> elements, so the
+  // remote stream attached during 'connecting' is dropped when React swaps to
+  // the live element. Re-bind (and retry autoplay) once the live element mounts.
+  useEffect(() => {
+    if (phase !== 'live') return;
+    const audioEl = audioRef.current;
+    const stream = remoteStreamRef.current;
+    if (audioEl && stream) {
+      audioEl.srcObject = stream;
+      void audioEl.play().catch(() => {
+        // Autoplay blocked — the "Gespräch starten" click is a user gesture that
+        // normally satisfies policy; swallow to avoid an unhandled rejection.
+      });
+    }
+  }, [phase]);
 
   // Elapsed-time ticker while live.
   useEffect(() => {
@@ -475,7 +505,7 @@ export function InterviewVoice({
             </div>
           </div>
         </div>
-        <audio ref={audioRef} autoPlay className="hidden" />
+        <audio ref={audioRef} autoPlay playsInline className="hidden" />
       </Card>
     );
   }
@@ -625,7 +655,7 @@ export function InterviewVoice({
       </div>
 
       {/* Remote interviewer audio. */}
-      <audio ref={audioRef} autoPlay className="hidden" />
+      <audio ref={audioRef} autoPlay playsInline className="hidden" />
 
       <style jsx>{`
         @keyframes voiceEq {

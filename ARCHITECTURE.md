@@ -40,13 +40,13 @@
 
 ### Production hostnames
 
-| Hostname                    | Origin                                                | Notes                                              |
-| --------------------------- | ----------------------------------------------------- | -------------------------------------------------- |
-| `smart-apply.io` (apex)     | Cloudflare Worker `smart-apply-web` (Custom Domain)   | Universal Edge Cert (Cloudflare)                   |
-| `www.smart-apply.io`        | Cloudflare Worker `smart-apply-web` (Custom Domain)   | Same Worker; redirect rule TBD for canonical host  |
-| `api.smart-apply.io`        | CNAME → `93ke51y.smart-apply-api.fly.dev` (Proxied 🟧) | Let's Encrypt cert issued by Fly via DNS-01        |
-| `_acme-challenge.api.…`     | CNAME → `api.smart-apply.io.93ke51y.flydns.net` (DNS-only) | Required for Fly cert renewal behind CF proxy |
-| `_fly-ownership.api.…`      | TXT `app-93ke51y`                                     | Required when traffic is proxied via Cloudflare    |
+| Hostname                | Origin                                                     | Notes                                             |
+| ----------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
+| `smart-apply.io` (apex) | Cloudflare Worker `smart-apply-web` (Custom Domain)        | Universal Edge Cert (Cloudflare)                  |
+| `www.smart-apply.io`    | Cloudflare Worker `smart-apply-web` (Custom Domain)        | Same Worker; redirect rule TBD for canonical host |
+| `api.smart-apply.io`    | CNAME → `93ke51y.smart-apply-api.fly.dev` (Proxied 🟧)     | Let's Encrypt cert issued by Fly via DNS-01       |
+| `_acme-challenge.api.…` | CNAME → `api.smart-apply.io.93ke51y.flydns.net` (DNS-only) | Required for Fly cert renewal behind CF proxy     |
+| `_fly-ownership.api.…`  | TXT `app-93ke51y`                                          | Required when traffic is proxied via Cloudflare   |
 
 ## 📦 Monorepo Structure (pnpm Workspaces + Turborepo)
 
@@ -201,26 +201,26 @@ recorded baselines live in
 
 ### Core Models
 
-| Model              | Description                            |
-| ------------------ | -------------------------------------- |
-| **User**           | Auth, OAuth identities, 2FA secrets    |
-| **Profile**        | Personal info, contact, summary        |
-| **Skill**          | Skills with level & category           |
-| **Experience**     | Work history                           |
-| **Education**      | Education history                      |
-| **Certificate**    | Certifications                         |
-| **Project**        | Portfolio projects                     |
-| **Language**       | Language proficiency                   |
-| **JobPosting**     | Parsed job listings                    |
-| **Application**    | Generated applications + PDFs          |
+| Model              | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| **User**           | Auth, OAuth identities, 2FA secrets            |
+| **Profile**        | Personal info, contact, summary                |
+| **Skill**          | Skills with level & category                   |
+| **Experience**     | Work history                                   |
+| **Education**      | Education history                              |
+| **Certificate**    | Certifications                                 |
+| **Project**        | Portfolio projects                             |
+| **Language**       | Language proficiency                           |
+| **JobPosting**     | Parsed job listings                            |
+| **Application**    | Generated applications + PDFs                  |
 | **Validation**     | Standalone AI check of an external application |
-| **ResumeTemplate** | PDF templates (50 variants)            |
-| **Interview**      | AI-generated interview Q&A             |
-| **RefreshToken**   | Rotated refresh tokens                 |
-| **Session**        | Device/IP/UA tracking                  |
-| **InviteCode**     | Closed-beta gate (hashed, single-use)  |
-| **Subscription**   | Plan & usage counters                  |
-| **AuditLog**       | Security event log                     |
+| **ResumeTemplate** | PDF templates (50 variants)                    |
+| **Interview**      | AI-generated interview Q&A                     |
+| **RefreshToken**   | Rotated refresh tokens                         |
+| **Session**        | Device/IP/UA tracking                          |
+| **InviteCode**     | Closed-beta gate (hashed, single-use)          |
+| **Subscription**   | Plan & usage counters                          |
+| **AuditLog**       | Security event log                             |
 
 ### Key Relations
 
@@ -250,74 +250,74 @@ User 1:1 Subscription
 
 ### Security Layers
 
-| Layer          | Implementation                                     |
-| -------------- | -------------------------------------------------- |
-| **Transport**  | HTTPS, HSTS                                        |
-| **Headers**    | Helmet, CSP, X-Frame-Options, X-Content-Type-Opts  |
-| **Auth**       | JWT (HttpOnly cookies) + refresh rotation + 2FA    |
-| **OAuth**      | Google, Microsoft, Azure AD (passport)             |
-| **Rate Limit** | 5/15min auth · 100/15min standard (`@nestjs/throttler`) |
-| **Input**      | class-validator DTOs, `@Sanitize()` + DOMPurify    |
+| Layer             | Implementation                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Transport**     | HTTPS, HSTS                                                                                                   |
+| **Headers**       | Helmet, CSP, X-Frame-Options, X-Content-Type-Opts                                                             |
+| **Auth**          | JWT (HttpOnly cookies) + refresh rotation + 2FA                                                               |
+| **OAuth**         | Google, Microsoft, Azure AD (passport)                                                                        |
+| **Rate Limit**    | 5/15min auth · 100/15min standard (`@nestjs/throttler`)                                                       |
+| **Input**         | class-validator DTOs, `@Sanitize()` + DOMPurify                                                               |
 | **AI Guardrails** | per-surface char + token limits on AI prompt inputs (`@smart-apply/shared` + `gpt-tokenizer` model `gpt-4.1`) |
-| **CSRF**       | csrf-csrf (Double Submit Cookie, optional)         |
-| **Passwords**  | argon2id, strength regex                           |
-| **Audit**      | Winston daily-rotated logs (90-day retention)      |
-| **Monitoring** | Sentry (errors + performance)                      |
+| **CSRF**          | csrf-csrf (Double Submit Cookie, optional)                                                                    |
+| **Passwords**     | argon2id, strength regex                                                                                      |
+| **Audit**         | Winston daily-rotated logs (90-day retention)                                                                 |
+| **Monitoring**    | Sentry (errors + performance)                                                                                 |
 
 ## 🔧 Technology Stack
 
 ### Backend (NestJS 11)
 
-| Category    | Technology                                           |
-| ----------- | ---------------------------------------------------- |
-| Runtime     | Node.js 24 (>= 20.19)                                |
-| Framework   | NestJS 11                                            |
-| Database    | Neon Postgres (serverless, EU/Frankfurt; pooled + direct URLs) |
-| ORM         | Prisma 6.19 (`@prisma/adapter-pg` + connection pool) |
-| Auth        | passport-jwt · passport-google · passport-microsoft · passport-azure-ad · argon2 · otplib (2FA) |
-| Queue       | Upstash QStash · in-memory                           |
-| Cache       | Upstash Redis · node-cache                           |
-| Storage     | Cloudflare R2 (S3-compatible) · local disk           |
-| LLM         | Azure AI Foundry · Azure OpenAI · mock               |
-| PDF         | `@react-pdf/renderer` 4.5 (TSX templates) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake) |
-| Email       | Resend                                               |
-| Logging     | Pino (req logs) + Winston (audit, daily rotation)    |
-| Monitoring  | Sentry (`@sentry/node` + profiling)                  |
-| Validation  | class-validator · Zod · sanitize-html                |
-| AI guardrails | `@smart-apply/shared` (limits) · `gpt-tokenizer` (model `gpt-4.1`) |
-| Resilience  | opossum (circuit breaker) |
-| Scheduling  | `@nestjs/schedule` (cron jobs)                       |
-| Health      | `@nestjs/terminus`                                   |
+| Category      | Technology                                                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime       | Node.js 24 (>= 20.19)                                                                                                               |
+| Framework     | NestJS 11                                                                                                                           |
+| Database      | Neon Postgres (serverless, EU/Frankfurt; pooled + direct URLs)                                                                      |
+| ORM           | Prisma 6.19 (`@prisma/adapter-pg` + connection pool)                                                                                |
+| Auth          | passport-jwt · passport-google · passport-microsoft · passport-azure-ad · argon2 · otplib (2FA)                                     |
+| Queue         | Upstash QStash · in-memory                                                                                                          |
+| Cache         | Upstash Redis · node-cache                                                                                                          |
+| Storage       | Cloudflare R2 (S3-compatible) · local disk                                                                                          |
+| LLM           | Azure AI Foundry · Azure OpenAI · mock                                                                                              |
+| PDF           | `@react-pdf/renderer` 4.5 (TSX templates) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake) |
+| Email         | Resend                                                                                                                              |
+| Logging       | Pino (req logs) + Winston (audit, daily rotation)                                                                                   |
+| Monitoring    | Sentry (`@sentry/node` + profiling)                                                                                                 |
+| Validation    | class-validator · Zod · sanitize-html                                                                                               |
+| AI guardrails | `@smart-apply/shared` (limits) · `gpt-tokenizer` (model `gpt-4.1`)                                                                  |
+| Resilience    | opossum (circuit breaker)                                                                                                           |
+| Scheduling    | `@nestjs/schedule` (cron jobs)                                                                                                      |
+| Health        | `@nestjs/terminus`                                                                                                                  |
 
 ### Frontend (Next.js 16)
 
-| Category    | Technology                                           |
-| ----------- | ---------------------------------------------------- |
-| Framework   | Next.js 16.1 (App Router, React Compiler enabled)    |
-| Language    | TypeScript (strict)                                  |
-| UI          | React 19.2 · shadcn/ui (Radix) · Tailwind v4         |
-| State       | Zustand 5 · TanStack Query 5                         |
-| Forms       | react-hook-form 7 · Zod (`@hookform/resolvers`)      |
-| PDF Viewer  | react-pdf · pdfjs-dist                               |
-| Editor      | Tiptap 3 (StarterKit + TextStyle)                    |
-| Toast       | Sonner                                               |
-| Files       | react-dropzone · jszip                               |
-| Sanitize    | isomorphic-dompurify                                 |
-| Markdown    | marked · turndown                                    |
-| Bundle      | Cloudflare Workers (OpenNext) · `@next/bundle-analyzer` |
+| Category   | Technology                                              |
+| ---------- | ------------------------------------------------------- |
+| Framework  | Next.js 16.1 (App Router, React Compiler enabled)       |
+| Language   | TypeScript (strict)                                     |
+| UI         | React 19.2 · shadcn/ui (Radix) · Tailwind v4            |
+| State      | Zustand 5 · TanStack Query 5                            |
+| Forms      | react-hook-form 7 · Zod (`@hookform/resolvers`)         |
+| PDF Viewer | react-pdf · pdfjs-dist                                  |
+| Editor     | Tiptap 3 (StarterKit + TextStyle)                       |
+| Toast      | Sonner                                                  |
+| Files      | react-dropzone · jszip                                  |
+| Sanitize   | isomorphic-dompurify                                    |
+| Markdown   | marked · turndown                                       |
+| Bundle     | Cloudflare Workers (OpenNext) · `@next/bundle-analyzer` |
 
 ### Infrastructure
 
-| Category   | Technology                                    |
-| ---------- | --------------------------------------------- |
-| Container  | Docker (multi-stage, `infra/Dockerfile`)      |
-| API host   | **Fly.io** (`smart-apply-api`, region `fra`, shared-cpu-1x / 1 GB) |
-| Web host   | Cloudflare Workers via `@opennextjs/cloudflare` (`smart-apply-web`) |
+| Category   | Technology                                                                                                                                                            |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Container  | Docker (multi-stage, `infra/Dockerfile`)                                                                                                                              |
+| API host   | **Fly.io** (`smart-apply-api`, region `fra`, shared-cpu-1x / 1 GB)                                                                                                    |
+| Web host   | Cloudflare Workers via `@opennextjs/cloudflare` (`smart-apply-web`)                                                                                                   |
 | CI/CD      | GitHub Actions — `ci.yml` (PR checks) + `deploy-staging.yml` (auto on `main`) + `deploy-prod.yml` (gated on `v*.*.*` tag) + `release-please.yml` (SemVer + CHANGELOG) |
-| Secrets    | Fly Secrets (API) · Cloudflare Worker vars/secrets (Web) · `.env` (dev) |
-| Database   | Neon Postgres (serverless, EU/Frankfurt; `DATABASE_URL` pooled, `DIRECT_URL` for migrations) |
-| DNS/CDN    | Cloudflare (proxied for all hostnames; ACME challenge DNS-only) |
-| Migrations | `prisma migrate deploy` runs as a Fly **release command** before machines start serving traffic |
+| Secrets    | Fly Secrets (API) · Cloudflare Worker vars/secrets (Web) · `.env` (dev)                                                                                               |
+| Database   | Neon Postgres (serverless, EU/Frankfurt; `DATABASE_URL` pooled, `DIRECT_URL` for migrations)                                                                          |
+| DNS/CDN    | Cloudflare (proxied for all hostnames; ACME challenge DNS-only)                                                                                                       |
+| Migrations | `prisma migrate deploy` runs as a Fly **release command** before machines start serving traffic                                                                       |
 
 ## 📊 API Endpoints (selection)
 
@@ -325,53 +325,53 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 
 ### Public
 
-| Method | Endpoint                | Description           |
-| ------ | ----------------------- | --------------------- |
+| Method | Endpoint                | Description                                                                  |
+| ------ | ----------------------- | ---------------------------------------------------------------------------- |
 | POST   | `/auth/register`        | Register (closed-beta invite code required when `REQUIRE_INVITE_CODES=true`) |
-| POST   | `/auth/login`           | Email/password login  |
-| POST   | `/auth/refresh`         | Rotate access token   |
-| GET    | `/auth/oauth/google`    | OAuth (Google)        |
-| GET    | `/auth/oauth/microsoft` | OAuth (Microsoft)     |
-| GET    | `/auth/csrf-token`      | CSRF token (optional) |
-| GET    | `/auth/config`          | Public auth flags (e.g. `requireInviteCode`) |
-| GET    | `/health`               | Health check          |
-| POST   | `/contact`              | Contact form          |
+| POST   | `/auth/login`           | Email/password login                                                         |
+| POST   | `/auth/refresh`         | Rotate access token                                                          |
+| GET    | `/auth/oauth/google`    | OAuth (Google)                                                               |
+| GET    | `/auth/oauth/microsoft` | OAuth (Microsoft)                                                            |
+| GET    | `/auth/csrf-token`      | CSRF token (optional)                                                        |
+| GET    | `/auth/config`          | Public auth flags (e.g. `requireInviteCode`)                                 |
+| GET    | `/health`               | Health check                                                                 |
+| POST   | `/contact`              | Contact form                                                                 |
 
 ### Protected
 
-| Method   | Endpoint                       | Description              |
-| -------- | ------------------------------ | ------------------------ |
-| GET      | `/auth/me`                     | Current user             |
-| GET      | `/auth/logout`                 | Logout                   |
-| POST     | `/auth/2fa/setup`              | TOTP enrollment          |
-| POST     | `/auth/2fa/verify`             | TOTP verification        |
-| GET/PUT  | `/profile`                     | Profile (differential)   |
-| POST     | `/resume-parser/parse`         | Resume → profile         |
-| GET/POST | `/job-postings`                | Job CRUD                 |
-| POST     | `/job-postings/parse`          | Parse text/URL/file      |
-| GET/POST | `/applications`                | Application pipeline     |
-| GET      | `/applications/:id/files`      | SAS download URLs        |
-| GET      | `/applications/:id/stream`     | SSE status stream        |
-| POST     | `/validation`                  | Check an external application (AI quality + ATS; Free 5/mo, Pro+ unlimited) |
-| GET      | `/validation`                  | Validation history       |
-| POST     | `/interviews`                  | Generate mock interview  |
-| POST     | `/interviews/:id/voice/session`    | Mint voice (realtime) session (Premium) |
-| POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Premium) |
-| GET      | `/mailbox-sync/connections`    | List connected mailboxes (Premium)         |
-| GET      | `/mailbox-sync/microsoft/connect` | Start MS Graph OAuth (Premium)          |
-| GET      | `/mailbox-sync/microsoft/callback` | OAuth redirect target (public)         |
-| POST     | `/mailbox-sync/microsoft/webhook`  | MS Graph push notifications (public)   |
-| DELETE   | `/mailbox-sync/connections/:id` | Disconnect mailbox (Premium)              |
-| GET      | `/templates`                   | Template catalog         |
-| GET      | `/sessions`                    | Active sessions          |
-| DELETE   | `/sessions/:id`                | Remote logout            |
-| GET      | `/subscription`                | Plan & usage             |
-| GET      | `/admin/users?email=`          | Admin: search users (allow-listed) |
-| POST     | `/admin/users/:email/tier`     | Admin: set subscription tier (allow-listed) |
-| DELETE   | `/admin/users/:email`          | Admin: permanently delete user (allow-listed) |
-| POST     | `/admin/invite-codes`          | Admin: issue 1–100 closed-beta invite codes (plaintexts returned **once**) |
-| GET      | `/admin/invite-codes`          | Admin: list invite codes (metadata only — never plaintext) |
-| GET/PUT  | `/user-preferences`            | Settings                 |
+| Method   | Endpoint                           | Description                                                                 |
+| -------- | ---------------------------------- | --------------------------------------------------------------------------- |
+| GET      | `/auth/me`                         | Current user                                                                |
+| GET      | `/auth/logout`                     | Logout                                                                      |
+| POST     | `/auth/2fa/setup`                  | TOTP enrollment                                                             |
+| POST     | `/auth/2fa/verify`                 | TOTP verification                                                           |
+| GET/PUT  | `/profile`                         | Profile (differential)                                                      |
+| POST     | `/resume-parser/parse`             | Resume → profile                                                            |
+| GET/POST | `/job-postings`                    | Job CRUD                                                                    |
+| POST     | `/job-postings/parse`              | Parse text/URL/file                                                         |
+| GET/POST | `/applications`                    | Application pipeline                                                        |
+| GET      | `/applications/:id/files`          | SAS download URLs                                                           |
+| GET      | `/applications/:id/stream`         | SSE status stream                                                           |
+| POST     | `/validation`                      | Check an external application (AI quality + ATS; Free 5/mo, Pro+ unlimited) |
+| GET      | `/validation`                      | Validation history                                                          |
+| POST     | `/interviews`                      | Generate mock interview                                                     |
+| POST     | `/interviews/:id/voice/session`    | Mint voice (realtime) session (Premium)                                     |
+| POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Premium)                                  |
+| GET      | `/mailbox-sync/connections`        | List connected mailboxes (Premium)                                          |
+| GET      | `/mailbox-sync/microsoft/connect`  | Start MS Graph OAuth (Premium)                                              |
+| GET      | `/mailbox-sync/microsoft/callback` | OAuth redirect target (public)                                              |
+| POST     | `/mailbox-sync/microsoft/webhook`  | MS Graph push notifications (public)                                        |
+| DELETE   | `/mailbox-sync/connections/:id`    | Disconnect mailbox (Premium)                                                |
+| GET      | `/templates`                       | Template catalog                                                            |
+| GET      | `/sessions`                        | Active sessions                                                             |
+| DELETE   | `/sessions/:id`                    | Remote logout                                                               |
+| GET      | `/subscription`                    | Plan & usage                                                                |
+| GET      | `/admin/users?email=`              | Admin: search users (allow-listed)                                          |
+| POST     | `/admin/users/:email/tier`         | Admin: set subscription tier (allow-listed)                                 |
+| DELETE   | `/admin/users/:email`              | Admin: permanently delete user (allow-listed)                               |
+| POST     | `/admin/invite-codes`              | Admin: issue 1–100 closed-beta invite codes (plaintexts returned **once**)  |
+| GET      | `/admin/invite-codes`              | Admin: list invite codes (metadata only — never plaintext)                  |
+| GET/PUT  | `/user-preferences`                | Settings                                                                    |
 
 ## 🚀 Deployment
 
@@ -399,10 +399,10 @@ Merge Release PR → PAT pushes tag v1.x.y → deploy-prod.yml fires
                  → you click "Approve and deploy" → prod ships
 ```
 
-| Environment | API (Fly app)              | Web (Worker)                                          | DB (Neon branch) | R2 bucket             |
-| ----------- | -------------------------- | ----------------------------------------------------- | ---------------- | --------------------- |
-| **Staging** | `smart-apply-api-staging`  | `smart-apply-web-staging` (`*.workers.dev`)           | `staging`        | `smart-apply-staging` |
-| **Prod**    | `smart-apply-api`          | `smart-apply-web` (`smart-apply.io`)                  | `main`           | `smart-apply-prod`    |
+| Environment | API (Fly app)             | Web (Worker)                                | DB (Neon branch) | R2 bucket             |
+| ----------- | ------------------------- | ------------------------------------------- | ---------------- | --------------------- |
+| **Staging** | `smart-apply-api-staging` | `smart-apply-web-staging` (`*.workers.dev`) | `staging`        | `smart-apply-staging` |
+| **Prod**    | `smart-apply-api`         | `smart-apply-web` (`smart-apply.io`)        | `main`           | `smart-apply-prod`    |
 
 Fly config files split per env: [`fly.prod.toml`](./fly.prod.toml) and
 [`fly.staging.toml`](./fly.staging.toml). Both use the same `infra/Dockerfile`;
@@ -444,17 +444,17 @@ GitHub Actions
 
 ## 📈 Performance & Resilience
 
-| Feature             | Implementation                              |
-| ------------------- | ------------------------------------------- |
-| **Template cache**  | In-memory cache (TTL)                       |
+| Feature             | Implementation                                           |
+| ------------------- | -------------------------------------------------------- |
+| **Template cache**  | In-memory cache (TTL)                                    |
 | **Browser pool**    | (removed in v1.16 — react-pdf has no browser dependency) |
-| **Circuit breaker** | `opossum` around LLM calls                  |
-| **DB indexes**      | Targeted indexes; cursor-based pagination   |
-| **Compression**     | gzip middleware                             |
-| **Soft delete**     | Logical deletion across user data           |
-| **SSE**             | Real-time pipeline status                   |
-| **N+1 prevention**  | Prisma `include`/select tuning              |
-| **CDN**             | Cloudflare in front of Workers              |
+| **Circuit breaker** | `opossum` around LLM calls                               |
+| **DB indexes**      | Targeted indexes; cursor-based pagination                |
+| **Compression**     | gzip middleware                                          |
+| **Soft delete**     | Logical deletion across user data                        |
+| **SSE**             | Real-time pipeline status                                |
+| **N+1 prevention**  | Prisma `include`/select tuning                           |
+| **CDN**             | Cloudflare in front of Workers                           |
 
 ---
 
