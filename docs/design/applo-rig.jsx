@@ -13,6 +13,17 @@
   const BLUE   = '#2563eb';
   const GREEN  = '#15a34a';
   const GEARBG = '#e7eefa';
+  const HAND   = '#3a4f76';
+  const HEART  = '#ff5a72';
+
+  function Heart({ cx, cy, size, fill }) {
+    const sc = Number(size) / 32;
+    return (
+      <g transform={`translate(${Number(cx) - 16 * sc} ${Number(cy) - 14 * sc}) scale(${sc})`}>
+        <path d="M16 28 C16 28 2 18 2 9 C2 4 6 2 9 2 C12 2 14 4 16 7 C18 4 20 2 23 2 C26 2 30 4 30 9 C30 18 16 28 16 28 Z" fill={fill} />
+      </g>
+    );
+  }
 
   /* A single cog/gear: toothed disc with a hub hole. Spins via CSS on `cls`. */
   function Gear({ cx, cy, r, teeth = 8, fill, cls }) {
@@ -60,40 +71,40 @@
             <rect x="182" y="96" width="16" height="36" rx="8" fill={S} />
 
             {/* ---- FEET ---- */}
-            <rect x="88" y="236" width="26" height="16" rx="8" fill={S} />
-            <rect x="126" y="236" width="26" height="16" rx="8" fill={S} />
+            <rect x="88" y="236" width="26" height="16" rx="8" fill={HAND} />
+            <rect x="126" y="236" width="26" height="16" rx="8" fill={HAND} />
 
             {/* ---- ARMS: idle/down (default) ---- */}
             <g className="arm a-l-down">
               <path d="M86 178 L72 206" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
-              <circle cx="70" cy="210" r="13" fill={S} />
+              <circle cx="70" cy="210" r="13" fill={HAND} />
             </g>
             <g className="arm a-r-down">
               <path d="M154 178 L168 206" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
-              <circle cx="170" cy="210" r="13" fill={S} />
+              <circle cx="170" cy="210" r="13" fill={HAND} />
             </g>
 
             {/* ---- ARMS: raised (success) ---- */}
             <g className="arm a-l-up">
               <path d="M86 174 L58 150" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
-              <circle cx="54" cy="146" r="13" fill={S} />
+              <circle cx="54" cy="146" r="13" fill={HAND} />
             </g>
             <g className="arm a-r-up">
               <path d="M154 174 L182 150" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
-              <circle cx="186" cy="146" r="13" fill={S} />
+              <circle cx="186" cy="146" r="13" fill={HAND} />
             </g>
 
             {/* ---- ARM: right raised for waving ---- */}
             <g className="arm a-r-wave">
               <path d="M154 174 L184 150" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
-              <circle cx="188" cy="146" r="13" fill={S} />
+              <circle cx="188" cy="146" r="13" fill={HAND} />
             </g>
 
             {/* ---- ARM: right thumbs-up (done) ---- */}
             <g className="arm a-r-thumb">
               <path d="M154 178 L176 162" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
-              <circle cx="180" cy="158" r="13" fill={S} />
-              <rect x="175.5" y="141" width="9" height="17" rx="4.5" fill={S} />
+              <circle cx="180" cy="158" r="13" fill={HAND} />
+              <rect x="175.5" y="141" width="9" height="17" rx="4.5" fill={HAND} />
             </g>
 
 
@@ -142,7 +153,7 @@
             {/* ---- ARM: right hand to chin (thinking) — drawn in FRONT of face ---- */}
             <g className="arm a-r-chin">
               <path d="M158 188 L150 156" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
-              <circle cx="149" cy="150" r="13" fill={S} />
+              <circle cx="149" cy="150" r="13" fill={HAND} />
             </g>
 
             {/* ---- FX: processing — gears turning in the belly (pondering) ---- */}
@@ -180,13 +191,30 @@
                  wird nur über die jeweilige state-* Klasse gezeigt.
                ====================================================== */}
 
->>>>>>> origin/main
+            {/* ---- TOOL: Lupe vor dem Gesicht (Job-Suche / search) ---- */}
+            <g className="tool-search">
+              {/* Arm hoch zum Griff */}
+              <path d="M156 182 L162 150" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
+              <circle cx="163" cy="147" r="13" fill={HAND} />
+              {/* Griff von der Hand zur Linse */}
+              <line x1="160" y1="145" x2="150" y2="124" stroke={S} strokeWidth="8" strokeLinecap="round" />
+              {/* Linse genau über dem rechten Auge */}
+              <circle cx="138" cy="110" r="19" fill="#fff" stroke={S} strokeWidth="6" />
+              {/* vergrößertes Auge im Glas, Pupille scannt */}
+              <g className="search-eye">
+                <circle className="se-pupil" cx="138" cy="110" r="9" fill={S} />
+                <circle className="se-glint" cx="141" cy="106" r="3.4" fill="#fff" />
+              </g>
+              {/* Glanzreflex auf dem Glas */}
+              <path d="M126 100 q4 -7 13 -7" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" opacity="0.7" />
+            </g>
+
             {/* ---- TOOL: Applo spricht mit dem Nutzer (Interview-Coach / coach) ---- */}
             <g className="tool-coach">
               {/* offene, erklärende Handgeste */}
               <g className="coach-arm">
                 <path d="M154 178 L182 164" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
-                <circle cx="186" cy="161" r="13" fill={S} />
+                <circle cx="186" cy="161" r="13" fill={HAND} />
               </g>
               {/* kleine Schallwellen — Applo spricht laut */}
               <g className="fx-say">
@@ -195,7 +223,44 @@
               </g>
             </g>
 
->>>>>>> origin/main
+            {/* ---- FX: Blitz + Speed-Lines (Auto-Apply / auto) ---- */}
+            <g className="fx-auto">
+              <path className="bolt" d="M128 6 L106 46 L122 46 L110 78 L146 38 L128 38 Z"
+                    fill={BLUE} stroke="#fff" strokeWidth="2" strokeLinejoin="round" />
+              <g className="speed speed-l">
+                <line x1="28" y1="150" x2="52" y2="150" stroke={BLUE} strokeWidth="4" strokeLinecap="round" />
+                <line x1="24" y1="168" x2="44" y2="168" stroke={BLUE} strokeWidth="4" strokeLinecap="round" opacity="0.55" />
+              </g>
+              <g className="speed speed-r">
+                <line x1="212" y1="150" x2="188" y2="150" stroke={BLUE} strokeWidth="4" strokeLinecap="round" />
+                <line x1="216" y1="168" x2="196" y2="168" stroke={BLUE} strokeWidth="4" strokeLinecap="round" opacity="0.55" />
+              </g>
+            </g>
+
+            {/* ---- LOVE: Herz-Augen (Favorit / Verliebt) ---- */}
+            <g className="ey-hearts">
+              <Heart cx={101} cy={112} size={19} fill={HEART} />
+              <Heart cx={139} cy={112} size={19} fill={HEART} />
+            </g>
+
+            {/* ---- LOVE: Herz in den gewiegten Händen ---- */}
+            <g className="tool-love">
+              <path d="M86 178 L106 197" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
+              <path d="M154 178 L134 197" fill="none" stroke={S} strokeWidth="20" strokeLinecap="round" />
+              <g className="love-heart">
+                <Heart cx={120} cy={176} size={58} fill={HEART} />
+              </g>
+              <circle cx="107" cy="199" r="13" fill={HAND} />
+              <circle cx="133" cy="199" r="13" fill={HAND} />
+            </g>
+
+            {/* ---- FX: aufsteigende Herzen (love) ---- */}
+            <g className="fx-love">
+              <g className="lh lh1"><Heart cx={64} cy={92} size={15} fill={HEART} /></g>
+              <g className="lh lh2"><Heart cx={180} cy={84} size={20} fill={BLUE} /></g>
+              <g className="lh lh3"><Heart cx={120} cy={30} size={13} fill={HEART} /></g>
+            </g>
+
           </g>{/* /rig */}
         </g>{/* /root-float */}
       </svg>
