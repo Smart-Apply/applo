@@ -504,9 +504,19 @@ _Newest first. Add an entry for every change that touches generation quality._
   `scripts/eval/style.ts`, and (c) gained a `--no-anchor` flag for a clean A/B of the
   system/user split. Smoke (4 mixed DE/EN fixtures, anchor on): overall 5.00,
   grounding 100%, style 100% clean.
-- **Next (not in this slice):** run the full 24-fixture `--no-anchor` A/B to quantify
-  the anchor's effect (judge scores are near-saturated, so watch the deterministic
-  style rate), then give the linter teeth (a targeted micro-rewrite pass).
+- **Full A/B result (24 fixtures, real Azure, 2026-06-24).** Anchor OFF → ON:
+  grounding pass-rate **29% → 58%** (mean score 52.8 → 73.8; fixtures with fabricated
+  numbers 17 → 10) — the anchor roughly **halves number-fabrication**, the top
+  credibility/legal risk. LLM-judge OVERALL 4.96 → 5.00 (saturated — not sensitive
+  here). Priority-1 coverage (post-weave) 98.2% → 100%. Trade-off: deterministic style
+  clean-rate 96% → 88% (1 → 3 cliche hits, small-N; none of them in the anchor's own
+  examples) and judge `quantified` 4.71 → 4.54 (fewer fabricated metrics = fewer flashy
+  numbers). **Verdict: net win — keep the anchor.** Result files under
+  `scripts/eval/results/eval-anchor-{off,on}-*.json` (git-ignored).
+- **Next (not in this slice):** the anchor did NOT move the deterministic cliche rate,
+  so the remaining cliche lever is giving the linter teeth (a targeted micro-rewrite
+  pass) and/or rewriting the CAPS-heavy prompt bodies — both eval-gated against this
+  baseline.
 
 ### 2026-06-15 — Cover-letter data layer + Betreffzeile decision (#5 complete)
 - **#5 Shipped (data layer).** A dedicated extraction step
