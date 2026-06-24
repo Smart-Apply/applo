@@ -1,22 +1,16 @@
 'use client';
 
 /* =============================================================================
- *  Application detail / download page — REDESIGN
+ *  Application detail / download page — redesign (UI only)
  *
- *  TARGET PATH (copy this file to):
- *    apps/web/src/app/(dashboard)/applications/[id]/page.tsx
+ *  Changes vs. the old page:
+ *   • READY: celebration hero + document cards + guided next-step CTA.
+ *   • Compact status tracker (Erstellt → Beworben → Interview → Angenommen).
+ *   • ATS analysis + job posting collapsed into click-to-open cards.
+ *   • PENDING / GENERATING / FAILED are centered states (with Applo).
  *
- *  What changed vs. the old page (UI only — all data logic is preserved):
- *   • READY is now a celebration: Applo (state="success") + clear headline,
- *     the two document cards as the hero, then a single guided "next step"
- *     CTA (apply on the company site → mark as "Beworben").
- *   • A compact status tracker (Erstellt → Beworben → Interview → Angenommen).
- *   • ATS analysis is collapsed into a click-to-open card (declutter).
- *   • Job posting + metadata are collapsed / demoted to a quiet footer.
- *   • GENERATING / FAILED / PENDING are centered states, each with Applo.
- *
- *  Preserved unchanged: useQuery(application + files), SSE progress stream,
- *  status-change toasts, download / preview / ZIP handlers, retry mutation,
+ *  Preserved unchanged: queries (application + files), SSE progress stream,
+ *  status-change toasts, download/preview/ZIP handlers, retry mutation,
  *  feature-gated ATS panel, EditableTitle, StatusDropdown, PDFPreviewModal.
  * ========================================================================== */
 
