@@ -341,8 +341,16 @@ export default function ApplicationDetailPage() {
     );
   }
 
-  const trackingStatus = (application.applicationStatus ?? 'CREATED') as ApplicationTrackingStatus;
-  const isApplied = trackingStatus !== 'CREATED' && trackingStatus !== 'REJECTED';
+  const trackingStatus: ApplicationTrackingStatus =
+    application.applicationStatus === 'CREATED' ||
+    application.applicationStatus === 'APPLIED' ||
+    application.applicationStatus === 'INTERVIEW' ||
+    application.applicationStatus === 'ACCEPTED' ||
+    application.applicationStatus === 'REJECTED'
+      ? application.applicationStatus
+      : 'CREATED';
+  const isApplied =
+    trackingStatus === 'APPLIED' || trackingStatus === 'INTERVIEW' || trackingStatus === 'ACCEPTED';
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
