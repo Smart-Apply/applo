@@ -38,27 +38,26 @@ and what recruiters + ATS systems actually reward.
 
 ---
 
-## Current generation architecture (as of 2026-06-15)
+## Current generation architecture (as of 2026-06-24)
 
 The **live** path is the v1 "single-LLM pipeline" inside
 [`applications.service.ts`](../../apps/api/src/applications/applications.service.ts)
-`create()`. It runs entirely through `LLMService.callJson` / `callText`:
+`createWithGeneration()`. It runs entirely through `LLMService.callJson` / `callText`:
 
 | Step | Prompt | Call | Purpose |
 |---|---|---|---|
-| 1 | [`v1/skill-selector.md`](../../apps/api/prompts/v1/skill-selector.md) | `callJson` (temp 0.2) | Select the most relevant profile data → `tailoredProfile` |
-| 2a | [`v1/cover-letter.md`](../../apps/api/prompts/v1/cover-letter.md) | `callText` | Cover letter (Markdown → HTML) |
-| 2b | [`v1/resume-rewrite.md`](../../apps/api/prompts/v1/resume-rewrite.md) | `callJson` (temp 0.35) | Rewrite summary / experiences / projects |
+| 1a | [`v1/skill-selector.md`](../../apps/api/prompts/v1/skill-selector.md) | `callJson` (temp 0.2) | Select the most relevant profile data → `tailoredProfile` |
+| 1b ¹ | [`v1/job-facts.md`](../../apps/api/prompts/v1/job-facts.md) | `callJson` (temp 0, max 500 tok) | Extract contact person, company specifics, salary/start-date flags |
+| 2a ¹ | [`v1/cover-letter.md`](../../apps/api/prompts/v1/cover-letter.md) | `callText` | Cover letter (Markdown → HTML) |
+| 2b | [`v1/resume-rewrite.md`](../../apps/api/prompts/v1/resume-rewrite.md) | `callJson` (temp 0.35) | Rewrite summary / experiences / projects into target language |
 | 2c | [`v1/ats-keywords.md`](../../apps/api/prompts/v1/ats-keywords.md) | `callJson` | Extract ≤15 job keywords, then **deterministic** match vs. profile |
-| 2d | [`v1/editor-cover-letter.md`](../../apps/api/prompts/v1/editor-cover-letter.md) | `callText` | **Editor pass (#1):** critique + revise the cover letter; graceful fallback to the draft |
+| 2d | [`v1/editor-resume.md`](../../apps/api/prompts/v1/editor-resume.md) | `callJson` (temp 0.35) | **Editor pass (#1, resume):** tighten bullets/summary, preserve all IDs; guarded fallback |
 | 3 | — | code | `convertTailoredProfileToResumeJson` → stored as `resumeText` (JSON) |
-| 4 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
+| 4 ¹ | [`v1/editor-cover-letter.md`](../../apps/api/prompts/v1/editor-cover-letter.md) | `callText` (temp 0.4) | **Editor pass (#1, CL):** critique + revise the cover letter; graceful fallback to draft |
+| 5 ¹ | [`v1/keyword-weave.md`](../../apps/api/prompts/v1/keyword-weave.md) | `callText` (temp 0.3) | **Keyword weave (#6):** weave profile-supported priority-1 ATS gaps into the cover letter |
+| 6 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
 
-Steps 2a/2b/2c run in **parallel** (`Promise.all`). The editor pass (2d) runs **after** the
-draft is produced (sequential by nature); the grounding check (4) runs on the finalized
-documents. Resume is persisted as structured JSON for the editor; the cover letter is
-persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and
-`generateWithSinglePipeline` (test endpoint) — share the editor + grounding helpers.
+¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 4, and 5 run sequentially after the parallel block. The grounding check (6) runs on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and `generateWithSinglePipeline` (secondary/test) — share the editor + grounding helpers.
 
 **Dead / optional code (do not confuse with the live path):**
 - ~~`apps/api/src/agents/**` (the old Azure AI Foundry agent classes)~~ **Removed (#2,
@@ -83,11 +82,11 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 
 | # | Improvement | Phase | Risk | Status | Primary files |
 |---|---|---|---|---|---|
-| 2 | Consolidate onto one pipeline; retire dead/legacy paths | 1 | Low | � Shipped | `agents/**`, `prompts/*-ats.md`, `stored-resume.util.ts`, `applications.service.ts` |
+| 2 | Consolidate onto one pipeline; retire dead/legacy paths | 1 | Low | 🟢 Shipped | `agents/**`, `prompts/*-ats.md`, `stored-resume.util.ts`, `applications.service.ts` |
 | 3 | XYZ/STAR achievement-bullet formula | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
 | 4 | Make the professional summary / Kurzprofil do real work | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
-| 5 | Real cover-letter personalization | 1 | Low | � Shipped | `prompts/v1/cover-letter.md`, `prompts/v1/job-facts.md`, `job-facts.util.ts` |
-| 1 | Self-critique / editor pass | 2 | Med | 🟡 In progress | `prompts/v1/editor-cover-letter.md`, `applications.service.ts` |
+| 5 | Real cover-letter personalization | 1 | Low | 🟢 Shipped | `prompts/v1/cover-letter.md`, `prompts/v1/job-facts.md`, `job-facts.util.ts` |
+| 1 | Self-critique / editor pass | 2 | Med | 🟢 Shipped | `prompts/v1/editor-cover-letter.md`, `prompts/v1/editor-resume.md`, `applications.service.ts` |
 | 7 | Anti-hallucination grounding validator | 2 | Med | 🟢 Shipped | `grounding/grounding-validator.service.ts`, `applications.service.ts` |
 | 6 | Coverage-driven keyword loop | 3 | Med | 🟢 Shipped | `applications.service.ts`, `keyword-coverage.util.ts`, `prompts/v1/keyword-weave.md` |
 | 9 | Trustworthy + actionable match score | 3 | Low | 🟢 Shipped | `applications.service.ts`, `match-insights.util.ts`, web ATS panel |
@@ -117,7 +116,7 @@ persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main)
 
 ## Detailed specs
 
-### 1. Self-critique / editor pass 🔴
+### 1. Self-critique / editor pass 🟢
 **Problem.** Generation is one-shot. No pass checks the draft against an explicit rubric,
 so clichés, missing metrics, weak summaries and generic cover letters slip through.
 
