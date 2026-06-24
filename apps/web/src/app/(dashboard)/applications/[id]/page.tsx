@@ -426,8 +426,10 @@ export default function ApplicationDetailPage() {
             onOpenJobUrl={
               application.jobPosting?.sourceUrl
                 ? () => {
+                    const sourceUrl = application.jobPosting?.sourceUrl;
+                    if (!sourceUrl) return;
                     try {
-                      const url = new URL(application.jobPosting.sourceUrl);
+                      const url = new URL(sourceUrl);
                       if (url.protocol !== 'http:' && url.protocol !== 'https:') {
                         toast.error('Ungültige URL der Stellenanzeige');
                         return;
