@@ -29,6 +29,13 @@ export interface FixtureCoverageSummary {
   weaveKeywords: string[];
 }
 
+export interface FixtureStyleSummary {
+  /** Total distinct deterministic style violations (AI clichés + hedging). */
+  total: number;
+  aiPhrases: string[];
+  hedging: string[];
+}
+
 export interface FixtureResult {
   id: string;
   profession: string;
@@ -36,6 +43,7 @@ export interface FixtureResult {
   judge?: JudgeResult;
   grounding?: FixtureGroundingSummary;
   coverage?: FixtureCoverageSummary;
+  style?: FixtureStyleSummary;
   durationMs: number;
   editorApplied: boolean;
   resumeEditorApplied: boolean;
@@ -72,6 +80,14 @@ export interface EvalSummary {
     meanAfterRate: number;
     /** Number of fixtures where the weave pass ran. */
     weaveAppliedCount: number;
+  };
+  style: {
+    /** % of fixtures with zero deterministic style violations. */
+    cleanRate: number;
+    /** Total violations summed across fixtures. */
+    totalViolations: number;
+    /** Fixtures with at least one violation. */
+    fixturesWithViolations: number;
   };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
@@ -110,6 +126,15 @@ export function summarize(
     weaveAppliedCount: ok.filter((r) => r.coverage?.weaveApplied).length,
   };
 
+  const style = {
+    cleanRate:
+      ok.length === 0
+        ? 0
+        : Math.round((ok.filter((r) => (r.style?.total ?? 0) === 0).length / ok.length) * 100),
+    totalViolations: ok.reduce((acc, r) => acc + (r.style?.total ?? 0), 0),
+    fixturesWithViolations: ok.filter((r) => (r.style?.total ?? 0) > 0).length,
+  };
+
   const byLanguage: Record<string, LanguageBreakdown> = {};
   for (const lang of ['de', 'en'] as EvalLanguage[]) {
     const subset = ok.filter((r) => r.language === lang);
@@ -138,6 +163,7 @@ export function summarize(
       fixturesWithUnsupported,
     },
     coverage,
+    style,
     byLanguage,
     results,
   };
@@ -172,6 +198,11 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    mean coverage after weave      ${summary.coverage.meanAfterRate.toFixed(2)}%`);
   lines.push(`    weave pass applied             ${summary.coverage.weaveAppliedCount} fixtures`);
   lines.push('');
+  lines.push('  Style (deterministic AI-cliché / hedging linter):');
+  lines.push(`    clean (0 violations)           ${summary.style.cleanRate}%`);
+  lines.push(`    fixtures with violations       ${summary.style.fixturesWithViolations}`);
+  lines.push(`    total violations               ${summary.style.totalViolations}`);
+  lines.push('');
   lines.push('  By language:');
   for (const [lang, b] of Object.entries(summary.byLanguage)) {
     lines.push(
@@ -192,6 +223,9 @@ export function formatReport(summary: EvalSummary): string {
       r.resumeRewriteSucceeded ? '' : 'rewrite-degraded',
       r.grounding && r.grounding.unsupportedCount > 0
         ? `unsupported:${r.grounding.unsupportedValues.join('/')}`
+        : '',
+      r.style && r.style.total > 0
+        ? `style:${[...r.style.aiPhrases, ...r.style.hedging].join('/')}`
         : '',
     ]
       .filter(Boolean)

@@ -498,9 +498,15 @@ _Newest first. Add an entry for every change that touches generation quality._
 - **Branch:** `feat/prompt-quality`. New: `style-lint.util.ts`, `style-lint.unit.spec.ts`.
   Touched: `constants.ts`, `applications.service.ts`, `README.md`, `ARCHITECTURE.md`,
   `.github/copilot-instructions.md`.
-- **Next (not in this slice):** give the linter teeth (a targeted micro-rewrite pass) and
-  wire its cliché/hedging counts into the eval harness (#10) so the rate is measured
-  before/after — only after a baseline proves the system-anchor split is a net win.
+- **Eval harness wiring (#10):** the offline harness now (a) passes the same
+  `GENERATION_SYSTEM_ANCHOR` so it stays byte-identical to production, (b) reports a
+  deterministic **style** metric (clean-rate + violation counts) via
+  `scripts/eval/style.ts`, and (c) gained a `--no-anchor` flag for a clean A/B of the
+  system/user split. Smoke (4 mixed DE/EN fixtures, anchor on): overall 5.00,
+  grounding 100%, style 100% clean.
+- **Next (not in this slice):** run the full 24-fixture `--no-anchor` A/B to quantify
+  the anchor's effect (judge scores are near-saturated, so watch the deterministic
+  style rate), then give the linter teeth (a targeted micro-rewrite pass).
 
 ### 2026-06-15 — Cover-letter data layer + Betreffzeile decision (#5 complete)
 - **#5 Shipped (data layer).** A dedicated extraction step

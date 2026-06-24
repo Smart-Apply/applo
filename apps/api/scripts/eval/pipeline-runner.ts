@@ -29,6 +29,7 @@ import {
   normalizeJobFacts,
   type JobFactsDto,
 } from '../../src/applications/job-facts.util';
+import { GENERATION_SYSTEM_ANCHOR } from '../../src/applications/constants';
 import type {
   TailoredProfileDto,
   RewrittenProfileDto,
@@ -87,6 +88,11 @@ export interface GeneratedDocuments {
 export interface GenerateOptions {
   /** When false, skip the keyword weave pass (#6) — for before/after A/B runs. */
   applyWeave?: boolean;
+  /**
+   * When false, omit the shared GENERATION_SYSTEM_ANCHOR system message from the
+   * cover-letter + resume-rewrite calls — for a clean A/B of the system/user split.
+   */
+  applyAnchor?: boolean;
 }
 
 /**
@@ -243,6 +249,7 @@ export async function generateForFixture(
   options: GenerateOptions = {},
 ): Promise<GeneratedDocuments> {
   const applyWeave = options.applyWeave !== false;
+  const systemMessage = options.applyAnchor === false ? undefined : GENERATION_SYSTEM_ANCHOR;
   const start = Date.now();
   const profile = hydrateProfile(fixture);
   const serializedProfile = serializeProfileForLlm(profile);
@@ -273,15 +280,19 @@ export async function generateForFixture(
   ]);
 
   // Step 2: parallel cover letter (text) + resume rewrite (json) + ATS keywords.
-  const coverLetterPromise = llm.callText('v1/cover-letter.md', {
-    job: serializedJob,
-    tailoredProfile,
-    jobFacts,
-    salutation: buildSalutation(jobFacts, language),
-    language,
-    userId: fixture.id,
-    jobPostingId: fixture.id,
-  });
+  const coverLetterPromise = llm.callText(
+    'v1/cover-letter.md',
+    {
+      job: serializedJob,
+      tailoredProfile,
+      jobFacts,
+      salutation: buildSalutation(jobFacts, language),
+      language,
+      userId: fixture.id,
+      jobPostingId: fixture.id,
+    },
+    { systemMessage },
+  );
 
   const resumeRewritePromise = llm
     .callJson<RewrittenProfileDto>(
@@ -293,7 +304,7 @@ export async function generateForFixture(
         userId: fixture.id,
         jobPostingId: fixture.id,
       },
-      { temperature: 0.35, maxTokens: 2000 },
+      { temperature: 0.35, maxTokens: 2000, systemMessage },
     )
     .then((r) => (r && typeof r === 'object' ? r : null))
     .catch(() => null);

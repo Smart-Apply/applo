@@ -54,6 +54,7 @@ With `LLM_PROVIDER=mock` (or unset) the harness **skips gracefully** (exit 0).
 | `--delay=MS` | `1500` | Pause between fixtures. |
 | `--retries=N` | `5` | Retries on transient throttling (429/503/breaker-open) with exponential backoff (4s→64s, long enough to clear the 30s breaker reset). |
 | `--no-weave` | off | Skip the #6 keyword weave pass. Use for an A/B run: compare coverage with vs. without the loop. |
+| `--no-anchor` | off | Omit the shared `GENERATION_SYSTEM_ANCHOR` system message from the cover-letter + resume-rewrite calls. Use for a clean A/B of the system/user split. |
 | `--out=PATH` | `results/eval-<tag>-<ts>.json` | Override the output path. |
 
 ## What it measures
@@ -67,7 +68,7 @@ For each fixture the runner mirrors `ApplicationsService.createWithGeneration`:
 4. `v1/keyword-weave.md` (temp 0.3) — the #6 keyword weave pass (skipped with `--no-weave`,
    or when there is no profile-supported priority-1 gap)
 
-It then scores the output three ways:
+It then scores the output four ways:
 
 - **LLM judge** (`prompts/eval/judge-rubric.md`, temp 0) — 6 rubric dimensions
   scored 1–5: `action_verb_bullets`, `quantified_or_qualitative`,
@@ -78,6 +79,10 @@ It then scores the output three ways:
 - **Priority-1 keyword coverage** (#6, deterministic) — of the priority-1 ATS
   keywords the profile supports, the share that appear in the cover letter, both
   **before** and **after** the weave pass (so the lift is visible).
+- **Style** (`style-lint.util.ts`, deterministic) — the share of fixtures whose
+  finished documents contain zero forbidden AI clichés or German Konjunktiv/
+  hedging (plus the raw violation count). A deterministic complement to the
+  judge's holistic `style_no_cliches` dimension.
 
 > The runner omits only PDF rendering + persistence (irrelevant to output
 > quality). The keyword weave shares `keyword-coverage.util.ts` with the live
