@@ -56,6 +56,7 @@ The **live** path is the v1 "single-LLM pipeline" inside
 | 4 ¹ | [`v1/editor-cover-letter.md`](../../apps/api/prompts/v1/editor-cover-letter.md) | `callText` (temp 0.4) | **Editor pass (#1, CL):** critique + revise the cover letter; graceful fallback to draft |
 | 5 ¹ | [`v1/keyword-weave.md`](../../apps/api/prompts/v1/keyword-weave.md) | `callText` (temp 0.3) | **Keyword weave (#6):** weave profile-supported priority-1 ATS gaps into the cover letter |
 | 6 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
+| 7 | — | code | **Style check:** flag forbidden AI clichés + German Konjunktiv/hedging on the finished docs (`style-lint.util.ts`, log only, non-destructive) |
 
 ¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 4, and 5 run sequentially after the parallel block. The grounding check (6) runs on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and `generateWithSinglePipeline` (secondary/test) — share the editor + grounding helpers.
 
@@ -478,6 +479,28 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-24 — System-anchor split + deterministic style linter
+- **System/user split (prompt-quality).** The two LLM generation calls
+  (`v1/cover-letter.md`, `v1/resume-rewrite.md`) now pass a shared
+  `GENERATION_SYSTEM_ANCHOR` (in [`constants.ts`](../../apps/api/src/applications/constants.ts))
+  as the **system message**, keeping the non-negotiable constraints (no fabrication,
+  target language, no clichés/hedging) in the system turn per the GPT-4.1 prompting
+  guide; the detailed task stays in the user turn. The deliberately-tuned temperatures
+  were left untouched.
+- **Deterministic style check (new guardrail).**
+  [`style-lint.util.ts`](../../apps/api/src/applications/style-lint.util.ts) +
+  `runStyleCheck` flag forbidden AI clichés and German Konjunktiv/hedging on the
+  finished documents — deterministic, non-destructive (log only), mirroring the
+  grounding validator. Unit-tested in
+  [`style-lint.unit.spec.ts`](../../apps/api/src/applications/__tests__/unit/style-lint.unit.spec.ts).
+  Added as step 7 in the architecture table above.
+- **Branch:** `feat/prompt-quality`. New: `style-lint.util.ts`, `style-lint.unit.spec.ts`.
+  Touched: `constants.ts`, `applications.service.ts`, `README.md`, `ARCHITECTURE.md`,
+  `.github/copilot-instructions.md`.
+- **Next (not in this slice):** give the linter teeth (a targeted micro-rewrite pass) and
+  wire its cliché/hedging counts into the eval harness (#10) so the rate is measured
+  before/after — only after a baseline proves the system-anchor split is a net win.
 
 ### 2026-06-15 — Cover-letter data layer + Betreffzeile decision (#5 complete)
 - **#5 Shipped (data layer).** A dedicated extraction step

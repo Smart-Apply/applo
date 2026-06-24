@@ -152,6 +152,8 @@ User → Frontend (Next.js)
 │    profile-supported ATS keywords    │
 │ 5. Grounding check: flag fabricated  │
 │    impact numbers vs. the profile    │
+│ 6. Style check: flag AI clichés +    │
+│    hedging (Konjunktiv); log-only    │
 └──────────────────────────────────────┘
         │
         ▼

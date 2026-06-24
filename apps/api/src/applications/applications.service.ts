@@ -56,6 +56,8 @@ import {
   normalizeJobFacts,
   type JobFactsDto,
 } from './job-facts.util';
+import { lintGeneratedStyle } from './style-lint.util';
+import { GENERATION_SYSTEM_ANCHOR } from './constants';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -837,15 +839,19 @@ export class ApplicationsService {
 
       // Prepare parallel promises
       const coverLetterPromise = shouldGenerateCoverLetter
-        ? this.llmService.callText('v1/cover-letter.md', {
-            job: this.serializeJobPosting(jobPosting),
-            tailoredProfile,
-            jobFacts: normalizeJobFacts(jobFacts),
-            salutation: buildSalutation(jobFacts, detectedLanguage),
-            language: detectedLanguage,
-            userId,
-            jobPostingId: jobPosting.id,
-          })
+        ? this.llmService.callText(
+            'v1/cover-letter.md',
+            {
+              job: this.serializeJobPosting(jobPosting),
+              tailoredProfile,
+              jobFacts: normalizeJobFacts(jobFacts),
+              salutation: buildSalutation(jobFacts, detectedLanguage),
+              language: detectedLanguage,
+              userId,
+              jobPostingId: jobPosting.id,
+            },
+            { systemMessage: GENERATION_SYSTEM_ANCHOR },
+          )
         : Promise.resolve(null);
 
       const resumeRewritePromise = this.callResumeRewrite(
@@ -951,6 +957,13 @@ export class ApplicationsService {
         application.id,
         { resume: JSON.stringify(resumeJson), coverLetter: wovenCoverLetterMarkdown },
         profile,
+      );
+
+      // Style check: flag forbidden AI clichés + German hedging (non-destructive).
+      this.runStyleCheck(
+        application.id,
+        { resume: JSON.stringify(resumeJson), coverLetter: wovenCoverLetterMarkdown },
+        detectedLanguage,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
@@ -1361,6 +1374,7 @@ export class ApplicationsService {
         {
           temperature: 0.35, // Balanced: consistent but creative
           maxTokens: 2000,
+          systemMessage: GENERATION_SYSTEM_ANCHOR,
         },
       );
 
@@ -1571,6 +1585,36 @@ export class ApplicationsService {
       this.logger.warn(
         `Grounding check failed for application ${applicationId}: ${error.message}`,
       );
+    }
+  }
+
+  /**
+   * Style check — deterministic, non-destructive. Logs a warning when the
+   * generated documents contain forbidden AI-style clichés or (for German)
+   * Konjunktiv/hedging that the prompts explicitly ban. Detection only; the
+   * text is never altered here. Never throws. See `style-lint.util.ts`.
+   */
+  private runStyleCheck(
+    applicationId: string,
+    generated: { resume?: string | null; coverLetter?: string | null },
+    language: string,
+  ): void {
+    try {
+      const cover = lintGeneratedStyle(generated.coverLetter, language);
+      const resume = lintGeneratedStyle(generated.resume, language);
+      const total = cover.total + resume.total;
+      if (total > 0) {
+        const phrases = [...new Set([...cover.aiPhrases, ...resume.aiPhrases])];
+        const hedges = [...new Set([...cover.hedging, ...resume.hedging])];
+        this.logger.warn(
+          `Style check (application ${applicationId}): ${total} violation(s) — ` +
+            `clichés: [${phrases.join(', ') || '—'}]; hedging: [${hedges.join(', ') || '—'}]`,
+        );
+      } else {
+        this.logger.debug(`Style check (application ${applicationId}): clean`);
+      }
+    } catch (error) {
+      this.logger.warn(`Style check failed for application ${applicationId}: ${error.message}`);
     }
   }
 
