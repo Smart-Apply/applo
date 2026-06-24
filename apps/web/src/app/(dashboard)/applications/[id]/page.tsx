@@ -329,7 +329,7 @@ export default function ApplicationDetailPage() {
 
   if (error || !application) {
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
         <BackLink onClick={() => router.push('/applications')} />
         <Card className="rounded-[18px]">
           <CardContent className="py-12">
@@ -351,7 +351,7 @@ export default function ApplicationDetailPage() {
   const isApplied = trackingStatus !== 'CREATED' && trackingStatus !== 'REJECTED';
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <BackLink onClick={() => router.push('/applications')} />
 
       {/* Header: editable title + company, tracking-status dropdown */}
