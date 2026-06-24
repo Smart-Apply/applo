@@ -417,7 +417,18 @@ export default function ApplicationDetailPage() {
             onMarkApplied={() => markAppliedMutation.mutate()}
             onOpenJobUrl={
               application.jobPosting?.sourceUrl
-                ? () => window.open(application.jobPosting!.sourceUrl!, '_blank')
+                ? () => {
+                    try {
+                      const url = new URL(application.jobPosting.sourceUrl);
+                      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+                        toast.error('Ungültige URL der Stellenanzeige');
+                        return;
+                      }
+                      window.open(url.toString(), '_blank', 'noopener,noreferrer');
+                    } catch {
+                      toast.error('Ungültige URL der Stellenanzeige');
+                    }
+                  }
                 : undefined
             }
             onInterviewCoach={() => router.push('/interviews')}
