@@ -1,4 +1,4 @@
-# N+1 Query Prevention in Smart Apply
+# N+1 Query Prevention in Applo
 
 ## Problem Statement
 
@@ -32,7 +32,7 @@ const applications = await prisma.application.findMany({
 // Total: 1-2 queries (depending on Prisma's strategy) ✅
 ```
 
-## Implementation in Smart Apply
+## Implementation in Applo
 
 ### Applications Service
 

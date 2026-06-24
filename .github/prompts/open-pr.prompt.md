@@ -5,7 +5,7 @@ description: 'Push the current feature branch and open a pull request following 
 
 # Open a pull request
 
-Push the current short-lived branch and open a PR into `main`, following Smart Apply's
+Push the current short-lived branch and open a PR into `main`, following Applo's
 trunk-based, squash-merge workflow.
 
 ## First, gather the live state

@@ -1,4 +1,4 @@
-# English Localization Migration Plan (Smart Apply)
+# English Localization Migration Plan (Applo)
 
 ## Goal
 Ship a production-ready English experience without breaking existing German flows.

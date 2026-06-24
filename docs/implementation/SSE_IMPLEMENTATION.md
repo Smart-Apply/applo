@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Smart Apply application uses Server-Sent Events (SSE) to provide real-time status updates for application generation pipeline. This is more efficient than polling as it uses a push-based model.
+The Applo application uses Server-Sent Events (SSE) to provide real-time status updates for application generation pipeline. This is more efficient than polling as it uses a push-based model.
 
 ## Backend Implementation
 

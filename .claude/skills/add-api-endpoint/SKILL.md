@@ -1,9 +1,9 @@
 ---
 name: add-api-endpoint
-description: Recipe for adding or changing a NestJS endpoint in apps/api. Use when creating a controller route, DTO, or service method in the Smart Apply backend, or when asked to "add an API endpoint", "expose a route", or "add a backend endpoint".
+description: Recipe for adding or changing a NestJS endpoint in apps/api. Use when creating a controller route, DTO, or service method in the Applo backend, or when asked to "add an API endpoint", "expose a route", or "add a backend endpoint".
 ---
 
-# Add a NestJS endpoint (Smart Apply API)
+# Add a NestJS endpoint (Applo API)
 
 Follow the existing module layout under `apps/api/src/<module>/`: `*.controller.ts`, `*.service.ts`, `*.module.ts`, and `dto/`. A clean reference is `apps/api/src/job-postings/`.
 
@@ -34,4 +34,4 @@ The global pipe (`apps/api/src/main.ts`) runs `whitelist: true, transform: true`
 ## Constraints
 - TypeScript strict — no `any` (use `unknown` + a guard).
 - 0 ESLint errors and warnings: `pnpm --filter @smart-apply/api lint`.
-- Keep examples/placeholders profession-neutral — Smart Apply serves all industries, German-first copy.
+- Keep examples/placeholders profession-neutral — Applo serves all industries, German-first copy.

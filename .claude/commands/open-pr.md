@@ -1,5 +1,5 @@
 ---
-description: Push the current feature branch and open a PR following Smart Apply's trunk-based flow (lint + lockfile + doc-sync checks, Conventional-Commit PR title for squash-merge).
+description: Push the current feature branch and open a PR following Applo's trunk-based flow (lint + lockfile + doc-sync checks, Conventional-Commit PR title for squash-merge).
 argument-hint: [optional PR title]
 disable-model-invocation: true
 allowed-tools: Bash(git *) Bash(gh *) Bash(pnpm *) Read Grep
@@ -13,7 +13,7 @@ allowed-tools: Bash(git *) Bash(gh *) Bash(pnpm *) Read Grep
 ## Task
 Open a pull request for the current branch. Optional title from me: $ARGUMENTS
 
-Smart Apply runs **trunk-based** with one long-lived branch (`main`) and **squash-merge only**, so the PR title becomes the squashed commit message.
+Applo runs **trunk-based** with one long-lived branch (`main`) and **squash-merge only**, so the PR title becomes the squashed commit message.
 
 1. **Refuse to continue on `main`.** If the branch is `main`, stop and tell me to move the work to a `feat/`|`fix/`|`chore/`|`docs/`|`ci/`|`test/` branch first.
 2. **Pre-flight (block the PR on failures):**

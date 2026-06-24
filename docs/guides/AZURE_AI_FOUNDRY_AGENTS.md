@@ -1,6 +1,6 @@
 # Azure AI Foundry Agents Integration Guide
 
-This guide explains how to integrate and use Azure AI Foundry agents for resume and cover letter generation in Smart Apply.
+This guide explains how to integrate and use Azure AI Foundry agents for resume and cover letter generation in Applo.
 
 ## Overview
 
@@ -406,7 +406,7 @@ Restart application to apply change immediately.
 
 - [Azure AI Foundry Documentation](https://learn.microsoft.com/azure/ai-foundry/)
 - [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/)
-- [Smart Apply Architecture](../../ARCHITECTURE.md)
+- [Applo Architecture](../../ARCHITECTURE.md)
 - [Testing Guide](./TESTING_GUIDE.md)
 - [Security Documentation](../security/)
 

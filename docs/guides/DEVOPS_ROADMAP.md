@@ -3,7 +3,7 @@
 > **Status:** ✅ **Implemented** (May 2026). The plan below is preserved for
 > reference. See the "Shipped state" section directly below for what's
 > actually live.
-> **Audience:** Solo / small team running Smart Apply on Fly.io + Cloudflare Workers + Neon.
+> **Audience:** Solo / small team running Applo on Fly.io + Cloudflare Workers + Neon.
 > **Goal state:** `local → staging → prod` with safe migrations, scoped secrets, and tag-driven releases via Conventional Commits + release-please.
 
 ---

@@ -1,4 +1,4 @@
-# Smart Apply — Infrastructure
+# Applo — Infrastructure
 
 This directory holds the container build artifacts for the production
 deployment.

@@ -6,7 +6,7 @@ description: 'Generate a forward-only Prisma migration for a schema change and r
 # Create a Prisma migration
 
 Generate a migration for the current `apps/api/prisma/schema.prisma` change and regenerate
-the Prisma client the **Smart Apply way**.
+the Prisma client the **Applo way**.
 
 Migration name: `${input:migrationName:descriptive_snake_case_name}`
 

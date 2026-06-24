@@ -2,7 +2,7 @@
 
 ## Overview
 
-Smart Apply implements optimistic updates for all mutations to provide instant UI feedback and eliminate loading spinners for common operations. This document describes the implementation patterns, benefits, and testing strategies.
+Applo implements optimistic updates for all mutations to provide instant UI feedback and eliminate loading spinners for common operations. This document describes the implementation patterns, benefits, and testing strategies.
 
 ## Benefits
 
@@ -444,7 +444,7 @@ export function useCreateItem() {
 
 ## Summary
 
-Optimistic updates transform Smart Apply from a traditional request-response UI to a modern, instant-feedback experience. By following the 4-phase pattern consistently across all mutations, we ensure:
+Optimistic updates transform Applo from a traditional request-response UI to a modern, instant-feedback experience. By following the 4-phase pattern consistently across all mutations, we ensure:
 
 1. **Instant UI updates** (onMutate)
 2. **Error resilience** (onError rollback)

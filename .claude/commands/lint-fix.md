@@ -1,5 +1,5 @@
 ---
-description: Run ESLint --fix on the affected Smart Apply workspace and drive it to zero errors AND zero warnings.
+description: Run ESLint --fix on the affected Applo workspace and drive it to zero errors AND zero warnings.
 argument-hint: [api | web | both]
 allowed-tools: Bash(pnpm *) Read Grep Edit
 ---
@@ -7,7 +7,7 @@ allowed-tools: Bash(pnpm *) Read Grep Edit
 ## Task
 Lint and fix the affected workspace(s). Target: $ARGUMENTS (default: infer from the changed files).
 
-Smart Apply's lint policy: **new code MUST land with 0 ESLint errors AND 0 warnings.** CI only fails on errors, but warnings accumulate as untracked tech debt — once a workspace reached 74 warnings before one new error tipped the build red and blocked every PR. Treat warnings as errors for anything authored here.
+Applo's lint policy: **new code MUST land with 0 ESLint errors AND 0 warnings.** CI only fails on errors, but warnings accumulate as untracked tech debt — once a workspace reached 74 warnings before one new error tipped the build red and blocked every PR. Treat warnings as errors for anything authored here.
 
 1. Run the workspace lint:
    - web → `pnpm --filter @smart-apply/web lint`

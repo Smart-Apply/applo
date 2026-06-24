@@ -1,5 +1,5 @@
 ---
-description: Generate a forward-only Prisma migration for the Smart Apply API and regenerate the client with the required sanitize step.
+description: Generate a forward-only Prisma migration for the Applo API and regenerate the client with the required sanitize step.
 argument-hint: <descriptive_migration_name>
 disable-model-invocation: true
 allowed-tools: Bash(pnpm *) Bash(git *) Bash(rm *) Read Grep

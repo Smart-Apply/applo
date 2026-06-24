@@ -2,7 +2,7 @@
 
 ## Overview
 
-Smart Apply now supports OAuth 2.0 Social Login with Google and Microsoft (Azure AD). Users can register and log in using their existing accounts from these providers.
+Applo now supports OAuth 2.0 Social Login with Google and Microsoft (Azure AD). Users can register and log in using their existing accounts from these providers.
 
 ## Features
 
@@ -119,7 +119,7 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 1. Go to [Azure Portal](https://portal.azure.com/)
 2. Navigate to **Azure Active Directory** → **App registrations**
 3. Click **New registration**
-4. Name: `Smart Apply`
+4. Name: `Applo`
 5. Supported account types: **Accounts in any organizational directory and personal Microsoft accounts**
 6. Redirect URI: 
    - Platform: **Web**

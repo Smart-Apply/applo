@@ -1,6 +1,6 @@
 # Frontend Bundle Optimization Guide
 
-This document describes the bundle size optimizations implemented in the Smart Apply frontend to improve initial page load performance and Core Web Vitals scores.
+This document describes the bundle size optimizations implemented in the Applo frontend to improve initial page load performance and Core Web Vitals scores.
 
 ## Overview
 

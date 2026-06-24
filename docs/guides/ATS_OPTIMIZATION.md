@@ -26,18 +26,18 @@ An **Applicant Tracking System (ATS)** is software used by employers to manage j
 ✅ **Increased Visibility**: Well-formatted documents rank higher in candidate searches
 ✅ **Human-Readable**: Still looks professional when reviewed by recruiters
 
-## Smart Apply ATS Features
+## Applo ATS Features
 
 ### Automatic ATS Optimization
 
-When generating PDFs through Smart Apply, you can choose between two formats:
+When generating PDFs through Applo, you can choose between two formats:
 
 1. **Standard Format**: Professional-looking with modern styling, colors, and graphics
 2. **ATS-Optimized Format**: Maximum parsability with simple formatting
 
 ### ATS Score Calculation
 
-Smart Apply calculates a **weighted ATS match score** based on your profile's alignment with the job posting. The score uses the following weights:
+Applo calculates a **weighted ATS match score** based on your profile's alignment with the job posting. The score uses the following weights:
 
 | Category                     | Weight | Description                                                 |
 | ---------------------------- | ------ | ----------------------------------------------------------- |
@@ -125,7 +125,7 @@ Smart Apply calculates a **weighted ATS match score** based on your profile's al
 - ❌ **Avoid scanned images**: Must be text-based PDF
 - ❌ **No password-protected PDFs**: ATS cannot open them
 
-## Using ATS-Optimized PDFs in Smart Apply
+## Using ATS-Optimized PDFs in Applo
 
 ### When to Use ATS-Optimized Format
 
@@ -147,7 +147,7 @@ Smart Apply calculates a **weighted ATS match score** based on your profile's al
 
 ### How to Generate ATS-Optimized PDFs
 
-1. **Create Your Application** in Smart Apply
+1. **Create Your Application** in Applo
 2. **Select Template**: Choose any template (will be converted to ATS format)
 3. **Enable ATS Optimization**: Toggle "ATS-Optimized" option during export
 4. **Review PDF**: Check preview to ensure proper formatting
@@ -155,7 +155,7 @@ Smart Apply calculates a **weighted ATS match score** based on your profile's al
 
 ### ATS Validation Score
 
-Smart Apply automatically validates your PDF and provides an **ATS-Friendliness Score (0-100)**:
+Applo automatically validates your PDF and provides an **ATS-Friendliness Score (0-100)**:
 
 - **90-100**: Excellent - Will parse perfectly in most ATS systems
 - **75-89**: Good - Minor issues, but should work well
@@ -249,7 +249,7 @@ Smart Apply automatically validates your PDF and provides an **ATS-Friendliness 
 
 ### Q: What if the job posting asks for a Word document?
 
-**A:** Submit exactly what they request. Word documents (.docx) are actually easier for ATS to parse than PDFs. Smart Apply can export to both formats.
+**A:** Submit exactly what they request. Word documents (.docx) are actually easier for ATS to parse than PDFs. Applo can export to both formats.
 
 ### Q: Do all companies use ATS?
 

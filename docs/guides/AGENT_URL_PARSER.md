@@ -1,6 +1,6 @@
 # Agent-Based URL Parser for JavaScript-Heavy Job Sites
 
-This feature enables Smart Apply to parse job postings from dynamic, JavaScript-rendered job sites like Indeed, LinkedIn, Glassdoor, and other modern job boards that rely on client-side rendering.
+This feature enables Applo to parse job postings from dynamic, JavaScript-rendered job sites like Indeed, LinkedIn, Glassdoor, and other modern job boards that rely on client-side rendering.
 
 ## Overview
 
@@ -371,4 +371,4 @@ For issues or questions:
 
 ## License
 
-Part of Smart Apply MVP - MIT License
+Part of Applo MVP - MIT License

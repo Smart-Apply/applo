@@ -1,618 +1,630 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import './home.css';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { Linkedin, Globe, ChevronDown } from 'lucide-react';
-import { api } from '@/lib/api-client';
-import { toast } from 'sonner';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { ApploRig, type ApploState } from '@/components/ui/applo-rig';
+
+/** Inline reveal-delay helper (drives the CSS `--d` custom property). */
+const d = (delay: string): CSSProperties => ({ ['--d']: delay }) as CSSProperties;
+
+/** Dock speech-bubble copy per Applo pose. */
+const POSE_BUBBLE: Record<ApploState, { title?: string; text: string }> = {
+  wave: { title: 'Hi, ich bin Applo!', text: 'Ich helfe dir bei ehrlichen Bewerbungen.' },
+  search: { text: 'Ich lese deinen CV.' },
+  process: { text: 'Ich schreibe …' },
+  success: { text: 'Stark gemacht!' },
+  idle: { text: 'Ehrlich & ruhig.' },
+  love: { text: 'Für dich gebaut.' },
+  auto: { text: 'Stellen im Nu.' },
+  coach: { text: 'Üb mit mir.' },
+  think: { text: 'Mal sehen …' },
+  done: { text: 'Erledigt!' },
+};
+
+/** Applo wordmark/logo. `light` flips it for the dark footer. */
+function BrandMark({ light = false }: { light?: boolean }) {
+  const mark = light ? '#fff' : '#15233f';
+  const screen = light ? '#15233f' : '#fff';
+  return (
+    <svg width="28" height="28" viewBox="0 0 140 140" aria-hidden="true">
+      <g fill="none" stroke={mark} strokeWidth="7" strokeLinecap="round">
+        <path d="M58 36 L52 18" />
+        <path d="M82 36 L88 18" />
+      </g>
+      <circle cx="50" cy="14" r="8" fill={mark} />
+      <circle cx="90" cy="14" r="8" fill={mark} />
+      <rect x="20" y="64" width="14" height="34" rx="7" fill={mark} />
+      <rect x="106" y="64" width="14" height="34" rx="7" fill={mark} />
+      <rect x="30" y="34" width="80" height="84" rx="22" fill={mark} />
+      <rect x="50" y="52" width="40" height="50" rx="7" fill={screen} />
+      <path d="M56 82 L65 91 L84 70" fill="none" stroke={mark} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Green check used in value cards and price lists. */
+function Check() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="#22b964" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export default function Home() {
-  const router = useRouter();
-  const [contactForm, setContactForm] = useState({
-    name: '',
-    email: '',
-    message: '',
-  });
-  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'pro' | 'premium'>('pro');
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [pose, setPose] = useState<ApploState>('wave');
+  const [docked, setDocked] = useState<'hero' | 'float'>('hero');
+  const [dockHidden, setDockHidden] = useState(false);
+  const [ctaState, setCtaState] = useState<ApploState>('idle');
+  const [ctaRevealed, setCtaRevealed] = useState(false);
 
-  const handleContactSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Companion driver: pose per section, dock position, scroll-reveal and
+  // animated stat counters — a React port of the design's vanilla script.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const poseEls = Array.from(root.querySelectorAll<HTMLElement>('[data-pose]'));
+    const hero = root.querySelector<HTMLElement>('#hero');
+    const ctaSec = root.querySelector<HTMLElement>('#cta');
+    const stats = root.querySelector<HTMLElement>('#stats');
 
-    // Lightweight client-side guards. The backend re-validates with
-    // class-validator (length, email shape) and throttles per IP, so
-    // these only exist to give immediate feedback.
-    const name = contactForm.name.trim();
-    const email = contactForm.email.trim();
-    const message = contactForm.message.trim();
-    if (!name || !email || message.length < 10) {
-      toast.error('Bitte fülle alle Felder aus (Nachricht mindestens 10 Zeichen).');
-      return;
-    }
+    let curPose: string | null = null;
+    let lastDocked: 'hero' | 'float' | null = null;
+    let lastHidden: boolean | null = null;
+    let ctaDone = false;
 
-    setIsSubmittingContact(true);
-    try {
-      const response = await api.contact.submit({ name, email, message });
-      if (response.ok) {
-        toast.success(response.message);
-        setContactForm({ name: '', email: '', message: '' });
-      } else {
-        toast.error(response.message);
+    const onScroll = () => {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const mid = vh * 0.5;
+      // nearest [data-pose] section crossing the viewport middle
+      let best: HTMLElement | null = null;
+      let bestDist = Infinity;
+      poseEls.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top <= mid && r.bottom >= mid) {
+          const dist = Math.abs((r.top + r.bottom) / 2 - mid);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = el;
+          }
+        }
+      });
+      if (best) {
+        const p = (best as HTMLElement).getAttribute('data-pose');
+        if (p && p !== curPose) {
+          curPose = p;
+          setPose(p as ApploState);
+        }
       }
-    } catch (error) {
-      const { ApiError, getErrorMessage } = await import('@/lib/errors');
-      if (ApiError.isApiError(error)) {
-        toast.error(getErrorMessage(error));
-      } else {
-        toast.error('Nachricht konnte nicht gesendet werden. Bitte versuche es später erneut.');
-      }
-    } finally {
-      setIsSubmittingContact(false);
-    }
-  };
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      // dock: big in hero, small corner buddy afterwards, hidden over the CTA.
+      let inCta = false;
+      if (ctaSec) {
+        const cr = ctaSec.getBoundingClientRect();
+        inCta = cr.top < vh * 0.55 && cr.bottom > vh * 0.2;
+        if (!ctaDone && cr.top < vh * 0.72) {
+          ctaDone = true;
+          setCtaRevealed(true);
+          // let the entrance settle, then play the celebration
+          window.setTimeout(() => setCtaState('success'), 520);
+        }
+      }
+      const hr = hero?.getBoundingClientRect();
+      const next: 'hero' | 'float' = hr && hr.bottom > vh * 0.4 ? 'hero' : 'float';
+      if (next !== lastDocked) {
+        lastDocked = next;
+        setDocked(next);
+      }
+      const hidden = next === 'float' && inCta;
+      if (hidden !== lastHidden) {
+        lastHidden = hidden;
+        setDockHidden(hidden);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    onScroll();
+
+    // scroll reveal (rect-based, robust)
+    let revEls = Array.from(root.querySelectorAll<HTMLElement>('.reveal'));
+    let revealTimer = 0;
+    const checkReveal = () => {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      for (let i = revEls.length - 1; i >= 0; i--) {
+        const r = revEls[i].getBoundingClientRect();
+        if (r.top < vh * 0.92 && r.bottom > 0) {
+          revEls[i].classList.add('in');
+          revEls.splice(i, 1);
+        }
+      }
+      if (!revEls.length) {
+        window.removeEventListener('scroll', checkReveal);
+        window.removeEventListener('resize', checkReveal);
+      }
+    };
+    if (prefersReduced) {
+      revEls.forEach((el) => el.classList.add('in'));
+      revEls = [];
+    } else {
+      window.addEventListener('scroll', checkReveal, { passive: true });
+      window.addEventListener('resize', checkReveal);
+      checkReveal();
+      revealTimer = window.setTimeout(checkReveal, 60);
     }
-  };
+
+    // animated counters
+    let counted = false;
+    const runCount = () => {
+      if (counted) return;
+      counted = true;
+      root.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+        const target = parseFloat(el.getAttribute('data-count') || '0');
+        const suffix = el.getAttribute('data-suffix') || '';
+        if (prefersReduced) {
+          el.textContent = target + suffix;
+          return;
+        }
+        const dur = 1100;
+        let t0: number | null = null;
+        const step = (ts: number) => {
+          if (t0 === null) t0 = ts;
+          const k = Math.min((ts - t0) / dur, 1);
+          const eased = 1 - Math.pow(1 - k, 3);
+          el.textContent = Math.round(target * eased) + suffix;
+          if (k < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+    };
+    const checkCount = () => {
+      if (counted || !stats) return;
+      const r = stats.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      if (r.top < vh * 0.85 && r.bottom > 0) {
+        runCount();
+        window.removeEventListener('scroll', checkCount);
+      }
+    };
+    window.addEventListener('scroll', checkCount, { passive: true });
+    checkCount();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('scroll', checkReveal);
+      window.removeEventListener('resize', checkReveal);
+      window.removeEventListener('scroll', checkCount);
+      window.clearTimeout(revealTimer);
+    };
+  }, []);
+
+  const bubble = POSE_BUBBLE[pose];
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#FFFFFE]">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-        <div className="container flex h-[80px] items-center justify-between px-4 md:px-8">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
-              alt="SmartApply"
-              width={241}
-              height={247}
-              className="w-[120px] md:w-[160px] h-auto"
-              priority
-            />
-          </Link>
-          
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center gap-10 font-poppins text-lg text-[#1B2A49]">
-            <button onClick={() => scrollToSection('hero')} className="hover:opacity-70 transition-opacity">
-              Start
-            </button>
-            <button onClick={() => scrollToSection('about')} className="hover:opacity-70 transition-opacity">
-              Über uns
-            </button>
-            <button onClick={() => scrollToSection('pricing')} className="hover:opacity-70 transition-opacity">
-              Preise
-            </button>
-            <button onClick={() => scrollToSection('contact')} className="hover:opacity-70 transition-opacity">
-              Kontakt
-            </button>
-          </nav>
+    <div className="applo-home" ref={rootRef}>
+      {/* companion: ONE Applo, pose per section */}
+      <div
+        id="applo-dock"
+        className={docked === 'hero' ? 'dock-hero' : 'dock-float'}
+        style={dockHidden ? { opacity: 0, visibility: 'hidden' } : undefined}
+        aria-hidden
+      >
+        <ApploRig state={pose} aria-hidden />
+        <div className="dock-bubble" id="dockBubble">
+          {bubble.title ? (
+            <>
+              <b>{bubble.title}</b>
+              <span>{bubble.text}</span>
+            </>
+          ) : (
+            bubble.text
+          )}
+        </div>
+      </div>
 
-          {/* Auth Buttons */}
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="outline"
-              onClick={() => router.push('/login')}
-              className="font-poppins font-semibold text-sm md:text-base px-4 md:px-6 py-2 border-2 border-[#1B2A49] text-[#1B2A49] bg-transparent hover:bg-[#1B2A49] hover:text-white transition-colors rounded-lg"
-            >
+      {/* NAV */}
+      <header className="nav">
+        <div className="wrap nav-in">
+          <a className="brand" href="#top">
+            <BrandMark />
+            <span>Applo</span>
+          </a>
+          <nav className="nav-links" aria-label="Hauptnavigation">
+            <a href="#features">Features</a>
+            <a href="#werte">Werte</a>
+            <a href="#preise">Preise</a>
+            <a href="#faq">FAQ</a>
+          </nav>
+          <div className="nav-cta">
+            <Link className="nav-login" href="/login">
               Anmelden
-            </Button>
-            <Button 
-              onClick={() => router.push('/register')}
-              className="font-poppins font-semibold text-sm md:text-base px-4 md:px-6 py-2 bg-[#1B2A49] text-white hover:bg-[#2a3d66] transition-colors rounded-lg"
-            >
-              Registrieren
-            </Button>
+            </Link>
+            <Link className="btn btn-primary" href="/register">
+              Kostenlos starten
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section id="hero" className="container px-4 md:px-8 py-8 md:py-12">
-          <div className="max-w-[976px] mx-auto flex flex-col items-center gap-4">
-            <h1 className="font-poppins font-bold text-3xl md:text-5xl text-[#1B2A49] text-center">
-              Willkommen bei SmartApply
-            </h1>
-            <p className="font-poppins font-semibold text-xl md:text-3xl text-[#1B2A49] text-center">
-              wo Bewerbungen zum System werden
-            </p>
-            <div className="w-full mt-4">
-              <Image
-                src="/Images/Hero Image.png"
-                alt="Hero Image - Person working on laptop"
-                width={976}
-                height={651}
-                className="w-full h-auto rounded-lg"
-                priority
-              />
-            </div>
-            <div className="w-full max-w-[900px] h-[2px] bg-[#1B2A49] mt-4" />
-          </div>
-        </section>
-
-        {/* About Section */}
-        <section id="about" className="container px-4 md:px-8 py-12 md:py-20">
-          <div className="flex flex-col lg:flex-row gap-12 items-center">
-            {/* Feature Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-12 max-w-[762px]">
-              {/* Card 1 - Apply in minutes */}
-              <div className="bg-[#E5EEFD] rounded-3xl p-6 shadow-[0px_4px_4px_rgba(27,42,73,0.25)] min-h-[276px] flex flex-col">
-                <div className="flex justify-center mb-4">
-                  <Image
-                    src="/Icons/IconApply.png"
-                    alt="Apply icon"
-                    width={110}
-                    height={110}
-                    className="w-[80px] md:w-[110px] h-auto"
-                  />
-                </div>
-                <p className="font-poppins text-lg md:text-2xl">
-                  <span className="font-bold text-[#1B2A49]">Bewerben in Minuten.</span>
-                  <span className="font-semibold text-black"> Lass KI deinen Lebenslauf und dein Anschreiben automatisch anpassen.</span>
-                </p>
-              </div>
-
-              {/* Card 2 - Dashboard */}
-              <div className="bg-[#E5EEFD] rounded-3xl p-6 shadow-[0px_4px_4px_rgba(27,42,73,0.25)] min-h-[276px] flex flex-col">
-                <div className="flex justify-center mb-4">
-                  <Image
-                    src="/Icons/IconDashboard.png"
-                    alt="Dashboard icon"
-                    width={100}
-                    height={100}
-                    className="w-[70px] md:w-[100px] h-auto"
-                  />
-                </div>
-                <p className="font-poppins text-lg md:text-2xl">
-                  <span className="font-bold text-[#1B2A49]">Ein Dashboard für alle Bewerbungen. </span>
-                  <span className="font-semibold text-black">Behalte jede Bewerbung im Blick.</span>
-                </p>
-              </div>
-
-              {/* Card 3 - Data */}
-              <div className="bg-[#E5EEFD] rounded-3xl p-6 shadow-[0px_4px_4px_rgba(27,42,73,0.25)] min-h-[276px] flex flex-col">
-                <div className="flex justify-center mb-4">
-                  <Image
-                    src="/Icons/IconData.png"
-                    alt="Analytics icon"
-                    width={100}
-                    height={100}
-                    className="w-[70px] md:w-[100px] h-auto"
-                  />
-                </div>
-                <p className="font-poppins text-lg md:text-2xl">
-                  <span className="font-bold text-[#1B2A49]">Nutze Daten, nicht Vermutungen. </span>
-                  <span className="font-semibold text-black">Sieh, welche Bewerbungen am besten funktionieren und verbessere dich stetig.</span>
-                </p>
-              </div>
-
-              {/* Card 4 - Interview */}
-              <div className="bg-[#E5EEFD] rounded-3xl p-6 shadow-[0px_4px_4px_rgba(27,42,73,0.25)] min-h-[276px] flex flex-col">
-                <div className="flex justify-center mb-4">
-                  <Image
-                    src="/Icons/IconSupport.png"
-                    alt="Interview icon"
-                    width={110}
-                    height={110}
-                    className="w-[80px] md:w-[110px] h-auto"
-                  />
-                </div>
-                <p className="font-poppins text-lg md:text-2xl">
-                  <span className="font-bold text-[#1B2A49]">Unterstützung fürs Vorstellungsgespräch. </span>
-                  <span className="font-semibold text-black">Übe mit dem Interview-Coach für dein nächstes Bewerbungsgespräch.</span>
-                </p>
-              </div>
-            </div>
-
-            {/* About Us Illustration */}
-            <div className="hidden lg:block">
-              <Image
-                src="/Images/AboutUS.png"
-                alt="About us illustration"
-                width={553}
-                height={553}
-                className="w-[400px] xl:w-[553px] h-auto"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing Section */}
-        <section id="pricing" className="relative py-16 md:py-24 overflow-hidden">
-          {/* SVG Background - Behind the cards */}
-          <div className="absolute inset-0 z-0 flex items-center justify-center">
-            <svg width="1440" height="328" viewBox="0 0 1440 328" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-              <path d="M1440 327.692L1405.6 324.051C1371.2 320.41 1302.4 313.128 1233.92 296.088C1165.28 279.194 1097.12 252.396 1028.48 239.143C960 225.744 891.2 225.744 822.72 241.036C754.08 256.328 685.92 286.913 617.28 291.282C548.8 295.651 480 273.805 411.52 271.621C342.88 269.436 274.72 286.913 206.08 299.001C137.6 311.235 68.7999 317.934 34.4 321.43L0 324.78V9.15527e-05H34.4C68.7999 9.15527e-05 137.6 9.15527e-05 206.08 9.15527e-05C274.72 9.15527e-05 342.88 9.15527e-05 411.52 9.15527e-05C480 9.15527e-05 548.8 9.15527e-05 617.28 9.15527e-05C685.92 9.15527e-05 754.08 9.15527e-05 822.72 9.15527e-05C891.2 9.15527e-05 960 9.15527e-05 1028.48 9.15527e-05C1097.12 9.15527e-05 1165.28 9.15527e-05 1233.92 9.15527e-05C1302.4 9.15527e-05 1371.2 9.15527e-05 1405.6 9.15527e-05H1440V327.692Z" fill="#1B2A49"/>
-              <path d="M1440 240.308L1405.6 239.58C1371.2 238.851 1302.4 237.395 1233.92 229.093C1165.28 220.938 1097.12 205.791 1028.48 196.179C960 186.421 891.2 182.051 822.72 183.508C754.08 184.964 685.92 192.246 617.28 195.887C548.8 199.528 480 199.528 411.52 203.898C342.88 208.267 274.72 217.005 206.08 222.831C137.6 228.657 68.7999 231.569 34.4 233.026L0 234.482V0.000167847H34.4C68.7999 0.000167847 137.6 0.000167847 206.08 0.000167847C274.72 0.000167847 342.88 0.000167847 411.52 0.000167847C480 0.000167847 548.8 0.000167847 617.28 0.000167847C685.92 0.000167847 754.08 0.000167847 822.72 0.000167847C891.2 0.000167847 960 0.000167847 1028.48 0.000167847C1097.12 0.000167847 1165.28 0.000167847 1233.92 0.000167847C1302.4 0.000167847 1371.2 0.000167847 1405.6 0.000167847H1440V240.308Z" fill="#495573"/>
-              <path d="M1440 166.031L1405.6 161.953C1371.2 157.729 1302.4 149.574 1233.92 155.108C1165.28 160.642 1097.12 180.158 1028.48 185.401C960 190.79 891.2 182.052 822.72 177.974C754.08 173.75 685.92 174.333 617.28 175.061C548.8 175.789 480 176.663 411.52 185.401C342.88 194.14 274.72 210.743 206.08 209.723C137.6 208.704 68.7999 190.353 34.4 181.032L0 171.857V0.000244141H34.4C68.7999 0.000244141 137.6 0.000244141 206.08 0.000244141C274.72 0.000244141 342.88 0.000244141 411.52 0.000244141C480 0.000244141 548.8 0.000244141 617.28 0.000244141C685.92 0.000244141 754.08 0.000244141 822.72 0.000244141C891.2 0.000244141 960 0.000244141 1028.48 0.000244141C1097.12 0.000244141 1165.28 0.000244141 1233.92 0.000244141C1302.4 0.000244141 1371.2 0.000244141 1405.6 0.000244141H1440V166.031Z" fill="#7A859F"/>
-              <path d="M1440 167.487L1405.6 162.827C1371.2 158.312 1302.4 148.991 1233.92 137.339C1165.28 125.688 1097.12 111.707 1028.48 106.609C960 101.512 891.2 105.298 822.72 114.62C754.08 123.795 685.92 138.359 617.28 143.456C548.8 148.554 480 144.185 411.52 138.796C342.88 133.553 274.72 127.145 206.08 120.591C137.6 114.037 68.7999 107.337 34.4 103.842L0 100.492V0H34.4C68.7999 0 137.6 0 206.08 0C274.72 0 342.88 0 411.52 0C480 0 548.8 0 617.28 0C685.92 0 754.08 0 822.72 0C891.2 0 960 0 1028.48 0C1097.12 0 1165.28 0 1233.92 0C1302.4 0 1371.2 0 1405.6 0H1440V167.487Z" fill="#AEB8CD"/>
-              <path d="M1440 53.8872L1405.6 58.6933C1371.2 63.6451 1302.4 73.2575 1233.92 82.5785C1165.28 91.7539 1097.12 100.492 1028.48 95.6862C960 90.7344 891.2 72.3836 822.72 64.8103C754.08 57.2369 685.92 60.7323 617.28 68.0144C548.8 75.2964 480 86.3651 411.52 82.7241C342.88 79.0831 274.72 60.7323 206.08 61.4605C137.6 62.1888 68.7999 81.9959 34.4 92.0452L0 101.949V1.52588e-05H34.4C68.7999 1.52588e-05 137.6 1.52588e-05 206.08 1.52588e-05C274.72 1.52588e-05 342.88 1.52588e-05 411.52 1.52588e-05C480 1.52588e-05 548.8 1.52588e-05 617.28 1.52588e-05C685.92 1.52588e-05 754.08 1.52588e-05 822.72 1.52588e-05C891.2 1.52588e-05 960 1.52588e-05 1028.48 1.52588e-05C1097.12 1.52588e-05 1165.28 1.52588e-05 1233.92 1.52588e-05C1302.4 1.52588e-05 1371.2 1.52588e-05 1405.6 1.52588e-05H1440V53.8872Z" fill="#FFFFFD" fillOpacity="0.992157"/>
-            </svg>
-          </div>
-
-          <div className="container relative z-10 px-4 md:px-8">
-            {/* Section header — value-oriented framing */}
-            <div className="mx-auto mb-12 max-w-3xl text-center">
-              <h2 className="font-poppins font-semibold text-3xl md:text-4xl text-[#1B2A49] mb-3">
-                Wähle deinen Weg zum nächsten Job
-              </h2>
-              <p className="font-poppins text-base md:text-lg text-[#1B2A49]/80">
-                Vom risikofreien Einstieg bis zur KI-optimierten Bewerbung —
-                transparent, monatlich kündbar, ohne versteckte Kosten.
+      <main id="top">
+        {/* HERO */}
+        <section className="hero" data-pose="wave" id="hero">
+          <div className="wrap hero-grid">
+            <div>
+              <p className="eyebrow reveal">Bewerben, ehrlich gemacht</p>
+              <h1 className="reveal" style={d('.05s')}>
+                Bewerbungen, die zu <span style={{ color: 'var(--blue2)' }}>dir</span> passen — nicht zu einer erfundenen
+                Version von dir.
+              </h1>
+              <p className="lead reveal" style={d('.12s')}>
+                Applo schreibt Anschreiben und Lebenslauf aus deinem <b>echten Profil</b> — KI-gestützt, ATS-optimiert und
+                transparent. Du behältst die Kontrolle, die KI erfindet nichts dazu.
               </p>
-            </div>
-
-            <div className="flex flex-col lg:flex-row gap-8 justify-center items-stretch">
-              {/* FREE Plan — risikofreier Einstieg */}
-              <div
-                onClick={() => setSelectedPlan('free')}
-                className={`relative rounded-3xl p-8 w-full max-w-[420px] mx-auto lg:mx-0 flex flex-col min-h-[680px] cursor-pointer transition-all duration-300 ${
-                  selectedPlan === 'free' ? 'bg-[#1B2A49]' : 'bg-[#E5EEFD] shadow-[5px_10px_4px_rgba(27,42,73,0.25)]'
-                }`}
-              >
-                <div className="text-center mb-8">
-                  <h3 className={`font-poppins font-semibold text-3xl md:text-4xl mb-1 transition-colors duration-300 ${
-                    selectedPlan === 'free' ? 'text-[#E5EEFD]' : 'text-[#1B2A49]'
-                  }`}>Free</h3>
-                  <p className={`font-poppins text-sm md:text-base mb-4 transition-colors duration-300 ${
-                    selectedPlan === 'free' ? 'text-white/80' : 'text-[#1B2A49]/70'
-                  }`}>
-                    Smart Apply risikofrei testen
-                  </p>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className={`font-poppins font-bold text-4xl md:text-5xl transition-colors duration-300 ${
-                      selectedPlan === 'free' ? 'text-white' : 'text-[#1B2A49]'
-                    }`}>0 €</span>
-                    <span className={`font-poppins text-base transition-colors duration-300 ${
-                      selectedPlan === 'free' ? 'text-white/70' : 'text-[#1B2A49]/60'
-                    }`}>/Monat</span>
-                  </div>
-                </div>
-                <ul className={`flex-1 space-y-4 font-poppins text-base md:text-lg transition-colors duration-300 ${
-                  selectedPlan === 'free' ? 'text-white' : 'text-[#1B2A49]'
-                }`}>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'free' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>3 Bewerbungen pro Monat</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'free' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>ATS-Score für jede Bewerbung</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'free' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Übersichtliches Bewerbungstracking</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'free' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Keine Kreditkarte erforderlich</span>
-                  </li>
-                </ul>
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    onClick={(e) => { e.stopPropagation(); router.push('/register'); }}
-                    className={`font-poppins font-semibold text-lg md:text-xl px-12 py-6 rounded-xl shadow-[0px_4px_4px_rgba(0,0,0,0.25)] transition-colors ${
-                      selectedPlan === 'free'
-                        ? 'bg-white text-[#1B2A49] hover:bg-gray-100'
-                        : 'bg-[#1B2A49] text-white hover:bg-[#2a3d66]'
-                    }`}
-                  >
-                    Kostenlos starten
-                  </Button>
-                </div>
+              <div className="hero-cta reveal" style={d('.18s')}>
+                <Link className="btn btn-primary" href="/register">
+                  Kostenlos starten
+                </Link>
+                <a className="hero-link" href="#how">
+                  So funktioniert’s
+                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
               </div>
-
-              {/* PRO Plan — bessere Bewerbungen schreiben */}
-              <div
-                onClick={() => setSelectedPlan('pro')}
-                className={`relative rounded-3xl p-8 w-full max-w-[420px] mx-auto lg:mx-0 flex flex-col min-h-[685px] cursor-pointer transition-all duration-300 ${
-                  selectedPlan === 'pro' ? 'bg-[#1B2A49]' : 'bg-[#E5EEFD] shadow-[5px_10px_4px_rgba(27,42,73,0.25)]'
-                }`}
-              >
-                <div className="text-center mb-8">
-                  <h3 className={`font-poppins font-semibold text-3xl md:text-4xl mb-1 transition-colors duration-300 ${
-                    selectedPlan === 'pro' ? 'text-[#E5EEFD]' : 'text-[#1B2A49]'
-                  }`}>Pro</h3>
-                  <p className={`font-poppins text-sm md:text-base mb-4 transition-colors duration-300 ${
-                    selectedPlan === 'pro' ? 'text-white/80' : 'text-[#1B2A49]/70'
-                  }`}>
-                    Bessere Bewerbungen, mehr Interviews
-                  </p>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className={`font-poppins font-bold text-4xl md:text-5xl transition-colors duration-300 ${
-                      selectedPlan === 'pro' ? 'text-white' : 'text-[#1B2A49]'
-                    }`}>9,99 €</span>
-                    <span className={`font-poppins text-base transition-colors duration-300 ${
-                      selectedPlan === 'pro' ? 'text-white/70' : 'text-[#1B2A49]/60'
-                    }`}>/Monat</span>
-                  </div>
-                </div>
-                <ul className={`flex-1 space-y-4 font-poppins text-base md:text-lg transition-colors duration-300 ${
-                  selectedPlan === 'pro' ? 'text-white' : 'text-[#1B2A49]'
-                }`}>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'pro' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>KI-generierte Lebensläufe & Anschreiben</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'pro' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Mehrere professionelle Templates</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'pro' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>ATS-Optimierung & Keyword-Matching</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'pro' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Bewerbungstracking mit Statusverlauf</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'pro' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Analytics: ATS-Score, Keyword-Score, Match-Insights</span>
-                  </li>
-                </ul>
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    onClick={(e) => { e.stopPropagation(); router.push('/register'); }}
-                    className={`font-poppins font-semibold text-lg md:text-xl px-12 py-6 rounded-xl shadow-[0px_4px_4px_rgba(0,0,0,0.25)] transition-colors ${
-                      selectedPlan === 'pro'
-                        ? 'bg-white text-[#1B2A49] hover:bg-gray-100'
-                        : 'bg-[#1B2A49] text-white hover:bg-[#2a3d66]'
-                    }`}
-                  >
-                    Upgrade auf Pro
-                  </Button>
-                </div>
-              </div>
-
-              {/* PREMIUM Plan — Premium-Tools (recommended) */}
-              <div
-                onClick={() => setSelectedPlan('premium')}
-                className={`relative rounded-3xl p-8 w-full max-w-[420px] mx-auto lg:mx-0 flex flex-col min-h-[685px] cursor-pointer transition-all duration-300 ring-2 ring-offset-2 ring-offset-transparent ${
-                  selectedPlan === 'premium'
-                    ? 'bg-[#1B2A49] ring-[#1B2A49]'
-                    : 'bg-[#E5EEFD] shadow-[5px_10px_4px_rgba(27,42,73,0.25)] ring-[#1B2A49]/40'
-                }`}
-              >
-                {/* Recommended ribbon — restrained, value-focused */}
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                  <span className={`inline-block font-poppins font-semibold text-xs md:text-sm uppercase tracking-wide px-4 py-1.5 rounded-full shadow-md whitespace-nowrap transition-colors duration-300 ${
-                    selectedPlan === 'premium' ? 'bg-[#E5EEFD] text-[#1B2A49]' : 'bg-[#1B2A49] text-[#E5EEFD]'
-                  }`}>
-                    Beste Wahl für deine Bewerbung
-                  </span>
-                </div>
-
-                <div className="text-center mb-8">
-                  <h3 className={`font-poppins font-semibold text-3xl md:text-4xl mb-1 transition-colors duration-300 ${
-                    selectedPlan === 'premium' ? 'text-[#E5EEFD]' : 'text-[#1B2A49]'
-                  }`}>Premium</h3>
-                  <p className={`font-poppins text-sm md:text-base mb-4 transition-colors duration-300 ${
-                    selectedPlan === 'premium' ? 'text-white/80' : 'text-[#1B2A49]/70'
-                  }`}>
-                    Maximale Unterstützung für deine Bewerbung
-                  </p>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className={`font-poppins font-bold text-4xl md:text-5xl transition-colors duration-300 ${
-                      selectedPlan === 'premium' ? 'text-white' : 'text-[#1B2A49]'
-                    }`}>19,99 €</span>
-                    <span className={`font-poppins text-base transition-colors duration-300 ${
-                      selectedPlan === 'premium' ? 'text-white/70' : 'text-[#1B2A49]/60'
-                    }`}>/Monat</span>
-                  </div>
-                </div>
-                <ul className={`flex-1 space-y-4 font-poppins text-base md:text-lg transition-colors duration-300 ${
-                  selectedPlan === 'premium' ? 'text-white' : 'text-[#1B2A49]'
-                }`}>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Alles aus Pro</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Automatisches Tracking per E-Mail-Erkennung</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>KI Interview-Coach für die Vorbereitung</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Erweiterte Analytics & Trends</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className={`mt-1 ${selectedPlan === 'premium' ? 'text-green-400' : 'text-green-600'}`}>✓</span>
-                    <span>Priorisierte Generierung & Premium-Support</span>
-                  </li>
-                </ul>
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    onClick={(e) => { e.stopPropagation(); router.push('/register'); }}
-                    className={`font-poppins font-semibold text-lg md:text-xl px-12 py-6 rounded-xl shadow-[0px_4px_4px_rgba(0,0,0,0.25)] transition-colors ${
-                      selectedPlan === 'premium'
-                        ? 'bg-white text-[#1B2A49] hover:bg-gray-100'
-                        : 'bg-[#1B2A49] text-white hover:bg-[#2a3d66]'
-                    }`}
-                  >
-                    Premium freischalten
-                  </Button>
-                </div>
+              <div className="trust reveal" style={d('.24s')}>
+                <span className="dot" /> EU-Hosting
+                <span className="dot" /> DSGVO
+                <span className="dot" /> keine erfundenen Daten
               </div>
             </div>
+            <div className="hero-stage" aria-hidden="true" />
+          </div>
+        </section>
 
-            {/* Trust microcopy — under the cards */}
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-poppins text-sm md:text-base text-[#1B2A49]/80">
-              <span className="inline-flex items-center gap-2">
-                <span className="text-green-600">✓</span> Transparente Monatspreise
-              </span>
-              <span className="hidden md:inline text-[#1B2A49]/30">·</span>
-              <span className="inline-flex items-center gap-2">
-                <span className="text-green-600">✓</span> Jederzeit kündbar
-              </span>
-              <span className="hidden md:inline text-[#1B2A49]/30">·</span>
-              <span className="inline-flex items-center gap-2">
-                <span className="text-green-600">✓</span> Keine versteckten Kosten
-              </span>
-              <span className="hidden md:inline text-[#1B2A49]/30">·</span>
-              <span className="inline-flex items-center gap-2">
-                <span className="text-green-600">✓</span> Für echte Jobsuchende gemacht
-              </span>
+        {/* HOW */}
+        <section className="section" id="how" data-pose="process">
+          <div className="wrap">
+            <div className="sec-head center reveal">
+              <p className="eyebrow">So funktioniert’s</p>
+              <h2 className="h2">In drei Schritten zur fertigen Bewerbung</h2>
+              <p className="lead">Vom Lebenslauf zur abgeschickten, ATS-optimierten Bewerbung — ohne Copy-Paste-Chaos.</p>
+            </div>
+            <div className="grid steps">
+              <article className="card reveal" style={d('0s')}>
+                <div className="step-n">1</div>
+                <h3 className="h3">Profil &amp; CV hochladen</h3>
+                <p>Lade deinen Lebenslauf hoch. Der Resume-Parser liest ihn aus und füllt dein Profil automatisch — du prüfst und korrigierst.</p>
+              </article>
+              <article className="card reveal" style={d('.1s')}>
+                <div className="step-n">2</div>
+                <h3 className="h3">Stelle einfügen</h3>
+                <p>Füge eine Stelle als Text, URL oder PDF ein. Die KI schreibt Anschreiben und Lebenslauf passend zur Ausschreibung — ATS-optimiert.</p>
+              </article>
+              <article className="card reveal" style={d('.2s')}>
+                <div className="step-n">3</div>
+                <h3 className="h3">Als PDF exportieren</h3>
+                <p>Wähle aus 50 ATS-Vorlagen, exportiere als PDF (DE/EN) und bewirb dich. Fertig.</p>
+              </article>
             </div>
           </div>
         </section>
 
-        {/* Contact Section */}
-        <section id="contact" className="container px-4 md:px-8 py-16 md:py-24">
-          <h2 className="font-poppins font-semibold text-3xl md:text-4xl text-[#1B2A49] mb-8 text-center lg:text-left">
-            Kontaktiere uns
-          </h2>
-          
-          <div className="flex flex-col lg:flex-row gap-8 justify-center items-stretch">
-            {/* Contact Info Box */}
-            <div className="bg-[#E5EEFD] rounded-[42px] p-8 w-full lg:w-[360px] flex-shrink-0">
-              <div className="mb-8">
-                <h4 className="font-poppins font-semibold text-lg text-[#1B2A49] mb-2">Adresse</h4>
-                <p className="font-poppins text-base text-black">Kommt bald...</p>
-              </div>
-              
-              <div className="mb-8">
-                <h4 className="font-poppins font-semibold text-lg text-[#1B2A49] mb-2">E-Mail</h4>
-                <p className="font-poppins font-semibold text-lg text-black">smartapply@info.com</p>
-              </div>
-              
-              <div>
-                <h4 className="font-poppins font-semibold text-lg text-[#1B2A49] mb-4">Folge uns</h4>
-                <div className="flex gap-4">
-                  <a href="#" className="w-11 h-11 rounded-full bg-[#0077B5] flex items-center justify-center hover:opacity-80 transition-opacity">
-                    <Linkedin className="w-6 h-6 text-white" />
-                  </a>
-                  <a href="#" className="w-11 h-11 rounded-full bg-black flex items-center justify-center hover:opacity-80 transition-opacity">
-                    <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                  </a>
-                  <a href="#" className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center hover:opacity-80 transition-opacity">
-                    <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                    </svg>
-                  </a>
-                  <a href="#" className="w-11 h-11 rounded-full bg-black flex items-center justify-center hover:opacity-80 transition-opacity">
-                    <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                    </svg>
-                  </a>
+        {/* FEATURES */}
+        <section className="section" id="features" style={{ background: '#fff' }} data-pose="coach">
+          <div className="wrap">
+            <div className="sec-head center reveal">
+              <p className="eyebrow">Features</p>
+              <h2 className="h2">Alles, was eine ehrliche Bewerbung braucht</h2>
+              <p className="lead">Konkrete Werkzeuge statt leerer Versprechen — gebaut, damit deine Bewerbung stark <i>und</i> wahr ist.</p>
+            </div>
+            <div className="grid feat-grid">
+              <article className="card feat reveal fa-blue">
+                <div className="feat-viz">
+                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <rect x="70" y="20" width="100" height="84" rx="12" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
+                    <rect x="84" y="36" width="46" height="8" rx="4" fill="#15233f" opacity=".82" />
+                    <rect x="84" y="54" width="72" height="6" rx="3" fill="#E5E9F2" className="fv-w fv-w1" />
+                    <rect x="84" y="68" width="72" height="6" rx="3" fill="#E5E9F2" className="fv-w fv-w2" />
+                    <rect x="84" y="82" width="48" height="6" rx="3" fill="#E5E9F2" className="fv-w fv-w3" />
+                    <g className="fv-spark" style={{ transformOrigin: '158px 34px' }}>
+                      <path d="M158 22 C160 30 162 32 170 34 C162 36 160 38 158 46 C156 38 154 36 146 34 C154 32 156 30 158 22 Z" fill="#3B82F6" />
+                    </g>
+                    <circle cx="186" cy="74" r="5" fill="#22b964" className="fv-spark2" />
+                  </svg>
                 </div>
-              </div>
+                <h3 className="h3">KI-Generierung</h3>
+                <p>Self-Review &amp; ATS-Keyword-Loop verfeinern Anschreiben und CV automatisch — auf Basis deiner echten Daten.</p>
+              </article>
+
+              <article className="card feat reveal fa-blue" style={d('.06s')}>
+                <div className="feat-viz">
+                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <g className="fv-chip fv-c1"><rect x="22" y="20" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="30" r="5" fill="#3B82F6" /><rect x="44" y="27" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
+                    <g className="fv-chip fv-c2"><rect x="22" y="50" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="60" r="5" fill="#22b964" /><rect x="44" y="57" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
+                    <g className="fv-chip fv-c3"><rect x="22" y="80" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="90" r="5" fill="#ff5a72" /><rect x="44" y="87" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
+                    <path d="M104 30 H128 L150 60 L128 90 H104" fill="none" stroke="#E5E9F2" strokeWidth="2" strokeDasharray="2 8" strokeLinecap="round" />
+                    <rect x="158" y="38" width="58" height="44" rx="12" fill="#15233f" />
+                    <rect x="170" y="52" width="34" height="6" rx="3" fill="#fff" opacity=".55" />
+                    <rect x="170" y="64" width="22" height="6" rx="3" fill="#3B82F6" />
+                  </svg>
+                </div>
+                <h3 className="h3">Smart Job-Ingestion</h3>
+                <p>Stellen aus Indeed, LinkedIn und Glassdoor einlesen — als Text, URL oder PDF.</p>
+              </article>
+
+              <article className="card feat reveal fa-green" style={d('.12s')}>
+                <div className="feat-viz">
+                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <circle cx="92" cy="60" r="34" fill="none" stroke="#E5E9F2" strokeWidth="10" />
+                    <circle cx="92" cy="60" r="34" fill="none" stroke="#22b964" strokeWidth="10" strokeLinecap="round" strokeDasharray="213.6" strokeDashoffset="64" transform="rotate(-90 92 60)" className="fv-ring" />
+                    <text x="92" y="60" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="22" fill="#15233f">87</text>
+                    <g className="fv-lights">
+                      <rect x="150" y="30" width="60" height="60" rx="14" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
+                      <circle cx="180" cy="44" r="6" fill="#22b964" className="fv-l1" />
+                      <circle cx="180" cy="60" r="6" fill="#f4b740" className="fv-l2" />
+                      <circle cx="180" cy="76" r="6" fill="#ff5a72" opacity=".35" className="fv-l3" />
+                    </g>
+                  </svg>
+                </div>
+                <h3 className="h3">Bewerbungs-Check</h3>
+                <p>ATS-Score plus Ampel-Feedback zeigt dir, was vor dem Absenden noch besser geht.</p>
+              </article>
+
+              <article className="card feat reveal fa-navy" style={d('.18s')}>
+                <div className="feat-viz">
+                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <g transform="rotate(-9 120 60)" opacity=".55"><rect x="86" y="24" width="68" height="80" rx="9" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /></g>
+                    <g transform="rotate(5 120 60)" opacity=".8"><rect x="86" y="22" width="68" height="80" rx="9" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /></g>
+                    <g className="fv-page">
+                      <rect x="86" y="20" width="68" height="80" rx="9" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
+                      <rect x="96" y="32" width="30" height="7" rx="3.5" fill="#15233f" opacity=".82" />
+                      <rect x="96" y="46" width="48" height="5" rx="2.5" fill="#E5E9F2" />
+                      <rect x="96" y="56" width="48" height="5" rx="2.5" fill="#E5E9F2" />
+                      <rect x="96" y="70" width="34" height="5" rx="2.5" fill="#3B82F6" />
+                      <rect x="96" y="80" width="48" height="5" rx="2.5" fill="#E5E9F2" />
+                    </g>
+                    <g className="fv-badge"><circle cx="166" cy="34" r="15" fill="#3B82F6" /><text x="166" y="34" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="13" fill="#fff">50</text></g>
+                  </svg>
+                </div>
+                <h3 className="h3">50 ATS-PDF-Vorlagen</h3>
+                <p>Sauber strukturierte Vorlagen in Deutsch und Englisch, optimiert für Bewerbungssysteme.</p>
+              </article>
+
+              <article className="card feat reveal fa-coral">
+                <div className="feat-viz">
+                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <g><rect x="34" y="26" width="120" height="30" rx="14" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><rect x="48" y="38" width="74" height="6" rx="3" fill="#E5E9F2" /></g>
+                    <g>
+                      <rect x="92" y="64" width="114" height="32" rx="14" fill="#15233f" />
+                      <circle cx="124" cy="80" r="4" fill="#fff" className="fv-typ fv-t1" />
+                      <circle cx="140" cy="80" r="4" fill="#fff" className="fv-typ fv-t2" />
+                      <circle cx="156" cy="80" r="4" fill="#fff" className="fv-typ fv-t3" />
+                    </g>
+                  </svg>
+                </div>
+                <h3 className="h3">Mock-Interviews</h3>
+                <p>Übe Interviews als Text oder per Voice und erhalte konkretes Feedback.<span className="tag">Premium</span></p>
+              </article>
+
+              <article className="card feat reveal fa-blue" style={d('.06s')}>
+                <div className="feat-viz">
+                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <rect x="46" y="32" width="86" height="58" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
+                    <path d="M50 38 L89 64 L128 38" fill="none" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    <g className="fv-status">
+                      <rect x="146" y="40" width="58" height="18" rx="9" fill="rgba(34,185,100,.14)" /><circle cx="158" cy="49" r="4" fill="#22b964" className="fv-dot" /><rect x="168" y="46" width="28" height="6" rx="3" fill="#22b964" />
+                      <rect x="146" y="64" width="58" height="18" rx="9" fill="#eef3fb" /><circle cx="158" cy="73" r="4" fill="#94a3b8" /><rect x="168" y="70" width="28" height="6" rx="3" fill="#E5E9F2" />
+                    </g>
+                  </svg>
+                </div>
+                <h3 className="h3">E-Mail-Tracking</h3>
+                <p>Verbinde Outlook/M365 — der Status deiner Bewerbungen aktualisiert sich automatisch.<span className="tag">Premium</span></p>
+              </article>
+
+              <article className="card feat reveal fa-blue" style={d('.12s')}>
+                <div className="feat-viz">
+                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <rect x="58" y="42" width="124" height="36" rx="18" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
+                    <rect x="62" y="46" width="58" height="28" rx="14" fill="#2563eb" className="fv-toggle" />
+                    <text x="91" y="60" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="14" fill="#fff" className="fv-de">DE</text>
+                    <text x="151" y="60" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="14" fill="#94a3b8" className="fv-en">EN</text>
+                  </svg>
+                </div>
+                <h3 className="h3">Mehrsprachig DE/EN</h3>
+                <p>Erstelle und exportiere Bewerbungen wahlweise auf Deutsch oder Englisch.</p>
+              </article>
+
+              <article className="card feat reveal fa-green" style={d('.18s')}>
+                <div className="feat-viz">
+                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <g>
+                      <rect x="26" y="24" width="58" height="72" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
+                      <rect x="91" y="24" width="58" height="72" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
+                      <rect x="156" y="24" width="58" height="72" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
+                    </g>
+                    <rect x="34" y="34" width="42" height="14" rx="5" fill="#E5E9F2" />
+                    <rect x="34" y="52" width="42" height="14" rx="5" fill="#E5E9F2" />
+                    <rect x="99" y="34" width="42" height="14" rx="5" fill="#3B82F6" opacity=".85" />
+                    <rect x="164" y="34" width="42" height="14" rx="5" fill="#22b964" />
+                    <rect x="164" y="52" width="42" height="14" rx="5" fill="#22b964" opacity=".5" />
+                    <rect x="99" y="52" width="42" height="14" rx="5" fill="#3B82F6" opacity=".4" className="fv-move" />
+                  </svg>
+                </div>
+                <h3 className="h3">Live-Status der Pipeline</h3>
+                <p>Behalte alle Bewerbungen und ihren aktuellen Stand an einem Ort im Blick.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* WERTE */}
+        <section className="section values" id="werte" data-pose="idle">
+          <div className="wrap">
+            <div className="sec-head center reveal">
+              <p className="eyebrow">Werte &amp; Transparenz</p>
+              <h2 className="h2">Ehrlich. Nachprüfbar. Auf deiner Seite.</h2>
+              <p className="lead">Transparenz ist kein Feature-Häkchen, sondern das Fundament. Deshalb sagen wir klar, was passiert — und was nicht.</p>
+            </div>
+            <div className="grid val-grid">
+              <article className="card val reveal">
+                <div className="chk"><Check /></div>
+                <h3 className="h3">Keine erfundenen Daten</h3>
+                <p>Die KI nutzt nur, was dein Profil belegt. Ein Grounding-Check markiert erfundene Kennzahlen, bevor sie in deine Bewerbung geraten.</p>
+              </article>
+              <article className="card val reveal" style={d('.06s')}>
+                <div className="chk"><Check /></div>
+                <h3 className="h3">Deine Daten bleiben in der EU</h3>
+                <p>Hosting und Speicherung erfolgen in der EU, nach DSGVO.</p>
+              </article>
+              <article className="card val reveal" style={d('.12s')}>
+                <div className="chk"><Check /></div>
+                <h3 className="h3">Interviews: kein Audio gespeichert</h3>
+                <p>Von Mock-Interviews bleiben nur Transcript und Feedback — keine Audioaufnahme.</p>
+              </article>
+              <article className="card val reveal">
+                <div className="chk"><Check /></div>
+                <h3 className="h3">E-Mail-Tracking ohne Inhalte</h3>
+                <p>Wir lesen den Status, nicht deine Nachrichten. Mail-Inhalte werden nicht gespeichert.</p>
+              </article>
+              <article className="card val reveal" style={d('.06s')}>
+                <div className="chk"><Check /></div>
+                <h3 className="h3">Sicherheit eingebaut</h3>
+                <p>HttpOnly-JWT, 2FA, CSRF-Schutz, Rate-Limiting und Audit-Logs — standardmäßig aktiv.</p>
+              </article>
+              <article className="card val reveal" style={d('.12s')}>
+                <div className="chk"><Check /></div>
+                <h3 className="h3">Für dich, nicht für Recruiter</h3>
+                <p>Dein Profil ist die Basis <b>deiner</b> Bewerbungen — kein durchsuchbares Schaufenster für Firmen.</p>
+              </article>
             </div>
 
-            {/* Contact Form */}
-            <div className="bg-[#1B2A49] rounded-[42px] p-8 w-full lg:flex-1 max-w-[812px]">
-              <form onSubmit={handleContactSubmit} className="space-y-6">
-                <div>
-                  <label className="font-poppins font-semibold text-lg text-white block mb-2">Name</label>
-                  <input
-                    type="text"
-                    placeholder="Dein Name"
-                    value={contactForm.name}
-                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                    required
-                    minLength={1}
-                    maxLength={100}
-                    disabled={isSubmittingContact}
-                    className="w-full bg-transparent border-2 border-[#E5EEFD] rounded-xl px-4 py-2 text-white placeholder-white/70 font-poppins focus:outline-none focus:border-white disabled:opacity-60"
-                  />
-                </div>
-                
-                <div>
-                  <label className="font-poppins font-semibold text-lg text-white block mb-2">E-Mail</label>
-                  <input
-                    type="email"
-                    placeholder="Deine E-Mail"
-                    value={contactForm.email}
-                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    required
-                    maxLength={254}
-                    disabled={isSubmittingContact}
-                    className="w-full bg-transparent border-2 border-[#E5EEFD] rounded-xl px-4 py-2 text-white placeholder-white/70 font-poppins focus:outline-none focus:border-white disabled:opacity-60"
-                  />
-                </div>
-                
-                <div>
-                  <label className="font-poppins font-semibold text-lg text-white block mb-2">Nachricht</label>
-                  <textarea
-                    placeholder="Deine Nachricht"
-                    rows={4}
-                    value={contactForm.message}
-                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                    required
-                    minLength={10}
-                    maxLength={5000}
-                    disabled={isSubmittingContact}
-                    className="w-full bg-transparent border-2 border-[#E5EEFD] rounded-xl px-4 py-2 text-white placeholder-white/70 font-poppins focus:outline-none focus:border-white resize-none disabled:opacity-60"
-                  />
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button 
-                    type="submit"
-                    disabled={isSubmittingContact}
-                    className="bg-white text-[#1B2A49] font-poppins font-semibold text-lg md:text-xl px-12 py-6 rounded-xl shadow-[0px_4px_4px_rgba(0,0,0,0.25)] hover:bg-gray-100 transition-colors disabled:opacity-70"
-                  >
-                    {isSubmittingContact ? 'Senden…' : 'Senden'}
-                  </Button>
-                </div>
-              </form>
+            <div className="not reveal">
+              <h3 className="h3">
+                Was Applo <span style={{ color: 'var(--coral)' }}>nicht</span> tut
+              </h3>
+              <ul>
+                <li><span className="x">×</span><span>Keine Massen-Spam-Bewerbungen in deinem Namen.</span></li>
+                <li><span className="x">×</span><span>Keine Fake-Erfolge und keine erfundenen Kennzahlen.</span></li>
+                <li><span className="x">×</span><span>Kein Verkauf deiner Daten — an niemanden.</span></li>
+              </ul>
             </div>
+          </div>
+        </section>
+
+        {/* PREISE */}
+        <section className="section" id="preise" style={{ background: '#fff' }} data-pose="idle">
+          <div className="wrap">
+            <div className="sec-head center reveal">
+              <p className="eyebrow">Preise</p>
+              <h2 className="h2">Fair und ohne Überraschungen</h2>
+              <p className="lead">Starte kostenlos. Upgrade nur, wenn du mehr brauchst — jederzeit kündbar.</p>
+            </div>
+            <div className="grid price-grid">
+              <article className="card price reveal">
+                <div className="pname">Free</div>
+                <div className="pamt">€ 0 <small>/ Monat</small></div>
+                <div className="ptbd">Zum Ausprobieren</div>
+                <ul>
+                  <li><span className="ck"><Check /></span> 5 Bewerbungs-Checks / Monat</li>
+                  <li><span className="ck"><Check /></span> KI-Generierung &amp; ATS-Score</li>
+                  <li><span className="ck"><Check /></span> 50 ATS-PDF-Vorlagen</li>
+                  <li><span className="ck"><Check /></span> DE/EN</li>
+                </ul>
+                <Link className="btn btn-ghost" href="/register">Kostenlos starten</Link>
+              </article>
+              <article className="card price feature reveal" style={d('.08s')}>
+                <span className="badge">Beliebt</span>
+                <div className="pname">Pro</div>
+                <div className="pamt">€ <span style={{ color: 'var(--muted-2)' }}>TBD</span> <small>/ Monat</small></div>
+                <div className="ptbd">Preis folgt</div>
+                <ul>
+                  <li><span className="ck"><Check /></span> Unlimitierte Bewerbungs-Checks</li>
+                  <li><span className="ck"><Check /></span> Smart Job-Ingestion</li>
+                  <li><span className="ck"><Check /></span> Live-Status der Pipeline</li>
+                  <li><span className="ck"><Check /></span> Alles aus Free</li>
+                </ul>
+                <Link className="btn btn-primary" href="/register">Pro wählen</Link>
+              </article>
+              <article className="card price reveal" style={d('.16s')}>
+                <div className="pname">Premium</div>
+                <div className="pamt">€ <span style={{ color: 'var(--muted-2)' }}>TBD</span> <small>/ Monat</small></div>
+                <div className="ptbd">Preis folgt</div>
+                <ul>
+                  <li><span className="ck"><Check /></span> Mock-Interviews (Text &amp; Voice)</li>
+                  <li><span className="ck"><Check /></span> E-Mail-Tracking (Outlook/M365)</li>
+                  <li><span className="ck"><Check /></span> Alles aus Pro</li>
+                </ul>
+                <Link className="btn btn-ghost" href="/register">Premium wählen</Link>
+              </article>
+            </div>
+            <div className="stats reveal" id="stats">
+              <div className="stat"><b data-count="50">0</b><span>ATS-Vorlagen</span></div>
+              <div className="stat"><b data-count="2" data-suffix=" Sprachen">0</b><span>Deutsch &amp; Englisch</span></div>
+              <div className="stat"><b data-suffix="%" data-count="100">0</b><span>EU-Hosting &amp; DSGVO</span></div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="section values" id="faq" data-pose="think">
+          <div className="wrap">
+            <div className="sec-head center reveal">
+              <p className="eyebrow">FAQ</p>
+              <h2 className="h2">Klare Antworten</h2>
+            </div>
+            <div className="faq-list">
+              <details className="faq reveal"><summary>Was passiert mit meinen Daten?<span className="pls" /></summary><div className="ans">Deine Daten werden in der EU gehostet und gespeichert, nach DSGVO. Wir verkaufen deine Daten nicht. Bei Mock-Interviews wird kein Audio gespeichert, beim E-Mail-Tracking keine Mail-Inhalte.</div></details>
+              <details className="faq reveal"><summary>Erfindet die KI Dinge über mich?<span className="pls" /></summary><div className="ans">Nein. Die KI nutzt nur, was dein Profil belegt. Ein Grounding-Check markiert erfundene Kennzahlen, damit nichts Unwahres in deine Bewerbung gerät.</div></details>
+              <details className="faq reveal"><summary>Können Recruiter mein Profil sehen oder finden?<span className="pls" /></summary><div className="ans">Nein. Dein Profil ist die private Basis deiner eigenen Bewerbungen — kein durchsuchbares Schaufenster. Es wird Firmen nicht zur Suche angeboten.</div></details>
+              <details className="faq reveal"><summary>In welchen Sprachen kann ich bewerben?<span className="pls" /></summary><div className="ans">Du kannst Bewerbungen auf Deutsch und Englisch erstellen und als PDF exportieren.</div></details>
+              <details className="faq reveal"><summary>Ist Applo kündbar?<span className="pls" /></summary><div className="ans">Ja, jederzeit. Free bleibt kostenlos; bezahlte Tarife sind ohne lange Bindung kündbar.</div></details>
+              <details className="faq reveal"><summary>Wem gehören meine Daten?<span className="pls" /></summary><div className="ans">Dir. Dein Profil und deine Inhalte gehören dir — Applo nutzt sie nur, um deine Bewerbungen zu erstellen.</div></details>
+            </div>
+          </div>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="section final" id="cta" data-pose="success">
+          <div className="wrap final-wrap">
+            <div className={`cta-applo-wrap${ctaRevealed ? ' revealed' : ''}`} aria-hidden>
+              <ApploRig state={ctaState} className="cta-applo" aria-hidden />
+            </div>
+            <h2 className="h2 reveal" style={d('.05s')}>Bereit für ehrliche Bewerbungen?</h2>
+            <p className="lead reveal" style={d('.1s')}>Starte kostenlos — keine erfundenen Daten, keine Massen-Spam-Bewerbungen.</p>
+            <div className="hero-cta reveal" style={{ ...d('.16s'), justifyContent: 'center' }}>
+              <Link className="btn btn-primary" href="/register">Kostenlos starten</Link>
+            </div>
+            <p className="trust reveal" style={{ ...d('.22s'), justifyContent: 'center' }}>
+              <span className="dot" /> EU-Hosting <span className="dot" /> DSGVO <span className="dot" /> jederzeit kündbar
+            </p>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="relative">
-        {/* Wave Background */}
-        <div className="relative h-[200px] md:h-[300px]">
-          <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 1440 300" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-            <path d="M0 150C200 50 400 200 720 150C1040 100 1240 200 1440 100V300H0V150Z" fill="#1B2A49" fillOpacity="0.3"/>
-            <path d="M0 200C200 100 400 250 720 200C1040 150 1240 250 1440 150V300H0V200Z" fill="#1B2A49" fillOpacity="0.5"/>
-            <path d="M0 250C200 150 400 280 720 230C1040 180 1240 280 1440 200V300H0V250Z" fill="#1B2A49"/>
-          </svg>
-        </div>
-        
-        {/* Footer Content */}
-        <div className="bg-[#1B2A49] py-6">
-          <div className="container px-4 md:px-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-white">
-              <p className="font-poppins font-semibold text-sm md:text-xl">
-                Copyright © {new Date().getFullYear()} SmartApply
-              </p>
-              
-              <div className="flex items-center gap-6 md:gap-12">
-                <Link href="/faq" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
-                  FAQ
-                </Link>
-                <Link href="/datenschutz" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
-                  Datenschutz
-                </Link>
-                <Link href="/agb" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
-                  AGB
-                </Link>
-                <Link href="/impressum" className="font-poppins font-semibold text-sm md:text-xl hover:opacity-70 transition-opacity">
-                  Impressum
-                </Link>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Globe className="w-5 h-5 md:w-6 md:h-6" />
-                <span className="font-poppins font-semibold text-sm md:text-xl">Deutsch</span>
-                <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
-              </div>
-            </div>
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="wrap">
+          <div className="fcol">
+            <a className="brand" href="#top">
+              <BrandMark light />
+              <span>Applo</span>
+            </a>
+            <p style={{ maxWidth: 240, lineHeight: 1.6, marginTop: 4 }}>
+              Bewerbungen aus deinem echten Profil — ehrlich, ATS-optimiert, in der EU gehostet.
+            </p>
+          </div>
+          <div className="fcol">
+            <Link href="/impressum">Impressum</Link>
+            <Link href="/datenschutz">Datenschutz</Link>
+            <Link href="/agb">AGB</Link>
+          </div>
+          <div className="fcol fmeta">
+            <div>EU · DSGVO</div>
+            <span className="pill">Source-available · BSL 1.1</span>
           </div>
         </div>
       </footer>

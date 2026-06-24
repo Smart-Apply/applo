@@ -162,7 +162,7 @@ async function main() {
             ],
           },
           {
-            name: 'Smart Apply',
+            name: 'Applo',
             description:
               'AI-powered job application assistant generating tailored resumes and cover letters.',
             url: 'https://github.com/demouser/smart-apply',

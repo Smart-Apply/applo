@@ -1,6 +1,6 @@
 # Test-Struktur
 
-Organisierte Test-Suite für Smart Apply Backend API. Migriert von Jest auf
+Organisierte Test-Suite für Applo Backend API. Migriert von Jest auf
 **Vitest 2.1** (Mai 2026, Phase 5 des [Rearchitecture Plan](../../docs/guides/REARCHITECTURE_PLAN.md)).
 
 ## 📁 Ordnerstruktur
@@ -206,4 +206,4 @@ default in `setup.ts`).
 ---
 
 **Letzte Aktualisierung:** 16. Mai 2026 (Vitest-Migration, Phase 5)
-**Maintainer:** Smart Apply Team
+**Maintainer:** Applo Team

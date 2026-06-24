@@ -1,6 +1,6 @@
 # @smart-apply/shared
 
-Shared TypeScript types and interfaces for the Smart Apply monorepo.
+Shared TypeScript types and interfaces for the Applo monorepo.
 
 ## Purpose
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Datenschutzerklärung – Smart Apply",
+  title: "Datenschutzerklärung – Applo",
   description:
     "Informationen zur Verarbeitung personenbezogener Daten gemäß DSGVO.",
   robots: { index: true, follow: false },
@@ -53,7 +53,7 @@ export default function DatenschutzPage() {
       <p>
         Diese Datenschutzerklärung klärt dich über die Art, den Umfang und
         Zweck der Verarbeitung personenbezogener Daten innerhalb unseres
-        Online-Angebotes &bdquo;Smart Apply&rdquo; auf. Personenbezogene Daten
+        Online-Angebotes &bdquo;Applo&rdquo; auf. Personenbezogene Daten
         sind alle Daten, die sich auf dich persönlich beziehen lassen.
       </p>
 

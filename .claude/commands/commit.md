@@ -1,5 +1,5 @@
 ---
-description: Stage and create a Conventional Commit on a short-lived feature branch. Enforces Smart Apply's trunk-based, branch-first, squash-merge discipline.
+description: Stage and create a Conventional Commit on a short-lived feature branch. Enforces Applo's trunk-based, branch-first, squash-merge discipline.
 argument-hint: [optional commit summary]
 disable-model-invocation: true
 allowed-tools: Bash(git *) Read Grep
@@ -14,7 +14,7 @@ allowed-tools: Bash(git *) Read Grep
 ## Task
 Create a clean Conventional Commit for the current changes. Optional hint from me: $ARGUMENTS
 
-Follow Smart Apply's repo discipline exactly:
+Follow Applo's repo discipline exactly:
 
 1. **Branch first — never commit on `main`.** If the current branch is `main`, STOP and create a short-lived branch before committing: `git checkout -b <type>/<thing>`. Pick the type from the change (`feat` / `fix` / `chore` / `docs` / `ci` / `test`). Branch protection rejects direct commits to `main`, and a commit that lands on local `main` has to be reset + cherry-picked to recover.
 2. **One concern per commit.** If the changes span multiple concerns, propose a split and stage only the files for this commit with `git add <paths>`.

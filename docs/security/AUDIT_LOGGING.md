@@ -1,6 +1,6 @@
 # Audit Logging
 
-Smart Apply implements comprehensive audit logging for security events using winston with daily rotation.
+Applo implements comprehensive audit logging for security events using winston with daily rotation.
 
 ## Overview
 

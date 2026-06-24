@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "FAQ – Smart Apply",
+  title: "FAQ – Applo",
   description:
-    "Häufig gestellte Fragen zu Smart Apply: geschlossene Beta, Einladungscodes, Bewerbungen, Lebenslauf, Anschreiben, Datenschutz und Preise.",
+    "Häufig gestellte Fragen zu Applo: geschlossene Beta, Einladungscodes, Bewerbungen, Lebenslauf, Anschreiben, Datenschutz und Preise.",
   robots: { index: true, follow: true },
 };
 
@@ -59,10 +59,10 @@ const betaFaqs: FaqItem[] = [
     ),
   },
   {
-    q: "Was kostet Smart Apply während der Beta?",
+    q: "Was kostet Applo während der Beta?",
     a: (
       <>
-        Für alle Beta-Tester ist Smart Apply kostenlos — inklusive aller
+        Für alle Beta-Tester ist Applo kostenlos — inklusive aller
         Pro- und Premium-Features (E-Mail-Tracking,
         Interview-Coach, unbegrenzte Bewerbungen). Wenn du in der Beta
         aktiv mitgetestet hast, behältst du Premium auch nach dem offenen
@@ -75,7 +75,7 @@ const betaFaqs: FaqItem[] = [
     q: "Was kann (noch) schiefgehen?",
     a: (
       <>
-        Smart Apply ist eine frühe Version. Erwartbare Stolperstellen:
+        Applo ist eine frühe Version. Erwartbare Stolperstellen:
         <ul className="mt-2 list-inside list-disc space-y-1">
           <li>
             Vereinzelt brauchen Stellenanzeigen-URLs einen zweiten Versuch
@@ -131,10 +131,10 @@ const betaFaqs: FaqItem[] = [
 
 const faqs: FaqItem[] = [
   {
-    q: "Was macht Smart Apply genau?",
+    q: "Was macht Applo genau?",
     a: (
       <>
-        Smart Apply erstellt aus deinem Profil und einer Stellenanzeige in
+        Applo erstellt aus deinem Profil und einer Stellenanzeige in
         wenigen Sekunden ein passendes Anschreiben und einen optimierten
         Lebenslauf als PDF — beides individuell auf die jeweilige Stelle
         zugeschnitten. Du kannst die Texte direkt im Editor anpassen,
@@ -143,10 +143,10 @@ const faqs: FaqItem[] = [
     ),
   },
   {
-    q: "Funktioniert Smart Apply auch außerhalb von IT-Berufen?",
+    q: "Funktioniert Applo auch außerhalb von IT-Berufen?",
     a: (
       <>
-        Ja. Smart Apply ist bewusst branchenneutral entwickelt. Die
+        Ja. Applo ist bewusst branchenneutral entwickelt. Die
         Vorlagen und Prompts arbeiten u.&nbsp;a. mit Berufen aus
         Pflege, Vertrieb, Marketing, Handwerk, Verwaltung, Bildung und
         Logistik — nicht nur Tech.
@@ -182,11 +182,11 @@ const faqs: FaqItem[] = [
     ),
   },
   {
-    q: "Was kostet Smart Apply?",
+    q: "Was kostet Applo?",
     a: (
       <>
         Der Einstieg ist kostenlos und ohne Kreditkarte. Im Free-Plan kannst
-        du Smart Apply mit 3 Bewerbungen pro Monat in Ruhe ausprobieren. Pro
+        du Applo mit 3 Bewerbungen pro Monat in Ruhe ausprobieren. Pro
         (9,99 € / Monat) hilft dir, jede Bewerbung mit KI zu optimieren.
         Premium (19,99 € / Monat) ergänzt das um
         E-Mail-Tracking und Interview-Coach. Alle Preise sind
@@ -259,8 +259,8 @@ const faqsForJsonLd: { q: string; a: string }[] = [
     a: "Während der Beta nur für bereits per E-Mail registrierte Konten. Erstelle dein Konto zuerst mit Einladungscode + E-Mail, danach kannst du Google oder Microsoft in den Einstellungen verknüpfen.",
   },
   {
-    q: "Was kostet Smart Apply während der Beta?",
-    a: "Für alle Beta-Tester ist Smart Apply komplett kostenlos — alle Pro- und Premium-Features inklusive. Aktive Beta-Tester behalten auch nach dem offenen Launch Premium ein Stück weit kostenlos.",
+    q: "Was kostet Applo während der Beta?",
+    a: "Für alle Beta-Tester ist Applo komplett kostenlos — alle Pro- und Premium-Features inklusive. Aktive Beta-Tester behalten auch nach dem offenen Launch Premium ein Stück weit kostenlos.",
   },
   {
     q: "Was kann in der Beta noch schiefgehen?",
@@ -276,12 +276,12 @@ const faqsForJsonLd: { q: string; a: string }[] = [
   },
   // End beta block.
   {
-    q: "Was macht Smart Apply genau?",
-    a: "Smart Apply erstellt aus deinem Profil und einer Stellenanzeige in wenigen Sekunden ein passendes Anschreiben und einen optimierten Lebenslauf als PDF — individuell auf die jeweilige Stelle zugeschnitten.",
+    q: "Was macht Applo genau?",
+    a: "Applo erstellt aus deinem Profil und einer Stellenanzeige in wenigen Sekunden ein passendes Anschreiben und einen optimierten Lebenslauf als PDF — individuell auf die jeweilige Stelle zugeschnitten.",
   },
   {
-    q: "Funktioniert Smart Apply auch außerhalb von IT-Berufen?",
-    a: "Ja. Smart Apply ist bewusst branchenneutral entwickelt und arbeitet mit Berufen aus Pflege, Vertrieb, Marketing, Handwerk, Verwaltung, Bildung und Logistik — nicht nur Tech.",
+    q: "Funktioniert Applo auch außerhalb von IT-Berufen?",
+    a: "Ja. Applo ist bewusst branchenneutral entwickelt und arbeitet mit Berufen aus Pflege, Vertrieb, Marketing, Handwerk, Verwaltung, Bildung und Logistik — nicht nur Tech.",
   },
   {
     q: "In welcher Sprache werden meine Bewerbungen erstellt?",
@@ -292,7 +292,7 @@ const faqsForJsonLd: { q: string; a: string }[] = [
     a: "Deine Daten liegen verschlüsselt in einer EU-Datenbank (Microsoft Azure, Schweden). Wir verkaufen sie nicht und nutzen sie nicht für Werbung oder Modelltraining. Du kannst deine Daten jederzeit exportieren oder dein Konto löschen.",
   },
   {
-    q: "Was kostet Smart Apply?",
+    q: "Was kostet Applo?",
     a: "Der Einstieg ist kostenlos und ohne Kreditkarte: Free umfasst 3 Bewerbungen pro Monat. Pro kostet 9,99 € / Monat und optimiert jede Bewerbung mit KI. Premium kostet 19,99 € / Monat und ergänzt das um E-Mail-Tracking und Interview-Coach. Monatlich kündbar, keine versteckten Kosten.",
   },
   {
@@ -324,7 +324,7 @@ export default function FaqPage() {
     <>
       <h1>Häufige Fragen (FAQ)</h1>
       <p>
-        Antworten auf die häufigsten Fragen zu Smart Apply. Findest du
+        Antworten auf die häufigsten Fragen zu Applo. Findest du
         deine Frage nicht? Schreib uns über das Kontaktformular auf der{" "}
         <Link href="/" className="underline">
           Startseite
@@ -342,7 +342,7 @@ export default function FaqPage() {
         className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900"
       >
         <strong className="font-semibold">
-          Smart Apply ist gerade in der geschlossenen Beta.
+          Applo ist gerade in der geschlossenen Beta.
         </strong>{" "}
         Die Registrierung erfolgt nur per Einladungscode, alle Features
         sind während der Beta kostenlos, und du hilfst uns aktiv dabei,

@@ -77,7 +77,7 @@ export class ContactController {
 
     const sent = await this.emailService.sendRawHtml({
       to: support,
-      subject: `${subjectPrefix}[Smart Apply Kontakt] ${dto.name}`,
+      subject: `${subjectPrefix}[Applo Kontakt] ${dto.name}`,
       html,
       replyTo: dto.email,
       tags: [{ name: 'priority', value: isPremium ? 'premium' : 'standard' }],

@@ -79,7 +79,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
   };
 
   const handleDownloadBackupCodes = () => {
-    const codesText = `Smart Apply - Backup-Codes für 2FA\n${'='.repeat(40)}\n\nDiese Codes können jeweils einmal verwendet werden.\nBewahre sie an einem sicheren Ort auf.\n\n${backupCodes.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nGeneriert am: ${new Date().toLocaleString('de-DE')}`;
+    const codesText = `Applo - Backup-Codes für 2FA\n${'='.repeat(40)}\n\nDiese Codes können jeweils einmal verwendet werden.\nBewahre sie an einem sicheren Ort auf.\n\n${backupCodes.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nGeneriert am: ${new Date().toLocaleString('de-DE')}`;
     const blob = new Blob([codesText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

@@ -1,9 +1,9 @@
 ---
 applyTo: 'apps/web/src/**'
-description: 'Recipe + guardrails for building a Next.js (App Router) feature in the Smart Apply web app (server components, the typed api client, TanStack Query hooks, react-hook-form + Zod, shadcn/ui, German-first profession-neutral copy).'
+description: 'Recipe + guardrails for building a Next.js (App Router) feature in the Applo web app (server components, the typed api client, TanStack Query hooks, react-hook-form + Zod, shadcn/ui, German-first profession-neutral copy).'
 ---
 
-# Smart Apply web — feature recipe
+# Applo web — feature recipe
 
 These rules apply when editing anything under `apps/web/src/`. They complement (don't
 replace) the global rules in [.github/copilot-instructions.md](../copilot-instructions.md).
@@ -67,7 +67,7 @@ export function useCreateThing() {
 
 ## Copy & domain-neutrality (important)
 
-Smart Apply serves **every profession**, not just tech. All user-facing copy:
+Applo serves **every profession**, not just tech. All user-facing copy:
 
 - Is **German-first** (the product UI is German).
 - Uses **profession-neutral** examples and placeholders — e.g.

@@ -1,4 +1,4 @@
-# Smart Apply — Full-Stack MVP (Azure)
+# Applo — Full-Stack MVP (Azure)
 
 ## Goal
 Deliver a production-grade, multi-provider application with:
@@ -26,7 +26,7 @@ For specific tasks, refer to these specialized instruction files:
 Also update this `copilot-instructions.md` file (Tech Stack, Backend Modules, Data Model, API Endpoints, Env Variables sections) to keep agent context accurate. Treat doc drift as a bug — never ship architecture changes without the corresponding doc updates.
 
 ## Domain-Agnostic Design Principles
-**Smart Apply is designed to work across ALL professions and industries**, not just IT/tech roles. When writing code, documentation, or examples:
+**Applo is designed to work across ALL professions and industries**, not just IT/tech roles. When writing code, documentation, or examples:
 - ✅ **Use diverse profession examples**: Healthcare (Nurse, Doctor), Manufacturing (CNC Operator), Marketing (Content Manager), Sales (Account Executive), Education (Teacher), Finance (Financial Analyst)
 - ✅ **Generic terminology**: "Skills" (not "Technical Skills"), "Experience" (not "Development Experience"), "Projects" (not "Software Projects")
 - ✅ **Domain-neutral placeholders**: "z.B. Projektmanager, Krankenpfleger, Vertriebsleiter" (not "z.B. Senior Software Engineer")
@@ -207,7 +207,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `templates` — template catalog
 - `uploads` — file uploads
 - `user-preferences` — per-user settings
-- `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Smart Apply. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 5/month, Pro+ unlimited); usage recorded only after success. Each check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
+- `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Applo. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 5/month, Pro+ unlimited); usage recorded only after success. Each check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
 
 ## Frontend Structure
 - `app/` (App Router with route groups)
@@ -446,7 +446,7 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
 
 ### Validation — Bewerbungs-Check (Protected)
 
-Standalone AI quality + ATS check of an application the user created **outside** Smart Apply. Not tied to a generated `Application`/`JobPosting`.
+Standalone AI quality + ATS check of an application the user created **outside** Applo. Not tied to a generated `Application`/`JobPosting`.
 
 **POST /api/v1/validation**
 - Body: `{ resumeText (required), coverLetterText?, jobContext?, language?, title? }` — all `@Sanitize()`d, DTO length-capped (résumé ≤ 24k, cover letter ≤ 12k, jobContext ≤ 24k chars).
@@ -522,7 +522,7 @@ PUT /api/v1/profile
 > See [docs/implementation/LLM_OUTPUT_QUALITY.md](../docs/implementation/LLM_OUTPUT_QUALITY.md) for the LLM output-quality roadmap (the 10 improvements to generated CVs/cover letters) and its living status tracker.
 
 ## Prompt Templates
-The active generation prompts live under `apps/api/prompts/v1/*` and are described in the **Application Pipeline** above: `skill-selector`, `job-facts`, `cover-letter`, `resume`, `resume-rewrite`, `ats-keywords`, `editor-cover-letter`, `editor-resume`, `keyword-weave`. A separate on-demand `application-validation` prompt (strict `json_schema`) powers `POST /validation` (the standalone Bewerbungs-Check of an application the user created outside Smart Apply; not part of the create pipeline). The legacy top-level `cover-letter.md`, `resume.md`, `cover-letter-ats.md` and `resume-ats.md` prompts were **retired (#2)**. The editor's "regenerate cover letter" action now reuses `v1/cover-letter.md` via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile` maps the saved editor resume back into the `TailoredProfileDto` the v1 prompt expects), so there is a single cover-letter generation path.
+The active generation prompts live under `apps/api/prompts/v1/*` and are described in the **Application Pipeline** above: `skill-selector`, `job-facts`, `cover-letter`, `resume`, `resume-rewrite`, `ats-keywords`, `editor-cover-letter`, `editor-resume`, `keyword-weave`. A separate on-demand `application-validation` prompt (strict `json_schema`) powers `POST /validation` (the standalone Bewerbungs-Check of an application the user created outside Applo; not part of the create pipeline). The legacy top-level `cover-letter.md`, `resume.md`, `cover-letter-ats.md` and `resume-ats.md` prompts were **retired (#2)**. The editor's "regenerate cover letter" action now reuses `v1/cover-letter.md` via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile` maps the saved editor resume back into the `TailoredProfileDto` the v1 prompt expects), so there is a single cover-letter generation path.
 
 ## Validation & Errors
 - DTO validation (class-validator or Zod)

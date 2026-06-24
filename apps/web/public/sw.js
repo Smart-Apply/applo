@@ -293,7 +293,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Smart Apply', options)
+    self.registration.showNotification(data.title || 'Applo', options)
   );
 });
 
@@ -317,4 +317,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-console.log('[SW] Smart Apply Service Worker loaded');
+console.log('[SW] Applo Service Worker loaded');

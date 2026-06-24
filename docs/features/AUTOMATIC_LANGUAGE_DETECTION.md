@@ -1,7 +1,7 @@
 # Automatic Language Detection & Translation
 
 ## Overview
-The Smart Apply system automatically detects the language of job postings and adapts all generated content (cover letters, resumes, and profile summaries) to match that language.
+The Applo system automatically detects the language of job postings and adapts all generated content (cover letters, resumes, and profile summaries) to match that language.
 
 ## Features
 

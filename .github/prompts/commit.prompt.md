@@ -6,7 +6,7 @@ description: 'Stage changes and create a Conventional Commit on a short-lived fe
 # Commit my changes
 
 Create one focused [Conventional Commit](https://www.conventionalcommits.org/) for the
-work in progress, following Smart Apply's trunk-based workflow.
+work in progress, following Applo's trunk-based workflow.
 
 ## First, gather the live state
 

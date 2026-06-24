@@ -9,7 +9,7 @@ import type { SubscriptionUsage } from '../generated/prisma/client';
  * Defines the resource limits for each subscription tier
  *
  * Pricing Model (value-positioned, not feature-count-positioned):
- * - FREE (€0):            Risk-free entry. 3 applications/month so users can try Smart Apply.
+ * - FREE (€0):            Risk-free entry. 3 applications/month so users can try Applo.
  * - PRO (€9.99/month):    Optimise every application with AI. Templates, ATS-Optimisation,
  *                        keyword matching, analytics, integrated job search.
  * - PREMIUM (€19.99/month): Automate the job search. Auto-Apply agent, automatic email-based

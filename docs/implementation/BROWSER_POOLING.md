@@ -2,7 +2,7 @@
 
 ## Overview
 
-Smart Apply uses browser pooling to prevent memory leaks and OOM crashes during PDF generation. Instead of creating a new browser instance for every PDF request, we maintain a pool of reusable browser instances.
+Applo uses browser pooling to prevent memory leaks and OOM crashes during PDF generation. Instead of creating a new browser instance for every PDF request, we maintain a pool of reusable browser instances.
 
 ## Implementation Details
 

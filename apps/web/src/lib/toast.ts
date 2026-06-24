@@ -1,5 +1,5 @@
 /**
- * Toast notification utilities for Smart Apply
+ * Toast notification utilities for Applo
  * Provides consistent toast API across the application
  */
 

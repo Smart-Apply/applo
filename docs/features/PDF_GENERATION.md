@@ -1,6 +1,6 @@
 # Professional PDF Generation Guide
 
-This document describes the enhanced PDF generation system for Smart Apply, which creates professional, HR-ready resumes and cover letters.
+This document describes the enhanced PDF generation system for Applo, which creates professional, HR-ready resumes and cover letters.
 
 ## Overview
 

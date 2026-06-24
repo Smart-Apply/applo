@@ -2,7 +2,7 @@
 
 ## Overview
 
-Smart Apply implements automated cleanup of expired sessions and refresh tokens to prevent database bloat and maintain optimal performance at scale.
+Applo implements automated cleanup of expired sessions and refresh tokens to prevent database bloat and maintain optimal performance at scale.
 
 ## Problem Statement
 
@@ -301,7 +301,7 @@ traces
 
 **GDPR Article 5(1)(e)**: Data must not be kept longer than necessary.
 
-Smart Apply's cleanup policy:
+Applo's cleanup policy:
 
 - **Sessions**: Max 90 days (exceeds typical 30-day requirement)
 - **Refresh tokens**: 7 days after revocation (audit trail)

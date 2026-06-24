@@ -1,4 +1,4 @@
-/* SmartApply profile redesign — shared base styles
+/* Applo profile redesign — shared base styles
    Loaded once at the top of profile.html so all three variants pick up the
    navy palette + typography defaults. Per-variant flourishes live inside
    each variant's component using scoped class prefixes (v1-, v2-, v3-).
@@ -25,7 +25,7 @@
   --hairline: rgba(15, 23, 42, 0.08);
   --hairline-strong: rgba(15, 23, 42, 0.14);
 
-  /* Brand navy (matches the SmartApply logo) */
+  /* Brand navy (matches the Applo logo) */
   --navy: #11204a;
   --navy-soft: #1d2e5e;
   --navy-deep: #0a1838;

@@ -1,7 +1,7 @@
 {
   "name": "@smart-apply/shared",
   "version": "1.0.0",
-  "description": "Shared types and utilities for Smart Apply monorepo",
+  "description": "Shared types and utilities for Applo monorepo",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,7 +9,7 @@
     "watch": "tsc --watch"
   },
   "keywords": ["types", "dtos", "shared"],
-  "author": "Smart Apply Team",
+  "author": "Applo Team",
   "license": "BUSL-1.1",
   "devDependencies": {
     "typescript": "^6.0.3"

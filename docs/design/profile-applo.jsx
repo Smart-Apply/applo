@@ -1,4 +1,4 @@
-// profile-applo.jsx — SmartApply Profil-Redesign mit Applo als Coach
+// profile-applo.jsx — Applo Profil-Redesign mit Applo als Coach
 // ============================================================================
 // Designidee (warum, nicht wie):
 //
@@ -173,7 +173,7 @@ const ProfileApplo = () => {
                 <path d="m9 15 2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-            SmartApply
+            Applo
           </div>
           <nav className="pf-nav">
             <div className="pf-nav-label">Menü</div>
@@ -200,7 +200,7 @@ const ProfileApplo = () => {
         <main className="pf-main">
           <div className="pf-topbar">
             <div className="pf-bread">
-              <span>SmartApply</span><I.arrow size={11} /><b>Mein Profil</b>
+              <span>Applo</span><I.arrow size={11} /><b>Mein Profil</b>
             </div>
             <div className="pf-actions">
               <button className="pf-btn"><I.download size={14} /> CV herunterladen</button>

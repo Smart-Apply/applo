@@ -1,4 +1,4 @@
-// Prisma schema for Smart Apply MVP
+// Prisma schema for Applo MVP
 // Database: PostgreSQL (Docker locally, Azure Database for PostgreSQL in prod)
 // 
 // IMPORTANT: In Prisma 7, the datasource URL is configured in prisma.config.ts
@@ -404,7 +404,7 @@ enum ApplicationGenerationStatus {
 }
 
 // Standalone application check (issue #569): an AI quality + ATS review of an
-// application the user created OUTSIDE Smart Apply. The user pastes/uploads
+// application the user created OUTSIDE Applo. The user pastes/uploads
 // their own résumé (+ optional cover letter + optional job context) and gets
 // actionable feedback. NOT linked to a generated Application/JobPosting.
 // Metered via SubscriptionUsage.validationsUsed (Free 5/month, Pro+ unlimited).
@@ -691,7 +691,7 @@ model BackgroundJob {
 // =====================================
 
 // Subscription tier levels (3-tier pricing model)
-// FREE (€0)            - Risk-free entry: try Smart Apply with 3 applications/month
+// FREE (€0)            - Risk-free entry: try Applo with 3 applications/month
 // PRO (€9.99/month)    - Optimise every application with AI (templates, ATS, analytics)
 // PREMIUM (€19.99/month) - Premium tooling (email tracking, interview coach)
 enum SubscriptionTier {

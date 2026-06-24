@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Smart Apply API implements a restrictive CORS (Cross-Origin Resource Sharing) policy to prevent unauthorized access from malicious domains. This document explains the configuration and how to manage it across different environments.
+The Applo API implements a restrictive CORS (Cross-Origin Resource Sharing) policy to prevent unauthorized access from malicious domains. This document explains the configuration and how to manage it across different environments.
 
 ## Current Implementation
 

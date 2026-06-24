@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for Smart Apply API (pnpm).
+# Multi-stage Dockerfile for Applo API (pnpm).
 #
 # Strategy:
 #   Stage 1 (builder)    — install full workspace (incl. dev deps) with pnpm,

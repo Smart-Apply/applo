@@ -1,6 +1,6 @@
-# Smart Apply — Monorepo Workspace (pnpm)
+# Applo — Monorepo Workspace (pnpm)
 
-pnpm-Workspaces-basiertes Monorepo für Smart Apply (Backend + Frontend + Shared Types).
+pnpm-Workspaces-basiertes Monorepo für Applo (Backend + Frontend + Shared Types).
 
 > Migriert von npm Workspaces auf **pnpm 11.1** (Mai 2026, Phase 5 des [Rearchitecture Plan](./REARCHITECTURE_PLAN.md)).
 

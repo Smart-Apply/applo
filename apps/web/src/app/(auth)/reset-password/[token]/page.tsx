@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import Image from 'next/image';
+import { AppLogo } from '@/components/ui/app-logo';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { KeyRound, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
@@ -70,14 +70,7 @@ export default function ResetPasswordPage() {
       <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
         <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
           <div className="mb-6 flex justify-center">
-            <Image
-              src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
-              alt="Smart Apply"
-              width={200}
-              height={50}
-              className="h-12 w-auto"
-              priority
-            />
+            <AppLogo className="h-12 w-auto" />
           </div>
 
           <div className="flex flex-col items-center text-center">
@@ -105,14 +98,7 @@ export default function ResetPasswordPage() {
       <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
         <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
           <div className="mb-6 flex justify-center">
-            <Image
-              src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
-              alt="Smart Apply"
-              width={200}
-              height={50}
-              className="h-12 w-auto"
-              priority
-            />
+            <AppLogo className="h-12 w-auto" />
           </div>
 
           <div className="flex flex-col items-center text-center">
@@ -138,14 +124,7 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
       <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
         <div className="mb-6 flex justify-center">
-          <Image
-            src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
-            alt="Smart Apply"
-            width={200}
-            height={50}
-            className="h-12 w-auto"
-            priority
-          />
+          <AppLogo className="h-12 w-auto" />
         </div>
 
         <div className="mb-6 flex flex-col items-center text-center">

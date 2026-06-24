@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the circuit breaker and global timeout implementation for LLM requests in Smart Apply. These features prevent cascading failures when the LLM provider is degraded or unavailable, a critical requirement for production scalability.
+This document describes the circuit breaker and global timeout implementation for LLM requests in Applo. These features prevent cascading failures when the LLM provider is degraded or unavailable, a critical requirement for production scalability.
 
 ## Problem Statement
 

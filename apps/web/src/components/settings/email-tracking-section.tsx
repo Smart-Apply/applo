@@ -80,7 +80,7 @@ export function EmailTrackingSection({
     if (!status) return;
 
     if (status === 'connected') {
-      toast.success('Postfach verbunden — Smart Apply erkennt jetzt eingehende E-Mails.');
+      toast.success('Postfach verbunden — Applo erkennt jetzt eingehende E-Mails.');
     } else if (status === 'error') {
       const reason = params.get('reason') || 'unknown';
       toast.error(`Verbindung fehlgeschlagen (${reason}). Bitte erneut versuchen.`);
@@ -141,7 +141,7 @@ export function EmailTrackingSection({
       <UpgradePrompt
         feature="Automatisches Bewerbungs-Tracking"
         requiredTier="PREMIUM"
-        description="Verbinde dein Postfach und Smart Apply erkennt Antworten von Unternehmen automatisch — Einladungen zum Gespräch, Bestätigungen und Absagen. Der Status deiner Bewerbung wird live aktualisiert."
+        description="Verbinde dein Postfach und Applo erkennt Antworten von Unternehmen automatisch — Einladungen zum Gespräch, Bestätigungen und Absagen. Der Status deiner Bewerbung wird live aktualisiert."
         variant="default"
       />
     );
@@ -158,7 +158,7 @@ export function EmailTrackingSection({
           </Badge>
         </div>
         <CardDescription>
-          Verbinde dein Postfach. Smart Apply erkennt Antworten von Unternehmen
+          Verbinde dein Postfach. Applo erkennt Antworten von Unternehmen
           automatisch (Bestätigungen, Einladungen, Absagen) und aktualisiert
           den Status deiner Bewerbungen.
         </CardDescription>
@@ -204,7 +204,7 @@ export function EmailTrackingSection({
               E-Mail bei automatischer Status-Änderung
             </p>
             <p className="text-sm text-muted-foreground">
-              Smart Apply schickt dir nur eine Mail, wenn das Tracking den Status
+              Applo schickt dir nur eine Mail, wenn das Tracking den Status
               geändert hat — nicht, wenn du ihn selbst änderst.
             </p>
           </div>
@@ -221,7 +221,7 @@ export function EmailTrackingSection({
         </div>
 
         <p className="text-xs text-muted-foreground pt-2">
-          Smart Apply liest E-Mails ausschließlich zur Klassifikation. Wir
+          Applo liest E-Mails ausschließlich zur Klassifikation. Wir
           speichern <strong>keine E-Mail-Texte</strong> — nur Absender, Betreff
           und das Klassifikations-Ergebnis (siehe Datenschutz).
         </p>
@@ -312,7 +312,7 @@ function ConnectionRow({
               <AlertDialogHeader>
                 <AlertDialogTitle>Postfach trennen?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Smart Apply wird keine neuen E-Mails von{' '}
+                  Applo wird keine neuen E-Mails von{' '}
                   <strong>{connection.emailAddress}</strong> mehr erkennen.
                   Bestehende Bewerbungen bleiben erhalten, aber der Status
                   aktualisiert sich nicht mehr automatisch.

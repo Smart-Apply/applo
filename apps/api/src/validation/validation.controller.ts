@@ -89,7 +89,7 @@ export class ValidationController {
     summary: 'Check an externally-created application (AI quality + ATS review)',
     description:
       "Runs an AI quality + ATS review of the user's own résumé (+ optional cover letter and job " +
-      'context) created outside Smart Apply, and returns actionable feedback. Metered: Free tier gets ' +
+      'context) created outside Applo, and returns actionable feedback. Metered: Free tier gets ' +
       '5 checks/month, Pro and above are unlimited. The result is persisted so it can be revisited.',
   })
   @ApiResponse({ status: 201, description: 'Validation completed and stored' })

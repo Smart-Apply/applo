@@ -37,26 +37,26 @@ const metadataBase = new URL(
 
 export const metadata: Metadata = {
   metadataBase,
-  title: "Smart Apply - KI-gestützte Bewerbungen",
+  title: "Applo - KI-gestützte Bewerbungen",
   description: "Erstelle personalisierte Bewerbungen mit KI-Unterstützung",
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Smart Apply',
+    title: 'Applo',
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
-    title: 'Smart Apply - KI-gestützte Bewerbungen',
+    title: 'Applo - KI-gestützte Bewerbungen',
     description: 'Erstelle personalisierte Bewerbungen mit KI-Unterstützung',
     images: ['/Logo/Full Logo.png'],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Smart Apply - KI-gestützte Bewerbungen',
+    title: 'Applo - KI-gestützte Bewerbungen',
     description: 'Erstelle personalisierte Bewerbungen mit KI-Unterstützung',
     images: ['/Logo/Full Logo.png'],
   },
@@ -74,7 +74,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/Logo/favicon-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Smart Apply" />
+        <meta name="apple-mobile-web-app-title" content="Applo" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#2563eb" />
         <meta name="msapplication-tap-highlight" content="no" />

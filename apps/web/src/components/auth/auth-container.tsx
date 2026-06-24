@@ -3,7 +3,7 @@
 import { useState, useEffect, JSX } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import Image from 'next/image';
+import { AppLogo } from '@/components/ui/app-logo';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { api, resetAuthRedirectFlag } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
@@ -66,7 +66,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
     const message = searchParams.get('message');
     if (message === 'invite_required') {
       toast.error(
-        'Smart Apply ist gerade in der geschlossenen Beta. Bitte registriere dich zuerst mit deinem Einladungscode \u2014 danach kannst du Google / Microsoft in den Einstellungen verknüpfen.',
+        'Applo ist gerade in der geschlossenen Beta. Bitte registriere dich zuerst mit deinem Einladungscode \u2014 danach kannst du Google / Microsoft in den Einstellungen verknüpfen.',
         { duration: 12000 },
       );
     } else if (message === 'authentication_failed') {
@@ -255,7 +255,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
             message: 'Bitte gib deinen Einladungscode ein.',
           });
           toast.error(
-            'Smart Apply ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.',
+            'Applo ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.',
             { duration: 8000 },
           );
         } else if (error.data?.code === 'INVITE_CODE_INVALID') {
@@ -344,19 +344,12 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
             {/* Content */}
             <div className="relative z-10 flex h-full w-full flex-col justify-center px-4">
-              {/* Login Branding (Logo + SmartApply) */}
+              {/* Login Branding (Logo + Applo) */}
               <div
                 className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-300 ${isLogin && !isAnimating ? 'opacity-100' : 'opacity-0'
                   }`}
               >
-                <Image
-                  src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
-                  alt="Smart Apply"
-                  width={320}
-                  height={160}
-                  className="h-40 w-auto brightness-0 invert"
-                  priority
-                />
+                <AppLogo className="h-40 w-auto brightness-0 invert" />
               </div>
 
               {/* Register Branding (Motto) */}
@@ -365,13 +358,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                   }`}
               >
                 <div className="mb-16 flex justify-center">
-                  <Image
-                    src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
-                    alt="Smart Apply"
-                    width={400}
-                    height={80}
-                    className="h-20 w-auto brightness-0 invert"
-                  />
+                  <AppLogo className="h-20 w-auto brightness-0 invert" />
                 </div>
                 <div className="space-y-1">
                   <div className="w-[321px] text-left">
@@ -697,7 +684,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                         </FormControl>
                         <FormMessage />
                         <p className="mt-1 font-poppins text-xs text-muted-foreground">
-                          Smart Apply ist gerade in der geschlossenen Beta. Du brauchst einen Einladungscode, um dich zu registrieren.
+                          Applo ist gerade in der geschlossenen Beta. Du brauchst einen Einladungscode, um dich zu registrieren.
                         </p>
                       </FormItem>
                     )}

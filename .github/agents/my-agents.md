@@ -3,9 +3,9 @@ name: Smart-Apply-Full-Stack-Agent
 description: AI-powered job application assistant - NestJS backend + Next.js 16 frontend with Azure integration for generating tailored cover letters and resumes
 ---
 
-# Smart Apply Full-Stack Agent
+# Applo Full-Stack Agent
 
-This agent assists in building and maintaining the Smart Apply MVP - a full-stack application consisting of:
+This agent assists in building and maintaining the Applo MVP - a full-stack application consisting of:
 - **Backend:** Production-grade NestJS REST API with Azure OpenAI, Blob Storage, and Service Bus
 - **Frontend:** Next.js 16 with React 19, TypeScript, Tailwind CSS, shadcn/ui for user-facing features
 

@@ -1,9 +1,9 @@
 ---
 name: add-web-feature
-description: Recipe for building a Next.js App Router feature in apps/web. Use when adding a page, route group, form, or data hook to the Smart Apply frontend, or when asked to "add a page", "build a frontend feature", or "wire up the UI".
+description: Recipe for building a Next.js App Router feature in apps/web. Use when adding a page, route group, form, or data hook to the Applo frontend, or when asked to "add a page", "build a frontend feature", or "wire up the UI".
 ---
 
-# Add a Next.js feature (Smart Apply web)
+# Add a Next.js feature (Applo web)
 
 Next.js 16 App Router + React 19 (React Compiler on) + Tailwind v4 + shadcn/ui.
 

@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get Smart Apply running in 5 minutes.
+Get Applo running in 5 minutes.
 
 ## Prerequisites
 

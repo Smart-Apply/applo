@@ -927,7 +927,7 @@ export default function ProfilePage() {
       <div className="flex items-center justify-between">
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Link href="/dashboard" className="transition-colors hover:text-foreground">
-            SmartApply
+            Applo
           </Link>
           <span>→</span>
           <span className="font-medium text-foreground">Mein Profil</span>

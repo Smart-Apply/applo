@@ -102,7 +102,7 @@ export class SubscriptionController {
         {
           id: 'FREE',
           name: 'Free',
-          tagline: 'Smart Apply risikofrei testen',
+          tagline: 'Applo risikofrei testen',
           price: 0,
           priceDisplay: '0 €',
           priceInterval: 'Monat',

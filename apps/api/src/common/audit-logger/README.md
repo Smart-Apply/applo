@@ -1,6 +1,6 @@
 # Audit Logger
 
-The AuditLoggerService provides structured logging for security events in Smart Apply.
+The AuditLoggerService provides structured logging for security events in Applo.
 
 ## Quick Start
 

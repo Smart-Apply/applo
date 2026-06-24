@@ -1,9 +1,9 @@
 ---
 applyTo: 'apps/api/src/**'
-description: 'Recipe + guardrails for adding or changing a NestJS endpoint in the Smart Apply API (DTO + class-validator + @Sanitize, thin controller, ownership-scoped service, Swagger, doc sync).'
+description: 'Recipe + guardrails for adding or changing a NestJS endpoint in the Applo API (DTO + class-validator + @Sanitize, thin controller, ownership-scoped service, Swagger, doc sync).'
 ---
 
-# Smart Apply API — endpoint recipe
+# Applo API — endpoint recipe
 
 These rules apply when editing anything under `apps/api/src/`. They complement (don't
 replace) the global rules in [.github/copilot-instructions.md](../copilot-instructions.md).
