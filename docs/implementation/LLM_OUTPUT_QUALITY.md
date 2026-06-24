@@ -82,10 +82,10 @@ The **live** path is the v1 "single-LLM pipeline" inside
 
 | # | Improvement | Phase | Risk | Status | Primary files |
 |---|---|---|---|---|---|
-| 2 | Consolidate onto one pipeline; retire dead/legacy paths | 1 | Low | � Shipped | `agents/**`, `prompts/*-ats.md`, `stored-resume.util.ts`, `applications.service.ts` |
+| 2 | Consolidate onto one pipeline; retire dead/legacy paths | 1 | Low | 🟢 Shipped | `agents/**`, `prompts/*-ats.md`, `stored-resume.util.ts`, `applications.service.ts` |
 | 3 | XYZ/STAR achievement-bullet formula | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
 | 4 | Make the professional summary / Kurzprofil do real work | 1 | Low | 🟢 Shipped | `prompts/v1/resume-rewrite.md` |
-| 5 | Real cover-letter personalization | 1 | Low | � Shipped | `prompts/v1/cover-letter.md`, `prompts/v1/job-facts.md`, `job-facts.util.ts` |
+| 5 | Real cover-letter personalization | 1 | Low | 🟢 Shipped | `prompts/v1/cover-letter.md`, `prompts/v1/job-facts.md`, `job-facts.util.ts` |
 | 1 | Self-critique / editor pass | 2 | Med | 🟢 Shipped | `prompts/v1/editor-cover-letter.md`, `prompts/v1/editor-resume.md`, `applications.service.ts` |
 | 7 | Anti-hallucination grounding validator | 2 | Med | 🟢 Shipped | `grounding/grounding-validator.service.ts`, `applications.service.ts` |
 | 6 | Coverage-driven keyword loop | 3 | Med | 🟢 Shipped | `applications.service.ts`, `keyword-coverage.util.ts`, `prompts/v1/keyword-weave.md` |
