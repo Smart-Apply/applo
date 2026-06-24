@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of consistent empty states across all list pages in Smart Apply using the reusable `EmptyState` component.
+This document describes the implementation of consistent empty states across all list pages in Applo using the reusable `EmptyState` component.
 
 ## Component Location
 
@@ -139,7 +139,7 @@ The component is responsive by default:
 
 ## Styling Consistency
 
-The component follows the existing Smart Apply design system:
+The component follows the existing Applo design system:
 - Uses Tailwind utility classes
 - Consistent with shadcn/ui component patterns
 - Matches color scheme (muted backgrounds, foreground text)

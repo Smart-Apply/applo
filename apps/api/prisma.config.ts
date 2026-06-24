@@ -5,7 +5,7 @@ import { config } from 'dotenv';
 config();
 
 /**
- * Prisma Configuration for Smart Apply API
+ * Prisma Configuration for Applo API
  *
  * This configuration file is required for Prisma 7.x
  * - Datasource URL is now defined here instead of in schema.prisma

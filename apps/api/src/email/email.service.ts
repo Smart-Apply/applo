@@ -133,7 +133,7 @@ export class EmailService {
 
     return this.sendEmail({
       to: email,
-      subject: 'Verify your email address - Smart Apply',
+      subject: 'Verify your email address - Applo',
       template: 'verification-email',
       context: {
         userName: userName || 'there',
@@ -153,7 +153,7 @@ export class EmailService {
 
     return this.sendEmail({
       to: email,
-      subject: 'Reset your password - Smart Apply',
+      subject: 'Reset your password - Applo',
       template: 'password-reset-email',
       context: {
         userName: userName || 'there',

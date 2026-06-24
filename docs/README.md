@@ -1,4 +1,4 @@
-# Smart Apply - Dokumentation
+# Applo - Dokumentation
 
 Übersicht über die Projektdokumentation.
 

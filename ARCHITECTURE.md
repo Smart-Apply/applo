@@ -1,4 +1,4 @@
-# Smart Apply — System Architecture
+# Applo — System Architecture
 
 ## 🏗️ High-Level Architecture
 

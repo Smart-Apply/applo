@@ -1,6 +1,6 @@
 # LLM-as-judge evaluation harness (item #10)
 
-A standalone, **dev-only** harness that measures the quality of Smart Apply's
+A standalone, **dev-only** harness that measures the quality of Applo's
 generated CVs + cover letters. It runs the **real v1 generation chain** over a
 set of committed golden fixtures, scores each output with an **LLM judge**
 against the quality rubric (items #1/#3/#4/#5), runs the deterministic

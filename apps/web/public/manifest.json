@@ -1,6 +1,6 @@
 {
-  "name": "Smart Apply - KI-gestützte Bewerbungen",
-  "short_name": "Smart Apply",
+  "name": "Applo - KI-gestützte Bewerbungen",
+  "short_name": "Applo",
   "description": "Erstelle personalisierte Bewerbungen mit KI-Unterstützung. Generiere Anschreiben und Lebensläufe, die auf die Stellenanzeige zugeschnitten sind.",
   "start_url": "/",
   "display": "standalone",

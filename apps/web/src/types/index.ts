@@ -1,5 +1,5 @@
 // ============================================
-// Smart Apply Frontend Types
+// Applo Frontend Types
 // ============================================
 // All shared types are imported from @smart-apply/shared package.
 // This ensures type consistency between frontend and backend.

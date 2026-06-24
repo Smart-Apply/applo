@@ -271,7 +271,7 @@ Below those numbers → don't launch publicly yet, iterate first.
 - The PUBLIC_LAUNCH_PLAN blockers (#A1 + #A6 here = #1 + #6 there) are
   resolved as a side effect
 - The top-3 bugs from each wave are fixed and deployed
-- You can answer in one sentence: *"Smart Apply solves X for Y in Z way,
+- You can answer in one sentence: *"Applo solves X for Y in Z way,
   and 30% of the cohort came back for a second application"* (or
   whatever the real number is)
 

@@ -39,7 +39,7 @@ const NavRail = ({ accent }) => {
             <path d="m9 15 2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
-        SmartApply
+        Applo
       </div>
       <nav className="sa-rail__group" aria-label="Navigation">
         <div className="sa-rail__group-label">Menü</div>

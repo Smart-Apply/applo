@@ -136,7 +136,7 @@ export const mockCertificates = [
 export const mockProjects = [
   {
     id: 'proj-1',
-    name: 'Smart Apply - Job Application Platform',
+    name: 'Applo - Job Application Platform',
     description:
       'Full-stack platform for automated job applications with AI-powered cover letter and resume generation',
     url: 'https://github.com/smartapply/platform',

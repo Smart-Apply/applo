@@ -1,6 +1,6 @@
 # LLM Output Quality — Implementation Plan & Living Tracker
 
-> **The LLM output is Smart Apply's main quality driver.** This document is the single
+> **The LLM output is Applo's main quality driver.** This document is the single
 > source of truth for the 10 improvements we are making to the generated CVs and cover
 > letters.
 >
@@ -21,7 +21,7 @@
 
 We researched what makes excellent applications (Jobscan's ATS guidance, the Harvard/
 Google "XYZ" bullet formula, The Muse's cover-letter guide, and the German-market
-standards from Karrierebibel — relevant because Smart Apply is German-first) and audited
+standards from Karrierebibel — relevant because Applo is German-first) and audited
 the live generation code. The 10 items below close the gap between what we generate today
 and what recruiters + ATS systems actually reward.
 

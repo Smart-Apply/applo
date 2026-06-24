@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the PDF download and preview functionality implemented for the Smart Apply application.
+This document describes the PDF download and preview functionality implemented for the Applo application.
 
 ## Features
 
@@ -347,4 +347,4 @@ For issues or questions:
 
 ## License
 
-Part of Smart Apply MVP - Internal documentation
+Part of Applo MVP - Internal documentation

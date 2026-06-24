@@ -65,7 +65,7 @@ async function bootstrap() {
   // is safe.
   app.set('trust proxy', 1);
 
-  logger.log(`🚀 Starting Smart Apply API in ${configService.nodeEnv} mode`, 'Bootstrap');
+  logger.log(`🚀 Starting Applo API in ${configService.nodeEnv} mode`, 'Bootstrap');
   if (sentryEnabled) {
     logger.log('📊 Sentry error tracking enabled', 'Bootstrap');
   } else {
@@ -293,7 +293,7 @@ async function bootstrap() {
   // Available in both development and production for better API discoverability
   // Access at: http://localhost:3000/api/docs
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Smart Apply API')
+    .setTitle('Applo API')
     .setDescription(
       'AI-powered job application assistant API\n\n' +
         '## Features\n' +
@@ -311,7 +311,7 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .setContact(
-      'Smart Apply Team',
+      'Applo Team',
       'https://github.com/Smart-Apply/smart-apply',
       'support@smartapply.com',
     )
@@ -371,7 +371,7 @@ async function bootstrap() {
       defaultModelsExpandDepth: 2, // Expand models 2 levels deep
       defaultModelExpandDepth: 2, // Expand model schemas 2 levels deep
     },
-    customSiteTitle: 'Smart Apply API Documentation',
+    customSiteTitle: 'Applo API Documentation',
     customfavIcon: 'https://nestjs.com/img/logo-small.svg',
     customCss: `
       .swagger-ui .topbar { display: none }

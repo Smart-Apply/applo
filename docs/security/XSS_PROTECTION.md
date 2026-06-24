@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the input sanitization strategy implemented to protect Smart Apply from Cross-Site Scripting (XSS) attacks.
+This document describes the input sanitization strategy implemented to protect Applo from Cross-Site Scripting (XSS) attacks.
 
 ## Defense-in-Depth Strategy
 

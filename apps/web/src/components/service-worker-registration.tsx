@@ -44,7 +44,7 @@ export function showUpdateAvailableToast(): void {
     {
       id: UPDATE_TOAST_ID,
       description:
-        'Lade die Seite neu, um die aktuelle Version von Smart Apply zu sehen. Deine Eingaben in offenen Formularen gehen dabei verloren.',
+        'Lade die Seite neu, um die aktuelle Version von Applo zu sehen. Deine Eingaben in offenen Formularen gehen dabei verloren.',
       // Stay until the user acts — surprise auto-reloads cost more than
       // a visible banner.
       duration: Infinity,

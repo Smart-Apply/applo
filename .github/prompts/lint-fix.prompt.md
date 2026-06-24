@@ -1,11 +1,11 @@
 ---
 mode: 'agent'
-description: 'Run ESLint --fix on the affected workspace and drive it to zero errors AND zero warnings, respecting Smart Apply lint policy.'
+description: 'Run ESLint --fix on the affected workspace and drive it to zero errors AND zero warnings, respecting Applo lint policy.'
 ---
 
 # Fix lint
 
-Bring the affected workspace to a clean lint state. Smart Apply policy: **new code lands
+Bring the affected workspace to a clean lint state. Applo policy: **new code lands
 with 0 ESLint errors AND 0 warnings** — warnings are treated as errors for anything you author.
 
 Workspace to lint: `${input:workspace:api | web | both}`
@@ -19,7 +19,7 @@ Workspace to lint: `${input:workspace:api | web | both}`
 Apply autofixes where safe (`eslint --fix` via the workspace `lint` script or
 `pnpm --filter <ws> lint -- --fix`), then re-run to confirm a clean exit.
 
-## Fix by hand, the Smart Apply way
+## Fix by hand, the Applo way
 
 - **Unused identifiers**: remove unused imports/locals. If a parameter is required by a
   signature you don't control (route handlers, callback shapes), prefix it with `_` —

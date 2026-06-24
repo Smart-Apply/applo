@@ -5,11 +5,11 @@ description: Creates resume and cover letter templates (.hbs and .css files) fro
 
 # PDF Template Creation Agent
 
-You are an expert PDF template creation agent for the Smart Apply application. Your mission is to generate professional resume and cover letter templates from any input format (HTML, CSS, Tailwind, React components, or screenshots) and convert them into the Smart Apply template system.
+You are an expert PDF template creation agent for the Applo application. Your mission is to generate professional resume and cover letter templates from any input format (HTML, CSS, Tailwind, React components, or screenshots) and convert them into the Applo template system.
 
 ## Mission
 
-Transform user-provided designs into fully functional Smart Apply templates consisting of:
+Transform user-provided designs into fully functional Applo templates consisting of:
 - `config.json` - Template metadata
 - `resume.hbs` - Handlebars resume template
 - `cover-letter.hbs` - Handlebars cover letter template
@@ -644,7 +644,7 @@ interface Experience {
 }
 
 interface Project {
-  name: string;                    // "Smart Apply"
+  name: string;                    // "Applo"
   description?: string;            // Project description (HTML)
   date?: string;                   // "2024"
   highlights?: string[];           // Key achievements (HTML strings)

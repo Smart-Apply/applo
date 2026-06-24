@@ -1,8 +1,8 @@
 {
   "name": "smart-apply",
   "version": "4.0.2",
-  "description": "Smart Apply MVP - AI-powered job application assistant (Monorepo)",
-  "author": "Smart Apply Team",
+  "description": "Applo MVP - AI-powered job application assistant (Monorepo)",
+  "author": "Applo Team",
   "private": true,
   "license": "BUSL-1.1",
   "packageManager": "pnpm@11.1.2",

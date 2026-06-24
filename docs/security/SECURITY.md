@@ -1,6 +1,6 @@
 # Security Guidelines
 
-This document outlines security best practices and procedures for the Smart Apply application.
+This document outlines security best practices and procedures for the Applo application.
 
 ## 🔐 JWT Secret Management
 
@@ -154,7 +154,7 @@ If validation fails, the application will **not start** and display a clear erro
 
 ### Overview
 
-Smart Apply uses a dual-token authentication strategy for enhanced security:
+Applo uses a dual-token authentication strategy for enhanced security:
 
 - **Access Token**: Short-lived (15 minutes), used for API authentication
 - **Refresh Token**: Long-lived (30 days), used to obtain new access tokens

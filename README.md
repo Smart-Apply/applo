@@ -1,4 +1,4 @@
-# Smart Apply
+# Applo
 
 AI-powered job application assistant — generate tailored, ATS-optimized cover letters and resumes from your profile and any job posting.
 
@@ -247,7 +247,7 @@ via `/api/config`, the `PUBLIC_API_URL` GitHub Variable trap) lives in
 
 ## 📄 License
 
-Smart Apply is source-available under the [Business Source License 1.1](LICENSE).
+Applo is source-available under the [Business Source License 1.1](LICENSE).
 
 - ✅ **Free** for non-production use: read the source, run it locally, modify it, contribute.
 - ❌ **Production use** (running it as a service for others, hosted/SaaS, or any commercial deployment) requires a commercial license — contact the Licensor.

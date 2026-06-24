@@ -1,4 +1,4 @@
-# 🧠 Smart Apply Feature-Matrix
+# 🧠 Applo Feature-Matrix
 
 | Kategorie | Feature | Free | Pro | Premium | Status | Nutzen für Nutzer | Technische Komplexität | Priorität |
 | --------- | ------- | ---- | --- | ------- | ------ | ----------------- | ---------------------- | --------- |

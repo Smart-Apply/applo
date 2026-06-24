@@ -5,7 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { api } from '@/lib/api-client';
 import Link from 'next/link';
-import Image from 'next/image';
+import { AppLogo } from '@/components/ui/app-logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
@@ -179,14 +179,7 @@ function DashboardLayoutInner({
           <div className="flex h-full flex-col">
             <div className="flex h-16 items-center px-4 border-b border-border/50">
               <Link href="/dashboard" className="flex items-center">
-                <Image
-                  src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
-                  alt="Smart Apply"
-                  width={200}
-                  height={40}
-                  className="w-[180px] h-auto"
-                  priority
-                />
+                <AppLogo className="w-[180px] h-auto" />
               </Link>
             </div>
 
@@ -244,14 +237,7 @@ function DashboardLayoutInner({
             the frosted-glass feel when something does peek through. */}
         <header className="md:hidden sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border/50 bg-background/95 backdrop-blur-md px-4">
           <Link href="/dashboard" className="flex items-center">
-            <Image
-              src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
-              alt="Smart Apply"
-              width={200}
-              height={40}
-              className="h-10 w-auto"
-              priority
-            />
+            <AppLogo className="h-10 w-auto" />
           </Link>
 
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -274,18 +260,12 @@ function DashboardLayoutInner({
                   bricks every page that mounts the dashboard layout. */}
               <SheetTitle className="sr-only">Hauptmenü</SheetTitle>
               <SheetDescription className="sr-only">
-                Navigation des Smart Apply Dashboards.
+                Navigation des Applo Dashboards.
               </SheetDescription>
               <div className="flex h-full flex-col">
                 <div className="flex h-16 items-center px-4 border-b border-border/50">
                   <Link href="/dashboard" className="flex items-center">
-                    <Image
-                      src="/Logo/Logo without bg/Full_Logo-removebg-preview.png"
-                      alt="Smart Apply"
-                      width={250}
-                      height={50}
-                      className="w-[220px] h-auto"
-                    />
+                    <AppLogo className="w-[220px] h-auto" />
                   </Link>
                 </div>
 

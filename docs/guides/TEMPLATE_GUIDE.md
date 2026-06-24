@@ -1,6 +1,6 @@
 # Template Guide - Neue Vorlagen hinzufügen
 
-Diese Anleitung erklärt, wie du neue Templates mit komplett eigenem Design zum Smart Apply System hinzufügst.
+Diese Anleitung erklärt, wie du neue Templates mit komplett eigenem Design zum Applo System hinzufügst.
 
 ## Übersicht
 

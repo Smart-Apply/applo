@@ -1323,7 +1323,7 @@ export class AuthService {
         format: 'smart-apply.user-export.v1',
         exportedAt: new Date().toISOString(),
         notice:
-          'This file contains your personal data exported from Smart Apply per GDPR Art. 15 / Art. 20. ' +
+          'This file contains your personal data exported from Applo per GDPR Art. 15 / Art. 20. ' +
           'Sensitive credentials (password hashes, raw security tokens, encrypted 2FA secrets) are intentionally omitted.',
       },
       user: userPublic,

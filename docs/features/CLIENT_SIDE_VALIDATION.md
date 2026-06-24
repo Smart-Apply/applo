@@ -2,7 +2,7 @@
 
 ## Overview
 
-Smart Apply implements comprehensive client-side validation using **Zod** schemas with **react-hook-form** to provide immediate feedback to users and prevent unnecessary API calls. All validation rules mirror the backend DTOs to ensure consistency between frontend and backend validation.
+Applo implements comprehensive client-side validation using **Zod** schemas with **react-hook-form** to provide immediate feedback to users and prevent unnecessary API calls. All validation rules mirror the backend DTOs to ensure consistency between frontend and backend validation.
 
 ## Architecture
 

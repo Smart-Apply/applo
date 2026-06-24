@@ -278,7 +278,7 @@ export default function JobsPage() {
                   <Loader2 className="h-4 w-4" />
                 </div>
                 <h3 className="font-semibold text-blue-900 dark:text-blue-300">
-                  So funktioniert der Smart Apply Workflow
+                  So funktioniert der Applo Workflow
                 </h3>
               </div>
               <div className="grid sm:grid-cols-3 gap-4 mt-4">

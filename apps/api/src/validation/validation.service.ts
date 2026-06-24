@@ -48,7 +48,7 @@ export class ValidationService {
 
   /**
    * Run a standalone AI quality + ATS check on an application the user created
-   * OUTSIDE Smart Apply (their own résumé + optional cover letter + optional
+   * OUTSIDE Applo (their own résumé + optional cover letter + optional
    * job context), persist it, and return the record.
    *
    * Metered: the controller's `UsageLimitGuard` + `@CheckUsage('validation')`

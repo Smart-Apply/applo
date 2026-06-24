@@ -1,4 +1,4 @@
-# Contributing to Smart Apply
+# Contributing to Applo
 
 > **Audience:** Anyone making changes to this repository — solo maintainer
 > today, future contributors tomorrow. Keep this file honest about what's
@@ -311,7 +311,7 @@ See [docs/security/SECRETS_ROTATION.md](docs/security/SECRETS_ROTATION.md) for c
 
 ### Profession-neutral copy
 
-Smart Apply is for **all professions**, not just tech. When writing user-facing copy, examples, or placeholders:
+Applo is for **all professions**, not just tech. When writing user-facing copy, examples, or placeholders:
 
 - ✅ "z.B. Projektmanager, Krankenpfleger, Vertriebsleiter"
 - ❌ "z.B. Senior Software Engineer"

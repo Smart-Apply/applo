@@ -383,7 +383,7 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
         {
           title: `${data.candidateName} - Resume`,
           author: data.candidateName,
-          creator: 'Smart Apply',
+          creator: 'Applo',
         },
         createElement(
           Page,
@@ -635,7 +635,7 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
         {
           title: `${data.candidateName} - Cover Letter`,
           author: data.candidateName,
-          creator: 'Smart Apply',
+          creator: 'Applo',
         },
         createElement(
           Page,

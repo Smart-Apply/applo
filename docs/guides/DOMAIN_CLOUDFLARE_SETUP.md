@@ -300,7 +300,7 @@ You have to remove (or rename) that container to be able to reuse that name.
 **Problem:** Der erste Versuch `ssh azureuser@<vm>` schlug mit "Permission denied (publickey)" fehl. Mein Tooling kannte den .pem-Pfad nicht, und der war an einem ungewöhnlichen Ort:
 
 ```
-~/Desktop/Schreibtisch – Arianit's MacBook Pro/Wichtig!/SmartApply/smartapply-mvp-vm_key.pem
+~/Desktop/Schreibtisch – Arianit's MacBook Pro/Wichtig!/Applo/smartapply-mvp-vm_key.pem
 ```
 
 Mit Apostroph, `!`, Spaces, Umlauten — zsh's `setopt no_bang_hist` brauchte ich, um `!` zu escapen.

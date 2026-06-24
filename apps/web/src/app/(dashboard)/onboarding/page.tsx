@@ -154,7 +154,7 @@ export default function OnboardingPage() {
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Willkommen bei Smart Apply{user?.firstName ? `, ${user.firstName}` : ''}!
+          Willkommen bei Applo{user?.firstName ? `, ${user.firstName}` : ''}!
         </h1>
         <p className="text-muted-foreground max-w-lg mx-auto">
           Lade deinen Lebenslauf hoch, um dein Profil automatisch auszufüllen — oder fülle die wichtigsten Daten manuell aus.

@@ -1,5 +1,5 @@
 /**
- * API Client for Smart Apply Backend
+ * API Client for Applo Backend
  * Base URL is resolved at runtime via getApiBaseUrl() (NEXT_PUBLIC_API_URL).
  */
 

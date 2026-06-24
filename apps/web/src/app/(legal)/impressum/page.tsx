@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Impressum – Smart Apply",
+  title: "Impressum – Applo",
   description: "Impressum und Anbieterkennzeichnung gemäß § 5 TMG.",
   robots: { index: true, follow: false },
 };

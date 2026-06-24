@@ -1,4 +1,4 @@
-# Smart Apply — Rearchitecture Plan
+# Applo — Rearchitecture Plan
 
 > **Status:** Closed out · **Owner:** Arian · **Created:** 2026-05-11 · **Closed:** 2026-05-14
 >

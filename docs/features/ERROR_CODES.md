@@ -1,6 +1,6 @@
 # Error Code System
 
-This document describes the error code system implemented in Smart Apply for better user experience and error handling.
+This document describes the error code system implemented in Applo for better user experience and error handling.
 
 ## Overview
 

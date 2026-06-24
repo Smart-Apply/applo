@@ -1,6 +1,6 @@
 ---
 name: doc-sync
-description: Smart Apply's mandatory documentation-sync rule. Apply automatically whenever a change touches architecture — a backend module, frontend route group, Prisma model, pluggable provider (STORAGE_DRIVER/JOBS_DRIVER/LLM_PROVIDER/cache/email), the generation pipeline, a third-party service, a major dependency, an auth flow, an API endpoint, or deployment topology.
+description: Applo's mandatory documentation-sync rule. Apply automatically whenever a change touches architecture — a backend module, frontend route group, Prisma model, pluggable provider (STORAGE_DRIVER/JOBS_DRIVER/LLM_PROVIDER/cache/email), the generation pipeline, a third-party service, a major dependency, an auth flow, an API endpoint, or deployment topology.
 user-invocable: false
 ---
 

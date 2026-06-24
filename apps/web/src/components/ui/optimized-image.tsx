@@ -105,7 +105,7 @@ export function Logo({ variant = 'full', className, inverted = false, priority =
   return (
     <Image
       src={logoSources[variant]}
-      alt="Smart Apply Logo"
+      alt="Applo Logo"
       width={logoSizes[variant].width}
       height={logoSizes[variant].height}
       className={cn(

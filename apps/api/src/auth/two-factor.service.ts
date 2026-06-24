@@ -58,7 +58,7 @@ export class TwoFactorService {
   private readonly BACKUP_CODE_COUNT = 10;
   private readonly BACKUP_CODE_LENGTH = 8;
   private readonly TRUSTED_DEVICE_DAYS = 30;
-  private readonly ISSUER = 'SmartApply';
+  private readonly ISSUER = 'Applo';
 
   constructor(
     private prisma: PrismaService,

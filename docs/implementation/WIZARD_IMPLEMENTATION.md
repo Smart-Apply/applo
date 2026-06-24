@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the implementation of the Application Creation Wizard (Issue #50) for the Smart Apply frontend.
+This document summarizes the implementation of the Application Creation Wizard (Issue #50) for the Applo frontend.
 
 ## What Was Built
 

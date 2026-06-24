@@ -1,6 +1,6 @@
 # Error Handling & Toast Notifications
 
-This document describes the error handling and toast notification system implemented in the Smart Apply frontend.
+This document describes the error handling and toast notification system implemented in the Applo frontend.
 
 ## Overview
 

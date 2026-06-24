@@ -1,4 +1,4 @@
-# CSS Template Creation Prompt for Smart Apply
+# CSS Template Creation Prompt for Applo
 
 ## ROLE & CONTEXT
 
@@ -607,7 +607,7 @@ Before submitting CSS, verify:
 2. OR a description (e.g., "minimalist with emerald green accents")
 3. OR a reference file (PDF/CSS)
 
-**I will respond with**: Complete, production-ready CSS code that can be directly saved to a file and used with the Smart Apply backend.
+**I will respond with**: Complete, production-ready CSS code that can be directly saved to a file and used with the Applo backend.
 
 ---
 

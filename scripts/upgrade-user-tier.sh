@@ -83,7 +83,7 @@ require_cmd() {
 require_cmd curl
 
 echo "──────────────────────────────────────────────────────────────"
-echo "  Smart Apply — admin tier change"
+echo "  Applo — admin tier change"
 echo "──────────────────────────────────────────────────────────────"
 
 prompt ENVIRONMENT "Environment (prod | staging)" "staging"

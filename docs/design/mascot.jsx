@@ -1,5 +1,5 @@
 /* ============================================================
-   SmartApply Mascot — "Applo"
+   Applo Mascot — "Applo"
    Head inspired by the logo (rounded navy body + antennae +
    document-with-checkmark), now with a friendly face.
    Two looks: flat 2D (web/UI) and glossy 3D (social).
@@ -214,7 +214,7 @@
     }
 
     return (
-      <svg viewBox="0 0 240 300" width={size} height={size * 300 / 240} style={{ display: 'block', overflow: 'visible' }} role="img" aria-label={`SmartApply Maskottchen – ${pose}`}>
+      <svg viewBox="0 0 240 300" width={size} height={size * 300 / 240} style={{ display: 'block', overflow: 'visible' }} role="img" aria-label={`Applo Maskottchen – ${pose}`}>
         {is3d && (
           <defs>
             <linearGradient id={`navy-${uid}`} x1="0" y1="0" x2="0" y2="1">
@@ -292,7 +292,7 @@
   /* The pure logo mark (faithful, monochrome) — for the merge explainer */
   function LogoMark({ size = 120, color = NAVY }) {
     return (
-      <svg viewBox="0 0 140 140" width={size} height={size} style={{ display: 'block' }} role="img" aria-label="SmartApply Logo">
+      <svg viewBox="0 0 140 140" width={size} height={size} style={{ display: 'block' }} role="img" aria-label="Applo Logo">
         {/* antennae */}
         <g fill="none" stroke={color} strokeWidth="7" strokeLinecap="round">
           <path d="M58 36 L52 18" />

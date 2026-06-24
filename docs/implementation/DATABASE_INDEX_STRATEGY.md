@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the indexing strategy for Smart Apply's PostgreSQL database. Proper indexes are critical for query performance, especially as the application scales to 20k+ monthly users.
+This document describes the indexing strategy for Applo's PostgreSQL database. Proper indexes are critical for query performance, especially as the application scales to 20k+ monthly users.
 
 ## Index Categories
 

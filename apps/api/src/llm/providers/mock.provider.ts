@@ -124,7 +124,7 @@ University of Technology | 2018
 **E-commerce Platform** | github.com/yourname/ecommerce  
 Full-featured online store with Stripe payment integration, built with React, Node.js, and PostgreSQL
 
-**Smart Apply** | github.com/yourname/smart-apply  
+**Applo** | github.com/yourname/smart-apply  
 AI-powered job application assistant using NestJS and Azure OpenAI
     `.trim();
   }

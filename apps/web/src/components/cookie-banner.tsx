@@ -9,7 +9,7 @@ const STORAGE_KEY = "smartapply.cookieBanner.dismissed.v1";
 /**
  * Minimal cookie banner.
  *
- * Smart Apply currently sets only strictly-necessary cookies (auth, CSRF).
+ * Applo currently sets only strictly-necessary cookies (auth, CSRF).
  * Per § 25 Abs. 2 Nr. 2 TTDSG these do not require consent — but a brief
  * notice is still expected on a public site. Dismissal is stored in
  * localStorage so the banner does not nag returning users.

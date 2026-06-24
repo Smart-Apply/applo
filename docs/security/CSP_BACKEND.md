@@ -2,7 +2,7 @@
 
 ## Overview
 
-Content Security Policy (CSP) is a critical security layer that helps prevent Cross-Site Scripting (XSS), clickjacking, and other code injection attacks. This document details the **backend** CSP implementation in Smart Apply.
+Content Security Policy (CSP) is a critical security layer that helps prevent Cross-Site Scripting (XSS), clickjacking, and other code injection attacks. This document details the **backend** CSP implementation in Applo.
 
 > **Note:** The backend CSP complements the [frontend CSP configuration](../apps/web/next.config.ts). Together, they provide defense-in-depth protection.
 
@@ -10,7 +10,7 @@ Content Security Policy (CSP) is a critical security layer that helps prevent Cr
 
 ### Defense-in-Depth Strategy
 
-Smart Apply implements **three layers** of XSS protection:
+Applo implements **three layers** of XSS protection:
 
 1. **Layer 1: Input Sanitization** - `@Sanitize()` decorator on all user inputs
 2. **Layer 2: Output Encoding** - React's automatic escaping + template engines

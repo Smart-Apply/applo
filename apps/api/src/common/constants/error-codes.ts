@@ -1,5 +1,5 @@
 /**
- * Error codes and user-friendly German messages for Smart Apply
+ * Error codes and user-friendly German messages for Applo
  *
  * These error codes are returned in the API response `code` field
  * and mapped to user-friendly German messages for better UX.
@@ -157,7 +157,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
 
   // Invite-code gate (closed beta)
   [ErrorCode.INVITE_CODE_REQUIRED]:
-    'Smart Apply ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.',
+    'Applo ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.',
   [ErrorCode.INVITE_CODE_INVALID]:
     'Dieser Einladungscode ist ungültig. Bitte überprüfe die Schreibweise.',
   [ErrorCode.INVITE_CODE_ALREADY_USED]:

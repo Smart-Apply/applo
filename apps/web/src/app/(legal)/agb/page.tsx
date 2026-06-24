@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Allgemeine Geschäftsbedingungen – Smart Apply",
-  description: "Nutzungsbedingungen für die Smart Apply Plattform.",
+  title: "Allgemeine Geschäftsbedingungen – Applo",
+  description: "Nutzungsbedingungen für die Applo Plattform.",
   robots: { index: true, follow: false },
 };
 
@@ -32,7 +32,7 @@ export default function AgbPage() {
       <h2>§ 1 Geltungsbereich</h2>
       <p>
         Diese Allgemeinen Geschäftsbedingungen (&bdquo;AGB&rdquo;) gelten für
-        die Nutzung der Plattform &bdquo;Smart Apply&rdquo;, betrieben von
+        die Nutzung der Plattform &bdquo;Applo&rdquo;, betrieben von
         Arianit Sheholli, c/o IP-Management #9916, Ludwig-Erhard-Straße 18,
         20459 Hamburg (&bdquo;Anbieter&rdquo;), durch registrierte Nutzerinnen
         und Nutzer (&bdquo;Nutzer&rdquo;).
@@ -40,7 +40,7 @@ export default function AgbPage() {
 
       <h2>§ 2 Leistungsbeschreibung</h2>
       <p>
-        Smart Apply ist eine Online-Plattform zur KI-gestützten Erstellung
+        Applo ist eine Online-Plattform zur KI-gestützten Erstellung
         personalisierter Anschreiben und Lebensläufe auf Basis vom Nutzer
         bereitgestellter Profildaten und Stellenanzeigen. Die Plattform wird
         als &bdquo;Software-as-a-Service&rdquo; bereitgestellt und steht in der

@@ -1,6 +1,6 @@
 # Refresh Token Strategy
 
-This document describes the refresh token implementation in Smart Apply, which provides enhanced security and improved user experience through automatic token refresh.
+This document describes the refresh token implementation in Applo, which provides enhanced security and improved user experience through automatic token refresh.
 
 ## Overview
 

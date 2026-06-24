@@ -28,7 +28,7 @@ class ExperienceEntryDto {
   @IsString()
   title: string;
 
-  @ApiProperty({ example: 'Smart Apply GmbH' })
+  @ApiProperty({ example: 'Applo GmbH' })
   @IsString()
   company: string;
 

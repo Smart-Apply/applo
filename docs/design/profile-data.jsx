@@ -69,7 +69,7 @@ window.PROFILE = {
       summary: "Online-Store mit Payment-Integration und Inventory-Management. Gebaut für einen Mittelständler in der DACH-Region.",
     },
     {
-      title: "Smart Apply",
+      title: "Applo",
       summary: "AI-gestützter Bewerbungs-Assistent, der Lebensläufe und Anschreiben pro Stellenanzeige passgenau generiert.",
     },
   ],

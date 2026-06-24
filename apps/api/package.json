@@ -1,8 +1,8 @@
 {
   "name": "@smart-apply/api",
   "version": "1.0.0",
-  "description": "Smart Apply Backend API - NestJS + Prisma + Azure",
-  "author": "Smart Apply Team",
+  "description": "Applo Backend API - NestJS + Prisma + Azure",
+  "author": "Applo Team",
   "private": true,
   "license": "BUSL-1.1",
   "scripts": {

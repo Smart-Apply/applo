@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { AppLogo } from '@/components/ui/app-logo';
 
 export default function LegalLayout({
   children,
@@ -12,13 +12,7 @@ export default function LegalLayout({
       <header className="border-b border-gray-200">
         <div className="container mx-auto flex items-center justify-between px-4 py-4 md:px-8">
           <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/Logo/Full Logo.png"
-              alt="Smart Apply"
-              width={140}
-              height={40}
-              priority
-            />
+            <AppLogo />
           </Link>
           <Link
             href="/"
@@ -54,7 +48,7 @@ export default function LegalLayout({
             </Link>
           </nav>
           <p className="mt-4 text-center text-xs font-poppins text-gray-500">
-            © {new Date().getFullYear()} Smart Apply. Alle Rechte vorbehalten.
+            © {new Date().getFullYear()} Applo. Alle Rechte vorbehalten.
           </p>
         </div>
       </footer>

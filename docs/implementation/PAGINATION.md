@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the pagination implementation for all list endpoints in the Smart Apply API to prevent performance degradation at scale (20k+ users).
+This document describes the pagination implementation for all list endpoints in the Applo API to prevent performance degradation at scale (20k+ users).
 
 ## Implementation Details
 

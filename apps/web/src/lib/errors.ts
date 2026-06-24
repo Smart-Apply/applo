@@ -1,5 +1,5 @@
 /**
- * Error handling utilities for Smart Apply
+ * Error handling utilities for Applo
  */
 
 import { getErrorMessage as getLocalizedErrorMessage, formatValidationErrors } from './error-messages';

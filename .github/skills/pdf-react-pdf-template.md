@@ -1,6 +1,6 @@
 ---
 name: pdf-react-pdf-template
-description: 'Recipe for adding a new PDF template (resume + cover letter) to Smart Apply using `@react-pdf/renderer`. Covers the factory pattern, ESM-only loader, color-variant derivation, i18n labels, registry wiring, and validation.'
+description: 'Recipe for adding a new PDF template (resume + cover letter) to Applo using `@react-pdf/renderer`. Covers the factory pattern, ESM-only loader, color-variant derivation, i18n labels, registry wiring, and validation.'
 ---
 
 # Add a New PDF Template (`@react-pdf/renderer`)
