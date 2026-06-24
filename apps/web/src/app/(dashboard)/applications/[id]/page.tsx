@@ -884,6 +884,8 @@ function AtsDisclosure({ applicationId }: { applicationId: string }) {
   return (
     <div className="overflow-hidden rounded-[16px] border bg-card shadow-sm">
       <button
+        type="button"
+        aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-3.5 px-5 py-4 text-left"
       >
