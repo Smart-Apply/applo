@@ -205,7 +205,7 @@ export default function ApplicationDetailPage() {
     onSuccess: (updatedApp) => {
       queryClient.setQueryData(['applications', applicationId], updatedApp);
       queryClient.invalidateQueries({ queryKey: ['applications'] });
-      toast.success('Als „Beworben" markiert', { description: 'Viel Erfolg! 🤞' });
+      toast.success('Als „Beworben“ markiert', { description: 'Viel Erfolg! 🤞' });
     },
     onError: (err: Error) => toast.error(`Fehler beim Aktualisieren: ${err.message}`),
   });
