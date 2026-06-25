@@ -23,18 +23,18 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 
 ## 🛠️ Tech Stack
 
-| Layer          | Technology                                                                  |
-| -------------- | --------------------------------------------------------------------------- |
-| **Frontend**   | Next.js 16 · React 19 · Tailwind v4 · shadcn/ui · TanStack Query · Zustand  |
-| **Backend**    | NestJS 11 · Prisma 6 (pg adapter) · Neon Postgres (pooled + direct) · Pino · Helmet |
-| **AI**         | Azure AI Foundry · Azure OpenAI · LangChain · LangGraph · Hugging Face      |
+| Layer          | Technology                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Frontend**   | Next.js 16 · React 19 · Tailwind v4 · shadcn/ui · TanStack Query · Zustand                                                           |
+| **Backend**    | NestJS 11 · Prisma 6 (pg adapter) · Neon Postgres (pooled + direct) · Pino · Helmet                                                  |
+| **AI**         | Azure AI Foundry · Azure OpenAI · LangChain · LangGraph · Hugging Face                                                               |
 | **PDF**        | `@react-pdf/renderer` 4.5 (TSX templates) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake). |
-| **Storage**   | Cloudflare R2 (S3-compatible, EU jurisdiction) · local disk (pluggable)    |
-| **Queue**      | Upstash QStash · in-memory (pluggable)                                     |
-| **Cache**      | Upstash Redis · node-cache                                                  |
-| **Monorepo**   | pnpm workspaces · Turborepo                                                 |
-| **Deployment** | Docker · **Fly.io** (API, region `fra`) · Cloudflare Workers / OpenNext (Web) · Cloudflare DNS+CDN |
-| **Monitoring** | Sentry · Winston (audit logs, daily rotation)                               |
+| **Storage**    | Cloudflare R2 (S3-compatible, EU jurisdiction) · local disk (pluggable)                                                              |
+| **Queue**      | Upstash QStash · in-memory (pluggable)                                                                                               |
+| **Cache**      | Upstash Redis · node-cache                                                                                                           |
+| **Monorepo**   | pnpm workspaces · Turborepo                                                                                                          |
+| **Deployment** | Docker · **Fly.io** (API, region `fra`) · Cloudflare Workers / OpenNext (Web) · Cloudflare DNS+CDN                                   |
+| **Monitoring** | Sentry · Winston (audit logs, daily rotation)                                                                                        |
 
 ## 🚀 Quick Start
 
@@ -188,10 +188,10 @@ apps + Cloudflare Workers + Neon branches. See
 [docs/guides/DEVOPS_ROADMAP.md](docs/guides/DEVOPS_ROADMAP.md) for the full
 topology and [CONTRIBUTING.md](CONTRIBUTING.md) for the daily-use flow.
 
-| Environment | Trigger                              | Approval         | URL                                                 |
-| ----------- | ------------------------------------ | ---------------- | --------------------------------------------------- |
-| **Staging** | Push to `main`                       | None (auto)      | `smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev` |
-| **Prod**    | Tag push `v*.*.*` (via release-please) | Manual click   | `api.smart-apply.io` + `smart-apply.io`             |
+| Environment | Trigger                                | Approval     | URL                                                                                |
+| ----------- | -------------------------------------- | ------------ | ---------------------------------------------------------------------------------- |
+| **Staging** | Push to `main`                         | None (auto)  | `smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev` |
+| **Prod**    | Tag push `v*.*.*` (via release-please) | Manual click | `api.smart-apply.io` + `smart-apply.io`                                            |
 
 **Manual deploy commands** (rarely needed — CI handles both):
 
@@ -211,13 +211,13 @@ cd apps/web && pnpm cf:deploy:staging
 
 **Custom domain (`smart-apply.io`):**
 
-| Hostname              | Type  | Target                                      | Proxy   |
-| --------------------- | ----- | ------------------------------------------- | ------- |
-| `smart-apply.io`      | —     | Cloudflare Worker (Custom Domain binding)   | 🟧      |
-| `www.smart-apply.io`  | —     | Cloudflare Worker (Custom Domain binding)   | 🟧      |
-| `api.smart-apply.io`  | CNAME | `93ke51y.smart-apply-api.fly.dev`           | 🟧      |
-| `_acme-challenge.api` | CNAME | `api.smart-apply.io.93ke51y.flydns.net`     | DNS only |
-| `_fly-ownership.api`  | TXT   | `app-93ke51y`                               | —       |
+| Hostname              | Type  | Target                                    | Proxy    |
+| --------------------- | ----- | ----------------------------------------- | -------- |
+| `smart-apply.io`      | —     | Cloudflare Worker (Custom Domain binding) | 🟧       |
+| `www.smart-apply.io`  | —     | Cloudflare Worker (Custom Domain binding) | 🟧       |
+| `api.smart-apply.io`  | CNAME | `93ke51y.smart-apply-api.fly.dev`         | 🟧       |
+| `_acme-challenge.api` | CNAME | `api.smart-apply.io.93ke51y.flydns.net`   | DNS only |
+| `_fly-ownership.api`  | TXT   | `app-93ke51y`                             | —        |
 
 Full walkthrough (Fly cert issuance, Cloudflare proxy gotchas, runtime API URL
 via `/api/config`, the `PUBLIC_API_URL` GitHub Variable trap) lives in
@@ -232,18 +232,18 @@ via `/api/config`, the `PUBLIC_API_URL` GitHub Variable trap) lives in
 
 ## 📖 Documentation
 
-| Document                                                              | Description                                |
-| --------------------------------------------------------------------- | ------------------------------------------ |
-| [ARCHITECTURE.md](ARCHITECTURE.md)                                    | System architecture                        |
-| [QUICKSTART.md](QUICKSTART.md)                                        | Detailed setup guide                       |
-| [CONTRIBUTING.md](CONTRIBUTING.md)                                    | Daily contributor workflow                 |
-| [docs/guides/DEVOPS_ROADMAP.md](docs/guides/DEVOPS_ROADMAP.md)        | Multi-stage env, secrets, releases         |
-| [docs/security/SECRETS_ROTATION.md](docs/security/SECRETS_ROTATION.md) | How to rotate every credential            |
-| [docs/security/MIGRATION_ROLLBACK.md](docs/security/MIGRATION_ROLLBACK.md) | Schema rollback runbook              |
-| [docs/features/](docs/features/)                                      | Feature specs                              |
-| [docs/guides/](docs/guides/)                                          | Operational guides                         |
-| [docs/security/](docs/security/)                                      | Security documentation                     |
-| [docs/implementation/](docs/implementation/)                          | Implementation notes                       |
+| Document                                                                   | Description                        |
+| -------------------------------------------------------------------------- | ---------------------------------- |
+| [ARCHITECTURE.md](ARCHITECTURE.md)                                         | System architecture                |
+| [QUICKSTART.md](QUICKSTART.md)                                             | Detailed setup guide               |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                                         | Daily contributor workflow         |
+| [docs/guides/DEVOPS_ROADMAP.md](docs/guides/DEVOPS_ROADMAP.md)             | Multi-stage env, secrets, releases |
+| [docs/security/SECRETS_ROTATION.md](docs/security/SECRETS_ROTATION.md)     | How to rotate every credential     |
+| [docs/security/MIGRATION_ROLLBACK.md](docs/security/MIGRATION_ROLLBACK.md) | Schema rollback runbook            |
+| [docs/features/](docs/features/)                                           | Feature specs                      |
+| [docs/guides/](docs/guides/)                                               | Operational guides                 |
+| [docs/security/](docs/security/)                                           | Security documentation             |
+| [docs/implementation/](docs/implementation/)                               | Implementation notes               |
 
 ## 📄 License
 

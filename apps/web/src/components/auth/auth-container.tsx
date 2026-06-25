@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
+import { AppLogo } from '@/components/ui/app-logo';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AppLogo } from '@/components/ui/app-logo';
 import { api, resetAuthRedirectFlag } from '@/lib/api-client';
@@ -158,7 +159,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
     const message = searchParams.get('message');
     if (message === 'invite_required') {
       toast.error(
-        'Applo ist gerade in der geschlossenen Beta. Bitte registriere dich zuerst mit deinem Einladungscode — danach kannst du Google / Microsoft in den Einstellungen verknüpfen.',
+        'Applo ist gerade in der geschlossenen Beta. Bitte registriere dich zuerst mit deinem Einladungscode \u2014 danach kannst du Google / Microsoft in den Einstellungen verknüpfen.',
         { duration: 12000 },
       );
     } else if (message === 'authentication_failed') {
@@ -325,6 +326,10 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
           toast.error('Applo ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.', {
             duration: 8000,
           });
+          toast.error(
+            'Applo ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.',
+            { duration: 8000 },
+          );
         } else if (error.data?.code === 'INVITE_CODE_INVALID') {
           registerForm.setError('inviteCode', { type: 'manual', message: 'Code ist ungültig.' });
           toast.error('Dieser Einladungscode ist ungültig. Bitte überprüfe die Schreibweise.');
@@ -403,13 +408,78 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
   }
 
   return (
-    <div className="applo-auth">
-      <div className={`auth${isLogin ? '' : ' swapped'}`}>
-        {/* ---------- brand pane ---------- */}
-        <aside className="brand-pane">
-          <div className="brand-top">
-            <div className="brand-lockup">
-              <AppLogo className="aa-logo" />
+    <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+      {/* Container: full-width on mobile so the form actually fits a 360px
+          viewport; locks to the original 1040x800 design on md+ desktop
+          where the sliding-panel animation works. */}
+      <div className="relative min-h-[640px] w-full max-w-[1040px] overflow-hidden rounded-xl bg-card shadow-lg border border-border md:h-[800px]">
+        {/* Sliding Branding Panel — desktop only. Hidden below md: because
+            it consumed half the screen width and squashed the form on
+            iPhone-sized viewports (visible in the wave-2 E2E screenshots). */}
+        <div
+          className={`absolute top-0 z-20 hidden h-full w-1/2 transform transition-transform duration-500 ease-in-out md:block ${isLogin ? 'translate-x-0' : 'translate-x-full'
+            }`}
+        >
+          <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-primary p-12">
+            {/* Background Texture - Curved Lines */}
+            <svg
+              className="absolute inset-0 h-full w-full"
+              viewBox="0 0 500 756"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="xMidYMid slice"
+            >
+              <path
+                d="M-30 0 Q 80 200, 50 400 Q 20 600, 80 756"
+                stroke="rgba(255,255,255,0.1)"
+                strokeWidth="12"
+                fill="none"
+              />
+              <path
+                d="M520 0 Q 400 200, 430 400 Q 460 600, 380 756"
+                stroke="rgba(255,255,255,0.1)"
+                strokeWidth="12"
+                fill="none"
+              />
+            </svg>
+
+            {/* Content */}
+            <div className="relative z-10 flex h-full w-full flex-col justify-center px-4">
+              {/* Login Branding (Logo + Applo) */}
+              <div
+                className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-300 ${isLogin && !isAnimating ? 'opacity-100' : 'opacity-0'
+                  }`}
+              >
+                <AppLogo className="h-40 w-auto brightness-0 invert" />
+              </div>
+
+              {/* Register Branding (Motto) */}
+              <div
+                className={`absolute inset-0 flex flex-col justify-center px-4 transition-opacity duration-300 ${!isLogin && !isAnimating ? 'opacity-100' : 'opacity-0'
+                  }`}
+              >
+                <div className="mb-16 flex justify-center">
+                  <AppLogo className="h-20 w-auto brightness-0 invert" />
+                </div>
+                <div className="space-y-1">
+                  <div className="w-[321px] text-left">
+                    <p className="font-poppins text-[45px] font-extrabold leading-normal text-primary-foreground">
+                      Where
+                    </p>
+                    <p className="font-poppins text-[45px] font-extrabold leading-normal text-primary-foreground">
+                      Applications
+                    </p>
+                  </div>
+                  <div className="ml-auto w-fit text-right">
+                    <p className="mt-4 font-poppins text-[45px] font-extrabold leading-normal text-primary-foreground">
+                      Become A
+                    </p>
+                    <p className="font-poppins text-[45px] font-extrabold leading-normal text-primary-foreground">
+                      System
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div className="brand-stage">
@@ -722,13 +792,127 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                         )}
                       />
                     )}
+                  />
+                </div>
 
-                    {requireInviteCode && (
-                      <div className="beta-note">
-                        <IcInfo />
-                        Applo ist gerade in der geschlossenen Beta. Du brauchst einen Einladungscode, um dich zu
-                        registrieren.
-                      </div>
+                <FormField
+                  control={registerForm.control}
+                  name="email"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormLabel className="font-poppins text-base font-semibold text-foreground">
+                        E-Mail
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="Deine E-Mail"
+                          className={`h-9 rounded-xl border-2 bg-transparent px-4 text-[14px] placeholder:text-muted-foreground focus:border-primary ${
+                            fieldState.error
+                              ? 'border-red-500 focus:border-red-500'
+                              : fieldState.isDirty && !fieldState.invalid
+                              ? 'border-green-500'
+                              : 'border-input'
+                          }`}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={registerForm.control}
+                  name="password"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormLabel className="font-poppins text-base font-semibold text-foreground">
+                        Passwort
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Dein Passwort"
+                          className={`h-9 rounded-xl border-2 bg-transparent px-4 text-[14px] placeholder:text-muted-foreground focus:border-primary ${
+                            fieldState.error
+                              ? 'border-red-500 focus:border-red-500'
+                              : fieldState.isDirty && !fieldState.invalid
+                              ? 'border-green-500'
+                              : 'border-input'
+                          }`}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <PasswordStrength password={field.value} />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={registerForm.control}
+                  name="confirmPassword"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormLabel className="font-poppins text-base font-semibold text-foreground">
+                        Passwort wiederholen
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Dein Passwort"
+                          className={`h-9 rounded-xl border-2 bg-transparent px-4 text-[14px] placeholder:text-muted-foreground focus:border-primary ${
+                            fieldState.error
+                              ? 'border-red-500 focus:border-red-500'
+                              : fieldState.isDirty && !fieldState.invalid
+                              ? 'border-green-500'
+                              : 'border-input'
+                          }`}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Closed-beta invite-code gate. Only rendered when the
+                    backend has REQUIRE_INVITE_CODES=true; the
+                    useAuthConfig hook caches the answer for 10 min so
+                    the field doesn't flicker between page loads. The
+                    gate is enforced server-side regardless \u2014 the field
+                    is just UX. */}
+                {requireInviteCode && (
+                  <FormField
+                    control={registerForm.control}
+                    name="inviteCode"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <FormLabel className="font-poppins text-base font-semibold text-foreground">
+                          Einladungscode
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="BETA-XXXX-XXXX-XXXX"
+                            autoComplete="off"
+                            autoCapitalize="characters"
+                            spellCheck={false}
+                            className={`h-9 rounded-xl border-2 bg-transparent px-4 font-mono text-[14px] tracking-wider placeholder:text-muted-foreground focus:border-primary ${
+                              fieldState.error
+                                ? 'border-red-500 focus:border-red-500'
+                                : fieldState.isDirty && !fieldState.invalid
+                                ? 'border-green-500'
+                                : 'border-input'
+                            }`}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        <p className="mt-1 font-poppins text-xs text-muted-foreground">
+                          Applo ist gerade in der geschlossenen Beta. Du brauchst einen Einladungscode, um dich zu registrieren.
+                        </p>
+                      </FormItem>
                     )}
 
                     {/* Cloudflare Turnstile — renders nothing in dev without a site key. */}
