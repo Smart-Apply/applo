@@ -130,8 +130,11 @@ export class PreviewRendererService {
       );
       return Buffer.from(pngBuffer);
     } finally {
-      await doc.cleanup();
-      doc.destroy();
+      // PDFDocumentProxy has no `destroy()` — only `cleanup()`. Tearing down
+      // the loading task aborts the worker and releases the document. The old
+      // `doc.destroy()` threw `TypeError: doc.destroy is not a function`,
+      // which surfaced as a 500 on every freshly-rendered (uncached) preview.
+      await loadingTask.destroy();
     }
   }
 
@@ -271,15 +274,19 @@ interface PdfjsNamespace {
     useSystemFonts?: boolean;
     isEvalSupported?: boolean;
     standardFontDataUrl?: string;
-  }): { promise: Promise<PdfjsDocument> };
+  }): PdfjsLoadingTask;
+}
+
+interface PdfjsLoadingTask {
+  promise: Promise<PdfjsDocument>;
+  /** Aborts the worker and releases the document. Resolves once torn down. */
+  destroy(): Promise<void>;
 }
 
 interface PdfjsDocument {
   getPage(n: number): Promise<PdfjsPage>;
   /** pdfjs' NodeCanvasFactory — uses the @napi-rs/canvas copy bundled with pdfjs. */
   canvasFactory: PdfjsCanvasFactory;
-  cleanup(): Promise<void>;
-  destroy(): void;
 }
 
 interface PdfjsCanvasFactory {
