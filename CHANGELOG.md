@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.0](https://github.com/Smart-Apply/smart-apply/compare/v4.0.2...v4.1.0) (2026-06-25)
+
+
+### Features
+
+* **applications:** redesign application detail view ([#596](https://github.com/Smart-Apply/smart-apply/issues/596)) ([5550cac](https://github.com/Smart-Apply/smart-apply/commit/5550cac1cb6120ee4f1b3545fc247f2ec9c2c6a9))
+* new Applo landing page and full Smart Apply → Applo rebrand ([#598](https://github.com/Smart-Apply/smart-apply/issues/598)) ([e5079a3](https://github.com/Smart-Apply/smart-apply/commit/e5079a398e76f6a78c75589e10da077cdfa5bb9a))
+
+
+### Bug Fixes
+
+* **applications:** make job-posting URL access null-safe in detail view ([#597](https://github.com/Smart-Apply/smart-apply/issues/597)) ([b4bd17c](https://github.com/Smart-Apply/smart-apply/commit/b4bd17c32494dda09008067e682d84b9a27246a7))
+* **interviews:** re-bind remote voice audio when switching to live phase ([#594](https://github.com/Smart-Apply/smart-apply/issues/594)) ([4018c6f](https://github.com/Smart-Apply/smart-apply/commit/4018c6fd5b90542a821dc61f76235b26d5508733))
+* resolve 500s in application generation and template preview ([#603](https://github.com/Smart-Apply/smart-apply/issues/603)) ([21811c8](https://github.com/Smart-Apply/smart-apply/commit/21811c86b6f32cedb9f3418bde34abf5f89c4a16))
+
 ## [4.0.2](https://github.com/Smart-Apply/smart-apply/compare/v4.0.1...v4.0.2) (2026-06-22)
 
 
