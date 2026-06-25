@@ -1,0 +1,301 @@
+/* ============================================================
+   Applo — Auth screens (login / register / forgot).
+   VERBATIM port of the design handoff's auth.css (standalone
+   bundle, 2026-06-25), mechanically scoped under `.applo-auth`:
+   :root tokens -> .applo-auth and renamed --aa-* (so they never
+   clobber the app's shadcn vars), keyframes prefixed aa_. The
+   markup (auth-container.tsx / auth-applo.tsx) uses these exact
+   class names. JS-driven --lid/--cover/--coverShow are left as-is.
+   ============================================================ */
+/* ============================================================
+   SmartApply — Auth (Sign in / Sign up / Reset)
+   Builds on the SmartApply design tokens. Navy + Inter.
+   ============================================================ */
+.applo-auth { --aa-bg:        #f6f8fb;
+  --aa-surface:   #ffffff;
+  --aa-surface-2: #f8fafc;
+  --aa-border:    #e7ebf1;
+  --aa-border-2:  #dfe5ee;
+
+  --aa-ink:       #15233f;
+  --aa-ink-soft:  #33425c;
+  --aa-muted:     #64748b;
+  --aa-muted-2:   #94a3b8;
+
+  --aa-navy:      #15233f;
+  --aa-navy-2:    #1d3151;   /* curved-line tone on the brand pane */
+  --aa-navy-hover:#213a61;
+
+  --aa-accent:    #2563eb;   /* tweakable */
+  --aa-field-r:   12px;      /* tweakable */
+  --aa-btn-r:     12px;      /* tweakable */
+
+  --aa-red:    #dc2626;
+  --aa-red-bg: #fdeced;
+  --aa-green:  #15a34a;
+  --aa-amber:  #e0951a;
+
+  --aa-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+
+  --aa-sh-card: 0 24px 64px rgba(20,33,61,.10), 0 2px 8px rgba(20,33,61,.04); }
+.applo-auth * { box-sizing: border-box; }
+.applo-auth { font-family: var(--aa-font);
+  background: var(--aa-bg);
+  color: var(--aa-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility; }
+.applo-auth button, .applo-auth input { font-family: inherit; }
+.applo-auth button { cursor: pointer; }
+.applo-auth ::selection { background: #c9d8f5; }
+/* ---- shell -------------------------------------------------- */
+.applo-auth .auth { display: flex;
+  height: 100vh;
+  overflow: hidden; }
+.applo-auth .brand-pane, .applo-auth .form-pane { flex: 0 0 50%;
+  width: 50%;
+  height: 100%;
+  transition: transform .6s cubic-bezier(.76,0,.18,1);
+  will-change: transform; }
+/* register: Applo slides to the right, the form to the left */
+.applo-auth .auth.swapped .brand-pane { transform: translateX(100%); }
+.applo-auth .auth.swapped .form-pane { transform: translateX(-100%); }
+/* ---- brand pane (navy) ------------------------------------- */
+.applo-auth .brand-pane { position: relative;
+  overflow: hidden;
+  color: var(--aa-ink);
+  display: flex;
+  flex-direction: column;
+  padding: 44px 48px;
+  z-index: 2;
+  background:
+    radial-gradient(115% 78% at 16% 4%, color-mix(in srgb, var(--aa-accent) 16%, transparent) 0%, transparent 50%),
+    linear-gradient(155deg, #e9f0fc 0%, #dae6f8 52%, #cbdcf3 100%); }
+/* fine dot grid overlay */
+.applo-auth .brand-pane::before { content: "";
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background-image: radial-gradient(rgba(21,35,63,.09) 1.4px, transparent 1.4px);
+  background-size: 26px 26px;
+  background-position: -8px -8px;
+  -webkit-mask-image: radial-gradient(125% 95% at 50% 42%, #000 32%, transparent 80%);
+          mask-image: radial-gradient(125% 95% at 50% 42%, #000 32%, transparent 80%); }
+.applo-auth .brand-curves { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; opacity: .9; }
+.applo-auth .brand-curves circle { fill: none; stroke: rgba(21,35,63,.11); stroke-width: 1.5; }
+.applo-auth .brand-top { position: relative; z-index: 2; display: flex; justify-content: center; }
+.applo-auth .brand-lockup { display: inline-flex; align-items: center; gap: 15px; }
+.applo-auth .brand-word { font-size: 31px; font-weight: 800; letter-spacing: -.02em; }
+.applo-auth .brand-stage { position: relative; z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  text-align: center; }
+.applo-auth .brand-applo { filter: drop-shadow(0 30px 50px rgba(0,0,0,.28)); }
+.applo-auth .brand-speech { min-height: 26px;
+  font-size: 16px; font-weight: 650; color: #3a4a6b;
+  letter-spacing: .01em;
+  transition: opacity .25s; }
+.applo-auth .brand-tagline { font-size: 17px; line-height: 1.5; color: #58688a; max-width: 340px; }
+/* claim variant */
+.applo-auth .brand-claim { font-size: clamp(44px, 5.2vw, 80px);
+  font-weight: 850; line-height: .98; letter-spacing: -.03em;
+  text-align: left; align-self: stretch; margin: auto 0; }
+.applo-auth .brand-claim .accent { color: var(--aa-accent); }
+/* features variant */
+.applo-auth .brand-feats { display: flex; flex-direction: column; gap: 16px; align-self: stretch; max-width: 360px; margin: 0 auto; text-align: left; }
+.applo-auth .brand-feat { display: flex; gap: 13px; align-items: flex-start; }
+.applo-auth .brand-feat .fi { flex: none; width: 34px; height: 34px; border-radius: 10px;
+  background: var(--aa-navy); color: #fff;
+  display: grid; place-items: center; }
+.applo-auth .brand-feat b { display: block; font-size: 15.5px; font-weight: 700; }
+.applo-auth .brand-feat span { font-size: 13.5px; color: #58688a; line-height: 1.45; }
+/* ---- form pane --------------------------------------------- */
+.applo-auth .form-pane { display: flex; align-items: safe center; justify-content: center;
+  padding: 48px 28px; overflow-y: auto;
+  z-index: 1; }
+.applo-auth .form-card { width: 100%; max-width: 416px;
+  min-height: 612px;
+  display: flex; flex-direction: column; justify-content: center; }
+.applo-auth .form-mobilebrand { display: none; }
+.applo-auth .form-head { margin: 0 0 26px; }
+.applo-auth .form-title { font-size: 30px; font-weight: 800; letter-spacing: -.022em; margin: 0; }
+.applo-auth .form-sub { margin: 9px 0 0; color: var(--aa-muted); font-size: 15px; line-height: 1.5; }
+.applo-auth .form { display: flex; flex-direction: column; gap: 17px; }
+.applo-auth .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.applo-auth .field { display: flex; flex-direction: column; gap: 7px; }
+.applo-auth .field > label { font-size: 13.5px; font-weight: 650; color: var(--aa-ink-soft); }
+.applo-auth .field-label-row { display: flex; align-items: baseline; justify-content: space-between; }
+.applo-auth .field-label-row a { font-size: 12.5px; font-weight: 600; color: var(--aa-accent); text-decoration: none; }
+.applo-auth .field-label-row a:hover { text-decoration: underline; }
+.applo-auth .input-wrap { position: relative; }
+.applo-auth .input { width: 100%; padding: 13px 15px; font-size: 15px; color: var(--aa-ink);
+  background: var(--aa-surface); border: 1.5px solid var(--aa-border-2);
+  border-radius: var(--aa-field-r);
+  transition: border-color .14s, box-shadow .14s, background .14s; }
+.applo-auth .input.has-icon { padding-right: 46px; }
+.applo-auth .input::placeholder { color: var(--aa-muted-2); }
+.applo-auth .input:hover { border-color: #c9d3e3; }
+.applo-auth .input:focus { outline: none; border-color: var(--aa-accent); box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--aa-accent) 16%, transparent); }
+.applo-auth .input.invalid { border-color: var(--aa-red); }
+.applo-auth .input.invalid:focus { box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--aa-red) 14%, transparent); }
+.applo-auth .reveal { position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+  width: 34px; height: 34px; display: grid; place-items: center;
+  border: none; background: none; color: var(--aa-muted-2); border-radius: 9px; }
+.applo-auth .reveal:hover { color: var(--aa-ink-soft); background: var(--aa-surface-2); }
+.applo-auth .reveal:focus-visible { outline: 2px solid var(--aa-accent); outline-offset: 1px; }
+.applo-auth .err { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 550; color: var(--aa-red); }
+.applo-auth .hint { font-size: 12.5px; color: var(--aa-muted); line-height: 1.5; }
+/* password strength */
+.applo-auth .strength { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.applo-auth .strength-bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.applo-auth .strength-bars i { height: 5px; border-radius: 999px; background: var(--aa-border); transition: background .2s; }
+.applo-auth .strength-row { display: flex; justify-content: space-between; font-size: 12px; }
+.applo-auth .strength-label { font-weight: 650; }
+/* submit */
+.applo-auth .btn-submit { margin-top: 4px;
+  width: 100%; padding: 14px 20px; border: none; border-radius: var(--aa-btn-r);
+  background: var(--aa-navy); color: #fff; font-size: 15.5px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  transition: background .14s, transform .04s; }
+.applo-auth .btn-submit:hover { background: var(--aa-navy-hover); }
+.applo-auth .btn-submit:active { transform: translateY(1px); }
+.applo-auth .btn-submit:disabled { opacity: .75; cursor: default; }
+.applo-auth .spinner { width: 17px; height: 17px; border-radius: 50%;
+  border: 2.4px solid rgba(255,255,255,.35); border-top-color: #fff;
+  animation: aa_spin .7s linear infinite; }
+@keyframes aa_spin { to { transform: rotate(360deg); } }
+/* meta links */
+.applo-auth .form-foot { margin-top: 4px; text-align: center; font-size: 14.5px; color: var(--aa-muted); }
+.applo-auth .form-foot a, .applo-auth .link { color: var(--aa-ink); font-weight: 700; text-decoration: none;
+  border: none; background: none; font-size: inherit; padding: 0; }
+.applo-auth .form-foot a:hover, .applo-auth .link:hover { color: var(--aa-accent); }
+.applo-auth .link-quiet { display: block; text-align: center; margin-top: -2px; color: var(--aa-muted); font-weight: 600; font-size: 14px; }
+.applo-auth .link-quiet:hover { color: var(--aa-accent); }
+/* divider + social */
+.applo-auth .divider { display: flex; align-items: center; gap: 14px; margin: 22px 0 18px; color: var(--aa-muted-2); font-size: 13px; }
+.applo-auth .divider::before, .applo-auth .divider::after { content: ""; height: 1px; flex: 1; background: var(--aa-border); }
+.applo-auth .social { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.applo-auth .social button { display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px; border: 1.5px solid var(--aa-border-2); border-radius: var(--aa-field-r);
+  background: var(--aa-surface); color: var(--aa-ink-soft); font-size: 14.5px; font-weight: 650;
+  transition: border-color .14s, background .14s; }
+.applo-auth .social button:hover { border-color: #c9d3e3; background: var(--aa-surface-2); }
+.applo-auth .social svg { width: 19px; height: 19px; flex: none; }
+.applo-auth .beta-note { display: flex; gap: 10px; align-items: flex-start;
+  background: var(--aa-surface-2); border: 1px solid var(--aa-border);
+  border-radius: 11px; padding: 12px 13px; font-size: 12.5px; color: var(--aa-muted); line-height: 1.5; }
+.applo-auth .beta-note svg { flex: none; color: var(--aa-accent); margin-top: 1px; }
+/* success card */
+.applo-auth .success { text-align: center; animation: aa_pop .35s cubic-bezier(.34,1.4,.5,1) both; }
+.applo-auth .success h2 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 8px; }
+.applo-auth .success p { color: var(--aa-muted); font-size: 15px; margin: 0 0 24px; line-height: 1.55; }
+@keyframes aa_pop { from { transform: scale(.96); } to { transform: none; } }
+.applo-auth .fade { animation: aa_fade .3s ease; }
+@keyframes aa_fade { from { transform: translateY(8px); } to { transform: none; } }
+/* mode-switch transition (login ↔ register) — opacity stays ≥.4 so a frozen
+   capture frame is never fully blank */
+.applo-auth .form-anim { animation: aa_formSwap .38s cubic-bezier(.22,.7,.3,1) both; }
+@keyframes aa_formSwap {
+  from { opacity: .4; transform: translateY(14px) scale(.992); }
+  to   { opacity: 1;  transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .applo-auth .form-anim { animation: none; }
+}
+/* ============================================================
+   Applo state machine
+   ============================================================ */
+.applo-auth .aApplo .aArmUp, .applo-auth .aApplo .aArmCover, .applo-auth .aApplo .aArmPeek, .applo-auth .aApplo .aEyesHappy, .applo-auth .aApplo .aBrows, .applo-auth .aApplo .aMoHappy, .applo-auth .aApplo .aMoO, .applo-auth .aApplo .aConfetti, .applo-auth .aApplo .aLidLine { opacity: 0; pointer-events: none; }
+.applo-auth .aApplo .aCheck { opacity: 0; }
+.applo-auth .aApplo .aMoHappy, .applo-auth .aApplo .aEyesHappy { transition: opacity .18s; }
+.applo-auth .aFloat { animation: aa_aFloat 4.2s ease-in-out infinite; transform-origin: 120px 300px; }
+@keyframes aa_aFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+.applo-auth .aShadow { animation: aa_aShadow 4.2s ease-in-out infinite; transform-origin: 120px 300px; }
+@keyframes aa_aShadow { 0%,100% { transform: scaleX(1); opacity: .16; } 50% { transform: scaleX(.86); opacity: .1; } }
+.applo-auth .aAntL { animation: aa_aSwayL 3.4s ease-in-out infinite; transform-origin: 108px 64px; }
+.applo-auth .aAntR { animation: aa_aSwayR 3.8s ease-in-out infinite; transform-origin: 132px 64px; }
+@keyframes aa_aSwayL { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-7deg); } }
+@keyframes aa_aSwayR { 0%,100% { transform: rotate(0); } 50% { transform: rotate(7deg); } }
+.applo-auth .aEyesOpen { animation: aa_aBlink 5s infinite; transform-origin: 120px 110px; transition: transform .3s ease; }
+@keyframes aa_aBlink { 0%,92%,100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+/* look — eyes drift toward the form (down + toward pane edge) */
+.applo-auth .s-look .aEyesOpen { transform: translate(4px, 4px); animation-play-state: paused; }
+.applo-auth .s-look .aMoSmile { d: path("M106 132 Q120 142 134 132"); }
+/* cover & peek hands use TRANSITIONS (they interpolate once to the target and
+   never restart when React re-renders on every keystroke) */
+.applo-auth .aArmDown { transition: opacity .2s ease; }
+.applo-auth .aArmCover { transform: translateY(24px); transition: transform .36s cubic-bezier(.34,1.45,.5,1), opacity .22s ease; }
+.applo-auth .aArmPeek { transform: translateY(-30px); transition: transform .34s cubic-bezier(.34,1.35,.5,1), opacity .22s ease; }
+.applo-auth .aCoverArm { transform: scaleY(.9); transform-origin: 120px 178px; transition: transform .44s cubic-bezier(.3,1.55,.55,1); }
+/* cover — hands rise into place, arms give a subtle buckle */
+.applo-auth .s-cover .aArmDown { opacity: 0; }
+.applo-auth .s-cover .aArmCover { opacity: 1; transform: none; }
+.applo-auth .s-cover .aCoverArm { transform: scaleY(1); }
+/* peek — hands slide down to the cheeks, eyes aa_pop open and glance down */
+.applo-auth .s-peek .aArmDown { opacity: 0; }
+.applo-auth .s-peek .aArmPeek { opacity: 1; transform: none; }
+.applo-auth .s-peek .aSquint { transform: translate(2px, 4px) scale(1.07); transform-origin: 120px 110px; }
+.applo-auth .s-peek .aEyesOpen { animation-play-state: paused; }
+/* squint — during sign-up, eyelids lower the stronger the password gets.
+   --lid runs 1 (wide open) → ~0.08 (squeezed shut), set from JS by strength. */
+.applo-auth .aSquint { transform-origin: 120px 110px; transition: transform .3s cubic-bezier(.45,0,.25,1); }
+.applo-auth .aLidLine { transition: opacity .3s ease; }
+/* squint (sign-up) — Applo raises his hands to cover his eyes, further the
+   stronger the password gets. --cover runs 0 (hands down) → 1 (fully covering).
+   Hands stay fully opaque; only their height changes. */
+.applo-auth .s-squint .aArmDown { opacity: calc(1 - var(--coverShow, 0)); }
+.applo-auth .s-squint .aArmCover { opacity: var(--coverShow, 0); transform: translateY(calc((1 - var(--cover, 0)) * 52px)); }
+.applo-auth .s-squint .aCoverArm { transform: scaleY(1); }
+/* load — concentrating: brows + look up, faster bob */
+.applo-auth .s-load .aFloat { animation-duration: 2.2s; }
+.applo-auth .s-load .aEyesOpen { transform: translateY(-2px); animation-play-state: paused; }
+/* success — arms up, happy, check + confetti */
+.applo-auth .s-success .aArmDown { opacity: 0; }
+.applo-auth .s-success .aArmUp { opacity: 1; animation: aa_aCheer 1.6s ease-in-out infinite; }
+.applo-auth .s-success .aEyesOpen, .applo-auth .s-success .aMoSmile { opacity: 0; }
+.applo-auth .s-success .aEyesHappy, .applo-auth .s-success .aMoHappy { opacity: 1; }
+.applo-auth .s-success .aCheck { opacity: 1; animation: aa_aDraw .5s ease .15s both; stroke-dasharray: 60; }
+.applo-auth .s-success .aRig { animation: aa_aJump .55s cubic-bezier(.3,1.4,.5,1) both; transform-origin: 120px 252px; }
+.applo-auth .s-success .aConfetti { opacity: 1; }
+.applo-auth .s-success .cf { animation: aa_aCf 1.1s ease-out infinite; }
+.applo-auth .s-success .cf2 { animation-delay: .15s; }
+.applo-auth .s-success .cf3 { animation-delay: .3s; }
+.applo-auth .s-success .cf4 { animation-delay: .45s; }
+.applo-auth .s-success .cf5 { animation-delay: .6s; }
+@keyframes aa_aCheer { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes aa_aJump { 0% { transform: translateY(0) scaleY(1); } 35% { transform: translateY(-16px) scaleY(1.04); } 100% { transform: translateY(0) scaleY(1); } }
+@keyframes aa_aDraw { from { stroke-dashoffset: 60; } to { stroke-dashoffset: 0; } }
+@keyframes aa_aCf { 0% { transform: translateY(8px) scale(.4); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-26px) scale(1) rotate(40deg); opacity: 0; } }
+/* error — worried brows, "o" mouth, shake */
+.applo-auth .s-error .aMoSmile { opacity: 0; }
+.applo-auth .s-error .aMoO { opacity: 1; }
+.applo-auth .s-error .aBrows { opacity: 1; }
+.applo-auth .s-error .aEyesOpen { animation-play-state: paused; }
+.applo-auth .s-error .aRig { animation: aa_aShake .42s ease; transform-origin: 120px 200px; }
+@keyframes aa_aShake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px) rotate(-2deg); } 40% { transform: translateX(7px) rotate(2deg); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) {
+  .applo-auth .aFloat, .applo-auth .aShadow, .applo-auth .aAntL, .applo-auth .aAntR, .applo-auth .aEyesOpen, .applo-auth .s-success .aArmUp, .applo-auth .s-success .cf, .applo-auth .s-success .aRig, .applo-auth .s-error .aRig { animation: none !important; }
+}
+/* ============================================================
+   Responsive — collapse brand pane into a compact top band
+   ============================================================ */
+@media (max-width: 900px) {
+  .applo-auth .auth { display: block; height: auto; min-height: 100vh; overflow: visible; }
+  .applo-auth .brand-pane { display: none; }
+  .applo-auth .form-pane { flex: 1; width: 100%; height: auto;
+    transform: none !important; transition: none; }
+  .applo-auth .form-mobilebrand { display: flex; flex-direction: column; align-items: center; gap: 10px;
+    margin-bottom: 22px; }
+  .applo-auth .form-mobilebrand .mb-applo { margin-top: -8px; }
+  .applo-auth .form-pane { padding: 32px 22px 56px; align-items: flex-start; }
+}
+@media (max-width: 460px) {
+  .applo-auth .row2 { grid-template-columns: 1fr; }
+  .applo-auth .form-title { font-size: 26px; }
+}
+
+/* ---- app integration: we render <AppLogo>, not the prototype LogoMark ---- */
+.applo-auth .brand-top .aa-logo { height: 40px; width: auto; }
+.applo-auth .form-mobilebrand { align-items: center; }
+.applo-auth .form-mobilebrand .aa-logo { height: 34px; width: auto; }
