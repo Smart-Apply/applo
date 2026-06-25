@@ -285,3 +285,38 @@ html { scroll-behavior: smooth; }
   .applo-home .reveal { opacity:1 !important; transform:none !important; transition:none !important; }
   html { scroll-behavior:auto; }
 }
+
+/* ============================================================
+   Mobile (≤600px): swipeable card carousels.
+   On phones the step / feature / value / pricing card grids turn
+   into horizontal scroll-snap rows, so the user swipes left↔right
+   to read through "infos & preise" instead of scrolling one tall
+   vertical stack. Kept inside .wrap (no full-bleed) so the page
+   keeps its zero horizontal-overflow guarantee; the peeking next
+   card is the hint that the row is swipeable.
+   ============================================================ */
+@media(max-width:600px) {
+  .applo-home .grid.steps,
+  .applo-home .grid.feat-grid,
+  .applo-home .grid.val-grid,
+  .applo-home .grid.price-grid {
+    display:flex; grid-template-columns:none; flex-wrap:nowrap;
+    gap:14px; overflow-x:auto; overflow-y:hidden;
+    scroll-snap-type:x mandatory; scroll-padding-left:2px;
+    padding:18px 2px 30px;            /* room for the Pro badge (-13px) + card shadow */
+    scrollbar-width:none;             /* Firefox: hide the scrollbar */
+    -webkit-overflow-scrolling:touch; /* momentum scroll on iOS */
+    scroll-behavior:smooth;
+  }
+  .applo-home .grid.steps::-webkit-scrollbar,
+  .applo-home .grid.feat-grid::-webkit-scrollbar,
+  .applo-home .grid.val-grid::-webkit-scrollbar,
+  .applo-home .grid.price-grid::-webkit-scrollbar { display:none; } /* Chrome/Safari */
+
+  .applo-home .grid.steps > *,
+  .applo-home .grid.feat-grid > *,
+  .applo-home .grid.val-grid > *,
+  .applo-home .grid.price-grid > * {
+    flex:0 0 84%; scroll-snap-align:start;
+  }
+}
