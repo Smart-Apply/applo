@@ -26,7 +26,9 @@ import { ConfigService } from '../../config/config.service';
  * crashed process. Always write the response directly here instead.
  *
  * Notes:
- * - Applied globally; can be skipped per-route via `@SkipRequestTimeout()`.
+ * - Applied globally; long-running endpoints are excluded via the
+ *   `.exclude(...)` allow-list where `TimeoutMiddleware` is wired up in
+ *   `app.module.ts` (there is no per-route decorator).
  * - Clears the timer on response finish/close to prevent memory leaks.
  * - Does NOT interrupt async work in the handler (only prevents the response).
  */

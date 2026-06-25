@@ -148,11 +148,21 @@ export class AppModule implements NestModule {
     // too aggressive for these:
     //   - job-postings/parse: Playwright + Azure OpenAI extraction on dynamic
     //     job boards (LinkedIn, Indeed, Workwise…) can take 60–90s.
+    //   - applications/create-with-generation: synchronous LLM pipeline
+    //     (skill-selector → cover-letter/resume-rewrite/ats-keywords → editor
+    //     passes → keyword weave) routinely runs 30s–2m. Without this exclude
+    //     the 30s timer fires a 408 mid-flight, then the real completion crashes
+    //     with ERR_HTTP_HEADERS_SENT and the user sees a 500 even though the
+    //     application generated successfully. The opossum circuit breaker around
+    //     each LLM call provides the real hang protection here.
     // If you add another long-running synchronous endpoint, exclude it here
     // (or — better — push the work onto the QStash queue).
     consumer
       .apply(TimeoutMiddleware)
-      .exclude({ path: 'job-postings/parse', method: RequestMethod.POST })
+      .exclude(
+        { path: 'job-postings/parse', method: RequestMethod.POST },
+        { path: 'applications/create-with-generation', method: RequestMethod.POST },
+      )
       .forRoutes('*');
   }
 }
