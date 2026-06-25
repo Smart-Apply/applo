@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { AppLogo } from '@/components/ui/app-logo';
 import { api } from '@/lib/api-client';
 import { AuthApplo, type AuthApploState } from '@/components/auth/auth-applo';
@@ -41,13 +41,11 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  if (isSubmitted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-        <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
-          <div className="mb-6 flex justify-center">
-            <AppLogo className="h-12 w-auto" />
-          </div>
+  const submitting = form.formState.isSubmitting;
+  let applo: AuthApploState = 'idle';
+  if (isSubmitted) applo = 'success';
+  else if (submitting) applo = 'load';
+  else if (focused) applo = 'look';
 
   const speech = isSubmitted
     ? 'Schau in dein Postfach!'
@@ -56,15 +54,19 @@ export default function ForgotPasswordPage() {
       : 'Passwort vergessen? Passiert jedem.';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-      <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
-        <div className="mb-6 flex justify-center">
-          <AppLogo className="h-12 w-auto" />
-        </div>
-
-        <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Mail className="h-8 w-8 text-primary" />
+    <div className="applo-auth">
+      <div className="auth">
+        {/* ---------- brand pane ---------- */}
+        <aside className="brand-pane">
+          <div className="brand-top">
+            <div className="brand-lockup">
+              <AppLogo className="aa-logo" />
+            </div>
+          </div>
+          <div className="brand-stage">
+            <AuthApplo state={applo} size={260} className="brand-applo" />
+            <div className="brand-speech">{speech}</div>
+            <div className="brand-tagline">Kein Problem — wir bringen dich gleich wieder rein.</div>
           </div>
         </aside>
 
