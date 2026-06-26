@@ -175,6 +175,7 @@ async function runOne(
         total: style.total,
         aiPhrases: style.aiPhrases,
         hedging: style.hedging,
+        verbFirstBullets: style.verbFirstBullets,
       },
       styleRewriteApplied: docs.styleRewriteApplied,
       styleViolationsBefore: docs.styleViolationsBefore,

@@ -1,5 +1,5 @@
 import type { RewrittenProfileDto } from './dto/tailored-profile.dto';
-import { lintGeneratedStyle } from './style-lint.util';
+import { detectGermanVerbFirstBullets, lintGeneratedStyle } from './style-lint.util';
 
 /**
  * Pure validation for the resume editor pass (#1).
@@ -126,6 +126,59 @@ export function extractResumeProse(profile: RewrittenProfileDto | null | undefin
   return parts.join('\n');
 }
 
+/**
+ * Collect every résumé *bullet* (achievements + highlights) as discrete strings.
+ * Bullets are checked for the German verb-first anti-pattern (the summary and
+ * descriptions are full sentences and are deliberately excluded).
+ */
+export function collectResumeBullets(profile: RewrittenProfileDto | null | undefined): string[] {
+  if (!profile) return [];
+  const bullets: string[] = [];
+  for (const exp of profile.rewritten_experiences ?? []) {
+    for (const a of exp?.rewritten_achievements ?? []) {
+      if (a) bullets.push(a);
+    }
+  }
+  for (const proj of profile.rewritten_projects ?? []) {
+    for (const h of proj?.rewritten_highlights ?? []) {
+      if (h) bullets.push(h);
+    }
+  }
+  return bullets;
+}
+
+/** All deterministic style violations across a résumé payload. */
+export interface ResumeStyleViolations {
+  /** Forbidden AI clichés found anywhere in the prose. */
+  aiPhrases: string[];
+  /** German hedging/Konjunktiv found anywhere in the prose. */
+  hedging: string[];
+  /** Bullets (achievements/highlights) that open with a German finite past-tense verb. */
+  verbFirstBullets: string[];
+  /** Total distinct violations = clichés + hedging + verb-first bullets. */
+  total: number;
+}
+
+/**
+ * Count every deterministic style violation in a résumé payload: the cliché +
+ * hedging hits over its prose PLUS the German verb-first bullets (the anglicised
+ * "Entwickelte…" opener). This is the unified signal the résumé style-rewrite
+ * teeth must strictly reduce.
+ */
+export function countResumeStyleViolations(
+  profile: RewrittenProfileDto | null | undefined,
+  language = 'de',
+): ResumeStyleViolations {
+  const prose = lintGeneratedStyle(extractResumeProse(profile), language);
+  const verbFirstBullets = detectGermanVerbFirstBullets(collectResumeBullets(profile), language);
+  return {
+    aiPhrases: prose.aiPhrases,
+    hedging: prose.hedging,
+    verbFirstBullets,
+    total: prose.total + verbFirstBullets.length,
+  };
+}
+
 /** Verdict of the guarded résumé style-rewrite ("teeth") pass. */
 export interface ResumeStyleRewriteEvaluation {
   /** Whether the rewrite should replace the pre-rewrite résumé payload. */
@@ -154,13 +207,13 @@ export function evaluateResumeStyleRewrite(
   edited: unknown,
   language = 'de',
 ): ResumeStyleRewriteEvaluation {
-  const before = lintGeneratedStyle(extractResumeProse(original), language).total;
+  const before = countResumeStyleViolations(original, language).total;
 
   if (!isValidResumeEdit(original, edited)) {
     return { accept: false, before, after: before, reason: 'invalid-structure' };
   }
 
-  const after = lintGeneratedStyle(extractResumeProse(edited), language).total;
+  const after = countResumeStyleViolations(edited, language).total;
   if (after >= before) {
     return { accept: false, before, after, reason: 'not-improved' };
   }

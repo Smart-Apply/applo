@@ -85,8 +85,9 @@ It then scores the output four ways:
   keywords the profile supports, the share that appear in the cover letter, both
   **before** and **after** the weave pass (so the lift is visible).
 - **Style** (`style-lint.util.ts`, deterministic) — the share of fixtures whose
-  finished documents contain zero forbidden AI clichés or German Konjunktiv/
-  hedging (plus the raw violation count). A deterministic complement to the
+  finished documents contain zero forbidden AI clichés, German Konjunktiv/
+  hedging, or anglicised German verb-first résumé bullets (plus the raw violation
+  count). A deterministic complement to the
   judge's holistic `style_no_cliches` dimension. The report also counts how many
   fixtures the **style-rewrite "teeth" passes** improved — separately for the cover
   letter and the résumé (with per-fixture before→after violation counts in the JSON)

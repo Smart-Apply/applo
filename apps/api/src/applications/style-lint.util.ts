@@ -161,3 +161,58 @@ export function evaluateStyleRewrite(
 
   return { accept: true, before, after, reason: 'improved' };
 }
+
+/**
+ * German résumé bullets must NOT open with a finite past-tense verb
+ * ("Entwickelte…", "Implementierte…") — that is the English action-verb
+ * convention misapplied to German, where it reads as anglicised Denglisch.
+ * Idiomatic German CVs use Nominalstil (noun-led: "Entwicklung…", "Aufbau…").
+ * This deterministic detector flags the offending bullets so the résumé
+ * style-rewrite pass can convert them and the eval can measure the rate.
+ *
+ * Detection is intentionally PRECISION-biased (a curated set of common CV verbs
+ * plus the `-ierte` weak-verb suffix, which as a bullet's first word is
+ * effectively always a verb) so it never false-flags a correct noun-led bullet.
+ */
+const GERMAN_PAST_TENSE_CV_VERBS: ReadonlySet<string> = new Set([
+  'entwickelte', 'erstellte', 'leitete', 'betreute', 'verantwortete', 'baute',
+  'führte', 'setzte', 'steuerte', 'verbesserte', 'erhöhte', 'senkte', 'steigerte',
+  'gestaltete', 'bearbeitete', 'verwaltete', 'pflegte', 'schulte', 'unterstützte',
+  'begleitete', 'ermöglichte', 'gewährleistete', 'plante', 'gründete', 'erweiterte',
+  'überwachte', 'prüfte', 'testete', 'übernahm', 'schuf', 'gewann', 'hielt',
+  'begann', 'schrieb', 'entwarf', 'trug',
+]);
+
+/** Extract the lowercased first word of a bullet, stripping leading list markers. */
+function bulletFirstWord(bullet: string): string {
+  const cleaned = bullet.replace(/^[\s\-•*–—·.()[\]"'`]+/u, '');
+  const match = cleaned.match(/^[\p{L}]+/u);
+  return match ? match[0].toLowerCase() : '';
+}
+
+/** Does a (lowercased) word look like a German finite past-tense verb a bullet shouldn't open with? */
+function isGermanPastTenseVerbOpener(word: string): boolean {
+  if (GERMAN_PAST_TENSE_CV_VERBS.has(word)) return true;
+  // `-ierte` is the past tense of the large `-ieren` verb family (implementierte,
+  // optimierte, realisierte…) and, as a bullet's FIRST word, is effectively always
+  // a verb — no common German noun opens a CV bullet with an `-ierte` word.
+  return word.length >= 6 && /ierte$/u.test(word);
+}
+
+/**
+ * Return the subset of German bullets that open with a finite past-tense verb
+ * (the anglicised "Entwickelte…" style). Empty for non-German languages.
+ *
+ * @param bullets  Achievement / highlight strings (one bullet each).
+ * @param language Target language code (the check is German-specific).
+ */
+export function detectGermanVerbFirstBullets(bullets: string[], language = 'de'): string[] {
+  if (!language.toLowerCase().startsWith('de')) return [];
+  const hits: string[] = [];
+  for (const bullet of bullets) {
+    if (bullet && isGermanPastTenseVerbOpener(bulletFirstWord(bullet))) {
+      hits.push(bullet);
+    }
+  }
+  return hits;
+}

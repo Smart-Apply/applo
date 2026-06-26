@@ -25,6 +25,12 @@ flagged phrase. Every other field stays as it is.
 {{json violations}}
 ```
 
+**German bullets that open with a finite past-tense verb — rewrite EACH into Nominalstil:**
+
+```json
+{{json verbFirstBullets}}
+```
+
 **Tailored Profile (the ONLY source of facts):**
 
 ```json
@@ -41,7 +47,7 @@ flagged phrase. Every other field stays as it is.
    output MUST be copied character-for-character from the input, and you MUST return the
    **same set** of experiences and projects (same count, same IDs). Never add, drop, merge or
    rename an entry. If you change an ID, the content is lost.
-2. **Only touch the flagged phrases.** Leave every other sentence exactly as it is.
+2. **Only touch the flagged phrases and the listed verb-first bullets.** Leave every other sentence exactly as it is.
 3. **No fabrication.** Never invent a number, metric, date, employer, tool or achievement to
    replace a cliché. If a flagged claim has no concrete support in `tailoredProfile`, drop the
    empty phrase and keep the real content around it intact.
@@ -58,9 +64,15 @@ flagged phrase. Every other field stays as it is.
 
 - **Self-praise clichés → let the facts speak.** "proven track record", "developed and
   delivered", "maßgeblich beigetragen", "erfolgreich umgesetzt" become the concrete thing
-  actually done ("Verantwortete die Umstellung auf …" / "Reduced onboarding time by …" only
-  if that number is in the profile), or are removed. Never assert impact the profile doesn't
-  show.
+  actually done ("Verantwortung für die Umstellung auf …" / "Reduced onboarding time by …"
+  only if that number is in the profile), or are removed. Never assert impact the profile
+  doesn't show.
+- **German verb-first bullets → Nominalstil (noun-led).** A German achievement/highlight must
+  NOT open with a finite past-tense verb. Convert each listed bullet by nominalising the
+  opening verb and keeping the rest verbatim: ❌ "Entwickelte eine wiederverwendbare
+  Terraform-Vorlage …" → ✅ "Entwicklung einer wiederverwendbaren Terraform-Vorlage …". Keep
+  every fact, number and detail; only the opening construction changes. (English bullets stay
+  verb-first — leave them.)
 - **Empty enthusiasm / buzzwords → concrete evidence or cut.** "leidenschaftlich",
   "passionate about", "Teamplayer", "results-driven" carry no information — replace with the
   real responsibility/setting from `tailoredProfile`, or delete the phrase.

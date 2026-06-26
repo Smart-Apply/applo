@@ -49,8 +49,8 @@ import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.u
 import { buildMatchInsights } from './match-insights.util';
 import { matchAtsKeywordsToProfile, selectKeywordsToWeave } from './keyword-coverage.util';
 import {
+  countResumeStyleViolations,
   evaluateResumeStyleRewrite,
-  extractResumeProse,
   isValidResumeEdit,
 } from './resume-editor.util';
 import { mapStoredResumeToTailoredProfile } from './stored-resume.util';
@@ -1665,17 +1665,18 @@ export class ApplicationsService {
   ): Promise<RewrittenProfileDto | null> {
     if (!rewrittenProfile) return rewrittenProfile;
 
-    const before = lintGeneratedStyle(extractResumeProse(rewrittenProfile), language);
+    const before = countResumeStyleViolations(rewrittenProfile, language);
     if (before.total === 0) {
       this.logger.debug('Résumé style rewrite: prose already clean; skipping');
       return rewrittenProfile;
     }
 
     const violations = [...before.aiPhrases, ...before.hedging];
+    const verbFirstBullets = before.verbFirstBullets;
     try {
       const edited = await this.llmService.callJson<RewrittenProfileDto>(
         'v1/resume-style-rewrite.md',
-        { rewrittenProfile, tailoredProfile, violations, language, userId, jobPostingId },
+        { rewrittenProfile, tailoredProfile, violations, verbFirstBullets, language, userId, jobPostingId },
         { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
       );
 
@@ -1688,7 +1689,7 @@ export class ApplicationsService {
       }
 
       this.logger.log(
-        `Résumé style rewrite applied (${decision.before}→${decision.after} violation(s): ${violations.join(', ')})`,
+        `Résumé style rewrite applied (${decision.before}→${decision.after} violation(s); ${violations.length} phrase(s), ${verbFirstBullets.length} verb-first bullet(s))`,
       );
       return edited;
     } catch (error) {

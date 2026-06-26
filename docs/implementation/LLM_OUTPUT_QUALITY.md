@@ -482,6 +482,36 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 
 _Newest first. Add an entry for every change that touches generation quality._
 
+### 2026-06-27 — German Nominalstil for résumé bullets (prompt fix + deterministic enforcement)
+- **Reported defect.** German résumé bullets opened with a finite past-tense verb
+  ("Entwickelte eine wiederverwendbare Terraform-Vorlage …") — the English action-verb
+  convention misapplied to German, where it reads as anglicised Denglisch. Idiomatic German
+  CVs use Nominalstil (noun-led: "Entwicklung einer …").
+- **Root-cause prompt fix (commit `bc45b75`).** `resume-rewrite.md` + `editor-resume.md` both
+  carried a language-agnostic "start each bullet with a strong action verb" rule (and the
+  résumé-rewrite formula referenced an "approved list below" that didn't exist), and the
+  résumé editor could even *convert* a correct Nominalstil bullet into a verb-first one. All
+  three rules are now language-aware (EN → action verb; DE → Nominalstil noun, never a finite
+  past-tense verb), with the exact ❌"Entwickelte…" → ✅"Entwicklung…" example.
+- **Deterministic enforcement (this commit).** `detectGermanVerbFirstBullets`
+  ([`style-lint.util.ts`](../../apps/api/src/applications/style-lint.util.ts)) flags German
+  bullets that open with a finite past-tense verb — precision-biased (a curated common-CV-verb
+  set + the `-ierte` weak-verb family) so it never false-flags a noun-led bullet. It is folded
+  into the résumé violation count (`countResumeStyleViolations`), so the résumé style-rewrite
+  teeth now also require verb-first bullets to strictly drop, and `v1/resume-style-rewrite.md`
+  converts any flagged bullet to Nominalstil. Surfaced as a `DE verb-first bullets` eval metric
+  + per-fixture `vfb:N` flag.
+- **Result (real Azure, 12 German fixtures, 2026-06-27).** Teeth OFF (fixed prompts alone):
+  **0 verb-first bullets** — the prompt fix eliminates the anti-pattern at generation (the 2
+  residual violations were clichés, not verb-first). Teeth ON (production): **100% style clean,
+  0 verb-first** (the cover-letter teeth cleaned the 2 cliché residuals; the résumé teeth had
+  nothing to fix). The verb-first → Nominalstil teeth path is unit-proven —
+  `evaluateResumeStyleRewrite` accepts a verb-first→Nominalstil rewrite (before 3 → after 0).
+- **Branch:** `feat/prompt-quality`. Touched: `style-lint.util.ts`
+  (+`detectGermanVerbFirstBullets`), `resume-editor.util.ts` (+`collectResumeBullets`,
+  +`countResumeStyleViolations`), `v1/resume-style-rewrite.md`, `applications.service.ts`, both
+  unit specs, the eval harness, `README.md`, `.github/copilot-instructions.md`.
+
 ### 2026-06-26 — Résumé-side style-rewrite teeth
 - **What.** Extends the style-rewrite "teeth" to the **résumé** (the lever the entry below
   identified): a guarded JSON→JSON micro-rewrite

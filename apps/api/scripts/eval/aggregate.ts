@@ -30,10 +30,12 @@ export interface FixtureCoverageSummary {
 }
 
 export interface FixtureStyleSummary {
-  /** Total distinct deterministic style violations (AI clichés + hedging). */
+  /** Total distinct deterministic style violations (AI clichés + hedging + verb-first bullets). */
   total: number;
   aiPhrases: string[];
   hedging: string[];
+  /** German résumé bullets that open with a finite past-tense verb (anglicised). */
+  verbFirstBullets: string[];
 }
 
 export interface FixtureResult {
@@ -104,6 +106,8 @@ export interface EvalSummary {
     styleRewriteAppliedCount: number;
     /** Number of fixtures where the résumé style-rewrite "teeth" pass replaced the payload. */
     resumeStyleRewriteAppliedCount: number;
+    /** Total German verb-first résumé bullets across fixtures (the anglicised opener). */
+    verbFirstViolations: number;
   };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
@@ -151,6 +155,7 @@ export function summarize(
     fixturesWithViolations: ok.filter((r) => (r.style?.total ?? 0) > 0).length,
     styleRewriteAppliedCount: ok.filter((r) => r.styleRewriteApplied).length,
     resumeStyleRewriteAppliedCount: ok.filter((r) => r.resumeStyleRewriteApplied).length,
+    verbFirstViolations: ok.reduce((acc, r) => acc + (r.style?.verbFirstBullets?.length ?? 0), 0),
   };
 
   const byLanguage: Record<string, LanguageBreakdown> = {};
@@ -216,10 +221,11 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    mean coverage after weave      ${summary.coverage.meanAfterRate.toFixed(2)}%`);
   lines.push(`    weave pass applied             ${summary.coverage.weaveAppliedCount} fixtures`);
   lines.push('');
-  lines.push('  Style (deterministic AI-cliché / hedging linter):');
+  lines.push('  Style (deterministic AI-cliché / hedging / verb-first linter):');
   lines.push(`    clean (0 violations)           ${summary.style.cleanRate}%`);
   lines.push(`    fixtures with violations       ${summary.style.fixturesWithViolations}`);
   lines.push(`    total violations               ${summary.style.totalViolations}`);
+  lines.push(`    DE verb-first bullets          ${summary.style.verbFirstViolations}`);
   lines.push(`    style-rewrite applied          ${summary.style.styleRewriteAppliedCount} fixtures`);
   lines.push(`    résumé-style-rewrite applied   ${summary.style.resumeStyleRewriteAppliedCount} fixtures`);
   lines.push('');
@@ -246,8 +252,11 @@ export function formatReport(summary: EvalSummary): string {
       r.grounding && r.grounding.unsupportedCount > 0
         ? `unsupported:${r.grounding.unsupportedValues.join('/')}`
         : '',
-      r.style && r.style.total > 0
+      r.style && (r.style.aiPhrases.length || r.style.hedging.length)
         ? `style:${[...r.style.aiPhrases, ...r.style.hedging].join('/')}`
+        : '',
+      r.style && r.style.verbFirstBullets?.length
+        ? `vfb:${r.style.verbFirstBullets.length}`
         : '',
     ]
       .filter(Boolean)

@@ -23,7 +23,7 @@ import {
   type MatchedAtsKeywords,
   type CoverageReport,
 } from '../../src/applications/keyword-coverage.util';
-import { isValidResumeEdit, extractResumeProse, evaluateResumeStyleRewrite } from '../../src/applications/resume-editor.util';
+import { isValidResumeEdit, countResumeStyleViolations, evaluateResumeStyleRewrite } from '../../src/applications/resume-editor.util';
 import {
   buildSalutation,
   normalizeJobFacts,
@@ -303,13 +303,14 @@ async function runResumeStyleRewrite(
   language: string,
   fixtureId: string,
 ): Promise<{ profile: RewrittenProfileDto; applied: boolean; before: number; after: number }> {
-  const before = lintGeneratedStyle(extractResumeProse(rewritten), language);
+  const before = countResumeStyleViolations(rewritten, language);
   if (before.total === 0) return { profile: rewritten, applied: false, before: 0, after: 0 };
   const violations = [...before.aiPhrases, ...before.hedging];
+  const verbFirstBullets = before.verbFirstBullets;
   try {
     const edited = await llm.callJson<RewrittenProfileDto>(
       'v1/resume-style-rewrite.md',
-      { rewrittenProfile: rewritten, tailoredProfile, violations, language, userId: fixtureId, jobPostingId: fixtureId },
+      { rewrittenProfile: rewritten, tailoredProfile, violations, verbFirstBullets, language, userId: fixtureId, jobPostingId: fixtureId },
       { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     const decision = evaluateResumeStyleRewrite(rewritten, edited, language);

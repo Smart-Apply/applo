@@ -1,4 +1,8 @@
-import { evaluateStyleRewrite, lintGeneratedStyle } from '../../style-lint.util';
+import {
+  detectGermanVerbFirstBullets,
+  evaluateStyleRewrite,
+  lintGeneratedStyle,
+} from '../../style-lint.util';
 
 describe('lintGeneratedStyle', () => {
   it('returns no violations for empty or whitespace input', () => {
@@ -101,5 +105,56 @@ describe('evaluateStyleRewrite', () => {
     expect(verdict.after).toBe(1);
     expect(verdict.accept).toBe(false);
     expect(verdict.reason).toBe('not-improved');
+  });
+});
+
+describe('detectGermanVerbFirstBullets', () => {
+  it('flags a German bullet that opens with a finite past-tense verb', () => {
+    const hits = detectGermanVerbFirstBullets(
+      ['Entwickelte eine wiederverwendbare Terraform- und Azure-Vorlage für Multi-Stage Deployments'],
+      'de',
+    );
+    expect(hits).toHaveLength(1);
+  });
+
+  it('flags -ierte verbs via the suffix rule', () => {
+    const hits = detectGermanVerbFirstBullets(
+      ['Implementierte eine CI/CD-Pipeline', 'Optimierte die Rüstprozesse', 'Migrierte zwölf Dienste'],
+      'de',
+    );
+    expect(hits).toHaveLength(3);
+  });
+
+  it('does NOT flag idiomatic Nominalstil bullets', () => {
+    const hits = detectGermanVerbFirstBullets(
+      [
+        'Entwicklung einer wiederverwendbaren Terraform-Vorlage für Multi-Stage-Deployments',
+        'Reduktion des Ausschusses um 12 % durch Optimierung der CNC-Rüstprozesse',
+        'Betreuung von bis zu 18 Patient:innen pro Schicht',
+      ],
+      'de',
+    );
+    expect(hits).toEqual([]);
+  });
+
+  it('never flags for English (verb-first is correct there)', () => {
+    const hits = detectGermanVerbFirstBullets(
+      ['Developed a reusable Terraform template', 'Reduced deployment time by 60%'],
+      'en',
+    );
+    expect(hits).toEqual([]);
+  });
+
+  it('strips leading list markers before checking the first word', () => {
+    const hits = detectGermanVerbFirstBullets(['- Leitete ein Team von acht Pflegekräften'], 'de');
+    expect(hits).toHaveLength(1);
+  });
+
+  it('does not flag a noun-led bullet that merely contains a verb later', () => {
+    const hits = detectGermanVerbFirstBullets(
+      ['Aufbau eines Onboarding-Prozesses, der neue Mitarbeitende schneller einsatzfähig machte'],
+      'de',
+    );
+    expect(hits).toEqual([]);
   });
 });
