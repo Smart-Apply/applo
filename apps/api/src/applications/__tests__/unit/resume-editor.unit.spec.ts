@@ -1,4 +1,8 @@
-import { isValidResumeEdit } from '../../resume-editor.util';
+import {
+  evaluateResumeStyleRewrite,
+  extractResumeProse,
+  isValidResumeEdit,
+} from '../../resume-editor.util';
 import type { RewrittenProfileDto } from '../../dto/tailored-profile.dto';
 
 const base = (): RewrittenProfileDto => ({
@@ -104,5 +108,52 @@ describe('isValidResumeEdit (Unit, #1)', () => {
     expect(isValidResumeEdit(original, null)).toBe(false);
     expect(isValidResumeEdit(original, 'nope')).toBe(false);
     expect(isValidResumeEdit(original, { rewritten_summary: 'x' })).toBe(false);
+  });
+});
+
+describe('extractResumeProse', () => {
+  it('joins summary, descriptions, achievements and highlights; ignores ids', () => {
+    const prose = extractResumeProse(base());
+    expect(prose).toContain('Examinierte Pflegefachkraft');
+    expect(prose).toContain('Schichtleitung auf der Intensivstation');
+    expect(prose).toContain('Senkte die Fluktuation um 18 Prozent');
+    expect(prose).toContain('Schulte 20 Kolleginnen');
+    expect(prose).not.toContain('exp-aaa');
+    expect(prose).not.toContain('proj-xyz');
+  });
+
+  it('returns an empty string for null / undefined', () => {
+    expect(extractResumeProse(null)).toBe('');
+    expect(extractResumeProse(undefined)).toBe('');
+  });
+});
+
+describe('evaluateResumeStyleRewrite', () => {
+  // base() is clean; inject one German cliché into the summary.
+  const dirty = (): RewrittenProfileDto => {
+    const p = base();
+    p.rewritten_summary = 'Examinierte Pflegefachkraft, leidenschaftlich in der Intensivpflege.';
+    return p;
+  };
+
+  it('accepts a rewrite that removes a cliché and preserves structure', () => {
+    const verdict = evaluateResumeStyleRewrite(dirty(), base(), 'de');
+    expect(verdict.accept).toBe(true);
+    expect(verdict.reason).toBe('improved');
+    expect(verdict.before).toBeGreaterThan(verdict.after);
+  });
+
+  it('rejects a rewrite that does not reduce violations', () => {
+    const verdict = evaluateResumeStyleRewrite(dirty(), dirty(), 'de');
+    expect(verdict.accept).toBe(false);
+    expect(verdict.reason).toBe('not-improved');
+  });
+
+  it('rejects a structurally-invalid rewrite even when it is cleaner', () => {
+    const edited = base(); // clean prose…
+    edited.rewritten_experiences = [edited.rewritten_experiences[0]]; // …but drops an id
+    const verdict = evaluateResumeStyleRewrite(dirty(), edited, 'de');
+    expect(verdict.accept).toBe(false);
+    expect(verdict.reason).toBe('invalid-structure');
   });
 });

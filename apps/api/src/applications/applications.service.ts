@@ -48,7 +48,11 @@ import {
 import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.util';
 import { buildMatchInsights } from './match-insights.util';
 import { matchAtsKeywordsToProfile, selectKeywordsToWeave } from './keyword-coverage.util';
-import { isValidResumeEdit } from './resume-editor.util';
+import {
+  evaluateResumeStyleRewrite,
+  extractResumeProse,
+  isValidResumeEdit,
+} from './resume-editor.util';
 import { mapStoredResumeToTailoredProfile } from './stored-resume.util';
 import {
   buildSalutation,
@@ -908,12 +912,24 @@ export class ApplicationsService {
         jobPosting.id,
       );
 
+      // Style rewrite ("teeth", résumé): surgically fix the AI clichés the linter
+      // flags in the résumé prose. Guarded (JSON→JSON, ID-preserving, strictly
+      // cleaner) — the analogue of the cover-letter teeth. Falls back to the
+      // edited payload otherwise. See runResumeStyleRewritePass.
+      const styledRewrittenProfile = await this.runResumeStyleRewritePass(
+        editedRewrittenProfile,
+        tailoredProfile,
+        detectedLanguage,
+        userId,
+        jobPosting.id,
+      );
+
       // Step 3: Convert tailoredProfile to JSON format for frontend editor
       this.logger.log('Step 3: Converting resume to JSON format for editor...');
       const resumeJson = this.convertTailoredProfileToResumeJson(
         profile,
         tailoredProfile,
-        editedRewrittenProfile,
+        styledRewrittenProfile,
       );
 
       // Debug: Log the first experience achievements to verify German content is saved
@@ -1623,6 +1639,63 @@ export class ApplicationsService {
     } catch (error) {
       this.logger.warn(`Style rewrite failed; keeping pre-rewrite draft: ${error.message}`);
       return draft;
+    }
+  }
+
+  /**
+   * Résumé style rewrite ("teeth", JSON→JSON) — the résumé analogue of
+   * `runStyleRewritePass`. Surgically rephrases the forbidden AI clichés the
+   * deterministic linter flags in the résumé prose (summary + achievements +
+   * highlights) into concrete language, leaving every other field — and every
+   * `profileExperienceId` / `profileProjectId` — untouched.
+   *
+   * Fully guarded so it can never ship a worse or structurally-broken payload:
+   * - Skips the LLM call when the résumé prose is already clean.
+   * - Carries the `GENERATION_SYSTEM_ANCHOR` so the rewrite can't fabricate.
+   * - Accepts the rewrite ONLY when `evaluateResumeStyleRewrite` confirms it is a
+   *   valid, ID-preserving `RewrittenProfileDto` AND strictly reduces the
+   *   violation count; otherwise keeps the pre-rewrite payload. Never throws.
+   */
+  private async runResumeStyleRewritePass(
+    rewrittenProfile: RewrittenProfileDto | null,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    userId: string,
+    jobPostingId: string,
+  ): Promise<RewrittenProfileDto | null> {
+    if (!rewrittenProfile) return rewrittenProfile;
+
+    const before = lintGeneratedStyle(extractResumeProse(rewrittenProfile), language);
+    if (before.total === 0) {
+      this.logger.debug('Résumé style rewrite: prose already clean; skipping');
+      return rewrittenProfile;
+    }
+
+    const violations = [...before.aiPhrases, ...before.hedging];
+    try {
+      const edited = await this.llmService.callJson<RewrittenProfileDto>(
+        'v1/resume-style-rewrite.md',
+        { rewrittenProfile, tailoredProfile, violations, language, userId, jobPostingId },
+        { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
+      );
+
+      const decision = evaluateResumeStyleRewrite(rewrittenProfile, edited, language);
+      if (!decision.accept) {
+        this.logger.warn(
+          `Résumé style rewrite rejected (${decision.reason}, ${decision.before}→${decision.after} violation(s)); keeping pre-rewrite payload`,
+        );
+        return rewrittenProfile;
+      }
+
+      this.logger.log(
+        `Résumé style rewrite applied (${decision.before}→${decision.after} violation(s): ${violations.join(', ')})`,
+      );
+      return edited;
+    } catch (error) {
+      this.logger.warn(
+        `Résumé style rewrite failed; keeping pre-rewrite payload: ${error.message}`,
+      );
+      return rewrittenProfile;
     }
   }
 

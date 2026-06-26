@@ -23,7 +23,7 @@ import {
   type MatchedAtsKeywords,
   type CoverageReport,
 } from '../../src/applications/keyword-coverage.util';
-import { isValidResumeEdit } from '../../src/applications/resume-editor.util';
+import { isValidResumeEdit, extractResumeProse, evaluateResumeStyleRewrite } from '../../src/applications/resume-editor.util';
 import {
   buildSalutation,
   normalizeJobFacts,
@@ -89,6 +89,12 @@ export interface GeneratedDocuments {
   styleViolationsBefore: number;
   /** Deterministic style violations in the FINAL cover letter (after teeth). */
   styleViolationsAfter: number;
+  /** True when the résumé style-rewrite "teeth" pass replaced the payload (improved it). */
+  resumeStyleRewriteApplied: boolean;
+  /** Deterministic style violations in the résumé prose BEFORE the teeth pass. */
+  resumeStyleViolationsBefore: number;
+  /** Deterministic style violations in the FINAL résumé prose (after teeth). */
+  resumeStyleViolationsAfter: number;
   durationMs: number;
 }
 
@@ -285,6 +291,38 @@ async function runResumeEditor(
 }
 
 /**
+ * Replicates `runResumeStyleRewritePass` (the résumé "teeth"): surgically fix the
+ * deterministic linter's cliché hits in the résumé prose, keeping the pre-rewrite
+ * payload unless the rewrite is a valid, ID-preserving `RewrittenProfileDto` that
+ * strictly reduces violations. Skips the LLM call when the prose is already clean.
+ */
+async function runResumeStyleRewrite(
+  llm: LLMService,
+  rewritten: RewrittenProfileDto,
+  tailoredProfile: TailoredProfileDto,
+  language: string,
+  fixtureId: string,
+): Promise<{ profile: RewrittenProfileDto; applied: boolean; before: number; after: number }> {
+  const before = lintGeneratedStyle(extractResumeProse(rewritten), language);
+  if (before.total === 0) return { profile: rewritten, applied: false, before: 0, after: 0 };
+  const violations = [...before.aiPhrases, ...before.hedging];
+  try {
+    const edited = await llm.callJson<RewrittenProfileDto>(
+      'v1/resume-style-rewrite.md',
+      { rewrittenProfile: rewritten, tailoredProfile, violations, language, userId: fixtureId, jobPostingId: fixtureId },
+      { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
+    );
+    const decision = evaluateResumeStyleRewrite(rewritten, edited, language);
+    if (!decision.accept) {
+      return { profile: rewritten, applied: false, before: decision.before, after: decision.after };
+    }
+    return { profile: edited, applied: true, before: decision.before, after: decision.after };
+  } catch {
+    return { profile: rewritten, applied: false, before: before.total, after: before.total };
+  }
+}
+
+/**
  * Run the v1 generation chain for a single fixture.
  */
 export async function generateForFixture(
@@ -402,9 +440,15 @@ export async function generateForFixture(
     ? await runResumeEditor(llm, rewrittenProfile, tailoredProfile, language, fixture.id)
     : { profile: null as RewrittenProfileDto | null, applied: false };
 
+  // Résumé style-rewrite "teeth" — fix linter-flagged clichés in the résumé prose.
+  const resumeStyle =
+    resumeEditor.profile && applyStyleRewrite
+      ? await runResumeStyleRewrite(llm, resumeEditor.profile, tailoredProfile, language, fixture.id)
+      : { profile: resumeEditor.profile, applied: false, before: 0, after: 0 };
+
   const resumeView = assembleResumeView(
     tailoredProfile,
-    resumeEditor.profile,
+    resumeStyle.profile,
     fixture.profile.summary,
   );
 
@@ -435,6 +479,9 @@ export async function generateForFixture(
     styleRewriteApplied: styleRewrite.applied,
     styleViolationsBefore: styleRewrite.before,
     styleViolationsAfter: styleRewrite.after,
+    resumeStyleRewriteApplied: resumeStyle.applied,
+    resumeStyleViolationsBefore: resumeStyle.before,
+    resumeStyleViolationsAfter: resumeStyle.after,
     durationMs: Date.now() - start,
   };
 }

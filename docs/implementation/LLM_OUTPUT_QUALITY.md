@@ -52,6 +52,7 @@ The **live** path is the v1 "single-LLM pipeline" inside
 | 2b | [`v1/resume-rewrite.md`](../../apps/api/prompts/v1/resume-rewrite.md) | `callJson` (temp 0.35) | Rewrite summary / experiences / projects into target language |
 | 2c | [`v1/ats-keywords.md`](../../apps/api/prompts/v1/ats-keywords.md) | `callJson` | Extract ≤15 job keywords, then **deterministic** match vs. profile |
 | 2d | [`v1/editor-resume.md`](../../apps/api/prompts/v1/editor-resume.md) | `callJson` (temp 0.35) | **Editor pass (#1, resume):** tighten bullets/summary, preserve all IDs; guarded fallback |
+| 2e | [`v1/resume-style-rewrite.md`](../../apps/api/prompts/v1/resume-style-rewrite.md) | `callJson` (temp 0.3) | **Résumé style rewrite (teeth):** surgically fix linter-flagged clichés in the résumé prose (summary/achievements/highlights); guarded by `evaluateResumeStyleRewrite` (ID-preserving + strictly cleaner), graceful fallback |
 | 3 | — | code | `convertTailoredProfileToResumeJson` → stored as `resumeText` (JSON) |
 | 4 ¹ | [`v1/editor-cover-letter.md`](../../apps/api/prompts/v1/editor-cover-letter.md) | `callText` (temp 0.4) | **Editor pass (#1, CL):** critique + revise the cover letter; graceful fallback to draft |
 | 5 ¹ | [`v1/keyword-weave.md`](../../apps/api/prompts/v1/keyword-weave.md) | `callText` (temp 0.3) | **Keyword weave (#6):** weave profile-supported priority-1 ATS gaps into the cover letter |
@@ -59,7 +60,7 @@ The **live** path is the v1 "single-LLM pipeline" inside
 | 7 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
 | 8 | — | code | **Style check:** flag residual AI clichés + German Konjunktiv/hedging on the finished docs (`style-lint.util.ts`, log only, non-destructive) |
 
-¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 4, 5, and 6 run sequentially after the parallel block. The grounding check (7) and style check (8) run on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and `generateWithSinglePipeline` (secondary/test) — share the editor + grounding helpers.
+¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 2e, 4, 5, and 6 run sequentially after the parallel block. The grounding check (7) and style check (8) run on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and `generateWithSinglePipeline` (secondary/test) — share the editor + grounding helpers.
 
 **Dead / optional code (do not confuse with the live path):**
 - ~~`apps/api/src/agents/**` (the old Azure AI Foundry agent classes)~~ **Removed (#2,
@@ -480,6 +481,38 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-26 — Résumé-side style-rewrite teeth
+- **What.** Extends the style-rewrite "teeth" to the **résumé** (the lever the entry below
+  identified): a guarded JSON→JSON micro-rewrite
+  ([`v1/resume-style-rewrite.md`](../../apps/api/prompts/v1/resume-style-rewrite.md) +
+  `runResumeStyleRewritePass`) that surgically fixes the AI clichés the linter flags in the
+  résumé prose (summary + achievements + highlights), leaving every other field and every
+  `profileExperienceId` / `profileProjectId` untouched. Runs right after the résumé editor
+  pass (architecture step 2e), before the résumé JSON is assembled.
+- **Two independent structural safety nets.** The Azure call is bound to the strict
+  `resumeRewriteSchema` (structured output), AND the pure
+  [`evaluateResumeStyleRewrite`](../../apps/api/src/applications/resume-editor.util.ts) guard
+  accepts the rewrite ONLY when `isValidResumeEdit` confirms it preserves every ID + entry AND
+  the deterministic violation count strictly drops. Skips the LLM when the prose is already
+  clean; carries the `GENERATION_SYSTEM_ANCHOR`. Worst case = the editor's payload.
+  Unit-tested (+5 cases incl. ID-drop + cliché-swap rejection; 27 total).
+- **Result (real Azure, 2026-06-26).** Full 24-fixture run (`--tag=teeth-full`): **100% style
+  clean** (0 residual violations); the cover-letter teeth fired 2× (`logistics-de`,
+  `skilled-trades-de`, 1→0 each) and the résumé prose happened to be clean, so the résumé
+  teeth didn't need to fire. A targeted probe of the 4 EN fixtures that previously surfaced
+  résumé clichés caught the résumé teeth firing **live**: `healthcare-en` résumé 1→0
+  (`cv-style-fixed`, ID-preserving, guard-accepted). Both teeth now have controlled,
+  within-run before→after proof; grounding 54% / OVERALL 5.00 are run-to-run sampling,
+  untouched by the teeth.
+- **Eval harness.** The résumé teeth share the `--no-style-rewrite` flag; the report adds a
+  `résumé-style-rewrite applied` count and a per-fixture `cv-style-fixed` flag (cover-letter
+  flag renamed `cl-style-fixed`), with per-fixture résumé before→after persisted in the JSON.
+- **Branch:** `feat/prompt-quality`. New: `prompts/v1/resume-style-rewrite.md`. Touched:
+  `resume-editor.util.ts` (+`extractResumeProse`, +`evaluateResumeStyleRewrite`),
+  `applications.service.ts`, `llm/schemas/v1-schemas.ts` (registered the strict schema),
+  `resume-editor.unit.spec.ts`, the eval harness, `README.md`, and
+  `.github/copilot-instructions.md`.
 
 ### 2026-06-26 — Style-rewrite "teeth" pass (linter enforcement)
 - **What.** The deterministic style linter now has *teeth*: a guarded LLM micro-rewrite

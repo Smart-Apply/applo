@@ -1,4 +1,5 @@
 import type { RewrittenProfileDto } from './dto/tailored-profile.dto';
+import { lintGeneratedStyle } from './style-lint.util';
 
 /**
  * Pure validation for the resume editor pass (#1).
@@ -97,4 +98,72 @@ export function isValidResumeEdit(
   }
 
   return true;
+}
+
+/**
+ * Concatenate every prose field of a rewritten resume payload (summary +
+ * descriptions + achievements + highlights) into one newline-joined string.
+ * Used to run the deterministic style linter over the résumé's *prose only* —
+ * never the structural keys or the `profile*Id` values — so the style-rewrite
+ * "teeth" measure exactly the human-readable text.
+ */
+export function extractResumeProse(profile: RewrittenProfileDto | null | undefined): string {
+  if (!profile) return '';
+  const parts: string[] = [];
+  if (profile.rewritten_summary) parts.push(profile.rewritten_summary);
+  for (const exp of profile.rewritten_experiences ?? []) {
+    if (exp?.rewritten_description) parts.push(exp.rewritten_description);
+    for (const a of exp?.rewritten_achievements ?? []) {
+      if (a) parts.push(a);
+    }
+  }
+  for (const proj of profile.rewritten_projects ?? []) {
+    if (proj?.rewritten_description) parts.push(proj.rewritten_description);
+    for (const h of proj?.rewritten_highlights ?? []) {
+      if (h) parts.push(h);
+    }
+  }
+  return parts.join('\n');
+}
+
+/** Verdict of the guarded résumé style-rewrite ("teeth") pass. */
+export interface ResumeStyleRewriteEvaluation {
+  /** Whether the rewrite should replace the pre-rewrite résumé payload. */
+  accept: boolean;
+  /** Distinct style violations in the original résumé prose. */
+  before: number;
+  /** Distinct style violations in the rewrite (equals `before` when rejected on structure). */
+  after: number;
+  /** Why the rewrite was accepted or rejected. */
+  reason: 'invalid-structure' | 'not-improved' | 'improved';
+}
+
+/**
+ * Decide whether a résumé style-rewrite candidate may replace the payload. The
+ * JSON analogue of `evaluateStyleRewrite`: it gives the linter "teeth" on the
+ * résumé without ever shipping a worse or structurally-broken payload. A rewrite
+ * is accepted ONLY if it (a) is a valid, ID-preserving `RewrittenProfileDto`
+ * (via `isValidResumeEdit`) AND (b) strictly reduces the deterministic style
+ * violation count over the résumé prose. Otherwise the caller keeps the original.
+ *
+ * Pure and side-effect-free so it can be unit-tested and reused identically by
+ * the live pipeline and the offline eval harness.
+ */
+export function evaluateResumeStyleRewrite(
+  original: RewrittenProfileDto,
+  edited: unknown,
+  language = 'de',
+): ResumeStyleRewriteEvaluation {
+  const before = lintGeneratedStyle(extractResumeProse(original), language).total;
+
+  if (!isValidResumeEdit(original, edited)) {
+    return { accept: false, before, after: before, reason: 'invalid-structure' };
+  }
+
+  const after = lintGeneratedStyle(extractResumeProse(edited), language).total;
+  if (after >= before) {
+    return { accept: false, before, after, reason: 'not-improved' };
+  }
+
+  return { accept: true, before, after, reason: 'improved' };
 }

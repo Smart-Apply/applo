@@ -50,6 +50,12 @@ export interface FixtureResult {
   styleViolationsBefore?: number;
   /** Deterministic style violations in the FINAL cover letter (after the teeth pass). */
   styleViolationsAfter?: number;
+  /** True when the résumé style-rewrite "teeth" pass replaced the payload with a cleaner one. */
+  resumeStyleRewriteApplied?: boolean;
+  /** Deterministic style violations in the résumé prose BEFORE the teeth pass. */
+  resumeStyleViolationsBefore?: number;
+  /** Deterministic style violations in the FINAL résumé prose (after the teeth pass). */
+  resumeStyleViolationsAfter?: number;
   durationMs: number;
   editorApplied: boolean;
   resumeEditorApplied: boolean;
@@ -96,6 +102,8 @@ export interface EvalSummary {
     fixturesWithViolations: number;
     /** Number of fixtures where the style-rewrite "teeth" pass replaced the draft. */
     styleRewriteAppliedCount: number;
+    /** Number of fixtures where the résumé style-rewrite "teeth" pass replaced the payload. */
+    resumeStyleRewriteAppliedCount: number;
   };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
@@ -142,6 +150,7 @@ export function summarize(
     totalViolations: ok.reduce((acc, r) => acc + (r.style?.total ?? 0), 0),
     fixturesWithViolations: ok.filter((r) => (r.style?.total ?? 0) > 0).length,
     styleRewriteAppliedCount: ok.filter((r) => r.styleRewriteApplied).length,
+    resumeStyleRewriteAppliedCount: ok.filter((r) => r.resumeStyleRewriteApplied).length,
   };
 
   const byLanguage: Record<string, LanguageBreakdown> = {};
@@ -212,6 +221,7 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    fixtures with violations       ${summary.style.fixturesWithViolations}`);
   lines.push(`    total violations               ${summary.style.totalViolations}`);
   lines.push(`    style-rewrite applied          ${summary.style.styleRewriteAppliedCount} fixtures`);
+  lines.push(`    résumé-style-rewrite applied   ${summary.style.resumeStyleRewriteAppliedCount} fixtures`);
   lines.push('');
   lines.push('  By language:');
   for (const [lang, b] of Object.entries(summary.byLanguage)) {
@@ -230,7 +240,8 @@ export function formatReport(summary: EvalSummary): string {
       r.editorApplied ? 'editor' : '',
       r.resumeEditorApplied ? 'resume-editor' : '',
       r.coverage?.weaveApplied ? `weave:${r.coverage.weaveKeywords.join('/')}` : '',
-      r.styleRewriteApplied ? 'style-fixed' : '',
+      r.styleRewriteApplied ? 'cl-style-fixed' : '',
+      r.resumeStyleRewriteApplied ? 'cv-style-fixed' : '',
       r.resumeRewriteSucceeded ? '' : 'rewrite-degraded',
       r.grounding && r.grounding.unsupportedCount > 0
         ? `unsupported:${r.grounding.unsupportedValues.join('/')}`
