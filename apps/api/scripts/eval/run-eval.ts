@@ -51,6 +51,7 @@ interface CliArgs {
   validate: boolean;
   applyWeave: boolean;
   applyAnchor: boolean;
+  applyStyleRewrite: boolean;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -62,6 +63,7 @@ function parseArgs(argv: string[]): CliArgs {
     validate: false,
     applyWeave: true,
     applyAnchor: true,
+    applyStyleRewrite: true,
   };
   for (const arg of argv) {
     const [key, value] = arg.replace(/^--/, '').split('=');
@@ -75,6 +77,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (key === 'validate') args.validate = true;
     else if (key === 'no-weave') args.applyWeave = false;
     else if (key === 'no-anchor') args.applyAnchor = false;
+    else if (key === 'no-style-rewrite') args.applyStyleRewrite = false;
   }
   return args;
 }
@@ -136,6 +139,7 @@ async function runOne(
   retries: number,
   applyWeave: boolean,
   applyAnchor: boolean,
+  applyStyleRewrite: boolean,
 ): Promise<FixtureResult> {
   const base = {
     id: fixture.id,
@@ -144,7 +148,7 @@ async function runOne(
   };
   try {
     const docs = await withRetry(
-      () => generateForFixture(llm, fixture, { applyWeave, applyAnchor }),
+      () => generateForFixture(llm, fixture, { applyWeave, applyAnchor, applyStyleRewrite }),
       retries,
     );
     const grounding = groundDocuments(fixture, docs);
@@ -172,6 +176,9 @@ async function runOne(
         aiPhrases: style.aiPhrases,
         hedging: style.hedging,
       },
+      styleRewriteApplied: docs.styleRewriteApplied,
+      styleViolationsBefore: docs.styleViolationsBefore,
+      styleViolationsAfter: docs.styleViolationsAfter,
       durationMs: docs.durationMs,
       editorApplied: docs.editorApplied,
       resumeEditorApplied: docs.resumeEditorApplied,
@@ -204,7 +211,7 @@ async function runPool(
       if (index >= fixtures.length) return;
       const fixture = fixtures[index];
       process.stdout.write(`  → [${index + 1}/${fixtures.length}] ${fixture.id} ... `);
-      const result = await runOne(llm, fixture, args.retries, args.applyWeave, args.applyAnchor);
+      const result = await runOne(llm, fixture, args.retries, args.applyWeave, args.applyAnchor, args.applyStyleRewrite);
       process.stdout.write(result.error ? `ERROR\n` : `overall ${result.judge?.overall}\n`);
       results[index] = result;
       if (args.delayMs > 0 && index + 1 < fixtures.length) await sleep(args.delayMs);
@@ -282,7 +289,8 @@ async function main(): Promise<void> {
   console.log(
     `\n🧪 Running eval (provider=${provider}, fixtures=${fixtures.length}, ` +
       `concurrency=${args.concurrency}, weave=${args.applyWeave ? 'on' : 'off'}, ` +
-      `anchor=${args.applyAnchor ? 'on' : 'off'}, tag=${args.tag})\n`,
+      `anchor=${args.applyAnchor ? 'on' : 'off'}, ` +
+      `styleRewrite=${args.applyStyleRewrite ? 'on' : 'off'}, tag=${args.tag})\n`,
   );
 
   const app = await NestFactory.createApplicationContext(EvalHarnessModule, {

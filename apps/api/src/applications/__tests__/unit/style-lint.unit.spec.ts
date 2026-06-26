@@ -1,4 +1,4 @@
-import { lintGeneratedStyle } from '../../style-lint.util';
+import { evaluateStyleRewrite, lintGeneratedStyle } from '../../style-lint.util';
 
 describe('lintGeneratedStyle', () => {
   it('returns no violations for empty or whitespace input', () => {
@@ -54,5 +54,52 @@ describe('lintGeneratedStyle', () => {
     const text = 'passionate about teaching. passionate about mentoring.';
     const result = lintGeneratedStyle(text, 'en');
     expect(result.aiPhrases.filter((p) => p === 'passionate about')).toHaveLength(1);
+  });
+});
+
+describe('evaluateStyleRewrite', () => {
+  const dirty =
+    'Ich bin begeistert von der Möglichkeit. Als Krankenpfleger betreute ich bis zu 18 Patient:innen pro Schicht. Ich würde mich freuen, von Ihnen zu hören.';
+  const clean =
+    'Als Krankenpfleger betreute ich bis zu 18 Patient:innen pro Schicht und koordinierte die Übergaben. Ich freue mich auf das Gespräch.';
+
+  it('accepts a rewrite that strictly reduces violations and keeps the length', () => {
+    const verdict = evaluateStyleRewrite(dirty, clean, 'de');
+    expect(verdict.accept).toBe(true);
+    expect(verdict.reason).toBe('improved');
+    expect(verdict.after).toBeLessThan(verdict.before);
+  });
+
+  it('rejects a rewrite that does not reduce violations', () => {
+    // Same two violations survive — must not be shipped.
+    const verdict = evaluateStyleRewrite(dirty, dirty, 'de');
+    expect(verdict.accept).toBe(false);
+    expect(verdict.reason).toBe('not-improved');
+    expect(verdict.after).toBe(verdict.before);
+  });
+
+  it('rejects an empty or gutted rewrite (length guard) without re-linting it', () => {
+    const empty = evaluateStyleRewrite(dirty, '', 'de');
+    expect(empty.accept).toBe(false);
+    expect(empty.reason).toBe('too-short');
+
+    const gutted = evaluateStyleRewrite(dirty, 'Ich freue mich.', 'de');
+    expect(gutted.accept).toBe(false);
+    expect(gutted.reason).toBe('too-short');
+    // after falls back to before when the candidate is rejected on length.
+    expect(gutted.after).toBe(gutted.before);
+  });
+
+  it('rejects a rewrite that swaps one cliché for another (no net gain)', () => {
+    // One violation in, one different violation out → count unchanged → reject.
+    const oneCliche =
+      'Ich bin begeistert von der Stelle. Ich leite seit drei Jahren ein Team von acht Pflegekräften.';
+    const swapped =
+      'Ich bin leidenschaftlich bei der Arbeit. Ich leite seit drei Jahren ein Team von acht Pflegekräften.';
+    const verdict = evaluateStyleRewrite(oneCliche, swapped, 'de');
+    expect(verdict.before).toBe(1);
+    expect(verdict.after).toBe(1);
+    expect(verdict.accept).toBe(false);
+    expect(verdict.reason).toBe('not-improved');
   });
 });

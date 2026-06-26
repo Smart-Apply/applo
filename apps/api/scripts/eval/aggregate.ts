@@ -44,6 +44,12 @@ export interface FixtureResult {
   grounding?: FixtureGroundingSummary;
   coverage?: FixtureCoverageSummary;
   style?: FixtureStyleSummary;
+  /** True when the style-rewrite "teeth" pass replaced the draft with a cleaner one. */
+  styleRewriteApplied?: boolean;
+  /** Deterministic style violations in the cover letter BEFORE the teeth pass. */
+  styleViolationsBefore?: number;
+  /** Deterministic style violations in the FINAL cover letter (after the teeth pass). */
+  styleViolationsAfter?: number;
   durationMs: number;
   editorApplied: boolean;
   resumeEditorApplied: boolean;
@@ -88,6 +94,8 @@ export interface EvalSummary {
     totalViolations: number;
     /** Fixtures with at least one violation. */
     fixturesWithViolations: number;
+    /** Number of fixtures where the style-rewrite "teeth" pass replaced the draft. */
+    styleRewriteAppliedCount: number;
   };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
@@ -133,6 +141,7 @@ export function summarize(
         : Math.round((ok.filter((r) => (r.style?.total ?? 0) === 0).length / ok.length) * 100),
     totalViolations: ok.reduce((acc, r) => acc + (r.style?.total ?? 0), 0),
     fixturesWithViolations: ok.filter((r) => (r.style?.total ?? 0) > 0).length,
+    styleRewriteAppliedCount: ok.filter((r) => r.styleRewriteApplied).length,
   };
 
   const byLanguage: Record<string, LanguageBreakdown> = {};
@@ -202,6 +211,7 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    clean (0 violations)           ${summary.style.cleanRate}%`);
   lines.push(`    fixtures with violations       ${summary.style.fixturesWithViolations}`);
   lines.push(`    total violations               ${summary.style.totalViolations}`);
+  lines.push(`    style-rewrite applied          ${summary.style.styleRewriteAppliedCount} fixtures`);
   lines.push('');
   lines.push('  By language:');
   for (const [lang, b] of Object.entries(summary.byLanguage)) {
@@ -220,6 +230,7 @@ export function formatReport(summary: EvalSummary): string {
       r.editorApplied ? 'editor' : '',
       r.resumeEditorApplied ? 'resume-editor' : '',
       r.coverage?.weaveApplied ? `weave:${r.coverage.weaveKeywords.join('/')}` : '',
+      r.styleRewriteApplied ? 'style-fixed' : '',
       r.resumeRewriteSucceeded ? '' : 'rewrite-degraded',
       r.grounding && r.grounding.unsupportedCount > 0
         ? `unsupported:${r.grounding.unsupportedValues.join('/')}`

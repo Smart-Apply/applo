@@ -114,3 +114,50 @@ export function lintGeneratedStyle(text: string | null | undefined, language = '
 
   return { aiPhrases, hedging, total: aiPhrases.length + hedging.length };
 }
+
+/** Verdict of the guarded style-rewrite ("teeth") pass. */
+export interface StyleRewriteEvaluation {
+  /** Whether the rewrite should replace the draft. */
+  accept: boolean;
+  /** Distinct style violations in the original draft. */
+  before: number;
+  /** Distinct style violations in the rewrite (equals `before` when rejected for length). */
+  after: number;
+  /** Why the rewrite was accepted or rejected. */
+  reason: 'too-short' | 'not-improved' | 'improved';
+}
+
+/**
+ * Decide whether a style-rewrite candidate may replace the draft. This is the
+ * deterministic guard that gives the linter "teeth" without ever shipping a
+ * worse letter: a rewrite is accepted ONLY if it (a) preserves enough of the
+ * draft's length (never guts it) AND (b) strictly reduces the deterministic
+ * violation count. Otherwise the caller keeps the original draft.
+ *
+ * Pure and side-effect-free so it can be unit-tested and reused identically by
+ * the live pipeline and the offline eval harness.
+ *
+ * @param draft         The pre-rewrite cover letter.
+ * @param rewritten     The LLM's rewrite candidate (may be empty/undefined on failure).
+ * @param language      Target language code (hedging is German-specific).
+ * @param minLengthRatio Minimum fraction of the draft length the rewrite must retain.
+ */
+export function evaluateStyleRewrite(
+  draft: string,
+  rewritten: string | null | undefined,
+  language = 'de',
+  minLengthRatio = 0.6,
+): StyleRewriteEvaluation {
+  const before = lintGeneratedStyle(draft, language).total;
+
+  if (!rewritten || rewritten.trim().length < draft.trim().length * minLengthRatio) {
+    return { accept: false, before, after: before, reason: 'too-short' };
+  }
+
+  const after = lintGeneratedStyle(rewritten, language).total;
+  if (after >= before) {
+    return { accept: false, before, after, reason: 'not-improved' };
+  }
+
+  return { accept: true, before, after, reason: 'improved' };
+}

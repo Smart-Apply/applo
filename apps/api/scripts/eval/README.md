@@ -55,6 +55,7 @@ With `LLM_PROVIDER=mock` (or unset) the harness **skips gracefully** (exit 0).
 | `--retries=N` | `5` | Retries on transient throttling (429/503/breaker-open) with exponential backoff (4s→64s, long enough to clear the 30s breaker reset). |
 | `--no-weave` | off | Skip the #6 keyword weave pass. Use for an A/B run: compare coverage with vs. without the loop. |
 | `--no-anchor` | off | Omit the shared `GENERATION_SYSTEM_ANCHOR` system message from the cover-letter + resume-rewrite calls. Use for a clean A/B of the system/user split. |
+| `--no-style-rewrite` | off | Skip the style-rewrite "teeth" pass. Use for an A/B of the deterministic-linter enforcement step. |
 | `--out=PATH` | `results/eval-<tag>-<ts>.json` | Override the output path. |
 
 ## What it measures
@@ -67,6 +68,8 @@ For each fixture the runner mirrors `ApplicationsService.createWithGeneration`:
 3. `v1/editor-cover-letter.md` (temp 0.4) — the #1 editor pass
 4. `v1/keyword-weave.md` (temp 0.3) — the #6 keyword weave pass (skipped with `--no-weave`,
    or when there is no profile-supported priority-1 gap)
+5. `v1/style-rewrite.md` (temp 0.3) — the style-rewrite "teeth" pass (skipped with
+   `--no-style-rewrite`, or when the post-weave letter is already clean)
 
 It then scores the output four ways:
 
@@ -82,7 +85,10 @@ It then scores the output four ways:
 - **Style** (`style-lint.util.ts`, deterministic) — the share of fixtures whose
   finished documents contain zero forbidden AI clichés or German Konjunktiv/
   hedging (plus the raw violation count). A deterministic complement to the
-  judge's holistic `style_no_cliches` dimension.
+  judge's holistic `style_no_cliches` dimension. The report also counts how many
+  fixtures the **style-rewrite "teeth" pass** improved (with the per-fixture
+  before→after violation counts in the JSON) — a within-run, controlled measure
+  of the enforcement step.
 
 > The runner omits only PDF rendering + persistence (irrelevant to output
 > quality). The keyword weave shares `keyword-coverage.util.ts` with the live

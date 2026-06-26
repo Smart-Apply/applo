@@ -55,10 +55,11 @@ The **live** path is the v1 "single-LLM pipeline" inside
 | 3 | — | code | `convertTailoredProfileToResumeJson` → stored as `resumeText` (JSON) |
 | 4 ¹ | [`v1/editor-cover-letter.md`](../../apps/api/prompts/v1/editor-cover-letter.md) | `callText` (temp 0.4) | **Editor pass (#1, CL):** critique + revise the cover letter; graceful fallback to draft |
 | 5 ¹ | [`v1/keyword-weave.md`](../../apps/api/prompts/v1/keyword-weave.md) | `callText` (temp 0.3) | **Keyword weave (#6):** weave profile-supported priority-1 ATS gaps into the cover letter |
-| 6 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
-| 7 | — | code | **Style check:** flag forbidden AI clichés + German Konjunktiv/hedging on the finished docs (`style-lint.util.ts`, log only, non-destructive) |
+| 6 ¹ | [`v1/style-rewrite.md`](../../apps/api/prompts/v1/style-rewrite.md) | `callText` (temp 0.3) | **Style rewrite (teeth):** surgically fix linter-flagged AI clichés + German hedging in the cover letter; guarded by `evaluateStyleRewrite` (ships only a strictly-cleaner, non-gutted result), graceful fallback |
+| 7 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
+| 8 | — | code | **Style check:** flag residual AI clichés + German Konjunktiv/hedging on the finished docs (`style-lint.util.ts`, log only, non-destructive) |
 
-¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 4, and 5 run sequentially after the parallel block. The grounding check (6) runs on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and `generateWithSinglePipeline` (secondary/test) — share the editor + grounding helpers.
+¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 4, 5, and 6 run sequentially after the parallel block. The grounding check (7) and style check (8) run on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and `generateWithSinglePipeline` (secondary/test) — share the editor + grounding helpers.
 
 **Dead / optional code (do not confuse with the live path):**
 - ~~`apps/api/src/agents/**` (the old Azure AI Foundry agent classes)~~ **Removed (#2,
@@ -479,6 +480,42 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-26 — Style-rewrite "teeth" pass (linter enforcement)
+- **What.** The deterministic style linter now has *teeth*: a guarded LLM micro-rewrite
+  ([`v1/style-rewrite.md`](../../apps/api/prompts/v1/style-rewrite.md) +
+  `runStyleRewritePass`) that surgically rephrases the exact AI clichés + German
+  Konjunktiv/hedging the linter flags in the **cover letter** into confident, concrete
+  language. Runs after the keyword weave (architecture step 6), then feeds the grounding +
+  style checks. This is the "teeth" the 2026-06-24 entry forecast.
+- **Non-destructive by construction.** The pure
+  [`evaluateStyleRewrite`](../../apps/api/src/applications/style-lint.util.ts) guard accepts
+  the rewrite ONLY when it (a) keeps ≥60% of the draft length AND (b) *strictly* reduces the
+  deterministic violation count; otherwise it keeps the pre-rewrite draft. It skips the LLM
+  call entirely when the letter is already clean and carries the `GENERATION_SYSTEM_ANCHOR`
+  so the rewrite can't fabricate. Worst case = the unchanged letter — it can never ship a
+  *worse* one. Unit-tested (+4 cases, 12 total).
+- **Result (24 fixtures, real Azure, 2026-06-26, `--tag=teeth-on`).** The teeth fired on
+  **2/24** cover letters (`it-de`, `logistics-de`) and drove **both to 0** violations — a
+  controlled, within-run before→after (same draft, lint pre/post) that the guard guarantees
+  is a strict improvement. The **4 residual** violations (`healthcare-en`, `hospitality-en`,
+  `it-en`, `logistics-en`) are all *English résumé-side* clichés ("proven track record" ×3,
+  "developed and delivered") — `applied=false` means the cover letter was already clean, so
+  the cover-letter-scoped teeth correctly leave them untouched. Judge OVERALL 5.00
+  (saturated); grounding 42% / coverage 100% reflect run-to-run sampling and are untouched
+  by the teeth. (Aggregate style clean-rate is noisy at this violation density — the
+  per-fixture 2→0 is the real signal, not the cross-run clean-rate vs. the 2026-06-24 baseline.)
+- **Finding → next lever.** Every residual cliché this run was in the **résumé**, not the
+  cover letter. Cover-letter clichés are now handled; **résumé-side style enforcement**
+  (extend the teeth to the rewritten summary/achievements, or strengthen `editor-resume.md`)
+  is the clear next step — eval-gated against this run.
+- **Eval harness.** Added `--no-style-rewrite` (A/B), a `styleRewriteApplied` count +
+  per-fixture `style-fixed` flag, and persisted per-fixture `styleViolationsBefore→After`.
+- **Branch:** `feat/prompt-quality`. New: `prompts/v1/style-rewrite.md`. Touched:
+  `style-lint.util.ts` (+`evaluateStyleRewrite`), `applications.service.ts`,
+  `style-lint.unit.spec.ts`, the eval harness (`pipeline-runner.ts`, `run-eval.ts`,
+  `aggregate.ts`, eval `README.md`), `README.md`, `ARCHITECTURE.md`,
+  `.github/copilot-instructions.md`.
 
 ### 2026-06-24 — System-anchor split + deterministic style linter
 - **System/user split (prompt-quality).** The two LLM generation calls
