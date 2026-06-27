@@ -1744,10 +1744,10 @@ export class ApplicationsService {
     try {
       const cover = lintGeneratedStyle(generated.coverLetter, language);
       const resume = lintGeneratedStyle(generated.resume, language);
-      const total = cover.total + resume.total;
+      const phrases = [...new Set([...cover.aiPhrases, ...resume.aiPhrases])];
+      const hedges = [...new Set([...cover.hedging, ...resume.hedging])];
+      const total = phrases.length + hedges.length;
       if (total > 0) {
-        const phrases = [...new Set([...cover.aiPhrases, ...resume.aiPhrases])];
-        const hedges = [...new Set([...cover.hedging, ...resume.hedging])];
         this.logger.warn(
           `Style check (application ${applicationId}): ${total} violation(s) — ` +
             `clichés: [${phrases.join(', ') || '—'}]; hedging: [${hedges.join(', ') || '—'}]`,
