@@ -150,8 +150,12 @@ User → Frontend (Next.js)
 │    the cover letter AND resume        │
 │ 4. Keyword weave: add missing        │
 │    profile-supported ATS keywords    │
-│ 5. Grounding check: flag fabricated  │
+│ 5. Style rewrite: fix flagged AI     │
+│    clichés/hedging (guarded, teeth)  │
+│ 6. Grounding check: flag fabricated  │
 │    impact numbers vs. the profile    │
+│ 7. Style check: flag AI clichés +    │
+│    hedging (Konjunktiv); log-only    │
 └──────────────────────────────────────┘
         │
         ▼

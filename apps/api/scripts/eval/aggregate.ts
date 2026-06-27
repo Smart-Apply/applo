@@ -29,6 +29,15 @@ export interface FixtureCoverageSummary {
   weaveKeywords: string[];
 }
 
+export interface FixtureStyleSummary {
+  /** Total distinct deterministic style violations (AI clichés + hedging + verb-first bullets). */
+  total: number;
+  aiPhrases: string[];
+  hedging: string[];
+  /** German résumé bullets that open with a finite past-tense verb (anglicised). */
+  verbFirstBullets: string[];
+}
+
 export interface FixtureResult {
   id: string;
   profession: string;
@@ -36,6 +45,19 @@ export interface FixtureResult {
   judge?: JudgeResult;
   grounding?: FixtureGroundingSummary;
   coverage?: FixtureCoverageSummary;
+  style?: FixtureStyleSummary;
+  /** True when the style-rewrite "teeth" pass replaced the draft with a cleaner one. */
+  styleRewriteApplied?: boolean;
+  /** Deterministic style violations in the cover letter BEFORE the teeth pass. */
+  styleViolationsBefore?: number;
+  /** Deterministic style violations in the FINAL cover letter (after the teeth pass). */
+  styleViolationsAfter?: number;
+  /** True when the résumé style-rewrite "teeth" pass replaced the payload with a cleaner one. */
+  resumeStyleRewriteApplied?: boolean;
+  /** Deterministic style violations in the résumé prose BEFORE the teeth pass. */
+  resumeStyleViolationsBefore?: number;
+  /** Deterministic style violations in the FINAL résumé prose (after the teeth pass). */
+  resumeStyleViolationsAfter?: number;
   durationMs: number;
   editorApplied: boolean;
   resumeEditorApplied: boolean;
@@ -72,6 +94,20 @@ export interface EvalSummary {
     meanAfterRate: number;
     /** Number of fixtures where the weave pass ran. */
     weaveAppliedCount: number;
+  };
+  style: {
+    /** % of fixtures with zero deterministic style violations. */
+    cleanRate: number;
+    /** Total violations summed across fixtures. */
+    totalViolations: number;
+    /** Fixtures with at least one violation. */
+    fixturesWithViolations: number;
+    /** Number of fixtures where the style-rewrite "teeth" pass replaced the draft. */
+    styleRewriteAppliedCount: number;
+    /** Number of fixtures where the résumé style-rewrite "teeth" pass replaced the payload. */
+    resumeStyleRewriteAppliedCount: number;
+    /** Total German verb-first résumé bullets across fixtures (the anglicised opener). */
+    verbFirstViolations: number;
   };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
@@ -110,6 +146,18 @@ export function summarize(
     weaveAppliedCount: ok.filter((r) => r.coverage?.weaveApplied).length,
   };
 
+  const style = {
+    cleanRate:
+      ok.length === 0
+        ? 0
+        : Math.round((ok.filter((r) => (r.style?.total ?? 0) === 0).length / ok.length) * 100),
+    totalViolations: ok.reduce((acc, r) => acc + (r.style?.total ?? 0), 0),
+    fixturesWithViolations: ok.filter((r) => (r.style?.total ?? 0) > 0).length,
+    styleRewriteAppliedCount: ok.filter((r) => r.styleRewriteApplied).length,
+    resumeStyleRewriteAppliedCount: ok.filter((r) => r.resumeStyleRewriteApplied).length,
+    verbFirstViolations: ok.reduce((acc, r) => acc + (r.style?.verbFirstBullets?.length ?? 0), 0),
+  };
+
   const byLanguage: Record<string, LanguageBreakdown> = {};
   for (const lang of ['de', 'en'] as EvalLanguage[]) {
     const subset = ok.filter((r) => r.language === lang);
@@ -138,6 +186,7 @@ export function summarize(
       fixturesWithUnsupported,
     },
     coverage,
+    style,
     byLanguage,
     results,
   };
@@ -172,6 +221,14 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    mean coverage after weave      ${summary.coverage.meanAfterRate.toFixed(2)}%`);
   lines.push(`    weave pass applied             ${summary.coverage.weaveAppliedCount} fixtures`);
   lines.push('');
+  lines.push('  Style (deterministic AI-cliché / hedging / verb-first linter):');
+  lines.push(`    clean (0 violations)           ${summary.style.cleanRate}%`);
+  lines.push(`    fixtures with violations       ${summary.style.fixturesWithViolations}`);
+  lines.push(`    total violations               ${summary.style.totalViolations}`);
+  lines.push(`    DE verb-first bullets          ${summary.style.verbFirstViolations}`);
+  lines.push(`    style-rewrite applied          ${summary.style.styleRewriteAppliedCount} fixtures`);
+  lines.push(`    résumé-style-rewrite applied   ${summary.style.resumeStyleRewriteAppliedCount} fixtures`);
+  lines.push('');
   lines.push('  By language:');
   for (const [lang, b] of Object.entries(summary.byLanguage)) {
     lines.push(
@@ -189,9 +246,17 @@ export function formatReport(summary: EvalSummary): string {
       r.editorApplied ? 'editor' : '',
       r.resumeEditorApplied ? 'resume-editor' : '',
       r.coverage?.weaveApplied ? `weave:${r.coverage.weaveKeywords.join('/')}` : '',
+      r.styleRewriteApplied ? 'cl-style-fixed' : '',
+      r.resumeStyleRewriteApplied ? 'cv-style-fixed' : '',
       r.resumeRewriteSucceeded ? '' : 'rewrite-degraded',
       r.grounding && r.grounding.unsupportedCount > 0
         ? `unsupported:${r.grounding.unsupportedValues.join('/')}`
+        : '',
+      r.style && (r.style.aiPhrases.length || r.style.hedging.length)
+        ? `style:${[...r.style.aiPhrases, ...r.style.hedging].join('/')}`
+        : '',
+      r.style && r.style.verbFirstBullets?.length
+        ? `vfb:${r.style.verbFirstBullets.length}`
         : '',
     ]
       .filter(Boolean)

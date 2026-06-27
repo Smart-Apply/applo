@@ -48,7 +48,11 @@ import {
 import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.util';
 import { buildMatchInsights } from './match-insights.util';
 import { matchAtsKeywordsToProfile, selectKeywordsToWeave } from './keyword-coverage.util';
-import { isValidResumeEdit } from './resume-editor.util';
+import {
+  countResumeStyleViolations,
+  evaluateResumeStyleRewrite,
+  isValidResumeEdit,
+} from './resume-editor.util';
 import { mapStoredResumeToTailoredProfile } from './stored-resume.util';
 import {
   buildSalutation,
@@ -56,6 +60,8 @@ import {
   normalizeJobFacts,
   type JobFactsDto,
 } from './job-facts.util';
+import { evaluateStyleRewrite, lintGeneratedStyle } from './style-lint.util';
+import { GENERATION_SYSTEM_ANCHOR } from './constants';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -837,15 +843,19 @@ export class ApplicationsService {
 
       // Prepare parallel promises
       const coverLetterPromise = shouldGenerateCoverLetter
-        ? this.llmService.callText('v1/cover-letter.md', {
-            job: this.serializeJobPosting(jobPosting),
-            tailoredProfile,
-            jobFacts: normalizeJobFacts(jobFacts),
-            salutation: buildSalutation(jobFacts, detectedLanguage),
-            language: detectedLanguage,
-            userId,
-            jobPostingId: jobPosting.id,
-          })
+        ? this.llmService.callText(
+            'v1/cover-letter.md',
+            {
+              job: this.serializeJobPosting(jobPosting),
+              tailoredProfile,
+              jobFacts: normalizeJobFacts(jobFacts),
+              salutation: buildSalutation(jobFacts, detectedLanguage),
+              language: detectedLanguage,
+              userId,
+              jobPostingId: jobPosting.id,
+            },
+            { systemMessage: GENERATION_SYSTEM_ANCHOR },
+          )
         : Promise.resolve(null);
 
       const resumeRewritePromise = this.callResumeRewrite(
@@ -902,12 +912,24 @@ export class ApplicationsService {
         jobPosting.id,
       );
 
+      // Style rewrite ("teeth", résumé): surgically fix the AI clichés the linter
+      // flags in the résumé prose. Guarded (JSON→JSON, ID-preserving, strictly
+      // cleaner) — the analogue of the cover-letter teeth. Falls back to the
+      // edited payload otherwise. See runResumeStyleRewritePass.
+      const styledRewrittenProfile = await this.runResumeStyleRewritePass(
+        editedRewrittenProfile,
+        tailoredProfile,
+        detectedLanguage,
+        userId,
+        jobPosting.id,
+      );
+
       // Step 3: Convert tailoredProfile to JSON format for frontend editor
       this.logger.log('Step 3: Converting resume to JSON format for editor...');
       const resumeJson = this.convertTailoredProfileToResumeJson(
         profile,
         tailoredProfile,
-        editedRewrittenProfile,
+        styledRewrittenProfile,
       );
 
       // Debug: Log the first experience achievements to verify German content is saved
@@ -946,15 +968,36 @@ export class ApplicationsService {
           )
         : editedCoverLetterMarkdown;
 
+      // Style rewrite ("teeth"): surgically fix the AI clichés + German hedging
+      // the deterministic linter flags. Guarded — only fires on a real violation
+      // and only keeps a strictly-cleaner, non-gutted result; otherwise falls
+      // back to the woven draft. Never fabricates (see runStyleRewritePass).
+      const polishedCoverLetterMarkdown = shouldGenerateCoverLetter
+        ? await this.runStyleRewritePass(
+            wovenCoverLetterMarkdown,
+            tailoredProfile,
+            detectedLanguage,
+            userId,
+            jobPosting.id,
+          )
+        : wovenCoverLetterMarkdown;
+
       // Grounding check (#7): flag any fabricated impact numbers (non-destructive).
       this.runGroundingCheck(
         application.id,
-        { resume: JSON.stringify(resumeJson), coverLetter: wovenCoverLetterMarkdown },
+        { resume: JSON.stringify(resumeJson), coverLetter: polishedCoverLetterMarkdown },
         profile,
       );
 
+      // Style check: flag forbidden AI clichés + German hedging (non-destructive).
+      this.runStyleCheck(
+        application.id,
+        { resume: JSON.stringify(resumeJson), coverLetter: polishedCoverLetterMarkdown },
+        detectedLanguage,
+      );
+
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = this.convertCoverLetterToHtml(wovenCoverLetterMarkdown);
+      const coverLetterHtml = this.convertCoverLetterToHtml(polishedCoverLetterMarkdown);
 
       const updatedApplication = await this.prisma.application.update({
         where: { id: application.id },
@@ -1361,6 +1404,7 @@ export class ApplicationsService {
         {
           temperature: 0.35, // Balanced: consistent but creative
           maxTokens: 2000,
+          systemMessage: GENERATION_SYSTEM_ANCHOR,
         },
       );
 
@@ -1545,6 +1589,118 @@ export class ApplicationsService {
   }
 
   /**
+   * Style rewrite ("teeth") — one guarded pass that surgically rephrases the
+   * forbidden AI clichés + German Konjunktiv/hedging the deterministic linter
+   * flags into confident, concrete language. This is the enforcement step the
+   * `style-lint.util` deliberately left out: the linter detects, this fixes.
+   *
+   * Fully guarded so it can never ship a worse letter:
+   * - Skips the LLM call entirely when the draft is already clean.
+   * - Carries the `GENERATION_SYSTEM_ANCHOR` so the rewrite can't fabricate.
+   * - Accepts the rewrite ONLY when `evaluateStyleRewrite` confirms it both
+   *   preserves the draft's length and strictly reduces the violation count;
+   *   otherwise keeps the pre-rewrite draft. Never throws.
+   */
+  private async runStyleRewritePass(
+    draft: string | null,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    userId: string,
+    jobPostingId: string,
+  ): Promise<string | null> {
+    if (!draft || draft.trim() === '') return draft;
+
+    const before = lintGeneratedStyle(draft, language);
+    if (before.total === 0) {
+      this.logger.debug('Style rewrite: cover letter already clean; skipping');
+      return draft;
+    }
+
+    const violations = [...before.aiPhrases, ...before.hedging];
+    try {
+      const rewritten = await this.llmService.callText(
+        'v1/style-rewrite.md',
+        { draft, violations, tailoredProfile, language, userId, jobPostingId },
+        { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
+      );
+
+      const decision = evaluateStyleRewrite(draft, rewritten, language);
+      if (!decision.accept) {
+        this.logger.warn(
+          `Style rewrite rejected (${decision.reason}, ${decision.before}→${decision.after} violation(s)); keeping pre-rewrite draft`,
+        );
+        return draft;
+      }
+
+      this.logger.log(
+        `Style rewrite applied (${decision.before}→${decision.after} violation(s): ${violations.join(', ')})`,
+      );
+      return rewritten;
+    } catch (error) {
+      this.logger.warn(`Style rewrite failed; keeping pre-rewrite draft: ${error.message}`);
+      return draft;
+    }
+  }
+
+  /**
+   * Résumé style rewrite ("teeth", JSON→JSON) — the résumé analogue of
+   * `runStyleRewritePass`. Surgically rephrases the forbidden AI clichés the
+   * deterministic linter flags in the résumé prose (summary + achievements +
+   * highlights) into concrete language, leaving every other field — and every
+   * `profileExperienceId` / `profileProjectId` — untouched.
+   *
+   * Fully guarded so it can never ship a worse or structurally-broken payload:
+   * - Skips the LLM call when the résumé prose is already clean.
+   * - Carries the `GENERATION_SYSTEM_ANCHOR` so the rewrite can't fabricate.
+   * - Accepts the rewrite ONLY when `evaluateResumeStyleRewrite` confirms it is a
+   *   valid, ID-preserving `RewrittenProfileDto` AND strictly reduces the
+   *   violation count; otherwise keeps the pre-rewrite payload. Never throws.
+   */
+  private async runResumeStyleRewritePass(
+    rewrittenProfile: RewrittenProfileDto | null,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    userId: string,
+    jobPostingId: string,
+  ): Promise<RewrittenProfileDto | null> {
+    if (!rewrittenProfile) return rewrittenProfile;
+
+    const before = countResumeStyleViolations(rewrittenProfile, language);
+    if (before.total === 0) {
+      this.logger.debug('Résumé style rewrite: prose already clean; skipping');
+      return rewrittenProfile;
+    }
+
+    const violations = [...before.aiPhrases, ...before.hedging];
+    const verbFirstBullets = before.verbFirstBullets;
+    try {
+      const edited = await this.llmService.callJson<RewrittenProfileDto>(
+        'v1/resume-style-rewrite.md',
+        { rewrittenProfile, tailoredProfile, violations, verbFirstBullets, language, userId, jobPostingId },
+        { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
+      );
+
+      const decision = evaluateResumeStyleRewrite(rewrittenProfile, edited, language);
+      if (!decision.accept) {
+        this.logger.warn(
+          `Résumé style rewrite rejected (${decision.reason}, ${decision.before}→${decision.after} violation(s)); keeping pre-rewrite payload`,
+        );
+        return rewrittenProfile;
+      }
+
+      this.logger.log(
+        `Résumé style rewrite applied (${decision.before}→${decision.after} violation(s); ${violations.length} phrase(s), ${verbFirstBullets.length} verb-first bullet(s))`,
+      );
+      return edited;
+    } catch (error) {
+      this.logger.warn(
+        `Résumé style rewrite failed; keeping pre-rewrite payload: ${error.message}`,
+      );
+      return rewrittenProfile;
+    }
+  }
+
+  /**
    * Grounding check (#7) — deterministic, non-destructive. Logs a warning when
    * the generated documents contain impact numbers that don't appear anywhere
    * in the source profile (likely fabrications). Never throws.
@@ -1571,6 +1727,36 @@ export class ApplicationsService {
       this.logger.warn(
         `Grounding check failed for application ${applicationId}: ${error.message}`,
       );
+    }
+  }
+
+  /**
+   * Style check — deterministic, non-destructive. Logs a warning when the
+   * generated documents contain forbidden AI-style clichés or (for German)
+   * Konjunktiv/hedging that the prompts explicitly ban. Detection only; the
+   * text is never altered here. Never throws. See `style-lint.util.ts`.
+   */
+  private runStyleCheck(
+    applicationId: string,
+    generated: { resume?: string | null; coverLetter?: string | null },
+    language: string,
+  ): void {
+    try {
+      const cover = lintGeneratedStyle(generated.coverLetter, language);
+      const resume = lintGeneratedStyle(generated.resume, language);
+      const phrases = [...new Set([...cover.aiPhrases, ...resume.aiPhrases])];
+      const hedges = [...new Set([...cover.hedging, ...resume.hedging])];
+      const total = phrases.length + hedges.length;
+      if (total > 0) {
+        this.logger.warn(
+          `Style check (application ${applicationId}): ${total} violation(s) — ` +
+            `clichés: [${phrases.join(', ') || '—'}]; hedging: [${hedges.join(', ') || '—'}]`,
+        );
+      } else {
+        this.logger.debug(`Style check (application ${applicationId}): clean`);
+      }
+    } catch (error) {
+      this.logger.warn(`Style check failed for application ${applicationId}: ${error.message}`);
     }
   }
 

@@ -89,7 +89,7 @@ Professionally rewrite the candidate's summary, selected experiences, and projec
 
 ### Rewriting Guidelines:
 - Transform passive descriptions into active, achievement-oriented statements
-- Start each bullet point with a strong action verb
+- Open each bullet in the style that reads natively in {{language}} (see the ACHIEVEMENT BULLET FORMULA below): English → a strong past-tense action verb (Led, Built, Reduced); German → **Nominalstil** (noun-led: "Entwicklung von…", "Aufbau von…", "Reduktion von…"), **never** a finite past-tense verb like "Entwickelte…"/"Implementierte…" (that is anglicised and reads wrong in a German CV)
 - Keep descriptions concise but impactful (1-2 sentences for descriptions, 1 sentence per achievement)
 - For projects: emphasize technologies that match job requirements
 - Maintain professional tone appropriate for the role level
@@ -99,7 +99,9 @@ Professionally rewrite the candidate's summary, selected experiences, and projec
 Every item in `rewritten_achievements` and `rewritten_highlights` MUST be a RESULT, not a duty.
 Use the **XYZ formula**: *Accomplished [X], measured by [Y], by doing [Z]* — action + measurable result + how.
 
-- **Start with a strong action verb** (DE: noun-based forms per the approved list below; EN: Led, Built, Reduced, Increased…).
+- **Open with the native bullet style for {{language}}.** EN: a strong past-tense action verb (Led, Built, Reduced, Increased…). **DE: Nominalstil — start with a NOUN, never a conjugated past-tense verb** (Entwicklung, Aufbau, Einführung, Leitung, Reduktion, Steigerung, Optimierung, Betreuung, Gewinnung, Migration, Umsetzung…).
+  - ❌ "Entwickelte eine wiederverwendbare Terraform-Vorlage für Multi-Stage-Deployments" — anglicised, sounds wrong in German
+  - ✅ "Entwicklung einer wiederverwendbaren Terraform-Vorlage für Multi-Stage-Deployments nach Best Practices"
 - **Quantify whenever the source data supports it** — %, absolute numbers, time saved, team size, budget, volume, frequency.
 - **NO invented numbers.** If the source profile has no metric, DO NOT fabricate one. Instead state a concrete qualitative outcome (what changed, for whom, why it mattered). Never use vague filler like "significantly improved".
 - **One idea per bullet.** Keep it to a single, scannable line.

@@ -167,6 +167,7 @@ const applicationValidationSchema = {
 const SCHEMA_REGISTRY: { match: string; name: string; schema: Record<string, unknown> }[] = [
   { match: 'v1/ats-keywords.md', name: 'ats_keywords', schema: atsKeywordsSchema },
   { match: 'v1/resume-rewrite.md', name: 'resume_rewrite', schema: resumeRewriteSchema },
+  { match: 'v1/resume-style-rewrite.md', name: 'resume_style_rewrite', schema: resumeRewriteSchema },
   { match: 'v1/job-facts.md', name: 'job_facts', schema: jobFactsSchema },
   {
     match: 'v1/application-validation.md',

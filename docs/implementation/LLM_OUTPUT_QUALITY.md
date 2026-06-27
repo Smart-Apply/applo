@@ -52,12 +52,15 @@ The **live** path is the v1 "single-LLM pipeline" inside
 | 2b | [`v1/resume-rewrite.md`](../../apps/api/prompts/v1/resume-rewrite.md) | `callJson` (temp 0.35) | Rewrite summary / experiences / projects into target language |
 | 2c | [`v1/ats-keywords.md`](../../apps/api/prompts/v1/ats-keywords.md) | `callJson` | Extract ≤15 job keywords, then **deterministic** match vs. profile |
 | 2d | [`v1/editor-resume.md`](../../apps/api/prompts/v1/editor-resume.md) | `callJson` (temp 0.35) | **Editor pass (#1, resume):** tighten bullets/summary, preserve all IDs; guarded fallback |
+| 2e | [`v1/resume-style-rewrite.md`](../../apps/api/prompts/v1/resume-style-rewrite.md) | `callJson` (temp 0.3) | **Résumé style rewrite (teeth):** surgically fix linter-flagged clichés in the résumé prose (summary/achievements/highlights); guarded by `evaluateResumeStyleRewrite` (ID-preserving + strictly cleaner), graceful fallback |
 | 3 | — | code | `convertTailoredProfileToResumeJson` → stored as `resumeText` (JSON) |
 | 4 ¹ | [`v1/editor-cover-letter.md`](../../apps/api/prompts/v1/editor-cover-letter.md) | `callText` (temp 0.4) | **Editor pass (#1, CL):** critique + revise the cover letter; graceful fallback to draft |
 | 5 ¹ | [`v1/keyword-weave.md`](../../apps/api/prompts/v1/keyword-weave.md) | `callText` (temp 0.3) | **Keyword weave (#6):** weave profile-supported priority-1 ATS gaps into the cover letter |
-| 6 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
+| 6 ¹ | [`v1/style-rewrite.md`](../../apps/api/prompts/v1/style-rewrite.md) | `callText` (temp 0.3) | **Style rewrite (teeth):** surgically fix linter-flagged AI clichés + German hedging in the cover letter; guarded by `evaluateStyleRewrite` (ships only a strictly-cleaner, non-gutted result), graceful fallback |
+| 7 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
+| 8 | — | code | **Style check:** flag residual AI clichés + German Konjunktiv/hedging on the finished docs (`style-lint.util.ts`, log only, non-destructive) |
 
-¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 4, and 5 run sequentially after the parallel block. The grounding check (6) runs on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and `generateWithSinglePipeline` (secondary/test) — share the editor + grounding helpers.
+¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 2e, 4, 5, and 6 run sequentially after the parallel block. The grounding check (7) and style check (8) run on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and `generateWithSinglePipeline` (secondary/test) — share the editor + grounding helpers.
 
 **Dead / optional code (do not confuse with the live path):**
 - ~~`apps/api/src/agents/**` (the old Azure AI Foundry agent classes)~~ **Removed (#2,
@@ -478,6 +481,142 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-06-27 — German Nominalstil for résumé bullets (prompt fix + deterministic enforcement)
+- **Reported defect.** German résumé bullets opened with a finite past-tense verb
+  ("Entwickelte eine wiederverwendbare Terraform-Vorlage …") — the English action-verb
+  convention misapplied to German, where it reads as anglicised Denglisch. Idiomatic German
+  CVs use Nominalstil (noun-led: "Entwicklung einer …").
+- **Root-cause prompt fix (commit `bc45b75`).** `resume-rewrite.md` + `editor-resume.md` both
+  carried a language-agnostic "start each bullet with a strong action verb" rule (and the
+  résumé-rewrite formula referenced an "approved list below" that didn't exist), and the
+  résumé editor could even *convert* a correct Nominalstil bullet into a verb-first one. All
+  three rules are now language-aware (EN → action verb; DE → Nominalstil noun, never a finite
+  past-tense verb), with the exact ❌"Entwickelte…" → ✅"Entwicklung…" example.
+- **Deterministic enforcement (this commit).** `detectGermanVerbFirstBullets`
+  ([`style-lint.util.ts`](../../apps/api/src/applications/style-lint.util.ts)) flags German
+  bullets that open with a finite past-tense verb — precision-biased (a curated common-CV-verb
+  set + the `-ierte` weak-verb family) so it never false-flags a noun-led bullet. It is folded
+  into the résumé violation count (`countResumeStyleViolations`), so the résumé style-rewrite
+  teeth now also require verb-first bullets to strictly drop, and `v1/resume-style-rewrite.md`
+  converts any flagged bullet to Nominalstil. Surfaced as a `DE verb-first bullets` eval metric
+  + per-fixture `vfb:N` flag.
+- **Result (real Azure, 12 German fixtures, 2026-06-27).** Teeth OFF (fixed prompts alone):
+  **0 verb-first bullets** — the prompt fix eliminates the anti-pattern at generation (the 2
+  residual violations were clichés, not verb-first). Teeth ON (production): **100% style clean,
+  0 verb-first** (the cover-letter teeth cleaned the 2 cliché residuals; the résumé teeth had
+  nothing to fix). The verb-first → Nominalstil teeth path is unit-proven —
+  `evaluateResumeStyleRewrite` accepts a verb-first→Nominalstil rewrite (before 3 → after 0).
+- **Branch:** `feat/prompt-quality`. Touched: `style-lint.util.ts`
+  (+`detectGermanVerbFirstBullets`), `resume-editor.util.ts` (+`collectResumeBullets`,
+  +`countResumeStyleViolations`), `v1/resume-style-rewrite.md`, `applications.service.ts`, both
+  unit specs, the eval harness, `README.md`, `.github/copilot-instructions.md`.
+
+### 2026-06-26 — Résumé-side style-rewrite teeth
+- **What.** Extends the style-rewrite "teeth" to the **résumé** (the lever the entry below
+  identified): a guarded JSON→JSON micro-rewrite
+  ([`v1/resume-style-rewrite.md`](../../apps/api/prompts/v1/resume-style-rewrite.md) +
+  `runResumeStyleRewritePass`) that surgically fixes the AI clichés the linter flags in the
+  résumé prose (summary + achievements + highlights), leaving every other field and every
+  `profileExperienceId` / `profileProjectId` untouched. Runs right after the résumé editor
+  pass (architecture step 2e), before the résumé JSON is assembled.
+- **Two independent structural safety nets.** The Azure call is bound to the strict
+  `resumeRewriteSchema` (structured output), AND the pure
+  [`evaluateResumeStyleRewrite`](../../apps/api/src/applications/resume-editor.util.ts) guard
+  accepts the rewrite ONLY when `isValidResumeEdit` confirms it preserves every ID + entry AND
+  the deterministic violation count strictly drops. Skips the LLM when the prose is already
+  clean; carries the `GENERATION_SYSTEM_ANCHOR`. Worst case = the editor's payload.
+  Unit-tested (+5 cases incl. ID-drop + cliché-swap rejection; 27 total).
+- **Result (real Azure, 2026-06-26).** Full 24-fixture run (`--tag=teeth-full`): **100% style
+  clean** (0 residual violations); the cover-letter teeth fired 2× (`logistics-de`,
+  `skilled-trades-de`, 1→0 each) and the résumé prose happened to be clean, so the résumé
+  teeth didn't need to fire. A targeted probe of the 4 EN fixtures that previously surfaced
+  résumé clichés caught the résumé teeth firing **live**: `healthcare-en` résumé 1→0
+  (`cv-style-fixed`, ID-preserving, guard-accepted). Both teeth now have controlled,
+  within-run before→after proof; grounding 54% / OVERALL 5.00 are run-to-run sampling,
+  untouched by the teeth.
+- **Eval harness.** The résumé teeth share the `--no-style-rewrite` flag; the report adds a
+  `résumé-style-rewrite applied` count and a per-fixture `cv-style-fixed` flag (cover-letter
+  flag renamed `cl-style-fixed`), with per-fixture résumé before→after persisted in the JSON.
+- **Branch:** `feat/prompt-quality`. New: `prompts/v1/resume-style-rewrite.md`. Touched:
+  `resume-editor.util.ts` (+`extractResumeProse`, +`evaluateResumeStyleRewrite`),
+  `applications.service.ts`, `llm/schemas/v1-schemas.ts` (registered the strict schema),
+  `resume-editor.unit.spec.ts`, the eval harness, `README.md`, and
+  `.github/copilot-instructions.md`.
+
+### 2026-06-26 — Style-rewrite "teeth" pass (linter enforcement)
+- **What.** The deterministic style linter now has *teeth*: a guarded LLM micro-rewrite
+  ([`v1/style-rewrite.md`](../../apps/api/prompts/v1/style-rewrite.md) +
+  `runStyleRewritePass`) that surgically rephrases the exact AI clichés + German
+  Konjunktiv/hedging the linter flags in the **cover letter** into confident, concrete
+  language. Runs after the keyword weave (architecture step 6), then feeds the grounding +
+  style checks. This is the "teeth" the 2026-06-24 entry forecast.
+- **Non-destructive by construction.** The pure
+  [`evaluateStyleRewrite`](../../apps/api/src/applications/style-lint.util.ts) guard accepts
+  the rewrite ONLY when it (a) keeps ≥60% of the draft length AND (b) *strictly* reduces the
+  deterministic violation count; otherwise it keeps the pre-rewrite draft. It skips the LLM
+  call entirely when the letter is already clean and carries the `GENERATION_SYSTEM_ANCHOR`
+  so the rewrite can't fabricate. Worst case = the unchanged letter — it can never ship a
+  *worse* one. Unit-tested (+4 cases, 12 total).
+- **Result (24 fixtures, real Azure, 2026-06-26, `--tag=teeth-on`).** The teeth fired on
+  **2/24** cover letters (`it-de`, `logistics-de`) and drove **both to 0** violations — a
+  controlled, within-run before→after (same draft, lint pre/post) that the guard guarantees
+  is a strict improvement. The **4 residual** violations (`healthcare-en`, `hospitality-en`,
+  `it-en`, `logistics-en`) are all *English résumé-side* clichés ("proven track record" ×3,
+  "developed and delivered") — `applied=false` means the cover letter was already clean, so
+  the cover-letter-scoped teeth correctly leave them untouched. Judge OVERALL 5.00
+  (saturated); grounding 42% / coverage 100% reflect run-to-run sampling and are untouched
+  by the teeth. (Aggregate style clean-rate is noisy at this violation density — the
+  per-fixture 2→0 is the real signal, not the cross-run clean-rate vs. the 2026-06-24 baseline.)
+- **Finding → next lever.** Every residual cliché this run was in the **résumé**, not the
+  cover letter. Cover-letter clichés are now handled; **résumé-side style enforcement**
+  (extend the teeth to the rewritten summary/achievements, or strengthen `editor-resume.md`)
+  is the clear next step — eval-gated against this run.
+- **Eval harness.** Added `--no-style-rewrite` (A/B), a `styleRewriteApplied` count +
+  per-fixture `style-fixed` flag, and persisted per-fixture `styleViolationsBefore→After`.
+- **Branch:** `feat/prompt-quality`. New: `prompts/v1/style-rewrite.md`. Touched:
+  `style-lint.util.ts` (+`evaluateStyleRewrite`), `applications.service.ts`,
+  `style-lint.unit.spec.ts`, the eval harness (`pipeline-runner.ts`, `run-eval.ts`,
+  `aggregate.ts`, eval `README.md`), `README.md`, `ARCHITECTURE.md`,
+  `.github/copilot-instructions.md`.
+
+### 2026-06-24 — System-anchor split + deterministic style linter
+- **System/user split (prompt-quality).** The two LLM generation calls
+  (`v1/cover-letter.md`, `v1/resume-rewrite.md`) now pass a shared
+  `GENERATION_SYSTEM_ANCHOR` (in [`constants.ts`](../../apps/api/src/applications/constants.ts))
+  as the **system message**, keeping the non-negotiable constraints (no fabrication,
+  target language, no clichés/hedging) in the system turn per the GPT-4.1 prompting
+  guide; the detailed task stays in the user turn. The deliberately-tuned temperatures
+  were left untouched.
+- **Deterministic style check (new guardrail).**
+  [`style-lint.util.ts`](../../apps/api/src/applications/style-lint.util.ts) +
+  `runStyleCheck` flag forbidden AI clichés and German Konjunktiv/hedging on the
+  finished documents — deterministic, non-destructive (log only), mirroring the
+  grounding validator. Unit-tested in
+  [`style-lint.unit.spec.ts`](../../apps/api/src/applications/__tests__/unit/style-lint.unit.spec.ts).
+  Added as step 7 in the architecture table above.
+- **Branch:** `feat/prompt-quality`. New: `style-lint.util.ts`, `style-lint.unit.spec.ts`.
+  Touched: `constants.ts`, `applications.service.ts`, `README.md`, `ARCHITECTURE.md`,
+  `.github/copilot-instructions.md`.
+- **Eval harness wiring (#10):** the offline harness now (a) passes the same
+  `GENERATION_SYSTEM_ANCHOR` so it stays byte-identical to production, (b) reports a
+  deterministic **style** metric (clean-rate + violation counts) via
+  `scripts/eval/style.ts`, and (c) gained a `--no-anchor` flag for a clean A/B of the
+  system/user split. Smoke (4 mixed DE/EN fixtures, anchor on): overall 5.00,
+  grounding 100%, style 100% clean.
+- **Full A/B result (24 fixtures, real Azure, 2026-06-24).** Anchor OFF → ON:
+  grounding pass-rate **29% → 58%** (mean score 52.8 → 73.8; fixtures with fabricated
+  numbers 17 → 10) — the anchor roughly **halves number-fabrication**, the top
+  credibility/legal risk. LLM-judge OVERALL 4.96 → 5.00 (saturated — not sensitive
+  here). Priority-1 coverage (post-weave) 98.2% → 100%. Trade-off: deterministic style
+  clean-rate 96% → 88% (1 → 3 cliche hits, small-N; none of them in the anchor's own
+  examples) and judge `quantified` 4.71 → 4.54 (fewer fabricated metrics = fewer flashy
+  numbers). **Verdict: net win — keep the anchor.** Result files under
+  `scripts/eval/results/eval-anchor-{off,on}-*.json` (git-ignored).
+- **Next (not in this slice):** the anchor did NOT move the deterministic cliche rate,
+  so the remaining cliche lever is giving the linter teeth (a targeted micro-rewrite
+  pass) and/or rewriting the CAPS-heavy prompt bodies — both eval-gated against this
+  baseline.
 
 ### 2026-06-15 — Cover-letter data layer + Betreffzeile decision (#5 complete)
 - **#5 Shipped (data layer).** A dedicated extraction step

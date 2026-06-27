@@ -49,9 +49,13 @@ already there.
 1. **Summary:** Must name the exact target role, signal seniority/years when derivable,
    surface the top matching keywords, and contain one concrete achievement. 50-80 words.
    Cut generic openers ("Erfahrener Profi…", "Results-driven professional…").
-2. **Achievement bullets:** Every bullet starts with a strong action verb and states an
-   outcome, not a duty. Replace "Verantwortlich für…" / "Responsible for…" and passive
-   chains. Each bullet = one idea.
+2. **Achievement bullets:** Every bullet states an outcome, not a duty (replace
+   "Verantwortlich für…" / "Responsible for…" and passive chains) and opens in the native
+   style for `{{language}}`: English → a strong past-tense action verb (Led, Built,
+   Reduced); German → **Nominalstil — a noun, never a finite past-tense verb**
+   ("Entwicklung…"/"Aufbau…", NOT "Entwickelte…"/"Implementierte…", which is anglicised and
+   wrong in a German CV). Each bullet = one idea. Do NOT convert a correct German
+   Nominalstil bullet into a verb-first one.
 3. **Quantify honestly:** Keep real metrics from the payload / profile. Where a bullet is
    vague ("deutlich verbessert", "significantly improved") and a real number exists in the
    profile, use it; otherwise state a concrete qualitative outcome.

@@ -23,12 +23,14 @@ import {
   type MatchedAtsKeywords,
   type CoverageReport,
 } from '../../src/applications/keyword-coverage.util';
-import { isValidResumeEdit } from '../../src/applications/resume-editor.util';
+import { isValidResumeEdit, countResumeStyleViolations, evaluateResumeStyleRewrite } from '../../src/applications/resume-editor.util';
 import {
   buildSalutation,
   normalizeJobFacts,
   type JobFactsDto,
 } from '../../src/applications/job-facts.util';
+import { GENERATION_SYSTEM_ANCHOR } from '../../src/applications/constants';
+import { lintGeneratedStyle, evaluateStyleRewrite } from '../../src/applications/style-lint.util';
 import type {
   TailoredProfileDto,
   RewrittenProfileDto,
@@ -81,12 +83,34 @@ export interface GeneratedDocuments {
   coverageBeforeWeave: CoverageReport;
   /** Priority-1 coverage of the FINAL cover letter (after weave, if applied). */
   coverageAfterWeave: CoverageReport;
+  /** True when the style-rewrite "teeth" pass replaced the draft (improved it). */
+  styleRewriteApplied: boolean;
+  /** Deterministic style violations in the cover letter BEFORE the teeth pass. */
+  styleViolationsBefore: number;
+  /** Deterministic style violations in the FINAL cover letter (after teeth). */
+  styleViolationsAfter: number;
+  /** True when the résumé style-rewrite "teeth" pass replaced the payload (improved it). */
+  resumeStyleRewriteApplied: boolean;
+  /** Deterministic style violations in the résumé prose BEFORE the teeth pass. */
+  resumeStyleViolationsBefore: number;
+  /** Deterministic style violations in the FINAL résumé prose (after teeth). */
+  resumeStyleViolationsAfter: number;
   durationMs: number;
 }
 
 export interface GenerateOptions {
   /** When false, skip the keyword weave pass (#6) — for before/after A/B runs. */
   applyWeave?: boolean;
+  /**
+   * When false, omit the shared GENERATION_SYSTEM_ANCHOR system message from the
+   * cover-letter + resume-rewrite calls — for a clean A/B of the system/user split.
+   */
+  applyAnchor?: boolean;
+  /**
+   * When false, skip the style-rewrite "teeth" pass — for a clean A/B of the
+   * deterministic-linter enforcement step.
+   */
+  applyStyleRewrite?: boolean;
 }
 
 /**
@@ -142,6 +166,38 @@ async function runWeavePass(
     return { text: woven, applied: true };
   } catch {
     return { text: draft, applied: false };
+  }
+}
+
+/**
+ * Replicates `runStyleRewritePass` (the linter "teeth"): surgically fix the
+ * deterministic linter's cliché/hedging hits, keeping the pre-rewrite draft
+ * unless the rewrite both preserves length and strictly reduces violations.
+ * Skips the LLM call when the draft is already clean.
+ */
+async function runStyleRewrite(
+  llm: LLMService,
+  draft: string,
+  tailoredProfile: TailoredProfileDto,
+  language: string,
+  fixtureId: string,
+): Promise<{ text: string; applied: boolean; before: number; after: number }> {
+  const before = lintGeneratedStyle(draft, language);
+  if (before.total === 0) return { text: draft, applied: false, before: 0, after: 0 };
+  const violations = [...before.aiPhrases, ...before.hedging];
+  try {
+    const rewritten = await llm.callText(
+      'v1/style-rewrite.md',
+      { draft, violations, tailoredProfile, language, userId: fixtureId, jobPostingId: fixtureId },
+      { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
+    );
+    const decision = evaluateStyleRewrite(draft, rewritten, language);
+    if (!decision.accept) {
+      return { text: draft, applied: false, before: decision.before, after: decision.after };
+    }
+    return { text: rewritten, applied: true, before: decision.before, after: decision.after };
+  } catch {
+    return { text: draft, applied: false, before: before.total, after: before.total };
   }
 }
 
@@ -235,6 +291,39 @@ async function runResumeEditor(
 }
 
 /**
+ * Replicates `runResumeStyleRewritePass` (the résumé "teeth"): surgically fix the
+ * deterministic linter's cliché hits in the résumé prose, keeping the pre-rewrite
+ * payload unless the rewrite is a valid, ID-preserving `RewrittenProfileDto` that
+ * strictly reduces violations. Skips the LLM call when the prose is already clean.
+ */
+async function runResumeStyleRewrite(
+  llm: LLMService,
+  rewritten: RewrittenProfileDto,
+  tailoredProfile: TailoredProfileDto,
+  language: string,
+  fixtureId: string,
+): Promise<{ profile: RewrittenProfileDto; applied: boolean; before: number; after: number }> {
+  const before = countResumeStyleViolations(rewritten, language);
+  if (before.total === 0) return { profile: rewritten, applied: false, before: 0, after: 0 };
+  const violations = [...before.aiPhrases, ...before.hedging];
+  const verbFirstBullets = before.verbFirstBullets;
+  try {
+    const edited = await llm.callJson<RewrittenProfileDto>(
+      'v1/resume-style-rewrite.md',
+      { rewrittenProfile: rewritten, tailoredProfile, violations, verbFirstBullets, language, userId: fixtureId, jobPostingId: fixtureId },
+      { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
+    );
+    const decision = evaluateResumeStyleRewrite(rewritten, edited, language);
+    if (!decision.accept) {
+      return { profile: rewritten, applied: false, before: decision.before, after: decision.after };
+    }
+    return { profile: edited, applied: true, before: decision.before, after: decision.after };
+  } catch {
+    return { profile: rewritten, applied: false, before: before.total, after: before.total };
+  }
+}
+
+/**
  * Run the v1 generation chain for a single fixture.
  */
 export async function generateForFixture(
@@ -243,6 +332,8 @@ export async function generateForFixture(
   options: GenerateOptions = {},
 ): Promise<GeneratedDocuments> {
   const applyWeave = options.applyWeave !== false;
+  const applyStyleRewrite = options.applyStyleRewrite !== false;
+  const systemMessage = options.applyAnchor === false ? undefined : GENERATION_SYSTEM_ANCHOR;
   const start = Date.now();
   const profile = hydrateProfile(fixture);
   const serializedProfile = serializeProfileForLlm(profile);
@@ -273,15 +364,19 @@ export async function generateForFixture(
   ]);
 
   // Step 2: parallel cover letter (text) + resume rewrite (json) + ATS keywords.
-  const coverLetterPromise = llm.callText('v1/cover-letter.md', {
-    job: serializedJob,
-    tailoredProfile,
-    jobFacts,
-    salutation: buildSalutation(jobFacts, language),
-    language,
-    userId: fixture.id,
-    jobPostingId: fixture.id,
-  });
+  const coverLetterPromise = llm.callText(
+    'v1/cover-letter.md',
+    {
+      job: serializedJob,
+      tailoredProfile,
+      jobFacts,
+      salutation: buildSalutation(jobFacts, language),
+      language,
+      userId: fixture.id,
+      jobPostingId: fixture.id,
+    },
+    { systemMessage },
+  );
 
   const resumeRewritePromise = llm
     .callJson<RewrittenProfileDto>(
@@ -293,7 +388,7 @@ export async function generateForFixture(
         userId: fixture.id,
         jobPostingId: fixture.id,
       },
-      { temperature: 0.35, maxTokens: 2000 },
+      { temperature: 0.35, maxTokens: 2000, systemMessage },
     )
     .then((r) => (r && typeof r === 'object' ? r : null))
     .catch(() => null);
@@ -328,17 +423,39 @@ export async function generateForFixture(
       ? await runWeavePass(llm, editor.text, weaveKeywords, tailoredProfile, language, fixture.id)
       : { text: editor.text, applied: false };
 
-  const finalCoverLetter = coverLetterDraft ? weave.text : null;
-  const coverageAfterWeave = computePriority1Coverage(atsKeywords, finalCoverLetter);
+  // Coverage is measured on the post-weave letter (the weave's own effect),
+  // before the style-rewrite pass, so the coverage metric stays about the weave.
+  const postWeave = coverLetterDraft ? weave.text : null;
+  const coverageAfterWeave = computePriority1Coverage(atsKeywords, postWeave);
+
+  // Style rewrite "teeth" pass — surgically fix the deterministic linter's
+  // cliché/hedging hits. Skipped when --no-style-rewrite (A/B) or already clean.
+  const styleViolationsBefore = postWeave ? lintGeneratedStyle(postWeave, language).total : 0;
+  const styleRewrite =
+    postWeave && applyStyleRewrite
+      ? await runStyleRewrite(llm, postWeave, tailoredProfile, language, fixture.id)
+      : {
+          text: postWeave ?? '',
+          applied: false,
+          before: styleViolationsBefore,
+          after: styleViolationsBefore,
+        };
+  const finalCoverLetter = postWeave ? styleRewrite.text : null;
 
   // Resume editor pass (#1) — JSON→JSON critique with ID-preservation guard.
   const resumeEditor = rewrittenProfile
     ? await runResumeEditor(llm, rewrittenProfile, tailoredProfile, language, fixture.id)
     : { profile: null as RewrittenProfileDto | null, applied: false };
 
+  // Résumé style-rewrite "teeth" — fix linter-flagged clichés in the résumé prose.
+  const resumeStyle =
+    resumeEditor.profile && applyStyleRewrite
+      ? await runResumeStyleRewrite(llm, resumeEditor.profile, tailoredProfile, language, fixture.id)
+      : { profile: resumeEditor.profile, applied: false, before: 0, after: 0 };
+
   const resumeView = assembleResumeView(
     tailoredProfile,
-    resumeEditor.profile,
+    resumeStyle.profile,
     fixture.profile.summary,
   );
 
@@ -366,6 +483,12 @@ export async function generateForFixture(
     weaveKeywords,
     coverageBeforeWeave,
     coverageAfterWeave,
+    styleRewriteApplied: styleRewrite.applied,
+    styleViolationsBefore: styleRewrite.before,
+    styleViolationsAfter: styleRewrite.after,
+    resumeStyleRewriteApplied: resumeStyle.applied,
+    resumeStyleViolationsBefore: resumeStyle.before,
+    resumeStyleViolationsAfter: resumeStyle.after,
     durationMs: Date.now() - start,
   };
 }
