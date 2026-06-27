@@ -430,10 +430,16 @@ export async function generateForFixture(
 
   // Style rewrite "teeth" pass — surgically fix the deterministic linter's
   // cliché/hedging hits. Skipped when --no-style-rewrite (A/B) or already clean.
+  const styleViolationsBefore = postWeave ? lintGeneratedStyle(postWeave, language).total : 0;
   const styleRewrite =
     postWeave && applyStyleRewrite
       ? await runStyleRewrite(llm, postWeave, tailoredProfile, language, fixture.id)
-      : { text: postWeave ?? '', applied: false, before: 0, after: 0 };
+      : {
+          text: postWeave ?? '',
+          applied: false,
+          before: styleViolationsBefore,
+          after: styleViolationsBefore,
+        };
   const finalCoverLetter = postWeave ? styleRewrite.text : null;
 
   // Resume editor pass (#1) — JSON→JSON critique with ID-preservation guard.
