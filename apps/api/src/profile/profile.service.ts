@@ -426,33 +426,37 @@ export class ProfileService {
       githubUrl: profile.githubUrl,
       portfolioUrl: profile.portfolioUrl,
       summary: profile.summary,
-      skills: profile.skills.map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        level: s.level,
-      })),
-      certificates: profile.certificates.map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        issuer: c.issuer,
-        dateObtained: c.issueDate?.toISOString(),
-        url: c.credentialUrl,
-      })),
-      experiences: profile.experiences.map((e: any) => ({
-        id: e.id,
-        title: e.title,
-        company: e.company,
-        startDate: e.startDate.toISOString(),
-        endDate: e.endDate?.toISOString(),
-        description: e.description,
-      })),
-      projects: profile.projects.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        technologies: p.technologies,
-        url: p.url,
-      })),
+      skills:
+        profile.skills?.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          level: s.level,
+        })) || [],
+      certificates:
+        profile.certificates?.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          issuer: c.issuer,
+          dateObtained: c.issueDate?.toISOString(),
+          url: c.credentialUrl,
+        })) || [],
+      experiences:
+        profile.experiences?.map((e: any) => ({
+          id: e.id,
+          title: e.title,
+          company: e.company,
+          startDate: e.startDate?.toISOString(),
+          endDate: e.endDate?.toISOString(),
+          description: e.description,
+        })) || [],
+      projects:
+        profile.projects?.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          technologies: p.technologies,
+          url: p.url,
+        })) || [],
       education:
         profile.education?.map((e: any) => ({
           id: e.id,
