@@ -92,7 +92,7 @@
     "marked": "^18.0.5",
     "nestjs-pino": "^4.5.0",
     "node-cache": "^5.1.2",
-    "opossum": "^9.0.0",
+    "opossum": "^10.0.0",
     "otplib": "^13.4.1",
     "passport": "^0.7.0",
     "passport-azure-ad": "^4.3.5",
