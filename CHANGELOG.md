@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.0](https://github.com/Smart-Apply/smart-apply/compare/v4.1.0...v4.2.0) (2026-06-29)
+
+
+### Features
+
+* **applications:** deterministic style enforcement for generated CV + cover letter ([#604](https://github.com/Smart-Apply/smart-apply/issues/604)) ([f2e66b4](https://github.com/Smart-Apply/smart-apply/commit/f2e66b44c51354917f245c525de4da40104fd940))
+
 ## [4.1.0](https://github.com/Smart-Apply/smart-apply/compare/v4.0.2...v4.1.0) (2026-06-25)
 
 
