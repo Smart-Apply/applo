@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.0](https://github.com/Smart-Apply/smart-apply/compare/v4.2.1...v4.3.0) (2026-06-30)
+
+
+### Features
+
+* **settings:** integrate redesigned settings experience ([#615](https://github.com/Smart-Apply/smart-apply/issues/615)) ([329fa0b](https://github.com/Smart-Apply/smart-apply/commit/329fa0b5d0adddcb155681897625e489b9892613))
+
 ## [4.2.1](https://github.com/Smart-Apply/smart-apply/compare/v4.2.0...v4.2.1) (2026-06-30)
 
 
