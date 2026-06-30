@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.1](https://github.com/Smart-Apply/smart-apply/compare/v4.2.0...v4.2.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* **profile:** prevent unique constraint violations on skill/language updates ([#611](https://github.com/Smart-Apply/smart-apply/issues/611)) ([c5f01b3](https://github.com/Smart-Apply/smart-apply/commit/c5f01b351bdcacfd8f1512d48ace016a4788f0b7))
+
 ## [4.2.0](https://github.com/Smart-Apply/smart-apply/compare/v4.1.0...v4.2.0) (2026-06-29)
 
 
