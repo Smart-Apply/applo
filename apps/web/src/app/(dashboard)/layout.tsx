@@ -31,6 +31,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { EmailVerificationBanner } from '@/components/auth/email-verification-banner';
+import { SettingsNavGroup } from '@/components/settings/settings-nav-group';
 
 interface NavItem {
   name: string;
@@ -187,13 +188,17 @@ function DashboardLayoutInner({
               <div className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                 Menu
               </div>
-              {navigation.map((item) => (
-                <NavLink
-                  key={item.name}
-                  item={item}
-                  isActive={pathname === item.href}
-                />
-              ))}
+              {navigation.map((item) =>
+                item.href === '/settings' ? (
+                  <SettingsNavGroup key={item.name} item={item} />
+                ) : (
+                  <NavLink
+                    key={item.name}
+                    item={item}
+                    isActive={pathname === item.href}
+                  />
+                ),
+              )}
             </nav>
 
             <div className="p-4 border-t border-border/50 bg-muted/10">
@@ -273,13 +278,17 @@ function DashboardLayoutInner({
                   <div className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                     Menu
                   </div>
-                  {navigation.map((item) => (
-                    <NavLink
-                      key={item.name}
-                      item={item}
-                      isActive={pathname === item.href}
-                    />
-                  ))}
+                  {navigation.map((item) =>
+                    item.href === '/settings' ? (
+                      <SettingsNavGroup key={item.name} item={item} />
+                    ) : (
+                      <NavLink
+                        key={item.name}
+                        item={item}
+                        isActive={pathname === item.href}
+                      />
+                    ),
+                  )}
                 </nav>
 
                 <div className="p-4 border-t border-border/50 bg-muted/10">
