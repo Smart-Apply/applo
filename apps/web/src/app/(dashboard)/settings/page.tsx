@@ -1,44 +1,70 @@
+/* =============================================================================
+ *  page.tsx — Settings (REDESIGN)
+ *  TARGET PATH: apps/web/src/app/(dashboard)/settings/page.tsx
+ *
+ *  What changed (UI only — all data logic preserved verbatim):
+ *   • Tabs → section-driven view keyed off the ?section= query param, so the
+ *     sidebar dropdown (SettingsNavGroup) and search can deep-link into it.
+ *   • Aktiviert/Deaktiviert buttons → real <Switch> rows (SettingToggleRow).
+ *   • Theme <Select> → visual ThemeCards.
+ *   • Profile "Speichern" button → sticky ProfileSaveBar (only on dirty edits).
+ *   • Added SettingsSearch (find any setting), icon section headers, a
+ *     mobile-only section pill strip (the desktop nav lives in the sidebar).
+ *
+ *  Preserved unchanged: api.userPreferences (get/update), api.auth
+ *  (updateProfile / changePassword / deleteAccount / exportData), useAuthStore,
+ *  TwoFactorStatusCard, EmailTrackingSection, PremiumSupportCard, the
+ *  OAuth-only delete-confirm logic, and every toast.
+ *
+ *  PREREQ: shadcn Switch primitive →  npx shadcn@latest add switch
+ * ========================================================================== */
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { User, Shield, Bell, Palette, Trash2, ChevronRight, Loader2, Download } from 'lucide-react';
+import {
+  User, Shield, Bell, Palette, Trash2, ChevronRight, Loader2, Download,
+  Mail, Camera, Key, Lock, FileText, Search, Monitor, BarChart3, ExternalLink,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/stores/auth-store';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import type { UserPreferences } from '@/types';
 import { ApiError } from '@/lib/errors';
 import { TwoFactorStatusCard } from '@/components/two-factor';
 import { PremiumSupportCard } from '@/components/subscription/premium-support-card';
 import { EmailTrackingSection } from '@/components/settings/email-tracking-section';
+import {
+  SETTINGS_SECTIONS, resolveSection, type SettingsSectionId,
+} from '@/lib/settings-sections';
+import { SettingToggleRow } from '@/components/settings/setting-toggle-row';
+import { ThemeCards } from '@/components/settings/theme-cards';
+import { ProfileSaveBar } from '@/components/settings/profile-save-bar';
+import { SettingsSearch } from '@/components/settings/settings-search';
 
 export default function SettingsPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const section = resolveSection(pathname, searchParams.get('section'));
+  const setSection = (id: SettingsSectionId) =>
+    router.push(`/settings?section=${id}`, { scroll: false });
+
   const { user, clearAuth, updateUser } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -49,29 +75,25 @@ export default function SettingsPage() {
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
   const [email] = useState(user?.email || '');
-  
+
   // Password change
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
-  // For OAuth-only accounts (no local password) we fall back to a typed
-  // confirmation: the user must re-type their email to delete the account.
   const [deleteEmailConfirm, setDeleteEmailConfirm] = useState('');
 
-  // OAuth-only accounts (e.g. "Sign in with Google") never have a local
-  // password, so the password field would be impossible to satisfy. The
-  // backend already accepts an empty/missing password for these accounts;
-  // the frontend just needs to skip the password prompt.
   const isOAuthOnlyAccount = user?.hasPassword === false;
   const canConfirmDelete = isOAuthOnlyAccount
     ? deleteEmailConfirm.trim().toLowerCase() === (user?.email ?? '').toLowerCase()
     : deletePassword.length > 0;
 
+  const profileDirty =
+    firstName !== (user?.firstName || '') || lastName !== (user?.lastName || '');
+
   // User preferences
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
 
-  // Load user preferences on mount
   useEffect(() => {
     const loadPreferences = async () => {
       try {
@@ -87,10 +109,8 @@ export default function SettingsPage() {
     loadPreferences();
   }, []);
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveProfile = async () => {
     setIsLoading(true);
-
     try {
       const updatedUser = await api.auth.updateProfile({ firstName, lastName });
       updateUser({ firstName: updatedUser.firstName, lastName: updatedUser.lastName });
@@ -106,28 +126,35 @@ export default function SettingsPage() {
     }
   };
 
+  const handleUpdateProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    void saveProfile();
+  };
+
+  const discardProfile = () => {
+    setFirstName(user?.firstName || '');
+    setLastName(user?.lastName || '');
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (newPassword !== confirmPassword) {
       toast.error('Passwörter stimmen nicht überein');
       return;
     }
-
     if (newPassword.length < 8) {
       toast.error('Passwort muss mindestens 8 Zeichen lang sein');
       return;
     }
 
     setIsLoading(true);
-
     try {
       await api.auth.changePassword({ currentPassword, newPassword });
       toast.success('Passwort erfolgreich geändert. Bitte melden Sie sich erneut an.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      // Password change invalidates sessions, redirect to login
       clearAuth();
       router.push('/login');
     } catch (error) {
@@ -154,13 +181,8 @@ export default function SettingsPage() {
     }
 
     setIsDeleting(true);
-
     try {
-      // OAuth-only accounts: backend ignores the password field, so we
-      // omit it entirely. Local accounts: send the confirmation password.
-      await api.auth.deleteAccount(
-        isOAuthOnlyAccount ? {} : { password: deletePassword },
-      );
+      await api.auth.deleteAccount(isOAuthOnlyAccount ? {} : { password: deletePassword });
       toast.success('Account wurde gelöscht');
       clearAuth();
       router.push('/');
@@ -180,7 +202,6 @@ export default function SettingsPage() {
 
   const handleUpdatePreference = async (key: keyof UserPreferences, value: boolean | string) => {
     if (!preferences) return;
-
     try {
       const updatedPreferences = await api.userPreferences.update({ [key]: value });
       setPreferences(updatedPreferences);
@@ -194,111 +215,112 @@ export default function SettingsPage() {
     }
   };
 
+  const PrefLoader = () => (
+    <div className="flex items-center justify-center py-4">
+      <Loader2 className="h-6 w-6 animate-spin" />
+    </div>
+  );
+
+  const initial = (user?.firstName || user?.email)?.charAt(0).toUpperCase() ?? 'A';
+
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Einstellungen</h1>
+    <div className="mx-auto max-w-3xl pb-28">
+      {/* Page head + search */}
+      <div className="mb-6">
+        <h1 className="mb-2 text-3xl font-bold">Einstellungen</h1>
         <p className="text-muted-foreground">
-          Verwalte deine Account-Einstellungen und Präferenzen
+          Verwalte deinen Account, deine Sicherheit und deine Präferenzen.
         </p>
+        <div className="mt-4">
+          <SettingsSearch />
+        </div>
       </div>
 
-      <Tabs defaultValue="account" className="space-y-6">
-        {/*
-          Mobile: horizontally scrollable strip with full text labels so the
-          user can always tell which tab is which (icons alone aren't enough
-          context for "Sicherheit" vs "Präferenzen"). Desktop keeps the
-          original 4-cell grid.
-
-          The `-mx-4 px-4 sm:mx-0 sm:px-0` trick lets the scroll area bleed
-          to the screen edges on mobile (so the right-hand tab doesn't feel
-          cut off) without affecting desktop spacing.
-        */}
-        <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 sm:overflow-visible">
-          <TabsList className="inline-flex w-max gap-1 sm:grid sm:w-full sm:grid-cols-4 sm:gap-0 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="account" className="gap-2 whitespace-nowrap">
-              <User className="h-4 w-4" />
-              <span>Account</span>
-            </TabsTrigger>
-            <TabsTrigger value="security" className="gap-2 whitespace-nowrap">
-              <Shield className="h-4 w-4" />
-              <span>Sicherheit</span>
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2 whitespace-nowrap">
-              <Bell className="h-4 w-4" />
-              <span>Benachrichtigungen</span>
-            </TabsTrigger>
-            <TabsTrigger value="preferences" className="gap-2 whitespace-nowrap">
-              <Palette className="h-4 w-4" />
-              <span>Präferenzen</span>
-            </TabsTrigger>
-          </TabsList>
+      {/* Mobile section switcher (desktop nav lives in the sidebar dropdown) */}
+      <div className="-mx-4 mb-6 overflow-x-auto px-4 md:hidden">
+        <div className="inline-flex gap-1 rounded-xl bg-muted p-1">
+          {SETTINGS_SECTIONS.map((s) => {
+            const Icon = s.icon;
+            const active = s.id === section;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setSection(s.id)}
+                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
+                  active ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {s.label}
+              </button>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Account Tab */}
-        <TabsContent value="account" className="space-y-6">
+      {/* ================= ACCOUNT ================= */}
+      {section === 'account' && (
+        <div className="space-y-6">
+          <SectionHeader icon={User} title="Account" sub="Verwalte deine persönlichen Informationen und Account-Daten." />
+
           <Card>
             <CardHeader>
               <CardTitle>Profil-Informationen</CardTitle>
-              <CardDescription>
-                Aktualisiere deine persönlichen Informationen
-              </CardDescription>
+              <CardDescription>Diese Angaben erscheinen auf deinen generierten Unterlagen.</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-6 flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-2xl font-bold text-primary">
+                  {initial}
+                </div>
+                <div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-2" type="button">
+                      <Camera className="h-4 w-4" /> Bild hochladen
+                    </Button>
+                    <Button variant="ghost" size="sm" type="button">Entfernen</Button>
+                  </div>
+                  <p className="mt-1.5 text-xs text-muted-foreground">JPG oder PNG, max. 2 MB.</p>
+                </div>
+              </div>
+
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Vorname</Label>
-                    <Input
-                      id="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="Max"
-                    />
+                    <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Max" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Nachname</Label>
-                    <Input
-                      id="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Mustermann"
-                    />
+                    <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Mustermann" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">E-Mail-Adresse</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    E-Mail-Adresse kann nicht geändert werden
+                  <div className="relative">
+                    <Input id="email" type="email" value={email} disabled className="bg-muted pr-9" />
+                    <Lock className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  </div>
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Lock className="h-3 w-3" /> Mit deinem Anbieter verknüpft — die E-Mail-Adresse kann nicht geändert werden.
                   </p>
                 </div>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Wird gespeichert...' : 'Änderungen speichern'}
-                </Button>
+                {/* submit handled by the sticky ProfileSaveBar; this enables Enter-to-save */}
+                <button type="submit" className="hidden" aria-hidden tabIndex={-1} />
               </form>
             </CardContent>
           </Card>
 
-          <Card className="border-destructive">
+          <Card className="border-destructive/50">
             <CardHeader>
               <CardTitle className="text-destructive">Account löschen</CardTitle>
-              <CardDescription>
-                Lösche deinen Account und alle zugehörigen Daten permanent
-              </CardDescription>
+              <CardDescription>Lösche deinen Account und alle zugehörigen Daten permanent.</CardDescription>
             </CardHeader>
             <CardContent>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" className="gap-2">
-                    <Trash2 className="h-4 w-4" />
-                    Account löschen
+                    <Trash2 className="h-4 w-4" /> Account löschen
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -312,45 +334,29 @@ export default function SettingsPage() {
                   <div className="py-4">
                     {isOAuthOnlyAccount ? (
                       <>
-                        <Label htmlFor="deleteEmailConfirm">
-                          Gib deine E-Mail-Adresse zur Bestätigung ein
-                        </Label>
+                        <Label htmlFor="deleteEmailConfirm">Gib deine E-Mail-Adresse zur Bestätigung ein</Label>
                         <Input
-                          id="deleteEmailConfirm"
-                          type="email"
-                          autoComplete="off"
-                          value={deleteEmailConfirm}
-                          onChange={(e) => setDeleteEmailConfirm(e.target.value)}
-                          placeholder={user?.email ?? ''}
-                          className="mt-2"
+                          id="deleteEmailConfirm" type="email" autoComplete="off"
+                          value={deleteEmailConfirm} onChange={(e) => setDeleteEmailConfirm(e.target.value)}
+                          placeholder={user?.email ?? ''} className="mt-2"
                         />
                         <p className="mt-2 text-xs text-muted-foreground">
-                          Du hast dich mit einem externen Anbieter angemeldet und kein Passwort
-                          gesetzt. Bitte tippe stattdessen deine E-Mail-Adresse ein, um die
-                          Löschung zu bestätigen.
+                          Du hast dich mit einem externen Anbieter angemeldet und kein Passwort gesetzt.
+                          Bitte tippe stattdessen deine E-Mail-Adresse ein, um die Löschung zu bestätigen.
                         </p>
                       </>
                     ) : (
                       <>
                         <Label htmlFor="deletePassword">Passwort zur Bestätigung</Label>
                         <Input
-                          id="deletePassword"
-                          type="password"
-                          value={deletePassword}
-                          onChange={(e) => setDeletePassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="mt-2"
+                          id="deletePassword" type="password" value={deletePassword}
+                          onChange={(e) => setDeletePassword(e.target.value)} placeholder="••••••••" className="mt-2"
                         />
                       </>
                     )}
                   </div>
                   <AlertDialogFooter>
-                    <AlertDialogCancel
-                      onClick={() => {
-                        setDeletePassword('');
-                        setDeleteEmailConfirm('');
-                      }}
-                    >
+                    <AlertDialogCancel onClick={() => { setDeletePassword(''); setDeleteEmailConfirm(''); }}>
                       Abbrechen
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -367,10 +373,14 @@ export default function SettingsPage() {
           </Card>
 
           <PremiumSupportCard />
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6">
+      {/* ================= SECURITY ================= */}
+      {section === 'security' && (
+        <div className="space-y-6">
+          <SectionHeader icon={Shield} title="Sicherheit" sub="Schütze deinen Account mit zusätzlichen Sicherheitsmaßnahmen." />
+
           <Card>
             <CardHeader>
               <CardTitle>Passwort ändern</CardTitle>
@@ -382,44 +392,37 @@ export default function SettingsPage() {
             </CardHeader>
             {isOAuthOnlyAccount ? (
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Du hast dich über{' '}
-                  <span className="font-medium capitalize">{user?.provider ?? 'OAuth'}</span>{' '}
-                  angemeldet. Verwalte dein Passwort direkt bei deinem Anbieter.
-                </p>
+                <div className="flex items-center gap-4 rounded-xl border border-border p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                    <Key className="h-[18px] w-[18px]" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold">
+                      Anmeldung über <span className="capitalize">{user?.provider ?? 'OAuth'}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Verwalte dein Passwort direkt bei deinem Anbieter.
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-2" type="button">
+                    <ExternalLink className="h-4 w-4" /> Verwalten
+                  </Button>
+                </div>
               </CardContent>
             ) : (
               <CardContent>
                 <form onSubmit={handleChangePassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="currentPassword">Aktuelles Passwort</Label>
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
+                    <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••••" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="newPassword">Neues Passwort</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
+                    <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
+                    <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" />
                   </div>
                   <Button type="submit" disabled={isLoading}>
                     {isLoading ? 'Wird geändert...' : 'Passwort ändern'}
@@ -434,127 +437,103 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Aktive Sitzungen</CardTitle>
-              <CardDescription>
-                Verwalte deine aktiven Sitzungen auf verschiedenen Geräten
-              </CardDescription>
+              <CardDescription>Verwalte deine aktiven Sitzungen auf verschiedenen Geräten</CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/settings/sessions">
                 <Button variant="outline" className="w-full justify-between">
-                  Sitzungen verwalten
+                  <span className="flex items-center gap-2">
+                    <Monitor className="h-4 w-4" /> Sitzungen verwalten
+                  </span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Notifications Tab */}
-        <TabsContent value="notifications" className="space-y-6">
+      {/* ================= NOTIFICATIONS ================= */}
+      {section === 'notifications' && (
+        <div className="space-y-6">
+          <SectionHeader icon={Bell} title="Benachrichtigungen" sub="Entscheide, worüber und wann Applo dich auf dem Laufenden hält." />
+
           <Card>
             <CardHeader>
               <CardTitle>E-Mail-Benachrichtigungen</CardTitle>
-              <CardDescription>
-                Wähle aus, welche E-Mails du erhalten möchtest
-              </CardDescription>
+              <CardDescription>Wähle aus, welche E-Mails du erhalten möchtest</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               {isLoadingPreferences ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
+                <PrefLoader />
               ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Bewerbungs-Updates</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Erhalte Updates zu deinen Bewerbungen
-                      </p>
-                    </div>
-                    <Button
-                      variant={preferences?.applicationUpdates ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleUpdatePreference('applicationUpdates', !preferences?.applicationUpdates)}
-                    >
-                      {preferences?.applicationUpdates ? 'Aktiviert' : 'Deaktiviert'}
-                    </Button>
+                <div className="divide-y divide-border">
+                  <div className="pb-3">
+                    <SettingToggleRow
+                      icon={FileText}
+                      title="Bewerbungs-Updates"
+                      description="Status-Änderungen und Erinnerungen zu deinen Bewerbungen."
+                      checked={!!preferences?.applicationUpdates}
+                      onCheckedChange={(v) => handleUpdatePreference('applicationUpdates', v)}
+                    />
                   </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Neue Stellenanzeigen</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Erhalte Benachrichtigungen über neue Stellenanzeigen
-                      </p>
-                    </div>
-                    <Button
-                      variant={preferences?.newJobPostings ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleUpdatePreference('newJobPostings', !preferences?.newJobPostings)}
-                    >
-                      {preferences?.newJobPostings ? 'Aktiviert' : 'Deaktiviert'}
-                    </Button>
+                  <div className="py-3">
+                    <SettingToggleRow
+                      icon={Search}
+                      title="Neue Stellenanzeigen"
+                      description="Passende Stellen, sobald sie verfügbar sind."
+                      checked={!!preferences?.newJobPostings}
+                      onCheckedChange={(v) => handleUpdatePreference('newJobPostings', v)}
+                    />
                   </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Marketing-E-Mails</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Erhalte Newsletter und Produktupdates
-                      </p>
-                    </div>
-                    <Button
-                      variant={preferences?.marketingEmails ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleUpdatePreference('marketingEmails', !preferences?.marketingEmails)}
-                    >
-                      {preferences?.marketingEmails ? 'Aktiviert' : 'Deaktiviert'}
-                    </Button>
+                  <div className="pt-3">
+                    <SettingToggleRow
+                      icon={Mail}
+                      title="Produkt & Newsletter"
+                      description="Neue Features, Tipps und gelegentliche Angebote."
+                      checked={!!preferences?.marketingEmails}
+                      onCheckedChange={(v) => handleUpdatePreference('marketingEmails', v)}
+                    />
                   </div>
-                </>
+                </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Email Tracking (Premium feature) — OAuth inbox sync. Lives
-              under "Benachrichtigungen" instead of getting its own tab. */}
+          {/* Email Tracking (Premium) — unchanged component */}
           <EmailTrackingSection
             preferences={preferences}
             onTogglePreference={(key, value) => handleUpdatePreference(key, value)}
             isLoadingPreferences={isLoadingPreferences}
           />
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Preferences Tab */}
-        <TabsContent value="preferences" className="space-y-6">
+      {/* ================= PREFERENCES ================= */}
+      {section === 'preferences' && (
+        <div className="space-y-6">
+          <SectionHeader icon={Palette} title="Präferenzen" sub="Passe Applo an deine Sprache, dein Design und deine Datenschutz-Wünsche an." />
+
           <Card>
             <CardHeader>
               <CardTitle>Sprache & Region</CardTitle>
-              <CardDescription>
-                Wähle deine bevorzugte Sprache und Region
-              </CardDescription>
+              <CardDescription>Bestimmt die Sprache der Oberfläche und der generierten Unterlagen.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               {isLoadingPreferences ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
+                <PrefLoader />
               ) : (
                 <div className="space-y-2">
                   <Label htmlFor="language">Sprache</Label>
-                  <Select
-                    value={preferences?.language || 'de'}
-                    onValueChange={(value) => handleUpdatePreference('language', value)}
-                  >
-                    <SelectTrigger id="language">
+                  <Select value={preferences?.language || 'de'} onValueChange={(value) => handleUpdatePreference('language', value)}>
+                    <SelectTrigger id="language" className="max-w-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                      <SelectItem value="en">🇬🇧 English</SelectItem>
+                      <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                      <SelectItem value="es">🇪🇸 Español</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -565,32 +544,16 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Design</CardTitle>
-              <CardDescription>
-                Passe das Erscheinungsbild der Anwendung an
-              </CardDescription>
+              <CardDescription>Wähle, wie Applo aussehen soll. &bdquo;System&ldquo; folgt den Einstellungen deines Geräts.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               {isLoadingPreferences ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
+                <PrefLoader />
               ) : (
-                <div className="space-y-2">
-                  <Label htmlFor="theme">Theme</Label>
-                  <Select
-                    value={preferences?.theme || 'system'}
-                    onValueChange={(value) => handleUpdatePreference('theme', value)}
-                  >
-                    <SelectTrigger id="theme">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Hell</SelectItem>
-                      <SelectItem value="dark">Dunkel</SelectItem>
-                      <SelectItem value="system">System</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <ThemeCards
+                  value={(preferences?.theme as 'system' | 'light' | 'dark') || 'system'}
+                  onChange={(value) => handleUpdatePreference('theme', value)}
+                />
               )}
             </CardContent>
           </Card>
@@ -598,49 +561,36 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Datenschutz</CardTitle>
-              <CardDescription>
-                Verwalte deine Datenschutz-Einstellungen
-              </CardDescription>
+              <CardDescription>Du behältst die Kontrolle über deine Daten.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               {isLoadingPreferences ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
+                <PrefLoader />
               ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Profil öffentlich</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Dein Profil kann von anderen gesehen werden
-                      </p>
+                <div className="space-y-1">
+                  <div className="divide-y divide-border">
+                    <div className="pb-3">
+                      <SettingToggleRow
+                        icon={User}
+                        title="Öffentliches Profil"
+                        description="Dein Profil kann von anderen gesehen werden."
+                        checked={!!preferences?.profilePublic}
+                        onCheckedChange={(v) => handleUpdatePreference('profilePublic', v)}
+                      />
                     </div>
-                    <Button
-                      variant={preferences?.profilePublic ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleUpdatePreference('profilePublic', !preferences?.profilePublic)}
-                    >
-                      {preferences?.profilePublic ? 'Aktiviert' : 'Deaktiviert'}
-                    </Button>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Analyse-Daten</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Hilf uns, die App zu verbessern
-                      </p>
+                    <div className="pt-3">
+                      <SettingToggleRow
+                        icon={BarChart3}
+                        title="Anonyme Nutzungsdaten"
+                        description="Hilf uns, Applo zu verbessern. Keine personenbezogenen Inhalte."
+                        checked={!!preferences?.analyticsEnabled}
+                        onCheckedChange={(v) => handleUpdatePreference('analyticsEnabled', v)}
+                      />
                     </div>
-                    <Button
-                      variant={preferences?.analyticsEnabled ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleUpdatePreference('analyticsEnabled', !preferences?.analyticsEnabled)}
-                    >
-                      {preferences?.analyticsEnabled ? 'Aktiviert' : 'Deaktiviert'}
-                    </Button>
                   </div>
-                  <Separator />
+
+                  <Separator className="my-4" />
+
                   <div className="flex items-center justify-between gap-4">
                     <div className="space-y-0.5">
                       <Label>Meine Daten exportieren</Label>
@@ -649,9 +599,7 @@ export default function SettingsPage() {
                       </p>
                     </div>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isExporting}
+                      variant="outline" size="sm" disabled={isExporting}
                       onClick={async () => {
                         setIsExporting(true);
                         try {
@@ -665,24 +613,43 @@ export default function SettingsPage() {
                       }}
                     >
                       {isExporting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Wird vorbereitet...
-                        </>
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Wird vorbereitet...</>
                       ) : (
-                        <>
-                          <Download className="mr-2 h-4 w-4" />
-                          Herunterladen
-                        </>
+                        <><Download className="mr-2 h-4 w-4" /> Herunterladen</>
                       )}
                     </Button>
                   </div>
-                </>
+                </div>
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
+
+      {/* Sticky save bar — profile edits only */}
+      <ProfileSaveBar
+        visible={section === 'account' && profileDirty}
+        saving={isLoading}
+        onSave={saveProfile}
+        onDiscard={discardProfile}
+      />
+    </div>
+  );
+}
+
+/* Section header with an icon chip. */
+function SectionHeader({
+  icon: Icon, title, sub,
+}: { icon: React.ComponentType<{ className?: string }>; title: string; sub: string }) {
+  return (
+    <div>
+      <h2 className="flex items-center gap-3 text-2xl font-bold">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <Icon className="h-[19px] w-[19px]" />
+        </span>
+        {title}
+      </h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">{sub}</p>
     </div>
   );
 }

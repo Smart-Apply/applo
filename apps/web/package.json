@@ -52,6 +52,7 @@
     "marked": "^18.0.5",
     "next": "^16.2.9",
     "pdfjs-dist": "6.1.200",
+    "radix-ui": "^1.6.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-dropzone": "^15.0.0",
