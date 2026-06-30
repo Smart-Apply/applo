@@ -134,13 +134,23 @@ export class ProfileService {
                 },
               });
             } else {
-              // Create new
-              await tx.skill.create({
-                data: {
+              // Create or update if skill with same name exists (unique constraint on profileId, name)
+              await tx.skill.upsert({
+                where: {
+                  profileId_name: {
+                    profileId: profile.id,
+                    name: skill.name,
+                  },
+                },
+                create: {
                   profileId: profile.id,
                   name: skill.name,
                   category: 'General',
                   level: skill.level,
+                },
+                update: {
+                  level: skill.level,
+                  category: 'General',
                 },
               });
             }
@@ -348,10 +358,20 @@ export class ProfileService {
                 },
               });
             } else {
-              await tx.language.create({
-                data: {
+              // Create or update if language with same name exists (unique constraint on profileId, name)
+              await tx.language.upsert({
+                where: {
+                  profileId_name: {
+                    profileId: profile.id,
+                    name: lang.name,
+                  },
+                },
+                create: {
                   profileId: profile.id,
                   name: lang.name,
+                  level: lang.level,
+                },
+                update: {
                   level: lang.level,
                 },
               });
