@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { toast } from '@/lib/toast';
+import { hardReloadWithCacheBust } from '@/lib/hard-reload';
 
 /**
  * Stable sonner toast id used for both chunk-error and SW-update
@@ -56,47 +57,6 @@ export function showUpdateAvailableToast(): void {
       },
     },
   );
-}
-
-/**
- * Hard reload that proactively clears caches and the service worker
- * before navigating. Belt-and-braces against the chunks of stale state
- * that have bitten us during the closed beta:
- *
- *   - Service Worker cache (`caches.delete(name)` for each cache key)
- *   - Service Worker registration itself (`unregister()`)
- *   - Browser HTTP cache (cache-busting `?_v=<timestamp>` on the URL)
- *
- * Errors during cleanup are swallowed — the reload still proceeds so
- * the user is never stuck if e.g. `caches` is unavailable in the
- * runtime (older iOS Safari) or the SW registration call throws.
- */
-async function hardReloadWithCacheBust(): Promise<void> {
-  try {
-    if (typeof caches !== 'undefined') {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k).catch(() => undefined)));
-    }
-  } catch {
-    // Cache cleanup is best-effort — don't block the reload on it.
-  }
-
-  try {
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map((r) => r.unregister().catch(() => undefined)));
-    }
-  } catch {
-    // Same: best effort.
-  }
-
-  // `location.replace` (not `assign`) keeps the user out of back-button
-  // history pointing at the stale URL. The `?_v=<ts>` query bypasses
-  // any aggressive HTML cache; the Worker ignores unknown query params
-  // for HTML routes so this is safe.
-  const url = new URL(window.location.href);
-  url.searchParams.set('_v', String(Date.now()));
-  window.location.replace(url.toString());
 }
 
 /**

@@ -21,7 +21,7 @@ function safeOrigin(url: string | undefined): string | null {
 //   Cloudflare Workers runtime is V8-only and cannot run Node middleware,
 //   so we keep the legacy `middleware.ts` (Edge runtime) for portability.
 //   This file does no Node-specific work — just response header writes.
-export function middleware(_request: NextRequest) {
+export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   // ---- Build the list of allowed API origins for CSP ----
@@ -101,6 +101,28 @@ export function middleware(_request: NextRequest) {
   ].join('; ');
 
   response.headers.set('Content-Security-Policy', csp);
+
+  // ---- Force revalidation of navigable HTML documents ----
+  //
+  // Next.js prerenders static pages with `Cache-Control: s-maxage=31536000`
+  // (one year), assuming the host purges its CDN on every deploy — true on
+  // Vercel, NOT on OpenNext/Cloudflare (deploys don't purge anything). Left
+  // as-is, any SHARED cache (CF edge / tiered cache / Cache Reserve, a
+  // corporate proxy) can pin an OLD HTML document that still references the
+  // previous build's content-hashed chunks; after the next deploy those
+  // hashes 404 and the tab breaks — the stale-chunk failure mode that
+  // `chunk-error-handler` has to recover from client-side.
+  //
+  // Documents must therefore always be revalidated. `no-cache` still allows
+  // an efficient conditional revalidation via the ETag (a 304 when the
+  // prerender is unchanged); it only forbids serving a stale copy WITHOUT
+  // checking the origin first. Scoped to top-level navigations via
+  // `Sec-Fetch-Dest: document`, so the immutable, content-hashed
+  // `/_next/static/*` chunks (dest `script`/`style`/`font`) keep their long
+  // `immutable` cache and are never touched here.
+  if (request.headers.get('sec-fetch-dest') === 'document') {
+    response.headers.set('Cache-Control', 'no-cache');
+  }
 
   return response;
 }
