@@ -91,7 +91,7 @@ smart-apply/
 │   └── web/                  # @smart-apply/web (Next.js 16)
 │       ├── src/
 │       │   ├── app/               # App Router (route groups)
-│       │   ├── components/        # UI + shadcn/ui + pdf
+│       │   ├── components/        # UI + shadcn/ui + pdf + analytics (recharts)
 │       │   ├── hooks/             # Custom React hooks
 │       │   ├── lib/               # api-client, providers, utils
 │       │   ├── stores/            # Zustand
@@ -303,6 +303,7 @@ User 1:1 Subscription
 | State      | Zustand 5 · TanStack Query 5                            |
 | Forms      | react-hook-form 7 · Zod (`@hookform/resolvers`)         |
 | PDF Viewer | react-pdf · pdfjs-dist                                  |
+| Charts     | recharts (Analytics activity chart)                     |
 | Editor     | Tiptap 3 (StarterKit + TextStyle)                       |
 | Toast      | Sonner                                                  |
 | Files      | react-dropzone · jszip                                  |
