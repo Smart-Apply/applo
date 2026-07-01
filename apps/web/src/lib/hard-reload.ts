@@ -47,7 +47,12 @@ export async function hardReloadWithCacheBust(): Promise<void> {
   // history pointing at the stale URL. The `?_v=<ts>` query bypasses any
   // aggressive HTML cache; the Worker ignores unknown query params for
   // HTML routes so this is safe.
-  const url = new URL(window.location.href);
-  url.searchParams.set('_v', String(Date.now()));
-  window.location.replace(url.toString());
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set('_v', String(Date.now()));
+    window.location.replace(url.toString());
+  } catch {
+    // Last resort: attempt a normal reload.
+    window.location.reload();
+  }
 }
