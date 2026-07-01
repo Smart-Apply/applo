@@ -173,6 +173,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - **TanStack Query 5.90** (server state, caching, optimistic updates)
 - **Forms:** react-hook-form 7.66 + Zod 3.25 (`@hookform/resolvers`)
 - **PDF:** react-pdf 10 + pdfjs-dist 5
+- **Charts:** recharts (Analytics activity chart only — the rest of `apps/web/src/components/analytics/*` uses Tailwind/inline SVG, no chart lib)
 - **Editor:** Tiptap 3.10 (StarterKit + TextStyle)
 - **Sanitization:** isomorphic-dompurify
 - **Files:** react-dropzone, jszip

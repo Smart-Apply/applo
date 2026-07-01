@@ -25,7 +25,7 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 
 | Layer          | Technology                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **Frontend**   | Next.js 16 · React 19 · Tailwind v4 · shadcn/ui · TanStack Query · Zustand                                                           |
+| **Frontend**   | Next.js 16 · React 19 · Tailwind v4 · shadcn/ui · TanStack Query · Zustand · recharts (Analytics)                                   |
 | **Backend**    | NestJS 11 · Prisma 6 (pg adapter) · Neon Postgres (pooled + direct) · Pino · Helmet                                                  |
 | **AI**         | Azure AI Foundry · Azure OpenAI · LangChain · LangGraph · Hugging Face                                                               |
 | **PDF**        | `@react-pdf/renderer` 4.5 (TSX templates) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake). |
