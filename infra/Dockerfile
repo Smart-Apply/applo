@@ -89,12 +89,23 @@ RUN echo '{"extends":"./tsconfig.json","compilerOptions":{"module":"commonjs","t
 # `pnpm deploy` resolves @smart-apply/shared (a workspace dep) into a real
 # copy inside node_modules so the production stage doesn't need a symlink
 # back into packages/shared.
+#
+# Uses pnpm 10+'s DEFAULT deploy strategy (no `--legacy`): it derives a
+# dedicated lockfile directly from the already-resolved root pnpm-lock.yaml —
+# a local, network-free operation — then does a headless install from it.
+# Requires `injectWorkspacePackages: true` in pnpm-workspace.yaml (hard-copies
+# workspace deps like @smart-apply/shared instead of symlinking them).
+# `--legacy` re-resolves the ENTIRE dependency graph from scratch/network
+# instead, which queries the registry for every optional platform variant of
+# every resolver (@unrs/resolver-binding-*, incl. android/freebsd/wasm32/
+# win32/s390x/ppc64/riscv64/loong64 — none of which this repo needs) and is
+# what OOM-killed (exit 137) the Fly remote builder here previously.
 FROM builder AS deployer
 
 WORKDIR /app
 
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm --filter @smart-apply/api deploy --prod --legacy /prod/api
+    pnpm --filter @smart-apply/api deploy --prod /prod/api
 
 # ---------------------------------------------------------------------------
 # Stage 3: production runtime
