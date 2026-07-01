@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.1](https://github.com/Smart-Apply/smart-apply/compare/v4.3.0...v4.3.1) (2026-07-01)
+
+
+### Bug Fixes
+
+* **deploy:** stop pnpm deploy --legacy from OOM-killing the Fly builder ([#617](https://github.com/Smart-Apply/smart-apply/issues/617)) ([27fb5ca](https://github.com/Smart-Apply/smart-apply/commit/27fb5ca9428b426ec461f0508748bd1d0da0ffe4))
+
 ## [4.3.0](https://github.com/Smart-Apply/smart-apply/compare/v4.2.1...v4.3.0) (2026-06-30)
 
 
