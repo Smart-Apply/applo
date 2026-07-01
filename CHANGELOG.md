@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.1](https://github.com/Smart-Apply/smart-apply/compare/v4.4.0...v4.4.1) (2026-07-01)
+
+
+### Bug Fixes
+
+* **web:** recover stale chunks with a cache-busting hard reload ([#621](https://github.com/Smart-Apply/smart-apply/issues/621)) ([0b408fe](https://github.com/Smart-Apply/smart-apply/commit/0b408fe4f7a392ad398f370712d8e693201dafd7))
+
 ## [4.4.0](https://github.com/Smart-Apply/smart-apply/compare/v4.3.1...v4.4.0) (2026-07-01)
 
 
