@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.0](https://github.com/Smart-Apply/smart-apply/compare/v4.3.1...v4.4.0) (2026-07-01)
+
+
+### Features
+
+* **analytics:** redesign analytics dashboard with trends and funnel ([#619](https://github.com/Smart-Apply/smart-apply/issues/619)) ([aa67bfb](https://github.com/Smart-Apply/smart-apply/commit/aa67bfbbcbe94e7f7029a0e3bd2d237f004be437))
+
 ## [4.3.1](https://github.com/Smart-Apply/smart-apply/compare/v4.3.0...v4.3.1) (2026-07-01)
 
 
