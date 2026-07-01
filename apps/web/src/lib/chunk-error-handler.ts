@@ -31,10 +31,13 @@
 
 import { toast } from 'sonner';
 
+import { hardReloadWithCacheBust } from './hard-reload';
+
 const RELOAD_MARKER_KEY = 'smart-apply:chunk-reload-at';
 const RELOAD_LOOP_GUARD_MS = 30_000;
 
 let installed = false;
+let reloadInFlight = false;
 
 function isNextChunkUrl(url: string | null | undefined): boolean {
   if (!url) return false;
@@ -64,6 +67,14 @@ function markReloadAttempt(): void {
 }
 
 function handleChunkLoadFailure(source: string): void {
+  // The recovery reload is async (it clears Cache Storage + unregisters
+  // the Service Worker before navigating). Several chunks routinely fail
+  // in the same tick after a deploy; only the FIRST should drive
+  // recovery. Without this in-flight guard the later failures would fall
+  // through to the "still broken after reload" branch below and flash a
+  // misleading error toast while the reload is still being set up.
+  if (reloadInFlight) return;
+
   if (recentlyReloaded()) {
     // We just reloaded and it's STILL failing — assume the deploy is
     // actually broken (not just a stale tab). Stop reloading and warn
@@ -78,13 +89,20 @@ function handleChunkLoadFailure(source: string): void {
     return;
   }
 
+  reloadInFlight = true;
   console.warn(
     `[chunk-error-handler] Detected stale chunk reference (source=${source}). Reloading…`,
   );
   markReloadAttempt();
-  // Use the synchronous form; we don't want any in-flight micro-tasks
-  // to enqueue another error after we've decided to reload.
-  window.location.reload();
+  // A plain window.location.reload() goes through the active Service
+  // Worker, so a previous-build SW can re-serve the SAME stale HTML that
+  // referenced the now-404 chunk — the "chunk load failed again after
+  // reload" dead-end. Do a cache-busting hard reload instead: clear
+  // Cache Storage, unregister service workers, and add a `?_v=` param so
+  // the reload lands on the CURRENT deploy's HTML with live chunk
+  // hashes. The sessionStorage marker set above still guards against a
+  // loop on a genuinely-broken deploy (one attempt, then suppress).
+  void hardReloadWithCacheBust();
 }
 
 /**
