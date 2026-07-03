@@ -14,10 +14,21 @@ import type {
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConfigService } from '../../config/config.service';
 import { InterviewsService } from '../interviews.service';
-import { InterviewSessionStatus } from '../../generated/prisma/client';
+import { InterviewSessionStatus, Prisma } from '../../generated/prisma/client';
 import { REALTIME_VOICES, VOICE_PROVIDER, VoiceProvider } from './voice-provider.interface';
 
 const AZURE_REALTIME_MAX_SESSION_SECONDS = 60 * 60; // Azure caps a realtime session at 60 min.
+
+type CandidateProfile = Prisma.ProfileGetPayload<{
+  include: {
+    skills: true;
+    experiences: true;
+    education: true;
+    projects: true;
+    certificates: true;
+    languages: true;
+  };
+}>;
 
 /**
  * Voice-interview orchestration: availability/quota reporting and minting
@@ -159,41 +170,225 @@ export class VoiceInterviewService {
   /** Build the interviewer system prompt (kept private from the browser). */
   private async buildInstructions(
     userId: string,
-    session: { jobTitle: string | null; company: string | null; industry: string | null; difficulty: string; type: string; language: string; maxQuestions: number },
+    session: {
+      jobTitle: string | null;
+      company: string | null;
+      industry: string | null;
+      jobDescription: string | null;
+      difficulty: string;
+      type: string;
+      language: string;
+      maxQuestions: number;
+    },
   ): Promise<string> {
-    const profile = await this.prisma.profile.findUnique({
-      where: { userId },
-      select: { summary: true },
-    });
+    const [profile, user] = await Promise.all([
+      this.prisma.profile.findUnique({
+        where: { userId },
+        include: {
+          skills: { take: 12 },
+          experiences: { orderBy: { startDate: 'desc' }, take: 4 },
+          education: { orderBy: { startYear: 'desc' }, take: 4 },
+          projects: { take: 3 },
+          certificates: { orderBy: { issueDate: 'desc' }, take: 5 },
+          languages: true,
+        },
+      }),
+      this.prisma.user.findUnique({ where: { id: userId }, select: { firstName: true } }),
+    ]);
 
     const isGerman = session.language !== 'en';
     const jobTitle = session.jobTitle ?? (isGerman ? 'die ausgeschriebene Position' : 'the role');
     const difficulty = this.difficultyLabel(session.difficulty, isGerman);
     const type = this.typeLabel(session.type, isGerman);
     const maxQuestions = session.maxQuestions;
-    const summary = profile?.summary?.trim();
+    const firstName = user?.firstName?.trim() || null;
+    const interviewerName = isGerman ? 'Alexandra Berger' : 'Alex Bennett';
+    const company = session.company ?? 'Meridian Group';
+    const jobDescription = this.truncate(this.stripHtml(session.jobDescription), 800);
+    const dossier = profile ? this.buildCandidateDossier(profile, isGerman) : '';
 
     if (isGerman) {
       return [
-        `Du bist ein erfahrener, professioneller Interviewer${session.company ? ` bei ${session.company}` : ''} und führst ein ${difficulty} ${type}-Vorstellungsgespräch für „${jobTitle}“${session.industry ? ` in der Branche ${session.industry}` : ''}.`,
-        `Führe ein realistisches Gespräch auf Deutsch. Stelle jeweils EINE Frage, höre aufmerksam zu und stelle bei Bedarf eine kurze Nachfrage. Stelle insgesamt etwa ${maxQuestions} Hauptfragen.`,
-        'Halte deine Beiträge gesprächig und kurz (1–3 Sätze). Beginne mit einer freundlichen Begrüßung und deiner ersten Frage.',
-        'Bleibe durchgehend in der Rolle des Interviewers und gib während des Gesprächs KEIN bewertendes Feedback – die Auswertung erfolgt am Ende.',
-        summary ? `Hintergrund der Kandidatin/des Kandidaten: ${summary}` : '',
+        `Du bist ${interviewerName}, erfahrene Interviewerin bei ${company}, und führst ein ${difficulty} ${type}-Übungs-Vorstellungsgespräch für „${jobTitle}“${session.industry ? ` in der Branche ${session.industry}` : ''}. Das Gespräch findet auf Deutsch statt.`,
+        `Eröffne das Gespräch wie in einem echten Interview: Begrüße ${firstName ? `${firstName} persönlich mit Vornamen` : 'die Kandidatin/den Kandidaten'}, stelle dich mit Namen und Rolle bei ${company} vor, umreiße kurz den Ablauf (ein Übungsgespräch mit etwa ${maxQuestions} Hauptfragen zu Werdegang und Zielposition) und frage, ob es losgehen kann.`,
+        'Stelle nach der Begrüßung genau EINE kurze, lockere Aufwärmfrage, bevor du zur ersten inhaltlichen Frage übergehst.',
+        `Stelle jeweils EINE Frage, höre aktiv zu, nimm in Überleitungen kurz Bezug auf das zuvor Gesagte und stelle höchstens EINE kurze Nachfrage pro Antwort, wenn sie Mehrwert bringt. Stelle insgesamt etwa ${maxQuestions} Hauptfragen.`,
+        dossier
+          ? 'Mische Fragen zur Zielposition mit konkreten Fragen zum Lebenslauf: Beziehe dich auf echte Stationen, Projekte, Erfolge und Kenntnisse aus dem Dossier unten (z. B. „Erzählen Sie mir von Ihrer Zeit als … bei …“, „Sie nennen … als Erfolg – wie sind Sie dabei vorgegangen?“, „Sie schätzen sich in … als … ein – geben Sie mir ein konkretes Beispiel.“).'
+          : 'Stelle fundierte Fragen zu Werdegang, Motivation und den für die Position relevanten Kompetenzen.',
+        'Halte deine Beiträge gesprächig und kurz (1–3 Sätze). Bleibe durchgehend in der Rolle der Interviewerin und gib während des Gesprächs KEIN bewertendes Feedback – die Auswertung erfolgt am Ende.',
+        'Beende das Gespräch professionell: Kündige die letzte Frage an, frage anschließend, ob es noch Fragen an dich oder das Unternehmen gibt, bedanke dich für das Gespräch und verabschiede dich freundlich.',
+        jobDescription ? `Stellenbeschreibung (Auszug): ${jobDescription}` : '',
+        dossier ? `Dossier – Lebenslauf der Kandidatin/des Kandidaten:\n${dossier}` : '',
       ]
         .filter(Boolean)
         .join('\n');
     }
 
     return [
-      `You are an experienced, professional interviewer${session.company ? ` at ${session.company}` : ''} conducting a ${difficulty} ${type} interview for "${jobTitle}"${session.industry ? ` in the ${session.industry} industry` : ''}.`,
-      `Hold a realistic conversation in English. Ask ONE question at a time, listen carefully, and add a short follow-up when useful. Ask roughly ${maxQuestions} main questions in total.`,
-      'Keep your turns conversational and short (1–3 sentences). Open with a friendly greeting and your first question.',
-      'Stay in the interviewer role throughout and do NOT give evaluative feedback during the conversation — the assessment happens at the end.',
-      summary ? `Candidate background: ${summary}` : '',
+      `You are ${interviewerName}, an experienced interviewer at ${company}, conducting a ${difficulty} ${type} practice interview for "${jobTitle}"${session.industry ? ` in the ${session.industry} industry` : ''}. The conversation is held in English.`,
+      `Open like a real interview: greet ${firstName ? `${firstName} by first name` : 'the candidate'}, introduce yourself with your name and role at ${company}, briefly outline the agenda (a practice interview with roughly ${maxQuestions} main questions about their background and the target role), and ask if they are ready to begin.`,
+      'After the greeting, ask exactly ONE short, casual warm-up question before moving on to the first substantive question.',
+      `Ask ONE question at a time, listen actively, briefly reference what was just said when transitioning to the next topic, and ask at most ONE short follow-up per answer when it adds value. Ask roughly ${maxQuestions} main questions in total.`,
+      dossier
+        ? 'Blend questions about the target role with concrete questions about the CV: reference real positions, projects, achievements, and skills from the dossier below (e.g. "Walk me through your time as … at …", "You list … as an achievement — how did you approach it?", "You rate yourself … in … — give me a concrete example.").'
+        : 'Ask well-founded questions about the candidate’s background, motivation, and the competencies relevant to the role.',
+      'Keep your turns conversational and short (1–3 sentences). Stay in the interviewer role throughout and do NOT give evaluative feedback during the conversation — the assessment happens at the end.',
+      'Close professionally: announce the final question, then ask whether the candidate has any questions for you or the company, thank them for the conversation, and say a friendly goodbye.',
+      jobDescription ? `Job description (excerpt): ${jobDescription}` : '',
+      dossier ? `Dossier — candidate CV:\n${dossier}` : '',
     ]
       .filter(Boolean)
       .join('\n');
+  }
+
+  /**
+   * Compact plain-text CV summary injected into the realtime instructions.
+   * Bounded deliberately: the instructions are re-sent for every session, so
+   * every extra token costs latency and money.
+   */
+  private buildCandidateDossier(profile: CandidateProfile, isGerman: boolean): string {
+    const sections: string[] = [];
+
+    const summary = this.stripHtml(profile.summary);
+    if (summary) {
+      sections.push(`${isGerman ? 'Kurzprofil' : 'Summary'}: ${this.truncate(summary, 400)}`);
+    }
+
+    const experiences = profile.experiences.map((exp) => {
+      const span = this.yearSpan(exp.startDate, exp.endDate, exp.isCurrent, isGerman);
+      const head = [`${exp.title}, ${exp.company}`, span ? `(${span})` : ''].filter(Boolean).join(' ');
+      const description = this.truncate(this.stripHtml(exp.description), 200);
+      const achievements = exp.achievements
+        .map((item) => this.truncate(this.stripHtml(item), 140))
+        .filter(Boolean)
+        .slice(0, 3)
+        .join('; ');
+      return [
+        `- ${head}`,
+        description ? `  ${description}` : '',
+        achievements ? `  ${isGerman ? 'Erfolge' : 'Achievements'}: ${achievements}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+    });
+    if (experiences.length) {
+      sections.push(`${isGerman ? 'Berufserfahrung' : 'Work experience'}:\n${experiences.join('\n')}`);
+    }
+
+    const education = profile.education.map((edu) => {
+      const span = this.yearSpan(edu.startYear, edu.endYear, false, isGerman);
+      const field = edu.fieldOfStudy ? `, ${edu.fieldOfStudy}` : '';
+      return `- ${edu.degree}${field} – ${edu.institution}${span ? ` (${span})` : ''}`;
+    });
+    if (education.length) {
+      sections.push(`${isGerman ? 'Ausbildung' : 'Education'}:\n${education.join('\n')}`);
+    }
+
+    const projects = profile.projects.map((project) => {
+      const tech = project.technologies.filter((item) => item.trim()).slice(0, 6).join(', ');
+      const description = this.truncate(this.stripHtml(project.description), 200);
+      const highlights = project.highlights
+        .map((item) => this.truncate(this.stripHtml(item), 140))
+        .filter(Boolean)
+        .slice(0, 2)
+        .join('; ');
+      return [
+        `- ${project.name}${tech ? ` (${tech})` : ''}`,
+        description ? `  ${description}` : '',
+        highlights ? `  Highlights: ${highlights}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+    });
+    if (projects.length) {
+      sections.push(`${isGerman ? 'Projekte' : 'Projects'}:\n${projects.join('\n')}`);
+    }
+
+    const skills = profile.skills
+      .map((skill) => {
+        const level = this.skillLevelLabel(skill.level, isGerman);
+        return level ? `${skill.name} (${level})` : skill.name;
+      })
+      .join(', ');
+    if (skills) {
+      sections.push(`${isGerman ? 'Kenntnisse' : 'Skills'}: ${skills}`);
+    }
+
+    const certificates = profile.certificates
+      .map((cert) => {
+        const year = cert.issueDate?.getFullYear();
+        return `${cert.name} (${cert.issuer}${year ? `, ${year}` : ''})`;
+      })
+      .join('; ');
+    if (certificates) {
+      sections.push(`${isGerman ? 'Zertifikate' : 'Certificates'}: ${certificates}`);
+    }
+
+    const languages = profile.languages
+      .map((lang) => {
+        const level = this.languageLevelLabel(lang.level, isGerman);
+        return level ? `${lang.name} (${level})` : lang.name;
+      })
+      .join(', ');
+    if (languages) {
+      sections.push(`${isGerman ? 'Sprachen' : 'Languages'}: ${languages}`);
+    }
+
+    return sections.join('\n');
+  }
+
+  // Same HTML→text approach as GroundingValidatorService.
+  private stripHtml(html: string | null | undefined): string {
+    if (!html) return '';
+    return html
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private truncate(text: string, maxLength: number): string {
+    if (text.length <= maxLength) return text;
+    return `${text.slice(0, maxLength).trimEnd()}…`;
+  }
+
+  private yearSpan(
+    start: Date | null,
+    end: Date | null,
+    isCurrent: boolean,
+    isGerman: boolean,
+  ): string {
+    const from = start?.getFullYear();
+    const to = end?.getFullYear();
+    if (from && (isCurrent || !to)) return isGerman ? `seit ${from}` : `since ${from}`;
+    if (from && to) return from === to ? `${from}` : `${from}–${to}`;
+    if (to) return isGerman ? `bis ${to}` : `until ${to}`;
+    return '';
+  }
+
+  private skillLevelLabel(level: string | null, isGerman: boolean): string | null {
+    if (!level) return null;
+    const map: Record<string, [string, string]> = {
+      BEGINNER: ['Grundkenntnisse', 'beginner'],
+      INTERMEDIATE: ['fortgeschritten', 'intermediate'],
+      ADVANCED: ['sehr gut', 'advanced'],
+      EXPERT: ['Expertenniveau', 'expert'],
+    };
+    const entry = map[level];
+    return entry ? (isGerman ? entry[0] : entry[1]) : null;
+  }
+
+  private languageLevelLabel(level: string | null, isGerman: boolean): string | null {
+    if (!level) return null;
+    const map: Record<string, [string, string]> = {
+      NATIVE: ['Muttersprache', 'native'],
+      FLUENT: ['fließend', 'fluent'],
+      ADVANCED: ['fortgeschritten', 'advanced'],
+      INTERMEDIATE: ['gut', 'intermediate'],
+      BASIC: ['Grundkenntnisse', 'basic'],
+    };
+    const entry = map[level];
+    return entry ? (isGerman ? entry[0] : entry[1]) : null;
   }
 
   private difficultyLabel(difficulty: string, isGerman: boolean): string {
