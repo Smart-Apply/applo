@@ -1003,6 +1003,12 @@ export interface VoiceTranscriptTurn {
 export interface StartVoiceSessionPayload {
   /** Optional voice override; falls back to the server default when omitted. */
   voice?: RealtimeVoice;
+  /**
+   * Desired call length in minutes. Server-side the value is clamped by the
+   * per-session hard cap and the remaining monthly voice budget; the minted
+   * `maxSessionSeconds` is authoritative.
+   */
+  durationMinutes?: 5 | 10 | 15;
 }
 
 export interface SubmitVoiceTranscriptPayload {

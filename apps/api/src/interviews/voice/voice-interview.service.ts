@@ -91,12 +91,18 @@ export class VoiceInterviewService {
     const voice = this.resolveVoice(payload?.voice);
     const model = this.config.azureOpenAIRealtimeDeployment;
     const hardSeconds = this.config.voiceInterviewMaxSessionMinutes * 60;
+    const requestedSeconds = payload?.durationMinutes
+      ? payload.durationMinutes * 60
+      : hardSeconds;
     const maxSessionSeconds =
       capSeconds < 0
-        ? Math.min(hardSeconds, AZURE_REALTIME_MAX_SESSION_SECONDS)
-        : Math.min(hardSeconds, remainingSeconds, AZURE_REALTIME_MAX_SESSION_SECONDS);
+        ? Math.min(requestedSeconds, hardSeconds, AZURE_REALTIME_MAX_SESSION_SECONDS)
+        : Math.min(requestedSeconds, hardSeconds, remainingSeconds, AZURE_REALTIME_MAX_SESSION_SECONDS);
 
-    const instructions = await this.buildInstructions(userId, session);
+    // The instructions must never promise more time than was actually minted
+    // (budget/hard-cap clamp), so derive the stated minutes from the ceiling.
+    const grantedMinutes = Math.max(1, Math.floor(maxSessionSeconds / 60));
+    const instructions = await this.buildInstructions(userId, session, grantedMinutes);
     const minted = await this.provider.createSession({
       sessionId,
       instructions,
@@ -178,8 +184,8 @@ export class VoiceInterviewService {
       difficulty: string;
       type: string;
       language: string;
-      maxQuestions: number;
     },
+    durationMinutes: number,
   ): Promise<string> {
     const [profile, user] = await Promise.all([
       this.prisma.profile.findUnique({
@@ -200,7 +206,6 @@ export class VoiceInterviewService {
     const jobTitle = session.jobTitle ?? (isGerman ? 'die ausgeschriebene Position' : 'the role');
     const difficulty = this.difficultyLabel(session.difficulty, isGerman);
     const type = this.typeLabel(session.type, isGerman);
-    const maxQuestions = session.maxQuestions;
     const firstName = user?.firstName?.trim() || null;
     const interviewerName = isGerman ? 'Alexandra Berger' : 'Alex Bennett';
     const company = session.company ?? 'Meridian Group';
@@ -209,15 +214,16 @@ export class VoiceInterviewService {
 
     if (isGerman) {
       return [
-        `Du bist ${interviewerName}, erfahrene Interviewerin bei ${company}, und führst ein ${difficulty} ${type}-Übungs-Vorstellungsgespräch für „${jobTitle}“${session.industry ? ` in der Branche ${session.industry}` : ''}. Das Gespräch findet auf Deutsch statt.`,
-        `Eröffne das Gespräch wie in einem echten Interview: Begrüße ${firstName ? `${firstName} persönlich mit Vornamen` : 'die Kandidatin/den Kandidaten'}, stelle dich mit Namen und Rolle bei ${company} vor, umreiße kurz den Ablauf (ein Übungsgespräch mit etwa ${maxQuestions} Hauptfragen zu Werdegang und Zielposition) und frage, ob es losgehen kann.`,
+        `Du bist ${interviewerName}, erfahrene Interviewerin bei ${company}, und führst ein etwa ${durationMinutes}-minütiges ${difficulty} ${type}-Übungs-Vorstellungsgespräch für „${jobTitle}“${session.industry ? ` in der Branche ${session.industry}` : ''}. Das Gespräch findet auf Deutsch statt.`,
+        `Eröffne das Gespräch wie in einem echten Interview: Begrüße ${firstName ? `${firstName} persönlich mit Vornamen` : 'die Kandidatin/den Kandidaten'}, stelle dich mit Namen und Rolle bei ${company} vor, umreiße kurz den Ablauf (ein Übungsgespräch von etwa ${durationMinutes} Minuten zu Werdegang und Zielposition) und frage, ob es losgehen kann.`,
         'Stelle nach der Begrüßung genau EINE kurze, lockere Aufwärmfrage, bevor du zur ersten inhaltlichen Frage übergehst.',
-        `Stelle jeweils EINE Frage, höre aktiv zu, nimm in Überleitungen kurz Bezug auf das zuvor Gesagte und stelle höchstens EINE kurze Nachfrage pro Antwort, wenn sie Mehrwert bringt. Stelle insgesamt etwa ${maxQuestions} Hauptfragen.`,
+        `Stelle jeweils EINE Frage, höre aktiv zu, nimm in Überleitungen kurz Bezug auf das zuvor Gesagte und stelle höchstens EINE kurze Nachfrage pro Antwort, wenn sie Mehrwert bringt. Teile dir die etwa ${durationMinutes} Minuten gut ein: Hetze nicht, und stelle so lange substanzielle Fragen, wie die Zeit reicht.`,
+        'Du hast keine eigene Uhr. Du erhältst während des Gesprächs Hinweise, wenn noch etwa eine Minute verbleibt und wenn die Zeit um ist. Beim Hinweis auf die letzte Minute: Schließe das aktuelle Thema ab und stelle höchstens EINE letzte Frage. Beim Hinweis, dass die Zeit um ist: Bedanke dich kurz und warm, verabschiede dich und stelle keine weiteren Fragen.',
         dossier
           ? 'Mische Fragen zur Zielposition mit konkreten Fragen zum Lebenslauf: Beziehe dich auf echte Stationen, Projekte, Erfolge und Kenntnisse aus dem Dossier unten (z. B. „Erzählen Sie mir von Ihrer Zeit als … bei …“, „Sie nennen … als Erfolg – wie sind Sie dabei vorgegangen?“, „Sie schätzen sich in … als … ein – geben Sie mir ein konkretes Beispiel.“).'
           : 'Stelle fundierte Fragen zu Werdegang, Motivation und den für die Position relevanten Kompetenzen.',
         'Halte deine Beiträge gesprächig und kurz (1–3 Sätze). Bleibe durchgehend in der Rolle der Interviewerin und gib während des Gesprächs KEIN bewertendes Feedback – die Auswertung erfolgt am Ende.',
-        'Beende das Gespräch professionell: Kündige die letzte Frage an, frage anschließend, ob es noch Fragen an dich oder das Unternehmen gibt, bedanke dich für das Gespräch und verabschiede dich freundlich.',
+        'Beende das Gespräch professionell: Frage zum Abschluss, ob es noch Fragen an dich oder das Unternehmen gibt (sofern die Zeit es erlaubt), bedanke dich für das Gespräch und verabschiede dich freundlich.',
         jobDescription ? `Stellenbeschreibung (Auszug): ${jobDescription}` : '',
         dossier ? `Dossier – Lebenslauf der Kandidatin/des Kandidaten:\n${dossier}` : '',
       ]
@@ -226,15 +232,16 @@ export class VoiceInterviewService {
     }
 
     return [
-      `You are ${interviewerName}, an experienced interviewer at ${company}, conducting a ${difficulty} ${type} practice interview for "${jobTitle}"${session.industry ? ` in the ${session.industry} industry` : ''}. The conversation is held in English.`,
-      `Open like a real interview: greet ${firstName ? `${firstName} by first name` : 'the candidate'}, introduce yourself with your name and role at ${company}, briefly outline the agenda (a practice interview with roughly ${maxQuestions} main questions about their background and the target role), and ask if they are ready to begin.`,
+      `You are ${interviewerName}, an experienced interviewer at ${company}, conducting a roughly ${durationMinutes}-minute ${difficulty} ${type} practice interview for "${jobTitle}"${session.industry ? ` in the ${session.industry} industry` : ''}. The conversation is held in English.`,
+      `Open like a real interview: greet ${firstName ? `${firstName} by first name` : 'the candidate'}, introduce yourself with your name and role at ${company}, briefly outline the agenda (a practice interview of about ${durationMinutes} minutes covering their background and the target role), and ask if they are ready to begin.`,
       'After the greeting, ask exactly ONE short, casual warm-up question before moving on to the first substantive question.',
-      `Ask ONE question at a time, listen actively, briefly reference what was just said when transitioning to the next topic, and ask at most ONE short follow-up per answer when it adds value. Ask roughly ${maxQuestions} main questions in total.`,
+      `Ask ONE question at a time, listen actively, briefly reference what was just said when transitioning to the next topic, and ask at most ONE short follow-up per answer when it adds value. Pace yourself across the roughly ${durationMinutes} minutes: don't rush, and keep asking substantive questions for as long as time allows.`,
+      'You have no clock of your own. During the conversation you will be told when about one minute remains and when time is up. When told about the final minute: finish the current topic and ask at most ONE final question. When told time is up: give brief, warm thanks, say goodbye, and ask no further questions.',
       dossier
         ? 'Blend questions about the target role with concrete questions about the CV: reference real positions, projects, achievements, and skills from the dossier below (e.g. "Walk me through your time as … at …", "You list … as an achievement — how did you approach it?", "You rate yourself … in … — give me a concrete example.").'
         : 'Ask well-founded questions about the candidate’s background, motivation, and the competencies relevant to the role.',
       'Keep your turns conversational and short (1–3 sentences). Stay in the interviewer role throughout and do NOT give evaluative feedback during the conversation — the assessment happens at the end.',
-      'Close professionally: announce the final question, then ask whether the candidate has any questions for you or the company, thank them for the conversation, and say a friendly goodbye.',
+      'Close professionally: ask whether the candidate has any questions for you or the company (time permitting), thank them for the conversation, and say a friendly goodbye.',
       jobDescription ? `Job description (excerpt): ${jobDescription}` : '',
       dossier ? `Dossier — candidate CV:\n${dossier}` : '',
     ]

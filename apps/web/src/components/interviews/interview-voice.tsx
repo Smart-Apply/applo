@@ -24,6 +24,17 @@ import { toast } from 'sonner';
 type Phase = 'idle' | 'connecting' | 'live' | 'ending' | 'ended';
 type VoiceError = 'mic' | 'unsupported' | 'connect' | null;
 
+const DURATION_OPTIONS = [5, 10, 15] as const;
+type VoiceDurationMinutes = (typeof DURATION_OPTIONS)[number];
+
+// The interviewer has no wall-clock: the model is nudged over the data channel
+// ~1 minute before the end and again at time-up, then gets a short grace period
+// to speak its closing before the transcript is finalized.
+const WARN_LEAD_SECONDS = 60;
+const MIN_SECONDS_FOR_WARN = WARN_LEAD_SECONDS + 30;
+const CLOSING_GRACE_MS = 9000;
+const BACKSTOP_GRACE_MS = 15000;
+
 interface InterviewVoiceProps {
   session: InterviewSessionDetail;
   maxSessionMinutes: number;
@@ -54,6 +65,9 @@ export function InterviewVoice({
   const [candidateSpeaking, setCandidateSpeaking] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
   const [heardSpeech, setHeardSpeech] = useState(false);
+  const [selectedMinutes, setSelectedMinutes] = useState<VoiceDurationMinutes>(10);
+  const [mintedSeconds, setMintedSeconds] = useState<number | null>(null);
+  const [wrapUpHint, setWrapUpHint] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
@@ -63,6 +77,10 @@ export function InterviewVoice({
   const turnsRef = useRef<VoiceTranscriptTurn[]>([]);
   const startedAtRef = useRef<number | null>(null);
   const endTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapUpSentRef = useRef(false);
+  const closingSentRef = useRef(false);
   const finalizedRef = useRef(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const levelRafRef = useRef<number | null>(null);
@@ -74,6 +92,14 @@ export function InterviewVoice({
     if (endTimerRef.current) {
       clearTimeout(endTimerRef.current);
       endTimerRef.current = null;
+    }
+    if (warnTimerRef.current) {
+      clearTimeout(warnTimerRef.current);
+      warnTimerRef.current = null;
+    }
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
     }
     try {
       dcRef.current?.close();
@@ -102,6 +128,29 @@ export function InterviewVoice({
     dcRef.current = null;
     pcRef.current = null;
     micStreamRef.current = null;
+  }, []);
+
+  // Inject a time cue as a system message and ask the model to react to it —
+  // the same data-channel pattern as the session.update/response.create on open.
+  const sendTimeCue = useCallback((text: string): boolean => {
+    const dc = dcRef.current;
+    if (!dc || dc.readyState !== 'open') return false;
+    try {
+      dc.send(
+        JSON.stringify({
+          type: 'conversation.item.create',
+          item: {
+            type: 'message',
+            role: 'system',
+            content: [{ type: 'input_text', text }],
+          },
+        }),
+      );
+      dc.send(JSON.stringify({ type: 'response.create' }));
+      return true;
+    } catch {
+      return false;
+    }
   }, []);
 
   const addTurn = useCallback((role: VoiceTranscriptTurn['role'], text: string) => {
@@ -180,6 +229,14 @@ export function InterviewVoice({
     }
   }, [cleanupConnection, submitMutation, onComplete]);
 
+  const allowedMaxMinutes =
+    remainingMinutes >= 0 ? Math.min(maxSessionMinutes, remainingMinutes) : maxSessionMinutes;
+  const enabledOptions = DURATION_OPTIONS.filter((option) => option <= allowedMaxMinutes);
+  const effectiveMinutes: VoiceDurationMinutes = enabledOptions.includes(selectedMinutes)
+    ? selectedMinutes
+    : (enabledOptions[enabledOptions.length - 1] ?? DURATION_OPTIONS[0]);
+  const cueIsGerman = session.language !== 'en';
+
   const start = useCallback(async () => {
     setError(null);
 
@@ -190,13 +247,16 @@ export function InterviewVoice({
 
     setPhase('connecting');
     finalizedRef.current = false;
+    wrapUpSentRef.current = false;
+    closingSentRef.current = false;
     turnsRef.current = [];
     setCaptions([]);
     setHeardSpeech(false);
+    setWrapUpHint(false);
 
     let descriptor;
     try {
-      descriptor = await startMutation.mutateAsync({});
+      descriptor = await startMutation.mutateAsync({ durationMinutes: effectiveMinutes });
     } catch {
       setPhase('idle');
       return;
@@ -332,11 +392,42 @@ export function InterviewVoice({
 
       startedAtRef.current = Date.now();
       setElapsed(0);
+      setMintedSeconds(descriptor.maxSessionSeconds);
       setPhase('live');
+
+      const totalMs = descriptor.maxSessionSeconds * 1000;
+      if (descriptor.maxSessionSeconds > MIN_SECONDS_FOR_WARN) {
+        warnTimerRef.current = setTimeout(() => {
+          if (wrapUpSentRef.current) return;
+          wrapUpSentRef.current = true;
+          setWrapUpHint(true);
+          sendTimeCue(
+            cueIsGerman
+              ? 'Zeithinweis: Es verbleibt noch etwa eine Minute. Schließe das aktuelle Thema ab und stelle höchstens EINE letzte Frage.'
+              : 'Time note: About one minute remains. Finish the current topic and ask at most ONE final question.',
+          );
+        }, totalMs - WARN_LEAD_SECONDS * 1000);
+      }
+      closeTimerRef.current = setTimeout(() => {
+        if (closingSentRef.current) return;
+        closingSentRef.current = true;
+        toast.info('Die Zeit ist um – Applo verabschiedet sich.');
+        const sent = sendTimeCue(
+          cueIsGerman
+            ? 'Die Zeit ist um. Bedanke dich jetzt kurz und warm, verabschiede dich und beende das Gespräch – stelle keine weiteren Fragen.'
+            : 'Time is up. Give brief, warm thanks, say goodbye, and end the interview now – ask no further questions.',
+        );
+        if (!sent) {
+          void stop();
+          return;
+        }
+        closeTimerRef.current = setTimeout(() => void stop(), CLOSING_GRACE_MS);
+      }, totalMs);
+      // Absolute backstop: the transcript must be submitted even if the model
+      // keeps talking past its closing.
       endTimerRef.current = setTimeout(() => {
-        toast.info('Das Zeitlimit für dieses Gespräch wurde erreicht.');
         void stop();
-      }, descriptor.maxSessionSeconds * 1000);
+      }, totalMs + BACKSTOP_GRACE_MS);
     } catch (err) {
       cleanupConnection();
       const denied =
@@ -345,7 +436,7 @@ export function InterviewVoice({
       setError(denied ? 'mic' : 'connect');
       setPhase('idle');
     }
-  }, [startMutation, handleRealtimeEvent, stop, cleanupConnection]);
+  }, [startMutation, handleRealtimeEvent, stop, cleanupConnection, effectiveMinutes, cueIsGerman, sendTimeCue]);
 
   const toggleMute = useCallback(() => {
     const tracks = micStreamRef.current?.getAudioTracks() ?? [];
@@ -406,7 +497,7 @@ export function InterviewVoice({
               ? 'idle'
               : 'wave';
 
-  const maxSessionSeconds = maxSessionMinutes * 60;
+  const limitSeconds = mintedSeconds ?? effectiveMinutes * 60;
   const isSpeaking = interviewerSpeaking || candidateSpeaking;
 
   // ============================ PRE-CALL ============================
@@ -473,6 +564,39 @@ export function InterviewVoice({
                   </span>
                 </div>
               ))}
+            </div>
+
+            {/* Duration selector */}
+            <div className="mt-6">
+              <div className="mb-2.5 text-sm font-semibold">Gesprächsdauer</div>
+              <div className="flex gap-2.5">
+                {DURATION_OPTIONS.map((minutes) => {
+                  const disabled = !enabledOptions.includes(minutes);
+                  const active = minutes === effectiveMinutes;
+                  return (
+                    <button
+                      key={minutes}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setSelectedMinutes(minutes)}
+                      className={cn(
+                        'h-[42px] rounded-xl border px-5 text-sm font-semibold transition-colors',
+                        active
+                          ? 'border-primary bg-[var(--primary-soft)] text-primary'
+                          : 'bg-card text-secondary hover:border-primary/40',
+                        disabled && 'pointer-events-none opacity-40',
+                      )}
+                    >
+                      {minutes} Min.
+                    </button>
+                  );
+                })}
+              </div>
+              {enabledOptions.length < DURATION_OPTIONS.length && (
+                <p className="mt-2 text-[12.5px] text-muted-foreground">
+                  Optionen über deinem verbleibenden Zeitkontingent sind deaktiviert.
+                </p>
+              )}
             </div>
 
             {/* Footer actions */}
@@ -578,7 +702,15 @@ export function InterviewVoice({
           <div className="mt-5 inline-flex h-[38px] items-center gap-2 rounded-full border bg-muted px-4 font-mono text-[15px] tabular-nums">
             <Clock className="h-4 w-4 text-muted-foreground" />
             {formatTime(elapsed)} <span className="text-muted-foreground">/</span>{' '}
-            {formatTime(maxSessionSeconds)}
+            {formatTime(limitSeconds)}
+          </div>
+        )}
+
+        {/* Wrap-up hint once the ~1-minute warning cue was sent */}
+        {phase === 'live' && wrapUpHint && (
+          <div className="mt-3 inline-flex h-[32px] items-center gap-2 rounded-full bg-amber-50 px-3.5 text-[13px] font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+            <Clock className="h-3.5 w-3.5" />
+            Noch etwa 1 Minute
           </div>
         )}
 
