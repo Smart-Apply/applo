@@ -360,7 +360,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | POST     | `/validation`                      | Check an external application (AI quality + ATS; Free 5/mo, Pro+ unlimited) |
 | GET      | `/validation`                      | Validation history                                                          |
 | POST     | `/interviews`                      | Generate mock interview                                                     |
-| POST     | `/interviews/:id/voice/session`    | Mint voice (realtime) session (Premium; persona-led intro, CV-grounded)     |
+| POST     | `/interviews/:id/voice/session`    | Mint voice session (Premium; 5/10/15 min, persona-led, CV-grounded)         |
 | POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Premium)                                  |
 | GET      | `/mailbox-sync/connections`        | List connected mailboxes (Premium)                                          |
 | GET      | `/mailbox-sync/microsoft/connect`  | Start MS Graph OAuth (Premium)                                              |
