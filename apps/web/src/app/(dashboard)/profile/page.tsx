@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ProfileSkeleton } from '@/components/shared/skeletons';
 import { ApploRig } from '@/components/ui/applo-rig';
 import type { ApploState } from '@/components/ui/applo-rig';
-import { sanitizeUrl } from '@/lib/sanitize';
+import { sanitizeUrl, sanitizeHtml } from '@/lib/sanitize';
 import { cn } from '@/lib/utils';
 import {
   MapPin,
@@ -1205,7 +1205,7 @@ export default function ProfilePage() {
                       {exp.description && (
                         <div
                           className="prose prose-sm mt-2 max-w-none text-sm leading-relaxed text-muted-foreground line-clamp-3"
-                          dangerouslySetInnerHTML={{ __html: exp.description }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(exp.description) }}
                         />
                       )}
                     </div>
