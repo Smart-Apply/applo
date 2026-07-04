@@ -24,7 +24,7 @@
  */
 
 import { createElement, type ReactElement } from 'react';
-import { tLabel } from '../i18n';
+import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import type { ReactPdfNamespace } from '../react-pdf-loader';
 import type {
@@ -605,7 +605,7 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                   createElement(
                     Text,
                     { key: `lng-${idx}`, style: styles.languageItem },
-                    `${l.name}${l.level ? ` (${l.level})` : ''}${
+                    `${l.name}${l.level ? ` (${tLevel(l.level, lang)})` : ''}${
                       idx < (data.languages?.length ?? 0) - 1 ? ',' : ''
                     }`,
                   ),

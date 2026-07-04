@@ -22,7 +22,7 @@
  */
 
 import { createElement, type ReactElement } from 'react';
-import { tLabel } from '../i18n';
+import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import type { ReactPdfNamespace } from '../react-pdf-loader';
 import type {
@@ -612,7 +612,7 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
                   Text,
                   { style: styles.skillItems },
                   data.languages
-                    .map((l) => `${l.name}${l.level ? ` (${l.level})` : ''}`)
+                    .map((l) => `${l.name}${l.level ? ` (${tLevel(l.level, lang)})` : ''}`)
                     .join(', '),
                 ),
               ),

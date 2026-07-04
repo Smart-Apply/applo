@@ -56,6 +56,10 @@ describe('react-pdf templates — language precedence (regression #536)', () => 
       },
     ],
     education: [{ degree: 'M.Sc. Informatik', institution: 'TU Berlin', year: '2020' }],
+    languages: [
+      { name: 'Deutsch', level: 'level.native' },
+      { name: 'Englisch', level: 'level.fluent' },
+    ],
     language: 'de', // ← the user's export-time choice
   };
 
@@ -90,6 +94,41 @@ describe('react-pdf templates — language precedence (regression #536)', () => 
           `${name} should NOT contain English heading "${heading}"`,
         ).not.toContain(heading.toLowerCase());
       }
+
+      // Regression: proficiency levels must render localized, never as raw keys.
+      expect(
+        text,
+        `${name} should localize level.native to "Muttersprache"`,
+      ).toContain('muttersprache');
+      expect(
+        text,
+        `${name} should NOT leak the raw "level.native" i18n key`,
+      ).not.toContain('level.native');
+    }, 30_000);
+
+    it(`${name} localizes proficiency levels in English when language='en'`, async () => {
+      const Resume = factory.resume(ReactPdf);
+      const element = createElement(Resume, {
+        data: { ...sampleData, language: 'en' },
+        meta: englishMeta,
+      });
+      const buf = await ReactPdf.renderToBuffer(element);
+      const parser = new PDFParse({ data: new Uint8Array(buf) });
+      const parsed = await parser.getText();
+      const text = parsed.text.toLowerCase();
+
+      expect(
+        text,
+        `${name} should localize level.native to "Native"`,
+      ).toContain('native');
+      expect(
+        text,
+        `${name} should NOT leak the raw "level.native" i18n key`,
+      ).not.toContain('level.native');
+      expect(
+        text,
+        `${name} should NOT show the German label in an English export`,
+      ).not.toContain('muttersprache');
     }, 30_000);
   }
 });
