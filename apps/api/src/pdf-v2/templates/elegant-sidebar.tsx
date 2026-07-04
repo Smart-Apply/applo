@@ -36,7 +36,7 @@
  */
 
 import { createElement, type ReactElement } from 'react';
-import { tLabel } from '../i18n';
+import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import { deriveElegantSidebarPalette } from '../color-utils';
 import type { ReactPdfNamespace } from '../react-pdf-loader';
@@ -569,7 +569,8 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
                       View,
                       { key: `lng-${lidx}`, style: styles.languageItem },
                       createElement(Text, { style: styles.languageName }, l.name),
-                      l.level && createElement(Text, { style: styles.languageLevel }, l.level),
+                      l.level &&
+                        createElement(Text, { style: styles.languageLevel }, tLevel(l.level, lang)),
                     ),
                   ),
                 ),
