@@ -262,6 +262,18 @@ If a refresh token is compromised:
 - The attacker gets a window of only one refresh cycle
 - Legitimate user will fail to refresh, detecting the compromise
 
+### Reuse Detection
+
+Rotation alone only limits a stolen token's window to one refresh cycle —
+it doesn't actively detect that a theft happened. `AuthService.refresh()`
+looks up matching tokens across **both** active and recently-revoked rows;
+if the presented token is found but already marked `isRevoked`, that's
+treated as a reuse/theft signal (either the legitimate rotation already
+happened and this is a replayed stolen token, or vice versa — either way
+we can't tell which holder is legitimate). The whole session/token family
+for that user is revoked immediately (forcing re-login on all devices) and
+a `REFRESH_TOKEN_REUSE_DETECTED` audit event is logged.
+
 ### Why Short Access Tokens?
 
 - Limits the damage if an access token is stolen
@@ -367,7 +379,11 @@ The system is backward compatible:
 
 ## Future Enhancements
 
-- [ ] Add suspicious refresh pattern detection (multiple rapid refreshes)
+- [x] Detect reuse of an already-revoked refresh token and revoke the
+      whole session/token family (see "Reuse Detection" above)
+- [ ] Add rate-based suspicious refresh pattern detection (multiple rapid
+      refreshes in a short window, distinct from reuse-of-revoked-token
+      detection above)
 - [ ] Implement device management UI (view/revoke sessions)
 - [ ] Add push notifications for new login from unknown device
 - [ ] Implement "remember this device" feature with longer refresh token TTL
