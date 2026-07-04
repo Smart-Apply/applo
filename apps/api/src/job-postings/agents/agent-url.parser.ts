@@ -3,6 +3,7 @@ import { chromium, Browser, Page } from 'playwright';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { PromptService } from '../../common/services';
+import { assertUrlIsPublic, resolveAndAssertPublic } from '../../common/security/url-safety.util';
 
 // Define the structured output schema for job posting extraction
 // Simplified schema: only core fields + fullText (no structured arrays)
@@ -179,6 +180,10 @@ export class AgentUrlParser {
 
     try {
       const work = (async () => {
+        // SSRF guard (security audit F1): block private/internal/link-local
+        // targets before launching the browser. `navigateToUrl`'s request
+        // interceptor re-checks every subsequent navigation/redirect too.
+        await assertUrlIsPublic(url);
         await this.initBrowser();
         const page = await this.navigateToUrl(url);
         const pageContent = await this.extractPageContent(page);
@@ -334,14 +339,43 @@ export class AgentUrlParser {
     try {
       this.logger.debug(`Navigating to ${url}`);
 
+      // Cache hostname → "is public" per navigation so a redirect chain
+      // through the same host doesn't re-resolve DNS on every request.
+      const hostSafetyCache = new Map<string, boolean>();
+
       // Block heavy resources we never need for text extraction. Cuts page
       // load time and RAM by 30–60% on image-heavy job boards (LinkedIn,
       // Indeed), which also makes the OOM risk on the 1GB Fly VM smaller.
-      await page.route('**/*', (route) => {
-        const type = route.request().resourceType();
+      //
+      // Also blocks SSRF: any top-level navigation (redirect chain) to a
+      // private/internal/link-local host is aborted here too, since a
+      // public-looking entry URL can still redirect server-side into an
+      // internal target after the initial `assertUrlIsPublic` check above.
+      await page.route('**/*', async (route) => {
+        const request = route.request();
+        const type = request.resourceType();
         if (type === 'image' || type === 'font' || type === 'media' || type === 'stylesheet') {
           return route.abort();
         }
+
+        if (type === 'document') {
+          const hostname = new URL(request.url()).hostname;
+          let safe = hostSafetyCache.get(hostname);
+          if (safe === undefined) {
+            try {
+              await resolveAndAssertPublic(hostname);
+              safe = true;
+            } catch {
+              safe = false;
+            }
+            hostSafetyCache.set(hostname, safe);
+          }
+          if (!safe) {
+            this.logger.warn(`Blocked navigation to non-public host: ${hostname}`);
+            return route.abort();
+          }
+        }
+
         return route.continue();
       });
 

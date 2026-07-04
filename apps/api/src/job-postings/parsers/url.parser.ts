@@ -3,6 +3,7 @@ import { load } from 'cheerio';
 import axios from 'axios';
 import NodeCache from 'node-cache';
 import { AgentUrlParser, type JobPostingExtraction } from '../agents/agent-url.parser';
+import { assertUrlIsPublic } from '../../common/security/url-safety.util';
 
 interface ParsedJobData {
   title: string;
@@ -107,6 +108,11 @@ export class UrlParser {
   }
 
   private async parseUncached(url: string): Promise<string | ParsedJobData> {
+    // SSRF guard (security audit F1): block private/internal/link-local
+    // targets (incl. the 169.254.169.254 cloud metadata address) before any
+    // network I/O happens, on both the Cheerio and agent (Playwright) paths.
+    await assertUrlIsPublic(url);
+
     const isDynamicSite = this.DYNAMIC_SITES.some((site) => url.includes(site));
 
     if (isDynamicSite) {
@@ -181,20 +187,55 @@ export class UrlParser {
   }
 
   /**
+   * Fetch a URL with `maxRedirects: 0` and manually follow any 3xx redirect,
+   * re-running the SSRF guard on every hop's `Location` target before
+   * following it. `parseUncached` already validates the entry URL, but a
+   * public-looking URL can still redirect to a private/link-local target
+   * (e.g. `169.254.169.254`) — each hop must be re-checked independently.
+   */
+  private async fetchWithSsrfGuard(
+    url: string,
+    hop = 0,
+  ): Promise<{ data: string }> {
+    const MAX_REDIRECTS = 5;
+    if (hop > MAX_REDIRECTS) {
+      throw new BadRequestException('Too many redirects while fetching URL');
+    }
+
+    if (hop > 0) {
+      await assertUrlIsPublic(url);
+    }
+
+    this.logger.log(`Fetching job posting from URL: ${url}`);
+
+    const response = await axios.get(url, {
+      timeout: this.REQUEST_TIMEOUT,
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      },
+      maxRedirects: 0,
+      validateStatus: (status) => (status >= 200 && status < 300) || (status >= 300 && status < 400),
+    });
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers?.location;
+      if (!location) {
+        throw new BadRequestException('Redirect response missing Location header');
+      }
+      const nextUrl = new URL(location, url).toString();
+      return this.fetchWithSsrfGuard(nextUrl, hop + 1);
+    }
+
+    return response;
+  }
+
+  /**
    * Parse job posting using Cheerio (fast but limited to static HTML)
    */
   private async parseWithCheerio(url: string): Promise<string> {
     try {
-      this.logger.log(`Fetching job posting from URL: ${url}`);
-
-      const response = await axios.get(url, {
-        timeout: this.REQUEST_TIMEOUT,
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        },
-        maxRedirects: 5,
-      });
+      const response = await this.fetchWithSsrfGuard(url);
 
       const $ = load(response.data);
 
