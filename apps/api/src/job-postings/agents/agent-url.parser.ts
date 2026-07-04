@@ -358,22 +358,32 @@ export class AgentUrlParser {
           return route.abort();
         }
 
-        if (type === 'document') {
-          const hostname = new URL(request.url()).hostname;
-          let safe = hostSafetyCache.get(hostname);
-          if (safe === undefined) {
-            try {
-              await resolveAndAssertPublic(hostname);
-              safe = true;
-            } catch {
-              safe = false;
-            }
-            hostSafetyCache.set(hostname, safe);
-          }
-          if (!safe) {
-            this.logger.warn(`Blocked navigation to non-public host: ${hostname}`);
+        // Block SSRF across ALL request types: a public document can still load JS
+        // that fetches internal URLs and writes the response into the DOM.
+        let hostname: string;
+        try {
+          const u = new URL(request.url());
+          if (u.protocol !== 'http:' && u.protocol !== 'https:') {
             return route.abort();
           }
+          hostname = u.hostname;
+        } catch {
+          return route.abort();
+        }
+
+        let safe = hostSafetyCache.get(hostname);
+        if (safe === undefined) {
+          try {
+            await resolveAndAssertPublic(hostname);
+            safe = true;
+          } catch {
+            safe = false;
+          }
+          hostSafetyCache.set(hostname, safe);
+        }
+        if (!safe) {
+          this.logger.warn(`Blocked request to non-public host: ${hostname}`);
+          return route.abort();
         }
 
         return route.continue();
