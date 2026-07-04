@@ -20,9 +20,25 @@ export class DiskStorageProvider implements StorageProvider {
     }
   }
 
+  /**
+   * Resolve a storage key to an absolute path and assert it stays inside
+   * `storagePath`. Defense-in-depth against path traversal (e.g. a key
+   * containing `..` or an absolute path) reaching this provider from any
+   * caller — callers SHOULD already validate ownership/traversal upstream,
+   * but this is the last line of defense before touching the filesystem.
+   */
+  private resolveSafePath(key: string): string {
+    const root = path.resolve(this.storagePath);
+    const resolved = path.resolve(root, key);
+    if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+      throw new Error(`Rejected storage key escaping storage root: ${key}`);
+    }
+    return resolved;
+  }
+
   async upload(fileName: string, content: Buffer, _mimeType: string): Promise<string> {
     const key = `${Date.now()}-${fileName}`;
-    const filePath = path.join(this.storagePath, key);
+    const filePath = this.resolveSafePath(key);
 
     await fs.writeFile(filePath, content);
     this.logger.log(`File uploaded: ${key}`);
@@ -31,7 +47,7 @@ export class DiskStorageProvider implements StorageProvider {
   }
 
   async download(key: string): Promise<Buffer> {
-    const filePath = path.join(this.storagePath, key);
+    const filePath = this.resolveSafePath(key);
     return await fs.readFile(filePath);
   }
 
@@ -42,14 +58,14 @@ export class DiskStorageProvider implements StorageProvider {
   }
 
   async delete(key: string): Promise<void> {
-    const filePath = path.join(this.storagePath, key);
+    const filePath = this.resolveSafePath(key);
     await fs.unlink(filePath);
     this.logger.log(`File deleted: ${key}`);
   }
 
   async exists(key: string): Promise<boolean> {
     try {
-      const filePath = path.join(this.storagePath, key);
+      const filePath = this.resolveSafePath(key);
       await fs.access(filePath);
       return true;
     } catch {
