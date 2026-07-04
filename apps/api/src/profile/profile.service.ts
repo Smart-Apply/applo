@@ -131,6 +131,7 @@ export class ProfileService {
                 data: {
                   name: skill.name,
                   level: skill.level,
+                  category: skill.category,
                 },
               });
             } else {
@@ -145,12 +146,12 @@ export class ProfileService {
                 create: {
                   profileId: profile.id,
                   name: skill.name,
-                  category: 'General',
+                  category: skill.category ?? null,
                   level: skill.level,
                 },
                 update: {
                   level: skill.level,
-                  category: 'General',
+                  category: skill.category,
                 },
               });
             }
@@ -451,6 +452,7 @@ export class ProfileService {
           id: s.id,
           name: s.name,
           level: s.level,
+          category: s.category,
         })) || [],
       certificates:
         profile.certificates?.map((c: any) => ({

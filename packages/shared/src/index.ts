@@ -162,6 +162,18 @@ export interface Skill {
   id?: string;
   name: string;
   level?: string;
+  category?: string | null;
+}
+
+/**
+ * Normalizes a user-defined skill category for grouping. Returns null for
+ * uncategorized skills: empty/whitespace values and the legacy 'General'
+ * default that older profile writes stamped on every skill.
+ */
+export function normalizeSkillCategory(category?: string | null): string | null {
+  const trimmed = category?.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'general') return null;
+  return trimmed;
 }
 
 export interface Experience {

@@ -1,4 +1,5 @@
 import type { Profile, ResumeData, ResumeExperience, ResumeSkillCategory } from '@/types';
+import { normalizeSkillCategory } from '@smart-apply/shared';
 import { isHtml } from './markdown';
 import { htmlToPlainText, plainTextToHtml, sanitizeHtml } from './sanitize';
 
@@ -109,13 +110,34 @@ function buildSkillCategories(profile: Profile): ResumeSkillCategory[] {
     return [];
   }
 
-  return [
-    {
-      id: createClientId(),
-      type: DEFAULT_CATEGORY,
-      skills: profile.skills.map((skill) => skill.name),
-    },
-  ];
+  // Group by the user's profile categories (first-seen order); uncategorized
+  // skills come last under an empty type so templates render them headerless —
+  // profiles without categories keep the previous single-group behavior.
+  const grouped = new Map<string, string[]>();
+  const uncategorized: string[] = [];
+  for (const skill of profile.skills) {
+    const category = normalizeSkillCategory(skill.category);
+    if (!category) {
+      uncategorized.push(skill.name);
+      continue;
+    }
+    const existing = grouped.get(category);
+    if (existing) {
+      existing.push(skill.name);
+    } else {
+      grouped.set(category, [skill.name]);
+    }
+  }
+
+  const categories: ResumeSkillCategory[] = Array.from(grouped, ([type, skills]) => ({
+    id: createClientId(),
+    type,
+    skills,
+  }));
+  if (uncategorized.length) {
+    categories.push({ id: createClientId(), type: DEFAULT_CATEGORY, skills: uncategorized });
+  }
+  return categories;
 }
 
 export function buildResumeFromProfile(
