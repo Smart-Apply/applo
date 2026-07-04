@@ -581,6 +581,13 @@ export interface ResumeData {
   education?: ResumeEducation[];
   certifications?: ResumeCertification[];
   languages?: { name: string; level?: string }[];
+  /**
+   * User-chosen document section order (edit mode). Section keys:
+   * 'profile' | 'experience' | 'education' | 'projects' | 'skills' |
+   * 'languages' | 'certs'. Optional — absent means the template's
+   * default order (all pre-existing records).
+   */
+  sectionOrder?: string[];
 }
 
 // ============================================

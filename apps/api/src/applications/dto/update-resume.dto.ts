@@ -266,6 +266,19 @@ class ResumeTemplateDto {
   @IsOptional()
   @IsString()
   language?: string;
+
+  // Without this the global `whitelist: true, forbidNonWhitelisted: true`
+  // pipe rejects saves from an editor session where the user reordered
+  // sections.
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['profile', 'experience', 'projects', 'education', 'skills', 'languages', 'certs'],
+    description: 'User-chosen document section order. Absent = template default order.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  sectionOrder?: string[];
 }
 
 export class UpdateResumeDto {

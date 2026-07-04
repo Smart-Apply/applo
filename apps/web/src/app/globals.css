@@ -470,6 +470,15 @@
   .rd-sec-actions { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 4px; }
   .rd-sec-rm { display: grid; place-items: center; width: 24px; height: 24px; border: none; background: none; color: var(--muted-2); cursor: pointer; border-radius: 6px; opacity: 0.45; transition: opacity 0.12s, background 0.12s, color 0.12s; }
   .rd-sec-rm:hover { opacity: 1; background: var(--red-bg); color: var(--red); }
+  .rd-sec-mv { display: grid; place-items: center; width: 24px; height: 24px; border: none; background: none; color: var(--muted-2); cursor: pointer; border-radius: 6px; opacity: 0.45; transition: opacity 0.12s, background 0.12s, color 0.12s; }
+  .rd-sec-mv:hover:not(:disabled) { opacity: 1; background: var(--blue-bg); color: var(--blue); }
+  .rd-sec-mv:disabled { opacity: 0.12; cursor: default; }
+  .ed-mv-sec { position: absolute; top: 0; width: 24px; height: 24px; border: none; background: none; color: var(--muted-2); display: grid; place-items: center; cursor: pointer; border-radius: 6px; opacity: 0; transition: opacity 0.12s, background 0.12s, color 0.12s; }
+  .ed-mv-sec.up { right: 52px; }
+  .ed-mv-sec.down { right: 26px; }
+  .rd-item:hover .ed-mv-sec:not(:disabled) { opacity: 1; }
+  .rd-item:hover .ed-mv-sec:disabled { opacity: 0.15; }
+  .ed-mv-sec:hover:not(:disabled) { background: var(--blue-bg); color: var(--blue); }
   .rd-p { font-size: 13.5px; line-height: 1.65; color: #374151; }
   .rd-item { position: relative; margin-bottom: 14px; padding-right: 26px; }
   .rd-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
@@ -488,7 +497,18 @@
   .rd-skill { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; padding: 5px 8px 5px 11px; border-radius: 9px; border: 1px solid #e2e8f0; background: #fff; color: #475569; }
   .rd-skill .rm { width: 18px; height: 18px; border: none; background: none; color: var(--muted-2); display: grid; place-items: center; cursor: pointer; border-radius: 5px; }
   .rd-skill .rm:hover { background: var(--red-bg); color: var(--red); }
+  .rd-skill .mv { width: 18px; height: 18px; border: none; background: none; color: var(--muted-2); display: grid; place-items: center; cursor: pointer; border-radius: 5px; opacity: 0; transition: opacity 0.12s, background 0.12s, color 0.12s; }
+  .rd-skill:hover .mv:not(:disabled) { opacity: 1; }
+  .rd-skill .mv:hover:not(:disabled) { background: var(--blue-bg); color: var(--blue); }
+  .rd-skill .mv:disabled { cursor: default; }
   .rd-skill-cat { font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-2); margin: 12px 0 7px; }
+  .rd-cat-row { display: flex; align-items: center; gap: 6px; }
+  .rd-cat-row .rd-skill-cat { flex: 1; }
+  .rd-cat-tools { display: inline-flex; align-items: center; gap: 2px; opacity: 0; transition: opacity 0.12s; }
+  .rd-cat-row:hover .rd-cat-tools { opacity: 1; }
+  .rd-cat-tools .mv { width: 18px; height: 18px; border: none; background: none; color: var(--muted-2); display: grid; place-items: center; cursor: pointer; border-radius: 5px; }
+  .rd-cat-tools .mv:hover:not(:disabled) { background: var(--blue-bg); color: var(--blue); }
+  .rd-cat-tools .mv:disabled { opacity: 0.3; cursor: default; }
   .rd-contact-edit { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: var(--blue); background: none; border: none; cursor: pointer; padding: 2px 5px; border-radius: 6px; }
   .rd-contact-edit:hover { background: #eef3fb; }
 

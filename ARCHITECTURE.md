@@ -188,6 +188,17 @@ User → Frontend (Next.js)
 > prompts and their `generate*ATS` methods were retired (#2), so there is one
 > cover-letter generation path.
 
+> **Section order (edit mode).** The résumé JSON (`ResumeTemplateData` /
+> shared `ResumeData`) carries an optional `sectionOrder?: string[]`
+> (keys: `profile`, `experience`, `education`, `projects`, `skills`,
+> `languages`, `certs`). The edit-mode editor writes it when the user
+> reorders sections; all three react-pdf resume templates emit their
+> section blocks in that order (`pdf-v2/template-data.ts`
+> `resolveSectionOrder` — unknown keys dropped, omitted sections appended
+> in the template default order; `elegant-sidebar` applies the flat list
+> within each of its two columns). Absent — i.e. every pre-existing
+> record — templates keep their hardcoded default order.
+
 ### Output-quality measurement (offline eval harness)
 
 Generation quality is the product's main driver, so it is measured rather than
