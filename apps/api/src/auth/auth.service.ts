@@ -386,11 +386,12 @@ export class AuthService {
       throw new UnauthorizedWithCode(ErrorCode.INVALID_TOKEN_TYPE);
     }
 
-    // Find all non-revoked, non-expired refresh tokens for this user
+    // Find all non-expired refresh tokens for this user (both active and
+    // recently-revoked — see the reuse-detection check below; revoked
+    // tokens are kept for 24h by the cleanup pass further down).
     const storedTokens = await this.prisma.refreshToken.findMany({
       where: {
         userId: payload.sub,
-        isRevoked: false,
         expiresAt: { gt: new Date() },
       },
     });
@@ -416,6 +417,28 @@ export class AuthService {
 
     if (!matchingToken) {
       throw new UnauthorizedWithCode(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
+    }
+
+    // Reuse/theft detection (security audit F6): rotation revokes a refresh
+    // token the moment it's used, so a client presenting an ALREADY-revoked
+    // token means either the token was stolen and the legitimate rotation
+    // already happened, or an attacker replayed a captured token. Either
+    // way we can't tell which of the two holders is legitimate, so treat it
+    // as compromised and revoke the whole session/token family for this
+    // user rather than just rejecting the one request.
+    if (matchingToken.isRevoked) {
+      if (req) {
+        this.auditLogger.logSecurityEvent(
+          'REFRESH_TOKEN_REUSE_DETECTED',
+          payload.email,
+          req,
+          payload.sub,
+          { tokenId: matchingToken.id },
+        );
+      }
+      await this.sessionService.revokeAllSessions(payload.sub);
+      await this.revokeRefreshToken(payload.sub);
+      throw new UnauthorizedWithCode(ErrorCode.REFRESH_TOKEN_INVALID);
     }
 
     // Log refresh token usage
