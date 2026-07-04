@@ -665,12 +665,13 @@ Anweisungen des Kandidaten:
 ${instructions}
 
 Aufgabe:
-1. Wende die gewünschten Änderungen präzise an
+1. **WICHTIGSTE REGEL: Ändere NUR, was die Anweisungen explizit verlangen. Jeder nicht betroffene Satz und Absatz MUSS wortwörtlich EXAKT erhalten bleiben — gleiche Wörter, gleiche Reihenfolge. Nichts umformulieren, umsortieren, zusammenführen oder "verbessern".**
 2. Behalte die professionelle Struktur und Tonalität bei
-3. Halte die Länge ähnlich (nicht wesentlich länger oder kürzer)
+3. Halte die Länge ähnlich (nicht wesentlich länger oder kürzer), außer die Anweisungen verlangen etwas anderes
 4. Bewahre wichtige Erfolge und Erfahrungen, außer sie sollen geändert werden
 5. Integriere die Änderungen natürlich in den bestehenden Text
-6. Gib NUR das geänderte Anschreiben im Markdown-Format zurück (keine Erklärungen)
+6. Wenn die Anweisungen verlangen, einen Abschnitt in Stichpunkte umzuwandeln (oder Stichpunkte in Fließtext), wandle genau diesen Abschnitt um: Markdown-Aufzählung ("- ") für Stichpunkte, normale Absätze für Fließtext — der restliche Text bleibt unverändert
+7. Gib NUR das geänderte Anschreiben im Markdown-Format zurück (keine Erklärungen)
 
 Geändertes Anschreiben:`;
 
@@ -678,7 +679,7 @@ Geändertes Anschreiben:`;
       temperature: 0.7,
       maxTokens: 2000,
       systemMessage:
-        'Du bist ein Experte im Verfassen und Optimieren von Bewerbungsanschreiben. Du wendest Änderungswünsche präzise an und behältst dabei professionelle Qualität.',
+        'Du bist ein Experte im Verfassen und Optimieren von Bewerbungsanschreiben. Du wendest Änderungswünsche präzise an und behältst dabei professionelle Qualität. Oberste Priorität: Inhalte, deren Änderung nicht angefragt wurde, übernimmst du wortwörtlich unverändert.',
     });
   }
 
@@ -741,7 +742,7 @@ ${experiencesList}
 ${instructions}
 
 **Aufgabe:**
-1. ${hasExistingSummary ? 'Wende die gewünschten Änderungen präzise an' : 'Erstelle eine neue professionelle Zusammenfassung'}
+1. ${hasExistingSummary ? '**WICHTIGSTE REGEL: Ändere NUR, was die Anweisungen explizit verlangen. Jeder nicht betroffene Satz MUSS wortwörtlich EXAKT übernommen werden — gleiche Wörter, gleiche Reihenfolge. Nichts umformulieren, umsortieren oder "verbessern". Die folgenden Regeln gelten nur für neu geschriebene oder explizit zu ändernde Sätze.**' : 'Erstelle eine neue professionelle Zusammenfassung'}
 2. **Halte dich strikt an 3-5 Sätze** (absolutes Maximum)
 3. Beginne mit der aktuellen Rolle/Erfahrung und Kernkompetenz
 4. Hebe 2-3 relevante Fähigkeiten oder Erfolge hervor, die zur Stelle passen
@@ -755,7 +756,7 @@ Professionelle Zusammenfassung:`;
       temperature: 0.7,
       maxTokens: 500, // Limit output for concise summary
       systemMessage:
-        'Du bist ein Experte für Lebenslauf-Optimierung und ATS-konforme Zusammenfassungen. Du schreibst prägnante, wirkungsvolle Zusammenfassungen in 3-5 Sätzen, die relevant für die Zielposition sind.',
+        'Du bist ein Experte für Lebenslauf-Optimierung und ATS-konforme Zusammenfassungen. Du schreibst prägnante, wirkungsvolle Zusammenfassungen in 3-5 Sätzen, die relevant für die Zielposition sind. Oberste Priorität: Sätze, deren Änderung nicht angefragt wurde, übernimmst du wortwörtlich unverändert.',
     });
   }
 
@@ -812,7 +813,7 @@ Professionelle Zusammenfassung:`;
           userInstructions: 'Anweisungen des Kandidaten',
           rules: 'WICHTIGE REGELN',
           rule1: hasExistingDescription
-            ? 'Wende die gewünschten Änderungen präzise an'
+            ? 'WICHTIGSTE REGEL: Ändere NUR, was die Anweisungen explizit verlangen. Jeder nicht betroffene Bullet-Point MUSS wortwörtlich EXAKT übernommen werden — gleiche Wörter, gleiche Reihenfolge. Nichts umformulieren, umsortieren, zusammenführen oder "verbessern". EINZIGE AUSNAHME: Verlangen die Anweisungen einen Formatwechsel (Stichpunkte ⇄ Fließtext), betrifft die Änderung den GESAMTEN Inhalt (siehe Formatregel unten). Die Regeln 2-6 gelten nur für neu geschriebene oder explizit zu ändernde Punkte'
             : 'Erstelle 3-5 aussagekräftige Bullet-Points',
           rule2:
             'Jeder Bullet-Point MUSS mit einem starken Aktionsverb beginnen (Entwickelte, Führte, Implementierte, Steigerte, Optimierte, etc.)',
@@ -823,12 +824,14 @@ Professionelle Zusammenfassung:`;
           rule7: 'Gib die Antwort als HTML-Aufzählung zurück (KEIN Markdown!)',
           rule8:
             'ANTWORTE AUF DEUTSCH, es sei denn die Anweisungen verlangen explizit eine Übersetzung',
+          ruleFormat:
+            'Formatwechsel nur auf Wunsch (gilt als explizit angefragte Änderung des GESAMTEN Inhalts): Verlangen die Anweisungen Fließtext (z.B. "Fließtext", "Absatz", "keine Stichpunkte"), fasse den gesamten Inhalt in genau EINEM <li> als Absatz zusammen. Verlangen sie Stichpunkte (z.B. "Stichpunkte", "Bullet-Points", "einzelne Punkte"), teile den Text in MEHRERE separate <li>-Punkte auf — ein Gedanke pro Punkt; Besteht der aktuelle Inhalt nur aus EINEM <li> mit einem langen Satz oder Absatz und die Anweisungen verlangen Stichpunkte, MUSST du diesen Absatz in 3-5 separate <li>-Punkte zerlegen — gib NIEMALS das einzelne <li> unverändert zurück. Der Wortlaut bleibt beim Formatwechsel möglichst unverändert. Die Antwort bleibt IMMER eine <ul>-Liste',
           outputFormat: 'OUTPUT FORMAT (HTML)',
           example1: 'Erster Bullet-Point mit Aktionsverb und messbarem Erfolg',
           important: 'Gib NUR das <ul>...</ul> HTML zurück, keine Erklärungen, kein Markdown!',
           htmlList: 'HTML-Aufzählung',
           systemMsg:
-            'Du bist ein Experte für ATS-optimierte Lebensläufe. Du schreibst prägnante, wirkungsvolle Bullet-Points mit Aktionsverben und quantifizierbaren Erfolgen. Antworte auf Deutsch. Gib nur HTML-formatierte Listen zurück, kein Markdown.',
+            'Du bist ein Experte für ATS-optimierte Lebensläufe. Du schreibst prägnante, wirkungsvolle Bullet-Points mit Aktionsverben und quantifizierbaren Erfolgen. Oberste Priorität: Bullet-Points, deren Änderung nicht angefragt wurde, übernimmst du wortwörtlich unverändert. Antworte auf Deutsch. Gib nur HTML-formatierte Listen zurück, kein Markdown.',
         }
       : {
           role: 'career coach',
@@ -844,7 +847,7 @@ Professionelle Zusammenfassung:`;
           userInstructions: "User's Instructions",
           rules: 'IMPORTANT RULES',
           rule1: hasExistingDescription
-            ? 'Apply the requested changes precisely'
+            ? 'MOST IMPORTANT RULE: Change ONLY what the instructions explicitly ask for. Every other bullet point MUST be reproduced EXACTLY as-is — same words, same order. Do not reword, reorder, merge, or "improve" untouched content. ONLY EXCEPTION: if the instructions request a format switch (bullets ⇄ prose), the change covers the ENTIRE content (see the format rule below). Rules 2-6 apply only to newly written or explicitly changed points'
             : 'Create 3-5 impactful bullet points',
           rule2:
             'Each bullet point MUST start with a strong action verb (Developed, Led, Implemented, Increased, Optimized, etc.)',
@@ -854,12 +857,14 @@ Professionelle Zusammenfassung:`;
           rule6: 'Keep each point to 1-2 lines (max 20 words per point)',
           rule7: 'Return the answer as an HTML list (NO Markdown!)',
           rule8: 'RESPOND IN ENGLISH, unless the instructions explicitly request translation',
+          ruleFormat:
+            'Format switch only on request (counts as an explicitly requested change of the ENTIRE content): if the instructions ask for flowing/continuous text (e.g. "flowing text", "paragraph", "no bullet points"), merge the whole content into exactly ONE <li> as a paragraph. If they ask for bullet points (e.g. "bullet points", "separate points"), split the text into SEVERAL separate <li> items — one idea per item; If the current content consists of a single <li> holding a long sentence or paragraph and the instructions ask for bullet points, you MUST break that paragraph into 3-5 separate <li> items — NEVER return the single <li> unchanged. Keep the wording as unchanged as possible during a format switch. The answer ALWAYS stays a <ul> list',
           outputFormat: 'OUTPUT FORMAT (HTML)',
           example1: 'First bullet point with action verb and measurable achievement',
           important: 'Return ONLY the <ul>...</ul> HTML, no explanations, no Markdown!',
           htmlList: 'HTML List',
           systemMsg:
-            'You are an expert in ATS-optimized resumes. You write concise, impactful bullet points with action verbs and quantifiable achievements. Respond in English. Return only HTML-formatted lists, no Markdown.',
+            'You are an expert in ATS-optimized resumes. You write concise, impactful bullet points with action verbs and quantifiable achievements. Top priority: bullet points the user did not ask to change are reproduced verbatim. Respond in English. Return only HTML-formatted lists, no Markdown.',
         };
 
     const prompt = `You are a professional ${labels.role} helping a candidate ${labels.action} their work experience description for their resume.
@@ -892,7 +897,7 @@ ${context.jobDescription.substring(0, 600)}...
 ${instructions}
 
 **${labels.rules}:**
-1. ${labels.rule1}
+1. **${labels.rule1}**
 2. **${labels.rule2}**
 3. **${labels.rule3}**
 4. **${labels.rule4}**
@@ -900,6 +905,7 @@ ${instructions}
 6. ${labels.rule6}
 7. **${labels.rule7}**
 8. **${labels.rule8}**
+9. **${labels.ruleFormat}**
 
 **${labels.outputFormat}:**
 <ul>
@@ -972,7 +978,7 @@ ${labels.htmlList}:`;
           userInstructions: 'Anweisungen des Kandidaten',
           rules: 'WICHTIGE REGELN',
           rule1: hasExistingDescription
-            ? 'Wende die gewünschten Änderungen präzise an'
+            ? 'WICHTIGSTE REGEL: Ändere NUR, was die Anweisungen explizit verlangen. Jeder nicht betroffene Bullet-Point MUSS wortwörtlich EXAKT übernommen werden — gleiche Wörter, gleiche Reihenfolge. Nichts umformulieren, umsortieren, zusammenführen oder "verbessern". EINZIGE AUSNAHME: Verlangen die Anweisungen einen Formatwechsel (Stichpunkte ⇄ Fließtext), betrifft die Änderung den GESAMTEN Inhalt (siehe Formatregel unten). Die Regeln 2-7 gelten nur für neu geschriebene oder explizit zu ändernde Punkte'
             : 'Erstelle 3-5 aussagekräftige Bullet-Points',
           rule2:
             'Jeder Bullet-Point MUSS mit einem starken Aktionsverb beginnen (Entwickelte, Implementierte, Konzipierte, Optimierte, etc.)',
@@ -985,12 +991,14 @@ ${labels.htmlList}:`;
           rule8: 'Gib die Antwort als HTML-Aufzählung zurück (KEIN Markdown!)',
           rule9:
             'ANTWORTE AUF DEUTSCH, es sei denn die Anweisungen verlangen explizit eine Übersetzung',
+          ruleFormat:
+            'Formatwechsel nur auf Wunsch (gilt als explizit angefragte Änderung des GESAMTEN Inhalts): Verlangen die Anweisungen Fließtext (z.B. "Fließtext", "Absatz", "keine Stichpunkte"), fasse den gesamten Inhalt in genau EINEM <li> als Absatz zusammen. Verlangen sie Stichpunkte (z.B. "Stichpunkte", "Bullet-Points", "einzelne Punkte"), teile den Text in MEHRERE separate <li>-Punkte auf — ein Gedanke pro Punkt; Besteht der aktuelle Inhalt nur aus EINEM <li> mit einem langen Satz oder Absatz und die Anweisungen verlangen Stichpunkte, MUSST du diesen Absatz in 3-5 separate <li>-Punkte zerlegen — gib NIEMALS das einzelne <li> unverändert zurück. Der Wortlaut bleibt beim Formatwechsel möglichst unverändert. Die Antwort bleibt IMMER eine <ul>-Liste',
           outputFormat: 'OUTPUT FORMAT (HTML)',
           example1: 'Erster Bullet-Point mit Technologie und messbarem Ergebnis',
           important: 'Gib NUR das <ul>...</ul> HTML zurück, keine Erklärungen, kein Markdown!',
           htmlList: 'HTML-Aufzählung',
           systemMsg:
-            'Du bist ein Experte für ATS-optimierte Lebensläufe. Du schreibst prägnante, wirkungsvolle Projekt-Beschreibungen mit Technologie-Fokus und quantifizierbaren Ergebnissen. Antworte auf Deutsch. Gib nur HTML-formatierte Listen zurück, kein Markdown.',
+            'Du bist ein Experte für ATS-optimierte Lebensläufe. Du schreibst prägnante, wirkungsvolle Projekt-Beschreibungen mit Technologie-Fokus und quantifizierbaren Ergebnissen. Oberste Priorität: Bullet-Points, deren Änderung nicht angefragt wurde, übernimmst du wortwörtlich unverändert. Antworte auf Deutsch. Gib nur HTML-formatierte Listen zurück, kein Markdown.',
         }
       : {
           role: 'career coach',
@@ -1007,7 +1015,7 @@ ${labels.htmlList}:`;
           userInstructions: "User's Instructions",
           rules: 'IMPORTANT RULES',
           rule1: hasExistingDescription
-            ? 'Apply the requested changes precisely'
+            ? 'MOST IMPORTANT RULE: Change ONLY what the instructions explicitly ask for. Every other bullet point MUST be reproduced EXACTLY as-is — same words, same order. Do not reword, reorder, merge, or "improve" untouched content. ONLY EXCEPTION: if the instructions request a format switch (bullets ⇄ prose), the change covers the ENTIRE content (see the format rule below). Rules 2-7 apply only to newly written or explicitly changed points'
             : 'Create 3-5 impactful bullet points',
           rule2:
             'Each bullet point MUST start with a strong action verb (Developed, Implemented, Designed, Optimized, etc.)',
@@ -1018,12 +1026,14 @@ ${labels.htmlList}:`;
           rule7: 'Keep each point to 1-2 lines (max 20 words per point)',
           rule8: 'Return the answer as an HTML list (NO Markdown!)',
           rule9: 'RESPOND IN ENGLISH, unless the instructions explicitly request translation',
+          ruleFormat:
+            'Format switch only on request (counts as an explicitly requested change of the ENTIRE content): if the instructions ask for flowing/continuous text (e.g. "flowing text", "paragraph", "no bullet points"), merge the whole content into exactly ONE <li> as a paragraph. If they ask for bullet points (e.g. "bullet points", "separate points"), split the text into SEVERAL separate <li> items — one idea per item; If the current content consists of a single <li> holding a long sentence or paragraph and the instructions ask for bullet points, you MUST break that paragraph into 3-5 separate <li> items — NEVER return the single <li> unchanged. Keep the wording as unchanged as possible during a format switch. The answer ALWAYS stays a <ul> list',
           outputFormat: 'OUTPUT FORMAT (HTML)',
           example1: 'First bullet point with technology and measurable outcome',
           important: 'Return ONLY the <ul>...</ul> HTML, no explanations, no Markdown!',
           htmlList: 'HTML List',
           systemMsg:
-            'You are an expert in ATS-optimized resumes. You write concise, impactful project descriptions with technology focus and quantifiable outcomes. Respond in English. Return only HTML-formatted lists, no Markdown.',
+            'You are an expert in ATS-optimized resumes. You write concise, impactful project descriptions with technology focus and quantifiable outcomes. Top priority: bullet points the user did not ask to change are reproduced verbatim. Respond in English. Return only HTML-formatted lists, no Markdown.',
         };
 
     const prompt = `You are a professional ${labels.role} helping a candidate ${labels.action} their project description for their resume.
@@ -1055,7 +1065,7 @@ ${context.jobDescription.substring(0, 600)}...
 ${instructions}
 
 **${labels.rules}:**
-1. ${labels.rule1}
+1. **${labels.rule1}**
 2. **${labels.rule2}**
 3. **${labels.rule3}**
 4. **${labels.rule4}**
@@ -1064,6 +1074,7 @@ ${instructions}
 7. ${labels.rule7}
 8. **${labels.rule8}**
 9. **${labels.rule9}**
+10. **${labels.ruleFormat}**
 
 **${labels.outputFormat}:**
 <ul>
