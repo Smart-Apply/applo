@@ -148,7 +148,7 @@ export class JobPostingsService {
         storageKey.includes('\0') ||
         !storageKey.startsWith(`${userId}/`)
       ) {
-        this.logger.warn(`Rejected fileId not owned by user ${userId}: ${storageKey}`);
+        this.logger.warn(`Rejected fileId not owned by user ${userId}`);
         throw new NotFoundWithCode(ErrorCode.JOB_POSTING_NOT_FOUND, 'File not found');
       }
 
