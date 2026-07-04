@@ -85,9 +85,22 @@ export function middleware(request: NextRequest) {
   // Set CSP header dynamically based on runtime environment
   // Note: 'unsafe-eval' is required for Handlebars template compilation in the browser
   // This is needed for the template preview feature which renders Handlebars templates client-side
+  //
+  // Security audit F5 (Low): 'unsafe-inline' on script-src is dropped in
+  // production. There is no legitimate inline-JS or inline-event-handler
+  // (onclick=...) usage in the app — the only inline <script> tag
+  // (faq/page.tsx JSON-LD) is `type="application/ld+json"`, which CSP's
+  // script-src does not govern (it isn't executable JS). Kept in
+  // development only, as a safety net for Next's dev-mode HMR/Fast Refresh
+  // overlay, which can inject inline scripts that don't ship in a
+  // production build.
+  const scriptSrc = isDevelopment
+    ? `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${turnstileOrigin} ${cloudflareInsightsOrigin}`
+    : `script-src 'self' 'unsafe-eval' ${turnstileOrigin} ${cloudflareInsightsOrigin}`;
+
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${turnstileOrigin} ${cloudflareInsightsOrigin}`,
+    scriptSrc,
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: https: ${apiOriginList}`,
     "font-src 'self' data:",
