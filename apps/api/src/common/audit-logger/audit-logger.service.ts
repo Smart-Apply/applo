@@ -28,6 +28,14 @@ export enum AuditEventType {
   // Suspicious Activity
   MULTIPLE_FAILED_LOGINS = 'MULTIPLE_FAILED_LOGINS',
   IP_CHANGE_DETECTED = 'IP_CHANGE_DETECTED',
+  /**
+   * A refresh token that was already revoked/rotated was presented again.
+   * Under strict rotation this only happens if the token was stolen and
+   * replayed (or, far less likely, a client retried a request after
+   * missing the rotated response) — treated as theft: the whole session/
+   * token family for the user is revoked. See auth.service.ts `refresh()`.
+   */
+  REFRESH_TOKEN_REUSE_DETECTED = 'REFRESH_TOKEN_REUSE_DETECTED',
 
   // Closed-beta invite-code gate
   INVITE_CODE_ISSUED = 'INVITE_CODE_ISSUED',
@@ -211,7 +219,11 @@ export class AuditLoggerService {
     const eventTypeEnum = AuditEventType[eventType as keyof typeof AuditEventType] || eventType;
 
     // Determine severity based on event type
-    const failedEvents = ['PASSWORD_CHANGE_FAILED', 'ACCOUNT_DELETE_FAILED'];
+    const failedEvents = [
+      'PASSWORD_CHANGE_FAILED',
+      'ACCOUNT_DELETE_FAILED',
+      'REFRESH_TOKEN_REUSE_DETECTED',
+    ];
     const severity = failedEvents.includes(eventType) ? 'warning' : 'info';
 
     this.log({
