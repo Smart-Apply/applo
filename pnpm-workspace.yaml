@@ -39,6 +39,25 @@ overrides:
   lodash: ^4.18.1
   postcss: ^8.5.10
   fast-xml-builder: '>=1.1.7 <1.2.0'
+  # Security audit F4 (2026-07-03): multiple resolved versions of these
+  # transitive deps coexist in the graph (some pre-dating a fix), pin the
+  # whole tree to the patched minimum. All same-major patch/minor bumps —
+  # multer/undici/form-data are prod-reachable (multer via file upload,
+  # undici via cheerio's fetch usage in the job-posting URL parser, form-data
+  # via various HTTP clients); picomatch/js-yaml are dev-only
+  # (@angular-devkit/* schematics tooling) but bumped too since it's free.
+  multer: '^2.2.0'
+  undici: '^7.28.0'
+  form-data: '^4.0.6'
+  picomatch: '^4.0.4'
+  js-yaml: '^4.1.2'
+  # Scoped (NOT a blanket `ajv:` override) — ESLint's own internal ajv@6.x
+  # dependency (@eslint/eslintrc) needs the old `missingRefs` option that
+  # ajv@8 removed; a blanket override crashes `pnpm lint` with
+  # "Cannot set properties of undefined (setting 'defaultMeta')". Only the
+  # @angular-devkit/core>ajv chain (dev-only schematics tooling) had the
+  # vulnerable 8.12.0 resolved.
+  '@angular-devkit/core>ajv': '^8.18.0'
   # Pin away from 7.1.1 — that release added `react-hooks/set-state-in-effect`
   # which surfaces 7 pre-existing violations across apps/web that we'd need a
   # dedicated refactor PR to address. Main was on 7.0.1 via the old
