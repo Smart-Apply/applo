@@ -64,7 +64,7 @@ export class JobPostingsService {
       }
     } else if (dto.fileId) {
       this.logger.log(`Parsing job posting from file: ${dto.fileId}`);
-      rawText = await this.parseFromFile(dto.fileId);
+      rawText = await this.parseFromFile(userId, dto.fileId);
       parsed = this.extractStructuredData(rawText);
     } else if (dto.text) {
       this.logger.log('Parsing job posting from text input');
@@ -125,13 +125,32 @@ export class JobPostingsService {
 
   /**
    * Parse file content based on file type
-   * @param fileId Storage key of uploaded file
+   * @param userId User ID from JWT token — the storage key MUST be scoped
+   *   to this user (uploads are stored as `${userId}/${timestamp}-${filename}`,
+   *   see UploadsService.generateStorageKey). Without this check, an attacker
+   *   could pass an arbitrary base64 fileId and read another user's file (IDOR)
+   *   or, on the disk provider, escape the storage directory via `..` (LFI).
+   * @param fileId Base64-encoded storage key of uploaded file
    * @returns Extracted text
    */
-  private async parseFromFile(fileId: string): Promise<string> {
+  private async parseFromFile(userId: string, fileId: string): Promise<string> {
     try {
       // Decode storage key from base64 ID
       const storageKey = Buffer.from(fileId, 'base64').toString('utf-8');
+
+      // Reject path traversal / absolute paths and enforce per-user ownership.
+      // Storage keys are minted as `${userId}/${timestamp}-${filename}` — any
+      // key not prefixed with the caller's own userId was never issued to them.
+      if (
+        storageKey.includes('..') ||
+        storageKey.startsWith('/') ||
+        storageKey.startsWith('\\') ||
+        storageKey.includes('\0') ||
+        !storageKey.startsWith(`${userId}/`)
+      ) {
+        this.logger.warn(`Rejected fileId not owned by user ${userId}`);
+        throw new NotFoundWithCode(ErrorCode.JOB_POSTING_NOT_FOUND, 'File not found');
+      }
 
       // Download file from storage
       const buffer = await this.storageService.download(storageKey);
@@ -148,7 +167,7 @@ export class JobPostingsService {
       }
     } catch (error) {
       this.logger.error(`Failed to parse file: ${error.message}`);
-      if (error instanceof BadRequestException) {
+      if (error instanceof BadRequestException || error instanceof NotFoundWithCode) {
         throw error;
       }
       throw new BadRequestException(`Failed to parse file: ${error.message}`);
