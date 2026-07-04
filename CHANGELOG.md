@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.5.0](https://github.com/Smart-Apply/smart-apply/compare/v4.4.1...v4.5.0) (2026-07-04)
+
+
+### Features
+
+* **applications:** reorder resume items and sections in edit mode ([#638](https://github.com/Smart-Apply/smart-apply/issues/638)) ([ae04619](https://github.com/Smart-Apply/smart-apply/commit/ae04619796e40f719c469a918613128ea93ce7e1))
+* **interviews:** personalize voice interview with CV-grounded questions and persona ([#624](https://github.com/Smart-Apply/smart-apply/issues/624)) ([a3e3a09](https://github.com/Smart-Apply/smart-apply/commit/a3e3a098b37e45f23717ea468e54c0155731c475))
+* **profile:** let users group skills into named categories that flow into the CV ([#637](https://github.com/Smart-Apply/smart-apply/issues/637)) ([2e9bee4](https://github.com/Smart-Apply/smart-apply/commit/2e9bee4cc19de8c5117f2cd5424ec3cabab370db))
+
+
+### Bug Fixes
+
+* **applications:** make edit-mode AI assistant edit bullets granularly and support prose⇄bullets ([#636](https://github.com/Smart-Apply/smart-apply/issues/636)) ([0f191d3](https://github.com/Smart-Apply/smart-apply/commit/0f191d3469ae1af2b6d4d233a64646348bc0601e))
+* **auth:** detect refresh token reuse and revoke the session family ([#633](https://github.com/Smart-Apply/smart-apply/issues/633)) ([8b641a7](https://github.com/Smart-Apply/smart-apply/commit/8b641a78fc606576f0cd528086d1a19ed5222016))
+* **job-postings:** block SSRF to private networks in URL parser ([#629](https://github.com/Smart-Apply/smart-apply/issues/629)) ([f74c3a7](https://github.com/Smart-Apply/smart-apply/commit/f74c3a7f3dcdf8f8a2d0d965b31aac46a8353584))
+* **job-postings:** scope file parsing to the uploading user and block path traversal ([#628](https://github.com/Smart-Apply/smart-apply/issues/628)) ([19792ba](https://github.com/Smart-Apply/smart-apply/commit/19792ba7885b772a54882697aa67f44d48854b77))
+* **mailbox-sync:** use constant-time compare for webhook clientState ([#634](https://github.com/Smart-Apply/smart-apply/issues/634)) ([768d4e5](https://github.com/Smart-Apply/smart-apply/commit/768d4e523d2019a503347f72fb40d3162f9f8d8e))
+* **pdf:** localize language proficiency levels in exported resumes ([#635](https://github.com/Smart-Apply/smart-apply/issues/635)) ([dee7718](https://github.com/Smart-Apply/smart-apply/commit/dee7718cab4aa1058b787b7a60fcdcd4db002ab2))
+* **profile:** sanitize experience description HTML before rendering ([#630](https://github.com/Smart-Apply/smart-apply/issues/630)) ([6547397](https://github.com/Smart-Apply/smart-apply/commit/6547397e609dd3ab2bf92382aec606e6837f6056))
+* **web:** drop CSP 'unsafe-inline' on script-src in production ([#632](https://github.com/Smart-Apply/smart-apply/issues/632)) ([12eca7d](https://github.com/Smart-Apply/smart-apply/commit/12eca7d99cfbb9e59a4570fd39de5db9feadbcee))
+
 ## [4.4.1](https://github.com/Smart-Apply/smart-apply/compare/v4.4.0...v4.4.1) (2026-07-01)
 
 
