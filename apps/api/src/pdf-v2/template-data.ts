@@ -60,6 +60,28 @@ export interface ResumeTemplateData {
   languages?: ResumeLanguage[];
   /** Language code ('de', 'en', etc.) for localized section headers. */
   language?: string;
+  /**
+   * User-chosen section order from the editor (keys: 'profile',
+   * 'experience', 'education', 'projects', 'skills', 'languages',
+   * 'certs'). Optional — absent means the template's default order,
+   * so all pre-existing records render unchanged.
+   */
+  sectionOrder?: string[];
+}
+
+/**
+ * Resolves the section order a template should render. Unknown requested
+ * keys are dropped; sections the request omits are appended in the
+ * template's default order so no content is ever lost.
+ */
+export function resolveSectionOrder(
+  requested: string[] | undefined,
+  templateDefault: readonly string[],
+): string[] {
+  if (!requested?.length) return [...templateDefault];
+  const known = requested.filter((key) => templateDefault.includes(key));
+  const missing = templateDefault.filter((key) => !known.includes(key));
+  return [...known, ...missing];
 }
 
 export interface ResumeLanguage {

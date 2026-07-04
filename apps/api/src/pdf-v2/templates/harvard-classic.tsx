@@ -21,15 +21,27 @@
  * See react-pdf-loader.ts for why we don't import the package statically.
  */
 
-import { createElement, type ReactElement } from 'react';
+import { createElement, type ReactElement, type ReactNode } from 'react';
 import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
+import { resolveSectionOrder } from '../template-data';
 import type { ReactPdfNamespace } from '../react-pdf-loader';
 import type {
   ReactPdfCoverLetterProps,
   ReactPdfResumeProps,
   ReactPdfTemplateFactory,
 } from '../types';
+
+/** Default section order — matches the template's original hardcoded layout. */
+const DEFAULT_SECTION_ORDER = [
+  'profile',
+  'education',
+  'experience',
+  'projects',
+  'certs',
+  'skills',
+  'languages',
+] as const;
 
 /** Source CSS uses pt directly — no conversion needed. */
 const FS = {
@@ -318,31 +330,11 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
       const lang = data.language || meta.language || 'en';
       const contactParts = buildResumeContactParts(data);
 
-      return createElement(
-        Document,
-        {
-          title: `${data.candidateName} - Resume`,
-          author: data.candidateName,
-          creator: 'Applo',
-        },
-        createElement(
-          Page,
-          { size: 'LETTER', style: styles.page },
-          // Header
-          createElement(
-            View,
-            { style: styles.header },
-            createElement(Text, { style: styles.candidateName }, data.candidateName),
-            createElement(View, { style: styles.headerDivider }),
-          ),
-          // Contact info
-          createElement(ContactInfo, {
-            parts: contactParts,
-            style: styles.contactInfo,
-            linkStyle: styles.contactLink,
-            separatorStyle: styles.contactSeparator,
-          }),
-          // Summary
+      // Per-section render blocks — emitted below in the user-chosen
+      // `data.sectionOrder` (falling back to the template default).
+      const sections: Record<string, ReactNode> = {
+        // Summary
+        profile:
           data.summary &&
             createElement(
               View,
@@ -350,7 +342,8 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
               createElement(Text, { style: styles.sectionHeader }, tLabel('resume.summary', lang)),
               renderRichText(data.summary, { paragraph: styles.summaryText }),
             ),
-          // Education (school first, like Harvard convention)
+        // Education (school first, like Harvard convention)
+        education:
           data.education &&
             data.education.length > 0 &&
             createElement(
@@ -405,7 +398,8 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Experience
+        // Experience
+        experience:
           data.experiences &&
             data.experiences.length > 0 &&
             createElement(
@@ -476,7 +470,8 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Projects
+        // Projects
+        projects:
           data.projects &&
             data.projects.length > 0 &&
             createElement(
@@ -529,7 +524,8 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Certifications
+        // Certifications
+        certs:
           data.certifications &&
             data.certifications.length > 0 &&
             createElement(
@@ -572,7 +568,8 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Skills
+        // Skills
+        skills:
           data.skillCategories &&
             data.skillCategories.length > 0 &&
             createElement(
@@ -589,7 +586,8 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Languages
+        // Languages
+        languages:
           data.languages &&
             data.languages.length > 0 &&
             createElement(
@@ -617,6 +615,35 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
+      };
+
+      const orderedSectionKeys = resolveSectionOrder(data.sectionOrder, DEFAULT_SECTION_ORDER);
+
+      return createElement(
+        Document,
+        {
+          title: `${data.candidateName} - Resume`,
+          author: data.candidateName,
+          creator: 'Applo',
+        },
+        createElement(
+          Page,
+          { size: 'LETTER', style: styles.page },
+          // Header
+          createElement(
+            View,
+            { style: styles.header },
+            createElement(Text, { style: styles.candidateName }, data.candidateName),
+            createElement(View, { style: styles.headerDivider }),
+          ),
+          // Contact info
+          createElement(ContactInfo, {
+            parts: contactParts,
+            style: styles.contactInfo,
+            linkStyle: styles.contactLink,
+            separatorStyle: styles.contactSeparator,
+          }),
+          ...orderedSectionKeys.map((key) => sections[key]),
         ),
       );
     };

@@ -17,8 +17,8 @@
  * `normalizeResumeForSave` already speak.
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { X, Plus, Edit3, Pencil } from 'lucide-react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { X, Plus, Edit3, Pencil, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -197,6 +197,28 @@ const RESUME_SECTIONS: { key: ResumeSection; label: string }[] = [
   { key: 'languages', label: 'Sprachen' },
   { key: 'certs', label: 'Zertifikate' },
 ];
+/** Default document order — matches the editor's original hardcoded layout. */
+const DEFAULT_SECTION_ORDER: ResumeSection[] = [
+  'profile',
+  'education',
+  'experience',
+  'projects',
+  'skills',
+  'languages',
+  'certs',
+];
+/** Sections the elegant-sidebar skin renders in the aside column. */
+const SIDEBAR_ASIDE_SECTIONS: ResumeSection[] = ['education', 'skills', 'languages'];
+
+/** Swap an item with its neighbor; null when the move is out of range. */
+function moveById<T extends { id: string }>(arr: T[], id: string, dir: -1 | 1): T[] | null {
+  const i = arr.findIndex((x) => x.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= arr.length) return null;
+  const next = [...arr];
+  [next[i], next[j]] = [next[j], next[i]];
+  return next;
+}
 
 interface GenerateSummaryArgs {
   instructions: string;
@@ -298,8 +320,22 @@ export function EditableResume({
     langs: (value.languages || []).map((l) => ({ id: uid(), name: l.name || '', level: l.level || '' })),
   }));
 
-  const buildResume = (l: Lists, m: Meta): ResumeData => ({
+  // ── section order (P4) ──
+  // Seeded from the saved order (unknown keys dropped, missing sections
+  // appended) or the default layout. Only emitted once the user actually
+  // reorders (or the record already carried an order) so untouched
+  // documents keep exporting with the template's default order.
+  const [sectionOrder, setSectionOrder] = useState<ResumeSection[]>(() => {
+    const saved = (value.sectionOrder || []).filter((k): k is ResumeSection =>
+      DEFAULT_SECTION_ORDER.includes(k as ResumeSection),
+    );
+    return [...saved, ...DEFAULT_SECTION_ORDER.filter((k) => !saved.includes(k))];
+  });
+  const [orderTouched, setOrderTouched] = useState(() => Boolean(value.sectionOrder?.length));
+
+  const buildResume = (l: Lists, m: Meta, order?: ResumeSection[]): ResumeData => ({
     ...original,
+    sectionOrder: order ?? (orderTouched ? sectionOrder : original.sectionOrder),
     candidateName: m.name,
     targetJobTitle: m.role || original.targetJobTitle,
     email: m.email,
@@ -411,6 +447,107 @@ export function EditableResume({
   const setLang = (id: string, patch: Partial<LangItem>) => apply('langs', lists.langs.map((l) => (l.id === id ? { ...l, ...patch } : l)));
   const addLang = () => apply('langs', [...lists.langs, { id: uid(), name: '', level: '' }], false);
   const rmLang = (id: string) => apply('langs', lists.langs.filter((l) => l.id !== id));
+
+  /* ---- item reordering (P4): swap with the neighbor, keys stay stable ---- */
+  const moveListItem = <K extends 'exp' | 'edu' | 'projects' | 'certs' | 'skillCats' | 'langs'>(
+    key: K,
+    id: string,
+    dir: -1 | 1,
+  ) => {
+    // The union of list arrays defeats the generic; every element has an id.
+    const next = moveById(lists[key] as Array<{ id: string }>, id, dir);
+    if (next) apply(key, next as Lists[K]);
+  };
+  const moveSkill = (catId: string, sid: string, dir: -1 | 1) =>
+    apply(
+      'skillCats',
+      mapCat((c) => {
+        if (c.id !== catId) return c;
+        const next = moveById(c.skills, sid, dir);
+        return next ? { ...c, skills: next } : c;
+      }),
+    );
+  /** Hover controls to move a list item up/down (absolute, next to the ✕). */
+  const itemMovers = (
+    key: 'exp' | 'edu' | 'projects' | 'certs',
+    id: string,
+    index: number,
+    count: number,
+  ) => (
+    <>
+      <button
+        type="button"
+        className="ed-mv-sec up"
+        title="Nach oben verschieben"
+        aria-label="Nach oben verschieben"
+        disabled={index === 0}
+        onClick={() => moveListItem(key, id, -1)}
+      >
+        <ChevronUp className="h-3.5 w-3.5" strokeWidth={2.4} />
+      </button>
+      <button
+        type="button"
+        className="ed-mv-sec down"
+        title="Nach unten verschieben"
+        aria-label="Nach unten verschieben"
+        disabled={index === count - 1}
+        onClick={() => moveListItem(key, id, 1)}
+      >
+        <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.4} />
+      </button>
+    </>
+  );
+  /** Hover controls to move a chip (skill/language) left/right. */
+  const chipMovers = (index: number, count: number, move: (dir: -1 | 1) => void) => (
+    <>
+      <button
+        type="button"
+        className="mv"
+        title="Nach links verschieben"
+        aria-label="Nach links verschieben"
+        disabled={index === 0}
+        onClick={() => move(-1)}
+      >
+        <ChevronLeft className="h-3 w-3" strokeWidth={2.6} />
+      </button>
+      <button
+        type="button"
+        className="mv"
+        title="Nach rechts verschieben"
+        aria-label="Nach rechts verschieben"
+        disabled={index === count - 1}
+        onClick={() => move(1)}
+      >
+        <ChevronRight className="h-3 w-3" strokeWidth={2.6} />
+      </button>
+    </>
+  );
+
+  /* ---- section reordering (P4): within the visible column ---- */
+  const sectionColumn = (key: ResumeSection): ResumeSection[] => {
+    if (design !== 'elegant-sidebar') return sectionOrder;
+    const inAside = SIDEBAR_ASIDE_SECTIONS.includes(key);
+    return sectionOrder.filter((k) => SIDEBAR_ASIDE_SECTIONS.includes(k) === inAside);
+  };
+  const canMoveSection = (key: ResumeSection, dir: -1 | 1): boolean => {
+    const visible = sectionColumn(key).filter((k) => !removed.has(k));
+    const i = visible.indexOf(key);
+    return i >= 0 && i + dir >= 0 && i + dir < visible.length;
+  };
+  const moveSection = (key: ResumeSection, dir: -1 | 1) => {
+    const visible = sectionColumn(key).filter((k) => !removed.has(k));
+    const i = visible.indexOf(key);
+    const target = visible[i + dir];
+    if (i < 0 || !target) return;
+    const next = [...sectionOrder];
+    const a = next.indexOf(key);
+    const b = next.indexOf(target);
+    next[a] = target;
+    next[b] = key;
+    setSectionOrder(next);
+    setOrderTouched(true);
+    onChange(buildResume(lists, meta, next));
+  };
 
   const multiCat = lists.skillCats.length > 1;
 
@@ -577,12 +714,32 @@ export function EditableResume({
     </Popover>
   );
 
-  // ── shared section header with a remove button (P3) ──
+  // ── shared section header with move + remove buttons (P3/P4) ──
   const sectionTitle = (label: string, key: ResumeSection, extra?: React.ReactNode) => (
     <div className="rd-sec-title" style={{ color: accent }}>
       {label}
       <span className="rd-sec-actions">
         {extra}
+        <button
+          type="button"
+          className="rd-sec-mv"
+          title={`${label} nach oben verschieben`}
+          aria-label={`${label} nach oben verschieben`}
+          disabled={!canMoveSection(key, -1)}
+          onClick={() => moveSection(key, -1)}
+        >
+          <ChevronUp className="h-3.5 w-3.5" strokeWidth={2.4} />
+        </button>
+        <button
+          type="button"
+          className="rd-sec-mv"
+          title={`${label} nach unten verschieben`}
+          aria-label={`${label} nach unten verschieben`}
+          disabled={!canMoveSection(key, 1)}
+          onClick={() => moveSection(key, 1)}
+        >
+          <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.4} />
+        </button>
         <button
           type="button"
           className="rd-sec-rm"
@@ -629,6 +786,7 @@ export function EditableResume({
       {sectionTitle('Berufserfahrung', 'experience')}
       {lists.exp.map((x, index) => (
         <div className="rd-item" key={x.id}>
+          {itemMovers('exp', x.id, index, lists.exp.length)}
           <button className="ed-rm-sec" title="Station entfernen" onClick={() => rmStation(x.id)}>
             <X className="h-3.5 w-3.5" strokeWidth={2.4} />
           </button>
@@ -681,8 +839,9 @@ export function EditableResume({
   const educationSection = removed.has('education') ? null : (
     <div className="rd-sec">
       {sectionTitle('Ausbildung', 'education')}
-      {lists.edu.map((e) => (
+      {lists.edu.map((e, index) => (
         <div className="rd-item" key={e.id}>
+          {itemMovers('edu', e.id, index, lists.edu.length)}
           <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmEdu(e.id)}>
             <X className="h-3.5 w-3.5" strokeWidth={2.4} />
           </button>
@@ -704,6 +863,7 @@ export function EditableResume({
         {sectionTitle('Projekte', 'projects')}
         {lists.projects.map((x, index) => (
           <div className="rd-item" key={x.id}>
+            {itemMovers('projects', x.id, index, lists.projects.length)}
             <button className="ed-rm-sec" title="Projekt entfernen" onClick={() => rmProject(x.id)}>
               <X className="h-3.5 w-3.5" strokeWidth={2.4} />
             </button>
@@ -755,15 +915,40 @@ export function EditableResume({
   const skillsSection = removed.has('skills') ? null : (
     <div className="rd-sec">
       {sectionTitle('Fähigkeiten', 'skills')}
-      {lists.skillCats.map((c) => (
+      {lists.skillCats.map((c, catIndex) => (
         <div key={c.id}>
           {multiCat && (
-            <Editable className="rd-skill-cat" oneline initial={c.type} placeholder="Kategorie" onCommit={(v) => setCatType(c.id, v)} />
+            <div className="rd-cat-row">
+              <Editable className="rd-skill-cat" oneline initial={c.type} placeholder="Kategorie" onCommit={(v) => setCatType(c.id, v)} />
+              <span className="rd-cat-tools">
+                <button
+                  type="button"
+                  className="mv"
+                  title="Kategorie nach oben verschieben"
+                  aria-label="Kategorie nach oben verschieben"
+                  disabled={catIndex === 0}
+                  onClick={() => moveListItem('skillCats', c.id, -1)}
+                >
+                  <ChevronUp className="h-3 w-3" strokeWidth={2.6} />
+                </button>
+                <button
+                  type="button"
+                  className="mv"
+                  title="Kategorie nach unten verschieben"
+                  aria-label="Kategorie nach unten verschieben"
+                  disabled={catIndex === lists.skillCats.length - 1}
+                  onClick={() => moveListItem('skillCats', c.id, 1)}
+                >
+                  <ChevronDown className="h-3 w-3" strokeWidth={2.6} />
+                </button>
+              </span>
+            </div>
           )}
           <div className="rd-skills" style={{ marginBottom: 8 }}>
-            {c.skills.map((s) => (
+            {c.skills.map((s, sIndex) => (
               <span className="rd-skill" key={s.id}>
                 <Editable tag="span" oneline initial={s.text} placeholder="Skill" onCommit={(v) => setSkillText(c.id, s.id, v)} />
+                {chipMovers(sIndex, c.skills.length, (dir) => moveSkill(c.id, s.id, dir))}
                 <button className="rm" title="Entfernen" onClick={() => rmSkill(c.id, s.id)}>
                   <X className="h-3 w-3" strokeWidth={2.6} />
                 </button>
@@ -795,10 +980,11 @@ export function EditableResume({
     <div className="rd-sec">
       {sectionTitle('Sprachen', 'languages')}
       <div className="rd-skills">
-        {lists.langs.map((l) => (
+        {lists.langs.map((l, index) => (
           <span className="rd-skill" key={l.id}>
             <Editable tag="span" oneline initial={l.name} placeholder="Sprache" onCommit={(v) => setLang(l.id, { name: v })} />
             <Editable tag="span" oneline initial={l.level} placeholder="Niveau" onCommit={(v) => setLang(l.id, { level: v })} className="text-muted-foreground" />
+            {chipMovers(index, lists.langs.length, (dir) => moveListItem('langs', l.id, dir))}
             <button className="rm" title="Entfernen" onClick={() => rmLang(l.id)}>
               <X className="h-3 w-3" strokeWidth={2.6} />
             </button>
@@ -814,8 +1000,9 @@ export function EditableResume({
   const certsSection = removed.has('certs') ? null : (
       <div className="rd-sec">
         {sectionTitle('Zertifikate', 'certs')}
-        {lists.certs.map((c) => (
+        {lists.certs.map((c, index) => (
           <div className="rd-item" key={c.id}>
+            {itemMovers('certs', c.id, index, lists.certs.length)}
             <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmCert(c.id)}>
               <X className="h-3.5 w-3.5" strokeWidth={2.4} />
             </button>
@@ -835,6 +1022,21 @@ export function EditableResume({
   const contactLine = [displayAddress, meta.phone, meta.email, meta.linkedin && 'LinkedIn', meta.github && 'GitHub']
     .filter(Boolean)
     .join('  ·  ');
+
+  // Sections rendered in the user-chosen order (P4).
+  const sectionNodes: Record<ResumeSection, React.ReactNode> = {
+    profile: profileSection,
+    experience: experienceSection,
+    education: educationSection,
+    projects: projectsSection,
+    skills: skillsSection,
+    languages: languagesSection,
+    certs: certsSection,
+  };
+  const orderedSections = (keys: ResumeSection[]) =>
+    sectionOrder
+      .filter((k) => keys.includes(k))
+      .map((k) => <Fragment key={k}>{sectionNodes[k]}</Fragment>);
 
   const isSidebar = design === 'elegant-sidebar';
   const rootClass = isSidebar ? 'rd--sidebar' : design === 'harvard-classic' ? 'rd--harvard' : 'rd--classic';
@@ -862,15 +1064,12 @@ export function EditableResume({
                   {meta.linkedin && <div className="rd-contact-item">LinkedIn</div>}
                   {meta.github && <div className="rd-contact-item">GitHub</div>}
                 </div>
-                {educationSection}
-                {skillsSection}
-                {languagesSection}
+                {orderedSections(SIDEBAR_ASIDE_SECTIONS)}
               </aside>
               <div className="rd-main">
-                {profileSection}
-                {experienceSection}
-                {projectsSection}
-                {certsSection}
+                {orderedSections(
+                  DEFAULT_SECTION_ORDER.filter((k) => !SIDEBAR_ASIDE_SECTIONS.includes(k)),
+                )}
               </div>
             </div>
           </>
@@ -885,15 +1084,7 @@ export function EditableResume({
                 {contactPopover}
               </div>
             </div>
-            <div className="rd-body">
-              {profileSection}
-              {educationSection}
-              {experienceSection}
-              {projectsSection}
-              {skillsSection}
-              {languagesSection}
-              {certsSection}
-            </div>
+            <div className="rd-body">{orderedSections(DEFAULT_SECTION_ORDER)}</div>
           </>
         )}
       </div>

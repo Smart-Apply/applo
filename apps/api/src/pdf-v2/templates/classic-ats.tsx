@@ -23,9 +23,10 @@
  * See react-pdf-loader.ts for why we don't import the package statically.
  */
 
-import { createElement, type ReactElement } from 'react';
+import { createElement, type ReactElement, type ReactNode } from 'react';
 import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
+import { resolveSectionOrder } from '../template-data';
 import type { ReactPdfNamespace } from '../react-pdf-loader';
 import type {
   ReactPdfCoverLetterProps,
@@ -34,6 +35,17 @@ import type {
 } from '../types';
 
 const ACCENT_FALLBACK = '#1a1a1a';
+
+/** Default section order — matches the template's original hardcoded layout. */
+const DEFAULT_SECTION_ORDER = [
+  'profile',
+  'education',
+  'experience',
+  'projects',
+  'skills',
+  'certs',
+  'languages',
+] as const;
 
 /** CSS px → PDF pt at Chromium's print default (96 DPI). */
 const px = (n: number) => n * 0.75;
@@ -378,31 +390,11 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
       const lang = data.language || meta.language || 'en';
       const contactParts = buildResumeContactParts(data);
 
-      return createElement(
-        Document,
-        {
-          title: `${data.candidateName} - Resume`,
-          author: data.candidateName,
-          creator: 'Applo',
-        },
-        createElement(
-          Page,
-          { size: 'LETTER', style: styles.resumePage },
-          // Header
-          createElement(
-            View,
-            { style: styles.resumeHeader },
-            createElement(Text, { style: styles.candidateName }, data.candidateName),
-            data.targetJobTitle &&
-              createElement(Text, { style: styles.jobTitle }, data.targetJobTitle),
-            createElement(ContactInfo, {
-              parts: contactParts,
-              style: styles.contactInfo,
-              linkStyle: styles.contactLink,
-              separatorStyle: styles.contactSeparator,
-            }),
-          ),
-          // Summary
+      // Per-section render blocks — emitted below in the user-chosen
+      // `data.sectionOrder` (falling back to the template default).
+      const sections: Record<string, ReactNode> = {
+        // Summary
+        profile:
           data.summary &&
             createElement(
               View,
@@ -410,7 +402,8 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
               createElement(Text, { style: styles.sectionTitle }, tLabel('resume.summary', lang)),
               renderRichText(data.summary, { paragraph: styles.summaryText }),
             ),
-          // Education
+        // Education
+        education:
           data.education &&
             data.education.length > 0 &&
             createElement(
@@ -446,7 +439,8 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Experience
+        // Experience
+        experience:
           data.experiences &&
             data.experiences.length > 0 &&
             createElement(
@@ -501,7 +495,8 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Projects
+        // Projects
+        projects:
           data.projects &&
             data.projects.length > 0 &&
             createElement(
@@ -545,7 +540,8 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Skills
+        // Skills
+        skills:
           data.skillCategories &&
             data.skillCategories.length > 0 &&
             createElement(
@@ -566,7 +562,8 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Certifications
+        // Certifications
+        certs:
           data.certifications &&
             data.certifications.length > 0 &&
             createElement(
@@ -591,7 +588,8 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
-          // Languages
+        // Languages
+        languages:
           data.languages &&
             data.languages.length > 0 &&
             createElement(
@@ -612,6 +610,35 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
                 ),
               ),
             ),
+      };
+
+      const orderedSectionKeys = resolveSectionOrder(data.sectionOrder, DEFAULT_SECTION_ORDER);
+
+      return createElement(
+        Document,
+        {
+          title: `${data.candidateName} - Resume`,
+          author: data.candidateName,
+          creator: 'Applo',
+        },
+        createElement(
+          Page,
+          { size: 'LETTER', style: styles.resumePage },
+          // Header
+          createElement(
+            View,
+            { style: styles.resumeHeader },
+            createElement(Text, { style: styles.candidateName }, data.candidateName),
+            data.targetJobTitle &&
+              createElement(Text, { style: styles.jobTitle }, data.targetJobTitle),
+            createElement(ContactInfo, {
+              parts: contactParts,
+              style: styles.contactInfo,
+              linkStyle: styles.contactLink,
+              separatorStyle: styles.contactSeparator,
+            }),
+          ),
+          ...orderedSectionKeys.map((key) => sections[key]),
         ),
       );
     };

@@ -471,6 +471,13 @@ export class ApplicationsService {
           level: normalizeProficiencyLevel(lang.level?.trim()),
         }))
         .filter((lang) => lang.name),
+      // User-chosen section order — keep only known keys; undefined (not [])
+      // when absent so pre-existing records keep the template default order.
+      sectionOrder: resume.sectionOrder?.filter((key) =>
+        ['profile', 'experience', 'education', 'projects', 'skills', 'languages', 'certs'].includes(
+          key,
+        ),
+      ),
     };
   }
 

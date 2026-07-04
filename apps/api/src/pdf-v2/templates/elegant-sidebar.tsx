@@ -35,16 +35,26 @@
  * Factory pattern: receives the lazily-loaded @react-pdf/renderer namespace.
  */
 
-import { createElement, type ReactElement } from 'react';
+import { createElement, type ReactElement, type ReactNode } from 'react';
 import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import { deriveElegantSidebarPalette } from '../color-utils';
+import { resolveSectionOrder } from '../template-data';
 import type { ReactPdfNamespace } from '../react-pdf-loader';
 import type {
   ReactPdfCoverLetterProps,
   ReactPdfResumeProps,
   ReactPdfTemplateFactory,
 } from '../types';
+
+/**
+ * Default section order per column — matches the template's original
+ * hardcoded layout. `data.sectionOrder` is a single flat list; each
+ * column applies it to its own subset (contact is fixed at the top of
+ * the sidebar).
+ */
+const SIDEBAR_SECTION_ORDER = ['education', 'skills', 'languages'] as const;
+const MAIN_SECTION_ORDER = ['profile', 'experience', 'projects', 'certs'] as const;
 
 /** CSS px → PDF pt at 96 DPI. */
 const px = (n: number) => n * 0.75;
@@ -454,51 +464,12 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
         return createElement(Text, { key: `c-${idx}`, style: styles.contactItem }, part.label);
       };
 
-      return createElement(
-        Document,
-        {
-          title: `${data.candidateName} - Resume`,
-          author: data.candidateName,
-          creator: 'Applo',
-        },
-        createElement(
-          Page,
-          { size: 'LETTER', style: styles.page, wrap: true },
-          // Sidebar background — fixed so it repeats on every page.
-          createElement(View, { fixed: true, style: styles.sidebarBackground }),
-          // Header bar (page 1 only)
-          createElement(
-            View,
-            { style: styles.headerBar },
-            createElement(
-              View,
-              null,
-              createElement(Text, { style: styles.profileName }, data.candidateName),
-              data.targetJobTitle &&
-                createElement(Text, { style: styles.targetJobTitle }, data.targetJobTitle),
-            ),
-          ),
-          // Two-column content row
-          createElement(
-            View,
-            { style: styles.contentRow },
-            // Sidebar
-            createElement(
-              View,
-              { style: styles.sidebar },
-              // Contact
-              createElement(
-                View,
-                { style: styles.sidebarSection, wrap: false },
-                createElement(
-                  Text,
-                  { style: styles.sidebarSectionTitle },
-                  tLabel('contact', lang),
-                ),
-                ...contactParts.map(renderContactItem),
-              ),
-              // Education
-              data.education &&
+      // Per-section render blocks — emitted below in the user-chosen
+      // `data.sectionOrder`, applied within each column.
+      const sections: Record<string, ReactNode> = {
+        // Education
+        education:
+          data.education &&
                 data.education.length > 0 &&
                 createElement(
                   View,
@@ -522,8 +493,9 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
                     ),
                   ),
                 ),
-              // Skills
-              data.skillCategories &&
+        // Skills
+        skills:
+          data.skillCategories &&
                 data.skillCategories.length > 0 &&
                 createElement(
                   View,
@@ -553,34 +525,31 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
                     ),
                   ),
                 ),
-              // Languages
-              data.languages &&
-                data.languages.length > 0 &&
-                createElement(
-                  View,
-                  { style: styles.sidebarSection, wrap: false },
-                  createElement(
-                    Text,
-                    { style: styles.sidebarSectionTitle },
-                    tLabel('resume.languages', lang),
-                  ),
-                  ...data.languages.map((l, lidx) =>
-                    createElement(
-                      View,
-                      { key: `lng-${lidx}`, style: styles.languageItem },
-                      createElement(Text, { style: styles.languageName }, l.name),
-                      l.level &&
-                        createElement(Text, { style: styles.languageLevel }, tLevel(l.level, lang)),
-                    ),
-                  ),
-                ),
-            ),
-            // Main column
+        // Languages
+        languages:
+          data.languages &&
+            data.languages.length > 0 &&
             createElement(
               View,
-              { style: styles.main },
-              // Summary
-              data.summary &&
+              { style: styles.sidebarSection, wrap: false },
+              createElement(
+                Text,
+                { style: styles.sidebarSectionTitle },
+                tLabel('resume.languages', lang),
+              ),
+              ...data.languages.map((l, lidx) =>
+                createElement(
+                  View,
+                  { key: `lng-${lidx}`, style: styles.languageItem },
+                  createElement(Text, { style: styles.languageName }, l.name),
+                  l.level &&
+                    createElement(Text, { style: styles.languageLevel }, tLevel(l.level, lang)),
+                ),
+              ),
+            ),
+        // Summary
+        profile:
+          data.summary &&
                 createElement(
                   View,
                   { style: styles.mainSection, wrap: false },
@@ -591,8 +560,9 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
                   ),
                   renderRichText(data.summary, { paragraph: styles.summaryText }),
                 ),
-              // Experience
-              data.experiences &&
+        // Experience
+        experience:
+          data.experiences &&
                 data.experiences.length > 0 &&
                 createElement(
                   View,
@@ -646,8 +616,9 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
                     ),
                   ),
                 ),
-              // Projects
-              data.projects &&
+        // Projects
+        projects:
+          data.projects &&
                 data.projects.length > 0 &&
                 createElement(
                   View,
@@ -696,8 +667,9 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
                     ),
                   ),
                 ),
-              // Certifications
-              data.certifications &&
+        // Certifications
+        certs:
+          data.certifications &&
                 data.certifications.length > 0 &&
                 createElement(
                   View,
@@ -722,7 +694,58 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
                     ),
                   ),
                 ),
+      };
+
+      const sidebarKeys = resolveSectionOrder(data.sectionOrder, SIDEBAR_SECTION_ORDER);
+      const mainKeys = resolveSectionOrder(data.sectionOrder, MAIN_SECTION_ORDER);
+
+      return createElement(
+        Document,
+        {
+          title: `${data.candidateName} - Resume`,
+          author: data.candidateName,
+          creator: 'Applo',
+        },
+        createElement(
+          Page,
+          { size: 'LETTER', style: styles.page, wrap: true },
+          // Sidebar background — fixed so it repeats on every page.
+          createElement(View, { fixed: true, style: styles.sidebarBackground }),
+          // Header bar (page 1 only)
+          createElement(
+            View,
+            { style: styles.headerBar },
+            createElement(
+              View,
+              null,
+              createElement(Text, { style: styles.profileName }, data.candidateName),
+              data.targetJobTitle &&
+                createElement(Text, { style: styles.targetJobTitle }, data.targetJobTitle),
             ),
+          ),
+          // Two-column content row
+          createElement(
+            View,
+            { style: styles.contentRow },
+            // Sidebar
+            createElement(
+              View,
+              { style: styles.sidebar },
+              // Contact
+              createElement(
+                View,
+                { style: styles.sidebarSection, wrap: false },
+                createElement(
+                  Text,
+                  { style: styles.sidebarSectionTitle },
+                  tLabel('contact', lang),
+                ),
+                ...contactParts.map(renderContactItem),
+              ),
+              ...sidebarKeys.map((key) => sections[key]),
+            ),
+            // Main column
+            createElement(View, { style: styles.main }, ...mainKeys.map((key) => sections[key])),
           ),
         ),
       );
