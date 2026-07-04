@@ -500,9 +500,11 @@ PUT /api/v1/profile
 {
   summary: "Updated summary",
   skills: [
-    { id: "existing-id", name: "JavaScript", level: "Expert" },  // Update existing
-    { name: "TypeScript", level: "Advanced" }                    // Create new
+    { id: "existing-id", name: "JavaScript", level: "Expert", category: "Programmiersprachen" },  // Update existing
+    { name: "TypeScript", level: "Advanced", category: "Programmiersprachen" }                    // Create new
     // Skills not in this array will be deleted (orphan removal)
+    // `category` = user-defined skill group shown in the generated CV
+    // (null/omitted or the legacy 'General' default = uncategorized)
   ]
 }
 ```

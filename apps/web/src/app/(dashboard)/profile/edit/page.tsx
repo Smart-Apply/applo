@@ -251,7 +251,7 @@ export default function ProfileEditPage() {
       const latestCertificates = certificatesRef.current;
       const latestProjects = projectsRef.current;
       
-      const skillsForUpdate = skills.map(({ id, name, level }) => ({ ...(id && { id }), name, level }));
+      const skillsForUpdate = skills.map(({ id, name, level, category }) => ({ ...(id && { id }), name, level, category: category ?? null }));
       const experiencesForUpdate = latestExperiences.map(({ id, title, company, location, startDate, endDate, description, current }) => ({
         ...(id && { id }), title, company, location, startDate, endDate, description, current
       }));

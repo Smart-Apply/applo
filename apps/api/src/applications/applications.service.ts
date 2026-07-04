@@ -38,6 +38,7 @@ import {
   ConflictWithCode,
 } from '../common/exceptions/coded-http.exception';
 import { assertPromptWithinLimits } from '../common/guardrails/prompt-guardrail';
+import { normalizeSkillCategory } from '@smart-apply/shared';
 import {
   buildResumeTemplateData,
   ProfileWithRelations,
@@ -629,8 +630,13 @@ export class ApplicationsService {
     // 3. Prefill resume data from profile
     const profile = await this.getProfileWithRelations(userId);
 
-    // 3.1. Intelligently categorize skills using LLM
-    const skillCategories = await this.categorizeSkillsWithLLM(profile);
+    // 3.1. Categorize skills: user-defined profile categories win; the LLM
+    // only categorizes when the profile has none (buildResumeTemplateData
+    // then falls back to deterministic grouping by Skill.category)
+    const hasUserCategories = profile.skills.some((s) => normalizeSkillCategory(s.category));
+    const skillCategories = hasUserCategories
+      ? undefined
+      : await this.categorizeSkillsWithLLM(profile);
     const resumeTemplate = buildResumeTemplateData(profile, skillCategories);
 
     // 3.2. Detect language from job posting for multilingual templates
@@ -1844,12 +1850,51 @@ export class ApplicationsService {
       (lower) => validatedSkills.find((s) => s.toLowerCase() === lower) || lower,
     );
 
+    // Group the LLM-selected skills by the user's profile categories
+    // (deterministic post-LLM mapping — the LLM never invents categories).
+    // Named categories keep the profile's first-seen order; uncategorized
+    // skills come last under an empty type (headerless render), which is
+    // also the unchanged single-group behavior for profiles without categories.
     if (uniqueSkills.length > 0) {
-      skillCategories.push({
-        id: 'skills-' + Date.now(),
-        type: '',
-        skills: uniqueSkills,
-      });
+      const categoryBySkillName = new Map(
+        profile.skills.map((s) => [s.name.toLowerCase(), normalizeSkillCategory(s.category)]),
+      );
+      const categoryOrder = Array.from(
+        new Set(
+          profile.skills
+            .map((s) => normalizeSkillCategory(s.category))
+            .filter((c): c is string => c !== null),
+        ),
+      );
+
+      const grouped = new Map<string, string[]>(categoryOrder.map((c) => [c, []]));
+      const uncategorized: string[] = [];
+      for (const skillName of uniqueSkills) {
+        const category = categoryBySkillName.get(skillName.toLowerCase());
+        if (category) {
+          grouped.get(category)!.push(skillName);
+        } else {
+          uncategorized.push(skillName);
+        }
+      }
+
+      let categoryIndex = 0;
+      for (const [type, skills] of grouped) {
+        if (skills.length > 0) {
+          skillCategories.push({
+            id: `skills-${Date.now()}-${categoryIndex++}`,
+            type,
+            skills,
+          });
+        }
+      }
+      if (uncategorized.length > 0) {
+        skillCategories.push({
+          id: 'skills-' + Date.now(),
+          type: '',
+          skills: uncategorized,
+        });
+      }
     }
 
     // Include ALL profile experiences (not just LLM-selected ones)

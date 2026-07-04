@@ -209,7 +209,7 @@ recorded baselines live in
 | ------------------ | ---------------------------------------------- |
 | **User**           | Auth, OAuth identities, 2FA secrets            |
 | **Profile**        | Personal info, contact, summary                |
-| **Skill**          | Skills with level & category                   |
+| **Skill**          | Skills with level & user-defined category (categories group the skills section of the generated CV; uncategorized skills render last without a header — the legacy `'General'` default counts as uncategorized) |
 | **Experience**     | Work history                                   |
 | **Education**      | Education history                              |
 | **Certificate**    | Certifications                                 |

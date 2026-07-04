@@ -13,6 +13,7 @@ import type {
   ResumeTemplateData,
   SkillCategory as ResumeSkillCategory,
 } from '../pdf-v2/template-data';
+import { normalizeSkillCategory } from '@smart-apply/shared';
 
 export type ProfileWithRelations = Profile & {
   user: User;
@@ -190,7 +191,9 @@ export function formatDateRange(
 
 /**
  * Build skill categories from database skills (fallback method)
- * Groups skills by their category field, or "Skills" if no category is set
+ * Groups skills by their user-defined category field (first-seen order);
+ * uncategorized skills come last under an empty type so templates render
+ * them without a header
  */
 function buildSkillCategories(skills: Skill[]): ResumeSkillCategory[] {
   if (!skills.length) {
@@ -198,16 +201,18 @@ function buildSkillCategories(skills: Skill[]): ResumeSkillCategory[] {
   }
 
   const grouped = skills.reduce<Record<string, string[]>>((acc, skill) => {
-    const key = skill.category?.trim() || DEFAULT_CATEGORY;
+    const key = normalizeSkillCategory(skill.category) ?? DEFAULT_CATEGORY;
     acc[key] = acc[key] || [];
     acc[key].push(skill.name);
     return acc;
   }, {});
 
-  return Object.entries(grouped).map(([type, values]) => ({
-    type,
-    skills: values.filter(Boolean),
-  }));
+  return Object.entries(grouped)
+    .sort(([a], [b]) => Number(a === DEFAULT_CATEGORY) - Number(b === DEFAULT_CATEGORY))
+    .map(([type, values]) => ({
+      type,
+      skills: values.filter(Boolean),
+    }));
 }
 
 /**

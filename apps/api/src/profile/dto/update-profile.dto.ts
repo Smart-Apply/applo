@@ -103,6 +103,16 @@ export class SkillDto {
   @IsOptional()
   @Transform(({ value }) => mapToSkillLevel(value))
   level?: SkillLevel | null;
+
+  @ApiProperty({
+    example: 'Programmiersprachen',
+    required: false,
+    description: 'User-defined category the skill is grouped under in the resume',
+  })
+  @IsOptional()
+  @Sanitize()
+  @IsString()
+  category?: string | null;
 }
 
 export class CertificateDto {

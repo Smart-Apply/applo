@@ -10,6 +10,9 @@ export class SkillResponseDto {
 
   @ApiProperty({ required: false, enum: SkillLevel })
   level?: SkillLevel | null;
+
+  @ApiProperty({ required: false })
+  category?: string | null;
 }
 
 export class CertificateResponseDto {
