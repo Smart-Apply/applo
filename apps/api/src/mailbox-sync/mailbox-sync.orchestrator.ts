@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { timingSafeEqual } from 'crypto';
 import {
   ApplicationStatusSource,
   ApplicationTrackingStatus,
@@ -61,7 +62,7 @@ export class MailboxSyncOrchestrator {
       );
       return;
     }
-    if (conn.webhookClientState !== args.clientState) {
+    if (!isClientStateValid(conn.webhookClientState, args.clientState)) {
       this.logger.error(
         `clientState mismatch for subscription ${args.subscriptionId} — possible spoofing attempt`,
       );
@@ -291,6 +292,27 @@ function extractMessageId(resource: string): string | null {
     resource.match(/Messages\/([^/?']+)/i) ||
     resource.match(/messages\(['"]([^'"]+)['"]\)/i);
   return match?.[1] ?? null;
+}
+
+/**
+ * Constant-time comparison of the per-connection webhook `clientState`
+ * secret (security audit F7). A plain `!==` string compare leaks timing
+ * information proportional to the matching prefix length; low practical
+ * value over the network, but this is the one value in the whole webhook
+ * path that's compared with `!==` instead of a timing-safe compare (every
+ * other secret comparison in the codebase — QStash signature, HMAC checks
+ * — is already constant-time), so fixed for consistency.
+ */
+function isClientStateValid(expected: string, actual: string): boolean {
+  const expectedBuf = Buffer.from(expected, 'utf8');
+  const actualBuf = Buffer.from(actual, 'utf8');
+  // timingSafeEqual throws on length mismatch — mismatched lengths are
+  // trivially "not equal" and don't need to be constant-time themselves
+  // (the length is not secret; only the content is).
+  if (expectedBuf.length !== actualBuf.length) {
+    return false;
+  }
+  return timingSafeEqual(expectedBuf, actualBuf);
 }
 
 function buildReason(classifierReason: string, matcherReason?: string): string {
