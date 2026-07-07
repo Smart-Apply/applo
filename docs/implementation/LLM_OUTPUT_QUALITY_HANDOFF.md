@@ -23,7 +23,7 @@ top of them** unless told to — they're awaiting their own PRs.
 | Branch | Commits | Scope |
 |---|---|---|
 | `feat/llm-output-quality` | `f006416` (Phase 1), `62b3fe6` (Phase 2) | Prompts, editor pass, grounding validator, wizard UX, docs |
-| `fix/shared-dual-esm-build` | `c92be15` | Unrelated build fix (CJS/ESM for `@smart-apply/shared`) |
+| `fix/shared-dual-esm-build` | `c92be15` | Unrelated build fix (CJS/ESM for `@applo/shared`) |
 
 **Start your work on a NEW branch off `main`** (e.g. `feat/llm-eval-harness`). Branch
 BEFORE editing. Never commit to `main`, never `git push origin main`.
@@ -86,7 +86,7 @@ flow (`upsertCoverLetter`), not the create pipeline.
 - **Backend tests:** vitest. Unit = `*.unit.spec.ts` (`pnpm test:unit`), run a single file
   with `pnpm vitest run <pattern>`. The existing suite is partially out of sync; CI marks
   unit tests `continue-on-error`, so a clean, focused new test is enough. Prisma client:
-  always `pnpm --filter @smart-apply/api prisma:generate` (never bare `prisma generate`).
+  always `pnpm --filter @applo/api prisma:generate` (never bare `prisma generate`).
 - **Frontend:** App Router, server components by default; **never** `form.watch()` (use
   `useWatch`); TanStack Query via the existing `apiClient` (no raw `fetch`); German-first,
   profession-neutral copy.
@@ -276,4 +276,4 @@ ticks) in the same PR — treat tracker drift as a bug.
 | Repo conventions | `.github/copilot-instructions.md` |
 
 **Local run:** `docker compose -f infra/docker-compose.yml up -d db` → `pnpm dev` (api :3000,
-web :3001, Swagger :3000/docs). Demo login `demo@smartapply.com` / `Demo123!`.
+web :3001, Swagger :3000/docs). Demo login `demo@applo.ai` / `Demo123!`.

@@ -13,7 +13,7 @@
 >   image at all).
 >
 > Replace any `npm ci --workspace=… --legacy-peer-deps` snippets below with
-> `pnpm install --frozen-lockfile --filter @smart-apply/api...` when reading
+> `pnpm install --frozen-lockfile --filter @applo/api...` when reading
 > for context. The npm commands are kept as-is for the historical narrative
 > only.
 >
@@ -257,14 +257,14 @@ BUILD_TAG=v1.0.0 ./scripts/build-optimized.sh all
 ```bash
 # Update Container App mit neuem Image
 az containerapp update \
-  --name smart-apply-api \
-  --resource-group smart-apply-dev-rg \
-  --image smartapplydevacr.azurecr.io/smart-apply-api:latest
+  --name applo-api \
+  --resource-group applo-dev-rg \
+  --image smartapplydevacr.azurecr.io/applo-api:latest
 
 az containerapp update \
-  --name smart-apply-web \
-  --resource-group smart-apply-dev-rg \
-  --image smartapplydevacr.azurecr.io/smart-apply-web:latest
+  --name applo-web \
+  --resource-group applo-dev-rg \
+  --image smartapplydevacr.azurecr.io/applo-web:latest
 ```
 
 ---
@@ -279,7 +279,7 @@ az containerapp update \
 
 ```bash
 # Lokal testen
-cd /Users/arian/VS-Projects/smart-apply
+cd /Users/arian/VS-Projects/applo
 npm ci --workspace=apps/api --legacy-peer-deps
 ```
 
@@ -347,7 +347,7 @@ Die Lint-Warnings zu "2 high vulnerabilities" beziehen sich auf bekannte CVEs im
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --push \
-  -t smartapplydevacr.azurecr.io/smart-apply-api:latest \
+  -t smartapplydevacr.azurecr.io/applo-api:latest \
   -f infra/Dockerfile .
 ```
 
@@ -376,6 +376,6 @@ Bei Fragen oder Problemen:
 
 1. Check Logs: `docker logs <container-id>`
 2. Inspect Image: `docker history <image-name>`
-3. Compare Sizes: `docker images | grep smart-apply`
+3. Compare Sizes: `docker images | grep applo`
 
 **Kontakt:** DevOps Team

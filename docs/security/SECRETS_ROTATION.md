@@ -69,8 +69,8 @@ brew install postgresql        # gives you `psql`
 App names referenced below:
 
 ```
-PROD app:    smart-apply-api
-STAGING app: smart-apply-api-staging
+PROD app:    applo-api
+STAGING app: applo-api-staging
 ```
 
 ---
@@ -92,22 +92,22 @@ echo "JWT_SECRET length: ${#NEW_JWT} (must be ≥ 64)"
 echo "JWT_REFRESH_SECRET length: ${#NEW_JWT_REFRESH} (must be ≥ 64)"
 
 # 2. Push to PROD first
-fly secrets set --app smart-apply-api \
+fly secrets set --app applo-api \
   JWT_SECRET="$NEW_JWT" \
   JWT_REFRESH_SECRET="$NEW_JWT_REFRESH"
 
 # 3. Wait for rolling restart, verify
 sleep 30
-curl -s https://api.smart-apply.io/api/v1/health | head -c 200
+curl -s https://api.applo.ai/api/v1/health | head -c 200
 
 # 4. Repeat for STAGING (different value — never share JWT secrets across envs)
 NEW_JWT_STAGING=$(openssl rand -base64 64 | tr -d '\n')
 NEW_JWT_REFRESH_STAGING=$(openssl rand -base64 64 | tr -d '\n')
-fly secrets set --app smart-apply-api-staging \
+fly secrets set --app applo-api-staging \
   JWT_SECRET="$NEW_JWT_STAGING" \
   JWT_REFRESH_SECRET="$NEW_JWT_REFRESH_STAGING"
 sleep 30
-curl -s https://smart-apply-api-staging.fly.dev/api/v1/health | head -c 200
+curl -s https://applo-api-staging.fly.dev/api/v1/health | head -c 200
 
 # 5. Forget the values — Fly is now the only place they exist
 unset NEW_JWT NEW_JWT_REFRESH NEW_JWT_STAGING NEW_JWT_REFRESH_STAGING
@@ -133,8 +133,8 @@ If your DB has zero rows in `User.twoFactorSecret` (check via `prisma studio`):
 NEW_2FA=$(openssl rand -hex 32)
 echo "Length: ${#NEW_2FA} (must be 64)"
 
-fly secrets set --app smart-apply-api TWO_FACTOR_ENCRYPTION_KEY="$NEW_2FA"
-fly secrets set --app smart-apply-api-staging TWO_FACTOR_ENCRYPTION_KEY="$(openssl rand -hex 32)"
+fly secrets set --app applo-api TWO_FACTOR_ENCRYPTION_KEY="$NEW_2FA"
+fly secrets set --app applo-api-staging TWO_FACTOR_ENCRYPTION_KEY="$(openssl rand -hex 32)"
 ```
 
 ### 2b. Real users have 2FA enabled
@@ -169,13 +169,13 @@ NEW_PW='<paste new password here, then clear shell history>'
 
 # ── Step 2: Update PROD first ──
 # Hostname for prod is `ep-red-heart-aljqrpfj` (verify in your Neon console)
-fly secrets set --app smart-apply-api \
+fly secrets set --app applo-api \
   DATABASE_URL="postgresql://neondb_owner:$NEW_PW@ep-red-heart-aljqrpfj-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" \
   DIRECT_URL="postgresql://neondb_owner:$NEW_PW@ep-red-heart-aljqrpfj.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 # ── Step 3: Update STAGING ──
 # Different hostname (ep-proud-sound-ald0492q), same password
-fly secrets set --app smart-apply-api-staging \
+fly secrets set --app applo-api-staging \
   DATABASE_URL="postgresql://neondb_owner:$NEW_PW@ep-proud-sound-ald0492q-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" \
   DIRECT_URL="postgresql://neondb_owner:$NEW_PW@ep-proud-sound-ald0492q.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
@@ -183,8 +183,8 @@ fly secrets set --app smart-apply-api-staging \
 # Open in your editor, replace npg_OLD with the new password in DATABASE_URL/DIRECT_URL
 
 # ── Step 5: Verify both ──
-curl -s https://api.smart-apply.io/api/v1/health | jq '.data.info.database'
-curl -s https://smart-apply-api-staging.fly.dev/api/v1/health | jq '.data.info.database'
+curl -s https://api.applo.ai/api/v1/health | jq '.data.info.database'
+curl -s https://applo-api-staging.fly.dev/api/v1/health | jq '.data.info.database'
 
 # ── Step 6: Forget ──
 unset NEW_PW
@@ -213,9 +213,9 @@ propagates (~30 sec rolling restart).
 # ── Step 1: Cloudflare dashboard ──
 # R2 → Manage R2 API tokens → find existing staging or prod token → Delete
 # Then: Create API token →
-#   Name: smart-apply-staging-rw  (or smart-apply-prod-rw)
+#   Name: applo-staging-rw  (or applo-prod-rw)
 #   Permissions: Object Read & Write
-#   Apply to specific buckets: smart-apply-staging  (or smart-apply-prod)
+#   Apply to specific buckets: applo-staging  (or applo-prod)
 #   TTL: 1 year
 # Copy Access Key ID + Secret Access Key to your password manager (one-time view)
 
@@ -224,15 +224,15 @@ NEW_R2_SECRET='<new secret access key>'
 
 # ── Step 2: Push to the matching Fly app ──
 # STAGING:
-fly secrets set --app smart-apply-api-staging \
+fly secrets set --app applo-api-staging \
   R2_ACCESS_KEY_ID="$NEW_R2_KEY_ID" \
   R2_SECRET_ACCESS_KEY="$NEW_R2_SECRET"
 
-# PROD: same command with --app smart-apply-api and the prod token's values
+# PROD: same command with --app applo-api and the prod token's values
 
 # ── Step 3: Verify storage subcheck ──
 sleep 30
-curl -s https://smart-apply-api-staging.fly.dev/api/v1/health | jq '.data.info.storage'
+curl -s https://applo-api-staging.fly.dev/api/v1/health | jq '.data.info.storage'
 # expect: {"status":"up"}
 
 unset NEW_R2_KEY_ID NEW_R2_SECRET
@@ -264,13 +264,13 @@ recommends rotation per their Well-Architected Framework.
 NEW_AZURE_KEY='<new KEY 2 value>'
 
 # Both apps share the same Azure resource — same key, different deployments
-fly secrets set --app smart-apply-api          AZURE_OPENAI_API_KEY="$NEW_AZURE_KEY"
-fly secrets set --app smart-apply-api-staging  AZURE_OPENAI_API_KEY="$NEW_AZURE_KEY"
+fly secrets set --app applo-api          AZURE_OPENAI_API_KEY="$NEW_AZURE_KEY"
+fly secrets set --app applo-api-staging  AZURE_OPENAI_API_KEY="$NEW_AZURE_KEY"
 
 # Verify
 sleep 30
-curl -s https://api.smart-apply.io/api/v1/health | jq '.data.info.llm'
-curl -s https://smart-apply-api-staging.fly.dev/api/v1/health | jq '.data.info.llm'
+curl -s https://api.applo.ai/api/v1/health | jq '.data.info.llm'
+curl -s https://applo-api-staging.fly.dev/api/v1/health | jq '.data.info.llm'
 
 # Now invalidate the OLD key in Azure Portal (regenerate KEY 1)
 
@@ -300,7 +300,7 @@ NEW_CURRENT='<new current signing key>'
 NEW_NEXT='<new next signing key>'
 
 # ── Step 2: Both apps share QStash — push to both ──
-for APP in smart-apply-api smart-apply-api-staging; do
+for APP in applo-api applo-api-staging; do
   fly secrets set --app "$APP" \
     QSTASH_TOKEN="$NEW_TOKEN" \
     QSTASH_CURRENT_SIGNING_KEY="$NEW_CURRENT" \
@@ -309,8 +309,8 @@ done
 
 # ── Step 3: Verify queue subcheck on both ──
 sleep 30
-curl -s https://api.smart-apply.io/api/v1/health | jq '.data.info.queue'
-curl -s https://smart-apply-api-staging.fly.dev/api/v1/health | jq '.data.info.queue'
+curl -s https://api.applo.ai/api/v1/health | jq '.data.info.queue'
+curl -s https://applo-api-staging.fly.dev/api/v1/health | jq '.data.info.queue'
 
 unset NEW_TOKEN NEW_CURRENT NEW_NEXT
 ```
@@ -328,7 +328,7 @@ flow get an error and have to retry.
 ```bash
 # ── Step 1: Resend dashboard ──
 # https://resend.com/api-keys → Create API key →
-#   Name: smart-apply-prod  (or smart-apply-staging)
+#   Name: applo-prod  (or applo-staging)
 #   Permission: Full access (or Sending access only — preferred)
 # Copy the value.
 
@@ -336,8 +336,8 @@ NEW_RESEND='<new Resend key starting with re_>'
 
 # ── Step 2: Push to the matching Fly app ──
 # Both apps can share one key, OR use separate keys per env.
-fly secrets set --app smart-apply-api          RESEND_API_KEY="$NEW_RESEND"
-fly secrets set --app smart-apply-api-staging  RESEND_API_KEY="$NEW_RESEND"
+fly secrets set --app applo-api          RESEND_API_KEY="$NEW_RESEND"
+fly secrets set --app applo-api-staging  RESEND_API_KEY="$NEW_RESEND"
 
 # ── Step 3: Revoke OLD key in Resend dashboard ──
 # Verify by sending a test email (e.g. trigger password reset on a test account)
@@ -363,19 +363,19 @@ max). All three providers email you reminders ~30 days before expiry.
 # Or "Reset Secret" (immediate, breaks logins until new value is deployed)
 
 # ── For Microsoft / Azure AD ──
-# portal.azure.com → Entra ID → App registrations → smart-apply →
+# portal.azure.com → Entra ID → App registrations → applo →
 #   Certificates & secrets → New client secret
 # Multiple secrets can coexist — preferred for zero-downtime.
 
 # ── Push to Fly ──
-fly secrets set --app smart-apply-api \
+fly secrets set --app applo-api \
   GOOGLE_CLIENT_SECRET='<new google secret>'
 # (Repeat for AZURE_AD_CLIENT_SECRET, MICROSOFT_CLIENT_SECRET if used)
 
 # Staging usually doesn't have OAuth configured — skip unless you set it up.
 
 # ── Verify ──
-# Open https://smart-apply.io in a private window → Sign in with Google
+# Open https://applo.ai in a private window → Sign in with Google
 ```
 
 ---
@@ -390,10 +390,10 @@ GitHub Environment secrets. Doesn't affect the running app.
 ```bash
 # ── Step 1: Create new token, scoped to ONE app ──
 # Prod token (for the production environment):
-fly tokens create deploy --app smart-apply-api --name "github-actions-prod-$(date +%Y%m)" --expiry 8760h
+fly tokens create deploy --app applo-api --name "github-actions-prod-$(date +%Y%m)" --expiry 8760h
 
 # Staging token (for the staging environment):
-fly tokens create deploy --app smart-apply-api-staging --name "github-actions-staging-$(date +%Y%m)" --expiry 8760h
+fly tokens create deploy --app applo-api-staging --name "github-actions-staging-$(date +%Y%m)" --expiry 8760h
 
 # Copy the FlyV1 fm2_... token immediately — Fly shows it once.
 
@@ -419,8 +419,8 @@ affect the running Worker.
 ```bash
 # ── Step 1: Cloudflare dashboard ──
 # My Profile → API Tokens → Create Token → "Edit Cloudflare Workers" template
-#   Account resources: Include → smart-apply
-#   Zone resources: Include → smart-apply.io
+#   Account resources: Include → applo
+#   Zone resources: Include → applo.ai
 #   TTL: 1 year
 # Copy the value.
 
@@ -473,7 +473,7 @@ shells skip them when `HISTCONTROL=ignorespace` is set:
 setopt HIST_IGNORE_SPACE
 
 # Then prefix sensitive commands with a space:
- fly secrets set --app smart-apply-api JWT_SECRET='value-not-saved-to-history'
+ fly secrets set --app applo-api JWT_SECRET='value-not-saved-to-history'
 ```
 
 ---

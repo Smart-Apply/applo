@@ -26,6 +26,6 @@ Next.js 16 App Router + React 19 (React Compiler on) + Tailwind v4 + shadcn/ui.
 
 ## Constraints
 - TypeScript strict — no `any`. Prefix deliberately-unused identifiers with `_`.
-- 0 ESLint errors AND warnings — run `pnpm --filter @smart-apply/web lint` before finishing.
-- Verify the build compiles: `pnpm --filter @smart-apply/web build`.
+- 0 ESLint errors AND warnings — run `pnpm --filter @applo/web lint` before finishing.
+- Verify the build compiles: `pnpm --filter @applo/web build`.
 - User-facing copy is German-first and **profession-neutral** — placeholders like "z.B. Projektmanager, Krankenpfleger, Vertriebsleiter", never IT-only examples.

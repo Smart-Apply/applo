@@ -32,7 +32,7 @@ export const viewport: Viewport = {
 // into absolute URLs. Falls back to the production origin so social previews
 // work even when NEXT_PUBLIC_APP_URL isn't set (e.g. Cloudflare prod bundle).
 const metadataBase = new URL(
-  process.env.NEXT_PUBLIC_APP_URL ?? 'https://smart-apply.io',
+  process.env.NEXT_PUBLIC_APP_URL ?? 'https://applo.ai',
 );
 
 export const metadata: Metadata = {

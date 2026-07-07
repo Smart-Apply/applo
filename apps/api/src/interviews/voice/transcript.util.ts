@@ -1,4 +1,4 @@
-import type { VoiceTranscriptTurn } from '@smart-apply/shared';
+import type { VoiceTranscriptTurn } from '@applo/shared';
 
 /** A paired interviewer question and the candidate's spoken answer. */
 export interface VoiceQAPair {

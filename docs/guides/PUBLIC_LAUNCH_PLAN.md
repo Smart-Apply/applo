@@ -1,7 +1,7 @@
 # Public Launch Plan
 
 > **Status:** Open. Created 11 May 2026 to consolidate every gap that
-> blocks (or seriously embarrasses) a public launch of <https://smart-apply.io>.
+> blocks (or seriously embarrasses) a public launch of <https://applo.ai>.
 > Replaces the old `REDDIT_LAUNCH_ROADMAP.md`, `MVP_EVALUATION_DEC_2025.md`,
 > `MVP_FEATURES.md`, and `INFRA_MIGRATION_ROADMAP.md`, all of which had
 > drifted out of sync with the shipped state.
@@ -18,7 +18,7 @@ These were tracked as "todo" in the deleted docs but are live in code today:
 - ✅ Legal pages with real Impressum/Datenschutz/AGB data ([apps/web/src/app/(legal)/](../../apps/web/src/app/(legal)/))
 - ✅ Cloudflare Turnstile on register/login (`captcha.guard.ts`, `cloudflare-turnstile.service.ts`)
 - ✅ Email verification enforced before first generation (`EmailVerifiedGuard` on applications)
-- ✅ Contact form → Resend → `support@smart-apply.io` (`contact.controller.ts`, premium-priority routing included)
+- ✅ Contact form → Resend → `support@applo.ai` (`contact.controller.ts`, premium-priority routing included)
 - ✅ FAQ page ([apps/web/src/app/(legal)/faq/page.tsx](../../apps/web/src/app/(legal)/faq/page.tsx))
 - ✅ TOTP 2FA (otplib + qrcode + speakeasy, full enroll/verify/disable UI)
 - ✅ OAuth: Google, Microsoft, Azure AD
@@ -100,7 +100,7 @@ These were tracked as "todo" in the deleted docs but are live in code today:
 `apps/api/.env.example` defaults to `mock`. Confirm Fly prod is `azure-openai` and not silently serving canned demo text:
 
 ```bash
-flyctl secrets list --app smart-apply-api | grep LLM_PROVIDER
+flyctl secrets list --app applo-api | grep LLM_PROVIDER
 ```
 
 If it's anything other than `azure-openai`, fix before launch.
@@ -126,15 +126,15 @@ The privacy policy at [apps/web/src/app/(legal)/datenschutz/page.tsx](../../apps
 
 **Action:** In Sentry → Alerts → Create Alert Rule, set:
 - Trigger: > 5 errors in 5 min, OR any new issue in production environment.
-- Action: email `support@smart-apply.io` (already routed via Cloudflare).
+- Action: email `support@applo.ai` (already routed via Cloudflare).
 
 **Effort:** ~15 min.
 
 ### 10. End-to-end smoke test against staging
 
-**Symptom:** No Playwright/Cypress run pointing at `*.staging.smart-apply.io`. The PDF generation path (profile → job → LLM → Puppeteer → R2 → SAS URL → preview) has the most moving parts and is where a stranger will hit issues first.
+**Symptom:** No Playwright/Cypress run pointing at `*.staging.applo.ai`. The PDF generation path (profile → job → LLM → Puppeteer → R2 → SAS URL → preview) has the most moving parts and is where a stranger will hit issues first.
 
-**Action:** Walk through manually on `*.staging.smart-apply.io` (desktop + iOS Safari + Android Chrome):
+**Action:** Walk through manually on `*.staging.applo.ai` (desktop + iOS Safari + Android Chrome):
 1. Sign up new user → onboarding → fill profile manually
 2. Add a real LinkedIn job posting URL
 3. Generate application → preview both PDFs

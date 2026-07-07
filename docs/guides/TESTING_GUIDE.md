@@ -15,7 +15,7 @@
 
 ```bash
 # Credentials
-Email: demo@smartapply.com
+Email: demo@applo.ai
 Password: Demo123!
 
 # This account should have:
@@ -336,7 +336,7 @@ describe('Application Detail - Documents Section', () => {
 test('User can download and preview application documents', async ({ page }) => {
   // Login
   await page.goto('http://localhost:3001/login');
-  await page.fill('[name=email]', 'demo@smartapply.com');
+  await page.fill('[name=email]', 'demo@applo.ai');
   await page.fill('[name=password]', 'Demo123!');
   await page.click('button[type=submit]');
 

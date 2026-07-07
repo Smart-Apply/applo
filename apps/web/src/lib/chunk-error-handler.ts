@@ -33,7 +33,7 @@ import { toast } from 'sonner';
 
 import { hardReloadWithCacheBust } from './hard-reload';
 
-const RELOAD_MARKER_KEY = 'smart-apply:chunk-reload-at';
+const RELOAD_MARKER_KEY = 'applo:chunk-reload-at';
 const RELOAD_LOOP_GUARD_MS = 30_000;
 
 let installed = false;

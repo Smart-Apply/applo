@@ -31,7 +31,7 @@ import { CheckUsage } from '../common/decorators/tier.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ValidationService } from './validation.service';
 import { CreateValidationDto } from './dto/create-validation.dto';
-import type { Validation, ValidationSummary } from '@smart-apply/shared';
+import type { Validation, ValidationSummary } from '@applo/shared';
 
 @ApiTags('validation')
 @ApiBearerAuth()

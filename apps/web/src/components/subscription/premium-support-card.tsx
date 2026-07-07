@@ -50,7 +50,7 @@ export function PremiumSupportCard() {
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-200">
             <Mail className="h-4 w-4" />
-            <span>support@smart-apply.io</span>
+            <span>support@applo.ai</span>
           </div>
           <Button asChild variant="default" className="bg-amber-600 hover:bg-amber-700">
             <Link href="/#contact">

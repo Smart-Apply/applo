@@ -241,7 +241,7 @@ npx ts-node -r tsconfig-paths/register scripts/validate-react-pdf-templates.ts
 
 # 4. Visual diff vs Puppeteer (requires running DB + seeded templates).
 PDF_RENDERER_DEFAULT=react-pdf npm run snapshot:pdf-renderers
-# Output: /tmp/smart-apply-pdf-snapshots/<timestamp>/{puppeteer,react-pdf}/
+# Output: /tmp/applo-pdf-snapshots/<timestamp>/{puppeteer,react-pdf}/
 # Open both folders in Preview and visually diff.
 ```
 
@@ -260,7 +260,7 @@ When you're done, the assistant should report:
 1. ✅ `tsc --noEmit` exit code (must be 0)
 2. ✅ `eslint` exit code on touched files (must be 0; no warnings)
 3. ✅ The four-line block from `validate-react-pdf-templates.ts` showing each factory rendering, with byte counts
-4. (If full snapshot was run) The `/tmp/smart-apply-pdf-snapshots/<ts>/` path so the user can open and diff
+4. (If full snapshot was run) The `/tmp/applo-pdf-snapshots/<ts>/` path so the user can open and diff
 
 Then propose a Conventional Commit, e.g. `feat(pdf-v2): port <design> to react-pdf renderer`, and remind the user that PR titles must follow the same format because release-please consumes them.
 

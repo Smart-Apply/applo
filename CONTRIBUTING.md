@@ -227,7 +227,7 @@ We use [`release-please`](https://github.com/googleapis/release-please-action) f
    - Bumped `package.json` versions
    - Updated [CHANGELOG.md](CHANGELOG.md) with all entries grouped by type
 4. **You merge the Release PR when you want to ship.** This creates a Git tag `v1.2.0`.
-5. The tag push triggers [`deploy-prod.yml`](.github/workflows/deploy-prod.yml) → blocks at the `production` environment gate → you click **Approve and deploy** → live on smart-apply.io.
+5. The tag push triggers [`deploy-prod.yml`](.github/workflows/deploy-prod.yml) → blocks at the `production` environment gate → you click **Approve and deploy** → live on applo.ai.
 
 ### Batching releases
 
@@ -263,8 +263,8 @@ There's no "skip staging" path. Even hotfixes go through the full pipeline. The 
 
 | Trigger                      | Workflow                                                     | Target                                                                                | Approval     |
 | ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------- | ------------ |
-| Push to `main`               | [`deploy-staging.yml`](.github/workflows/deploy-staging.yml) | `smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev`    | Auto         |
-| Tag `v*.*.*` push            | [`deploy-prod.yml`](.github/workflows/deploy-prod.yml)       | `api.smart-apply.io` + `smart-apply.io`                                               | Manual click |
+| Push to `main`               | [`deploy-staging.yml`](.github/workflows/deploy-staging.yml) | `applo-api-staging.fly.dev` + `applo-web-staging.ari41dev.workers.dev`    | Auto         |
+| Tag `v*.*.*` push            | [`deploy-prod.yml`](.github/workflows/deploy-prod.yml)       | `api.applo.ai` + `applo.ai`                                               | Manual click |
 | `workflow_dispatch` (manual) | Either workflow                                              | The corresponding env                                                                  | Per env rule |
 
 ### Rolling back
@@ -272,8 +272,8 @@ There's no "skip staging" path. Even hotfixes go through the full pipeline. The 
 Fly does rolling deploys — old machines stay up until new ones pass health checks. If something goes wrong:
 
 ```bash
-flyctl releases list --app smart-apply-api
-flyctl releases rollback <release-id> --app smart-apply-api
+flyctl releases list --app applo-api
+flyctl releases rollback <release-id> --app applo-api
 ```
 
 Worker rollback is atomic via `wrangler rollback` (or the Cloudflare dashboard).
@@ -367,13 +367,13 @@ pnpm prisma:studio
 cd apps/api && pnpm exec prisma migrate reset
 
 # Manually deploy current main to staging (bypassing CI, for quick smoke tests)
-flyctl deploy --config fly.staging.toml --app smart-apply-api-staging --remote-only
+flyctl deploy --config fly.staging.toml --app applo-api-staging --remote-only
 
 # View staging logs
-flyctl logs --app smart-apply-api-staging
+flyctl logs --app applo-api-staging
 
 # View staging health
-curl https://smart-apply-api-staging.fly.dev/api/v1/health | jq
+curl https://applo-api-staging.fly.dev/api/v1/health | jq
 ```
 
 ---
@@ -391,4 +391,4 @@ curl https://smart-apply-api-staging.fly.dev/api/v1/health | jq
 
 ## Questions?
 
-Open a [discussion](https://github.com/Smart-Apply/smart-apply/discussions) or DM the maintainer. For bug reports, open an [issue](https://github.com/Smart-Apply/smart-apply/issues).
+Open a [discussion](https://github.com/applo/applo/discussions) or DM the maintainer. For bug reports, open an [issue](https://github.com/applo/applo/issues).

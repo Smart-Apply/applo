@@ -1343,7 +1343,7 @@ export class AuthService {
 
     return {
       meta: {
-        format: 'smart-apply.user-export.v1',
+        format: 'applo.user-export.v1',
         exportedAt: new Date().toISOString(),
         notice:
           'This file contains your personal data exported from Applo per GDPR Art. 15 / Art. 20. ' +

@@ -4,8 +4,8 @@
 > below was decommissioned after the migration to **Fly.io** (API) +
 > **Cloudflare Workers** (web). The current production topology is:
 >
-> - `smart-apply.io` / `www.smart-apply.io` → Cloudflare Worker `smart-apply-web`
-> - `api.smart-apply.io` → CNAME (Cloudflare-proxied) → `93ke51y.smart-apply-api.fly.dev`
+> - `applo.ai` / `www.applo.ai` → Cloudflare Worker `applo-web`
+> - `api.applo.ai` → CNAME (Cloudflare-proxied) → `93ke51y.applo-api.fly.dev`
 > - Fly issues the Let's Encrypt cert directly via DNS-01; the
 >   `_acme-challenge.api` CNAME **must be DNS-only** (gray cloud) or
 >   Cloudflare hides it from Let's Encrypt and issuance hangs.
@@ -28,8 +28,8 @@ prod. Live mappings:
 
 | Hostname                       | Target                                            | TLS                       |
 | ------------------------------ | ------------------------------------------------- | ------------------------- |
-| `staging.smart-apply.io`       | Cloudflare Worker `smart-apply-web-staging`       | Cloudflare Universal Edge |
-| `api-staging.smart-apply.io`   | Fly app `smart-apply-api-staging` (CNAME, DNS-only) | Fly Let's Encrypt (DNS-01) |
+| `staging.applo.ai`       | Cloudflare Worker `applo-web-staging`       | Cloudflare Universal Edge |
+| `api-staging.applo.ai`   | Fly app `applo-api-staging` (CNAME, DNS-only) | Fly Let's Encrypt (DNS-01) |
 
 The Worker domain is **declared in code** ([`apps/web/wrangler.jsonc`](../../apps/web/wrangler.jsonc) → `env.staging.routes`), so Cloudflare auto-provisions the proxied DNS record on every `wrangler deploy --env staging`. The Fly domain is **manual one-time setup** because Fly issues its own cert and needs the `_acme-challenge` CNAME to be unproxied.
 
@@ -37,42 +37,42 @@ The Worker domain is **declared in code** ([`apps/web/wrangler.jsonc`](../../app
 
 ```bash
 # 1. Fly: provision the API custom hostname + cert
-fly certs add api-staging.smart-apply.io -a smart-apply-api-staging
-fly certs show api-staging.smart-apply.io -a smart-apply-api-staging
+fly certs add api-staging.applo.ai -a applo-api-staging
+fly certs show api-staging.applo.ai -a applo-api-staging
 #   → prints the _acme-challenge CNAME you need to add to Cloudflare DNS
 ```
 
-In Cloudflare DNS (zone `smart-apply.io`), add:
+In Cloudflare DNS (zone `applo.ai`), add:
 
 | Type  | Name                       | Target                              | Proxy                  |
 | ----- | -------------------------- | ----------------------------------- | ---------------------- |
-| CNAME | `api-staging`              | `smart-apply-api-staging.fly.dev`   | **DNS only** (gray) ⚠️ |
+| CNAME | `api-staging`              | `applo-api-staging.fly.dev`   | **DNS only** (gray) ⚠️ |
 | CNAME | `_acme-challenge.api-staging` | (value from `fly certs show`)    | **DNS only** (gray) ⚠️ |
 
 > Both records **must** stay unproxied. Fly terminates TLS itself, and Let's
 > Encrypt's DNS-01 validator can't see records hidden behind Cloudflare's
-> proxy. Same gotcha as the prod `api.smart-apply.io` record (see status
+> proxy. Same gotcha as the prod `api.applo.ai` record (see status
 > banner above).
 
-Re-run `fly certs show api-staging.smart-apply.io -a smart-apply-api-staging`
+Re-run `fly certs show api-staging.applo.ai -a applo-api-staging`
 until status is **Ready** (usually <5 min).
 
 ```bash
 # 2. Update the staging API's CORS allow-list so the new web origin is accepted
-fly secrets set CORS_ORIGINS="https://staging.smart-apply.io" -a smart-apply-api-staging
+fly secrets set CORS_ORIGINS="https://staging.applo.ai" -a applo-api-staging
 ```
 
 ```bash
 # 3. Trigger a staging deploy — wrangler will auto-create the proxied
-#    Worker DNS record for staging.smart-apply.io on first deploy.
+#    Worker DNS record for staging.applo.ai on first deploy.
 git push origin main   # or: gh workflow run "Deploy → Staging"
 ```
 
 ### Verification
 
 ```bash
-curl -I https://api-staging.smart-apply.io/api/v1/health   # → 200
-curl -I https://staging.smart-apply.io/register            # → 200
+curl -I https://api-staging.applo.ai/api/v1/health   # → 200
+curl -I https://staging.applo.ai/register            # → 200
 ```
 
 The staging deploy workflow ([`.github/workflows/deploy-staging.yml`](../../.github/workflows/deploy-staging.yml))
@@ -83,18 +83,18 @@ values — the workflow falls back to them via `${{ vars.X || 'default' }}`.
 
 ### Common failure modes
 
-- **522 from `staging.smart-apply.io`** — the Worker route hasn't propagated
+- **522 from `staging.applo.ai`** — the Worker route hasn't propagated
   yet. Wait ~30 s after `wrangler deploy` or check
-  Cloudflare → Workers & Pages → `smart-apply-web-staging` → Settings → Domains.
+  Cloudflare → Workers & Pages → `applo-web-staging` → Settings → Domains.
 - **Fly cert stuck in `Awaiting configuration`** — `_acme-challenge` CNAME
   is missing or proxied. Toggle to DNS-only and re-run `fly certs show`.
 - **CORS errors in browser console** — `CORS_ORIGINS` on the staging Fly app
-  doesn't include `https://staging.smart-apply.io`. Re-set the secret and
+  doesn't include `https://staging.applo.ai`. Re-set the secret and
   `fly deploy` (the secret triggers a restart automatically).
 
 ---
 
-> Dokumentation der Migration von `smartapplymvp.swedencentral.cloudapp.azure.com` auf die eigene Domain **`smart-apply.io`** (April 2026), inklusive Cloudflare-Setup, nginx-Reverse-Proxy und HTTPS-Härtung.
+> Dokumentation der Migration von `smartapplymvp.swedencentral.cloudapp.azure.com` auf die eigene Domain **`applo.ai`** (April 2026), inklusive Cloudflare-Setup, nginx-Reverse-Proxy und HTTPS-Härtung.
 
 ## Inhaltsverzeichnis
 
@@ -133,16 +133,16 @@ values — the workflow falls back to them via `${{ vars.X || 'default' }}`.
 
 | Hostname                | DNS Record           | Ziel                        | Verhalten                                |
 | ----------------------- | -------------------- | --------------------------- | ---------------------------------------- |
-| `smart-apply.io`        | `A`                  | `135.225.56.134`            | nginx → web container (200)              |
-| `www.smart-apply.io`    | `A`                  | `135.225.56.134`            | nginx → 301 → `https://smart-apply.io`   |
-| `api.smart-apply.io`    | `A`                  | `135.225.56.134`            | nginx → api container (200)              |
+| `applo.ai`        | `A`                  | `135.225.56.134`            | nginx → web container (200)              |
+| `www.applo.ai`    | `A`                  | `135.225.56.134`            | nginx → 301 → `https://applo.ai`   |
+| `api.applo.ai`    | `A`                  | `135.225.56.134`            | nginx → api container (200)              |
 | Legacy Azure FQDN       | unverändert          | (Cloudflare nicht aktiv)    | nginx + Let's Encrypt — Rollback-Pfad    |
 
 ### Versionierte Konfiguration im Repo
 
 | Datei                                                                                                   | Zweck                                                                                       |
 | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| [`infra/nginx/smart-apply.conf`](../../infra/nginx/smart-apply.conf)                                    | Komplette nginx-Site-Definition (3 server-Blöcke + Cloudflare Real-IP-Liste)                |
+| [`infra/nginx/applo.conf`](../../infra/nginx/applo.conf)                                    | Komplette nginx-Site-Definition (3 server-Blöcke + Cloudflare Real-IP-Liste)                |
 | [`scripts/install-domain.sh`](../../scripts/install-domain.sh)                                          | Idempotenter Installer für die VM (nginx + Cert + Env-Update + API-Restart)                 |
 | [`infra/docker-compose.prod.yml`](../../infra/docker-compose.prod.yml)                                  | Container-Ports auf `127.0.0.1` gebunden (nicht mehr public-facing)                         |
 | [`.github/workflows/deploy-vm.yml`](../../.github/workflows/deploy-vm.yml)                              | `VM_HOST`, `HEALTH_CHECK_HOST`, `PUBLIC_API_URL` jetzt aus GitHub Repository Variables      |
@@ -154,8 +154,8 @@ Settings → Secrets and variables → Actions → **Variables**:
 | Variable             | Wert                                                                |
 | -------------------- | ------------------------------------------------------------------- |
 | `VM_HOST`            | `smartapplymvp.swedencentral.cloudapp.azure.com` (SSH-Ziel)         |
-| `HEALTH_CHECK_HOST`  | `api.smart-apply.io`                                                |
-| `PUBLIC_API_URL`     | `https://api.smart-apply.io/api/v1` (build-arg für Web-Image)       |
+| `HEALTH_CHECK_HOST`  | `api.applo.ai`                                                |
+| `PUBLIC_API_URL`     | `https://api.applo.ai/api/v1` (build-arg für Web-Image)       |
 
 **Wichtig:** `VM_HOST` bleibt auf der Azure-FQDN, weil Cloudflare keinen Port 22 (SSH) proxied. Ein DNS-Eintrag für SSH wäre zwar möglich, aber unnötig.
 
@@ -200,7 +200,7 @@ Der erste Versuch zeigte eine "Universal Certificate" Page — das war der Edge-
 
 **Lessons:**
 - Origin Certificate liegt unter `SSL/TLS → Origin Server`, nicht `Edge Certificates`.
-- Origin Cert hat `Subject Alternative Name` für `*.smart-apply.io` und `smart-apply.io` — nicht für die Azure FQDN.
+- Origin Cert hat `Subject Alternative Name` für `*.applo.ai` und `applo.ai` — nicht für die Azure FQDN.
 - Visitor sieht nie das Origin Cert — nur Cloudflare.
 
 ### 3.2 nginx Versionsinkompatibilität (`http2` Direktive)
@@ -277,9 +277,9 @@ You have to remove (or rename) that container to be able to reuse that name.
 
 ### 3.6 Apex DNS zeigte auf Namecheap-Parking
 
-**Problem:** Erster Test von `https://smart-apply.io` ergab `522 (origin connect timeout)`. Cloudflare versuchte, eine falsche IP zu erreichen.
+**Problem:** Erster Test von `https://applo.ai` ergab `522 (origin connect timeout)`. Cloudflare versuchte, eine falsche IP zu erreichen.
 
-**Ursache:** Beim Domain-Kauf hatte Namecheap automatisch einen A-Record `smart-apply.io → 192.64.119.224` (Namecheap Parking Page) angelegt. Cloudflare hat diesen Record beim Site-Add übernommen.
+**Ursache:** Beim Domain-Kauf hatte Namecheap automatisch einen A-Record `applo.ai → 192.64.119.224` (Namecheap Parking Page) angelegt. Cloudflare hat diesen Record beim Site-Add übernommen.
 
 **Fix:** Apex A-Record in Cloudflare DNS auf `135.225.56.134` umgestellt, Proxy 🟧 aktiviert.
 
@@ -287,7 +287,7 @@ You have to remove (or rename) that container to be able to reuse that name.
 
 ### 3.7 `www` CNAME-Loop / falsches Ziel
 
-**Problem:** `https://www.smart-apply.io` lieferte intermittierend 522/525, obwohl Apex und API 200 zurückgaben — gleiche Cloudflare IPs, gleicher Origin-Cert, gleiches nginx.
+**Problem:** `https://www.applo.ai` lieferte intermittierend 522/525, obwohl Apex und API 200 zurückgaben — gleiche Cloudflare IPs, gleicher Origin-Cert, gleiches nginx.
 
 **Ursache:** Der `www`-Record war als CNAME auf einen alten/falschen Wert gesetzt (vermutlich Namecheap-default). Cloudflares CNAME-Flattening löste in Edge-Cases auf eine falsche Origin-IP auf.
 
@@ -323,7 +323,7 @@ Dann reicht `ssh smartapply-vm`.
 **Problem:** Beim Setup hatte jemand vorher die VM mit einem Personal Access Token in der `git remote` URL eingerichtet:
 
 ```
-origin  https://Ar1anit:github_pat_11AYT35CA0V8...@github.com/Ar1anit/smart-apply.git
+origin  https://Ar1anit:github_pat_11AYT35CA0V8...@github.com/Ar1anit/applo.git
 ```
 
 Der Token war im VM-Filesystem (`.git/config`) klartext, plus jeder, der `git remote -v` ausführt, sieht ihn.
@@ -331,7 +331,7 @@ Der Token war im VM-Filesystem (`.git/config`) klartext, plus jeder, der `git re
 **Fix:** SSH-Deploy-Key generiert, Git-Remote auf SSH umgestellt:
 
 ```bash
-git remote set-url origin git@github.com:Ar1anit/smart-apply.git
+git remote set-url origin git@github.com:Ar1anit/applo.git
 ```
 
 **Lesson:** **Nie** PATs in Git-URLs einbetten. Auf Servern: SSH Deploy Keys (per-Repo, scope-bar auf Read-only). Auf Devs: `git config credential.helper` + Keychain.
@@ -440,7 +440,7 @@ ssh -i ~/.ssh/smartapply-vm.pem azureuser@<vm> '
 
 # 3. Repo auf der VM aktualisieren + Installer ausführen
 ssh -i ~/.ssh/smartapply-vm.pem azureuser@<vm> '
-  cd /home/azureuser/smart-apply
+  cd /home/azureuser/applo
   git pull origin main
   bash scripts/install-domain.sh <domain>
 '
@@ -488,24 +488,24 @@ KEY=$(openssl rsa -in ~/Desktop/new-key.pem -noout -modulus | openssl md5)
 # 4. Auf die VM
 scp ~/Desktop/new-cert.pem ~/Desktop/new-key.pem azureuser@<vm>:/tmp/
 ssh azureuser@<vm> '
-  sudo mv /tmp/new-cert.pem /etc/ssl/cloudflare/smart-apply.io.pem
-  sudo mv /tmp/new-key.pem  /etc/ssl/cloudflare/smart-apply.io.key
-  sudo chown root:root /etc/ssl/cloudflare/smart-apply.io.*
-  sudo chmod 644 /etc/ssl/cloudflare/smart-apply.io.pem
-  sudo chmod 600 /etc/ssl/cloudflare/smart-apply.io.key
+  sudo mv /tmp/new-cert.pem /etc/ssl/cloudflare/applo.ai.pem
+  sudo mv /tmp/new-key.pem  /etc/ssl/cloudflare/applo.ai.key
+  sudo chown root:root /etc/ssl/cloudflare/applo.ai.*
+  sudo chmod 644 /etc/ssl/cloudflare/applo.ai.pem
+  sudo chmod 600 /etc/ssl/cloudflare/applo.ai.key
   sudo nginx -t && sudo systemctl reload nginx
 '
 # → Kein Container-Restart nötig, nginx reload reicht
 
 # 5. Lokal testen
-curl -sI https://smart-apply.io | head -3
+curl -sI https://applo.ai | head -3
 ```
 
 ### "Site ist down" — Diagnostik-Runbook
 
 ```bash
 # 1. Cloudflare side: Edge erreichbar?
-curl -sI https://smart-apply.io 2>&1 | head -3
+curl -sI https://applo.ai 2>&1 | head -3
 
 # Codes interpretieren:
 #   522 → Cloudflare kann VM nicht erreichen (firewall, VM down, falsche IP)
@@ -522,8 +522,8 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 # Alle drei sollten "(healthy)" sein
 
 # 4. Direkt am Origin testen (umgeht Cloudflare)
-curl -sI -H "Host: smart-apply.io" https://localhost --insecure | head -5
-curl -sI -H "Host: api.smart-apply.io" https://localhost --insecure | head -5
+curl -sI -H "Host: applo.ai" https://localhost --insecure | head -5
+curl -sI -H "Host: api.applo.ai" https://localhost --insecure | head -5
 
 # 5. nginx config test + Logs
 sudo nginx -t
@@ -542,7 +542,7 @@ sudo ss -tlnp | grep -E ":(80|443|3000|3001) "
 
 ```bash
 ssh -i ~/.ssh/smartapply-vm.pem azureuser@<vm> '
-  cd /home/azureuser/smart-apply
+  cd /home/azureuser/applo
   docker-compose -f infra/docker-compose.prod.yml down --remove-orphans
   docker-compose -f infra/docker-compose.prod.yml up -d
   sleep 20
@@ -599,8 +599,8 @@ Falls man den Frontend-Build zurückrollen will, GitHub Repo Variable `PUBLIC_AP
 
 - [ ] **GitHub PAT revoken** — `github_pat_11AYT35CA0V8...` (siehe Section 3.9). Settings → Developer settings → PATs.
 - [ ] **Cloudflare Origin Cert in 2-3 Wochen rotieren** — der Key wurde im Chat geleaked (siehe Section 3.11). Runbook oben.
-- [ ] **Email-Domain bei Resend verifizieren** (`smart-apply.io`) — DNS-Records (SPF/DKIM/DMARC) bei Cloudflare anlegen, sobald Resend-Account existiert.
-- [ ] **Cloudflare Email Routing aktivieren** für `support@smart-apply.io` → Forward auf private Inbox.
+- [ ] **Email-Domain bei Resend verifizieren** (`applo.ai`) — DNS-Records (SPF/DKIM/DMARC) bei Cloudflare anlegen, sobald Resend-Account existiert.
+- [ ] **Cloudflare Email Routing aktivieren** für `support@applo.ai` → Forward auf private Inbox.
 - [ ] **Sentry Setup** — DSN für Web + API anlegen, in Repo Variables/Secrets ablegen.
 - [ ] **Cloudflare Turnstile** site key + secret für Signup-Formular.
 - [ ] **Azure OpenAI Credentials** auf der VM in `apps/api/.env` setzen + `LLM_PROVIDER=azure-openai`.
@@ -616,4 +616,4 @@ Falls man den Frontend-Build zurückrollen will, GitHub Repo Variable `PUBLIC_AP
 - [Cloudflare SSL/TLS encryption modes](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/)
 - [Cloudflare IP Ranges (für nginx `set_real_ip_from`)](https://www.cloudflare.com/ips/)
 - [nginx `http2` direktive change log](https://nginx.org/en/docs/http/ngx_http_v2_module.html)
-- Repo: [`infra/nginx/smart-apply.conf`](../../infra/nginx/smart-apply.conf), [`scripts/install-domain.sh`](../../scripts/install-domain.sh)
+- Repo: [`infra/nginx/applo.conf`](../../infra/nginx/applo.conf), [`scripts/install-domain.sh`](../../scripts/install-domain.sh)

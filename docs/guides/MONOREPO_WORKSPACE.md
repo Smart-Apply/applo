@@ -7,23 +7,23 @@ pnpm-Workspaces-basiertes Monorepo für Applo (Backend + Frontend + Shared Types
 ## 📁 Struktur
 
 ```text
-smart-apply/
+applo/
 ├── package.json              # Workspace-Root (Orchestrator, root devDeps)
 ├── pnpm-workspace.yaml       # Workspace-Manifest (welche Pakete gehören dazu)
 ├── pnpm-lock.yaml            # EINZIGE Lockfile-Quelle der Wahrheit
 ├── .npmrc                    # pnpm-Settings (auto-install-peers, hoist patterns)
 ├── turbo.json                # Turborepo Task-Graph
 ├── apps/
-│   ├── api/                  # @smart-apply/api (NestJS Backend)
+│   ├── api/                  # @applo/api (NestJS Backend)
 │   │   ├── package.json
 │   │   ├── src/
 │   │   ├── test/
 │   │   └── prisma/
-│   └── web/                  # @smart-apply/web (Next.js Frontend)
+│   └── web/                  # @applo/web (Next.js Frontend)
 │       ├── package.json
 │       └── src/
 ├── packages/
-│   └── shared/               # @smart-apply/shared (geteilte DTOs / Types)
+│   └── shared/               # @applo/shared (geteilte DTOs / Types)
 │       ├── package.json
 │       ├── src/
 │       └── dist/             # tsc Output (von api + web als JS importiert)
@@ -37,7 +37,7 @@ smart-apply/
 - **Content-addressed Store** — eine globale Kopie pro Paket-Version,
   Workspaces ziehen Symlinks. Ergebnis: viel kleineres `node_modules` (~40%
   weniger Plattenplatz) und ~5× schnellere Installs.
-- **Workspace-Filter** (`--filter @smart-apply/api...`) — präzise Builds,
+- **Workspace-Filter** (`--filter @applo/api...`) — präzise Builds,
   perfekt für Docker-Layer-Caching.
 - **`pnpm deploy`** — produktionsreife isolierte Tree-Ausgabe ohne
   Workspace-Symlinks. Das nutzen wir im [Dockerfile](../../infra/Dockerfile).
@@ -87,7 +87,7 @@ pnpm install
 pnpm dev
 
 # Nur Backend
-pnpm api:dev          # alias für pnpm --filter @smart-apply/api start:dev
+pnpm api:dev          # alias für pnpm --filter @applo/api start:dev
 
 # Nur Frontend
 pnpm web:dev
@@ -103,7 +103,7 @@ pnpm shared:watch
 pnpm build
 
 # Nur Backend
-pnpm build:api        # turbo run build --filter=@smart-apply/api
+pnpm build:api        # turbo run build --filter=@applo/api
 
 # Nur Frontend
 pnpm build:web
@@ -156,20 +156,20 @@ pnpm install --frozen-lockfile
 
 ```bash
 # Backend-spezifisch
-pnpm --filter @smart-apply/api add @nestjs/cache-manager
-pnpm --filter @smart-apply/api add -D @types/some-lib   # devDep
+pnpm --filter @applo/api add @nestjs/cache-manager
+pnpm --filter @applo/api add -D @types/some-lib   # devDep
 
 # Frontend-spezifisch
-pnpm --filter @smart-apply/web add react-icons
+pnpm --filter @applo/web add react-icons
 
 # Shared Package
-pnpm --filter @smart-apply/shared add zod
+pnpm --filter @applo/shared add zod
 
 # Im Root (für alle Workspaces verfügbare devDep, z.B. Tooling)
 pnpm add -Dw prettier
 
 # Entfernen
-pnpm --filter @smart-apply/api remove some-package
+pnpm --filter @applo/api remove some-package
 ```
 
 > **Wichtig:** Nach jedem `pnpm add/remove` wird `pnpm-lock.yaml` aktualisiert
@@ -179,9 +179,9 @@ pnpm --filter @smart-apply/api remove some-package
 ### Workspace-Filter Cheat-Sheet
 
 ```bash
-pnpm --filter @smart-apply/api <command>      # nur api
-pnpm --filter @smart-apply/api... <command>   # api + dessen Workspace-Deps
-pnpm --filter ...@smart-apply/api <command>   # api + alles was api importiert
+pnpm --filter @applo/api <command>      # nur api
+pnpm --filter @applo/api... <command>   # api + dessen Workspace-Deps
+pnpm --filter ...@applo/api <command>   # api + alles was api importiert
 pnpm --filter "./apps/*" <command>            # alle apps/*
 pnpm -r <command>                             # in jedem Workspace ausführen
 ```
@@ -192,13 +192,13 @@ pnpm -r <command>                             # in jedem Workspace ausführen
 
 pnpm legt einen einzigen content-addressed Store unter `~/.local/share/pnpm/store`
 an. Jeder Workspace bekommt ein eigenes `node_modules/` mit Symlinks zurück in
-den Store. Workspace-Deps (`@smart-apply/shared`) sind Symlinks ins
+den Store. Workspace-Deps (`@applo/shared`) sind Symlinks ins
 Source-Verzeichnis — Änderungen sind sofort sichtbar, kein Build-Step zwischen
 "shared geändert" und "api sieht's".
 
 ```bash
 # Symlink-Struktur
-apps/api/node_modules/@smart-apply/shared -> ../../../packages/shared
+apps/api/node_modules/@applo/shared -> ../../../packages/shared
 apps/api/node_modules/@nestjs/common      -> .pnpm/@nestjs+common@11.1.12/...
 node_modules/.pnpm/@nestjs+common@11.1.12 -> store/.../node_modules/@nestjs/common
 ```
@@ -222,7 +222,7 @@ Hoist-Ausnahmen für Tooling, das diese Annahme trotzdem braucht:
 | Install-Zeit (warm) | ~15 s | ~3 s |
 | `node_modules` Größe | ~1.8 GB | ~1.1 GB |
 | Phantom-Dep-Schutz | ❌ | ✅ |
-| Workspace-Filter | `--workspace=apps/api` | `--filter @smart-apply/api` (+ transitive Modi) |
+| Workspace-Filter | `--workspace=apps/api` | `--filter @applo/api` (+ transitive Modi) |
 | Lockfile-Größe | ~21 k Zeilen YAML-äquivalent | ~9 k Zeilen |
 | Produktions-Tree | Manuell prune + Symlink-Surgery | `pnpm deploy --prod` |
 
@@ -233,13 +233,13 @@ Hoist-Ausnahmen für Tooling, das diese Annahme trotzdem braucht:
 Siehe [`infra/Dockerfile`](../../infra/Dockerfile). Kurzfassung:
 
 1. **Builder stage** — `pnpm install --frozen-lockfile` (alle Workspaces, inkl.
-   devDeps), `pnpm --filter @smart-apply/shared build`,
-   `pnpm --filter @smart-apply/api prisma:generate`,
-   `pnpm --filter @smart-apply/api build`, Prisma-Seed-Scripts via `tsc`
+   devDeps), `pnpm --filter @applo/shared build`,
+   `pnpm --filter @applo/api prisma:generate`,
+   `pnpm --filter @applo/api build`, Prisma-Seed-Scripts via `tsc`
    kompilieren.
-2. **Deployer stage** — `pnpm --filter @smart-apply/api deploy --prod /prod/api`
+2. **Deployer stage** — `pnpm --filter @applo/api deploy --prod /prod/api`
    erzeugt einen isolierten produktionsreifen Baum mit allen runtime-Deps und
-   einer echten Kopie von `@smart-apply/shared` (kein Symlink mehr).
+   einer echten Kopie von `@applo/shared` (kein Symlink mehr).
 3. **Production stage** — `node:26-alpine`, COPY aus deployer + dist + Email-
    Templates + Prompts. Keine pnpm-Installation im finalen Image.
 
@@ -247,10 +247,10 @@ Siehe [`infra/Dockerfile`](../../infra/Dockerfile). Kurzfassung:
 
 ```bash
 # Staging (auto-deploy on push to main)
-pnpm --filter @smart-apply/web cf:deploy:staging
+pnpm --filter @applo/web cf:deploy:staging
 
 # Prod (auf v*.*.* tag push)
-pnpm --filter @smart-apply/web cf:deploy
+pnpm --filter @applo/web cf:deploy
 ```
 
 OpenNext baut Next.js zu einem Worker-Bundle. Cloudflare Workers haben
@@ -264,8 +264,8 @@ Isolierungsmodell.
 1. **Frage:** Welcher Workspace braucht das Paket *zur Laufzeit*?
    - Beides → in **beide** Workspaces einzeln (`pnpm --filter ... add ...`).
      pnpm dedupliziert via Store, du verlierst keinen Plattenplatz.
-   - Nur Backend → `pnpm --filter @smart-apply/api add ...`
-   - Nur Frontend → `pnpm --filter @smart-apply/web add ...`
+   - Nur Backend → `pnpm --filter @applo/api add ...`
+   - Nur Frontend → `pnpm --filter @applo/web add ...`
    - Nur Root-Tooling (Prettier, Turborepo) → `pnpm add -Dw ...`
 
 2. **Beispiele:**
@@ -289,7 +289,7 @@ git diff pnpm-lock.yaml | head -100
 
 # Prisma Client neu generieren (NICHT bare `prisma generate`, siehe
 # repo memory + apps/api/scripts/sanitize-prisma-client.js)
-pnpm --filter @smart-apply/api prisma:generate
+pnpm --filter @applo/api prisma:generate
 
 # TypeScript Errors? Shared zuerst bauen, dann der Rest
 pnpm shared:build
@@ -299,11 +299,11 @@ pnpm build
 ## 🎯 Best Practices
 
 1. **Immer vom Root ausführen:** `pnpm api:dev` statt `cd apps/api && pnpm start:dev`
-2. **`--filter @smart-apply/<name>` nutzen** statt `cd` + Befehl
+2. **`--filter @applo/<name>` nutzen** statt `cd` + Befehl
 3. **Lockfile committen:** Bei jedem `package.json` Change auch
    `pnpm-lock.yaml` committen. CI failt sonst.
 4. **Keine zirkulären Workspace-Imports:** Workspaces sollten sich nicht
-   gegenseitig importieren — nur über `@smart-apply/shared` als zentraler Hub.
+   gegenseitig importieren — nur über `@applo/shared` als zentraler Hub.
 5. **Konsistente Versionen:** Wenn `apps/api` und `apps/web` beide `zod` nutzen,
    sollten sie dieselbe Major-Version verwenden. Lass dir Inkonsistenzen
    anzeigen: `pnpm list -r zod`.

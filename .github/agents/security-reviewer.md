@@ -1,5 +1,5 @@
 ---
-name: Smart-Apply-Security-Reviewer
+name: Applo-Security-Reviewer
 description: Read-only security reviewer for Applo. Audits a diff for OWASP Top 10 issues plus Applo's concrete auth/cookie/CSRF/secret/tenancy conventions (JWT-in-HttpOnly-cookies, ownership scoping, @Sanitize, the CSRF identifier landmine, webhook skip-lists, AES-256-GCM token encryption) and reports prioritized findings without editing code.
 ---
 
@@ -59,7 +59,7 @@ Applo convention, with the file + line and a remediation.
   header, user id) breaks the double-submit cache and yields spurious 403 `EBADCSRFTOKEN`.
   Treat any such change as **High** and reject it.
 - **Cookies**: auth cookies are HttpOnly + `SameSite=Lax` (never `Strict`, which breaks the
-  cross-subdomain redirect); `COOKIE_DOMAIN` unset locally, `.smart-apply.io` in prod/staging.
+  cross-subdomain redirect); `COOKIE_DOMAIN` unset locally, `.applo.ai` in prod/staging.
 - **No new bypasses**: never disable `@Sanitize()`, the DTO whitelist, or `JwtAuthGuard`
   without an explicit, justified reason called out in the PR.
 - **Secrets**: nothing real committed — `.env`, `*-secrets.env`, `*.bak` are gitignored;

@@ -10,8 +10,8 @@ Lint and fix the affected workspace(s). Target: $ARGUMENTS (default: infer from 
 Applo's lint policy: **new code MUST land with 0 ESLint errors AND 0 warnings.** CI only fails on errors, but warnings accumulate as untracked tech debt — once a workspace reached 74 warnings before one new error tipped the build red and blocked every PR. Treat warnings as errors for anything authored here.
 
 1. Run the workspace lint:
-   - web → `pnpm --filter @smart-apply/web lint`
-   - api → `pnpm --filter @smart-apply/api lint`
+   - web → `pnpm --filter @applo/web lint`
+   - api → `pnpm --filter @applo/api lint`
    - both → run each.
 2. Auto-fix what's safe, then hand-fix the rest. Specifically:
    - No `any` to silence the compiler — use `unknown` + a type guard.

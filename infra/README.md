@@ -7,7 +7,7 @@ deployment.
 
 | Layer | Hosting                                              |
 | ----- | ---------------------------------------------------- |
-| API   | **Fly.io** app `smart-apply-api` (region `fra`)      |
+| API   | **Fly.io** app `applo-api` (region `fra`)      |
 | Web   | **Cloudflare Workers** (`@opennextjs/cloudflare`)    |
 | DB    | **Neon Postgres** (EU/Frankfurt)                     |
 | Files | **Cloudflare R2** (EU jurisdiction)                  |
@@ -32,11 +32,11 @@ web app is deployed by `wrangler deploy` after `npm run cf:build` in `apps/web/`
 ```bash
 # API → Fly.io
 # Prod
-flyctl deploy --config fly.prod.toml --app smart-apply-api
+flyctl deploy --config fly.prod.toml --app applo-api
 # Staging
-flyctl deploy --config fly.staging.toml --app smart-apply-api-staging
-flyctl logs -a smart-apply-api
-flyctl secrets list -a smart-apply-api
+flyctl deploy --config fly.staging.toml --app applo-api-staging
+flyctl logs -a applo-api
+flyctl secrets list -a applo-api
 
 # Web → Cloudflare Workers
 cd apps/web
@@ -44,7 +44,7 @@ npm run cf:deploy                            # build + wrangler deploy
 ```
 
 See [docs/guides/DOMAIN_CLOUDFLARE_SETUP.md](../docs/guides/DOMAIN_CLOUDFLARE_SETUP.md)
-for the custom-domain setup (apex + www on Workers, `api.smart-apply.io` on
+for the custom-domain setup (apex + www on Workers, `api.applo.ai` on
 Fly via Cloudflare proxy).
 
 ## Historical note

@@ -275,11 +275,11 @@ export class ConfigService {
   }
 
   /**
-   * Parent domain to scope auth cookies to (e.g. `.smart-apply.io`). When
+   * Parent domain to scope auth cookies to (e.g. `.applo.ai`). When
    * set, the browser stores them as first-party for ALL subdomains, which
    * sidesteps Chrome's third-party-cookie tracking protection silently
-   * dropping cookies between `staging.smart-apply.io` and
-   * `api-staging.smart-apply.io`. Returns `undefined` locally so cookies
+   * dropping cookies between `staging.applo.ai` and
+   * `api-staging.applo.ai`. Returns `undefined` locally so cookies
    * stay host-only on localhost.
    */
   get cookieDomain(): string | undefined {

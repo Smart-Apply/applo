@@ -26,14 +26,14 @@ Migration name: `${input:migrationName:descriptive_snake_case_name}`
    change is what you intend and note whether it is **additive** or **destructive**.
 2. **Generate the migration** (dev DB only):
    ```bash
-   pnpm --filter @smart-apply/api prisma:migrate -- --name ${input:migrationName}
+   pnpm --filter @applo/api prisma:migrate -- --name ${input:migrationName}
    ```
    (The `prisma:migrate` script runs `prisma migrate dev`.) This creates
    `apps/api/prisma/migrations/<timestamp>_${input:migrationName}/migration.sql` and
    regenerates the client.
 3. **Regenerate the client explicitly if needed** (never bare `prisma generate`):
    ```bash
-   pnpm --filter @smart-apply/api prisma:generate
+   pnpm --filter @applo/api prisma:generate
    ```
 4. **Review the generated `migration.sql`.** Make sure it does only what you expect.
 5. **Commit** `schema.prisma` + the new `migration.sql` together (use `/commit`).
@@ -51,7 +51,7 @@ Migration name: `${input:migrationName:descriptive_snake_case_name}`
 
 ## Never do
 
-- A bare `prisma generate` / `prisma migrate` outside the `pnpm --filter @smart-apply/api`
+- A bare `prisma generate` / `prisma migrate` outside the `pnpm --filter @applo/api`
   scripts (skips the sanitize step).
 - `prisma migrate reset` on Neon (staging or prod).
 - Committing the schema change without its `migration.sql`.

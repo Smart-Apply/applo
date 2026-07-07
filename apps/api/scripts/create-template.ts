@@ -323,7 +323,7 @@ Next steps:
      - cover-letter.hbs for custom cover letter layout
   
   4. Seed the database:
-     pnpm --filter @smart-apply/api prisma:seed:templates
+     pnpm --filter @applo/api prisma:seed:templates
 
   5. Test your template in the application!
 `);

@@ -1050,7 +1050,7 @@ model OAuthProvider {
 // EMAIL TRACKING (Premium feature)
 // =============================================================================
 // Connects a user's external mailbox (Microsoft 365 / Outlook.com first; Gmail
-// later) so smart-apply can detect application-related emails the company
+// later) so applo can detect application-related emails the company
 // sends and update the matching Application's tracking status automatically.
 // Stores OAuth tokens encrypted at rest (AES-256-GCM, see TokenCipher).
 // We never persist email bodies — only metadata + LLM classification result.

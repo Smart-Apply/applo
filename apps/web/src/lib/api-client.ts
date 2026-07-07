@@ -716,7 +716,7 @@ export const api = {
       const a = document.createElement('a');
       a.href = url;
       const date = new Date().toISOString().split('T')[0];
-      a.download = `smart-apply-export-${date}.json`;
+      a.download = `applo-export-${date}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

@@ -1,5 +1,5 @@
 import { encode } from 'gpt-tokenizer/model/gpt-4.1';
-import { estimateTokensByChars } from '@smart-apply/shared';
+import { estimateTokensByChars } from '@applo/shared';
 
 /**
  * Count tokens for a user prompt using the gpt-4.1 tokenizer (o200k_base) — the

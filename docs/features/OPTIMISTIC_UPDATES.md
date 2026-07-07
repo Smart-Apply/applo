@@ -439,7 +439,7 @@ export function useCreateItem() {
 ## References
 
 - [React Query Optimistic Updates Docs](https://tanstack.com/query/latest/docs/react/guides/optimistic-updates)
-- [Issue #217: Implement Optimistic Updates](https://github.com/Smart-Apply/smart-apply/issues/217)
+- [Issue #217: Implement Optimistic Updates](https://github.com/applo/applo/issues/217)
 - [Agent Instructions: Implementation Patterns](/.github/agents/scalability-enhancement-agent.md)
 
 ## Summary

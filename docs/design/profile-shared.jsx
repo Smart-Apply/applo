@@ -65,7 +65,7 @@ const NavRail = ({ accent }) => {
         <div className="sa-rail__avatar">JD</div>
         <div className="sa-rail__user">
           <div className="sa-rail__user-name">John Demo</div>
-          <div className="sa-rail__user-mail">demo@smartapply.com</div>
+          <div className="sa-rail__user-mail">demo@applo.ai</div>
           <span className="sa-rail__premium">
             <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="m3 7 4 5 5-7 5 7 4-5v12H3z" /></svg>
             Premium

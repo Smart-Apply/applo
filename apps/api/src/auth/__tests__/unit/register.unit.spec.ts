@@ -22,7 +22,7 @@ describe('AuthService.register (Unit)', () => {
   let jwtService: JwtService;
 
   const registerDto = {
-    email: 'newuser@smartapply.com',
+    email: 'newuser@applo.ai',
     password: 'SecurePass123!',
     firstName: 'New',
     lastName: 'User',

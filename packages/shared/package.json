@@ -1,5 +1,5 @@
 {
-  "name": "@smart-apply/shared",
+  "name": "@applo/shared",
   "version": "1.0.0",
   "description": "Shared types and utilities for Applo monorepo",
   "main": "dist/index.js",

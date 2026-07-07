@@ -150,8 +150,8 @@ export class AuthController {
         httpOnly: true,
         secure: this.configService.isProduction,
         // Lax (not Strict) so Chrome's tracking protection doesn't drop
-        // the cookie on cross-subdomain XHR (frontend.smart-apply.io →
-        // api.smart-apply.io). See setAuthCookies for the full rationale.
+        // the cookie on cross-subdomain XHR (frontend.applo.ai →
+        // api.applo.ai). See setAuthCookies for the full rationale.
         sameSite: 'lax',
         domain: this.configService.cookieDomain,
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
@@ -368,7 +368,7 @@ export class AuthController {
   async exportData(@CurrentUser() user: any, @Res() res: Response) {
     const data = await this.authService.exportUserData(user.id);
     const date = new Date().toISOString().split('T')[0];
-    const filename = `smart-apply-export-${date}.json`;
+    const filename = `applo-export-${date}.json`;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Cache-Control', 'no-store');
@@ -570,7 +570,7 @@ export class AuthController {
       httpOnly: true, // Prevents JavaScript access (XSS protection)
       secure: isProduction, // HTTPS only in production
       // Lax (not Strict) for cross-subdomain XHR. The frontend lives on
-      // `<env>.smart-apply.io` and the API on `api-<env>.smart-apply.io`
+      // `<env>.applo.ai` and the API on `api-<env>.applo.ai`
       // — same registrable domain, different hosts. Per spec, Strict
       // SHOULD allow this (same-site), but Chrome 147+ tracking
       // protection drops the cookie on the post-login XHR anyway, so
@@ -581,9 +581,9 @@ export class AuthController {
       // ENABLE_CSRF + the X-CSRF-Token header are still available for
       // double-submit defence on the mutating endpoints.
       sameSite: 'lax',
-      // Scope to parent domain in prod (e.g. .smart-apply.io) so the cookie
-      // is first-party for both `staging.smart-apply.io` (frontend) and
-      // `api-staging.smart-apply.io` (this API).
+      // Scope to parent domain in prod (e.g. .applo.ai) so the cookie
+      // is first-party for both `staging.applo.ai` (frontend) and
+      // `api-staging.applo.ai` (this API).
       domain,
       maxAge: 15 * 60 * 1000, // 15 minutes (matches JWT expiry)
       path: '/', // Available for all routes

@@ -10,7 +10,7 @@ import type {
   StartVoiceSessionPayload,
   VoiceInterviewConfig,
   VoiceSessionDescriptor,
-} from '@smart-apply/shared';
+} from '@applo/shared';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConfigService } from '../../config/config.service';
 import { InterviewsService } from '../interviews.service';

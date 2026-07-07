@@ -182,7 +182,7 @@ async function bootstrap() {
         // because the CSRF cookie is HttpOnly + Secure + SameSite=Lax and
         // the matching value must also be sent in X-CSRF-Token (which
         // cross-site requests cannot forge).
-        return 'smart-apply';
+        return 'applo';
       },
       // Use __Host- prefix only in production (requires HTTPS)
       // In development, use simple name (localhost doesn't support __Host- prefix)
@@ -191,7 +191,7 @@ async function bootstrap() {
         httpOnly: true,
         // Lax (not Strict) so Chrome's tracking protection doesn't drop
         // the CSRF cookie on cross-subdomain XHR
-        // (frontend.smart-apply.io → api.smart-apply.io). Same fix as
+        // (frontend.applo.ai → api.applo.ai). Same fix as
         // the auth cookies in auth.controller.ts. Lax is sufficient
         // because the double-submit pattern requires the matching
         // X-CSRF-Token header anyway, which CSRF can't forge cross-site.
@@ -223,7 +223,7 @@ async function bootstrap() {
   // CORS configuration with restrictive policy
   // Only allows specified origins from CORS_ORIGINS environment variable
   // For production, set CORS_ORIGINS to your deployed frontend URLs
-  // Example: CORS_ORIGINS=https://smartapply.azurewebsites.net,https://www.smartapply.com
+  // Example: CORS_ORIGINS=https://smartapply.azurewebsites.net,https://www.applo.ai
   const corsOrigins = configService.corsOrigins;
   logger.log(`🌐 CORS enabled for origins: ${JSON.stringify(corsOrigins)}`, 'Bootstrap');
 
@@ -312,8 +312,8 @@ async function bootstrap() {
     .setVersion('1.0')
     .setContact(
       'Applo Team',
-      'https://github.com/Smart-Apply/smart-apply',
-      'support@smartapply.com',
+      'https://github.com/applo/applo',
+      'support@applo.ai',
     )
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     // JWT Bearer Authentication (for manual testing)
@@ -350,7 +350,7 @@ async function bootstrap() {
     .addTag('security', 'Security endpoints (CSP violation reporting)')
     // Server URLs
     .addServer('http://localhost:3000', 'Local Development')
-    .addServer('https://api.smart-apply.io', 'Production')
+    .addServer('https://api.applo.ai', 'Production')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig, {

@@ -184,7 +184,7 @@ jobs:
 
       - name: Install dependencies
         # Only need the api workspace + shared for prisma to load.
-        run: pnpm install --frozen-lockfile --filter @smart-apply/api... --filter @smart-apply/shared...
+        run: pnpm install --frozen-lockfile --filter @applo/api... --filter @applo/shared...
 
       - name: Build shared package
         run: pnpm shared:build

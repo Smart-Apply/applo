@@ -3,7 +3,7 @@ import swc from 'unplugin-swc';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 /**
- * Vitest configuration for @smart-apply/api.
+ * Vitest configuration for @applo/api.
  *
  * Replaces three legacy Jest configs (jest-unit.json, jest-integration.json,
  * jest-e2e.json). Suite selection is driven by the test file suffix:

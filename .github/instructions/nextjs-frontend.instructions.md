@@ -77,10 +77,10 @@ Applo serves **every profession**, not just tech. All user-facing copy:
 
 ## When you finish
 
-- Lint clean: `pnpm --filter @smart-apply/web lint` → **0 errors, 0 warnings**. Remove unused
+- Lint clean: `pnpm --filter @applo/web lint` → **0 errors, 0 warnings**. Remove unused
   imports/vars; `_`-prefix params you must keep for a signature; never `any` (use `unknown`
   + a guard).
-- `pnpm --filter @smart-apply/web build` should still pass (validates every route compiles).
+- `pnpm --filter @applo/web build` should still pass (validates every route compiles).
 - If you added a route group, page, or changed the data flow, update `README.md` +
   `ARCHITECTURE.md` + `.github/copilot-instructions.md` (Frontend Structure section) in the
   same change set — doc sync is mandatory.

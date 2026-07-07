@@ -63,7 +63,7 @@ type AssetResolver = {
  * the resolver).
  */
 const staticChunk404Resolver: AssetResolver = {
-  name: 'smart-apply-static-chunk-404-resolver',
+  name: 'applo-static-chunk-404-resolver',
   async maybeGetAssetResult(event) {
     // Only intercept the static-chunk paths; everything else goes
     // through OpenNext's default routing untouched.

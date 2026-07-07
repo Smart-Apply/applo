@@ -37,7 +37,7 @@ export default function ImpressumPage() {
       <h2>Kontakt</h2>
       <p>
         E-Mail:{" "}
-        <a href="mailto:support@smart-apply.io">support@smart-apply.io</a>
+        <a href="mailto:support@applo.ai">support@applo.ai</a>
         <br />
         Telefon: <a href="tel:+4915159051609">+49 151 59051609</a>
       </p>

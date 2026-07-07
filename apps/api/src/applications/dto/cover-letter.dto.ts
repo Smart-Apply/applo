@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
-import { AI_PROMPT_HARD_CEILING_CHARS } from '@smart-apply/shared';
+import { AI_PROMPT_HARD_CEILING_CHARS } from '@applo/shared';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 
 export class CoverLetterDto {

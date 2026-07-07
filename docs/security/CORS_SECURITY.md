@@ -41,7 +41,7 @@ This allows:
 
 ```bash
 # Environment Variables / Azure Key Vault
-CORS_ORIGINS=https://smartapply.azurewebsites.net,https://www.smartapply.com
+CORS_ORIGINS=https://smartapply.azurewebsites.net,https://www.applo.ai
 ```
 
 **Important:** Never use wildcard `*` or `origin: true` in production!
@@ -160,7 +160,7 @@ For more complex validation (e.g., wildcard subdomains):
 app.enableCors({
   origin: (origin, callback) => {
     const allowedOrigins = configService.corsOrigins;
-    const allowedPatterns = [/\.smartapply\.com$/];  // Allow all *.smartapply.com
+    const allowedPatterns = [/\.smartapply\.com$/];  // Allow all *.applo.ai
 
     if (!origin || allowedOrigins.includes(origin) ||
         allowedPatterns.some(pattern => pattern.test(origin))) {

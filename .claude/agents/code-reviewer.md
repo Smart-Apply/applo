@@ -21,7 +21,7 @@ When invoked:
 - **CSRF:** `getSessionIdentifier` in `apps/api/src/main.ts` is a constant string, never derived from cookies/headers/user id (PR #502 introduced exactly this bug → 403 `EBADCSRFTOKEN`).
 - **Cookies:** auth cookies use `SameSite=Lax` (never `Strict`); `res.cookie` and `res.clearCookie` pass matching `domain` + `sameSite`.
 - **Backend input:** user-supplied DTO strings carry `@Sanitize()` (from `common/decorators/sanitize.decorator`); protected routes have `@UseGuards(JwtAuthGuard)`; services scope queries by `userId` for ownership.
-- **Prisma:** migrations are forward-only; destructive changes use expand→migrate→contract; client regenerated via `pnpm --filter @smart-apply/api prisma:generate` (sanitize step), not bare prisma.
+- **Prisma:** migrations are forward-only; destructive changes use expand→migrate→contract; client regenerated via `pnpm --filter @applo/api prisma:generate` (sanitize step), not bare prisma.
 - **Secrets:** nothing secret committed; new secrets are placeholders in `apps/api/.env.example` only.
 
 ## General review

@@ -59,8 +59,8 @@ Also update this `copilot-instructions.md` file (Tech Stack, Backend Modules, Da
 
 ### Deployment flow
 This project has **two environments** wired up:
-- **Staging** (`smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev`) — auto-deploys on every push to `main` via [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml). No approval gate.
-- **Prod** (`api.smart-apply.io` + `smart-apply.io`) — deploys only on `v*.*.*` tag pushes via [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml). Tags are created by `release-please` when its Release PR is merged. Gated by the `production` GitHub Environment (manual approval).
+- **Staging** (`applo-api-staging.fly.dev` + `applo-web-staging.ari41dev.workers.dev`) — auto-deploys on every push to `main` via [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml). No approval gate.
+- **Prod** (`api.applo.ai` + `applo.ai`) — deploys only on `v*.*.*` tag pushes via [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml). Tags are created by `release-please` when its Release PR is merged. Gated by the `production` GitHub Environment (manual approval).
 
 Resulting flow: PR → merge to main → staging deploys + Release PR opens/updates → you merge the Release PR → tag pushed via PAT → prod deploys after approval click.
 
@@ -77,7 +77,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 ### When architecture changes
 - **MANDATORY**: update `README.md` + `ARCHITECTURE.md` in the same PR. See "Documentation Sync" above.
 - If you change [`fly.prod.toml`](../fly.prod.toml) / [`fly.staging.toml`](../fly.staging.toml), env defaults, or pluggable provider behavior — also update this file's Tech Stack / Env Variables sections.
-- If you add a new secret — add it to `apps/api/.env.example` (placeholder), document the local source in [docs/security/SECRETS_ROTATION.md](../docs/security/SECRETS_ROTATION.md), and tell the user to set it via `fly secrets set --app smart-apply-api[-staging]`.
+- If you add a new secret — add it to `apps/api/.env.example` (placeholder), document the local source in [docs/security/SECRETS_ROTATION.md](../docs/security/SECRETS_ROTATION.md), and tell the user to set it via `fly secrets set --app applo-api[-staging]`.
 
 ### Secrets handling
 - **Never** commit secrets. `.env`, `.env.local`, `*-secrets.env`, and `*.bak` are all gitignored.
@@ -161,7 +161,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Security:** Helmet, CORS whitelist, `@nestjs/throttler` 6.5 (dual-tier), `csrf-csrf` 4.0 (optional), `sanitize-html`, `isomorphic-dompurify`, `@Sanitize()` decorator
 - **Health:** `@nestjs/terminus` (`/health`)
 - **Scheduling:** `@nestjs/schedule` for cron jobs (session cleanup, etc.)
-- **Containers:** Docker (multi-stage, `infra/Dockerfile`); deploy to **Fly.io** (`smart-apply-api`, region `fra`)
+- **Containers:** Docker (multi-stage, `infra/Dockerfile`); deploy to **Fly.io** (`applo-api`, region `fra`)
 
 ### Frontend (`apps/web`, Port 3001)
 - **Next.js 16.1** (App Router, Server Components, React Compiler)
@@ -185,7 +185,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `admin` — allow-listed admin endpoints (gated by `ADMIN_EMAILS` env), e.g. `POST /admin/users/:email/tier`, `DELETE /admin/users/:email`
 - `applications` — generation pipeline (profile + job → LLM → editor pass → keyword weave → grounding check → PDF → storage), SSE status stream. Owns the `grounding/` sub-service (`GroundingValidatorService`) — a deterministic, non-destructive anti-hallucination check that flags impact numbers (%, currency, counts) absent from the source profile (logs only; never strips), plus a deterministic **style check** (`style-lint.util.ts`) that flags forbidden AI clichés + German Konjunktiv/hedging on the finished documents (also logs-only, never strips), and a **guarded style-rewrite pass** (`prompts/v1/style-rewrite.md` + `evaluateStyleRewrite`) that surgically fixes those flagged clichés/hedging in the cover letter — non-destructive (ships only a strictly-cleaner, non-gutted rewrite; never fabricates; graceful fallback to the pre-rewrite draft). A matching **résumé style-rewrite** (`prompts/v1/resume-style-rewrite.md` + `evaluateResumeStyleRewrite`) does the same JSON→JSON over the résumé prose (summary/achievements/highlights), ID-preserving via `isValidResumeEdit` (only ships a valid, strictly-cleaner payload). Its résumé violation count also flags German **verb-first bullets** (the anglicised "Entwickelte…" opener via `detectGermanVerbFirstBullets`), which the résumé teeth convert to Nominalstil. Also owns the coverage-driven keyword loop (#6): `keyword-coverage.util.ts` selects the priority-1, **profile-supported** ATS keywords still missing from the cover letter and a single guarded `prompts/v1/keyword-weave.md` pass weaves them into the existing prose (never invents unsupported keywords; graceful fallback to the pre-weave draft). Edit-mode cover-letter regeneration (`upsertCoverLetter`) reuses the v1 `cover-letter.md` prompt via `stored-resume.util.ts` (`mapStoredResumeToTailoredProfile`) instead of a separate ATS prompt (#2).
 - `auth` — JWT, refresh-token rotation, OAuth (Google/Microsoft/Azure AD), TOTP 2FA, password reset
-- `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@smart-apply/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`)
+- `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@applo/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`)
 - `config` — Zod env schema
 - `contact` — contact form
 - `email` — Resend transactional email
@@ -645,7 +645,7 @@ STORAGE_DRIVER=disk          # disk | r2 — NODE_ENV=production rejects 'disk'
 R2_ACCOUNT_ID=<account-id>
 R2_ACCESS_KEY_ID=<key>
 R2_SECRET_ACCESS_KEY=<secret>
-R2_BUCKET=smart-apply-prod
+R2_BUCKET=applo-prod
 R2_ENDPOINT=https://<account-id>.eu.r2.cloudflarestorage.com
 
 # Queue (pluggable)
@@ -693,14 +693,14 @@ AZURE_AD_TENANT_ID=<tenant>
 
 # Email (Resend)
 RESEND_API_KEY=<key>
-RESEND_FROM=noreply@smartapply.com
+RESEND_FROM=noreply@applo.ai
 
 # Cookie scope for cross-subdomain auth (prod/staging only — leave UNSET locally
 # so cookies stay host-only on `localhost`). Without this, Chrome's tracking
-# protection silently drops cookies between `<env>.smart-apply.io` and
-# `api-<env>.smart-apply.io` and the user gets bounced back to login.
-# Prod:    COOKIE_DOMAIN=.smart-apply.io
-# Staging: COOKIE_DOMAIN=.smart-apply.io
+# protection silently drops cookies between `<env>.applo.ai` and
+# `api-<env>.applo.ai` and the user gets bounced back to login.
+# Prod:    COOKIE_DOMAIN=.applo.ai
+# Staging: COOKIE_DOMAIN=.applo.ai
 COOKIE_DOMAIN=
 
 # Monitoring (Sentry)
@@ -768,9 +768,9 @@ cp apps/web/.env.example apps/web/.env
 # Defaults run fully offline (Docker Postgres, mock LLM, disk storage).
 
 # 4. Migrate + seed
-pnpm --filter @smart-apply/api prisma:migrate
-pnpm --filter @smart-apply/api prisma:seed
-pnpm --filter @smart-apply/api prisma:seed:templates
+pnpm --filter @applo/api prisma:migrate
+pnpm --filter @applo/api prisma:seed
+pnpm --filter @applo/api prisma:seed:templates
 
 # 5. Run both apps in parallel (Turborepo)
 pnpm dev
@@ -811,7 +811,7 @@ pnpm dlx shadcn@latest add <component>  # Add shadcn/ui component
 - **Prisma Studio:** http://localhost:5555
 
 ### Demo Login
-- **Email:** demo@smartapply.com
+- **Email:** demo@applo.ai
 - **Password:** Demo123!
 
 ## CI/CD (GitHub Actions)
@@ -821,24 +821,24 @@ Four workflows, each with a single purpose. **Never propose adding a fifth that 
 | Workflow | Trigger | Purpose |
 |---|---|---|
 | [`ci.yml`](../.github/workflows/ci.yml) | PR opened | Lint + lockfile sync check + unit tests (non-blocking) + per-PR Neon migration dry-run (only when `schema.prisma` or `migrations/**` changes) |
-| [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) | Push to `main` | Auto-deploy to `smart-apply-api-staging` (Fly, `fly.staging.toml`) + `smart-apply-web-staging` (Worker, `env.staging` block). No approval. Reads from `staging` GitHub Environment. |
+| [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) | Push to `main` | Auto-deploy to `applo-api-staging` (Fly, `fly.staging.toml`) + `applo-web-staging` (Worker, `env.staging` block). No approval. Reads from `staging` GitHub Environment. |
 | [`release-please.yml`](../.github/workflows/release-please.yml) | Push to `main` | Maintains a Release PR + creates `v*.*.*` tags from Conventional Commits. Uses a PAT (`RELEASE_PLEASE_TOKEN`) so tag pushes trigger downstream workflows (default `GITHUB_TOKEN` doesn't). |
-| [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml) | Tag `v*.*.*` push | Deploys to `smart-apply-api` (Fly, `fly.prod.toml`) + `smart-apply-web` (Worker, default env). Gated by `production` GitHub Environment (manual approval). |
+| [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml) | Tag `v*.*.*` push | Deploys to `applo-api` (Fly, `fly.prod.toml`) + `applo-web` (Worker, default env). Gated by `production` GitHub Environment (manual approval). |
 
 **Migrations** run as a Fly **release command** (`prisma migrate deploy`) before machines start serving traffic — same command on staging and prod, against each env's `DIRECT_URL` secret.
 
-⚠️ **`PUBLIC_API_URL` trap**: leave the GitHub repo Variable **unset** in prod so the workflow default (`https://api.smart-apply.io/api/v1`) wins. Setting it to a `*.fly.dev` URL bakes the wrong origin into the Worker bundle and breaks CORS / cookies.
+⚠️ **`PUBLIC_API_URL` trap**: leave the GitHub repo Variable **unset** in prod so the workflow default (`https://api.applo.ai/api/v1`) wins. Setting it to a `*.fly.dev` URL bakes the wrong origin into the Worker bundle and breaks CORS / cookies.
 
-⚠️ **PAT requirement**: `release-please` needs a fine-grained PAT with `contents:write` + `pull-requests:write` + `workflows:write`, scoped to the Smart-Apply org and the smart-apply repo only. Stored as `RELEASE_PLEASE_TOKEN` repo secret. Without it, tags don't trigger `deploy-prod.yml`.
+⚠️ **PAT requirement**: `release-please` needs a fine-grained PAT with `contents:write` + `pull-requests:write` + `workflows:write`, scoped to the Applo org and the applo repo only. Stored as `RELEASE_PLEASE_TOKEN` repo secret. Without it, tags don't trigger `deploy-prod.yml`.
 
 ## Minimal Cloud Resources (production + staging)
 - **Fly.io**: two apps in region `fra` —
-  - `smart-apply-api` (prod, 2x2GB, `min_machines_running = 2`, Let's Encrypt cert for `api.smart-apply.io` via DNS-01)
-  - `smart-apply-api-staging` (staging, 1x1GB, `min_machines_running = 0` — suspend on idle)
+  - `applo-api` (prod, 2x2GB, `min_machines_running = 2`, Let's Encrypt cert for `api.applo.ai` via DNS-01)
+  - `applo-api-staging` (staging, 1x1GB, `min_machines_running = 0` — suspend on idle)
 - **Cloudflare**: two Workers —
-  - `smart-apply-web` (prod, Custom Domains: apex + `www.smart-apply.io`)
-  - `smart-apply-web-staging` (staging, `*.workers.dev` URL)
-  - Plus DNS zone `smart-apply.io`, two R2 buckets (`smart-apply-prod` + `smart-apply-staging`, both EU jurisdiction), Universal SSL
+  - `applo-web` (prod, Custom Domains: apex + `www.applo.ai`)
+  - `applo-web-staging` (staging, `*.workers.dev` URL)
+  - Plus DNS zone `applo.ai`, two R2 buckets (`applo-prod` + `applo-staging`, both EU jurisdiction), Universal SSL
 - **Neon**: one Postgres project (EU/Frankfurt) with two branches — `main` (prod) + `staging` (cow off `main`). Each branch has its own pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) URLs.
 - **Upstash**: QStash (queue, shared between envs — staging gets its own webhook URL) + Redis (prod throttler only; staging uses `THROTTLER_STORAGE=memory` since it runs single-instance)
 - **Azure**: OpenAI resource with three deployments — `gpt-4.1` (prod, 200K TPM), `gpt-4.1-staging` (staging), `gpt-4.1-local` (your laptop)

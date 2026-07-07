@@ -118,7 +118,7 @@ uploads/
 *.cer
 *.pfx
 *.p12
-smart-apply-cert*
-smart-apply-key*
+applo-cert*
+applo-key*
 cookies.txt
 invite-codes-*.json

@@ -20,7 +20,7 @@ export class AuthHelper {
   createTestUser() {
     return {
       id: 'test-user-id-123',
-      email: 'test@smartapply.com',
+      email: 'test@applo.ai',
       firstName: 'Test',
       lastName: 'User',
       password: 'Test123!@#',

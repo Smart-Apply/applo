@@ -8,8 +8,8 @@
                                   │   (WAF · CDN · Proxy 🟧)    │
                                   └─────┬──────────────┬────────┘
                                         │              │
-                  smart-apply.io        │              │  api.smart-apply.io
-                  www.smart-apply.io    │              │
+                  applo.ai        │              │  api.applo.ai
+                  www.applo.ai    │              │
                                         ▼              ▼
 ┌──────────────────────────────────────────────┐  ┌─────────────────────────────────┐
 │        Next.js 16 Frontend (Worker)          │  │     NestJS 11 API (Fly.io)      │
@@ -42,20 +42,20 @@
 
 | Hostname                | Origin                                                     | Notes                                             |
 | ----------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
-| `smart-apply.io` (apex) | Cloudflare Worker `smart-apply-web` (Custom Domain)        | Universal Edge Cert (Cloudflare)                  |
-| `www.smart-apply.io`    | Cloudflare Worker `smart-apply-web` (Custom Domain)        | Same Worker; redirect rule TBD for canonical host |
-| `api.smart-apply.io`    | CNAME → `93ke51y.smart-apply-api.fly.dev` (Proxied 🟧)     | Let's Encrypt cert issued by Fly via DNS-01       |
-| `_acme-challenge.api.…` | CNAME → `api.smart-apply.io.93ke51y.flydns.net` (DNS-only) | Required for Fly cert renewal behind CF proxy     |
+| `applo.ai` (apex) | Cloudflare Worker `applo-web` (Custom Domain)        | Universal Edge Cert (Cloudflare)                  |
+| `www.applo.ai`    | Cloudflare Worker `applo-web` (Custom Domain)        | Same Worker; redirect rule TBD for canonical host |
+| `api.applo.ai`    | CNAME → `93ke51y.applo-api.fly.dev` (Proxied 🟧)     | Let's Encrypt cert issued by Fly via DNS-01       |
+| `_acme-challenge.api.…` | CNAME → `api.applo.ai.93ke51y.flydns.net` (DNS-only) | Required for Fly cert renewal behind CF proxy     |
 | `_fly-ownership.api.…`  | TXT `app-93ke51y`                                          | Required when traffic is proxied via Cloudflare   |
 
 ## 📦 Monorepo Structure (pnpm Workspaces + Turborepo)
 
 ```text
-smart-apply/
+applo/
 ├── package.json              # Workspace root
 ├── turbo.json                # Turborepo pipeline
 ├── apps/
-│   ├── api/                  # @smart-apply/api (NestJS 11)
+│   ├── api/                  # @applo/api (NestJS 11)
 │   │   ├── src/
 │   │   │   ├── admin/             # Allow-listed admin endpoints (ADMIN_EMAILS)
 │   │   │   ├── agents/            # Azure AI Foundry agents
@@ -88,7 +88,7 @@ smart-apply/
 │   │   ├── prisma/                # Schema, migrations, seeds
 │   │   └── test/                  # Unit / integration / e2e
 │   │
-│   └── web/                  # @smart-apply/web (Next.js 16)
+│   └── web/                  # @applo/web (Next.js 16)
 │       ├── src/
 │       │   ├── app/               # App Router (route groups)
 │       │   ├── components/        # UI + shadcn/ui + pdf + analytics (recharts)
@@ -207,7 +207,7 @@ profession-diverse German + English golden fixtures, scores each output with an
 **LLM-as-judge** rubric (action-verb bullets, quantified achievements, targeted
 summary, cover-letter personalization, no clichés/Konjunktiv, language
 correctness) and the deterministic **grounding validator**, and writes a
-timestamped report. Run `pnpm --filter @smart-apply/api eval:llm` to capture a
+timestamped report. Run `pnpm --filter @applo/api eval:llm` to capture a
 baseline before a prompt change and re-run after to prove the lift. The roadmap +
 recorded baselines live in
 [docs/implementation/LLM_OUTPUT_QUALITY.md](docs/implementation/LLM_OUTPUT_QUALITY.md).
@@ -273,7 +273,7 @@ User 1:1 Subscription
 | **OAuth**         | Google, Microsoft, Azure AD (passport)                                                                        |
 | **Rate Limit**    | 5/15min auth · 100/15min standard (`@nestjs/throttler`)                                                       |
 | **Input**         | class-validator DTOs, `@Sanitize()` + DOMPurify                                                               |
-| **AI Guardrails** | per-surface char + token limits on AI prompt inputs (`@smart-apply/shared` + `gpt-tokenizer` model `gpt-4.1`) |
+| **AI Guardrails** | per-surface char + token limits on AI prompt inputs (`@applo/shared` + `gpt-tokenizer` model `gpt-4.1`) |
 | **CSRF**          | csrf-csrf (Double Submit Cookie, optional)                                                                    |
 | **Passwords**     | argon2id, strength regex                                                                                      |
 | **Audit**         | Winston daily-rotated logs (90-day retention)                                                                 |
@@ -299,7 +299,7 @@ User 1:1 Subscription
 | Logging       | Pino (req logs) + Winston (audit, daily rotation)                                                                                   |
 | Monitoring    | Sentry (`@sentry/node` + profiling)                                                                                                 |
 | Validation    | class-validator · Zod · sanitize-html                                                                                               |
-| AI guardrails | `@smart-apply/shared` (limits) · `gpt-tokenizer` (model `gpt-4.1`)                                                                  |
+| AI guardrails | `@applo/shared` (limits) · `gpt-tokenizer` (model `gpt-4.1`)                                                                  |
 | Resilience    | opossum (circuit breaker)                                                                                                           |
 | Scheduling    | `@nestjs/schedule` (cron jobs)                                                                                                      |
 | Health        | `@nestjs/terminus`                                                                                                                  |
@@ -327,8 +327,8 @@ User 1:1 Subscription
 | Category   | Technology                                                                                                                                                            |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Container  | Docker (multi-stage, `infra/Dockerfile`)                                                                                                                              |
-| API host   | **Fly.io** (`smart-apply-api`, region `fra`, shared-cpu-1x / 1 GB)                                                                                                    |
-| Web host   | Cloudflare Workers via `@opennextjs/cloudflare` (`smart-apply-web`)                                                                                                   |
+| API host   | **Fly.io** (`applo-api`, region `fra`, shared-cpu-1x / 1 GB)                                                                                                    |
+| Web host   | Cloudflare Workers via `@opennextjs/cloudflare` (`applo-web`)                                                                                                   |
 | CI/CD      | GitHub Actions — `ci.yml` (PR checks) + `deploy-staging.yml` (auto on `main`) + `deploy-prod.yml` (gated on `v*.*.*` tag) + `release-please.yml` (SemVer + CHANGELOG) |
 | Secrets    | Fly Secrets (API) · Cloudflare Worker vars/secrets (Web) · `.env` (dev)                                                                                               |
 | Database   | Neon Postgres (serverless, EU/Frankfurt; `DATABASE_URL` pooled, `DIRECT_URL` for migrations)                                                                          |
@@ -417,8 +417,8 @@ Merge Release PR → PAT pushes tag v1.x.y → deploy-prod.yml fires
 
 | Environment | API (Fly app)             | Web (Worker)                                | DB (Neon branch) | R2 bucket             |
 | ----------- | ------------------------- | ------------------------------------------- | ---------------- | --------------------- |
-| **Staging** | `smart-apply-api-staging` | `smart-apply-web-staging` (`*.workers.dev`) | `staging`        | `smart-apply-staging` |
-| **Prod**    | `smart-apply-api`         | `smart-apply-web` (`smart-apply.io`)        | `main`           | `smart-apply-prod`    |
+| **Staging** | `applo-api-staging` | `applo-web-staging` (`*.workers.dev`) | `staging`        | `applo-staging` |
+| **Prod**    | `applo-api`         | `applo-web` (`applo.ai`)        | `main`           | `applo-prod`    |
 
 Fly config files split per env: [`fly.prod.toml`](./fly.prod.toml) and
 [`fly.staging.toml`](./fly.staging.toml). Both use the same `infra/Dockerfile`;
@@ -433,20 +433,20 @@ GitHub Actions
   │     └─ migration-check (per-PR Neon branch + prisma migrate deploy dry-run)
   │
   ├── deploy-staging.yml (push to main)
-  │     ├─ API → Fly (smart-apply-api-staging, fly.staging.toml)
-  │     └─ Web → Cloudflare Worker (smart-apply-web-staging, env.staging block)
+  │     ├─ API → Fly (applo-api-staging, fly.staging.toml)
+  │     └─ Web → Cloudflare Worker (applo-web-staging, env.staging block)
   │
   ├── release-please.yml (push to main)
   │     └─ Maintains Release PR + creates v*.*.* tags via PAT
   │
   └── deploy-prod.yml (tag v*.*.* push)
         ├─ Blocks at `production` GitHub Environment (manual approval)
-        ├─ API → Fly (smart-apply-api, fly.prod.toml)
+        ├─ API → Fly (applo-api, fly.prod.toml)
         │   ├─ Release command: prisma migrate deploy (Neon DIRECT_URL)
         │   ├─ Secrets via `flyctl secrets set` (CORS_ORIGINS, JWT_*, R2_*, ...)
-        │   ├─ HTTPS terminated by Fly (Let's Encrypt for api.smart-apply.io)
+        │   ├─ HTTPS terminated by Fly (Let's Encrypt for api.applo.ai)
         │   └─ Backed by Neon Postgres · Cloudflare R2 · Upstash QStash/Redis
-        └─ Web → Cloudflare Worker (smart-apply-web, OpenNext)
+        └─ Web → Cloudflare Worker (applo-web, OpenNext)
             ├─ Build with NEXT_PUBLIC_API_URL injected from PUBLIC_API_URL env
             ├─ Runtime config served at /api/config (single source of truth)
             └─ wrangler deploy
@@ -454,7 +454,7 @@ GitHub Actions
 
 > ⚠️ **PUBLIC_API_URL trap:** the GitHub Actions workflow honours the
 > `PUBLIC_API_URL` repo Variable as an override. Leave it **unset** in
-> production so the workflow default (`https://api.smart-apply.io/api/v1`)
+> production so the workflow default (`https://api.applo.ai/api/v1`)
 > wins. Setting it to a `*.fly.dev` URL bakes the wrong origin into the
 > Worker and breaks CORS / cookies. See [docs/guides/DOMAIN_CLOUDFLARE_SETUP.md](docs/guides/DOMAIN_CLOUDFLARE_SETUP.md).
 

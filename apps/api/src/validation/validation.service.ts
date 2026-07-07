@@ -12,7 +12,7 @@ import type {
   ApplicationValidationResult,
   Validation as ValidationRecord,
   ValidationSummary,
-} from '@smart-apply/shared';
+} from '@applo/shared';
 
 const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 

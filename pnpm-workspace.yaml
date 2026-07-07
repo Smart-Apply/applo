@@ -27,7 +27,7 @@ supportedArchitectures:
 # every optional platform variant of every resolver (@unrs/resolver-binding-*,
 # incl. android/freebsd/wasm32/win32/s390x/ppc64/riscv64/loong64 — none of which
 # this repo needs) and eventually OOM-killed (exit 137) the Fly remote builder.
-# `injectWorkspacePackages: true` hard-copies workspace deps (e.g. @smart-apply/shared)
+# `injectWorkspacePackages: true` hard-copies workspace deps (e.g. @applo/shared)
 # into consumers' node_modules instead of symlinking, which the non-legacy deploy
 # strategy requires to produce a self-contained, portable deploy directory.
 injectWorkspacePackages: true

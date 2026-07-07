@@ -67,7 +67,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       statement_timeout: settings.statementTimeout,
       query_timeout: settings.queryTimeout,
       // Application name for monitoring
-      application_name: 'smart-apply-api',
+      application_name: 'applo-api',
     };
 
     // Create PostgreSQL connection pool

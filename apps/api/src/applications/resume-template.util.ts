@@ -13,7 +13,7 @@ import type {
   ResumeTemplateData,
   SkillCategory as ResumeSkillCategory,
 } from '../pdf-v2/template-data';
-import { normalizeSkillCategory } from '@smart-apply/shared';
+import { normalizeSkillCategory } from '@applo/shared';
 
 export type ProfileWithRelations = Profile & {
   user: User;

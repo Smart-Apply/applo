@@ -83,7 +83,7 @@ Every error response includes:
 
 ### AI Prompt Guardrails (400)
 
-Returned when a user-entered AI prompt (Interview Coach answer, Edit-Mode AI assistant instructions) exceeds the per-surface character **or** token limit. Both dimensions share one code; the message names how much to trim (e.g. "… um 120 Zeichen bzw. 30 Tokens.") and the response carries `surface`, `maxChars`, `maxTokens`, `chars`, `tokens`, `overChars`, `overTokens` metadata. Limits live in `@smart-apply/shared` (`AI_PROMPT_LIMITS`); the server re-counts tokens with `gpt-tokenizer` (model `gpt-4.1`).
+Returned when a user-entered AI prompt (Interview Coach answer, Edit-Mode AI assistant instructions) exceeds the per-surface character **or** token limit. Both dimensions share one code; the message names how much to trim (e.g. "… um 120 Zeichen bzw. 30 Tokens.") and the response carries `surface`, `maxChars`, `maxTokens`, `chars`, `tokens`, `overChars`, `overTokens` metadata. Limits live in `@applo/shared` (`AI_PROMPT_LIMITS`); the server re-counts tokens with `gpt-tokenizer` (model `gpt-4.1`).
 
 | Code                 | HTTP Status | Message                                                                             |
 | -------------------- | ----------- | ----------------------------------------------------------------------------------- |

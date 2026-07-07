@@ -1,4 +1,4 @@
-# @smart-apply/shared
+# @applo/shared
 
 Shared TypeScript types and interfaces for the Applo monorepo.
 
@@ -16,7 +16,7 @@ This package provides type-safe data contracts between the frontend (Next.js) an
 ### In Backend (NestJS)
 
 ```typescript
-import { User, Profile, Application } from '@smart-apply/shared';
+import { User, Profile, Application } from '@applo/shared';
 
 // Use in services, controllers, or DTOs
 function getUserProfile(user: User): Profile {
@@ -27,7 +27,7 @@ function getUserProfile(user: User): Profile {
 ### In Frontend (Next.js)
 
 ```typescript
-import { User, Application, JobPosting } from '@smart-apply/shared';
+import { User, Application, JobPosting } from '@applo/shared';
 
 // Use in components, hooks, or API clients
 const applications: Application[] = await fetchApplications();
@@ -93,7 +93,7 @@ pnpm shared:watch
 ## Architecture Notes
 
 - **Backend DTOs**: NestJS uses class-validator decorators for validation. The shared types serve as interfaces, while DTOs add validation logic.
-- **Frontend Types**: Next.js components import directly from `@smart-apply/shared` without modification.
+- **Frontend Types**: Next.js components import directly from `@applo/shared` without modification.
 - **Date Handling**: Use ISO date strings (`string`) for API transport, convert to `Date` objects as needed in business logic.
 
 ## Migration Guide
@@ -115,10 +115,10 @@ export interface User { ... } // ❌ Duplicate!
 export interface User { ... }
 
 // apps/api/src/users/users.service.ts
-import { User } from '@smart-apply/shared'; // ✅
+import { User } from '@applo/shared'; // ✅
 
 // apps/web/src/components/UserProfile.tsx
-import { User } from '@smart-apply/shared'; // ✅
+import { User } from '@applo/shared'; // ✅
 ```
 
 ## Future Enhancements
@@ -126,4 +126,4 @@ import { User } from '@smart-apply/shared'; // ✅
 - [ ] Add JSDoc comments for better IntelliSense
 - [ ] Generate OpenAPI schemas from shared types
 - [ ] Add runtime validation utilities (Zod schemas)
-- [ ] Split into sub-packages if it grows large (e.g., `@smart-apply/shared-types`, `@smart-apply/shared-utils`)
+- [ ] Split into sub-packages if it grows large (e.g., `@applo/shared-types`, `@applo/shared-utils`)

@@ -1,5 +1,5 @@
 {
-  "name": "@smart-apply/web",
+  "name": "@applo/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,8 +10,8 @@
     "lint": "eslint",
     "cf:hide-local-env": "test ! -f .env || mv .env .env.bak",
     "cf:restore-local-env": "test ! -f .env.bak || mv .env.bak .env",
-    "cf:build": "pnpm run cf:hide-local-env && (NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.smart-apply.io/api/v1} NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-0x4AAAAAADEb1zo5z5Pb47Dz} OPEN_NEXT=true opennextjs-cloudflare build); status=$?; pnpm run cf:restore-local-env; exit $status",
-    "cf:build:staging": "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api-staging.smart-apply.io/api/v1} pnpm run cf:build",
+    "cf:build": "pnpm run cf:hide-local-env && (NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.applo.ai/api/v1} NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-0x4AAAAAADEb1zo5z5Pb47Dz} OPEN_NEXT=true opennextjs-cloudflare build); status=$?; pnpm run cf:restore-local-env; exit $status",
+    "cf:build:staging": "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api-staging.applo.ai/api/v1} pnpm run cf:build",
     "cf:preview": "pnpm run cf:build && OPEN_NEXT=true opennextjs-cloudflare preview",
     "cf:deploy": "pnpm run cf:build && OPEN_NEXT=true opennextjs-cloudflare deploy",
     "cf:deploy:staging": "pnpm run cf:build:staging && OPEN_NEXT=true opennextjs-cloudflare deploy -- --env staging",
@@ -32,7 +32,7 @@
     "@radix-ui/react-tabs": "^1.1.15",
     "@radix-ui/react-tooltip": "^1.2.10",
     "@sentry/nextjs": "^10.62.0",
-    "@smart-apply/shared": "workspace:*",
+    "@applo/shared": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "@tiptap/core": "^3.27.1",
     "@tiptap/extension-text-style": "^3.27.1",

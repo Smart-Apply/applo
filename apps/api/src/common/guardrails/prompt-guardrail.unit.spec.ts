@@ -5,7 +5,7 @@ import {
   AI_PROMPT_WARN_THRESHOLD,
   estimateTokensByChars,
   evaluatePromptUsage,
-} from '@smart-apply/shared';
+} from '@applo/shared';
 import { ErrorCode } from '../constants/error-codes';
 import { CodedHttpException } from '../exceptions/coded-http.exception';
 import { countPromptTokens } from './prompt-token-counter';

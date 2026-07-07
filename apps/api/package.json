@@ -1,5 +1,5 @@
 {
-  "name": "@smart-apply/api",
+  "name": "@applo/api",
   "version": "1.0.0",
   "description": "Applo Backend API - NestJS + Prisma + Azure",
   "author": "Applo Team",
@@ -69,7 +69,7 @@
     "@prisma/client": "^6.19.2",
     "@react-pdf/renderer": "^4.5.1",
     "@sentry/node": "^10.62.0",
-    "@smart-apply/shared": "workspace:*",
+    "@applo/shared": "workspace:*",
     "@types/opossum": "^8.1.9",
     "@typescript-eslint/eslint-plugin": "8.62.0",
     "@typescript-eslint/parser": "8.62.0",

@@ -13,7 +13,7 @@
 | Phase | Item | Status | Where |
 |---|---|---|---|
 | 1 | Neon `staging` branch + R2 bucket + Upstash QStash + Fly app + CF Worker | ✅ | live |
-| 1 | Custom domains (`*.staging.smart-apply.io`) | ⏸ deferred | use `*.workers.dev` / `*.fly.dev` |
+| 1 | Custom domains (`*.staging.applo.ai`) | ⏸ deferred | use `*.workers.dev` / `*.fly.dev` |
 | 2 | GitHub Environments: `production` (gated), `staging` (auto), `copilot` | ✅ | repo Settings |
 | 2 | Per-env JWT/2FA secrets, scoped Fly tokens, secret rotation runbook | ✅ | [SECRETS_ROTATION.md](../security/SECRETS_ROTATION.md) |
 | 2 | Push protection + secret scanning + Dependabot security updates | ✅ | org-level |
@@ -55,9 +55,9 @@
                             ▼
                   ┌──────────────────────┐
                   │ STAGING              │
-                  │  smart-apply-api-    │
+                  │  applo-api-    │
                   │   staging (Fly)      │
-                  │  smart-apply-web     │
+                  │  applo-web     │
                   │   [env.staging]      │
                   │  Neon `staging` br   │
                   └──────────┬───────────┘
@@ -65,8 +65,8 @@
                              ▼ (manual approval)
                   ┌──────────────────────┐
                   │ PROD                 │
-                  │  smart-apply-api     │
-                  │  smart-apply-web     │
+                  │  applo-api     │
+                  │  applo-web     │
                   │  Neon `main` branch  │
                   └──────────────────────┘
 ```
@@ -77,8 +77,8 @@
 
 - [ ] Confirm Neon plan supports ≥10 branches (Launch tier or higher).
 - [ ] Decide staging hostnames:
-  - API: `api.staging.smart-apply.io`
-  - Web: `staging.smart-apply.io`
+  - API: `api.staging.applo.ai`
+  - Web: `staging.applo.ai`
 - [ ] Generate per-env JWT + 2FA secrets (one set per environment):
   ```bash
   openssl rand -base64 64    # JWT_SECRET (staging + prod, separately)
@@ -86,7 +86,7 @@
   ```
 - [ ] Create a Fly deploy token scoped to **staging only**:
   ```bash
-  fly tokens create deploy --app smart-apply-api-staging
+  fly tokens create deploy --app applo-api-staging
   ```
   Keep the existing prod token; never let staging CI use it.
 
@@ -110,7 +110,7 @@ neon branches create --project-id <id> --name staging --parent main
 
 ```bash
 # Or via dashboard: R2 → Create bucket → Jurisdiction: EU
-wrangler r2 bucket create smart-apply-staging --location=eu
+wrangler r2 bucket create applo-staging --location=eu
 ```
 
 Generate a token scoped to **only** that bucket (R2 → Manage R2 API tokens → Object Read/Write, single bucket).
@@ -147,7 +147,7 @@ cp fly.prod.toml fly.staging.toml
 Edit `fly.staging.toml`:
 
 ```toml
-app = 'smart-apply-api-staging'
+app = 'applo-api-staging'
 primary_region = 'fra'
 
 [http_service]
@@ -162,8 +162,8 @@ primary_region = 'fra'
 Create the Fly app + push secrets:
 
 ```bash
-fly apps create smart-apply-api-staging --org <your-org>
-fly secrets set --app smart-apply-api-staging \
+fly apps create applo-api-staging --org <your-org>
+fly secrets set --app applo-api-staging \
   DATABASE_URL='postgresql://…neon staging pooled…' \
   DIRECT_URL='postgresql://…neon staging direct…' \
   JWT_SECRET='…openssl rand -base64 64…' \
@@ -172,7 +172,7 @@ fly secrets set --app smart-apply-api-staging \
   AZURE_OPENAI_DEPLOYMENT_NAME='gpt-4.1-staging' \
   R2_ACCESS_KEY_ID='…staging…' \
   R2_SECRET_ACCESS_KEY='…staging…' \
-  R2_BUCKET='smart-apply-staging' \
+  R2_BUCKET='applo-staging' \
   QSTASH_TOKEN='…staging…' \
   UPSTASH_REDIS_REST_URL='…staging…' \
   UPSTASH_REDIS_REST_TOKEN='…staging…' \
@@ -182,7 +182,7 @@ fly secrets set --app smart-apply-api-staging \
 First deploy (manual, to verify):
 
 ```bash
-fly deploy --config fly.staging.toml --app smart-apply-api-staging --remote-only
+fly deploy --config fly.staging.toml --app applo-api-staging --remote-only
 ```
 
 ### 1.6 Cloudflare Worker staging environment
@@ -191,17 +191,17 @@ Edit `apps/web/wrangler.jsonc` to add an `env.staging` block:
 
 ```jsonc
 {
-  "name": "smart-apply-web",
+  "name": "applo-web",
   // …existing top-level config = prod defaults…
   "vars": {
-    "NEXT_PUBLIC_API_URL": "https://api.smart-apply.io/api/v1"
+    "NEXT_PUBLIC_API_URL": "https://api.applo.ai/api/v1"
   },
 
   "env": {
     "staging": {
-      "name": "smart-apply-web-staging",
+      "name": "applo-web-staging",
       "vars": {
-        "NEXT_PUBLIC_API_URL": "https://api.staging.smart-apply.io/api/v1"
+        "NEXT_PUBLIC_API_URL": "https://api.staging.applo.ai/api/v1"
       }
     }
   }
@@ -221,9 +221,9 @@ wrangler deploy                     # ← prod (unchanged)
 
 In the Cloudflare dashboard:
 
-- DNS: `api.staging.smart-apply.io` → Fly app `smart-apply-api-staging` (CNAME to `smart-apply-api-staging.fly.dev`, proxied OFF for cert issuance, then re-enable).
-- DNS: `staging.smart-apply.io` → Worker `smart-apply-web-staging` (Custom Domain).
-- Issue Fly cert: `fly certs create api.staging.smart-apply.io --app smart-apply-api-staging`.
+- DNS: `api.staging.applo.ai` → Fly app `applo-api-staging` (CNAME to `applo-api-staging.fly.dev`, proxied OFF for cert issuance, then re-enable).
+- DNS: `staging.applo.ai` → Worker `applo-web-staging` (Custom Domain).
+- Issue Fly cert: `fly certs create api.staging.applo.ai --app applo-api-staging`.
 
 ---
 
@@ -254,8 +254,8 @@ SENTRY_AUTH_TOKEN          # for source map uploads
 **Variables** (visible, safe to log):
 
 ```
-FLY_APP                    # smart-apply-api-staging or smart-apply-api
-HEALTH_CHECK_HOST          # api.staging.smart-apply.io or api.smart-apply.io
+FLY_APP                    # applo-api-staging or applo-api
+HEALTH_CHECK_HOST          # api.staging.applo.ai or api.applo.ai
 PUBLIC_API_URL             # baked into the Worker bundle
 TURNSTILE_SITE_KEY         # public by design
 SENTRY_DSN_WEB             # public DSN
@@ -473,7 +473,7 @@ jobs:
       - uses: googleapis/release-please-action@v4
         with:
           release-type: node
-          package-name: smart-apply
+          package-name: applo
 ```
 
 ### 4.2 Adopt Conventional Commits
@@ -530,7 +530,7 @@ Append to both deploy workflows:
   env:
     SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
     SENTRY_ORG: <your-org>
-    SENTRY_PROJECT: smart-apply
+    SENTRY_PROJECT: applo
   with:
     environment: ${{ vars.WRANGLER_ENV || 'production' }}
     version: ${{ github.ref_name }}      # 'v1.5.0' on tag pushes
@@ -543,7 +543,7 @@ Append to both deploy workflows:
 Already covered in Phase 3.1 (PR-time Neon branch + `prisma migrate deploy` dry-run). Add the human side:
 
 - **Add to `docs/security/` or `docs/guides/`:** runbook called `MIGRATION_ROLLBACK.md` documenting:
-  1. `flyctl releases list --app smart-apply-api` to find the previous release.
+  1. `flyctl releases list --app applo-api` to find the previous release.
   2. `flyctl releases rollback <id>` to redeploy the previous image.
   3. For schema rollbacks, **do not use `prisma migrate reset`**. Instead:
      - In Neon console: `Branches → main → Restore` to the snapshot taken before the bad release. PITR is automatic.
@@ -570,7 +570,7 @@ Already covered in Phase 3.1 (PR-time Neon branch + `prisma migrate deploy` dry-
 - **No persistent cloud `dev` env.** Docker Postgres + your local `.env` is faster, cheaper, and isolated. Add a cloud `dev` env only if a contributor joins.
 - **No shared "dev" Neon branch.** Same shared-mutable-state problem as a shared dev DB. Personal `dev-<yourname>` branches are fine if you want cloud DB on the road.
 - **No secrets manager service.** GitHub Environments cover the use case at this scale; switch to Doppler/Vault if you outgrow them.
-- **No per-package versions in the monorepo.** One repo-wide version (`smart-apply@1.5.0`) until `packages/shared` is published externally.
+- **No per-package versions in the monorepo.** One repo-wide version (`applo@1.5.0`) until `packages/shared` is published externally.
 
 ---
 

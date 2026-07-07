@@ -16,7 +16,7 @@ import {
   InterviewQuestionType,
   Prisma,
 } from '../generated/prisma/client';
-import type { SubmitVoiceTranscriptPayload } from '@smart-apply/shared';
+import type { SubmitVoiceTranscriptPayload } from '@applo/shared';
 import { StartInterviewDto, SubmitAnswerDto } from './dto';
 import { ConfigService } from '../config/config.service';
 import { pairTranscript } from './voice/transcript.util';

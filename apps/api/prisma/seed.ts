@@ -25,10 +25,10 @@ async function main() {
   const hashedPassword = await argon2.hash('Demo123!');
 
   const demoUser = await prisma.user.upsert({
-    where: { email: 'demo@smartapply.com' },
+    where: { email: 'demo@applo.ai' },
     update: {},
     create: {
-      email: 'demo@smartapply.com',
+      email: 'demo@applo.ai',
       password: hashedPassword,
       firstName: 'John',
       lastName: 'Demo',
@@ -165,7 +165,7 @@ async function main() {
             name: 'Applo',
             description:
               'AI-powered job application assistant generating tailored resumes and cover letters.',
-            url: 'https://github.com/demouser/smart-apply',
+            url: 'https://github.com/demouser/applo',
             startDate: new Date('2023-10-01'),
             technologies: ['NestJS', 'Azure OpenAI', 'Prisma', 'Azure', 'TypeScript'],
             highlights: [

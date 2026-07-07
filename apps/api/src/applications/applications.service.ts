@@ -38,7 +38,7 @@ import {
   ConflictWithCode,
 } from '../common/exceptions/coded-http.exception';
 import { assertPromptWithinLimits } from '../common/guardrails/prompt-guardrail';
-import { normalizeSkillCategory } from '@smart-apply/shared';
+import { normalizeSkillCategory } from '@applo/shared';
 import {
   buildResumeTemplateData,
   ProfileWithRelations,

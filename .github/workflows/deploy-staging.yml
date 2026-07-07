@@ -9,14 +9,14 @@ name: Deploy → Staging
 #
 # Required GitHub Environment: `staging`
 #   Secrets:
-#     FLY_API_TOKEN          — scoped to smart-apply-api-staging only
+#     FLY_API_TOKEN          — scoped to applo-api-staging only
 #     CLOUDFLARE_API_TOKEN   — Worker:Edit, can be same as production
 #     CLOUDFLARE_ACCOUNT_ID  — Cloudflare account ID (avoids /memberships lookup)
 #   Variables:
-#     STAGING_FLY_APP        — smart-apply-api-staging
-#     STAGING_API_URL        — https://api-staging.smart-apply.io/api/v1
-#     STAGING_HEALTH_HOST    — api-staging.smart-apply.io
-#     STAGING_WEB_HOST       — staging.smart-apply.io
+#     STAGING_FLY_APP        — applo-api-staging
+#     STAGING_API_URL        — https://api-staging.applo.ai/api/v1
+#     STAGING_HEALTH_HOST    — api-staging.applo.ai
+#     STAGING_WEB_HOST       — staging.applo.ai
 #     TURNSTILE_SITE_KEY     — public CAPTCHA site key
 #     SENTRY_DSN_WEB         — public Sentry DSN
 
@@ -37,13 +37,13 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  STAGING_FLY_APP: ${{ vars.STAGING_FLY_APP || 'smart-apply-api-staging' }}
+  STAGING_FLY_APP: ${{ vars.STAGING_FLY_APP || 'applo-api-staging' }}
   # Custom domains (set up once in Fly + Cloudflare DNS — see
   # docs/guides/DOMAIN_CLOUDFLARE_SETUP.md). Override via repo Variables
   # to fall back to the *.fly.dev / *.workers.dev origins if needed.
-  STAGING_API_URL: ${{ vars.STAGING_API_URL || 'https://api-staging.smart-apply.io/api/v1' }}
-  STAGING_HEALTH_HOST: ${{ vars.STAGING_HEALTH_HOST || 'api-staging.smart-apply.io' }}
-  STAGING_WEB_HOST: ${{ vars.STAGING_WEB_HOST || 'staging.smart-apply.io' }}
+  STAGING_API_URL: ${{ vars.STAGING_API_URL || 'https://api-staging.applo.ai/api/v1' }}
+  STAGING_HEALTH_HOST: ${{ vars.STAGING_HEALTH_HOST || 'api-staging.applo.ai' }}
+  STAGING_WEB_HOST: ${{ vars.STAGING_WEB_HOST || 'staging.applo.ai' }}
 
 jobs:
   detect-changes:
@@ -75,7 +75,7 @@ jobs:
               - '.github/workflows/deploy-staging.yml'
 
   # ─────────────────────────────────────────────────────────────────────
-  # deploy-api — Push the API to smart-apply-api-staging Fly app.
+  # deploy-api — Push the API to applo-api-staging Fly app.
   # Uses fly.staging.toml (smaller VM, suspend-on-idle).
   # ─────────────────────────────────────────────────────────────────────
   deploy-api:
@@ -136,7 +136,7 @@ jobs:
           flyctl status --app "${{ env.STAGING_FLY_APP }}" 2>&1 || true
 
   # ─────────────────────────────────────────────────────────────────────
-  # deploy-web — Push the Worker to smart-apply-web-staging.
+  # deploy-web — Push the Worker to applo-web-staging.
   # Uses wrangler.jsonc env.staging block; bakes staging API URL into bundle.
   # ─────────────────────────────────────────────────────────────────────
   deploy-web:
@@ -165,7 +165,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --filter @smart-apply/web... --filter @smart-apply/shared...
+        run: pnpm install --frozen-lockfile --filter @applo/web... --filter @applo/shared...
 
       - name: Build shared package
         run: pnpm shared:build
@@ -181,7 +181,7 @@ jobs:
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ vars.SENTRY_DSN_WEB }}
           NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
-        run: pnpm --filter @smart-apply/web cf:deploy:staging
+        run: pnpm --filter @applo/web cf:deploy:staging
 
       - name: Smoke test deployed Worker
         run: |

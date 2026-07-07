@@ -8,7 +8,7 @@ window.PROFILE = {
   status: "Bewerber · offen für neue Rollen",
   location: "Duisburg, Deutschland",
   address: "Musterstraße 123, 47057 Duisburg",
-  email: "demo@smartapply.com",
+  email: "demo@applo.ai",
   phone: "+49 201 555 0123",
   linkedin: "linkedin.com/in/johndemo",
   website: "johndemo.dev",

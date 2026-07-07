@@ -48,7 +48,7 @@ interface EmailTrackingSectionProps {
 
 /**
  * Settings section that lets a Premium user connect their Outlook / Microsoft 365
- * mailbox so smart-apply can detect company replies (interview invites,
+ * mailbox so applo can detect company replies (interview invites,
  * confirmations, rejections) and update the matching application status
  * automatically.
  *
