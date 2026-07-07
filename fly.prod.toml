@@ -1,9 +1,14 @@
-# fly.toml app configuration file generated for applo-api on 2026-05-02T16:27:41+02:00
+# fly.toml app configuration file generated for smart-apply-api on 2026-05-02T16:27:41+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
+# NOTE: the Fly app name stays `smart-apply-api` — Fly does not support
+# renaming an app (the name is baked into its internal ID + default
+# `.fly.dev` hostname). That's fine: it's an internal identifier users
+# never see. Only the PUBLIC hostname (API_BASE_URL below, DNS, certs)
+# moved to applo.ai as part of the applo.ai rebrand.
 
-app = 'applo-api'
+app = 'smart-apply-api'
 primary_region = 'fra'
 
 [build]
@@ -46,6 +51,9 @@ primary_region = 'fra'
   # Microsoft Graph push-notification webhook URL (mailbox-sync). Without
   # this, the API falls back to http://localhost:3000 — which Graph cannot
   # reach → subscription creation fails on every Outlook connect.
+  # TODO(applo.ai cutover): this value is only correct once the DNS CNAME
+  # + Fly cert (fly certs add api.applo.ai) are live; until then this API
+  # keeps serving at api.smart-apply.io / smart-apply-api.fly.dev.
   API_BASE_URL = 'https://api.applo.ai'
   JOBS_DRIVER = 'qstash'
   LLM_PROVIDER = 'azure-openai'

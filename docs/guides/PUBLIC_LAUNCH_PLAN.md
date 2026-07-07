@@ -100,7 +100,7 @@ These were tracked as "todo" in the deleted docs but are live in code today:
 `apps/api/.env.example` defaults to `mock`. Confirm Fly prod is `azure-openai` and not silently serving canned demo text:
 
 ```bash
-flyctl secrets list --app applo-api | grep LLM_PROVIDER
+flyctl secrets list --app smart-apply-api | grep LLM_PROVIDER
 ```
 
 If it's anything other than `azure-openai`, fix before launch.

@@ -257,14 +257,14 @@ BUILD_TAG=v1.0.0 ./scripts/build-optimized.sh all
 ```bash
 # Update Container App mit neuem Image
 az containerapp update \
-  --name applo-api \
+  --name smart-apply-api \
   --resource-group applo-dev-rg \
-  --image smartapplydevacr.azurecr.io/applo-api:latest
+  --image smartapplydevacr.azurecr.io/smart-apply-api:latest
 
 az containerapp update \
-  --name applo-web \
+  --name smart-apply-web \
   --resource-group applo-dev-rg \
-  --image smartapplydevacr.azurecr.io/applo-web:latest
+  --image smartapplydevacr.azurecr.io/smart-apply-web:latest
 ```
 
 ---
@@ -347,7 +347,7 @@ Die Lint-Warnings zu "2 high vulnerabilities" beziehen sich auf bekannte CVEs im
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --push \
-  -t smartapplydevacr.azurecr.io/applo-api:latest \
+  -t smartapplydevacr.azurecr.io/smart-apply-api:latest \
   -f infra/Dockerfile .
 ```
 

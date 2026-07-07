@@ -4,8 +4,8 @@
 > below was decommissioned after the migration to **Fly.io** (API) +
 > **Cloudflare Workers** (web). The current production topology is:
 >
-> - `applo.ai` / `www.applo.ai` → Cloudflare Worker `applo-web`
-> - `api.applo.ai` → CNAME (Cloudflare-proxied) → `93ke51y.applo-api.fly.dev`
+> - `applo.ai` / `www.applo.ai` → Cloudflare Worker `smart-apply-web`
+> - `api.applo.ai` → CNAME (Cloudflare-proxied) → `93ke51y.smart-apply-api.fly.dev`
 > - Fly issues the Let's Encrypt cert directly via DNS-01; the
 >   `_acme-challenge.api` CNAME **must be DNS-only** (gray cloud) or
 >   Cloudflare hides it from Let's Encrypt and issuance hangs.
@@ -28,8 +28,8 @@ prod. Live mappings:
 
 | Hostname                       | Target                                            | TLS                       |
 | ------------------------------ | ------------------------------------------------- | ------------------------- |
-| `staging.applo.ai`       | Cloudflare Worker `applo-web-staging`       | Cloudflare Universal Edge |
-| `api-staging.applo.ai`   | Fly app `applo-api-staging` (CNAME, DNS-only) | Fly Let's Encrypt (DNS-01) |
+| `staging.applo.ai`       | Cloudflare Worker `smart-apply-web-staging`       | Cloudflare Universal Edge |
+| `api-staging.applo.ai`   | Fly app `smart-apply-api-staging` (CNAME, DNS-only) | Fly Let's Encrypt (DNS-01) |
 
 The Worker domain is **declared in code** ([`apps/web/wrangler.jsonc`](../../apps/web/wrangler.jsonc) → `env.staging.routes`), so Cloudflare auto-provisions the proxied DNS record on every `wrangler deploy --env staging`. The Fly domain is **manual one-time setup** because Fly issues its own cert and needs the `_acme-challenge` CNAME to be unproxied.
 
@@ -37,8 +37,8 @@ The Worker domain is **declared in code** ([`apps/web/wrangler.jsonc`](../../app
 
 ```bash
 # 1. Fly: provision the API custom hostname + cert
-fly certs add api-staging.applo.ai -a applo-api-staging
-fly certs show api-staging.applo.ai -a applo-api-staging
+fly certs add api-staging.applo.ai -a smart-apply-api-staging
+fly certs show api-staging.applo.ai -a smart-apply-api-staging
 #   → prints the _acme-challenge CNAME you need to add to Cloudflare DNS
 ```
 
@@ -46,7 +46,7 @@ In Cloudflare DNS (zone `applo.ai`), add:
 
 | Type  | Name                       | Target                              | Proxy                  |
 | ----- | -------------------------- | ----------------------------------- | ---------------------- |
-| CNAME | `api-staging`              | `applo-api-staging.fly.dev`   | **DNS only** (gray) ⚠️ |
+| CNAME | `api-staging`              | `smart-apply-api-staging.fly.dev`   | **DNS only** (gray) ⚠️ |
 | CNAME | `_acme-challenge.api-staging` | (value from `fly certs show`)    | **DNS only** (gray) ⚠️ |
 
 > Both records **must** stay unproxied. Fly terminates TLS itself, and Let's
@@ -54,12 +54,12 @@ In Cloudflare DNS (zone `applo.ai`), add:
 > proxy. Same gotcha as the prod `api.applo.ai` record (see status
 > banner above).
 
-Re-run `fly certs show api-staging.applo.ai -a applo-api-staging`
+Re-run `fly certs show api-staging.applo.ai -a smart-apply-api-staging`
 until status is **Ready** (usually <5 min).
 
 ```bash
 # 2. Update the staging API's CORS allow-list so the new web origin is accepted
-fly secrets set CORS_ORIGINS="https://staging.applo.ai" -a applo-api-staging
+fly secrets set CORS_ORIGINS="https://staging.applo.ai" -a smart-apply-api-staging
 ```
 
 ```bash
@@ -85,7 +85,7 @@ values — the workflow falls back to them via `${{ vars.X || 'default' }}`.
 
 - **522 from `staging.applo.ai`** — the Worker route hasn't propagated
   yet. Wait ~30 s after `wrangler deploy` or check
-  Cloudflare → Workers & Pages → `applo-web-staging` → Settings → Domains.
+  Cloudflare → Workers & Pages → `smart-apply-web-staging` → Settings → Domains.
 - **Fly cert stuck in `Awaiting configuration`** — `_acme-challenge` CNAME
   is missing or proxied. Toggle to DNS-only and re-run `fly certs show`.
 - **CORS errors in browser console** — `CORS_ORIGINS` on the staging Fly app

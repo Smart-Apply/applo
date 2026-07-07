@@ -42,9 +42,9 @@
 
 | Hostname                | Origin                                                     | Notes                                             |
 | ----------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
-| `applo.ai` (apex) | Cloudflare Worker `applo-web` (Custom Domain)        | Universal Edge Cert (Cloudflare)                  |
-| `www.applo.ai`    | Cloudflare Worker `applo-web` (Custom Domain)        | Same Worker; redirect rule TBD for canonical host |
-| `api.applo.ai`    | CNAME → `93ke51y.applo-api.fly.dev` (Proxied 🟧)     | Let's Encrypt cert issued by Fly via DNS-01       |
+| `applo.ai` (apex) | Cloudflare Worker `smart-apply-web` (Custom Domain)        | Universal Edge Cert (Cloudflare)                  |
+| `www.applo.ai`    | Cloudflare Worker `smart-apply-web` (Custom Domain)        | Same Worker; redirect rule TBD for canonical host |
+| `api.applo.ai`    | CNAME → `93ke51y.smart-apply-api.fly.dev` (Proxied 🟧)     | Let's Encrypt cert issued by Fly via DNS-01       |
 | `_acme-challenge.api.…` | CNAME → `api.applo.ai.93ke51y.flydns.net` (DNS-only) | Required for Fly cert renewal behind CF proxy     |
 | `_fly-ownership.api.…`  | TXT `app-93ke51y`                                          | Required when traffic is proxied via Cloudflare   |
 
@@ -327,8 +327,8 @@ User 1:1 Subscription
 | Category   | Technology                                                                                                                                                            |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Container  | Docker (multi-stage, `infra/Dockerfile`)                                                                                                                              |
-| API host   | **Fly.io** (`applo-api`, region `fra`, shared-cpu-1x / 1 GB)                                                                                                    |
-| Web host   | Cloudflare Workers via `@opennextjs/cloudflare` (`applo-web`)                                                                                                   |
+| API host   | **Fly.io** (`smart-apply-api`, region `fra`, shared-cpu-1x / 1 GB)                                                                                                    |
+| Web host   | Cloudflare Workers via `@opennextjs/cloudflare` (`smart-apply-web`)                                                                                                   |
 | CI/CD      | GitHub Actions — `ci.yml` (PR checks) + `deploy-staging.yml` (auto on `main`) + `deploy-prod.yml` (gated on `v*.*.*` tag) + `release-please.yml` (SemVer + CHANGELOG) |
 | Secrets    | Fly Secrets (API) · Cloudflare Worker vars/secrets (Web) · `.env` (dev)                                                                                               |
 | Database   | Neon Postgres (serverless, EU/Frankfurt; `DATABASE_URL` pooled, `DIRECT_URL` for migrations)                                                                          |
@@ -417,8 +417,8 @@ Merge Release PR → PAT pushes tag v1.x.y → deploy-prod.yml fires
 
 | Environment | API (Fly app)             | Web (Worker)                                | DB (Neon branch) | R2 bucket             |
 | ----------- | ------------------------- | ------------------------------------------- | ---------------- | --------------------- |
-| **Staging** | `applo-api-staging` | `applo-web-staging` (`*.workers.dev`) | `staging`        | `applo-staging` |
-| **Prod**    | `applo-api`         | `applo-web` (`applo.ai`)        | `main`           | `applo-prod`    |
+| **Staging** | `smart-apply-api-staging` | `smart-apply-web-staging` (`*.workers.dev`) | `staging`        | `smart-apply-staging` |
+| **Prod**    | `smart-apply-api`         | `smart-apply-web` (`applo.ai`)        | `main`           | `smart-apply-prod`    |
 
 Fly config files split per env: [`fly.prod.toml`](./fly.prod.toml) and
 [`fly.staging.toml`](./fly.staging.toml). Both use the same `infra/Dockerfile`;
@@ -433,20 +433,20 @@ GitHub Actions
   │     └─ migration-check (per-PR Neon branch + prisma migrate deploy dry-run)
   │
   ├── deploy-staging.yml (push to main)
-  │     ├─ API → Fly (applo-api-staging, fly.staging.toml)
-  │     └─ Web → Cloudflare Worker (applo-web-staging, env.staging block)
+  │     ├─ API → Fly (smart-apply-api-staging, fly.staging.toml)
+  │     └─ Web → Cloudflare Worker (smart-apply-web-staging, env.staging block)
   │
   ├── release-please.yml (push to main)
   │     └─ Maintains Release PR + creates v*.*.* tags via PAT
   │
   └── deploy-prod.yml (tag v*.*.* push)
         ├─ Blocks at `production` GitHub Environment (manual approval)
-        ├─ API → Fly (applo-api, fly.prod.toml)
+        ├─ API → Fly (smart-apply-api, fly.prod.toml)
         │   ├─ Release command: prisma migrate deploy (Neon DIRECT_URL)
         │   ├─ Secrets via `flyctl secrets set` (CORS_ORIGINS, JWT_*, R2_*, ...)
         │   ├─ HTTPS terminated by Fly (Let's Encrypt for api.applo.ai)
         │   └─ Backed by Neon Postgres · Cloudflare R2 · Upstash QStash/Redis
-        └─ Web → Cloudflare Worker (applo-web, OpenNext)
+        └─ Web → Cloudflare Worker (smart-apply-web, OpenNext)
             ├─ Build with NEXT_PUBLIC_API_URL injected from PUBLIC_API_URL env
             ├─ Runtime config served at /api/config (single source of truth)
             └─ wrangler deploy

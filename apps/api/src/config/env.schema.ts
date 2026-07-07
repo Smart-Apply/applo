@@ -49,7 +49,7 @@ const envSchema = z.object({
   R2_ACCOUNT_ID: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
-  R2_BUCKET: z.string().default('applo-prod'),
+  R2_BUCKET: z.string().default('smart-apply-prod'),
   // Optional explicit endpoint override; otherwise built from R2_ACCOUNT_ID.
   R2_ENDPOINT: z.string().optional(),
 

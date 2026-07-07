@@ -137,7 +137,7 @@ cd /home/azureuser/applo
 docker-compose logs api
 
 # Prisma Client prüfen
-docker exec applo-api-1 ls -la /app/apps/api/src/generated/prisma
+docker exec smart-apply-api-1 ls -la /app/apps/api/src/generated/prisma
 ```
 
 ## 📋 Deployment Checklist

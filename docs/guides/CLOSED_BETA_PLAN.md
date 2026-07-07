@@ -74,7 +74,7 @@ every item is checked.
 
 - [x] **#A2 — Verify `LLM_PROVIDER=azure-openai` on Fly prod** ✅ *(verified on `fly.prod.toml`)*
   ```bash
-  flyctl secrets list --app applo-api | grep LLM_PROVIDER
+  flyctl secrets list --app smart-apply-api | grep LLM_PROVIDER
   ```
   If it's anything other than `azure-openai`, every tester gets canned
   mock text and the whole beta is worthless. Also confirm

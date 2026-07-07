@@ -45,10 +45,10 @@ Get prod back on the previous, working app version while you fix the
 migration on a branch:
 
 ```bash
-flyctl releases list --app applo-api
+flyctl releases list --app smart-apply-api
 # Find the release ID of the LAST GREEN deploy. Look for v1.x.y in the
 # message column and the "succeeded" status.
-flyctl releases rollback <release-id> --app applo-api
+flyctl releases rollback <release-id> --app smart-apply-api
 ```
 
 Effect: Fly redeploys the previous Docker image. The new (broken) schema
@@ -113,7 +113,7 @@ You need a UTC timestamp from BEFORE the bad deploy. Get it from:
 
 ```bash
 # When did the broken deploy run?
-flyctl releases list --app applo-api | head -10
+flyctl releases list --app smart-apply-api | head -10
 # Look for the release timestamp — restore to ~1 minute BEFORE that.
 ```
 
@@ -143,7 +143,7 @@ neon branches create --project-id <id> \
 1. Get the connection URL of the restore branch
 2. Update prod Fly secrets to point at the restore branch:
    ```bash
-   fly secrets set --app applo-api \
+   fly secrets set --app smart-apply-api \
      DATABASE_URL='<pooled URL of restore branch>' \
      DIRECT_URL='<direct URL of restore branch>'
    ```

@@ -31,6 +31,7 @@ build/
 # Cloudflare environments (e.g. `fly secrets import < fly-*.env`).
 *-secrets.env
 *-secrets*.env
+*.secrets.env
 secrets.env
 
 # IDE

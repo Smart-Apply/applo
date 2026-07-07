@@ -59,7 +59,7 @@ Also update this `copilot-instructions.md` file (Tech Stack, Backend Modules, Da
 
 ### Deployment flow
 This project has **two environments** wired up:
-- **Staging** (`applo-api-staging.fly.dev` + `applo-web-staging.ari41dev.workers.dev`) — auto-deploys on every push to `main` via [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml). No approval gate.
+- **Staging** (`smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev`) — auto-deploys on every push to `main` via [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml). No approval gate.
 - **Prod** (`api.applo.ai` + `applo.ai`) — deploys only on `v*.*.*` tag pushes via [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml). Tags are created by `release-please` when its Release PR is merged. Gated by the `production` GitHub Environment (manual approval).
 
 Resulting flow: PR → merge to main → staging deploys + Release PR opens/updates → you merge the Release PR → tag pushed via PAT → prod deploys after approval click.
@@ -77,7 +77,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 ### When architecture changes
 - **MANDATORY**: update `README.md` + `ARCHITECTURE.md` in the same PR. See "Documentation Sync" above.
 - If you change [`fly.prod.toml`](../fly.prod.toml) / [`fly.staging.toml`](../fly.staging.toml), env defaults, or pluggable provider behavior — also update this file's Tech Stack / Env Variables sections.
-- If you add a new secret — add it to `apps/api/.env.example` (placeholder), document the local source in [docs/security/SECRETS_ROTATION.md](../docs/security/SECRETS_ROTATION.md), and tell the user to set it via `fly secrets set --app applo-api[-staging]`.
+- If you add a new secret — add it to `apps/api/.env.example` (placeholder), document the local source in [docs/security/SECRETS_ROTATION.md](../docs/security/SECRETS_ROTATION.md), and tell the user to set it via `fly secrets set --app smart-apply-api[-staging]`.
 
 ### Secrets handling
 - **Never** commit secrets. `.env`, `.env.local`, `*-secrets.env`, and `*.bak` are all gitignored.
@@ -161,7 +161,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Security:** Helmet, CORS whitelist, `@nestjs/throttler` 6.5 (dual-tier), `csrf-csrf` 4.0 (optional), `sanitize-html`, `isomorphic-dompurify`, `@Sanitize()` decorator
 - **Health:** `@nestjs/terminus` (`/health`)
 - **Scheduling:** `@nestjs/schedule` for cron jobs (session cleanup, etc.)
-- **Containers:** Docker (multi-stage, `infra/Dockerfile`); deploy to **Fly.io** (`applo-api`, region `fra`)
+- **Containers:** Docker (multi-stage, `infra/Dockerfile`); deploy to **Fly.io** (`smart-apply-api`, region `fra`)
 
 ### Frontend (`apps/web`, Port 3001)
 - **Next.js 16.1** (App Router, Server Components, React Compiler)
@@ -645,7 +645,7 @@ STORAGE_DRIVER=disk          # disk | r2 — NODE_ENV=production rejects 'disk'
 R2_ACCOUNT_ID=<account-id>
 R2_ACCESS_KEY_ID=<key>
 R2_SECRET_ACCESS_KEY=<secret>
-R2_BUCKET=applo-prod
+R2_BUCKET=smart-apply-prod
 R2_ENDPOINT=https://<account-id>.eu.r2.cloudflarestorage.com
 
 # Queue (pluggable)
@@ -821,9 +821,9 @@ Four workflows, each with a single purpose. **Never propose adding a fifth that 
 | Workflow | Trigger | Purpose |
 |---|---|---|
 | [`ci.yml`](../.github/workflows/ci.yml) | PR opened | Lint + lockfile sync check + unit tests (non-blocking) + per-PR Neon migration dry-run (only when `schema.prisma` or `migrations/**` changes) |
-| [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) | Push to `main` | Auto-deploy to `applo-api-staging` (Fly, `fly.staging.toml`) + `applo-web-staging` (Worker, `env.staging` block). No approval. Reads from `staging` GitHub Environment. |
+| [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) | Push to `main` | Auto-deploy to `smart-apply-api-staging` (Fly, `fly.staging.toml`) + `smart-apply-web-staging` (Worker, `env.staging` block). No approval. Reads from `staging` GitHub Environment. |
 | [`release-please.yml`](../.github/workflows/release-please.yml) | Push to `main` | Maintains a Release PR + creates `v*.*.*` tags from Conventional Commits. Uses a PAT (`RELEASE_PLEASE_TOKEN`) so tag pushes trigger downstream workflows (default `GITHUB_TOKEN` doesn't). |
-| [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml) | Tag `v*.*.*` push | Deploys to `applo-api` (Fly, `fly.prod.toml`) + `applo-web` (Worker, default env). Gated by `production` GitHub Environment (manual approval). |
+| [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml) | Tag `v*.*.*` push | Deploys to `smart-apply-api` (Fly, `fly.prod.toml`) + `smart-apply-web` (Worker, default env). Gated by `production` GitHub Environment (manual approval). |
 
 **Migrations** run as a Fly **release command** (`prisma migrate deploy`) before machines start serving traffic — same command on staging and prod, against each env's `DIRECT_URL` secret.
 
@@ -833,12 +833,12 @@ Four workflows, each with a single purpose. **Never propose adding a fifth that 
 
 ## Minimal Cloud Resources (production + staging)
 - **Fly.io**: two apps in region `fra` —
-  - `applo-api` (prod, 2x2GB, `min_machines_running = 2`, Let's Encrypt cert for `api.applo.ai` via DNS-01)
-  - `applo-api-staging` (staging, 1x1GB, `min_machines_running = 0` — suspend on idle)
+  - `smart-apply-api` (prod, 2x2GB, `min_machines_running = 2`, Let's Encrypt cert for `api.applo.ai` via DNS-01)
+  - `smart-apply-api-staging` (staging, 1x1GB, `min_machines_running = 0` — suspend on idle)
 - **Cloudflare**: two Workers —
-  - `applo-web` (prod, Custom Domains: apex + `www.applo.ai`)
-  - `applo-web-staging` (staging, `*.workers.dev` URL)
-  - Plus DNS zone `applo.ai`, two R2 buckets (`applo-prod` + `applo-staging`, both EU jurisdiction), Universal SSL
+  - `smart-apply-web` (prod, Custom Domains: apex + `www.applo.ai`)
+  - `smart-apply-web-staging` (staging, `*.workers.dev` URL)
+  - Plus DNS zone `applo.ai`, two R2 buckets (`smart-apply-prod` + `smart-apply-staging`, both EU jurisdiction), Universal SSL
 - **Neon**: one Postgres project (EU/Frankfurt) with two branches — `main` (prod) + `staging` (cow off `main`). Each branch has its own pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) URLs.
 - **Upstash**: QStash (queue, shared between envs — staging gets its own webhook URL) + Redis (prod throttler only; staging uses `THROTTLER_STORAGE=memory` since it runs single-instance)
 - **Azure**: OpenAI resource with three deployments — `gpt-4.1` (prod, 200K TPM), `gpt-4.1-staging` (staging), `gpt-4.1-local` (your laptop)

@@ -190,17 +190,17 @@ topology and [CONTRIBUTING.md](CONTRIBUTING.md) for the daily-use flow.
 
 | Environment | Trigger                                | Approval     | URL                                                                                |
 | ----------- | -------------------------------------- | ------------ | ---------------------------------------------------------------------------------- |
-| **Staging** | Push to `main`                         | None (auto)  | `applo-api-staging.fly.dev` + `applo-web-staging.ari41dev.workers.dev` |
+| **Staging** | Push to `main`                         | None (auto)  | `smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev` |
 | **Prod**    | Tag push `v*.*.*` (via release-please) | Manual click | `api.applo.ai` + `applo.ai`                                            |
 
 **Manual deploy commands** (rarely needed — CI handles both):
 
 ```bash
 # Prod (uses fly.prod.toml)
-flyctl deploy --config fly.prod.toml --app applo-api --remote-only
+flyctl deploy --config fly.prod.toml --app smart-apply-api --remote-only
 
 # Staging (uses fly.staging.toml — smaller VM, suspend on idle)
-flyctl deploy --config fly.staging.toml --app applo-api-staging --remote-only
+flyctl deploy --config fly.staging.toml --app smart-apply-api-staging --remote-only
 
 # Web (production)
 cd apps/web && pnpm cf:deploy
@@ -215,7 +215,7 @@ cd apps/web && pnpm cf:deploy:staging
 | --------------------- | ----- | ----------------------------------------- | -------- |
 | `applo.ai`      | —     | Cloudflare Worker (Custom Domain binding) | 🟧       |
 | `www.applo.ai`  | —     | Cloudflare Worker (Custom Domain binding) | 🟧       |
-| `api.applo.ai`  | CNAME | `93ke51y.applo-api.fly.dev`         | 🟧       |
+| `api.applo.ai`  | CNAME | `93ke51y.smart-apply-api.fly.dev`         | 🟧       |
 | `_acme-challenge.api` | CNAME | `api.applo.ai.93ke51y.flydns.net`   | DNS only |
 | `_fly-ownership.api`  | TXT   | `app-93ke51y`                             | —        |
 

@@ -17,12 +17,12 @@ name: Deploy → Production
 #   Required reviewers: @Ar1anit  (gates the deploy on manual approval)
 #   Branch restrictions: tags v*.*.* and main only
 #   Secrets:
-#     FLY_API_TOKEN          — scoped to applo-api only
+#     FLY_API_TOKEN          — scoped to smart-apply-api only
 #     CLOUDFLARE_API_TOKEN   — Worker:Edit
 #     CLOUDFLARE_ACCOUNT_ID  — Cloudflare account ID (avoids /memberships lookup)
 #   Variables:
 #     PUBLIC_API_URL         — https://api.applo.ai/api/v1
-#     FLY_APP                — applo-api
+#     FLY_APP                — smart-apply-api
 #     HEALTH_CHECK_HOST      — api.applo.ai
 #     TURNSTILE_SITE_KEY     — public CAPTCHA site key
 #     SENTRY_DSN_WEB         — public Sentry DSN
@@ -50,8 +50,8 @@ env:
   #   FLY_APP           — Fly app name. Override only if you fork or rename.
   #   HEALTH_CHECK_HOST — hostname used for the post-deploy health check.
   PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL || 'https://api.applo.ai/api/v1' }}
-  FLY_APP: ${{ vars.FLY_APP || 'applo-api' }}
-  HEALTH_CHECK_HOST: ${{ vars.HEALTH_CHECK_HOST || 'applo-api.fly.dev' }}
+  FLY_APP: ${{ vars.FLY_APP || 'smart-apply-api' }}
+  HEALTH_CHECK_HOST: ${{ vars.HEALTH_CHECK_HOST || 'smart-apply-api.fly.dev' }}
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────

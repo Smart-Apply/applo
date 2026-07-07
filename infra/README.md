@@ -7,7 +7,7 @@ deployment.
 
 | Layer | Hosting                                              |
 | ----- | ---------------------------------------------------- |
-| API   | **Fly.io** app `applo-api` (region `fra`)      |
+| API   | **Fly.io** app `smart-apply-api` (region `fra`)      |
 | Web   | **Cloudflare Workers** (`@opennextjs/cloudflare`)    |
 | DB    | **Neon Postgres** (EU/Frankfurt)                     |
 | Files | **Cloudflare R2** (EU jurisdiction)                  |
@@ -32,11 +32,11 @@ web app is deployed by `wrangler deploy` after `npm run cf:build` in `apps/web/`
 ```bash
 # API → Fly.io
 # Prod
-flyctl deploy --config fly.prod.toml --app applo-api
+flyctl deploy --config fly.prod.toml --app smart-apply-api
 # Staging
-flyctl deploy --config fly.staging.toml --app applo-api-staging
-flyctl logs -a applo-api
-flyctl secrets list -a applo-api
+flyctl deploy --config fly.staging.toml --app smart-apply-api-staging
+flyctl logs -a smart-apply-api
+flyctl secrets list -a smart-apply-api
 
 # Web → Cloudflare Workers
 cd apps/web
