@@ -35,9 +35,23 @@
   // Sentry, etc. should be added as secrets:
   //   wrangler secret put SENTRY_AUTH_TOKEN
   //
-  // Custom domain routing happens in the Cloudflare dashboard:
-  //   Workers & Pages > smart-apply-web > Settings > Domains & Routes
-  //   Add: applo.ai  (or new.applo.ai for soft launch)
+  // Production Workers Custom Domains. Cloudflare auto-creates the proxied
+  // apex + www records (and their certs) on the applo.ai zone the first
+  // time `wrangler deploy` (prod, no --env) runs — same mechanism as the
+  // staging block below. Requires the zone in the same Cloudflare account
+  // as the Worker (CLOUDFLARE_ACCOUNT_ID secret). Binding happens in the
+  // SAME deploy that bakes the api.applo.ai bundle, so applo.ai never
+  // serves a stale bundle pointing at the old cross-origin API host.
+  "routes": [
+    {
+      "pattern": "applo.ai",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.applo.ai",
+      "custom_domain": true
+    }
+  ],
   "observability": {
     "enabled": true
   },
