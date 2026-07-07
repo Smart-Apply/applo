@@ -250,7 +250,7 @@ AZURE_OPENAI_API_KEY=your_key npm test -- agent-url.parser.spec.ts
    ```bash
    curl -X POST http://localhost:3000/api/v1/auth/login \
      -H "Content-Type: application/json" \
-     -d '{"email":"demo@smartapply.com","password":"Demo123!"}'
+     -d '{"email":"demo@applo.ai","password":"Demo123!"}'
    ```
 
 1. Test with a real job URL:

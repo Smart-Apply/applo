@@ -215,12 +215,12 @@ const envSchema = z.object({
   // In dev, defaults to http://localhost:${PORT}; in prod, set to https://api.<your-domain>
   API_BASE_URL: z.string().optional(),
 
-  // Parent domain shared by frontend (smart-apply.io) and API
-  // (api.smart-apply.io). When set, auth cookies are issued with
+  // Parent domain shared by frontend (applo.ai) and API
+  // (api.applo.ai). When set, auth cookies are issued with
   // `Domain=<value>` so they're treated as first-party for all subdomains
   // — fixes Chrome's tracking-protection silently dropping cross-subdomain
   // cookies. Leave UNSET locally (cookies stay host-only on localhost).
-  // Example for prod: COOKIE_DOMAIN=.smart-apply.io
+  // Example for prod: COOKIE_DOMAIN=.applo.ai
   COOKIE_DOMAIN: z.string().optional(),
 
   // Sentry error tracking (optional — if unset, Sentry stays disabled)

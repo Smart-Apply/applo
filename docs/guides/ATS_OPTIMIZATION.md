@@ -284,8 +284,8 @@ Applo automatically validates your PDF and provides an **ATS-Friendliness Score 
 If you have questions about ATS optimization or need help:
 
 - Check our [Documentation](./README.md)
-- Contact support: <support@smartapply.com>
-- Report issues: [GitHub Issues](https://github.com/Smart-Apply/smart-apply/issues)
+- Contact support: <support@applo.ai>
+- Report issues: [GitHub Issues](https://github.com/applo/applo/issues)
 
 ---
 

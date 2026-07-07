@@ -210,15 +210,15 @@ No big PRs. Do these as you happen to touch the affected areas.
 
 ### npm → pnpm (✅ Done — May 2026)
 - Strict hoisting kills phantom deps and the `--legacy-peer-deps` flag.
-- Migrated in [`chore/pnpm-migration`](https://github.com/Smart-Apply/smart-apply): added `pnpm-workspace.yaml` + `.npmrc`, switched root `packageManager` to `pnpm@11.1.2`, moved `overrides` to `pnpm.overrides`, regenerated lockfile (`package-lock.json` deleted, `pnpm-lock.yaml` committed).
+- Migrated in [`chore/pnpm-migration`](https://github.com/applo/applo): added `pnpm-workspace.yaml` + `.npmrc`, switched root `packageManager` to `pnpm@11.1.2`, moved `overrides` to `pnpm.overrides`, regenerated lockfile (`package-lock.json` deleted, `pnpm-lock.yaml` committed).
 - All internal `npm run X` calls inside workspace package.json scripts → `pnpm run X` so the production Docker image no longer ships npm.
-- [`infra/Dockerfile`](../../infra/Dockerfile) rewritten around `pnpm deploy --prod` — produces an isolated, hoisted production tree with workspace deps (`@smart-apply/shared`) resolved into real copies.
+- [`infra/Dockerfile`](../../infra/Dockerfile) rewritten around `pnpm deploy --prod` — produces an isolated, hoisted production tree with workspace deps (`@applo/shared`) resolved into real copies.
 - All three GH workflows ([ci.yml](../../.github/workflows/ci.yml), [deploy-staging.yml](../../.github/workflows/deploy-staging.yml), [deploy-prod.yml](../../.github/workflows/deploy-prod.yml)) use `pnpm/action-setup@v4` + `cache: 'pnpm'` + `pnpm install --frozen-lockfile`. Lockfile drift check rewritten for `pnpm-lock.yaml`.
 - Docs synced: [CONTRIBUTING.md](../../CONTRIBUTING.md), [.github/copilot-instructions.md](../../.github/copilot-instructions.md), [README.md](../../README.md), [QUICKSTART.md](../../QUICKSTART.md), [ARCHITECTURE.md](../../ARCHITECTURE.md), [MONOREPO_WORKSPACE.md](./MONOREPO_WORKSPACE.md) (full rewrite).
 
 ### Jest → Vitest (✅ Done — May 2026)
 - ~5× faster, native ESM, same API surface (`describe`/`it`/`expect`).
-- Migrated `apps/api` in [`chore/vitest-migration`](https://github.com/Smart-Apply/smart-apply): single `vitest.config.mts` replaces three Jest configs, `unplugin-swc` + `.swcrc` handle decorator metadata, `vite-tsconfig-paths` handles the `@/*` alias.
+- Migrated `apps/api` in [`chore/vitest-migration`](https://github.com/applo/applo): single `vitest.config.mts` replaces three Jest configs, `unplugin-swc` + `.swcrc` handle decorator metadata, `vite-tsconfig-paths` handles the `@/*` alias.
 - Mechanical churn: `jest.X` → `vi.X` across 25 spec files + `mock.helper.ts`. `jest.Mock` type cast → `import type { Mock } from 'vitest'`.
 - Existing test debt was preserved as-is (the `TemplatesService` DI mismatch in `summary-translation.integration.spec.ts` was a pre-existing failure under Jest too).
 - CI's `unit-tests` job still runs through `npm run test:unit` — script entrypoint is unchanged.

@@ -103,8 +103,8 @@ const betaFaqs: FaqItem[] = [
     a: (
       <>
         Schreib uns an{" "}
-        <a href="mailto:support@smart-apply.io" className="underline">
-          support@smart-apply.io
+        <a href="mailto:support@applo.ai" className="underline">
+          support@applo.ai
         </a>
         . Für Beta-Tester antworten wir in der Regel innerhalb weniger
         Stunden. Hilfreich sind: Browser + Gerät, was du gemacht hast und
@@ -231,8 +231,8 @@ const faqs: FaqItem[] = [
           Startseite
         </Link>{" "}
         oder direkt an{" "}
-        <a href="mailto:support@smart-apply.io" className="underline">
-          support@smart-apply.io
+        <a href="mailto:support@applo.ai" className="underline">
+          support@applo.ai
         </a>
         . Wir antworten in der Regel innerhalb von 1–2 Werktagen.
       </>
@@ -268,7 +268,7 @@ const faqsForJsonLd: { q: string; a: string }[] = [
   },
   {
     q: "Wie melde ich Fehler oder Feedback während der Beta?",
-    a: "Per E-Mail an support@smart-apply.io. Antwort meist innerhalb weniger Stunden. Frontend-Fehler landen automatisch in unserem Monitoring — keine Konsolen-Logs nötig.",
+    a: "Per E-Mail an support@applo.ai. Antwort meist innerhalb weniger Stunden. Frontend-Fehler landen automatisch in unserem Monitoring — keine Konsolen-Logs nötig.",
   },
   {
     q: "Was passiert mit meinen Daten, wenn die Beta endet?",
@@ -305,7 +305,7 @@ const faqsForJsonLd: { q: string; a: string }[] = [
   },
   {
     q: "Ich habe einen Fehler gefunden oder eine Idee — wo melde ich mich?",
-    a: "Über das Kontaktformular auf der Startseite oder direkt per Mail an support@smart-apply.io. Antwort meist innerhalb von 1–2 Werktagen.",
+    a: "Über das Kontaktformular auf der Startseite oder direkt per Mail an support@applo.ai. Antwort meist innerhalb von 1–2 Werktagen.",
   },
 ];
 

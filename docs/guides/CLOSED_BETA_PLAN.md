@@ -105,7 +105,7 @@ every item is checked.
       (prefix, note, expiresAt, usedAt) — never the plaintext.
   - **First batch after deploy:**
     ```bash
-    curl -X POST https://api.smart-apply.io/api/v1/admin/invite-codes \
+    curl -X POST https://api.applo.ai/api/v1/admin/invite-codes \
       -H "Cookie: access_token=<your-admin-jwt>" \
       -H "Content-Type: application/json" \
       -d '{"count": 10, "note": "wave 1 — friends"}'
@@ -145,7 +145,7 @@ every item is checked.
 - [ ] **#A7 — Sentry alert rule** *(~15min)*
   In Sentry → Alerts → New Rule: `> 5 errors in 5 min` OR
   `any new issue in production environment` → email
-  `support@smart-apply.io`. With a 50-user cohort you can spot
+  `support@applo.ai`. With a 50-user cohort you can spot
   incidents within minutes instead of "next time you open the dashboard".
 
 - [ ] **#A8 — Beta-tester FAQ section** *(~30min)*

@@ -1,6 +1,6 @@
 import { IsIn, IsInt, IsOptional } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import type { RealtimeVoice } from '@smart-apply/shared';
+import type { RealtimeVoice } from '@applo/shared';
 
 const REALTIME_VOICES = [
   'alloy',

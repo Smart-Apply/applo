@@ -81,7 +81,7 @@ export const useAuthStore = create<AuthState>()(
       setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
     {
-      name: 'smart-apply-auth',
+      name: 'applo-auth',
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
         // Re-attach Sentry user after hydration so an existing logged-in

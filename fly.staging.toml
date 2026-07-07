@@ -1,7 +1,9 @@
 # fly.toml — STAGING configuration for smart-apply-api-staging.
 #
 # Sister file to fly.prod.toml. Differences from prod, summarized:
-#   • app name              → smart-apply-api-staging
+#   • app name              → smart-apply-api-staging (Fly app names are
+#     immutable — an internal identifier, not renamed for the applo.ai
+#     rebrand; only the public hostname changed)
 #   • min_machines_running  → 0  (suspend on idle, save €€)
 #   • VM size               → shared-cpu-1x / 1 GB (smaller than prod)
 #   • concurrency limits    → halved (less traffic expected)
@@ -31,6 +33,8 @@ primary_region = 'fra'
   # Microsoft Graph push-notification webhook URL (mailbox-sync). Without
   # this, the API falls back to http://localhost:3000 — which Graph cannot
   # reach → subscription creation fails on every Outlook connect.
+  # TODO(applo.ai cutover): flip to https://api-staging.applo.ai once the
+  # DNS CNAME + Fly cert (fly certs add api-staging.applo.ai) are live.
   API_BASE_URL = 'https://smart-apply-api-staging.fly.dev'
   JOBS_DRIVER = 'qstash'
   LLM_PROVIDER = 'azure-openai'

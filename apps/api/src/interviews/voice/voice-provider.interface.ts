@@ -1,4 +1,4 @@
-import type { RealtimeVoice } from '@smart-apply/shared';
+import type { RealtimeVoice } from '@applo/shared';
 
 /**
  * DI token for the pluggable voice provider (mirrors `LLM_PROVIDER`).

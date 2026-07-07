@@ -46,7 +46,7 @@ export default function DatenschutzPage() {
         Deutschland
         <br />
         E-Mail:{" "}
-        <a href="mailto:support@smart-apply.io">support@smart-apply.io</a>
+        <a href="mailto:support@applo.ai">support@applo.ai</a>
       </p>
 
       <h2>2. Allgemeine Hinweise</h2>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, X, Code, Pencil, Trash2, FolderPlus, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { normalizeSkillCategory } from '@smart-apply/shared';
+import { normalizeSkillCategory } from '@applo/shared';
 import type { Skill } from '@/types';
 
 interface SkillsManagerProps {

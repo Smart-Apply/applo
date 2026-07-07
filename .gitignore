@@ -31,6 +31,7 @@ build/
 # Cloudflare environments (e.g. `fly secrets import < fly-*.env`).
 *-secrets.env
 *-secrets*.env
+*.secrets.env
 secrets.env
 
 # IDE
@@ -118,7 +119,7 @@ uploads/
 *.cer
 *.pfx
 *.p12
-smart-apply-cert*
-smart-apply-key*
+applo-cert*
+applo-key*
 cookies.txt
 invite-codes-*.json

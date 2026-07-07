@@ -13,7 +13,7 @@
 | Phase | Item | Status | Where |
 |---|---|---|---|
 | 1 | Neon `staging` branch + R2 bucket + Upstash QStash + Fly app + CF Worker | ✅ | live |
-| 1 | Custom domains (`*.staging.smart-apply.io`) | ⏸ deferred | use `*.workers.dev` / `*.fly.dev` |
+| 1 | Custom domains (`*.staging.applo.ai`) | ⏸ deferred | use `*.workers.dev` / `*.fly.dev` |
 | 2 | GitHub Environments: `production` (gated), `staging` (auto), `copilot` | ✅ | repo Settings |
 | 2 | Per-env JWT/2FA secrets, scoped Fly tokens, secret rotation runbook | ✅ | [SECRETS_ROTATION.md](../security/SECRETS_ROTATION.md) |
 | 2 | Push protection + secret scanning + Dependabot security updates | ✅ | org-level |
@@ -77,8 +77,8 @@
 
 - [ ] Confirm Neon plan supports ≥10 branches (Launch tier or higher).
 - [ ] Decide staging hostnames:
-  - API: `api.staging.smart-apply.io`
-  - Web: `staging.smart-apply.io`
+  - API: `api.staging.applo.ai`
+  - Web: `staging.applo.ai`
 - [ ] Generate per-env JWT + 2FA secrets (one set per environment):
   ```bash
   openssl rand -base64 64    # JWT_SECRET (staging + prod, separately)
@@ -194,14 +194,14 @@ Edit `apps/web/wrangler.jsonc` to add an `env.staging` block:
   "name": "smart-apply-web",
   // …existing top-level config = prod defaults…
   "vars": {
-    "NEXT_PUBLIC_API_URL": "https://api.smart-apply.io/api/v1"
+    "NEXT_PUBLIC_API_URL": "https://api.applo.ai/api/v1"
   },
 
   "env": {
     "staging": {
       "name": "smart-apply-web-staging",
       "vars": {
-        "NEXT_PUBLIC_API_URL": "https://api.staging.smart-apply.io/api/v1"
+        "NEXT_PUBLIC_API_URL": "https://api.staging.applo.ai/api/v1"
       }
     }
   }
@@ -221,9 +221,9 @@ wrangler deploy                     # ← prod (unchanged)
 
 In the Cloudflare dashboard:
 
-- DNS: `api.staging.smart-apply.io` → Fly app `smart-apply-api-staging` (CNAME to `smart-apply-api-staging.fly.dev`, proxied OFF for cert issuance, then re-enable).
-- DNS: `staging.smart-apply.io` → Worker `smart-apply-web-staging` (Custom Domain).
-- Issue Fly cert: `fly certs create api.staging.smart-apply.io --app smart-apply-api-staging`.
+- DNS: `api.staging.applo.ai` → Fly app `smart-apply-api-staging` (CNAME to `smart-apply-api-staging.fly.dev`, proxied OFF for cert issuance, then re-enable).
+- DNS: `staging.applo.ai` → Worker `smart-apply-web-staging` (Custom Domain).
+- Issue Fly cert: `fly certs create api.staging.applo.ai --app smart-apply-api-staging`.
 
 ---
 
@@ -255,7 +255,7 @@ SENTRY_AUTH_TOKEN          # for source map uploads
 
 ```
 FLY_APP                    # smart-apply-api-staging or smart-apply-api
-HEALTH_CHECK_HOST          # api.staging.smart-apply.io or api.smart-apply.io
+HEALTH_CHECK_HOST          # api.staging.applo.ai or api.applo.ai
 PUBLIC_API_URL             # baked into the Worker bundle
 TURNSTILE_SITE_KEY         # public by design
 SENTRY_DSN_WEB             # public DSN
@@ -473,7 +473,7 @@ jobs:
       - uses: googleapis/release-please-action@v4
         with:
           release-type: node
-          package-name: smart-apply
+          package-name: applo
 ```
 
 ### 4.2 Adopt Conventional Commits
@@ -530,7 +530,7 @@ Append to both deploy workflows:
   env:
     SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
     SENTRY_ORG: <your-org>
-    SENTRY_PROJECT: smart-apply
+    SENTRY_PROJECT: applo
   with:
     environment: ${{ vars.WRANGLER_ENV || 'production' }}
     version: ${{ github.ref_name }}      # 'v1.5.0' on tag pushes
@@ -570,7 +570,7 @@ Already covered in Phase 3.1 (PR-time Neon branch + `prisma migrate deploy` dry-
 - **No persistent cloud `dev` env.** Docker Postgres + your local `.env` is faster, cheaper, and isolated. Add a cloud `dev` env only if a contributor joins.
 - **No shared "dev" Neon branch.** Same shared-mutable-state problem as a shared dev DB. Personal `dev-<yourname>` branches are fine if you want cloud DB on the road.
 - **No secrets manager service.** GitHub Environments cover the use case at this scale; switch to Doppler/Vault if you outgrow them.
-- **No per-package versions in the monorepo.** One repo-wide version (`smart-apply@1.5.0`) until `packages/shared` is published externally.
+- **No per-package versions in the monorepo.** One repo-wide version (`applo@1.5.0`) until `packages/shared` is published externally.
 
 ---
 

@@ -1,5 +1,5 @@
 import type { Profile, ResumeData, ResumeExperience, ResumeSkillCategory } from '@/types';
-import { normalizeSkillCategory } from '@smart-apply/shared';
+import { normalizeSkillCategory } from '@applo/shared';
 import { isHtml } from './markdown';
 import { htmlToPlainText, plainTextToHtml, sanitizeHtml } from './sanitize';
 

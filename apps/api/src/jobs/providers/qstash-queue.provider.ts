@@ -21,7 +21,7 @@ import { BackgroundJobStatus } from '../../generated/prisma/client';
  *   - No polling, no long-lived TCP — fits Cloudflare Workers and any
  *     stateless host
  *   - Built-in retry with exponential backoff (configured via QStash dashboard)
- *   - Works behind the Azure VM's nginx already serving api.smart-apply.io
+ *   - Works behind the Azure VM's nginx already serving api.applo.ai
  *
  * Trade-offs vs in-memory:
  *   - +200-500ms latency per publish (network hop to qstash-eu-central-1)

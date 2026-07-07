@@ -9,7 +9,7 @@
  * Usage (from apps/api):
  *   npx ts-node -r tsconfig-paths/register scripts/validate-react-pdf-templates.ts
  *
- * Output: /tmp/smart-apply-pdf-validate/<key>/{resume,cover-letter}.pdf
+ * Output: /tmp/applo-pdf-validate/<key>/{resume,cover-letter}.pdf
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -142,7 +142,7 @@ const TARGETS: Target[] = [
 
 async function main() {
   const rp = await loadReactPdf();
-  const outRoot = path.join('/tmp', 'smart-apply-pdf-validate');
+  const outRoot = path.join('/tmp', 'applo-pdf-validate');
   await fs.rm(outRoot, { recursive: true, force: true });
 
   let failures = 0;

@@ -2,7 +2,7 @@
 
 AI-powered job application assistant — generate tailored, ATS-optimized cover letters and resumes from your profile and any job posting.
 
-**🌐 Live:** <https://smart-apply.io> · **API:** <https://api.smart-apply.io/api/v1> · **Health:** <https://api.smart-apply.io/api/v1/health>
+**🌐 Live:** <https://applo.ai> · **API:** <https://api.applo.ai/api/v1> · **Health:** <https://api.applo.ai/api/v1/health>
 
 ## ✨ Features
 
@@ -15,7 +15,7 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 - **Resume parser** — Upload an existing resume to bootstrap your profile
 - **Real-time updates** — SSE for live application pipeline status
 - **Mock interviews (Premium)** — Practice by **text chat or a natural voice conversation** (Azure OpenAI Realtime API via WebRTC, Sweden Central/EU). The AI interviewer adapts to the job and scores your answers with the same feedback engine as the text flow; the voice interviewer opens with a persona-led introduction and grounds its questions in your saved profile (experience, projects, skills). You pick the call length (5/10/15 min, clamped by the session cap and your monthly voice budget) — the interviewer paces itself, announces when about a minute is left, and closes when time is up. No audio is stored — only the transcript + feedback.
-- **Email tracking (Premium)** — Connect Outlook/Microsoft 365; smart-apply detects company replies (interview invites, confirmations, rejections) and updates the application status automatically. No email bodies are persisted.
+- **Email tracking (Premium)** — Connect Outlook/Microsoft 365; applo detects company replies (interview invites, confirmations, rejections) and updates the application status automatically. No email bodies are persisted.
 - **Auth & security** — JWT in HttpOnly cookies, refresh-token rotation, multi-device sessions, OAuth (Google, Microsoft, Azure AD), 2FA (TOTP), CSRF, rate limiting, audit logs, Sentry
 - **Closed-beta gate** — Optional database-backed invite-code system on `POST /auth/register` (single-use, hashed, atomic redemption). Toggled at runtime via `REQUIRE_INVITE_CODES` Fly secret; admins issue codes via `POST /admin/invite-codes`. See [docs/guides/CLOSED_BETA_PLAN.md](./docs/guides/CLOSED_BETA_PLAN.md).
 - **Subscriptions** — Tiered plans with usage limits
@@ -72,9 +72,9 @@ cp apps/web/.env.example apps/web/.env
 # 4. Migrate & seed database (includes 50 PDF templates)
 #    Migrations + seed use DIRECT_URL when set (required for Neon),
 #    falling back to DATABASE_URL for plain Postgres.
-npm --workspace @smart-apply/api run prisma:migrate
-npm --workspace @smart-apply/api run prisma:seed
-npm --workspace @smart-apply/api run prisma:seed:templates
+npm --workspace @applo/api run prisma:migrate
+npm --workspace @applo/api run prisma:seed
+npm --workspace @applo/api run prisma:seed:templates
 
 # 5. Run API + Web in parallel (Turborepo)
 pnpm dev
@@ -91,13 +91,13 @@ pnpm dev
 
 ### Demo Login
 
-- **Email:** `demo@smartapply.com`
+- **Email:** `demo@applo.ai`
 - **Password:** `Demo123!`
 
 ## 📁 Project Structure
 
 ```text
-smart-apply/
+applo/
 ├── apps/
 │   ├── api/                      # NestJS backend (Port 3000)
 │   │   ├── src/
@@ -158,8 +158,8 @@ pnpm test:e2e
 pnpm test:all          # unit + integration + e2e
 
 # LLM output-quality eval harness (from apps/api; LLM-as-judge over golden fixtures)
-pnpm --filter @smart-apply/api eval:validate   # token-free fixture check
-pnpm --filter @smart-apply/api eval:llm        # real baseline (needs Azure creds)
+pnpm --filter @applo/api eval:validate   # token-free fixture check
+pnpm --filter @applo/api eval:llm        # real baseline (needs Azure creds)
 
 # Lint & typecheck
 pnpm lint
@@ -191,7 +191,7 @@ topology and [CONTRIBUTING.md](CONTRIBUTING.md) for the daily-use flow.
 | Environment | Trigger                                | Approval     | URL                                                                                |
 | ----------- | -------------------------------------- | ------------ | ---------------------------------------------------------------------------------- |
 | **Staging** | Push to `main`                         | None (auto)  | `smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev` |
-| **Prod**    | Tag push `v*.*.*` (via release-please) | Manual click | `api.smart-apply.io` + `smart-apply.io`                                            |
+| **Prod**    | Tag push `v*.*.*` (via release-please) | Manual click | `api.applo.ai` + `applo.ai`                                            |
 
 **Manual deploy commands** (rarely needed — CI handles both):
 
@@ -209,14 +209,14 @@ cd apps/web && pnpm cf:deploy
 cd apps/web && pnpm cf:deploy:staging
 ```
 
-**Custom domain (`smart-apply.io`):**
+**Custom domain (`applo.ai`):**
 
 | Hostname              | Type  | Target                                    | Proxy    |
 | --------------------- | ----- | ----------------------------------------- | -------- |
-| `smart-apply.io`      | —     | Cloudflare Worker (Custom Domain binding) | 🟧       |
-| `www.smart-apply.io`  | —     | Cloudflare Worker (Custom Domain binding) | 🟧       |
-| `api.smart-apply.io`  | CNAME | `93ke51y.smart-apply-api.fly.dev`         | 🟧       |
-| `_acme-challenge.api` | CNAME | `api.smart-apply.io.93ke51y.flydns.net`   | DNS only |
+| `applo.ai`      | —     | Cloudflare Worker (Custom Domain binding) | 🟧       |
+| `www.applo.ai`  | —     | Cloudflare Worker (Custom Domain binding) | 🟧       |
+| `api.applo.ai`  | CNAME | `93ke51y.smart-apply-api.fly.dev`         | 🟧       |
+| `_acme-challenge.api` | CNAME | `api.applo.ai.93ke51y.flydns.net`   | DNS only |
 | `_fly-ownership.api`  | TXT   | `app-93ke51y`                             | —        |
 
 Full walkthrough (Fly cert issuance, Cloudflare proxy gotchas, runtime API URL

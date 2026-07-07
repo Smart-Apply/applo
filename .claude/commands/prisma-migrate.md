@@ -11,10 +11,10 @@ Create and apply a Prisma migration named `$ARGUMENTS` against the **local** dev
 These rules have caused real production incidents — follow them exactly:
 
 1. **Generate via the workspace script, not bare prisma:**
-   `pnpm --filter @smart-apply/api prisma:migrate -- --name $ARGUMENTS`
+   `pnpm --filter @applo/api prisma:migrate -- --name $ARGUMENTS`
    (this is `prisma migrate dev`; the Prisma CLI uses `DIRECT_URL`, the unpooled Neon URL — transaction-mode poolers can't run Migrate. `DIRECT_URL` falls back to `DATABASE_URL` for local Docker Postgres.)
 2. **Regenerate the client the sanitized way — NEVER bare `prisma generate` / `npx prisma generate`:**
-   `pnpm --filter @smart-apply/api prisma:generate`
+   `pnpm --filter @applo/api prisma:generate`
    Bare generate skips `apps/api/scripts/sanitize-prisma-client.js`. Without it `nest start` crashes with `ReferenceError: exports is not defined in ES module scope`. If you hit that, also `rm -rf dist/apps/api` before restarting.
 3. **Forward-only.** We never write `down` migrations — rollback is Neon point-in-time-restore. Commit the generated `migration.sql`.
 4. **Destructive changes (DROP / RENAME / type change) use expand → migrate → contract across two releases.** Never DROP a column in the same release as the code that stopped using it.

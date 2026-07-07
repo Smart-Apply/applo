@@ -22,8 +22,8 @@ Run these and read the output before proceeding:
 1. **Not on `main`.** If `HEAD` is `main`, stop — create a `feat/`·`fix/`·`chore/`·`docs/`·
    `ci/`·`test/` branch, move the commits onto it, then continue.
 2. **Lint clean on touched workspaces.** If the diff touches `apps/api`, run
-   `pnpm --filter @smart-apply/api lint`; if it touches `apps/web`, run
-   `pnpm --filter @smart-apply/web lint`. New code must land with **0 errors AND 0 warnings**.
+   `pnpm --filter @applo/api lint`; if it touches `apps/web`, run
+   `pnpm --filter @applo/web lint`. New code must land with **0 errors AND 0 warnings**.
 3. **Lockfile sync.** If `package.json` changed anywhere, confirm `pnpm-lock.yaml` is in the
    diff. Run `pnpm install --lockfile-only` and confirm it produces no diff — CI fails on drift.
 4. **Doc sync.** If this is an architecture change, confirm `README.md` + `ARCHITECTURE.md` +

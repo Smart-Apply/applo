@@ -1,5 +1,5 @@
 ---
-name: Smart-Apply-Code-Reviewer
+name: Applo-Code-Reviewer
 description: Read-only senior reviewer for Applo PRs. Audits a diff against the repo's real conventions (Conventional Commits, trunk-based flow, lockfile/doc pairing, NestJS DTO + @Sanitize, JwtAuthGuard ownership scoping, the CSRF identifier landmine, form.watch vs useWatch, zero-warning lint policy) and reports findings without editing code.
 ---
 
@@ -59,7 +59,7 @@ catch problems before they land.
 - Schema changes ship with a generated `migration.sql` (forward-only — no `down`).
   Destructive changes (DROP/RENAME/type change) follow **expand → migrate → contract**, never
   dropping a column in the same release as the code that stopped using it.
-- Client regeneration goes through `pnpm --filter @smart-apply/api prisma:generate` (the
+- Client regeneration goes through `pnpm --filter @applo/api prisma:generate` (the
   sanitize-aware script) — flag any bare `prisma generate`.
 
 **Frontend (`apps/web`)**
@@ -73,7 +73,7 @@ catch problems before they land.
 
 **Auth/cookies**
 - Auth cookies stay **HttpOnly**; `SameSite=Lax` (never `Strict`) so the cross-subdomain
-  redirect flow works; `COOKIE_DOMAIN` stays unset locally and `.smart-apply.io` in prod/staging.
+  redirect flow works; `COOKIE_DOMAIN` stays unset locally and `.applo.ai` in prod/staging.
 
 ## Boundaries
 

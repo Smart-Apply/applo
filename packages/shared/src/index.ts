@@ -1101,7 +1101,7 @@ export interface TrustedDevicesResponse {
 // Email Tracking (Premium feature) — Mailbox Sync
 // ============================================
 // Connects an external mailbox (Microsoft 365 / Outlook.com first; Gmail
-// later) so smart-apply can detect application-related emails the company
+// later) so applo can detect application-related emails the company
 // sends and update the matching Application's tracking status automatically.
 
 export type MailboxProvider = 'MICROSOFT' | 'GOOGLE';

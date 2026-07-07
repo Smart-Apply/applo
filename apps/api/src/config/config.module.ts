@@ -5,8 +5,8 @@ import { existsSync } from 'fs';
 import { validateEnv } from './env.schema';
 import { ConfigService } from './config.service';
 
-// __dirname in dist: /Users/arian/VS-Projects/smart-apply/dist/apps/api/config
-// .env location:    /Users/arian/VS-Projects/smart-apply/apps/api/.env
+// __dirname in dist: /Users/arian/VS-Projects/applo/dist/apps/api/config
+// .env location:    /Users/arian/VS-Projects/applo/apps/api/.env
 // Need to go up 4 levels from dist to root, then down to apps/api/.env
 const apiRoot = join(__dirname, '../../../../apps/api');
 const baseEnv = join(apiRoot, '.env');

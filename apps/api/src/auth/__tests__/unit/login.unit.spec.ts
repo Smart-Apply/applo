@@ -23,7 +23,7 @@ describe('AuthService.login (Unit)', () => {
 
   const mockUser = {
     id: 'user-id-123',
-    email: 'test@smartapply.com',
+    email: 'test@applo.ai',
     password: 'hashedPassword123',
     firstName: 'Test',
     lastName: 'User',

@@ -1,5 +1,5 @@
 ---
-name: Smart-Apply-Full-Stack-Agent
+name: Applo-Full-Stack-Agent
 description: AI-powered job application assistant - NestJS backend + Next.js 16 frontend with Azure integration for generating tailored cover letters and resumes
 ---
 

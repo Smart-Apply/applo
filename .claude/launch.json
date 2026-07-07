@@ -11,14 +11,14 @@
     {
       "name": "web-only",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@smart-apply/web", "dev"],
+      "runtimeArgs": ["--filter", "@applo/web", "dev"],
       "port": 3001,
       "autoPort": false
     },
     {
       "name": "api",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@smart-apply/api", "dev"],
+      "runtimeArgs": ["--filter", "@applo/api", "dev"],
       "port": 3000,
       "autoPort": false
     },

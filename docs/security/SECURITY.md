@@ -105,14 +105,14 @@ _This feature is not currently implemented but recommended for post-MVP._
 
 ```bash
 # Test authentication with new deployment
-curl -X POST https://api.smartapply.com/api/v1/auth/login \
+curl -X POST https://api.applo.ai/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"testpass"}'
 
 # Verify token is valid
 TOKEN="<token-from-response>"
 curl -H "Authorization: Bearer $TOKEN" \
-  https://api.smartapply.com/api/v1/auth/me
+  https://api.applo.ai/api/v1/auth/me
 ```
 
 #### Step 5: Document Rotation

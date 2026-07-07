@@ -33,5 +33,5 @@ The global pipe (`apps/api/src/main.ts`) runs `whitelist: true, transform: true`
 
 ## Constraints
 - TypeScript strict — no `any` (use `unknown` + a guard).
-- 0 ESLint errors and warnings: `pnpm --filter @smart-apply/api lint`.
+- 0 ESLint errors and warnings: `pnpm --filter @applo/api lint`.
 - Keep examples/placeholders profession-neutral — Applo serves all industries, German-first copy.

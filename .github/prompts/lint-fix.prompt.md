@@ -12,8 +12,8 @@ Workspace to lint: `${input:workspace:api | web | both}`
 
 ## Run the linters
 
-- API: `pnpm --filter @smart-apply/api lint`
-- Web: `pnpm --filter @smart-apply/web lint`
+- API: `pnpm --filter @applo/api lint`
+- Web: `pnpm --filter @applo/web lint`
 - Both: run each in turn.
 
 Apply autofixes where safe (`eslint --fix` via the workspace `lint` script or

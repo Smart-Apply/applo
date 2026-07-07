@@ -19,7 +19,7 @@ When invoked, scope to the change (`git diff origin/main...HEAD`), read the touc
 
 ## Applo specifics
 - **CSRF:** `getSessionIdentifier` (`apps/api/src/main.ts`) is a constant; machine-to-machine webhooks (`/jobs/qstash-webhook`, `/mailbox-sync/microsoft/webhook`) are in the CSRF/throttle skip-list since route decorators don't exempt the Express-level middleware.
-- **Cookies:** `SameSite=Lax`, correct `Domain` (`.smart-apply.io` in prod/staging, unset locally), symmetric set/clear attributes.
+- **Cookies:** `SameSite=Lax`, correct `Domain` (`.applo.ai` in prod/staging, unset locally), symmetric set/clear attributes.
 - **Secrets:** nothing committed; `.env`, `*-secrets.env`, `*.bak` stay gitignored; new secrets are placeholders in `.env.example` and set via Fly / Cloudflare secrets.
 
 ## Output

@@ -44,7 +44,7 @@ npm run cf:deploy                            # build + wrangler deploy
 ```
 
 See [docs/guides/DOMAIN_CLOUDFLARE_SETUP.md](../docs/guides/DOMAIN_CLOUDFLARE_SETUP.md)
-for the custom-domain setup (apex + www on Workers, `api.smart-apply.io` on
+for the custom-domain setup (apex + www on Workers, `api.applo.ai` on
 Fly via Cloudflare proxy).
 
 ## Historical note

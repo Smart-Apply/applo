@@ -227,7 +227,7 @@ We use [`release-please`](https://github.com/googleapis/release-please-action) f
    - Bumped `package.json` versions
    - Updated [CHANGELOG.md](CHANGELOG.md) with all entries grouped by type
 4. **You merge the Release PR when you want to ship.** This creates a Git tag `v1.2.0`.
-5. The tag push triggers [`deploy-prod.yml`](.github/workflows/deploy-prod.yml) → blocks at the `production` environment gate → you click **Approve and deploy** → live on smart-apply.io.
+5. The tag push triggers [`deploy-prod.yml`](.github/workflows/deploy-prod.yml) → blocks at the `production` environment gate → you click **Approve and deploy** → live on applo.ai.
 
 ### Batching releases
 
@@ -264,7 +264,7 @@ There's no "skip staging" path. Even hotfixes go through the full pipeline. The 
 | Trigger                      | Workflow                                                     | Target                                                                                | Approval     |
 | ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------- | ------------ |
 | Push to `main`               | [`deploy-staging.yml`](.github/workflows/deploy-staging.yml) | `smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev`    | Auto         |
-| Tag `v*.*.*` push            | [`deploy-prod.yml`](.github/workflows/deploy-prod.yml)       | `api.smart-apply.io` + `smart-apply.io`                                               | Manual click |
+| Tag `v*.*.*` push            | [`deploy-prod.yml`](.github/workflows/deploy-prod.yml)       | `api.applo.ai` + `applo.ai`                                               | Manual click |
 | `workflow_dispatch` (manual) | Either workflow                                              | The corresponding env                                                                  | Per env rule |
 
 ### Rolling back
@@ -391,4 +391,4 @@ curl https://smart-apply-api-staging.fly.dev/api/v1/health | jq
 
 ## Questions?
 
-Open a [discussion](https://github.com/Smart-Apply/smart-apply/discussions) or DM the maintainer. For bug reports, open an [issue](https://github.com/Smart-Apply/smart-apply/issues).
+Open a [discussion](https://github.com/applo/applo/discussions) or DM the maintainer. For bug reports, open an [issue](https://github.com/applo/applo/issues).

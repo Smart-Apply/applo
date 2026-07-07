@@ -1,4 +1,4 @@
-import { type AiPromptSurface, type PromptUsage, evaluatePromptUsage } from '@smart-apply/shared';
+import { type AiPromptSurface, type PromptUsage, evaluatePromptUsage } from '@applo/shared';
 import { ErrorCode } from '../constants/error-codes';
 import { BadRequestWithCode } from '../exceptions/coded-http.exception';
 import { countPromptTokens } from './prompt-token-counter';

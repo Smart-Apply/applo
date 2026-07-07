@@ -24,7 +24,7 @@
 
 set -euo pipefail
 
-PROD_API_BASE="https://api.smart-apply.io/api/v1"
+PROD_API_BASE="https://api.applo.ai/api/v1"
 STAGING_API_BASE="https://smart-apply-api-staging.fly.dev/api/v1"
 
 VALID_TIERS=("FREE" "PREMIUM" "PREMIUM_PLUS")

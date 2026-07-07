@@ -230,7 +230,7 @@ Cron jobs run automatically in the API container. No additional configuration re
 # Check logs in Azure Portal
 az containerapp logs show \
   --name smart-apply-api \
-  --resource-group smart-apply-rg \
+  --resource-group applo-rg \
   --follow
 ```
 

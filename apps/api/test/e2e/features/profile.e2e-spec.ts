@@ -29,7 +29,7 @@ describe('ProfileController (e2e)', () => {
     const loginResponse = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({
-        email: 'demo@smartapply.com',
+        email: 'demo@applo.ai',
         password: 'Demo123!',
       })
       .expect(201);

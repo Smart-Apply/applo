@@ -12,8 +12,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AI_PROMPT_HARD_CEILING_CHARS } from '@smart-apply/shared';
-import type { VoiceTranscriptRole } from '@smart-apply/shared';
+import { AI_PROMPT_HARD_CEILING_CHARS } from '@applo/shared';
+import type { VoiceTranscriptRole } from '@applo/shared';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 
 /** A single turn of the spoken interview transcript. */

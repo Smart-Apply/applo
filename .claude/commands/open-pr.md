@@ -17,8 +17,8 @@ Applo runs **trunk-based** with one long-lived branch (`main`) and **squash-merg
 
 1. **Refuse to continue on `main`.** If the branch is `main`, stop and tell me to move the work to a `feat/`|`fix/`|`chore/`|`docs/`|`ci/`|`test/` branch first.
 2. **Pre-flight (block the PR on failures):**
-   - If `apps/web/**` changed: `pnpm --filter @smart-apply/web lint` → must exit clean (0 errors AND 0 warnings).
-   - If `apps/api/**` changed: `pnpm --filter @smart-apply/api lint`.
+   - If `apps/web/**` changed: `pnpm --filter @applo/web lint` → must exit clean (0 errors AND 0 warnings).
+   - If `apps/api/**` changed: `pnpm --filter @applo/api lint`.
    - If any `package.json` changed: confirm the matching `pnpm-lock.yaml` change is committed in this branch (CI's `lint-and-typecheck` job blocks on lockfile drift).
    - If `apps/api/prisma/schema.prisma` changed: confirm a `migration.sql` exists for it.
 3. **Doc-sync gate:** if this branch changes architecture (new module/route group, Prisma model, pluggable provider, endpoint, deploy topology, major dep), confirm `README.md`, `ARCHITECTURE.md`, and `.github/copilot-instructions.md` were updated in the same branch. Treat missing doc updates as a blocker.

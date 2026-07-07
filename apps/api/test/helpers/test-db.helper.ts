@@ -36,7 +36,7 @@ export class TestDbHelper {
   async seedTestData(): Promise<TestData> {
     const user = await this.prisma.user.create({
       data: {
-        email: 'test@smartapply.com',
+        email: 'test@applo.ai',
         password: 'hashedPassword123',
         firstName: 'Test',
         lastName: 'User',

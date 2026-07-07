@@ -98,7 +98,7 @@ fly secrets set --app smart-apply-api \
 
 # 3. Wait for rolling restart, verify
 sleep 30
-curl -s https://api.smart-apply.io/api/v1/health | head -c 200
+curl -s https://api.applo.ai/api/v1/health | head -c 200
 
 # 4. Repeat for STAGING (different value — never share JWT secrets across envs)
 NEW_JWT_STAGING=$(openssl rand -base64 64 | tr -d '\n')
@@ -183,7 +183,7 @@ fly secrets set --app smart-apply-api-staging \
 # Open in your editor, replace npg_OLD with the new password in DATABASE_URL/DIRECT_URL
 
 # ── Step 5: Verify both ──
-curl -s https://api.smart-apply.io/api/v1/health | jq '.data.info.database'
+curl -s https://api.applo.ai/api/v1/health | jq '.data.info.database'
 curl -s https://smart-apply-api-staging.fly.dev/api/v1/health | jq '.data.info.database'
 
 # ── Step 6: Forget ──
@@ -269,7 +269,7 @@ fly secrets set --app smart-apply-api-staging  AZURE_OPENAI_API_KEY="$NEW_AZURE_
 
 # Verify
 sleep 30
-curl -s https://api.smart-apply.io/api/v1/health | jq '.data.info.llm'
+curl -s https://api.applo.ai/api/v1/health | jq '.data.info.llm'
 curl -s https://smart-apply-api-staging.fly.dev/api/v1/health | jq '.data.info.llm'
 
 # Now invalidate the OLD key in Azure Portal (regenerate KEY 1)
@@ -309,7 +309,7 @@ done
 
 # ── Step 3: Verify queue subcheck on both ──
 sleep 30
-curl -s https://api.smart-apply.io/api/v1/health | jq '.data.info.queue'
+curl -s https://api.applo.ai/api/v1/health | jq '.data.info.queue'
 curl -s https://smart-apply-api-staging.fly.dev/api/v1/health | jq '.data.info.queue'
 
 unset NEW_TOKEN NEW_CURRENT NEW_NEXT
@@ -363,7 +363,7 @@ max). All three providers email you reminders ~30 days before expiry.
 # Or "Reset Secret" (immediate, breaks logins until new value is deployed)
 
 # ── For Microsoft / Azure AD ──
-# portal.azure.com → Entra ID → App registrations → smart-apply →
+# portal.azure.com → Entra ID → App registrations → applo →
 #   Certificates & secrets → New client secret
 # Multiple secrets can coexist — preferred for zero-downtime.
 
@@ -375,7 +375,7 @@ fly secrets set --app smart-apply-api \
 # Staging usually doesn't have OAuth configured — skip unless you set it up.
 
 # ── Verify ──
-# Open https://smart-apply.io in a private window → Sign in with Google
+# Open https://applo.ai in a private window → Sign in with Google
 ```
 
 ---
@@ -419,8 +419,8 @@ affect the running Worker.
 ```bash
 # ── Step 1: Cloudflare dashboard ──
 # My Profile → API Tokens → Create Token → "Edit Cloudflare Workers" template
-#   Account resources: Include → smart-apply
-#   Zone resources: Include → smart-apply.io
+#   Account resources: Include → applo
+#   Zone resources: Include → applo.ai
 #   TTL: 1 year
 # Copy the value.
 

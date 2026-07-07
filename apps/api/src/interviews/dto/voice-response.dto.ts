@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { RealtimeVoice } from '@smart-apply/shared';
+import type { RealtimeVoice } from '@applo/shared';
 
 /**
  * Ephemeral voice session handed to the browser. Contains only a short-lived

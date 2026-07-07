@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsInt, Min, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AI_PROMPT_HARD_CEILING_CHARS } from '@smart-apply/shared';
+import { AI_PROMPT_HARD_CEILING_CHARS } from '@applo/shared';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 
 /**

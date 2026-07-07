@@ -10,7 +10,7 @@ import { hardReloadWithCacheBust } from '@/lib/hard-reload';
  * SW update (or vice-versa) updates the existing toast instead of
  * stacking a second copy.
  */
-const UPDATE_TOAST_ID = 'smart-apply-update-available';
+const UPDATE_TOAST_ID = 'applo-update-available';
 
 /**
  * Module-level guard so a single page load only ever performs ONE

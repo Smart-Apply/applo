@@ -1,10 +1,10 @@
-# Security Audit — Applo (smart-apply) — 2026-07-03
+# Security Audit — Applo (applo) — 2026-07-03
 
 Read-only static audit. No code modified, no live/dynamic testing, no traffic sent to prod. Scope: `apps/api/**`, `apps/web/**`, `packages/shared/**`, Prisma schema/migrations, infra/IaC, workflows, `.env.example` files, and dependency manifests.
 
 ## 1. Executive summary
 
-Overall posture is **strong**. The auth core is well-built: constant CSRF `getSessionIdentifier` (`'smart-apply'`), argon2id password + refresh-token hashing, AES-256-GCM token cipher with per-call random IV and auth-tag verification, HttpOnly/Secure/SameSite=Lax cookies with matching clear-domains, AdminGuard that fails closed on empty `ADMIN_EMAILS`, SHA-256 hashed one-time password-reset/verify tokens with expiry, and signature-verified QStash + Graph webhooks. Ownership scoping is consistently applied across applications, job-postings, interviews, validation, sessions, and mailbox connections. No `$queryRawUnsafe`, no committed secrets, gitignore correctly covers `.env`, `*-secrets.env`, and `invite-codes-*.json`.
+Overall posture is **strong**. The auth core is well-built: constant CSRF `getSessionIdentifier` (`'applo'`), argon2id password + refresh-token hashing, AES-256-GCM token cipher with per-call random IV and auth-tag verification, HttpOnly/Secure/SameSite=Lax cookies with matching clear-domains, AdminGuard that fails closed on empty `ADMIN_EMAILS`, SHA-256 hashed one-time password-reset/verify tokens with expiry, and signature-verified QStash + Graph webhooks. Ownership scoping is consistently applied across applications, job-postings, interviews, validation, sessions, and mailbox connections. No `$queryRawUnsafe`, no committed secrets, gitignore correctly covers `.env`, `*-secrets.env`, and `invite-codes-*.json`.
 
 Two real gaps stand out: **SSRF on the job-posting URL fetch** and an **IDOR/path-traversal on the file-parse path**. One stored-XSS regression violates the repo's own `sanitizeHtml` convention.
 
@@ -89,6 +89,6 @@ Counts by severity: **High 2, Medium 2, Low 2, Info 2** (plus dependency CVEs).
 - Confirm `CORS_ORIGINS` / `COOKIE_DOMAIN` Fly secrets in prod aren't wildcarded (operator-set, not in code).
 
 ## 5. Not covered
-No dynamic/DAST testing, no pen-testing, no traffic to `api.smart-apply.io` / `smart-apply.io`, no exploitation, no credential use, no third-party/outbound calls. Prod infra (Fly machines, Cloudflare Worker runtime, R2 bucket policy, nginx real-IP config) reviewed only as represented in committed IaC/config — not against the live environment. `pnpm audit` reflects the current lockfile only.
+No dynamic/DAST testing, no pen-testing, no traffic to `api.applo.ai` / `applo.ai`, no exploitation, no credential use, no third-party/outbound calls. Prod infra (Fly machines, Cloudflare Worker runtime, R2 bucket policy, nginx real-IP config) reviewed only as represented in committed IaC/config — not against the live environment. `pnpm audit` reflects the current lockfile only.
 
 **Ruled-out false positives:** `metric-tip.tsx` and `faq` `jsonLd` `dangerouslySetInnerHTML` (developer-controlled static content); resume/cover-letter previews (correctly `sanitizeHtml`-wrapped); CSRF `getSessionIdentifier` (correct constant); AdminGuard (fails closed); `TokenCipher` (correct GCM/IV/tag); QStash + Graph webhooks (signature/clientState verified); voice provider (standing Azure key never sent to browser); ownership scoping on applications/interviews/validation/sessions/mailbox.

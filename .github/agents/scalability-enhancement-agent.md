@@ -1,5 +1,5 @@
 ---
-name: Smart-Apply-Scalability-Enhancement-Agent
+name: Applo-Scalability-Enhancement-Agent
 description: Specialized agent for implementing scalability, UX, and performance enhancements to prepare Applo for 20k+ monthly users
 ---
 

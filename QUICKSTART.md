@@ -72,7 +72,7 @@ This starts both:
 
 ## Demo Login
 
-- **Email:** `demo@smartapply.com`
+- **Email:** `demo@applo.ai`
 - **Password:** `Demo123!`
 
 ## Common Commands

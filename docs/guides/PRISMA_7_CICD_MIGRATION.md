@@ -108,13 +108,13 @@ import { PrismaClient } from '../src/generated/prisma/client';
 
 ```bash
 # 1. Docker Build testen
-cd /Users/arian/VS-Projects/smart-apply
+cd /Users/arian/VS-Projects/applo
 docker build -f infra/Dockerfile -t smartapply-api:test .
 
 # 2. Container starten (mit DB)
 docker-compose up -d db
 docker run --rm \
-  --network smart-apply_default \
+  --network applo_default \
   -e DATABASE_URL="postgresql://postgres:postgres@db:5432/smartapply" \
   -p 3000:3000 \
   smartapply-api:test
@@ -133,7 +133,7 @@ docker exec -it <container-id> npm run prisma:seed
 ssh azureuser@smartapplymvp.swedencentral.cloudapp.azure.com
 
 # Logs prüfen
-cd /home/azureuser/smart-apply
+cd /home/azureuser/applo
 docker-compose logs api
 
 # Prisma Client prüfen

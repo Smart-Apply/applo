@@ -16,9 +16,9 @@
 // service-worker-registration.tsx triggers exactly one cache-busting
 // reload per client when the new SW takes over.
 const CACHE_VERSION = 'v6';
-const CACHE_NAME = `smart-apply-${CACHE_VERSION}`;
-const STATIC_CACHE_NAME = `smart-apply-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE_NAME = `smart-apply-dynamic-${CACHE_VERSION}`;
+const CACHE_NAME = `applo-${CACHE_VERSION}`;
+const STATIC_CACHE_NAME = `applo-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE_NAME = `applo-dynamic-${CACHE_VERSION}`;
 
 // Static assets to cache immediately
 const STATIC_ASSETS = [

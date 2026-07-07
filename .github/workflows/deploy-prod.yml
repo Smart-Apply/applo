@@ -21,9 +21,9 @@ name: Deploy → Production
 #     CLOUDFLARE_API_TOKEN   — Worker:Edit
 #     CLOUDFLARE_ACCOUNT_ID  — Cloudflare account ID (avoids /memberships lookup)
 #   Variables:
-#     PUBLIC_API_URL         — https://api.smart-apply.io/api/v1
+#     PUBLIC_API_URL         — https://api.applo.ai/api/v1
 #     FLY_APP                — smart-apply-api
-#     HEALTH_CHECK_HOST      — api.smart-apply.io
+#     HEALTH_CHECK_HOST      — api.applo.ai
 #     TURNSTILE_SITE_KEY     — public CAPTCHA site key
 #     SENTRY_DSN_WEB         — public Sentry DSN
 
@@ -49,7 +49,7 @@ env:
   #   PUBLIC_API_URL    — baked into the CF Worker bundle at build time.
   #   FLY_APP           — Fly app name. Override only if you fork or rename.
   #   HEALTH_CHECK_HOST — hostname used for the post-deploy health check.
-  PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL || 'https://api.smart-apply.io/api/v1' }}
+  PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL || 'https://api.applo.ai/api/v1' }}
   FLY_APP: ${{ vars.FLY_APP || 'smart-apply-api' }}
   HEALTH_CHECK_HOST: ${{ vars.HEALTH_CHECK_HOST || 'smart-apply-api.fly.dev' }}
 
@@ -232,7 +232,7 @@ jobs:
         # `--filter` includes the workspace's transitive workspace deps via
         # the `...` suffix — web pulls shared via local symlink. Dev deps
         # are included by default unless --prod is passed.
-        run: pnpm install --frozen-lockfile --filter @smart-apply/web... --filter @smart-apply/shared...
+        run: pnpm install --frozen-lockfile --filter @applo/web... --filter @applo/shared...
 
       - name: Build shared package
         run: pnpm shared:build
@@ -249,14 +249,14 @@ jobs:
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ vars.SENTRY_DSN_WEB }}
           NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
-        run: pnpm --filter @smart-apply/web cf:deploy
+        run: pnpm --filter @applo/web cf:deploy
 
       - name: Smoke test deployed Worker
         run: |
-          echo "⏳ Verifying https://smart-apply.io/register loads..."
+          echo "⏳ Verifying https://applo.ai/register loads..."
           sleep 5
           for i in {1..6}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://smart-apply.io/register)
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://applo.ai/register)
             if [ "$code" = "200" ]; then
               echo "✅ /register returned 200"
               exit 0

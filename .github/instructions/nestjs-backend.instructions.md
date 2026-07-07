@@ -119,10 +119,10 @@ export class ThingsService {
 
 - Update Swagger decorators so `/docs` reflects the change.
 - If you changed `schema.prisma`, generate a forward-only migration via the `/prisma-migrate`
-  prompt and regenerate the client with `pnpm --filter @smart-apply/api prisma:generate`
+  prompt and regenerate the client with `pnpm --filter @applo/api prisma:generate`
   (never a bare `prisma generate`).
 - If you added/changed an endpoint or module, update `README.md` + `ARCHITECTURE.md` +
   `.github/copilot-instructions.md` (API Endpoints / Backend Modules sections) in the same
   change set — doc sync is mandatory.
-- Lint clean: `pnpm --filter @smart-apply/api lint` → **0 errors, 0 warnings**. No `any`
+- Lint clean: `pnpm --filter @applo/api lint` → **0 errors, 0 warnings**. No `any`
   (use `unknown` + a guard).

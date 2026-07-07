@@ -49,7 +49,7 @@ COPY apps/api/prisma ./apps/api/prisma
 COPY apps/api/scripts ./apps/api/scripts
 
 # Install full workspace (dev deps included — needed for nest build, tsc, swc).
-# `--filter @smart-apply/api...` would skip the web workspace, but we need
+# `--filter @applo/api...` would skip the web workspace, but we need
 # turbo to be able to build packages/shared too, so install the full graph.
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
@@ -65,18 +65,18 @@ COPY apps/api/prompts ./apps/api/prompts
 COPY turbo.json ./
 
 # Build shared first (api imports its compiled output).
-RUN pnpm --filter @smart-apply/shared build
+RUN pnpm --filter @applo/shared build
 
 # Re-run prisma generate so the post-generate sanitizer picks up the now-present
 # scripts/sanitize-prisma-client.js. Needed because the postinstall during
 # `pnpm install` ran before scripts/ was copied (the `|| true` swallows the
 # missing-file error there). See apps/api/scripts/sanitize-prisma-client.js
 # and the repo memory note about Node 24 + Prisma client ESM compatibility.
-RUN pnpm --filter @smart-apply/api prisma:generate
+RUN pnpm --filter @applo/api prisma:generate
 
 # Build the Nest app — outputs to workspace-root dist/apps/api/ per
 # apps/api/tsconfig.json#outDir.
-RUN pnpm --filter @smart-apply/api build
+RUN pnpm --filter @applo/api build
 
 # Compile Prisma seed scripts to JavaScript so the runtime image doesn't need
 # ts-node. Output goes to apps/api/prisma/dist/.
@@ -86,7 +86,7 @@ RUN echo '{"extends":"./tsconfig.json","compilerOptions":{"module":"commonjs","t
 # ---------------------------------------------------------------------------
 # Stage 2: deployer — `pnpm deploy --prod` for a clean isolated tree
 # ---------------------------------------------------------------------------
-# `pnpm deploy` resolves @smart-apply/shared (a workspace dep) into a real
+# `pnpm deploy` resolves @applo/shared (a workspace dep) into a real
 # copy inside node_modules so the production stage doesn't need a symlink
 # back into packages/shared.
 #
@@ -94,7 +94,7 @@ RUN echo '{"extends":"./tsconfig.json","compilerOptions":{"module":"commonjs","t
 # dedicated lockfile directly from the already-resolved root pnpm-lock.yaml —
 # a local, network-free operation — then does a headless install from it.
 # Requires `injectWorkspacePackages: true` in pnpm-workspace.yaml (hard-copies
-# workspace deps like @smart-apply/shared instead of symlinking them).
+# workspace deps like @applo/shared instead of symlinking them).
 # `--legacy` re-resolves the ENTIRE dependency graph from scratch/network
 # instead, which queries the registry for every optional platform variant of
 # every resolver (@unrs/resolver-binding-*, incl. android/freebsd/wasm32/
@@ -105,7 +105,7 @@ FROM builder AS deployer
 WORKDIR /app
 
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm --filter @smart-apply/api deploy --prod /prod/api
+    pnpm --filter @applo/api deploy --prod /prod/api
 
 # ---------------------------------------------------------------------------
 # Stage 3: production runtime
