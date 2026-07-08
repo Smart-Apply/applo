@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.5.1](https://github.com/Smart-Apply/smart-apply/compare/v4.5.0...v4.5.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* **web:** restore 'unsafe-inline' on prod CSP script-src to unblock hydration ([#648](https://github.com/Smart-Apply/smart-apply/issues/648)) ([4540725](https://github.com/Smart-Apply/smart-apply/commit/454072509f4856be8f0b86667ddc521f260dbed0))
+
 ## [4.5.0](https://github.com/Smart-Apply/smart-apply/compare/v4.4.1...v4.5.0) (2026-07-07)
 
 
