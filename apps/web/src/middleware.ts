@@ -86,17 +86,23 @@ export function middleware(request: NextRequest) {
   // Note: 'unsafe-eval' is required for Handlebars template compilation in the browser
   // This is needed for the template preview feature which renders Handlebars templates client-side
   //
-  // Security audit F5 (Low): 'unsafe-inline' on script-src is dropped in
-  // production. There is no legitimate inline-JS or inline-event-handler
-  // (onclick=...) usage in the app — the only inline <script> tag
-  // (faq/page.tsx JSON-LD) is `type="application/ld+json"`, which CSP's
-  // script-src does not govern (it isn't executable JS). Kept in
-  // development only, as a safety net for Next's dev-mode HMR/Fast Refresh
-  // overlay, which can inject inline scripts that don't ship in a
-  // production build.
-  const scriptSrc = isDevelopment
-    ? `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${turnstileOrigin} ${cloudflareInsightsOrigin}`
-    : `script-src 'self' 'unsafe-eval' ${turnstileOrigin} ${cloudflareInsightsOrigin}`;
+  // 'unsafe-inline' is REQUIRED on script-src in ALL environments: Next.js
+  // App Router injects executable inline <script> tags into every SSR
+  // document to bootstrap the webpack runtime and stream the RSC flight
+  // payload (self.__next_f.push([...])). CSP's script-src DOES govern those,
+  // so without 'unsafe-inline' (and with no nonce/hash) the browser blocks
+  // them, React never hydrates, and every client-rendered route (login,
+  // register, dashboard) renders blank while static pages still appear.
+  //
+  // History: a prior "F5" hardening dropped 'unsafe-inline' in production on
+  // the mistaken assumption the app had no inline JS (only the faq JSON-LD,
+  // which is type="application/ld+json" and genuinely ungoverned). That broke
+  // production login the first time it shipped (the v4.5.0 applo.ai cutover —
+  // prod only deploys on tags, so the change had merely soaked on staging).
+  // To reintroduce that hardening safely, switch to a per-request nonce and
+  // propagate it to Next via the x-nonce request header — do NOT simply drop
+  // 'unsafe-inline' again.
+  const scriptSrc = `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${turnstileOrigin} ${cloudflareInsightsOrigin}`;
 
   const csp = [
     "default-src 'self'",
