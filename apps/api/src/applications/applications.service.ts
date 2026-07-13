@@ -2882,6 +2882,8 @@ export class ApplicationsService {
   ): Promise<ApplicationResponseDto> {
     this.logger.log(`Updating application ${applicationId} status to ${status} for user ${userId}`);
 
+    await this.ensureApplicationOwnership(userId, applicationId);
+
     // Update status and timestamp. We mark `statusSource = USER` so the
     // mailbox-sync notification logic knows NOT to send a "status changed"
     // email — the user already knows, they just clicked the dropdown.
@@ -2911,6 +2913,8 @@ export class ApplicationsService {
   ): Promise<ApplicationResponseDto> {
     this.logger.log(`Updating application ${applicationId} title for user ${userId}`);
 
+    await this.ensureApplicationOwnership(userId, applicationId);
+
     // Update title (validation already handled by DTO)
     const updated = await this.prisma.application.update({
       where: { id: applicationId },
@@ -2935,6 +2939,8 @@ export class ApplicationsService {
     targetJobTitle: string,
   ): Promise<ApplicationResponseDto> {
     this.logger.log(`Updating application ${applicationId} target job title for user ${userId}`);
+
+    await this.ensureApplicationOwnership(userId, applicationId);
 
     // Update targetJobTitle (validation already handled by DTO)
     const updated = await this.prisma.application.update({

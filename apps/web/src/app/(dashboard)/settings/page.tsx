@@ -551,7 +551,12 @@ export default function SettingsPage() {
                 <PrefLoader />
               ) : (
                 <ThemeCards
-                  value={(preferences?.theme as 'system' | 'light' | 'dark') || 'system'}
+                  value={
+                    (((preferences?.theme as string) || 'system').toLowerCase() as
+                      | 'system'
+                      | 'light'
+                      | 'dark')
+                  }
                   onChange={(value) => handleUpdatePreference('theme', value)}
                 />
               )}

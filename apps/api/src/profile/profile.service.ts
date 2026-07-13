@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { TransactionClient } from '../prisma/prisma.types';
 import { UpdateProfileDto } from './dto/update-profile.dto';

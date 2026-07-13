@@ -9,7 +9,11 @@ export class AuthHelper {
 
   constructor() {
     this.jwtService = new JwtService({
-      secret: 'test-secret-key-minimum-64-characters-for-security-requirements',
+      // Must match the JWT_SECRET set in test/setup.ts, otherwise tokens
+      // signed here fail verification against the running app (→ 401).
+      secret:
+        process.env.JWT_SECRET ||
+        'test_jwt_secret_for_e2e_tests_minimum_64_characters_required_for_security_validation',
       signOptions: { expiresIn: '1h' },
     });
   }

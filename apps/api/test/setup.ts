@@ -17,6 +17,10 @@ process.env.LLM_PROVIDER = 'mock';
 process.env.JOBS_DRIVER = 'in-memory';
 process.env.NODE_ENV = 'test';
 
+// Disable the closed-beta invite-code gate so register/login flows in e2e
+// don't 403. Production defaults this to 'true'; tests exercise the open path.
+process.env.REQUIRE_INVITE_CODES = 'false';
+
 // Set CORS origins for testing
 process.env.CORS_ORIGINS = 'http://localhost:3000,http://localhost:3001';
 

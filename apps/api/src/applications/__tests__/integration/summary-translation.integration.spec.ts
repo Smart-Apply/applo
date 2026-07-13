@@ -7,6 +7,8 @@ import { StorageService } from '../../../storage/storage.service';
 import { LLMService } from '../../../llm/llm.service';
 import { TitleGeneratorService } from '../../title-generator.service';
 import { KeywordsService } from '../../../keywords/keywords.service';
+import { TemplatesService } from '../../../templates/templates.service';
+import { SubscriptionService } from '../../../subscription/subscription.service';
 import { GroundingValidatorService } from '../../grounding/grounding-validator.service';
 
 describe('ApplicationsService - Summary Translation Integration', () => {
@@ -90,6 +92,14 @@ describe('ApplicationsService - Summary Translation Integration', () => {
         },
         {
           provide: KeywordsService,
+          useValue: {},
+        },
+        {
+          provide: TemplatesService,
+          useValue: {},
+        },
+        {
+          provide: SubscriptionService,
           useValue: {},
         },
         GroundingValidatorService,

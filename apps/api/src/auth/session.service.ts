@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Request } from 'express';
+import type { Request } from 'express';
 import * as UAParser from 'ua-parser-js';
 import {
   MAX_SESSIONS_PER_USER,

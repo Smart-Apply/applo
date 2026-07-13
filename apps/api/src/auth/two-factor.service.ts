@@ -3,7 +3,7 @@ import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';
 import * as argon2 from 'argon2';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { TransactionClient } from '../prisma/prisma.types';
 import { ConfigService } from '../config/config.service';
