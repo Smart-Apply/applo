@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 import { ConfigService } from '../config/config.service';
 import { ConfigModule } from '../config/config.module';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
 /**
  * Logger Module - Configures structured logging with Pino

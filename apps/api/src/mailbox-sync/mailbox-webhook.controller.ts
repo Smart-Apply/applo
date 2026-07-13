@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
-import { Response } from 'express';
+import type { Response } from 'express';
 
 import { MailboxSyncOrchestrator } from './mailbox-sync.orchestrator';
 

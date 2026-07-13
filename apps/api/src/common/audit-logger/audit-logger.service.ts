@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { createLogger, format, transports } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 export enum AuditEventType {
   // Authentication

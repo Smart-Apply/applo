@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Logger, Post, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { ConfigService } from '../config/config.service';
 import { EmailService } from '../email/email.service';
 import { Public } from '../common/decorators/public.decorator';

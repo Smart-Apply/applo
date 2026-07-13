@@ -20,7 +20,7 @@ import { SessionService } from './session.service';
 import { TwoFactorService } from './two-factor.service';
 import { EmailService } from '../email/email.service';
 import { MAX_TOKENS_PER_USER } from './session.constants';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { ErrorCode } from '../common/constants/error-codes';
 import {
   ConflictWithCode,
