@@ -24,8 +24,8 @@ const POSE_BUBBLE: Record<ApploState, { title?: string; text: string }> = {
 
 /** Applo wordmark/logo. `light` flips it for the dark footer. */
 function BrandMark({ light = false }: { light?: boolean }) {
-  const mark = light ? '#fff' : '#15233f';
-  const screen = light ? '#15233f' : '#fff';
+  const mark = light ? '#fff' : '#1B2A49';
+  const screen = light ? '#1B2A49' : '#fff';
   return (
     <svg width="28" height="28" viewBox="0 0 140 140" aria-hidden="true">
       <g fill="none" stroke={mark} strokeWidth="7" strokeLinecap="round">
@@ -43,11 +43,11 @@ function BrandMark({ light = false }: { light?: boolean }) {
   );
 }
 
-/** Green check used in value cards and price lists. */
-function Check() {
+/** Check used in value cards and price lists (green by default, blue on the navy Pro card). */
+function Check({ color = '#16A34A' }: { color?: string }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="#22b964" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -255,9 +255,12 @@ export default function Home() {
         <section className="hero" data-pose="wave" id="hero">
           <div className="wrap hero-grid">
             <div>
-              <p className="eyebrow reveal">Bewerben, ehrlich gemacht</p>
+              <p className="eyebrow reveal">
+                <span className="sq" />
+                Bewerben, ehrlich gemacht
+              </p>
               <h1 className="reveal" style={d('.05s')}>
-                Bewerbungen, die zu <span style={{ color: 'var(--blue2)' }}>dir</span> passen — nicht zu einer erfundenen
+                Bewerbungen, die zu <span className="hl">dir</span> passen — nicht zu einer erfundenen
                 Version von dir.
               </h1>
               <p className="lead reveal" style={d('.12s')}>
@@ -266,46 +269,88 @@ export default function Home() {
               </p>
               <div className="hero-cta reveal" style={d('.18s')}>
                 <Link className="btn btn-primary" href="/register">
-                  Kostenlos starten
+                  Kostenlos starten<span className="m">→</span>
                 </Link>
-                <a className="hero-link" href="#how">
-                  So funktioniert’s
-                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                <a className="btn btn-ghost" href="#how">
+                  So funktioniert’s<span className="m">↓</span>
                 </a>
               </div>
               <div className="trust reveal" style={d('.24s')}>
                 <span className="dot" /> EU-Hosting
                 <span className="dot" /> DSGVO
-                <span className="dot" /> keine erfundenen Daten
+                <span className="dot" /> Keine erfundenen Daten
               </div>
             </div>
-            <div className="hero-stage" aria-hidden="true" />
+            <div className="hero-stage reveal" style={d('.1s')} aria-hidden="true">
+              {/* “Receipt” product card — the mascot dock peeks out behind it */}
+              <div className="receipt">
+                <div className="r-top">
+                  <span className="r-file">bewerbung_vertriebsleitung.pdf</span>
+                  <span className="r-lang">DE</span>
+                </div>
+                <div className="r-row">
+                  <div className="r-field">
+                    <span className="r-label">PROFIL</span>
+                    <span className="r-val">Lena Weber — Vertriebsleiterin</span>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" fill="#16A34A" /><path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" /></svg>
+                </div>
+                <div className="r-row">
+                  <div className="r-field">
+                    <span className="r-label">STELLE</span>
+                    <span className="r-val">Vertriebsleitung · Nordwind GmbH</span>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" fill="#16A34A" /><path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" /></svg>
+                </div>
+                <div className="r-row" style={{ display: 'block' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span className="r-label">KI-GENERIERUNG</span>
+                    <svg width="26" height="10" viewBox="0 0 26 10" aria-hidden="true"><circle className="fv-t1" cx="4" cy="5" r="2.4" fill="#5581C7" /><circle className="fv-t2" cx="13" cy="5" r="2.4" fill="#5581C7" /><circle className="fv-t3" cx="22" cy="5" r="2.4" fill="#5581C7" /></svg>
+                  </div>
+                  <p className="r-note">Grounding-Check aktiv — keine erfundenen Kennzahlen.</p>
+                </div>
+                <div className="r-score">
+                  <div className="r-field">
+                    <span className="r-label">ATS-SCORE</span>
+                    <span className="r-num">87<small>/100</small></span>
+                  </div>
+                  <div className="r-track">
+                    <div className="r-bar"><span /></div>
+                    <div className="r-meta"><span>KEYWORDS 21/24</span><span className="ok">STARK</span></div>
+                  </div>
+                </div>
+                <div className="r-foot">
+                  <span className="r-export">Als PDF exportieren</span>
+                  <span className="r-hint">50 VORLAGEN · DE/EN</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* HOW */}
-        <section className="section" id="how" data-pose="process">
+        <section className="section alt" id="how" data-pose="process">
           <div className="wrap">
-            <div className="sec-head center reveal">
-              <p className="eyebrow">So funktioniert’s</p>
-              <h2 className="h2">In drei Schritten zur fertigen Bewerbung</h2>
+            <div className="sec-row reveal">
+              <div>
+                <p className="eyebrow">01 — So funktioniert’s</p>
+                <h2 className="h2">In drei Schritten zur fertigen Bewerbung</h2>
+              </div>
               <p className="lead">Vom Lebenslauf zur abgeschickten, ATS-optimierten Bewerbung — ohne Copy-Paste-Chaos.</p>
             </div>
             <div className="grid steps">
               <article className="card reveal" style={d('0s')}>
-                <div className="step-n">1</div>
+                <div className="step-n">01</div>
                 <h3 className="h3">Profil &amp; CV hochladen</h3>
                 <p>Lade deinen Lebenslauf hoch. Der Resume-Parser liest ihn aus und füllt dein Profil automatisch — du prüfst und korrigierst.</p>
               </article>
               <article className="card reveal" style={d('.1s')}>
-                <div className="step-n">2</div>
+                <div className="step-n">02</div>
                 <h3 className="h3">Stelle einfügen</h3>
                 <p>Füge eine Stelle als Text, URL oder PDF ein. Die KI schreibt Anschreiben und Lebenslauf passend zur Ausschreibung — ATS-optimiert.</p>
               </article>
               <article className="card reveal" style={d('.2s')}>
-                <div className="step-n">3</div>
+                <div className="step-n">03</div>
                 <h3 className="h3">Als PDF exportieren</h3>
                 <p>Wähle aus 50 ATS-Vorlagen, exportiere als PDF (DE/EN) und bewirb dich. Fertig.</p>
               </article>
@@ -314,110 +359,112 @@ export default function Home() {
         </section>
 
         {/* FEATURES */}
-        <section className="section" id="features" style={{ background: '#fff' }} data-pose="coach">
+        <section className="section" id="features" data-pose="coach">
           <div className="wrap">
-            <div className="sec-head center reveal">
-              <p className="eyebrow">Features</p>
-              <h2 className="h2">Alles, was eine ehrliche Bewerbung braucht</h2>
+            <div className="sec-row reveal">
+              <div>
+                <p className="eyebrow">02 — Features</p>
+                <h2 className="h2">Alles, was eine ehrliche Bewerbung braucht</h2>
+              </div>
               <p className="lead">Konkrete Werkzeuge statt leerer Versprechen — gebaut, damit deine Bewerbung stark <i>und</i> wahr ist.</p>
             </div>
             <div className="grid feat-grid">
-              <article className="card feat reveal fa-blue">
+              <article className="card feat reveal">
                 <div className="feat-viz">
-                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
-                    <rect x="70" y="20" width="100" height="84" rx="12" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                    <rect x="84" y="36" width="46" height="8" rx="4" fill="#15233f" opacity=".82" />
-                    <rect x="84" y="54" width="72" height="6" rx="3" fill="#E5E9F2" className="fv-w fv-w1" />
-                    <rect x="84" y="68" width="72" height="6" rx="3" fill="#E5E9F2" className="fv-w fv-w2" />
-                    <rect x="84" y="82" width="48" height="6" rx="3" fill="#E5E9F2" className="fv-w fv-w3" />
-                    <g className="fv-spark" style={{ transformOrigin: '158px 34px' }}>
-                      <path d="M158 22 C160 30 162 32 170 34 C162 36 160 38 158 46 C156 38 154 36 146 34 C154 32 156 30 158 22 Z" fill="#5581C7" />
+                  <svg viewBox="0 0 240 104" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <rect x="72" y="10" width="96" height="82" fill="#fff" stroke="#1B2A49" strokeWidth="1.5" />
+                    <rect x="84" y="22" width="44" height="7" fill="#1B2A49" />
+                    <rect x="84" y="40" width="70" height="5" fill="#E5E9F2" className="fv-w fv-w1" />
+                    <rect x="84" y="52" width="70" height="5" fill="#E5E9F2" className="fv-w fv-w2" />
+                    <rect x="84" y="64" width="46" height="5" fill="#E5E9F2" className="fv-w fv-w3" />
+                    <rect x="84" y="76" width="58" height="5" fill="#5581C7" />
+                    <g className="fv-spark" style={{ transformOrigin: '178px 18px' }}>
+                      <rect x="172" y="12" width="12" height="12" fill="#5581C7" transform="rotate(45 178 18)" />
                     </g>
-                    <circle cx="186" cy="74" r="5" fill="#22b964" className="fv-spark2" />
                   </svg>
                 </div>
                 <h3 className="h3">KI-Generierung</h3>
                 <p>Self-Review &amp; ATS-Keyword-Loop verfeinern Anschreiben und CV automatisch — auf Basis deiner echten Daten.</p>
               </article>
 
-              <article className="card feat reveal fa-blue" style={d('.06s')}>
+              <article className="card feat reveal" style={d('.06s')}>
                 <div className="feat-viz">
-                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
-                    <g className="fv-chip fv-c1"><rect x="22" y="20" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="30" r="5" fill="#5581C7" /><rect x="44" y="27" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
-                    <g className="fv-chip fv-c2"><rect x="22" y="50" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="60" r="5" fill="#22b964" /><rect x="44" y="57" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
-                    <g className="fv-chip fv-c3"><rect x="22" y="80" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="90" r="5" fill="#ff5a72" /><rect x="44" y="87" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
-                    <path d="M104 30 H128 L150 60 L128 90 H104" fill="none" stroke="#E5E9F2" strokeWidth="2" strokeDasharray="2 8" strokeLinecap="round" />
-                    <rect x="158" y="38" width="58" height="44" rx="12" fill="#15233f" />
-                    <rect x="170" y="52" width="34" height="6" rx="3" fill="#fff" opacity=".55" />
-                    <rect x="170" y="64" width="22" height="6" rx="3" fill="#5581C7" />
+                  <svg viewBox="0 0 240 104" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <g className="fv-chip fv-c1"><rect x="20" y="12" width="76" height="18" fill="#fff" stroke="#E0E0E0" strokeWidth="1.5" /><rect x="27" y="17" width="8" height="8" fill="#5581C7" /><rect x="42" y="19" width="42" height="4" fill="#E5E9F2" /></g>
+                    <g className="fv-chip fv-c2"><rect x="20" y="40" width="76" height="18" fill="#fff" stroke="#E0E0E0" strokeWidth="1.5" /><rect x="27" y="45" width="8" height="8" fill="#16A34A" /><rect x="42" y="47" width="42" height="4" fill="#E5E9F2" /></g>
+                    <g className="fv-chip fv-c3"><rect x="20" y="68" width="76" height="18" fill="#fff" stroke="#E0E0E0" strokeWidth="1.5" /><rect x="27" y="73" width="8" height="8" fill="#1B2A49" /><rect x="42" y="75" width="42" height="4" fill="#E5E9F2" /></g>
+                    <path d="M102 21 H126 L148 49 L126 77 H102" fill="none" stroke="#B0B0B0" strokeWidth="1.5" strokeDasharray="2 6" />
+                    <rect x="156" y="28" width="60" height="42" fill="#1B2A49" />
+                    <rect x="167" y="41" width="36" height="5" fill="#fff" opacity=".55" />
+                    <rect x="167" y="53" width="22" height="5" fill="#5581C7" />
                   </svg>
                 </div>
                 <h3 className="h3">Smart Job-Ingestion</h3>
                 <p>Stellen aus Indeed, LinkedIn und Glassdoor einlesen — als Text, URL oder PDF.</p>
               </article>
 
-              <article className="card feat reveal fa-green" style={d('.12s')}>
+              <article className="card feat reveal" style={d('.12s')}>
                 <div className="feat-viz">
-                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
-                    <circle cx="92" cy="60" r="34" fill="none" stroke="#E5E9F2" strokeWidth="10" />
-                    <circle cx="92" cy="60" r="34" fill="none" stroke="#22b964" strokeWidth="10" strokeLinecap="round" strokeDasharray="213.6" strokeDashoffset="64" transform="rotate(-90 92 60)" className="fv-ring" />
-                    <text x="92" y="60" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="22" fill="#15233f">87</text>
-                    <g className="fv-lights">
-                      <rect x="150" y="30" width="60" height="60" rx="14" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                      <circle cx="180" cy="44" r="6" fill="#22b964" className="fv-l1" />
-                      <circle cx="180" cy="60" r="6" fill="#f4b740" className="fv-l2" />
-                      <circle cx="180" cy="76" r="6" fill="#ff5a72" opacity=".35" className="fv-l3" />
-                    </g>
+                  <svg viewBox="0 0 240 104" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <circle cx="86" cy="52" r="32" fill="none" stroke="#E5E9F2" strokeWidth="8" />
+                    <circle cx="86" cy="52" r="32" fill="none" stroke="#16A34A" strokeWidth="8" strokeDasharray="201" strokeDashoffset="60" transform="rotate(-90 86 52)" className="fv-ring" />
+                    <text x="86" y="53" textAnchor="middle" dominantBaseline="central" fontFamily="var(--font-mono-plex),IBM Plex Mono,monospace" fontWeight="600" fontSize="21" fill="#1B2A49">87</text>
+                    <rect x="146" y="22" width="62" height="60" fill="#fff" stroke="#E0E0E0" strokeWidth="1.5" />
+                    <rect x="158" y="32" width="10" height="10" fill="#16A34A" />
+                    <rect x="174" y="35" width="24" height="4" fill="#E5E9F2" />
+                    <rect x="158" y="47" width="10" height="10" fill="#EAB308" className="fv-dot" />
+                    <rect x="174" y="50" width="24" height="4" fill="#E5E9F2" />
+                    <rect x="158" y="62" width="10" height="10" fill="#DC2626" opacity=".3" />
+                    <rect x="174" y="65" width="24" height="4" fill="#E5E9F2" />
                   </svg>
                 </div>
                 <h3 className="h3">Bewerbungs-Check</h3>
                 <p>ATS-Score plus Ampel-Feedback zeigt dir, was vor dem Absenden noch besser geht.</p>
               </article>
 
-              <article className="card feat reveal fa-navy" style={d('.18s')}>
+              <article className="card feat reveal" style={d('.18s')}>
                 <div className="feat-viz">
-                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
-                    <g transform="rotate(-9 120 60)" opacity=".55"><rect x="86" y="24" width="68" height="80" rx="9" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /></g>
-                    <g transform="rotate(5 120 60)" opacity=".8"><rect x="86" y="22" width="68" height="80" rx="9" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /></g>
+                  <svg viewBox="0 0 240 104" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <rect x="88" y="12" width="64" height="76" fill="#F5F6F8" stroke="#E0E0E0" strokeWidth="1.5" />
+                    <rect x="83" y="15" width="64" height="76" fill="#FAFAFA" stroke="#E0E0E0" strokeWidth="1.5" />
                     <g className="fv-page">
-                      <rect x="86" y="20" width="68" height="80" rx="9" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                      <rect x="96" y="32" width="30" height="7" rx="3.5" fill="#15233f" opacity=".82" />
-                      <rect x="96" y="46" width="48" height="5" rx="2.5" fill="#E5E9F2" />
-                      <rect x="96" y="56" width="48" height="5" rx="2.5" fill="#E5E9F2" />
-                      <rect x="96" y="70" width="34" height="5" rx="2.5" fill="#5581C7" />
-                      <rect x="96" y="80" width="48" height="5" rx="2.5" fill="#E5E9F2" />
+                      <rect x="78" y="18" width="64" height="76" fill="#fff" stroke="#1B2A49" strokeWidth="1.5" />
+                      <rect x="88" y="28" width="28" height="6" fill="#1B2A49" />
+                      <rect x="88" y="42" width="44" height="4" fill="#E5E9F2" />
+                      <rect x="88" y="51" width="44" height="4" fill="#E5E9F2" />
+                      <rect x="88" y="63" width="32" height="4" fill="#5581C7" />
+                      <rect x="88" y="72" width="44" height="4" fill="#E5E9F2" />
                     </g>
-                    <g className="fv-badge"><circle cx="166" cy="34" r="15" fill="#5581C7" /><text x="166" y="34" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="13" fill="#fff">50</text></g>
+                    <g className="fv-badge" style={{ transformOrigin: '162px 26px' }}><rect x="148" y="12" width="28" height="28" fill="#5581C7" /><text x="162" y="27" textAnchor="middle" dominantBaseline="central" fontFamily="var(--font-mono-plex),IBM Plex Mono,monospace" fontWeight="600" fontSize="12" fill="#fff">50</text></g>
                   </svg>
                 </div>
                 <h3 className="h3">50 ATS-PDF-Vorlagen</h3>
                 <p>Sauber strukturierte Vorlagen in Deutsch und Englisch, optimiert für Bewerbungssysteme.</p>
               </article>
 
-              <article className="card feat reveal fa-coral">
+              <article className="card feat reveal">
                 <div className="feat-viz">
-                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
-                    <g><rect x="34" y="26" width="120" height="30" rx="14" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><rect x="48" y="38" width="74" height="6" rx="3" fill="#E5E9F2" /></g>
-                    <g>
-                      <rect x="92" y="64" width="114" height="32" rx="14" fill="#15233f" />
-                      <circle cx="124" cy="80" r="4" fill="#fff" className="fv-typ fv-t1" />
-                      <circle cx="140" cy="80" r="4" fill="#fff" className="fv-typ fv-t2" />
-                      <circle cx="156" cy="80" r="4" fill="#fff" className="fv-typ fv-t3" />
-                    </g>
+                  <svg viewBox="0 0 240 104" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <rect x="30" y="14" width="118" height="28" fill="#fff" stroke="#E0E0E0" strokeWidth="1.5" />
+                    <rect x="42" y="25" width="72" height="5" fill="#E5E9F2" />
+                    <rect x="92" y="56" width="118" height="30" fill="#1B2A49" />
+                    <circle cx="128" cy="71" r="3.6" fill="#fff" className="fv-typ fv-t1" />
+                    <circle cx="144" cy="71" r="3.6" fill="#fff" className="fv-typ fv-t2" />
+                    <circle cx="160" cy="71" r="3.6" fill="#fff" className="fv-typ fv-t3" />
                   </svg>
                 </div>
                 <h3 className="h3">Mock-Interviews</h3>
                 <p>Übe Interviews als Text oder per Voice und erhalte konkretes Feedback.<span className="tag">Premium</span></p>
               </article>
 
-              <article className="card feat reveal fa-blue" style={d('.06s')}>
+              <article className="card feat reveal" style={d('.06s')}>
                 <div className="feat-viz">
-                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
-                    <rect x="46" y="32" width="86" height="58" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                    <path d="M50 38 L89 64 L128 38" fill="none" stroke="#5581C7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg viewBox="0 0 240 104" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <rect x="42" y="24" width="84" height="56" fill="#fff" stroke="#1B2A49" strokeWidth="1.5" />
+                    <path d="M44 27 L84 54 L124 27" fill="none" stroke="#5581C7" strokeWidth="2.4" />
                     <g className="fv-status">
-                      <rect x="146" y="40" width="58" height="18" rx="9" fill="rgba(34,185,100,.14)" /><circle cx="158" cy="49" r="4" fill="#22b964" className="fv-dot" /><rect x="168" y="46" width="28" height="6" rx="3" fill="#22b964" />
-                      <rect x="146" y="64" width="58" height="18" rx="9" fill="#eef3fb" /><circle cx="158" cy="73" r="4" fill="#94a3b8" /><rect x="168" y="70" width="28" height="6" rx="3" fill="#E5E9F2" />
+                      <rect x="140" y="30" width="62" height="18" fill="#D1FADF" /><rect x="147" y="35" width="8" height="8" fill="#16A34A" className="fv-dot" /><rect x="161" y="37" width="30" height="4" fill="#16A34A" />
+                      <rect x="140" y="56" width="62" height="18" fill="#F5F6F8" /><rect x="147" y="61" width="8" height="8" fill="#A0A0A0" /><rect x="161" y="63" width="30" height="4" fill="#E0E0E0" />
                     </g>
                   </svg>
                 </div>
@@ -425,33 +472,31 @@ export default function Home() {
                 <p>Verbinde Outlook/M365 — der Status deiner Bewerbungen aktualisiert sich automatisch.<span className="tag">Premium</span></p>
               </article>
 
-              <article className="card feat reveal fa-blue" style={d('.12s')}>
+              <article className="card feat reveal" style={d('.12s')}>
                 <div className="feat-viz">
-                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
-                    <rect x="58" y="42" width="124" height="36" rx="18" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                    <rect x="62" y="46" width="58" height="28" rx="14" fill="#5581C7" className="fv-toggle" />
-                    <text x="91" y="60" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="14" fill="#fff" className="fv-de">DE</text>
-                    <text x="151" y="60" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="14" fill="#94a3b8" className="fv-en">EN</text>
+                  <svg viewBox="0 0 240 104" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <rect x="56" y="34" width="128" height="36" fill="#fff" stroke="#1B2A49" strokeWidth="1.5" />
+                    <rect x="61" y="39" width="58" height="26" fill="#1B2A49" className="fv-toggle" />
+                    <text x="90" y="52" textAnchor="middle" dominantBaseline="central" fontFamily="var(--font-mono-plex),IBM Plex Mono,monospace" fontWeight="600" fontSize="13" fill="#fff" className="fv-de">DE</text>
+                    <text x="150" y="52" textAnchor="middle" dominantBaseline="central" fontFamily="var(--font-mono-plex),IBM Plex Mono,monospace" fontWeight="600" fontSize="13" fill="#A0A0A0" className="fv-en">EN</text>
                   </svg>
                 </div>
                 <h3 className="h3">Mehrsprachig DE/EN</h3>
                 <p>Erstelle und exportiere Bewerbungen wahlweise auf Deutsch oder Englisch.</p>
               </article>
 
-              <article className="card feat reveal fa-green" style={d('.18s')}>
+              <article className="card feat reveal" style={d('.18s')}>
                 <div className="feat-viz">
-                  <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
-                    <g>
-                      <rect x="26" y="24" width="58" height="72" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                      <rect x="91" y="24" width="58" height="72" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                      <rect x="156" y="24" width="58" height="72" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                    </g>
-                    <rect x="34" y="34" width="42" height="14" rx="5" fill="#E5E9F2" />
-                    <rect x="34" y="52" width="42" height="14" rx="5" fill="#E5E9F2" />
-                    <rect x="99" y="34" width="42" height="14" rx="5" fill="#5581C7" opacity=".85" />
-                    <rect x="164" y="34" width="42" height="14" rx="5" fill="#22b964" />
-                    <rect x="164" y="52" width="42" height="14" rx="5" fill="#22b964" opacity=".5" />
-                    <rect x="99" y="52" width="42" height="14" rx="5" fill="#5581C7" opacity=".4" className="fv-move" />
+                  <svg viewBox="0 0 240 104" className="fv" preserveAspectRatio="xMidYMid meet">
+                    <rect x="24" y="14" width="58" height="76" fill="#fff" stroke="#E0E0E0" strokeWidth="1.5" />
+                    <rect x="91" y="14" width="58" height="76" fill="#fff" stroke="#E0E0E0" strokeWidth="1.5" />
+                    <rect x="158" y="14" width="58" height="76" fill="#fff" stroke="#E0E0E0" strokeWidth="1.5" />
+                    <rect x="32" y="24" width="42" height="13" fill="#E5E9F2" />
+                    <rect x="32" y="42" width="42" height="13" fill="#E5E9F2" />
+                    <rect x="99" y="24" width="42" height="13" fill="#5581C7" opacity=".85" />
+                    <rect x="166" y="24" width="42" height="13" fill="#16A34A" />
+                    <rect x="166" y="42" width="42" height="13" fill="#16A34A" opacity=".45" />
+                    <rect x="99" y="42" width="42" height="13" fill="#5581C7" opacity=".4" className="fv-move" />
                   </svg>
                 </div>
                 <h3 className="h3">Live-Status der Pipeline</h3>
@@ -464,10 +509,12 @@ export default function Home() {
         {/* WERTE */}
         <section className="section values" id="werte" data-pose="idle">
           <div className="wrap">
-            <div className="sec-head center reveal">
-              <p className="eyebrow">Werte &amp; Transparenz</p>
-              <h2 className="h2">Ehrlich. Nachprüfbar. Auf deiner Seite.</h2>
-              <p className="lead">Transparenz ist kein Feature-Häkchen, sondern das Fundament. Deshalb sagen wir klar, was passiert — und was nicht.</p>
+            <div className="sec-row reveal">
+              <div>
+                <p className="eyebrow">03 — Werte &amp; Transparenz</p>
+                <h2 className="h2">Ehrlich. Nachprüfbar. Auf deiner Seite.</h2>
+              </div>
+              <p className="lead">Transparenz ist kein Feature-Häkchen, sondern das Fundament. Wir sagen klar, was passiert — und was nicht.</p>
             </div>
             <div className="grid val-grid">
               <article className="card val reveal">
@@ -504,7 +551,7 @@ export default function Home() {
 
             <div className="not reveal">
               <h3 className="h3">
-                Was Applo <span style={{ color: 'var(--coral)' }}>nicht</span> tut
+                Was Applo <span className="u">nicht</span> tut
               </h3>
               <ul>
                 <li><span className="x">×</span><span>Keine Massen-Spam-Bewerbungen in deinem Namen.</span></li>
@@ -516,11 +563,13 @@ export default function Home() {
         </section>
 
         {/* PREISE */}
-        <section className="section" id="preise" style={{ background: '#fff' }} data-pose="idle">
+        <section className="section" id="preise" data-pose="idle">
           <div className="wrap">
-            <div className="sec-head center reveal">
-              <p className="eyebrow">Preise</p>
-              <h2 className="h2">Fair und ohne Überraschungen</h2>
+            <div className="sec-row reveal">
+              <div>
+                <p className="eyebrow">04 — Preise</p>
+                <h2 className="h2">Fair und ohne Überraschungen</h2>
+              </div>
               <p className="lead">Starte kostenlos. Upgrade nur, wenn du mehr brauchst — jederzeit kündbar.</p>
             </div>
             <div className="grid price-grid">
@@ -539,15 +588,15 @@ export default function Home() {
               <article className="card price feature reveal" style={d('.08s')}>
                 <span className="badge">Beliebt</span>
                 <div className="pname">Pro</div>
-                <div className="pamt">€ <span style={{ color: 'var(--muted-2)' }}>TBD</span> <small>/ Monat</small></div>
+                <div className="pamt">€ <span style={{ color: 'rgba(229,233,242,.5)' }}>TBD</span> <small>/ Monat</small></div>
                 <div className="ptbd">Preis folgt</div>
                 <ul>
-                  <li><span className="ck"><Check /></span> Unlimitierte Bewerbungs-Checks</li>
-                  <li><span className="ck"><Check /></span> Smart Job-Ingestion</li>
-                  <li><span className="ck"><Check /></span> Live-Status der Pipeline</li>
-                  <li><span className="ck"><Check /></span> Alles aus Free</li>
+                  <li><span className="ck"><Check color="#5581C7" /></span> Unlimitierte Bewerbungs-Checks</li>
+                  <li><span className="ck"><Check color="#5581C7" /></span> Smart Job-Ingestion</li>
+                  <li><span className="ck"><Check color="#5581C7" /></span> Live-Status der Pipeline</li>
+                  <li><span className="ck"><Check color="#5581C7" /></span> Alles aus Free</li>
                 </ul>
-                <Link className="btn btn-primary" href="/register">Pro wählen</Link>
+                <Link className="btn btn-primary" href="/register">Pro wählen<span className="m">→</span></Link>
               </article>
               <article className="card price reveal" style={d('.16s')}>
                 <div className="pname">Premium</div>
@@ -570,11 +619,11 @@ export default function Home() {
         </section>
 
         {/* FAQ */}
-        <section className="section values" id="faq" data-pose="think">
-          <div className="wrap">
-            <div className="sec-head center reveal">
-              <p className="eyebrow">FAQ</p>
-              <h2 className="h2">Klare Antworten</h2>
+        <section className="section faq-sec" id="faq" data-pose="think">
+          <div className="wrap faq-grid">
+            <div className="reveal">
+              <p className="eyebrow">05 — FAQ</p>
+              <h2 className="h2" style={{ marginTop: 12 }}>Klare Antworten</h2>
             </div>
             <div className="faq-list">
               <details className="faq reveal"><summary>Was passiert mit meinen Daten?<span className="pls" /></summary><div className="ans">Deine Daten werden in der EU gehostet und gespeichert, nach DSGVO. Wir verkaufen deine Daten nicht. Bei Mock-Interviews wird kein Audio gespeichert, beim E-Mail-Tracking keine Mail-Inhalte.</div></details>
@@ -596,7 +645,7 @@ export default function Home() {
             <h2 className="h2 reveal" style={d('.05s')}>Bereit für ehrliche Bewerbungen?</h2>
             <p className="lead reveal" style={d('.1s')}>Starte kostenlos — keine erfundenen Daten, keine Massen-Spam-Bewerbungen.</p>
             <div className="hero-cta reveal" style={{ ...d('.16s'), justifyContent: 'center' }}>
-              <Link className="btn btn-primary" href="/register">Kostenlos starten</Link>
+              <Link className="btn btn-primary" href="/register">Kostenlos starten<span className="m">→</span></Link>
             </div>
             <p className="trust reveal" style={{ ...d('.22s'), justifyContent: 'center' }}>
               <span className="dot" /> EU-Hosting <span className="dot" /> DSGVO <span className="dot" /> jederzeit kündbar
