@@ -20,7 +20,7 @@ import type { CSSProperties } from 'react';
 const NAVY = '#15233f';
 const SCREEN = '#eef3fb';
 const BORDER = 'rgba(21,35,63,.10)';
-const BLUE = '#2563eb';
+const BLUE = '#40639C';
 const GREEN = '#15a34a';
 const HAND = '#3a4f76';
 const RIM = 'rgba(255,255,255,0.12)';

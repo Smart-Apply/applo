@@ -9,7 +9,8 @@
     "hover": "#4F4E4E"
   },
   "accent": {
-    "base": "#3B82F6"
+    "base": "#5581C7",
+    "onLight": "#40639C"
   },
   "background": {
     "default": "#FFFFFF",

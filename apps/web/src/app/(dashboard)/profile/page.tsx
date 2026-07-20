@@ -494,7 +494,7 @@ function CompanyMark({ name }: { name: string }) {
 /** Profile-strength ring — Applo-blue until complete, then green. */
 function StrengthRing({ pct }: { pct: number }) {
   const done = pct >= 100;
-  const color = done ? '#16a34a' : '#2563eb';
+  const color = done ? '#16a34a' : '#40639C';
   return (
     <div
       className="grid h-[84px] w-[84px] place-items-center rounded-full"
@@ -541,7 +541,7 @@ function CollapsibleCard({
       ref={cardRef}
       className={cn(
         'scroll-mt-24 rounded-2xl border bg-card shadow-sm transition-all duration-200',
-        active ? 'tour-active border-[#2563eb]' : 'border-border',
+        active ? 'tour-active border-[#40639C]' : 'border-border',
       )}
     >
       <div className="flex items-center gap-2.5 px-6 py-5">
@@ -918,7 +918,7 @@ export default function ProfilePage() {
   const sectionCard = (id: string) =>
     cn(
       'scroll-mt-24 rounded-2xl border bg-card p-6 shadow-sm transition-all duration-200',
-      activeSection === id ? 'tour-active border-[#2563eb]' : 'border-border',
+      activeSection === id ? 'tour-active border-[#40639C]' : 'border-border',
     );
 
   return (
@@ -957,19 +957,19 @@ export default function ProfilePage() {
           style={{
             background: isComplete
               ? 'radial-gradient(420px 150px at 8% 0%, rgba(22,163,74,0.08), transparent 70%)'
-              : 'radial-gradient(420px 150px at 8% 0%, rgba(37,99,235,0.06), transparent 70%)',
+              : 'radial-gradient(420px 150px at 8% 0%, rgba(85,129,199,0.08), transparent 70%)',
           }}
         />
         <div className="relative grid grid-cols-[auto_1fr] items-center gap-4 sm:gap-5 lg:grid-cols-[auto_1fr_auto]">
           <div
             className="grid h-[140px] w-[120px] place-items-center rounded-xl"
-            style={{ background: 'radial-gradient(58% 52% at 50% 45%, rgba(37,99,235,0.10), transparent 72%)' }}
+            style={{ background: 'radial-gradient(58% 52% at 50% 45%, rgba(85,129,199,0.12), transparent 72%)' }}
           >
             <ApploRig key={pose} state={pose} size={120} />
           </div>
           <div className="min-w-0">
             <div className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_0_3px_rgba(37,99,235,0.15)]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_0_3px_rgba(85,129,199,0.18)]" />
               Applo · dein Profil-Coach
             </div>
             <p key={`${tourStep}-${activeSection}-${isComplete}`} className="mb-3.5 max-w-[60ch] text-[15px] leading-relaxed text-foreground">

@@ -144,7 +144,7 @@ function DropZone({
       }}
       className="flex flex-col items-center justify-center gap-2 rounded-xl py-8 transition-colors duration-200"
       style={{
-        border: `1.5px dashed ${isDragging ? '#3B82F6' : '#C7D0E4'}`,
+        border: `1.5px dashed ${isDragging ? '#5581C7' : '#C7D0E4'}`,
         backgroundColor: isDragging ? '#EAF1FE' : '#EAF1FE',
         cursor: isExtracting ? 'wait' : 'pointer',
       }}

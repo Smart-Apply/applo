@@ -10,7 +10,7 @@
 html { scroll-behavior: smooth; }
 
 .applo-home {
-  --navy:#15233f; --navy2:#1B2A49; --blue:#3B82F6; --blue2:#2563eb;
+  --navy:#15233f; --navy2:#1B2A49; --blue:#5581C7; --blue2:#40639C;
   --soft:#E5E9F2; --screen:#eef3fb; --green:#22b964; --coral:#ff5a72;
   --slate:#3a4f76; --ink:#15233f; --muted:#5b6b86; --muted-2:#94a3b8;
   --surface:#fff; --border:#e7ebf1;
@@ -38,11 +38,11 @@ html { scroll-behavior: smooth; }
 .applo-home .btn { display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:15.5px;
   padding:14px 24px; border-radius:14px; border:1px solid transparent; cursor:pointer;
   transition:transform .18s ease, box-shadow .18s ease, background .18s ease; line-height:1; }
-.applo-home .btn-primary { background:var(--blue2); color:#fff; box-shadow:0 8px 22px rgba(37,99,235,.24); }
-.applo-home .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(37,99,235,.32); }
+.applo-home .btn-primary { background:var(--blue2); color:#fff; box-shadow:0 8px 22px rgba(85,129,199,.24); }
+.applo-home .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(85,129,199,.32); }
 .applo-home .btn-ghost { background:#fff; color:var(--ink); border-color:var(--border); }
 .applo-home .btn-ghost:hover { transform:translateY(-2px); border-color:#cdd6e6; }
-.applo-home .btn:focus-visible { outline:3px solid rgba(59,130,246,.5); outline-offset:2px; }
+.applo-home .btn:focus-visible { outline:3px solid rgba(85,129,199,.55); outline-offset:2px; }
 
 /* nav */
 .applo-home .nav { position:sticky; top:0; z-index:50; background:rgba(247,250,255,.82);
@@ -57,7 +57,7 @@ html { scroll-behavior: smooth; }
 .applo-home .nav-login { font-weight:700; font-size:15px; color:var(--ink); padding:11px 14px; border-radius:12px;
   transition:background .15s ease, color .15s ease; }
 .applo-home .nav-login:hover { background:var(--screen); color:var(--blue2); }
-.applo-home .nav-login:focus-visible { outline:3px solid rgba(59,130,246,.5); outline-offset:2px; }
+.applo-home .nav-login:focus-visible { outline:3px solid rgba(85,129,199,.55); outline-offset:2px; }
 .applo-home .nav .btn { padding:11px 18px; }
 @media(max-width:480px) { .applo-home .nav-login { display:none; } }
 @media(max-width:820px) { .applo-home .nav-links { display:none; } }
@@ -217,7 +217,7 @@ html { scroll-behavior: smooth; }
 .applo-home .price-grid { grid-template-columns:1fr; }
 @media(min-width:880px) { .applo-home .price-grid { grid-template-columns:repeat(3,1fr); align-items:stretch; } }
 .applo-home .price { padding:30px; display:flex; flex-direction:column; }
-.applo-home .price.feature { border:2px solid var(--blue2); box-shadow:0 18px 40px rgba(37,99,235,.14); position:relative; }
+.applo-home .price.feature { border:2px solid var(--blue2); box-shadow:0 18px 40px rgba(85,129,199,.14); position:relative; }
 .applo-home .price .badge { position:absolute; top:-13px; left:30px; background:var(--blue2); color:#fff;
   font-size:12px; font-weight:750; padding:5px 12px; border-radius:999px; }
 .applo-home .price .pname { font-weight:800; font-size:19px; }

@@ -331,7 +331,7 @@ export default function Home() {
                     <rect x="84" y="68" width="72" height="6" rx="3" fill="#E5E9F2" className="fv-w fv-w2" />
                     <rect x="84" y="82" width="48" height="6" rx="3" fill="#E5E9F2" className="fv-w fv-w3" />
                     <g className="fv-spark" style={{ transformOrigin: '158px 34px' }}>
-                      <path d="M158 22 C160 30 162 32 170 34 C162 36 160 38 158 46 C156 38 154 36 146 34 C154 32 156 30 158 22 Z" fill="#3B82F6" />
+                      <path d="M158 22 C160 30 162 32 170 34 C162 36 160 38 158 46 C156 38 154 36 146 34 C154 32 156 30 158 22 Z" fill="#5581C7" />
                     </g>
                     <circle cx="186" cy="74" r="5" fill="#22b964" className="fv-spark2" />
                   </svg>
@@ -343,13 +343,13 @@ export default function Home() {
               <article className="card feat reveal fa-blue" style={d('.06s')}>
                 <div className="feat-viz">
                   <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
-                    <g className="fv-chip fv-c1"><rect x="22" y="20" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="30" r="5" fill="#3B82F6" /><rect x="44" y="27" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
+                    <g className="fv-chip fv-c1"><rect x="22" y="20" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="30" r="5" fill="#5581C7" /><rect x="44" y="27" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
                     <g className="fv-chip fv-c2"><rect x="22" y="50" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="60" r="5" fill="#22b964" /><rect x="44" y="57" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
                     <g className="fv-chip fv-c3"><rect x="22" y="80" width="78" height="20" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" /><circle cx="34" cy="90" r="5" fill="#ff5a72" /><rect x="44" y="87" width="44" height="6" rx="3" fill="#E5E9F2" /></g>
                     <path d="M104 30 H128 L150 60 L128 90 H104" fill="none" stroke="#E5E9F2" strokeWidth="2" strokeDasharray="2 8" strokeLinecap="round" />
                     <rect x="158" y="38" width="58" height="44" rx="12" fill="#15233f" />
                     <rect x="170" y="52" width="34" height="6" rx="3" fill="#fff" opacity=".55" />
-                    <rect x="170" y="64" width="22" height="6" rx="3" fill="#3B82F6" />
+                    <rect x="170" y="64" width="22" height="6" rx="3" fill="#5581C7" />
                   </svg>
                 </div>
                 <h3 className="h3">Smart Job-Ingestion</h3>
@@ -384,10 +384,10 @@ export default function Home() {
                       <rect x="96" y="32" width="30" height="7" rx="3.5" fill="#15233f" opacity=".82" />
                       <rect x="96" y="46" width="48" height="5" rx="2.5" fill="#E5E9F2" />
                       <rect x="96" y="56" width="48" height="5" rx="2.5" fill="#E5E9F2" />
-                      <rect x="96" y="70" width="34" height="5" rx="2.5" fill="#3B82F6" />
+                      <rect x="96" y="70" width="34" height="5" rx="2.5" fill="#5581C7" />
                       <rect x="96" y="80" width="48" height="5" rx="2.5" fill="#E5E9F2" />
                     </g>
-                    <g className="fv-badge"><circle cx="166" cy="34" r="15" fill="#3B82F6" /><text x="166" y="34" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="13" fill="#fff">50</text></g>
+                    <g className="fv-badge"><circle cx="166" cy="34" r="15" fill="#5581C7" /><text x="166" y="34" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="13" fill="#fff">50</text></g>
                   </svg>
                 </div>
                 <h3 className="h3">50 ATS-PDF-Vorlagen</h3>
@@ -414,7 +414,7 @@ export default function Home() {
                 <div className="feat-viz">
                   <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
                     <rect x="46" y="32" width="86" height="58" rx="10" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                    <path d="M50 38 L89 64 L128 38" fill="none" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M50 38 L89 64 L128 38" fill="none" stroke="#5581C7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                     <g className="fv-status">
                       <rect x="146" y="40" width="58" height="18" rx="9" fill="rgba(34,185,100,.14)" /><circle cx="158" cy="49" r="4" fill="#22b964" className="fv-dot" /><rect x="168" y="46" width="28" height="6" rx="3" fill="#22b964" />
                       <rect x="146" y="64" width="58" height="18" rx="9" fill="#eef3fb" /><circle cx="158" cy="73" r="4" fill="#94a3b8" /><rect x="168" y="70" width="28" height="6" rx="3" fill="#E5E9F2" />
@@ -429,7 +429,7 @@ export default function Home() {
                 <div className="feat-viz">
                   <svg viewBox="0 0 240 120" className="fv" preserveAspectRatio="xMidYMid meet">
                     <rect x="58" y="42" width="124" height="36" rx="18" fill="#fff" stroke="#E5E9F2" strokeWidth="2" />
-                    <rect x="62" y="46" width="58" height="28" rx="14" fill="#2563eb" className="fv-toggle" />
+                    <rect x="62" y="46" width="58" height="28" rx="14" fill="#5581C7" className="fv-toggle" />
                     <text x="91" y="60" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="14" fill="#fff" className="fv-de">DE</text>
                     <text x="151" y="60" textAnchor="middle" dominantBaseline="central" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="14" fill="#94a3b8" className="fv-en">EN</text>
                   </svg>
@@ -448,10 +448,10 @@ export default function Home() {
                     </g>
                     <rect x="34" y="34" width="42" height="14" rx="5" fill="#E5E9F2" />
                     <rect x="34" y="52" width="42" height="14" rx="5" fill="#E5E9F2" />
-                    <rect x="99" y="34" width="42" height="14" rx="5" fill="#3B82F6" opacity=".85" />
+                    <rect x="99" y="34" width="42" height="14" rx="5" fill="#5581C7" opacity=".85" />
                     <rect x="164" y="34" width="42" height="14" rx="5" fill="#22b964" />
                     <rect x="164" y="52" width="42" height="14" rx="5" fill="#22b964" opacity=".5" />
-                    <rect x="99" y="52" width="42" height="14" rx="5" fill="#3B82F6" opacity=".4" className="fv-move" />
+                    <rect x="99" y="52" width="42" height="14" rx="5" fill="#5581C7" opacity=".4" className="fv-move" />
                   </svg>
                 </div>
                 <h3 className="h3">Live-Status der Pipeline</h3>

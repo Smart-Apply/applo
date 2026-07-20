@@ -523,7 +523,7 @@ function CelebrationHero({
       style={{
         borderColor: '#CBEBD6',
         background:
-          'radial-gradient(120% 140% at 12% -10%, rgba(59,130,246,.10), rgba(59,130,246,0) 55%), linear-gradient(180deg,#E7F6EC,#F3FBF6 70%)',
+          'radial-gradient(120% 140% at 12% -10%, rgba(85,129,199,.10), rgba(85,129,199,0) 55%), linear-gradient(180deg,#E7F6EC,#F3FBF6 70%)',
       }}
     >
       <div
@@ -665,12 +665,12 @@ function DocCard({
       <div className="mb-4 flex items-center gap-3.5">
         <div
           className="relative grid h-[60px] w-[50px] shrink-0 place-items-center rounded-[9px]"
-          style={{ backgroundColor: '#EAF1FE', border: '1px solid #D2E2FC', color: '#3B82F6' }}
+          style={{ backgroundColor: '#EAF1FE', border: '1px solid #D2E2FC', color: '#5581C7' }}
         >
           <FileText className="h-6 w-6" />
           <span
             className="absolute -bottom-[7px] left-1/2 -translate-x-1/2 rounded px-1.5 text-[8px] font-semibold tracking-wide text-white"
-            style={{ backgroundColor: '#3B82F6', fontFamily: 'var(--font-geist-mono, monospace)' }}
+            style={{ backgroundColor: '#5581C7', fontFamily: 'var(--font-geist-mono, monospace)' }}
           >
             PDF
           </span>
@@ -775,7 +775,7 @@ function NextStepCard({
     >
       <div
         className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full"
-        style={{ background: 'rgba(59,130,246,.18)' }}
+        style={{ background: 'rgba(85,129,199,.18)' }}
       />
       <span
         className="relative grid h-[46px] w-[46px] place-items-center rounded-[13px]"
@@ -847,8 +847,8 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
                   !done && !current && 'border-border bg-card text-muted-foreground',
                 )}
                 style={{
-                  backgroundColor: done ? '#16A34A' : current ? '#3B82F6' : undefined,
-                  borderColor: done ? '#16A34A' : current ? '#3B82F6' : undefined,
+                  backgroundColor: done ? '#16A34A' : current ? '#5581C7' : undefined,
+                  borderColor: done ? '#16A34A' : current ? '#5581C7' : undefined,
                   boxShadow: current ? '0 0 0 4px #EAF1FE' : undefined,
                 }}
               >
@@ -860,7 +860,7 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
                   done && 'text-[#1B2A49]',
                   !done && !current && 'text-muted-foreground',
                 )}
-                style={{ color: current ? '#3B82F6' : undefined }}
+                style={{ color: current ? '#5581C7' : undefined }}
               >
                 {s.label}
               </span>
@@ -901,7 +901,7 @@ function AtsDisclosure({ applicationId }: { applicationId: string }) {
       >
         <span
           className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px]"
-          style={{ backgroundColor: '#EAF1FE', color: '#3B82F6' }}
+          style={{ backgroundColor: '#EAF1FE', color: '#5581C7' }}
         >
           <Sparkles className="h-[18px] w-[18px]" />
         </span>
@@ -1003,7 +1003,7 @@ function JobPostingDisclosure({ jobPosting }: { jobPosting: JobPostingData }) {
                       key={i}
                       className="flex gap-2.5 text-[14px] leading-snug text-muted-foreground"
                     >
-                      <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#3B82F6' }} />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#5581C7' }} />
                       {req}
                     </li>
                   ))}

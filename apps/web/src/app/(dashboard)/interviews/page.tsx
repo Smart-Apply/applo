@@ -345,7 +345,7 @@ export default function InterviewsPage() {
                         className="grid h-36 place-items-center rounded-xl"
                         style={{
                           background:
-                            'radial-gradient(55% 60% at 50% 45%, rgba(59,130,246,0.10) 0%, transparent 72%)',
+                            'radial-gradient(55% 60% at 50% 45%, rgba(85,129,199,0.12) 0%, transparent 72%)',
                         }}
                       >
                         <Applo state="success" size={116} aria-hidden />

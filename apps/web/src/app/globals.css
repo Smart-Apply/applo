@@ -6,8 +6,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-mono-plex);
+  --font-heading: var(--font-archivo);
   --font-poppins: var(--font-poppins);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -76,7 +77,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.25rem; /* 4px — sharp but not severe */
   --background: #FFFFFF;
   --foreground: #1B2A49;
   --card: #FAFAFA;
@@ -89,14 +90,14 @@
   --secondary-foreground: #FFFFFF;
   --muted: #F5F6F8;
   --muted-foreground: #6B6969;
-  --accent: #3B82F6;
+  --accent: #5581C7;
   --accent-foreground: #FFFFFF;
   --destructive: #DC2626;
   --destructive-foreground: #FFFFFF;
   --border: #E0E0E0;
   --input: #E0E0E0;
-  --ring: #3B82F6;
-  --chart-1: #3B82F6;
+  --ring: #5581C7;
+  --chart-1: #5581C7;
   --chart-2: #1B2A49;
   --chart-3: #6B6969;
   --chart-4: #EAB308;
@@ -108,7 +109,7 @@
   --sidebar-accent: #E5E9F2;
   --sidebar-accent-foreground: #1B2A49;
   --sidebar-border: #E0E0E0;
-  --sidebar-ring: #3B82F6;
+  --sidebar-ring: #5581C7;
 
   /* Status Colors */
   --primary-soft: #E5E9F2;
@@ -129,8 +130,8 @@
   --card-foreground: #F5F6F8;
   --popover: #1E293B;
   --popover-foreground: #F5F6F8;
-  --primary: #3B82F6;
-  /* Brighter blue for dark mode primary */
+  --primary: #5581C7;
+  /* Softened brand blue for dark mode primary */
   --primary-foreground: #FFFFFF;
   --secondary: #475569;
   --secondary-foreground: #F5F6F8;
@@ -142,20 +143,20 @@
   --destructive-foreground: #FFFFFF;
   --border: #334155;
   --input: #334155;
-  --ring: #3B82F6;
-  --chart-1: #3B82F6;
+  --ring: #5581C7;
+  --chart-1: #5581C7;
   --chart-2: #60A5FA;
   --chart-3: #94A3B8;
   --chart-4: #FACC15;
   --chart-5: #4ADE80;
   --sidebar: #0F172A;
   --sidebar-foreground: #F5F6F8;
-  --sidebar-primary: #3B82F6;
+  --sidebar-primary: #5581C7;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #1E293B;
   --sidebar-accent-foreground: #F5F6F8;
   --sidebar-border: #334155;
-  --sidebar-ring: #3B82F6;
+  --sidebar-ring: #5581C7;
 
   /* Status Colors Dark Mode */
   --primary-soft: #1E293B;
@@ -166,6 +167,24 @@
   --warning-foreground: #000000;
   --warning-soft: #422006;
   --destructive-soft: #7F1D1D;
+}
+
+/* Applo type system: Inter body, Archivo headings, IBM Plex Mono for labels/numbers */
+body { font-family: var(--font-inter), system-ui, sans-serif; }
+h1, h2, h3, .font-heading {
+  font-family: var(--font-archivo), "Archivo", system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+.tabular {
+  font-family: var(--font-mono-plex), "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* Replaces the old checkered/grid backgrounds */
+.bg-brand-wash {            /* light sections (landing hero, CTA) */
+  background: radial-gradient(120% 100% at 82% -20%, #EAF0F9 0%, rgba(234, 240, 249, 0) 58%), #FFFFFF;
+}
+.bg-brand-glow {            /* dark boxes (dashboard hero, auth pane) */
+  background: radial-gradient(130% 130% at 88% -30%, rgba(85, 129, 199, .35) 0%, rgba(85, 129, 199, 0) 55%), #1B2A49;
 }
 
 @layer base {
@@ -215,7 +234,7 @@
   }
 
   .text-stats-accent {
-    color: #3B82F6;
+    color: #5581C7;
   }
 
   .bg-stats-accent {
@@ -374,7 +393,7 @@
   --green: #16a34a;
   --green-bg: #d1fadf;
   --green-ink: #15803d;
-  --blue: #3b82f6;
+  --blue: #5581c7;
   --blue-bg: #eff4fe;
   --amber-bg: #fef3c7;
   --amber-ink: #92400e;
@@ -924,8 +943,8 @@
 }
 
 @keyframes tour-glow {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25); }
-  50%       { box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.45); }
+  0%, 100% { box-shadow: 0 0 0 3px rgba(85, 129, 199, 0.3); }
+  50%       { box-shadow: 0 0 0 7px rgba(85, 129, 199, 0.5); }
 }
 
 .tour-active {

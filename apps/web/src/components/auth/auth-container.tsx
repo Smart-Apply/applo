@@ -41,7 +41,7 @@ const STRENGTH = [
   { label: '', color: 'var(--aa-border)' },
   { label: 'Schwach', color: '#dc2626' },
   { label: 'Okay', color: '#e0951a' },
-  { label: 'Gut', color: '#2563eb' },
+  { label: 'Gut', color: '#40639C' },
   { label: 'Stark', color: '#15a34a' },
 ];
 const COVER_BY_SCORE = [0, 0.32, 0.58, 0.82, 1];
