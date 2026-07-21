@@ -245,7 +245,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
     const isOverdue = elapsedSeconds > totalEstimate + 15;
 
     return (
-      <Card className="shadow-soft border-border/50">
+      <Card>
         <CardHeader>
           <CardTitle>Bewerbung wird erstellt...</CardTitle>
           <CardDescription>
@@ -271,8 +271,8 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
                 {String(elapsedSeconds % 60).padStart(2, '0')}
               </span>
             </div>
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full animate-progress" />
+            <div className="w-full h-2 bg-primary-soft dark:bg-slate-700 overflow-hidden">
+              <div className="h-full bg-brand animate-progress" />
             </div>
             <ul className="space-y-2 text-sm">
               {STEPS.map((step, i) => {
@@ -292,11 +292,11 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
                   >
                     <span
                       className={cn(
-                        'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors',
+                        'inline-flex h-5 w-5 shrink-0 items-center justify-center border transition-colors',
                         isDone
                           ? 'border-primary bg-primary text-primary-foreground'
                           : isActive
-                            ? 'border-primary bg-primary/10 text-primary'
+                            ? 'border-brand bg-primary-soft/60 text-brand dark:bg-slate-800'
                             : 'border-muted-foreground/30 text-muted-foreground/50',
                       )}
                     >
@@ -305,7 +305,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
                       ) : isActive ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
                       ) : (
-                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                        <span className="h-1.5 w-1.5 bg-current" />
                       )}
                     </span>
                     {step.label}
@@ -323,16 +323,16 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
   return (
     <div className="space-y-6">
       {/* Summary Card: Profile ↔ Job */}
-      <Card className="shadow-soft border-border/50">
+      <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-lg">Zusammenfassung</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Profile Summary */}
-            <div className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <User className="h-4 w-4" />
+            <div className="rounded-[3px] border bg-muted/20 p-4 space-y-2">
+              <div className="flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
+                <User className="h-3.5 w-3.5" />
                 Dein Profil
               </div>
               <p className="font-semibold">{user?.firstName || ''} {user?.lastName || ''}</p>
@@ -356,9 +356,9 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
             </div>
 
             {/* Job Summary */}
-            <div className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Briefcase className="h-4 w-4" />
+            <div className="rounded-[3px] border bg-muted/20 p-4 space-y-2">
+              <div className="flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
+                <Briefcase className="h-3.5 w-3.5" />
                 Diese Stelle
               </div>
               <p className="font-semibold">{jobPosting.title}</p>
@@ -372,12 +372,12 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
       </Card>
 
       {/* Options: Cover Letter + Language */}
-      <Card className="shadow-soft border-border/50">
+      <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-lg">Optionen</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-start space-x-3 p-4 rounded-lg bg-muted/30 border border-border/50">
+          <div className="flex items-start space-x-3 p-4 rounded-[3px] bg-muted/30 border">
             <Checkbox
               id="generateCoverLetter"
               checked={generateCoverLetter}
@@ -394,7 +394,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
             </div>
           </div>
 
-          <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+          <div className="p-4 rounded-[3px] bg-muted/30 border">
             <div className="grid gap-1.5 leading-none mb-3">
               <Label className="text-base font-medium">Sprache der Bewerbung</Label>
               <p className="text-sm text-muted-foreground leading-relaxed">
@@ -408,10 +408,10 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
                   type="button"
                   onClick={() => setSelectedLanguage(option.value)}
                   className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all duration-200 text-sm font-medium',
+                    'flex items-center gap-2 px-3 py-2 rounded-[3px] border-2 transition-colors text-sm font-medium',
                     selectedLanguage === option.value
-                      ? 'border-primary bg-primary/5 text-primary shadow-sm'
-                      : 'border-transparent bg-background hover:bg-muted/50 hover:border-border/50 text-muted-foreground'
+                      ? 'border-primary bg-primary-soft/60 text-primary dark:bg-slate-800 dark:text-slate-100'
+                      : 'border-transparent bg-background hover:bg-muted/50 hover:border-border text-muted-foreground'
                   )}
                 >
                   <span className="text-base">{option.flag}</span>
@@ -424,7 +424,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
       </Card>
 
       {/* Template Picker */}
-      <Card className="shadow-soft border-border/50">
+      <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
@@ -466,7 +466,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
               dailyUsage.isExhausted
                 ? 'text-destructive font-medium'
                 : dailyUsage.isLow
-                  ? 'text-amber-600 font-medium'
+                  ? 'font-medium text-[#A16207] dark:text-amber-300'
                   : 'text-muted-foreground',
             )}
           >
@@ -481,7 +481,6 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
           loadingText="Erstelle Bewerbung..."
           size="lg"
           disabled={dailyUsage.isExhausted}
-          className="shadow-lg hover:shadow-xl transition-all"
         >
           Bewerbung erstellen
           <Sparkles className="ml-2 h-4 w-4" />

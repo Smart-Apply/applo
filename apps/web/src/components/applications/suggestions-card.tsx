@@ -48,9 +48,9 @@ function SuggestionItem({ suggestion, category, keywords }: SuggestionItemProps)
   const Icon = config?.icon || Lightbulb;
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-      <div className="mt-0.5 p-1.5 rounded-md bg-primary/10">
-        <Icon className="h-4 w-4 text-primary" />
+    <div className="flex items-start gap-3 p-3 rounded-[3px] border bg-card hover:bg-muted/60 transition-colors">
+      <div className="mt-0.5 grid h-7 w-7 place-items-center border border-primary-soft bg-primary-soft/60 dark:border-slate-600 dark:bg-slate-800">
+        <Icon className="h-4 w-4 text-brand" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">{suggestion}</p>
@@ -140,17 +140,17 @@ export function SuggestionsCard({
     <Card className={cn('overflow-hidden', className)}>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Lightbulb className="h-5 w-5 text-yellow-500" />
+          <Lightbulb className="h-5 w-5 text-warning" />
           Verbesserungsvorschläge
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {hasNoSuggestions ? (
           <div className="text-center py-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 mb-3">
-              <Award className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <div className="mb-3 inline-flex h-12 w-12 items-center justify-center border border-[#BFE9CC] bg-[#ECFAF0] dark:border-green-400/30 dark:bg-green-400/10">
+              <Award className="h-6 w-6 text-success" />
             </div>
-            <h4 className="font-medium text-green-600 dark:text-green-400">Perfekt!</h4>
+            <h4 className="font-medium text-success">Perfekt!</h4>
             <p className="text-sm text-muted-foreground mt-1">
               Dein Profil passt hervorragend zu dieser Stelle.
             </p>
@@ -160,7 +160,7 @@ export function SuggestionsCard({
             {/* AI-generated suggestions */}
             {suggestions.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                <h4 className="font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
                   KI-Empfehlungen
                 </h4>
                 {suggestions.map((suggestion, idx) => (
@@ -176,7 +176,7 @@ export function SuggestionsCard({
             {/* Category-based actions */}
             {sortedActions.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                <h4 className="font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
                   Fehlende Keywords ergänzen
                 </h4>
                 {sortedActions.slice(0, 4).map((action, idx) => (

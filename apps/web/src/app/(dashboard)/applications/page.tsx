@@ -35,6 +35,7 @@ import {
 import { ApplicationCardSkeleton } from '@/components/shared/skeletons';
 import { ATSScoreCell } from '@/components/applications/ats-score-cell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { StatusChip, TRACKING_STATUS_CHIP } from '@/components/ui/status-chip';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Plus,
@@ -96,19 +97,6 @@ const TRACKING_STATUS_TABS: {
     { value: 'REJECTED', label: 'Abgelehnt', icon: ThumbsDown },
   ];
 
-// Per-status accent colors for tabs, summary cards and indicators.
-const TRACKING_STATUS_STYLE: Record<
-  ApplicationTrackingStatus | 'all',
-  { text: string; bg: string; ring: string; dot: string }
-> = {
-  all: { text: 'text-foreground', bg: 'bg-muted', ring: 'ring-border', dot: 'bg-foreground/60' },
-  CREATED: { text: 'text-slate-600', bg: 'bg-slate-100', ring: 'ring-slate-200', dot: 'bg-slate-500' },
-  APPLIED: { text: 'text-blue-600', bg: 'bg-blue-100', ring: 'ring-blue-200', dot: 'bg-blue-500' },
-  INTERVIEW: { text: 'text-amber-600', bg: 'bg-amber-100', ring: 'ring-amber-200', dot: 'bg-amber-500' },
-  ACCEPTED: { text: 'text-green-600', bg: 'bg-green-100', ring: 'ring-green-200', dot: 'bg-green-500' },
-  REJECTED: { text: 'text-red-600', bg: 'bg-red-100', ring: 'ring-red-200', dot: 'bg-red-500' },
-};
-
 // Sort options for the applications list.
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Neueste zuerst' },
@@ -119,11 +107,11 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 
 // Status options offered in the bulk action bar.
 const BULK_STATUS_OPTIONS: { value: ApplicationTrackingStatus; label: string }[] = [
-  { value: 'CREATED', label: '📋 Entwurf' },
-  { value: 'APPLIED', label: '📝 Beworben' },
-  { value: 'INTERVIEW', label: '🗓️ Interview' },
-  { value: 'ACCEPTED', label: '✅ Angenommen' },
-  { value: 'REJECTED', label: '❌ Abgelehnt' },
+  { value: 'CREATED', label: 'Entwurf' },
+  { value: 'APPLIED', label: 'Beworben' },
+  { value: 'INTERVIEW', label: 'Interview' },
+  { value: 'ACCEPTED', label: 'Angenommen' },
+  { value: 'REJECTED', label: 'Abgelehnt' },
 ];
 
 // ============================================================================
@@ -458,10 +446,10 @@ export default function ApplicationsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
+          <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">
             Bewerbungen
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             Verwalte und verfolge den Status deiner Bewerbungen.
           </p>
         </div>
@@ -470,14 +458,14 @@ export default function ApplicationsPage() {
             variant="outline"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="h-10 rounded-xl"
+            className="h-10 rounded-[3px]"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             Aktualisieren
           </Button>
           <Button
             onClick={() => router.push('/applications/new')}
-            className="h-10 rounded-xl"
+            className="h-10 rounded-[3px]"
           >
             <Plus className="mr-2 h-4 w-4" />
             Neue Bewerbung
@@ -523,24 +511,30 @@ export default function ApplicationsPage() {
             )}
           </div>
           
-          {/* Status filter pills */}
-          <div className="flex flex-wrap gap-2">
+          {/* Status filter — boxed segmented control with mono counts */}
+          <div className="inline-flex flex-wrap items-center gap-px overflow-hidden rounded-[4px] border border-border bg-border">
             {TRACKING_STATUS_TABS.map((tab) => {
-              const style = TRACKING_STATUS_STYLE[tab.value];
               const isActive = selectedTab === tab.value;
               return (
                 <button
                   key={tab.value}
                   type="button"
                   onClick={() => handleTabChange(tab.value)}
-                  className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold transition-all ${
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 text-[13.5px] font-semibold transition-colors ${
                     isActive
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'bg-card text-muted-foreground border border-border/60 hover:bg-muted/60 hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                   aria-pressed={isActive}
                 >
                   <span>{tab.label}</span>
+                  <span
+                    className={`font-mono text-[11px] font-medium ${
+                      isActive ? 'text-primary-foreground/70' : 'text-muted-foreground/70'
+                    }`}
+                  >
+                    {statusCounts[tab.value]}
+                  </span>
                 </button>
               );
             })}
@@ -548,9 +542,9 @@ export default function ApplicationsPage() {
 
           {/* Controls: Sort & view toggle */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline-block">
-                Sortieren nach:
+            <div className="flex items-center gap-2.5">
+              <span className="hidden whitespace-nowrap font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground sm:inline-block">
+                Sortieren
               </span>
               <Select value={sortBy} onValueChange={handleSortChange}>
                 <SelectTrigger className="w-full sm:w-[200px] bg-background">
@@ -567,14 +561,14 @@ export default function ApplicationsPage() {
             </div>
 
             {/* View toggle (table | cards) — desktop only */}
-            <div className="hidden md:inline-flex items-center rounded-lg border border-border/60 bg-card p-1">
+            <div className="hidden items-center gap-px overflow-hidden rounded-[4px] border border-border bg-border md:inline-flex">
               <button
                 type="button"
                 onClick={() => setViewMode('table')}
-                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
                   viewMode === 'table'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
                 aria-pressed={viewMode === 'table'}
                 aria-label="Tabellenansicht"
@@ -585,10 +579,10 @@ export default function ApplicationsPage() {
               <button
                 type="button"
                 onClick={() => setViewMode('cards')}
-                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
                   viewMode === 'cards'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
                 aria-pressed={viewMode === 'cards'}
                 aria-label="Kartenansicht"
@@ -614,7 +608,7 @@ export default function ApplicationsPage() {
 
           {/* Bulk action bar */}
           {selectedCount > 0 && (
-            <div className="sticky top-2 z-20 flex flex-col gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3 shadow-medium backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="sticky top-2 z-20 flex flex-col gap-3 rounded-[4px] border border-primary/40 bg-primary-soft/80 p-3 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-foreground">
                   {selectedCount} ausgewählt
@@ -677,7 +671,7 @@ export default function ApplicationsPage() {
                 const location = application.jobPosting?.location;
                 const timeAgo = formatDateSmart(application.createdAt);
                 const isSelected = selectedIds.has(application.id);
-                const cardTrackStyle = TRACKING_STATUS_STYLE[application.applicationStatus] || TRACKING_STATUS_STYLE.CREATED;
+                const cardChip = TRACKING_STATUS_CHIP[application.applicationStatus] ?? TRACKING_STATUS_CHIP.CREATED;
                 const cardTrackLabel = TRACKING_STATUS_TABS.find(t => t.value === application.applicationStatus)?.label || 'Entwurf';
 
                 return (
@@ -692,8 +686,8 @@ export default function ApplicationsPage() {
                         router.push(`/applications/${application.id}`);
                       }
                     }}
-                    className={`w-full text-left rounded-xl border bg-card p-4 shadow-sm transition-colors active:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer ${
-                      isSelected ? 'border-primary ring-1 ring-primary/40' : 'border-border/50'
+                    className={`w-full text-left rounded-[4px] border bg-card p-4 transition-colors active:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer ${
+                      isSelected ? 'border-primary ring-1 ring-primary/40' : 'border-border'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -766,12 +760,9 @@ export default function ApplicationsPage() {
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cardTrackStyle.bg} ${cardTrackStyle.text}`}>
-                        <span className={`w-[7px] h-[7px] rounded-full ${cardTrackStyle.dot}`} />
-                        {cardTrackLabel}
-                      </span>
+                      <StatusChip tone={cardChip.tone}>{cardTrackLabel}</StatusChip>
                       {application.status === 'GENERATING' && (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" />
                       )}
                       {application.status === 'FAILED' && (
                         <XCircle className="h-3.5 w-3.5 text-destructive" />
@@ -782,7 +773,7 @@ export default function ApplicationsPage() {
                       </span>
                     </div>
 
-                    <div className="mt-3 border-t border-border/40 pt-3" onClick={(e) => e.stopPropagation()}>
+                    <div className="mt-3 border-t border-border/60 pt-3" onClick={(e) => e.stopPropagation()}>
                       <ATSScoreCell applicationId={application.id} status={application.status} />
                     </div>
                   </div>
@@ -793,10 +784,10 @@ export default function ApplicationsPage() {
 
           {/* Application List — desktop table (md+, viewMode=table) */}
           {paginatedApplications.length > 0 && viewMode === 'table' && (
-            <div className="hidden md:block rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm">
+            <div className="hidden md:block overflow-hidden rounded-[4px] border bg-card">
               <Table>
-                <TableHeader className="bg-muted/30">
-                  <TableRow className="[&_th]:text-[12.5px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:text-muted-foreground">
+                <TableHeader className="bg-muted/50">
+                  <TableRow className="[&_th]:font-mono [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-[.12em] [&_th]:text-muted-foreground/70">
                     <TableHead className="w-[44px]">
                       <Checkbox
                         checked={allPageSelected ? true : somePageSelected ? 'indeterminate' : false}
@@ -858,16 +849,13 @@ export default function ApplicationsPage() {
                         </TableCell>
                         <TableCell>
                           {(() => {
-                            const tStyle = TRACKING_STATUS_STYLE[application.applicationStatus] || TRACKING_STATUS_STYLE.CREATED;
+                            const tChip = TRACKING_STATUS_CHIP[application.applicationStatus] ?? TRACKING_STATUS_CHIP.CREATED;
                             const tLabel = TRACKING_STATUS_TABS.find(t => t.value === application.applicationStatus)?.label || 'Entwurf';
                             return (
                               <div className="flex items-center gap-2">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${tStyle.bg} ${tStyle.text}`}>
-                                  <span className={`w-[7px] h-[7px] rounded-full ${tStyle.dot}`} />
-                                  {tLabel}
-                                </span>
+                                <StatusChip tone={tChip.tone}>{tLabel}</StatusChip>
                                 {application.status === 'GENERATING' && (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" />
                                 )}
                                 {application.status === 'FAILED' && (
                                   <XCircle className="h-3.5 w-3.5 text-destructive" />
@@ -935,7 +923,7 @@ export default function ApplicationsPage() {
 
           {/* Empty state */}
           {paginatedApplications.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border bg-muted/10 animate-in fade-in zoom-in-95 duration-500">
+            <div className="rounded-[4px] border border-dashed border-border bg-muted/10 animate-in fade-in duration-500">
               <EmptyState
                 icon={FileText}
                 title="Keine Bewerbungen gefunden"
@@ -1033,18 +1021,15 @@ export default function ApplicationsPage() {
           )}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border border-dashed border-border bg-muted/10 animate-in fade-in zoom-in-95 duration-500">
-          <div className="relative mb-6">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
-            <div className="relative h-20 w-20 rounded-full bg-background shadow-soft flex items-center justify-center border border-border/50">
-              <FileText className="h-10 w-10 text-primary" />
-            </div>
+        <div className="flex flex-col items-center justify-center py-20 text-center rounded-[4px] border border-dashed border-border bg-muted/10 animate-in fade-in duration-500">
+          <div className="mb-6 grid h-20 w-20 place-items-center rounded-[4px] border border-border bg-muted">
+            <FileText className="h-10 w-10 text-primary" />
           </div>
-          <h3 className="text-xl font-bold text-foreground mb-2">Noch keine Bewerbungen</h3>
+          <h3 className="font-heading text-xl font-bold text-foreground mb-2">Noch keine Bewerbungen</h3>
           <p className="text-muted-foreground mb-8 max-w-md">
             Erstelle deine erste Bewerbung mit KI-Unterstützung und behalte den Überblick über deinen Bewerbungsprozess.
           </p>
-          <Button size="lg" onClick={() => router.push('/applications/new')} className="shadow-lg hover:shadow-xl transition-all">
+          <Button size="lg" onClick={() => router.push('/applications/new')}>
             <Plus className="mr-2 h-5 w-5" />
             Erste Bewerbung erstellen
           </Button>
