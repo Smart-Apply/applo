@@ -74,5 +74,6 @@ const TRACKING_STATUS_CHIP: Record<
   INTERVIEW: { label: 'Interview', tone: 'violet' },
   ACCEPTED: { label: 'Angenommen', tone: 'success' },
   REJECTED: { label: 'Abgelehnt', tone: 'destructive' },
+};
 
 export { StatusChip, statusChipVariants, TRACKING_STATUS_CHIP };
