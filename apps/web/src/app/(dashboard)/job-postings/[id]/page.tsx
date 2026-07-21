@@ -47,11 +47,11 @@ export default function JobPostingDetailPage() {
         <Card>
           <CardContent className="py-12">
             <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 Stellenanzeige nicht gefunden
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-muted-foreground mb-6">
                 Die angeforderte Stellenanzeige existiert nicht oder du hast keine Berechtigung.
               </p>
               <Button onClick={() => router.push('/applications')}>
@@ -79,7 +79,7 @@ export default function JobPostingDetailPage() {
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-2 flex-1 min-w-0">
-              <CardTitle className="text-2xl sm:text-3xl break-words">{jobPosting.title}</CardTitle>
+              <CardTitle className="font-heading text-2xl sm:text-3xl break-words tracking-[-.02em]">{jobPosting.title}</CardTitle>
               <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
@@ -118,12 +118,12 @@ export default function JobPostingDetailPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
+              <FileText className="h-5 w-5 text-brand" />
               <CardTitle>Stellenbeschreibung</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+            <p className="text-foreground/80 whitespace-pre-wrap leading-relaxed">
               {jobPosting.description}
             </p>
           </CardContent>
@@ -135,9 +135,9 @@ export default function JobPostingDetailPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <CheckCircle2 className="h-5 w-5 text-brand" />
               <CardTitle>Anforderungen</CardTitle>
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-2 font-mono">
                 {jobPosting.requirements.length}
               </Badge>
             </div>
@@ -146,8 +146,8 @@ export default function JobPostingDetailPage() {
             <ul className="space-y-3">
               {jobPosting.requirements.map((req, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                  <span className="text-gray-700 leading-relaxed">{req}</span>
+                  <div className="mt-2 h-1.5 w-1.5 bg-brand flex-shrink-0" />
+                  <span className="text-foreground/80 leading-relaxed">{req}</span>
                 </li>
               ))}
             </ul>
@@ -160,9 +160,9 @@ export default function JobPostingDetailPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              <CardTitle>Aufgaben & Verantwortlichkeiten</CardTitle>
-              <Badge variant="secondary" className="ml-2">
+              <Target className="h-5 w-5 text-brand" />
+              <CardTitle>Aufgaben &amp; Verantwortlichkeiten</CardTitle>
+              <Badge variant="secondary" className="ml-2 font-mono">
                 {jobPosting.responsibilities.length}
               </Badge>
             </div>
@@ -171,8 +171,8 @@ export default function JobPostingDetailPage() {
             <ul className="space-y-3">
               {jobPosting.responsibilities.map((resp, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                  <span className="text-gray-700 leading-relaxed">{resp}</span>
+                  <div className="mt-2 h-1.5 w-1.5 bg-brand flex-shrink-0" />
+                  <span className="text-foreground/80 leading-relaxed">{resp}</span>
                 </li>
               ))}
             </ul>
@@ -185,9 +185,9 @@ export default function JobPostingDetailPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-primary" />
+              <Star className="h-5 w-5 text-brand" />
               <CardTitle>Wünschenswert</CardTitle>
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-2 font-mono">
                 {jobPosting.niceToHave.length}
               </Badge>
             </div>
@@ -196,8 +196,8 @@ export default function JobPostingDetailPage() {
             <ul className="space-y-3">
               {jobPosting.niceToHave.map((nice, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <div className="mt-1 h-1.5 w-1.5 rounded-full bg-muted-foreground flex-shrink-0" />
-                  <span className="text-gray-700 leading-relaxed">{nice}</span>
+                  <div className="mt-2 h-1.5 w-1.5 bg-muted-foreground flex-shrink-0" />
+                  <span className="text-foreground/80 leading-relaxed">{nice}</span>
                 </li>
               ))}
             </ul>
@@ -209,17 +209,17 @@ export default function JobPostingDetailPage() {
       {jobPosting.rawText && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground">
               Original-Text
             </CardTitle>
           </CardHeader>
           <CardContent>
             <details className="group">
-              <summary className="cursor-pointer text-sm text-primary hover:underline">
+              <summary className="cursor-pointer text-sm text-brand hover:underline">
                 Vollständigen Text anzeigen
               </summary>
               <Separator className="my-4" />
-              <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {jobPosting.rawText}
               </p>
             </details>
