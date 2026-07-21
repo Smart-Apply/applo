@@ -102,7 +102,7 @@ function ScoreRing({ value, size = 124 }: { value: number; size?: number }) {
           fill="none"
           stroke={col}
           strokeWidth={sw}
-          strokeLinecap="round"
+          strokeLinecap="butt"
           strokeDasharray={C}
           strokeDashoffset={off}
           style={{ transition: 'stroke-dashoffset .7s cubic-bezier(.34,1.2,.5,1), stroke .4s' }}
@@ -115,9 +115,9 @@ function ScoreRing({ value, size = 124 }: { value: number; size?: number }) {
           </div>
           <div
             style={{
-              fontSize: 10.5,
-              fontWeight: 700,
-              letterSpacing: '.06em',
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: '.12em',
               textTransform: 'uppercase',
               color: 'var(--muted-2)',
               marginTop: 3,
@@ -385,15 +385,15 @@ export function AtsOptimizer({
   if (isLoading) {
     return (
       <div className="opti-split">
-        <Skeleton className="h-[420px] w-full rounded-2xl" />
-        <Skeleton className="h-[420px] w-full rounded-2xl" />
+        <Skeleton className="h-[420px] w-full rounded-none" />
+        <Skeleton className="h-[420px] w-full rounded-none" />
       </div>
     );
   }
 
   if (error || !analysis) {
     return (
-      <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
+      <div className="mx-auto max-w-md border border-dashed border-border bg-card/40 p-10 text-center">
         <Sparkles className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
         <p className="mb-1 text-sm font-semibold">ATS-Analyse starten</p>
         <p className="mb-4 text-xs text-muted-foreground">
@@ -452,10 +452,10 @@ export function AtsOptimizer({
               <FileText className="h-[18px] w-[18px]" /> Dein Lebenslauf
             </div>
             <div className="sub">
-              <span className="hl-legend" /> grün = von der Stelle erkannte Begriffe
+              <span className="hl-legend" /> blau = von der Stelle erkannte Begriffe
             </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 border border-[#e0e0e0] bg-white px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-medium tracking-[0.08em] text-[#5581c7] uppercase">
             <Eye className="h-3.5 w-3.5" /> Live-Vorschau
           </span>
         </div>
@@ -473,7 +473,13 @@ export function AtsOptimizer({
             </div>
             <div className="sub">So kommt dein Lebenslauf durch die Bewerber-Filter</div>
           </div>
-          <Button variant="ghost" size="sm" onClick={reanalyze} disabled={reAnalyzing} className="h-8 px-2 text-xs">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={reanalyze}
+            disabled={reAnalyzing}
+            className="h-8 rounded-none border-[#1b2a49] bg-white px-2 text-xs text-[#1b2a49] hover:bg-[#e5e9f2]"
+          >
             <RefreshCw className={cn('mr-1.5 h-3.5 w-3.5', reAnalyzing && 'animate-spin')} />
             Neu analysieren
           </Button>
@@ -636,16 +642,16 @@ export function AtsOptimizer({
           </div>
           {allAddedPending || done ? (
             done ? (
-              <Button onClick={onExport} disabled={exportDisabled}>
+              <Button onClick={onExport} disabled={exportDisabled} className="rounded-none bg-[#1b2a49] text-white hover:bg-[#22345a]">
                 <Download className="mr-2 h-4 w-4" /> Lebenslauf exportieren
               </Button>
             ) : (
-              <Button onClick={reanalyze} disabled={reAnalyzing}>
+              <Button onClick={reanalyze} disabled={reAnalyzing} className="rounded-none bg-[#1b2a49] text-white hover:bg-[#22345a]">
                 <RefreshCw className={cn('mr-2 h-4 w-4', reAnalyzing && 'animate-spin')} /> Neu analysieren
               </Button>
             )
           ) : (
-            <Button onClick={addAll}>
+            <Button onClick={addAll} className="rounded-none bg-[#1b2a49] text-white hover:bg-[#22345a]">
               <Sparkles className="mr-2 h-4 w-4" /> Alle übernehmen
             </Button>
           )}
