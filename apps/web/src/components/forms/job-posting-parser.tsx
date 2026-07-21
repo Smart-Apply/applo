@@ -156,10 +156,10 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
                   type="text"
                   placeholder="https://www.linkedin.com/jobs/view/..."
                   {...urlForm.register('url')}
-                  className={urlForm.formState.errors.url ? 'border-red-500' : ''}
+                  className={urlForm.formState.errors.url ? 'border-destructive' : ''}
                 />
                 {urlForm.formState.errors.url && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {urlForm.formState.errors.url.message}
                   </p>
                 )}
@@ -196,26 +196,26 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div>
-                <Label className="text-xs text-gray-500">Titel</Label>
+                <Label className="text-xs text-muted-foreground">Titel</Label>
                 <p className="text-lg font-semibold">{parsedData.title}</p>
               </div>
 
               <div>
-                <Label className="text-xs text-gray-500">Unternehmen</Label>
+                <Label className="text-xs text-muted-foreground">Unternehmen</Label>
                 <p className="text-base">{parsedData.company}</p>
               </div>
 
               {parsedData.location && (
                 <div>
-                  <Label className="text-xs text-gray-500">Standort</Label>
+                  <Label className="text-xs text-muted-foreground">Standort</Label>
                   <p className="text-base">{parsedData.location}</p>
                 </div>
               )}
 
               {parsedData.description && (
                 <div>
-                  <Label className="text-xs text-gray-500">Beschreibung</Label>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                  <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">
                     {parsedData.description.length > 300
                       ? `${parsedData.description.substring(0, 300)}...`
                       : parsedData.description}
@@ -225,8 +225,8 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
 
               {parsedData.requirements && parsedData.requirements.length > 0 && (
                 <div>
-                  <Label className="text-xs text-gray-500">Anforderungen</Label>
-                  <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
+                  <Label className="text-xs text-muted-foreground">Anforderungen</Label>
+                  <ul className="text-sm text-foreground list-disc list-inside space-y-1">
                     {parsedData.requirements.map((req, index) => (
                       <li key={index}>{req}</li>
                     ))}
@@ -236,12 +236,12 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
 
               {parsedData.sourceUrl && (
                 <div>
-                  <Label className="text-xs text-gray-500">Original-URL</Label>
+                  <Label className="text-xs text-muted-foreground">Original-URL</Label>
                   <a
                     href={parsedData.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline break-all"
+                    className="text-sm text-brand hover:underline break-all"
                   >
                     {parsedData.sourceUrl}
                   </a>
@@ -284,10 +284,10 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
                   id="edit-title"
                   type="text"
                   {...editForm.register('title')}
-                  className={editForm.formState.errors.title ? 'border-red-500' : ''}
+                  className={editForm.formState.errors.title ? 'border-destructive' : ''}
                 />
                 {editForm.formState.errors.title && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {editForm.formState.errors.title.message}
                   </p>
                 )}
@@ -299,10 +299,10 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
                   id="edit-company"
                   type="text"
                   {...editForm.register('company')}
-                  className={editForm.formState.errors.company ? 'border-red-500' : ''}
+                  className={editForm.formState.errors.company ? 'border-destructive' : ''}
                 />
                 {editForm.formState.errors.company && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {editForm.formState.errors.company.message}
                   </p>
                 )}
@@ -356,15 +356,15 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
 
       {/* Help Text */}
       {!parsedData && (
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-primary-soft bg-primary-soft/40 dark:border-slate-600 dark:bg-slate-800/60">
           <CardContent className="pt-6">
             <div className="flex gap-3">
-              <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="text-sm font-medium text-blue-900">
+                <p className="text-sm font-medium text-foreground">
                   Unterstützte Plattformen
                 </p>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-muted-foreground">
                   Du kannst Stellenanzeigen von LinkedIn, Indeed und anderen Jobportalen 
                   importieren. Falls die Analyse fehlschlägt, kannst du die Informationen 
                   auch manuell eingeben.

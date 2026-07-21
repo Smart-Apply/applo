@@ -68,16 +68,16 @@ export default function ResetPasswordPage() {
   if (status === 'success') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-        <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
+        <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
           <div className="mb-6 flex justify-center">
             <AppLogo className="h-12 w-auto" />
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[4px] border border-[#BFE9CC] bg-[#ECFAF0] dark:border-green-400/30 dark:bg-green-400/10">
+              <CheckCircle className="h-8 w-8 text-success" />
             </div>
-            <h1 className="mb-2 font-poppins text-2xl font-semibold text-foreground">
+            <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
               Passwort zurückgesetzt
             </h1>
             <p className="mb-6 text-muted-foreground">
@@ -96,16 +96,16 @@ export default function ResetPasswordPage() {
   if (status === 'error') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-        <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
+        <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
           <div className="mb-6 flex justify-center">
             <AppLogo className="h-12 w-auto" />
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-              <XCircle className="h-8 w-8 text-red-600" />
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10">
+              <XCircle className="h-8 w-8 text-destructive" />
             </div>
-            <h1 className="mb-2 font-poppins text-2xl font-semibold text-foreground">
+            <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
               Link ungültig
             </h1>
             <p className="mb-6 text-muted-foreground">{errorMessage}</p>
@@ -122,16 +122,16 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-      <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
+      <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
         <div className="mb-6 flex justify-center">
           <AppLogo className="h-12 w-auto" />
         </div>
 
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <KeyRound className="h-8 w-8 text-primary" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[4px] border border-primary-soft bg-primary-soft/60 dark:border-slate-600 dark:bg-slate-800">
+            <KeyRound className="h-8 w-8 text-brand" />
           </div>
-          <h1 className="mb-2 font-poppins text-2xl font-semibold text-foreground">
+          <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
             Neues Passwort festlegen
           </h1>
           <p className="text-muted-foreground">
@@ -147,18 +147,18 @@ export default function ResetPasswordPage() {
               name="password"
               render={({ field, fieldState }) => (
                 <FormItem>
-                  <FormLabel className="font-poppins text-base font-semibold text-foreground">
+                  <FormLabel className="text-base font-semibold text-foreground">
                     Neues Passwort
                   </FormLabel>
                   <FormControl>
                     <Input
                       type="password"
                       placeholder="Neues Passwort"
-                      className={`h-10 rounded-xl border-2 bg-transparent px-4 font-poppins text-[15px] placeholder:text-muted-foreground focus:border-primary ${
+                      className={`h-10 rounded-[4px] border bg-transparent px-3.5 text-[15px] placeholder:text-muted-foreground focus:border-primary ${
                         fieldState.error
-                          ? 'border-red-500 focus:border-red-500'
+                          ? 'border-destructive focus:border-destructive'
                           : fieldState.isDirty && !fieldState.invalid
-                          ? 'border-green-500'
+                          ? 'border-success'
                           : 'border-input'
                       }`}
                       {...field}
@@ -175,18 +175,18 @@ export default function ResetPasswordPage() {
               name="confirmPassword"
               render={({ field, fieldState }) => (
                 <FormItem>
-                  <FormLabel className="font-poppins text-base font-semibold text-foreground">
+                  <FormLabel className="text-base font-semibold text-foreground">
                     Passwort wiederholen
                   </FormLabel>
                   <FormControl>
                     <Input
                       type="password"
                       placeholder="Passwort wiederholen"
-                      className={`h-10 rounded-xl border-2 bg-transparent px-4 font-poppins text-[15px] placeholder:text-muted-foreground focus:border-primary ${
+                      className={`h-10 rounded-[4px] border bg-transparent px-3.5 text-[15px] placeholder:text-muted-foreground focus:border-primary ${
                         fieldState.error
-                          ? 'border-red-500 focus:border-red-500'
+                          ? 'border-destructive focus:border-destructive'
                           : fieldState.isDirty && !fieldState.invalid
-                          ? 'border-green-500'
+                          ? 'border-success'
                           : 'border-input'
                       }`}
                       {...field}
@@ -199,7 +199,7 @@ export default function ResetPasswordPage() {
 
             <SubmitButton
               type="submit"
-              className="w-full h-10 rounded-xl bg-primary font-poppins text-base font-semibold text-primary-foreground hover:bg-primary/90"
+              className="w-full h-10 rounded-[4px] bg-primary text-base font-semibold text-primary-foreground hover:bg-primary/90"
               isLoading={form.formState.isSubmitting}
               loadingText="Speichere..."
             >

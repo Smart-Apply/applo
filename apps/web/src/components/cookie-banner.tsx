@@ -47,16 +47,16 @@ export function CookieBanner() {
     <div
       role="region"
       aria-label="Cookie-Hinweis"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
     >
       <div className="container mx-auto flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
-        <p className="font-poppins text-sm text-gray-700 md:max-w-3xl">
+        <p className="text-sm text-foreground/80 md:max-w-3xl">
           Wir verwenden ausschließlich technisch notwendige Cookies, damit du
           eingeloggt bleibst und Formulare sicher abgesendet werden. Es findet
           kein Tracking statt. Mehr dazu in unserer{" "}
           <Link
             href="/datenschutz"
-            className="font-medium text-blue-600 underline-offset-2 hover:underline"
+            className="font-medium text-brand underline-offset-2 hover:underline"
           >
             Datenschutzerklärung
           </Link>
@@ -66,7 +66,6 @@ export function CookieBanner() {
           <Button
             type="button"
             onClick={dismiss}
-            className="bg-[#1B2A49] font-poppins text-white hover:bg-[#0f1d3a]"
           >
             Verstanden
           </Button>

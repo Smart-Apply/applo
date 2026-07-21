@@ -60,20 +60,20 @@ interface CoverLetterCTAProps {
 export function CoverLetterCTA({ onGenerate, loading }: CoverLetterCTAProps) {
   return (
     <div className="mx-auto max-w-[820px] animate-in fade-in duration-300">
-      <div className="rounded-2xl border border-dashed border-primary/30 bg-gradient-to-b from-primary/[0.04] to-transparent p-6 sm:p-7">
+      <div className="rounded-[4px] border border-dashed border-primary/30 bg-primary-soft/30 p-6 sm:p-7">
         <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[3px] bg-primary text-primary-foreground">
             <Mail className="h-6 w-6" />
           </span>
           <div className="flex-1">
-            <div className="text-lg font-bold">Noch kein Anschreiben vorhanden</div>
+            <div className="font-heading text-lg font-bold">Noch kein Anschreiben vorhanden</div>
             <p className="mt-1 max-w-[460px] text-sm leading-relaxed text-muted-foreground">
               Ein individuelles Anschreiben hebt deine Bewerbung hervor und steigert deine
               Antwortchance. Es wird auf Basis deines Profils und dieser Stelle erstellt – in
               ca. 20 Sekunden.
             </p>
           </div>
-          <Button onClick={onGenerate} disabled={loading} size="lg" className="shrink-0 shadow-lg hover:shadow-xl">
+          <Button onClick={onGenerate} disabled={loading} size="lg" className="shrink-0">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Wird generiert…

@@ -206,11 +206,11 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                   {...urlForm.register('url')}
                   className={cn(
                     'rounded-[3px] border-[#B0B0B0] font-mono text-[13px] focus-visible:border-[#5581C7] focus-visible:ring-[#5581C7]/30',
-                    urlForm.formState.errors.url && 'border-red-500',
+                    urlForm.formState.errors.url && 'border-destructive',
                   )}
                 />
                 {urlForm.formState.errors.url && (
-                  <p className="text-sm text-red-500 mt-1">{urlForm.formState.errors.url.message}</p>
+                  <p className="text-sm text-destructive mt-1">{urlForm.formState.errors.url.message}</p>
                 )}
               </div>
               <Button
@@ -237,30 +237,30 @@ export function JobStep({ onJobCreated }: JobStepProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="manual-title">
-                    Stellentitel <span className="text-red-500">*</span>
+                    Stellentitel <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="manual-title"
                     placeholder="z.B. Marketing Manager, Pflegefachkraft"
                     {...manualForm.register('title')}
-                    className={manualForm.formState.errors.title ? 'border-red-500' : ''}
+                    className={manualForm.formState.errors.title ? 'border-destructive' : ''}
                   />
                   {manualForm.formState.errors.title && (
-                    <p className="text-sm text-red-500 mt-1">{manualForm.formState.errors.title.message}</p>
+                    <p className="text-sm text-destructive mt-1">{manualForm.formState.errors.title.message}</p>
                   )}
                 </div>
                 <div>
                   <Label htmlFor="manual-company">
-                    Unternehmen <span className="text-red-500">*</span>
+                    Unternehmen <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="manual-company"
                     placeholder="z.B. Unternehmen GmbH"
                     {...manualForm.register('company')}
-                    className={manualForm.formState.errors.company ? 'border-red-500' : ''}
+                    className={manualForm.formState.errors.company ? 'border-destructive' : ''}
                   />
                   {manualForm.formState.errors.company && (
-                    <p className="text-sm text-red-500 mt-1">{manualForm.formState.errors.company.message}</p>
+                    <p className="text-sm text-destructive mt-1">{manualForm.formState.errors.company.message}</p>
                   )}
                 </div>
               </div>
@@ -276,7 +276,7 @@ export function JobStep({ onJobCreated }: JobStepProps) {
 
               <div>
                 <Label htmlFor="manual-fullText">
-                  Stellenbeschreibung <span className="text-red-500">*</span>
+                  Stellenbeschreibung <span className="text-destructive">*</span>
                 </Label>
                 <p className="text-sm text-muted-foreground mb-2">
                   Kopiere den gesamten Text der Stellenanzeige und füge ihn hier ein.
@@ -286,10 +286,10 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                   placeholder="Füge hier den vollständigen Text der Stellenanzeige ein..."
                   rows={8}
                   {...manualForm.register('fullText')}
-                  className={manualForm.formState.errors.fullText ? 'border-red-500' : ''}
+                  className={manualForm.formState.errors.fullText ? 'border-destructive' : ''}
                 />
                 {manualForm.formState.errors.fullText && (
-                  <p className="text-sm text-red-500 mt-1">{manualForm.formState.errors.fullText.message}</p>
+                  <p className="text-sm text-destructive mt-1">{manualForm.formState.errors.fullText.message}</p>
                 )}
               </div>
 

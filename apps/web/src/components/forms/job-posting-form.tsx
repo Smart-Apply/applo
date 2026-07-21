@@ -83,22 +83,22 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Basic Information Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Grundinformationen</h3>
+            <h3 className="text-sm font-semibold text-foreground">Grundinformationen</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="title">
-                  Stellentitel <span className="text-red-500">*</span>
+                  Stellentitel <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="title"
                   type="text"
                   placeholder="z.B. Marketing Manager, Pflegefachkraft, Vertriebsmitarbeiter"
                   {...form.register('title')}
-                  className={form.formState.errors.title ? 'border-red-500' : ''}
+                  className={form.formState.errors.title ? 'border-destructive' : ''}
                 />
                 {form.formState.errors.title && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {form.formState.errors.title.message}
                   </p>
                 )}
@@ -106,17 +106,17 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
 
               <div>
                 <Label htmlFor="company">
-                  Unternehmen <span className="text-red-500">*</span>
+                  Unternehmen <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="company"
                   type="text"
                   placeholder="z.B. Unternehmen GmbH"
                   {...form.register('company')}
-                  className={form.formState.errors.company ? 'border-red-500' : ''}
+                  className={form.formState.errors.company ? 'border-destructive' : ''}
                 />
                 {form.formState.errors.company && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {form.formState.errors.company.message}
                   </p>
                 )}
@@ -131,10 +131,10 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
                   type="text"
                   placeholder="z.B. Berlin, Deutschland"
                   {...form.register('location')}
-                  className={form.formState.errors.location ? 'border-red-500' : ''}
+                  className={form.formState.errors.location ? 'border-destructive' : ''}
                 />
                 {form.formState.errors.location && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {form.formState.errors.location.message}
                   </p>
                 )}
@@ -147,10 +147,10 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
                   type="text"
                   placeholder="https://example.com/jobs/123"
                   {...form.register('url')}
-                  className={form.formState.errors.url ? 'border-red-500' : ''}
+                  className={form.formState.errors.url ? 'border-destructive' : ''}
                 />
                 {form.formState.errors.url && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {form.formState.errors.url.message}
                   </p>
                 )}
@@ -165,10 +165,10 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
                   type="text"
                   placeholder="z.B. 60,000 - 80,000 EUR"
                   {...form.register('salary')}
-                  className={form.formState.errors.salary ? 'border-red-500' : ''}
+                  className={form.formState.errors.salary ? 'border-destructive' : ''}
                 />
                 {form.formState.errors.salary && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {form.formState.errors.salary.message}
                   </p>
                 )}
@@ -181,10 +181,10 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
                   type="text"
                   placeholder="z.B. Vollzeit, Teilzeit, Freelance"
                   {...form.register('employmentType')}
-                  className={form.formState.errors.employmentType ? 'border-red-500' : ''}
+                  className={form.formState.errors.employmentType ? 'border-destructive' : ''}
                 />
                 {form.formState.errors.employmentType && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {form.formState.errors.employmentType.message}
                   </p>
                 )}
@@ -194,13 +194,13 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
 
           {/* Full Text Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Stellenbeschreibung</h3>
+            <h3 className="text-sm font-semibold text-foreground">Stellenbeschreibung</h3>
             
             <div>
               <Label htmlFor="fullText">
-                Beschreibung <span className="text-red-500">*</span>
+                Beschreibung <span className="text-destructive">*</span>
               </Label>
-              <p className="text-sm text-gray-500 mb-2">
+              <p className="text-sm text-muted-foreground mb-2">
                 Allgemeine Beschreibung der Stelle und des Unternehmens
               </p>
               <Textarea
@@ -208,10 +208,10 @@ export function JobPostingForm({ onSave, onCancel }: JobPostingFormProps) {
                 rows={12}
                 placeholder="Beschreibe die Stelle, das Team und was das Unternehmen ausmacht..."
                 {...form.register('fullText')}
-                className={form.formState.errors.fullText ? 'border-red-500' : ''}
+                className={form.formState.errors.fullText ? 'border-destructive' : ''}
               />
               {form.formState.errors.fullText && (
-                <p className="text-sm text-red-500 mt-1">
+                <p className="text-sm text-destructive mt-1">
                   {form.formState.errors.fullText.message}
                 </p>
               )}

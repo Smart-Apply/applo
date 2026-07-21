@@ -196,7 +196,7 @@ export function ATSScoreSidebar({
           {analysis.matchedKeywords.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <CheckCircle2 className="h-4 w-4 text-success" />
                 <span className="text-sm font-medium">Gefundene Keywords ({analysis.matchedKeywords.length})</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -211,7 +211,7 @@ export function ATSScoreSidebar({
           {analysis.missingKeywords.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
-                <XCircle className="h-4 w-4 text-red-500" />
+                <XCircle className="h-4 w-4 text-destructive" />
                 <span className="text-sm font-medium">Fehlende Keywords ({analysis.missingKeywords.length})</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -230,7 +230,7 @@ export function ATSScoreSidebar({
         <div className="flex items-center justify-between text-xs pt-2 border-t">
           <span className="text-muted-foreground">Gefundene Keywords</span>
           <Badge variant="secondary" className="text-xs">
-            <CheckCircle2 className="h-3 w-3 mr-1 text-green-600" />
+            <CheckCircle2 className="h-3 w-3 mr-1 text-success" />
             {analysis.matchedKeywords.length} / {analysis.matchedKeywords.length + analysis.missingKeywords.length}
           </Badge>
         </div>

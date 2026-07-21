@@ -63,9 +63,9 @@ function KeywordBadge({ keyword, showUsedIn = false }: KeywordBadgeProps) {
         )}
       >
         {keyword.found ? (
-          <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
+          <CheckCircle2 className="h-3 w-3 text-success dark:text-green-400" />
         ) : (
-          <XCircle className="h-3 w-3 text-red-600 dark:text-red-400" />
+          <XCircle className="h-3 w-3 text-destructive dark:text-red-400" />
         )}
         <span className="text-xs">{keyword.keyword}</span>
         <Icon className="h-3 w-3 ml-1 opacity-50" />
@@ -117,11 +117,11 @@ export function KeywordsOverview({
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3 text-green-600" />
+              <CheckCircle2 className="h-3 w-3 text-success" />
               {matchedKeywords.length}
             </Badge>
             <Badge variant="secondary" className="flex items-center gap-1">
-              <XCircle className="h-3 w-3 text-red-600" />
+              <XCircle className="h-3 w-3 text-destructive" />
               {missingKeywords.length}
             </Badge>
             <Badge variant="outline">{matchRate}% Match</Badge>
@@ -132,10 +132,10 @@ export function KeywordsOverview({
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all">Alle ({allKeywords.length})</TabsTrigger>
-            <TabsTrigger value="matched" className="text-green-600">
+            <TabsTrigger value="matched" className="text-success">
               Gefunden ({matchedKeywords.length})
             </TabsTrigger>
-            <TabsTrigger value="missing" className="text-red-600">
+            <TabsTrigger value="missing" className="text-destructive">
               Fehlend ({missingKeywords.length})
             </TabsTrigger>
           </TabsList>

@@ -260,13 +260,13 @@ function ConnectionRow({
             </Badge>
           )}
           {connection?.status === 'ACTIVE' && (
-            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-xs">
+            <Badge className="border-[#BFE9CC] bg-[#ECFAF0] text-success hover:bg-[#ECFAF0] dark:border-green-400/30 dark:bg-green-400/10 text-xs">
               <CheckCircle2 className="h-3 w-3 mr-1" />
               Aktiv
             </Badge>
           )}
           {connection?.status === 'ERROR' && (
-            <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-xs">
+            <Badge className="border-[#F3C9C9] bg-[#FDEEEE] text-destructive hover:bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10 text-xs">
               <AlertTriangle className="h-3 w-3 mr-1" />
               Fehler
             </Badge>
@@ -279,7 +279,7 @@ function ConnectionRow({
               {connection.emailAddress}
             </p>
             {connection.status === 'ERROR' && connection.lastErrorMessage && (
-              <p className="text-xs text-red-600 truncate">
+              <p className="text-xs text-destructive truncate">
                 {connection.lastErrorMessage}
               </p>
             )}

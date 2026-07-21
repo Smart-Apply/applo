@@ -49,7 +49,7 @@ const EditableCoverLetter = dynamic(
     import('@/components/applications/editable-cover-letter').then((m) => ({
       default: m.EditableCoverLetter,
     })),
-  { loading: () => <Skeleton className="mx-auto h-96 w-full max-w-[820px] rounded-2xl" />, ssr: false },
+  { loading: () => <Skeleton className="mx-auto h-96 w-full max-w-[820px] rounded-[4px]" />, ssr: false },
 );
 const CoverLetterCTA = dynamic(
   () =>

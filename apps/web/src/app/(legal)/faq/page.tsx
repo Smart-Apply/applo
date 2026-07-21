@@ -37,7 +37,7 @@ const betaFaqs: FaqItem[] = [
       <>
         Während der geschlossenen Beta ist die Registrierung nur mit einem
         persönlichen Einladungscode möglich (Format{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm">
+        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm">
           BETA-XXXX-XXXX-XXXX
         </code>
         ). Den Code hast du per E-Mail bekommen — trage ihn unten auf der
@@ -357,18 +357,18 @@ export default function FaqPage() {
           {betaFaqs.map(({ q, a }) => (
             <details
               key={q}
-              className="group rounded-lg border border-gray-200 bg-white p-4 open:shadow-sm"
+              className="group rounded-[4px] border border-border bg-card p-4"
             >
-              <summary className="flex cursor-pointer list-none items-center justify-between font-poppins text-base font-semibold text-[#1B2A49] [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between font-heading text-base font-semibold text-primary [&::-webkit-details-marker]:hidden">
                 <span>{q}</span>
                 <span
-                  className="ml-4 select-none text-xl text-gray-400 transition-transform group-open:rotate-45"
+                  className="ml-4 select-none text-xl text-muted-foreground transition-transform group-open:rotate-45"
                   aria-hidden="true"
                 >
                   +
                 </span>
               </summary>
-              <div className="mt-3 text-gray-700 leading-relaxed">{a}</div>
+              <div className="mt-3 text-foreground/80 leading-relaxed">{a}</div>
             </details>
           ))}
         </div>
@@ -382,18 +382,18 @@ export default function FaqPage() {
           {faqs.map(({ q, a }) => (
             <details
               key={q}
-              className="group rounded-lg border border-gray-200 bg-white p-4 open:shadow-sm"
+              className="group rounded-[4px] border border-border bg-card p-4"
             >
-              <summary className="flex cursor-pointer list-none items-center justify-between font-poppins text-base font-semibold text-[#1B2A49] [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between font-heading text-base font-semibold text-primary [&::-webkit-details-marker]:hidden">
                 <span>{q}</span>
                 <span
-                  className="ml-4 select-none text-xl text-gray-400 transition-transform group-open:rotate-45"
+                  className="ml-4 select-none text-xl text-muted-foreground transition-transform group-open:rotate-45"
                   aria-hidden="true"
                 >
                   +
                 </span>
               </summary>
-              <div className="mt-3 text-gray-700 leading-relaxed">{a}</div>
+              <div className="mt-3 text-foreground/80 leading-relaxed">{a}</div>
             </details>
           ))}
         </div>
