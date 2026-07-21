@@ -176,16 +176,16 @@ function DashboardLayoutInner({
 
       {/* Desktop Sidebar - Hidden in edit mode */}
       {!isEditMode && (
-        <aside className="hidden w-80 border-r border-border/50 bg-card/50 backdrop-blur-xl md:block text-foreground shadow-soft z-20">
+        <aside className="hidden w-[290px] flex-none bg-[#1B2A49] md:block z-20">
           <div className="flex h-full flex-col">
-            <div className="flex h-16 items-center px-4 border-b border-border/50">
+            <div className="flex h-16 items-center px-4 border-b border-white/10">
               <Link href="/dashboard" className="flex items-center">
-                <AppLogo className="w-[180px] h-auto" />
+                <AppLogo className="w-[180px] h-auto brightness-0 invert" />
               </Link>
             </div>
 
-            <nav className="flex-1 space-y-1 px-4 py-6">
-              <div className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+            <nav className="flex-1 space-y-0.5 px-4 py-6">
+              <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.45)]">
                 Menu
               </div>
               {navigation.map((item) =>
@@ -201,26 +201,29 @@ function DashboardLayoutInner({
               )}
             </nav>
 
-            <div className="p-4 border-t border-border/50 bg-muted/10">
-              <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card p-3 shadow-sm transition-all hover:shadow-md cursor-pointer group">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary ring-2 ring-background group-hover:ring-primary/20 transition-all">
+            <div className="p-4 border-t border-white/10">
+              <div className="flex items-center gap-3 border border-white/15 bg-white/5 p-3 transition-colors hover:bg-white/10 cursor-pointer group">
+                <div className="font-heading flex h-9 w-9 flex-none items-center justify-center bg-[#5581C7] text-sm font-bold text-white">
                   {(user?.firstName || user?.email)?.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-foreground">
+                    <p className="truncate text-sm font-semibold text-white">
                       {user?.firstName && user?.lastName
                         ? `${user.firstName} ${user.lastName}`
                         : user?.firstName || user?.email}
                     </p>
-                    <CurrentTierBadge size="sm" />
+                    <CurrentTierBadge
+                      size="sm"
+                      className="rounded-none bg-white/10 font-mono text-[10px] font-semibold uppercase tracking-[.08em] text-white/85"
+                    />
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+                  <p className="truncate text-xs text-[rgba(229,233,242,.55)]">{user?.email}</p>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  className="h-8 w-8 rounded-[3px] text-[rgba(229,233,242,.6)] hover:bg-[rgba(220,38,38,.4)] hover:text-white"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleLogout();
@@ -257,7 +260,7 @@ function DashboardLayoutInner({
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-80 p-0 bg-card border-r border-border">
+            <SheetContent side="left" className="w-80 p-0 bg-[#1B2A49] border-r-0">
               {/* Required by Radix Dialog for screen-reader users.
                   Hidden visually with `sr-only` so the existing logo/header
                   stays as the visible title. Without these, Radix's a11y
@@ -268,14 +271,14 @@ function DashboardLayoutInner({
                 Navigation des Applo Dashboards.
               </SheetDescription>
               <div className="flex h-full flex-col">
-                <div className="flex h-16 items-center px-4 border-b border-border/50">
+                <div className="flex h-16 items-center px-4 border-b border-white/10">
                   <Link href="/dashboard" className="flex items-center">
-                    <AppLogo className="w-[220px] h-auto" />
+                    <AppLogo className="w-[220px] h-auto brightness-0 invert" />
                   </Link>
                 </div>
 
-                <nav className="flex-1 space-y-1 px-4 py-6">
-                  <div className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                <nav className="flex-1 space-y-0.5 px-4 py-6">
+                  <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.45)]">
                     Menu
                   </div>
                   {navigation.map((item) =>
@@ -291,26 +294,29 @@ function DashboardLayoutInner({
                   )}
                 </nav>
 
-                <div className="p-4 border-t border-border/50 bg-muted/10">
-                  <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card p-3 shadow-sm">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                <div className="p-4 border-t border-white/10">
+                  <div className="flex items-center gap-3 border border-white/15 bg-white/5 p-3">
+                    <div className="font-heading flex h-9 w-9 flex-none items-center justify-center bg-[#5581C7] text-sm font-bold text-white">
                       {(user?.firstName || user?.email)?.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="truncate text-sm font-semibold text-foreground">
+                        <p className="truncate text-sm font-semibold text-white">
                           {user?.firstName && user?.lastName
                             ? `${user.firstName} ${user.lastName}`
                             : user?.firstName || user?.email}
                         </p>
-                        <CurrentTierBadge size="sm" />
+                        <CurrentTierBadge
+                          size="sm"
+                          className="rounded-none bg-white/10 font-mono text-[10px] font-semibold uppercase tracking-[.08em] text-white/85"
+                        />
                       </div>
-                      <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+                      <p className="truncate text-xs text-[rgba(229,233,242,.55)]">{user?.email}</p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      className="h-8 w-8 rounded-[3px] text-[rgba(229,233,242,.6)] hover:bg-[rgba(220,38,38,.4)] hover:text-white"
                       onClick={handleLogout}
                     >
                       <LogOut className="h-4 w-4" />
@@ -372,23 +378,20 @@ function NavLink({
   return (
     <Link
       href={item.href}
-      className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+      className={`group flex items-center justify-between border-l-[3px] px-3 py-2.5 text-sm transition-colors duration-150 ${
         isActive
-          ? 'bg-primary/5 text-primary shadow-sm'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+          ? 'border-white bg-[#5581C7] font-semibold text-white'
+          : 'border-transparent font-medium text-[rgba(229,233,242,.72)] hover:bg-white/5 hover:text-white'
       }`}
     >
       <div className="flex items-center gap-3">
         <Icon
           className={`h-5 w-5 transition-colors ${
-            isActive
-              ? 'text-primary'
-              : 'text-muted-foreground group-hover:text-foreground'
+            isActive ? 'text-white' : 'text-[rgba(229,233,242,.72)] group-hover:text-white'
           }`}
         />
         {item.name}
       </div>
-      {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
     </Link>
   );
 }
@@ -415,23 +418,20 @@ function NavLinkGated({
     return (
       <Link
         href={item.href}
-        className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+        className={`group flex items-center justify-between border-l-[3px] px-3 py-2.5 text-sm transition-colors duration-150 ${
           isActive
-            ? 'bg-primary/5 text-primary shadow-sm'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            ? 'border-white bg-[#5581C7] font-semibold text-white'
+            : 'border-transparent font-medium text-[rgba(229,233,242,.72)] hover:bg-white/5 hover:text-white'
         }`}
       >
         <div className="flex items-center gap-3">
           <Icon
             className={`h-5 w-5 transition-colors ${
-              isActive
-                ? 'text-primary'
-                : 'text-muted-foreground group-hover:text-foreground'
+              isActive ? 'text-white' : 'text-[rgba(229,233,242,.72)] group-hover:text-white'
             }`}
           />
           {item.name}
         </div>
-        {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
       </Link>
     );
   }
@@ -444,13 +444,13 @@ function NavLinkGated({
         <span
           aria-disabled="true"
           tabIndex={0}
-          className="group flex cursor-not-allowed items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/60 opacity-60 transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="group flex cursor-not-allowed items-center justify-between border-l-[3px] border-transparent px-3 py-2.5 text-sm font-medium text-[rgba(229,233,242,.4)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <div className="flex items-center gap-3">
-            <Icon className="h-5 w-5 text-muted-foreground/60" />
+            <Icon className="h-5 w-5 text-[rgba(229,233,242,.4)]" />
             {item.name}
           </div>
-          <Lock className="h-3.5 w-3.5 text-muted-foreground/60" />
+          <Lock className="h-3.5 w-3.5 text-[rgba(229,233,242,.4)]" />
         </span>
       </TooltipTrigger>
       <TooltipContent side="right" className="max-w-xs">

@@ -665,6 +665,45 @@ h1, h2, h3, .font-heading {
   white-space: pre-wrap;
 }
 
+/* ============ DASHBOARD HERO FLY-IN (Superman entrance) ============
+   Ported from the sharp-redesign handoff (Dashboard mock). The flyer div
+   travels across the hero; `.landed` fades the streaks + swaps to the
+   happy face + waves; `.rested` (added on top of .landed) lowers the arm
+   and returns to the calm open-eyed smile. Order matters: .rested rules
+   must come after .landed so they win at equal specificity. */
+@keyframes dashFly {
+  0% { left: -210px; transform: translateY(34px) rotate(-13deg) scale(.85); opacity: 0; }
+  12% { opacity: 1; }
+  55% { transform: translateY(-14px) rotate(-8deg) scale(1); }
+  100% { left: calc(100% - 208px); transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+}
+.dash-flyer { position: absolute; top: 0; left: -210px; width: 186px; height: 196px; animation: dashFly 1.7s cubic-bezier(.3,.55,.4,1) .2s both; transform-origin: 55% 60%; }
+@keyframes dashStreak { 0%, 100% { opacity: .35; } 50% { opacity: .95; } }
+.dstreak { animation: dashStreak .5s ease-in-out infinite; }
+.dstreak.d2 { animation-delay: .12s; }
+.dstreak.d3 { animation-delay: .24s; }
+/* streaks must STOP animating on land — a running keyframe overrides the fade */
+.dash-flyer.landed .dstreak { opacity: 0; animation: none; transition: opacity .25s ease; }
+.dash-flyer.landed .dash-applo { animation: dashBob 3s ease-in-out infinite; transform-origin: 120px 200px; }
+@keyframes dashBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.dash-brow, .dash-mouth-happy, .dash-eyes-happy { opacity: 0; }
+.dash-flyer.landed .dash-brow, .dash-flyer.landed .dash-eyes-open, .dash-flyer.landed .dash-mouth-fly { opacity: 0; }
+.dash-flyer.landed .dash-eyes-happy, .dash-flyer.landed .dash-mouth-happy { opacity: 1; }
+.dash-flyer.landed .dash-wave-arm { animation: dashWave 1s ease-in-out infinite; transform-origin: 154px 176px; }
+@keyframes dashWave { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(-16deg); } }
+.dash-flyer.rested .dash-eyes-happy, .dash-flyer.rested .dash-mouth-happy { opacity: 0; }
+.dash-flyer.rested .dash-eyes-open, .dash-flyer.rested .dash-mouth-fly { opacity: 1; }
+.dash-flyer.rested .dash-wave-arm { animation: none; transform: rotate(40deg); transform-origin: 154px 176px; transition: transform .5s ease; }
+@media (max-width: 820px) {
+  .dash-applo-layer { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-flyer { animation-duration: .01s; left: calc(100% - 208px) !important; }
+  .dstreak { animation: none !important; opacity: 0; }
+  .dash-flyer.landed .dash-applo { animation: none; }
+  .dash-flyer.landed .dash-wave-arm { animation: none; }
+}
+
 /* ============ APPLO STATE MACHINE ============ */
 .applo * { transform-box: view-box; }
 .applo { animation: apploEnter .4s cubic-bezier(.34,1.4,.64,1) both; transform-origin: 120px 256px; }

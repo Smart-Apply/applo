@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProfile } from '@/hooks/use-profile';
@@ -17,12 +17,12 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ApploFlyer } from '@/components/ui/applo-rig';
 import {
   Plus,
   FileText,
   Clock,
   CheckCircle,
-  XCircle,
   Briefcase,
   ArrowRight,
   TrendingUp,
@@ -33,40 +33,16 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { formatDateSmart } from '@/lib/format-date';
 
+/** Square status chips per the sharp design — mono uppercase, tinted bg + border + dot. */
 const STATUS_CONFIG: Record<
   ApplicationTrackingStatus,
-  { label: string; color: string; bgColor: string; icon: LucideIcon }
+  { label: string; bg: string; color: string; border: string }
 > = {
-  CREATED: {
-    label: 'Erstellt',
-    color: 'text-slate-600',
-    bgColor: 'bg-slate-100',
-    icon: FileText,
-  },
-  APPLIED: {
-    label: 'Beworben',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
-    icon: Clock,
-  },
-  INTERVIEW: {
-    label: 'Interview',
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
-    icon: Calendar,
-  },
-  ACCEPTED: {
-    label: 'Angenommen',
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
-    icon: CheckCircle,
-  },
-  REJECTED: {
-    label: 'Abgesagt',
-    color: 'text-red-600',
-    bgColor: 'bg-red-100',
-    icon: XCircle,
-  },
+  CREATED: { label: 'Erstellt', bg: '#F5F6F8', color: '#475569', border: '#D8DEE7' },
+  APPLIED: { label: 'Beworben', bg: '#EFF4FE', color: '#40639C', border: '#BFD3F5' },
+  INTERVIEW: { label: 'Interview', bg: '#F5EEFB', color: '#7C3AED', border: '#DCC9F0' },
+  ACCEPTED: { label: 'Angenommen', bg: '#ECFAF0', color: '#16A34A', border: '#BFE9CC' },
+  REJECTED: { label: 'Abgesagt', bg: '#FDEEEE', color: '#DC2626', border: '#F3C9C9' },
 };
 
 export default function DashboardPage() {
@@ -81,6 +57,38 @@ export default function DashboardPage() {
     offers: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  // Mascot fly-in state machine: flying → landed (wave ~3s) → rested.
+  // `.rested` is additive on top of `.landed` — the CSS relies on both
+  // classes being present. Replay = remount the flyer via `flyKey`.
+  const [flyPhase, setFlyPhase] = useState<'flying' | 'landed' | 'rested'>('flying');
+  const [flyKey, setFlyKey] = useState(0);
+  const restTimer = useRef<number>(0);
+  const prefersReducedMotion = useRef(false);
+
+  useEffect(() => {
+    // Full reduced-motion fallback: no flight, mascot resting at the end
+    // position (CSS pins the flyer), calm face, no wave.
+    prefersReducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion.current) {
+      setFlyPhase('rested');
+    }
+    return () => window.clearTimeout(restTimer.current);
+  }, []);
+
+  const handleFlyerAnimationEnd = (e: React.AnimationEvent<HTMLDivElement>) => {
+    if (e.animationName !== 'dashFly' || prefersReducedMotion.current) return;
+    setFlyPhase('landed');
+    window.clearTimeout(restTimer.current);
+    restTimer.current = window.setTimeout(() => setFlyPhase('rested'), 3200);
+  };
+
+  const replayFlyIn = () => {
+    if (prefersReducedMotion.current) return;
+    window.clearTimeout(restTimer.current);
+    setFlyPhase('flying');
+    setFlyKey((k) => k + 1);
+  };
 
   // Calculate profile strength using centralized utility
   const profileStrength = calculateProfileStrength(profile, user);
@@ -121,6 +129,8 @@ export default function DashboardPage() {
     return 'Guten Abend';
   };
 
+  const monthLabel = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(new Date());
+
   if (isLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -130,91 +140,87 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Welcome Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary-soft p-8 shadow-medium">
+    <div className="space-y-6 animate-fade-in">
+      {/* Welcome hero — navy glow band with the Applo fly-in. Click to replay. */}
+      <div
+        className="bg-brand-glow relative cursor-pointer overflow-hidden rounded-[4px] p-7 sm:p-9"
+        onClick={replayFlyIn}
+        title="Klicken für Applos Anflug"
+      >
         <div className="relative z-10">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          <p className="font-mono text-[11.5px] font-medium uppercase tracking-[.14em] text-[#5581C7]">
+            Dashboard · {monthLabel}
+          </p>
+          <h1 className="font-heading mt-3 text-[clamp(28px,3.4vw,38px)] font-extrabold tracking-[-.03em] text-white">
             {getGreeting()}, {user?.firstName || 'Nutzer'}!
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl">
-            Hier ist ein Überblick über deine aktuellen Bewerbungen. Du hast{' '}
-            <span className="font-semibold text-primary">{stats.active}</span>{' '}
+          <p className="mt-2.5 max-w-[600px] text-base leading-relaxed text-[rgba(229,233,242,.75)]">
+            Überblick über deine aktuellen Bewerbungen. Du hast{' '}
+            <span className="font-bold text-white">{stats.active}</span>{' '}
             aktive Bewerbungen am Laufen.
           </p>
-          <div className="mt-6 flex gap-4">
+          <div className="mt-6 flex flex-wrap gap-3">
             <Button
-              className="rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 hover:-translate-y-0.5"
-              onClick={() => router.push('/applications/new')}
+              className="rounded-[3px] bg-white text-[#1B2A49] hover:bg-[#E5E9F2]"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push('/applications/new');
+              }}
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-1 h-4 w-4" />
               Neue Bewerbung
             </Button>
             <Button
               variant="outline"
-              className="rounded-xl bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-background/80"
-              onClick={() => router.push('/jobs')}
+              className="rounded-[3px] border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push('/jobs');
+              }}
             >
-              <Briefcase className="mr-2 h-4 w-4" />
+              <Briefcase className="mr-1 h-4 w-4" />
               Jobs finden
             </Button>
           </div>
         </div>
 
-        {/* Decorative Background Elements */}
-        <div className="absolute right-0 top-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-primary/5 blur-3xl"></div>
-        <div className="absolute right-20 bottom-0 -mb-10 h-40 w-40 rounded-full bg-blue-500/5 blur-2xl"></div>
+        {/* Applo “Superman” fly-in layer (hidden ≤820px via CSS) */}
+        <div className="dash-applo-layer pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[196px]" aria-hidden>
+          <div
+            key={flyKey}
+            className={`dash-flyer${flyPhase !== 'flying' ? ' landed' : ''}${flyPhase === 'rested' ? ' rested' : ''}`}
+            onAnimationEnd={handleFlyerAnimationEnd}
+          >
+            <ApploFlyer />
+          </div>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Gesamt"
-          value={stats.total}
-          icon={FileText}
-          iconColor="#1B2A49"
-          bgColor="#F5F6F8"
-        />
-        <StatsCard
-          title="Aktiv"
-          value={stats.active}
-          icon={Clock}
-          iconColor="#1B2A49"
-          bgColor="#F5F6F8"
-        />
-        <StatsCard
-          title="Interviews"
-          value={stats.interviews}
-          icon={Calendar}
-          iconColor="#1B2A49"
-          bgColor="#F5F6F8"
-        />
-        <StatsCard
-          title="Angebote"
-          value={stats.offers}
-          icon={CheckCircle}
-          iconColor="#1B2A49"
-          bgColor="#F5F6F8"
-        />
+      {/* Stats — hairline 1px grid, mono numbers */}
+      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-[4px] border border-[#E0E0E0] bg-[#E0E0E0] sm:grid-cols-2 lg:grid-cols-4">
+        <StatsCard title="Gesamt" value={stats.total} icon={FileText} />
+        <StatsCard title="Aktiv" value={stats.active} icon={Clock} />
+        <StatsCard title="Interviews" value={stats.interviews} icon={Calendar} />
+        <StatsCard title="Angebote" value={stats.offers} icon={CheckCircle} />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content Area */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-6">
           {/* Recent Applications */}
-          <Card className="border-border/50 shadow-soft overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border/50 bg-muted/20">
+          <Card className="gap-0 overflow-hidden rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-[#E0E0E0] px-5 py-5">
               <div>
-                <CardTitle className="text-xl font-bold">Aktuelle Bewerbungen</CardTitle>
-                <CardDescription>Deine zuletzt bearbeiteten Bewerbungen</CardDescription>
+                <CardTitle className="font-heading text-lg font-bold tracking-[-.01em]">Aktuelle Bewerbungen</CardTitle>
+                <CardDescription className="mt-0.5 text-[13px]">Deine zuletzt bearbeiteten Bewerbungen</CardDescription>
               </div>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="text-primary hover:text-primary/80 hover:bg-primary/5"
+                className="rounded-[3px] border-[#E0E0E0] text-[13px] font-semibold hover:bg-[#F5F6F8]"
                 onClick={() => router.push('/applications')}
               >
-                Alle anzeigen <ArrowRight className="ml-2 h-4 w-4" />
+                Alle anzeigen <ArrowRight className="ml-1 h-3.5 w-3.5" />
               </Button>
             </CardHeader>
             <CardContent className="p-0">
@@ -229,97 +235,111 @@ export default function DashboardPage() {
                   }}
                 />
               ) : (
-                <div className="divide-y divide-border/50">
-                  {applications.slice(0, 5).map((app) => {
-                    const status = STATUS_CONFIG[app.applicationStatus] || STATUS_CONFIG.CREATED;
-                    const StatusIcon = status.icon;
-                    return (
-                      <div
-                        key={app.id}
-                        className="group flex items-center justify-between p-4 transition-colors hover:bg-muted/30"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-background border border-border/50 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
-                            <Briefcase className="h-6 w-6 text-primary" />
+                <>
+                  <div className="grid grid-cols-[24px_1fr] border-b border-[#E0E0E0] bg-[#FAFAFA] px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]">
+                    <span>#</span>
+                    <span>Position / Firma</span>
+                  </div>
+                  <div>
+                    {applications.slice(0, 5).map((app, i) => {
+                      const status = STATUS_CONFIG[app.applicationStatus] || STATUS_CONFIG.CREATED;
+                      return (
+                        <div
+                          key={app.id}
+                          className="group flex items-center justify-between gap-4 border-b border-[#E5E9F2] px-5 py-3.5 transition-colors last:border-b-0 hover:bg-[#FAFAFA]"
+                        >
+                          <div className="flex min-w-0 items-center gap-4">
+                            <span className="w-5 flex-none font-mono text-xs text-[#A0A0A0]">
+                              {String(i + 1).padStart(2, '0')}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="truncate text-[15px] font-semibold text-foreground">
+                                {app.title || 'Unbenannte Bewerbung'}
+                              </h4>
+                              <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                                {app.jobPosting?.company || app.jobPosting?.location || 'Keine Details'}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                              {app.title || 'Unbenannte Bewerbung'}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              {app.jobPosting?.company || app.jobPosting?.location || 'Keine Details'}
-                            </p>
-                          </div>
-                        </div>
 
-                        <div className="flex items-center gap-6">
-                          <div className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${status.bgColor} ${status.color}`}>
-                            <StatusIcon className="h-3.5 w-3.5" />
-                            {status.label}
+                          <div className="flex flex-none items-center gap-5">
+                            <div
+                              className="hidden items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[.05em] md:inline-flex"
+                              style={{ backgroundColor: status.bg, color: status.color, borderColor: status.border }}
+                            >
+                              <span className="h-1.5 w-1.5 flex-none" style={{ backgroundColor: status.color }} />
+                              {status.label}
+                            </div>
+                            <div className="hidden min-w-[72px] text-right sm:block">
+                              <p className="font-mono text-[9.5px] uppercase tracking-[.1em] text-[#A0A0A0]">Aktualisiert</p>
+                              <p className="mt-0.5 text-[12.5px] font-medium text-foreground">
+                                {formatDateSmart(app.updatedAt)}
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8 rounded-[3px] border-[#E0E0E0] text-muted-foreground hover:bg-[#1B2A49] hover:text-white"
+                              onClick={() => router.push(`/applications/${app.id}`)}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <div className="text-right hidden sm:block">
-                            <p className="text-xs text-muted-foreground">Aktualisiert</p>
-                            <p className="text-xs font-medium">
-                              {formatDateSmart(app.updatedAt)}
-                            </p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => router.push(`/applications/${app.id}`)}
-                          >
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                          </Button>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
         </div>
 
         {/* Sidebar Content */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Profile Completion */}
-          <Card className="border-border/50 shadow-soft bg-gradient-to-br from-card to-muted/20">
-            <CardHeader>
-              <CardTitle className="text-lg">Profilstatus</CardTitle>
-              <CardDescription>Vervollständige dein Profil</CardDescription>
+          <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
+            <CardHeader className="border-b border-[#E0E0E0] px-5 py-4">
+              <CardTitle className="font-heading text-base font-bold">Profilstatus</CardTitle>
+              <CardDescription className="text-[13px]">Vervollständige dein Profil</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-5">
               {isProfileLoading ? (
                 <div className="flex h-32 items-center justify-center">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3.5">
                   <div className="flex items-end justify-between">
-                    <span className="text-2xl font-bold text-primary">{profileStrength.score}%</span>
-                    <span className="text-sm text-muted-foreground mb-1">
-                      {profileStrength.score === 100 ? 'Perfekt!' : 'Fast geschafft!'}
+                    <span className="font-mono text-3xl font-semibold leading-none text-foreground">
+                      {profileStrength.score}
+                      <span className="text-base text-[#A0A0A0]">%</span>
+                    </span>
+                    <span className="font-mono text-[11px] uppercase tracking-[.08em] text-[#5581C7]">
+                      {profileStrength.score === 100 ? 'Perfekt!' : 'Fast geschafft'}
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="h-2 w-full overflow-hidden bg-[#E5E9F2]">
                     <div
-                      className="h-full bg-primary transition-all duration-500 ease-out"
+                      className="h-full bg-[#5581C7] transition-all duration-500 ease-out"
                       style={{ width: `${profileStrength.score}%` }}
                     />
                   </div>
-                  <div className="space-y-2 pt-2">
+                  <div className="space-y-2 pt-1.5">
                     {profileStrength.suggestions.slice(0, 3).map((suggestion, index) => (
-                      <div 
+                      <div
                         key={index}
-                        className={`flex items-center gap-2 text-sm ${
-                          suggestion.completed ? 'text-muted-foreground' : 'text-foreground font-medium'
+                        className={`flex items-center gap-2.5 text-[13.5px] ${
+                          suggestion.completed ? 'text-muted-foreground' : 'font-medium text-foreground'
                         }`}
                       >
                         {suggestion.completed ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <svg width="15" height="15" viewBox="0 0 24 24" className="flex-none" aria-hidden>
+                            <rect x="1" y="1" width="22" height="22" fill="#16A34A" />
+                            <path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" />
+                          </svg>
                         ) : (
-                          <div className="h-4 w-4 rounded-full border-2 border-primary/30" />
+                          <span className="box-border h-[15px] w-[15px] flex-none border-2 border-[#B0B0B0]" />
                         )}
                         <span>{suggestion.text}</span>
                       </div>
@@ -327,7 +347,7 @@ export default function DashboardPage() {
                   </div>
                   <Button
                     variant="outline"
-                    className="w-full mt-2"
+                    className="mt-1.5 w-full rounded-[3px] border-[#1B2A49] font-semibold hover:bg-[#E5E9F2]"
                     onClick={() => router.push('/profile')}
                   >
                     Profil bearbeiten
@@ -338,31 +358,34 @@ export default function DashboardPage() {
           </Card>
 
           {/* Usage Summary */}
-          <Card className="border-border/50 shadow-soft">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
+          <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
+            <CardHeader className="border-b border-[#E0E0E0] px-5 py-4">
+              <CardTitle className="font-heading flex items-center gap-2 text-base font-bold">
+                <Zap className="h-4 w-4 text-[#5581C7]" />
                 Kontingent
               </CardTitle>
-              <CardDescription>Dein monatliches Kontingent</CardDescription>
+              <CardDescription className="text-[13px]">Dein monatliches Kontingent</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-5">
               <UsageSummary showPeriod />
             </CardContent>
           </Card>
 
           {/* Activity Notice */}
-          <Card className="border-border/50 shadow-soft">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
+          <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
+            <CardHeader className="border-b border-[#E0E0E0] px-5 py-4">
+              <CardTitle className="font-heading flex items-center gap-2 text-base font-bold">
+                <TrendingUp className="h-4 w-4 text-[#5581C7]" />
                 Markttrends
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="rounded-xl bg-blue-50 p-4 border border-blue-100">
-                <p className="text-sm text-blue-800">
-                  <span className="font-semibold">Tipp:</span> Frontend-Entwickler werden aktuell stark gesucht. Aktualisiere deine Skills!
+            <CardContent className="p-5">
+              <div className="border-l-[3px] border-[#5581C7] bg-[#F5F6F8] px-4 py-3.5">
+                <p className="text-[13.5px] leading-relaxed text-foreground">
+                  <span className="mb-1 block font-mono text-[11px] font-semibold uppercase tracking-[.08em] text-[#5581C7]">
+                    Tipp
+                  </span>
+                  Pflegekräfte und Projektmanager werden aktuell stark gesucht. Aktualisiere deine Fähigkeiten!
                 </p>
               </div>
             </CardContent>
@@ -377,33 +400,22 @@ function StatsCard({
   title,
   value,
   icon: Icon,
-  iconColor,
-  bgColor,
 }: {
   title: string;
   value: number;
   icon: LucideIcon;
-  iconColor: string;
-  bgColor: string;
 }) {
   return (
-    <Card className="border-border/50 shadow-soft hover:shadow-medium transition-all duration-300 group">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-foreground">{value}</span>
-            </div>
-          </div>
-          <div 
-            className="rounded-xl p-3 group-hover:scale-110 transition-transform"
-            style={{ backgroundColor: bgColor }}
-          >
-            <Icon className="h-6 w-6" style={{ color: iconColor }} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex items-start justify-between gap-3 bg-white p-5 transition-colors hover:bg-[#FAFAFA]">
+      <div>
+        <p className="font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">{title}</p>
+        <span className="mt-2.5 block font-mono text-[32px] font-semibold leading-none tracking-[-.02em] text-foreground">
+          {value}
+        </span>
+      </div>
+      <div className="grid h-10 w-10 flex-none place-items-center border border-[#E0E0E0] bg-[#F5F6F8] text-[#1B2A49]">
+        <Icon className="h-5 w-5" />
+      </div>
+    </div>
   );
 }
