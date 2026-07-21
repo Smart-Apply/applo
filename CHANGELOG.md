@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.6.1](https://github.com/Smart-Apply/applo/compare/v4.6.0...v4.6.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* **web:** eliminate mobile horizontal overflow across dashboard routes ([#660](https://github.com/Smart-Apply/applo/issues/660)) ([f5f5e87](https://github.com/Smart-Apply/applo/commit/f5f5e87aac7ff4bfd8e2686c57bc7d85474e3cde))
+
 ## [4.6.0](https://github.com/Smart-Apply/applo/compare/v4.5.1...v4.6.0) (2026-07-21)
 
 
