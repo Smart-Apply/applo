@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.6.0](https://github.com/Smart-Apply/applo/compare/v4.5.1...v4.6.0) (2026-07-21)
+
+
+### Features
+
+* **web:** sharp redesign — editorial design system across the entire app ([#659](https://github.com/Smart-Apply/applo/issues/659)) ([e33d26c](https://github.com/Smart-Apply/applo/commit/e33d26c6668ac1359370eaa817dc37975f9141f3))
+
+
+### Bug Fixes
+
+* application IDOR, settings theme display, and broken test infrastructure ([#653](https://github.com/Smart-Apply/applo/issues/653)) ([e3ee8e1](https://github.com/Smart-Apply/applo/commit/e3ee8e1f834997af7a9015edabc8c5cfe0dd523c))
+
 ## [4.5.1](https://github.com/Smart-Apply/smart-apply/compare/v4.5.0...v4.5.1) (2026-07-08)
 
 
