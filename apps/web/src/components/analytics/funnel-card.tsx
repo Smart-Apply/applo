@@ -62,7 +62,7 @@ export function FunnelCard({ funnel, onStageClick }: Props) {
                   type="button"
                   onClick={() => handleClick(stage.key)}
                   className={cn(
-                    'relative w-full text-left px-3 py-3 rounded-xl transition-colors group',
+                    'relative w-full text-left px-3 py-3 rounded-[3px] transition-colors group',
                     isSel ? 'bg-accent/10' : 'hover:bg-muted/50',
                   )}
                 >
@@ -75,7 +75,7 @@ export function FunnelCard({ funnel, onStageClick }: Props) {
                     <span className="flex items-center gap-2 text-[13px]">
                       <span className="font-bold tabular-nums">{stage.count}</span>
                       {stage.conv != null && (
-                        <span className="text-xs font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full tabular-nums">
+                        <span className="rounded-[2px] bg-muted px-2 py-0.5 font-mono text-xs font-semibold text-muted-foreground tabular-nums">
                           {stage.conv}%
                         </span>
                       )}
@@ -83,9 +83,9 @@ export function FunnelCard({ funnel, onStageClick }: Props) {
                   </div>
 
                   {/* Horizontal bar */}
-                  <div className="h-3 rounded-full bg-muted overflow-hidden">
+                  <div className="h-3 bg-muted overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-500"
+                      className="h-full transition-all duration-500"
                       style={{
                         width: `${widthPct}%`,
                         background: isSel ? 'var(--accent)' : color,

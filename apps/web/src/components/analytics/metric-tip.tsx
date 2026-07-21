@@ -38,7 +38,7 @@ export function MetricTip({ content, align = 'center' }: Props) {
         <span
           role="tooltip"
           className={cn(
-            'absolute z-50 bottom-[calc(100%+8px)] w-56 rounded-xl px-3 py-2.5',
+            'absolute z-50 bottom-[calc(100%+8px)] w-56 rounded-[4px] px-3 py-2.5',
             'bg-foreground text-xs leading-relaxed shadow-[0_12px_28px_-8px_rgba(16,24,40,.22)]',
             'pointer-events-none',
             align === 'right'  && 'right-0',

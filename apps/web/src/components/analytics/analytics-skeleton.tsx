@@ -14,22 +14,22 @@ export function AnalyticsSkeleton() {
         <Skeleton className="h-4 w-80" />
       </div>
       {/* insight */}
-      <Skeleton className="h-14 w-full rounded-xl" />
+      <Skeleton className="h-14 w-full rounded-[4px]" />
       {/* kpi grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-[132px] rounded-xl" />
+          <Skeleton key={i} className="h-[132px] rounded-[4px]" />
         ))}
       </div>
       {/* activity chart */}
-      <Skeleton className="h-[380px] rounded-xl" />
+      <Skeleton className="h-[380px] rounded-[4px]" />
       {/* funnel + buckets */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Skeleton className="h-64 rounded-xl" />
-        <Skeleton className="h-64 rounded-xl" />
+        <Skeleton className="h-64 rounded-[4px]" />
+        <Skeleton className="h-64 rounded-[4px]" />
       </div>
       {/* templates */}
-      <Skeleton className="h-48 rounded-xl" />
+      <Skeleton className="h-48 rounded-[4px]" />
     </div>
   );
 }

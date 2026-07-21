@@ -47,7 +47,7 @@ function ChartTip({ active, payload, label }: TooltipContentProps<ValueType, Nam
   if (!active || !payload?.length) return null;
   return (
     <div
-      className="rounded-xl px-3 py-2.5 shadow-xl text-xs min-w-[152px]"
+      className="rounded-[4px] px-3 py-2.5 shadow-xl text-xs min-w-[152px]"
       style={{ background: '#1B2A49', color: '#fff' }}
     >
       <p className="font-semibold mb-2" style={{ color: '#98A8C4' }}>
@@ -130,8 +130,8 @@ export function ActivityChart({ timeseries, range, onRangeChange }: Props) {
                 type="button"
                 onClick={() => toggle(s.key)}
                 className={cn(
-                  'inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold transition-colors',
-                  on ? 'border-border' : 'border-border/50 opacity-55',
+                  'inline-flex items-center gap-2 px-3 py-1.5 rounded-[3px] border text-sm font-semibold transition-colors',
+                  on ? 'border-border bg-background' : 'border-border/50 opacity-55',
                 )}
               >
                 <span className="w-2.5 h-2.5 rounded-[3px] flex-none" style={{ background: s.color, opacity: on ? 1 : 0.3 }} />

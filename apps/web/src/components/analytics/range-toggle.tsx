@@ -24,7 +24,7 @@ export function RangeToggle({ value, onChange }: Props) {
     <div
       role="tablist"
       aria-label="Zeitraum auswählen"
-      className="inline-flex items-center gap-0.5 p-1 bg-card border border-border rounded-lg shadow-sm"
+      className="inline-flex items-center gap-px overflow-hidden rounded-[4px] border border-border bg-border"
     >
       {OPTIONS.map(o => (
         <button
@@ -33,10 +33,10 @@ export function RangeToggle({ value, onChange }: Props) {
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            'px-3 py-1.5 rounded-md text-sm font-semibold transition-colors whitespace-nowrap',
+            'px-3 py-1.5 text-sm font-semibold transition-colors whitespace-nowrap',
             value === o.value
               ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground',
+              : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
           )}
         >
           {o.label}

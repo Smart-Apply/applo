@@ -63,13 +63,11 @@ export function ScoreBucketsChart({ buckets }: Props) {
                     )}>
                       {b.interviewRate}%
                     </span>
-                    <div className="w-full bg-muted rounded-t-lg rounded-b-sm flex items-end overflow-hidden" style={{ height: '80%' }}>
+                    <div className="w-full bg-muted flex items-end overflow-hidden" style={{ height: '80%' }}>
                       <div
                         className={cn(
-                          'w-full rounded-t-lg transition-all duration-500',
-                          isBest
-                            ? 'bg-gradient-to-b from-[#34436E] to-primary'
-                            : 'bg-gradient-to-b from-[#93A0BC] to-[#7888AD]',
+                          'w-full transition-all duration-500',
+                          isBest ? 'bg-primary' : 'bg-muted-foreground/40',
                         )}
                         style={{ height: `${heightPct}%` }}
                       />

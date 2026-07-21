@@ -18,8 +18,8 @@ export function InsightStrip({ data }: Props) {
   const isNew  = data.totals.applications < 8;
 
   return (
-    <div className="flex items-start gap-3 px-4 py-3.5 bg-card border border-border border-l-4 border-l-primary rounded-xl shadow-sm">
-      <span className="grid place-items-center w-8 h-8 rounded-lg bg-primary/10 text-primary flex-none mt-0.5">
+    <div className="flex items-start gap-3 px-4 py-3.5 bg-card border border-border border-l-4 border-l-brand rounded-[4px]">
+      <span className="grid place-items-center w-8 h-8 rounded-[2px] bg-primary/10 text-primary flex-none mt-0.5">
         <Lightbulb size={16} strokeWidth={2} />
       </span>
 
