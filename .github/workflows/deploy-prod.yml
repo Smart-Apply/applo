@@ -218,7 +218,7 @@ jobs:
           standalone: true
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           # Node 24 to match the API workflow + satisfy pnpm 11's >=22.13
           # requirement. The Cloudflare Workers RUNTIME version is set in
