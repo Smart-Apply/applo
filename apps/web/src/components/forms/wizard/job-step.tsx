@@ -158,18 +158,12 @@ export function JobStep({ onJobCreated }: JobStepProps) {
       </CardHeader>
       <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6 grid h-auto w-full grid-cols-2 gap-px rounded-none border border-[#E0E0E0] bg-[#E0E0E0] p-0">
-            <TabsTrigger
-              value="url"
-              className="gap-2 rounded-none border-0 bg-white py-3 text-[13.5px] font-semibold text-[#6B6969] shadow-none data-[state=active]:bg-[#1B2A49] data-[state=active]:text-white data-[state=active]:shadow-none"
-            >
+          <TabsList className="mb-6 grid w-full grid-cols-2">
+            <TabsTrigger value="url" className="gap-2 py-3 text-[13.5px]">
               <LinkIcon className="h-4 w-4" />
               Link einfügen
             </TabsTrigger>
-            <TabsTrigger
-              value="text"
-              className="gap-2 rounded-none border-0 bg-white py-3 text-[13.5px] font-semibold text-[#6B6969] shadow-none data-[state=active]:bg-[#1B2A49] data-[state=active]:text-white data-[state=active]:shadow-none"
-            >
+            <TabsTrigger value="text" className="gap-2 py-3 text-[13.5px]">
               <FileText className="h-4 w-4" />
               Text einfügen
             </TabsTrigger>

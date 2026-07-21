@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProfile } from '@/hooks/use-profile';
 import { api } from '@/lib/api-client';
-import { Application, ApplicationTrackingStatus } from '@/types';
+import { Application } from '@/types';
 import { calculateProfileStrength } from '@/lib/profile-utils';
 import { UsageSummary } from '@/components/subscription';
 import {
@@ -17,6 +17,9 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { StatusChip, TRACKING_STATUS_CHIP } from '@/components/ui/status-chip';
+import { HairlineGrid } from '@/components/ui/hairline-grid';
+import { SectionLabel } from '@/components/ui/section-label';
 import { ApploFlyer } from '@/components/ui/applo-rig';
 import {
   Plus,
@@ -32,18 +35,6 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { formatDateSmart } from '@/lib/format-date';
-
-/** Square status chips per the sharp design — mono uppercase, tinted bg + border + dot. */
-const STATUS_CONFIG: Record<
-  ApplicationTrackingStatus,
-  { label: string; bg: string; color: string; border: string }
-> = {
-  CREATED: { label: 'Erstellt', bg: '#F5F6F8', color: '#475569', border: '#D8DEE7' },
-  APPLIED: { label: 'Beworben', bg: '#EFF4FE', color: '#40639C', border: '#BFD3F5' },
-  INTERVIEW: { label: 'Interview', bg: '#F5EEFB', color: '#7C3AED', border: '#DCC9F0' },
-  ACCEPTED: { label: 'Angenommen', bg: '#ECFAF0', color: '#16A34A', border: '#BFE9CC' },
-  REJECTED: { label: 'Abgesagt', bg: '#FDEEEE', color: '#DC2626', border: '#F3C9C9' },
-};
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -148,7 +139,7 @@ export default function DashboardPage() {
         title="Klicken für Applos Anflug"
       >
         <div className="relative z-10">
-          <p className="font-mono text-[11.5px] font-medium uppercase tracking-[.14em] text-[#5581C7]">
+          <p className="font-mono text-[11.5px] font-medium uppercase tracking-[.14em] text-brand">
             Dashboard · {monthLabel}
           </p>
           <h1 className="font-heading mt-3 text-[clamp(28px,3.4vw,38px)] font-extrabold tracking-[-.03em] text-white">
@@ -197,19 +188,19 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats — hairline 1px grid, mono numbers */}
-      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-[4px] border border-[#E0E0E0] bg-[#E0E0E0] sm:grid-cols-2 lg:grid-cols-4">
+      <HairlineGrid className="sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard title="Gesamt" value={stats.total} icon={FileText} />
         <StatsCard title="Aktiv" value={stats.active} icon={Clock} />
         <StatsCard title="Interviews" value={stats.interviews} icon={Calendar} />
         <StatsCard title="Angebote" value={stats.offers} icon={CheckCircle} />
-      </div>
+      </HairlineGrid>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-6">
           {/* Recent Applications */}
-          <Card className="gap-0 overflow-hidden rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-[#E0E0E0] px-5 py-5">
+          <Card className="gap-0 overflow-hidden py-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b px-5 py-5">
               <div>
                 <CardTitle className="font-heading text-lg font-bold tracking-[-.01em]">Aktuelle Bewerbungen</CardTitle>
                 <CardDescription className="mt-0.5 text-[13px]">Deine zuletzt bearbeiteten Bewerbungen</CardDescription>
@@ -217,7 +208,7 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-[3px] border-[#E0E0E0] text-[13px] font-semibold hover:bg-[#F5F6F8]"
+                className="rounded-[3px] text-[13px] font-semibold"
                 onClick={() => router.push('/applications')}
               >
                 Alle anzeigen <ArrowRight className="ml-1 h-3.5 w-3.5" />
@@ -236,20 +227,20 @@ export default function DashboardPage() {
                 />
               ) : (
                 <>
-                  <div className="grid grid-cols-[24px_1fr] border-b border-[#E0E0E0] bg-[#FAFAFA] px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]">
+                  <div className="grid grid-cols-[24px_1fr] border-b bg-muted/50 px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-muted-foreground/70">
                     <span>#</span>
                     <span>Position / Firma</span>
                   </div>
                   <div>
                     {applications.slice(0, 5).map((app, i) => {
-                      const status = STATUS_CONFIG[app.applicationStatus] || STATUS_CONFIG.CREATED;
+                      const chip = TRACKING_STATUS_CHIP[app.applicationStatus] ?? TRACKING_STATUS_CHIP.CREATED;
                       return (
                         <div
                           key={app.id}
-                          className="group flex items-center justify-between gap-4 border-b border-[#E5E9F2] px-5 py-3.5 transition-colors last:border-b-0 hover:bg-[#FAFAFA]"
+                          className="group flex items-center justify-between gap-4 border-b border-border/60 px-5 py-3.5 transition-colors last:border-b-0 hover:bg-muted/50"
                         >
                           <div className="flex min-w-0 items-center gap-4">
-                            <span className="w-5 flex-none font-mono text-xs text-[#A0A0A0]">
+                            <span className="w-5 flex-none font-mono text-xs text-muted-foreground/70">
                               {String(i + 1).padStart(2, '0')}
                             </span>
                             <div className="min-w-0">
@@ -263,15 +254,11 @@ export default function DashboardPage() {
                           </div>
 
                           <div className="flex flex-none items-center gap-5">
-                            <div
-                              className="hidden items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[.05em] md:inline-flex"
-                              style={{ backgroundColor: status.bg, color: status.color, borderColor: status.border }}
-                            >
-                              <span className="h-1.5 w-1.5 flex-none" style={{ backgroundColor: status.color }} />
-                              {status.label}
-                            </div>
+                            <StatusChip tone={chip.tone} className="hidden md:inline-flex">
+                              {chip.label}
+                            </StatusChip>
                             <div className="hidden min-w-[72px] text-right sm:block">
-                              <p className="font-mono text-[9.5px] uppercase tracking-[.1em] text-[#A0A0A0]">Aktualisiert</p>
+                              <SectionLabel className="text-[9.5px] tracking-[.1em] text-muted-foreground/70">Aktualisiert</SectionLabel>
                               <p className="mt-0.5 text-[12.5px] font-medium text-foreground">
                                 {formatDateSmart(app.updatedAt)}
                               </p>
@@ -279,7 +266,7 @@ export default function DashboardPage() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 rounded-[3px] border-[#E0E0E0] text-muted-foreground hover:bg-[#1B2A49] hover:text-white"
+                              className="h-8 w-8 rounded-[3px] text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                               onClick={() => router.push(`/applications/${app.id}`)}
                             >
                               <ChevronRight className="h-4 w-4" />
@@ -298,8 +285,8 @@ export default function DashboardPage() {
         {/* Sidebar Content */}
         <div className="space-y-6">
           {/* Profile Completion */}
-          <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
-            <CardHeader className="border-b border-[#E0E0E0] px-5 py-4">
+          <Card className="gap-0 py-0">
+            <CardHeader className="border-b px-5 py-4">
               <CardTitle className="font-heading text-base font-bold">Profilstatus</CardTitle>
               <CardDescription className="text-[13px]">Vervollständige dein Profil</CardDescription>
             </CardHeader>
@@ -313,15 +300,15 @@ export default function DashboardPage() {
                   <div className="flex items-end justify-between">
                     <span className="font-mono text-3xl font-semibold leading-none text-foreground">
                       {profileStrength.score}
-                      <span className="text-base text-[#A0A0A0]">%</span>
+                      <span className="text-base text-muted-foreground/70">%</span>
                     </span>
-                    <span className="font-mono text-[11px] uppercase tracking-[.08em] text-[#5581C7]">
+                    <span className="font-mono text-[11px] uppercase tracking-[.08em] text-brand">
                       {profileStrength.score === 100 ? 'Perfekt!' : 'Fast geschafft'}
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden bg-[#E5E9F2]">
+                  <div className="h-2 w-full overflow-hidden bg-primary-soft dark:bg-slate-700">
                     <div
-                      className="h-full bg-[#5581C7] transition-all duration-500 ease-out"
+                      className="h-full bg-brand transition-all duration-500 ease-out"
                       style={{ width: `${profileStrength.score}%` }}
                     />
                   </div>
@@ -335,11 +322,11 @@ export default function DashboardPage() {
                       >
                         {suggestion.completed ? (
                           <svg width="15" height="15" viewBox="0 0 24 24" className="flex-none" aria-hidden>
-                            <rect x="1" y="1" width="22" height="22" fill="#16A34A" />
+                            <rect x="1" y="1" width="22" height="22" className="fill-success" />
                             <path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" />
                           </svg>
                         ) : (
-                          <span className="box-border h-[15px] w-[15px] flex-none border-2 border-[#B0B0B0]" />
+                          <span className="box-border h-[15px] w-[15px] flex-none border-2 border-muted-foreground/50" />
                         )}
                         <span>{suggestion.text}</span>
                       </div>
@@ -347,7 +334,7 @@ export default function DashboardPage() {
                   </div>
                   <Button
                     variant="outline"
-                    className="mt-1.5 w-full rounded-[3px] border-[#1B2A49] font-semibold hover:bg-[#E5E9F2]"
+                    className="mt-1.5 w-full rounded-[3px] border-primary font-semibold hover:bg-primary-soft"
                     onClick={() => router.push('/profile')}
                   >
                     Profil bearbeiten
@@ -358,10 +345,10 @@ export default function DashboardPage() {
           </Card>
 
           {/* Usage Summary */}
-          <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
-            <CardHeader className="border-b border-[#E0E0E0] px-5 py-4">
+          <Card className="gap-0 py-0">
+            <CardHeader className="border-b px-5 py-4">
               <CardTitle className="font-heading flex items-center gap-2 text-base font-bold">
-                <Zap className="h-4 w-4 text-[#5581C7]" />
+                <Zap className="h-4 w-4 text-brand" />
                 Kontingent
               </CardTitle>
               <CardDescription className="text-[13px]">Dein monatliches Kontingent</CardDescription>
@@ -372,17 +359,17 @@ export default function DashboardPage() {
           </Card>
 
           {/* Activity Notice */}
-          <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
-            <CardHeader className="border-b border-[#E0E0E0] px-5 py-4">
+          <Card className="gap-0 py-0">
+            <CardHeader className="border-b px-5 py-4">
               <CardTitle className="font-heading flex items-center gap-2 text-base font-bold">
-                <TrendingUp className="h-4 w-4 text-[#5581C7]" />
+                <TrendingUp className="h-4 w-4 text-brand" />
                 Markttrends
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5">
-              <div className="border-l-[3px] border-[#5581C7] bg-[#F5F6F8] px-4 py-3.5">
+              <div className="border-l-[3px] border-brand bg-muted px-4 py-3.5">
                 <p className="text-[13.5px] leading-relaxed text-foreground">
-                  <span className="mb-1 block font-mono text-[11px] font-semibold uppercase tracking-[.08em] text-[#5581C7]">
+                  <span className="mb-1 block font-mono text-[11px] font-semibold uppercase tracking-[.08em] text-brand">
                     Tipp
                   </span>
                   Pflegekräfte und Projektmanager werden aktuell stark gesucht. Aktualisiere deine Fähigkeiten!
@@ -406,14 +393,14 @@ function StatsCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 bg-white p-5 transition-colors hover:bg-[#FAFAFA]">
+    <div className="flex items-start justify-between gap-3 bg-card p-5 transition-colors hover:bg-muted/60">
       <div>
-        <p className="font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">{title}</p>
+        <SectionLabel>{title}</SectionLabel>
         <span className="mt-2.5 block font-mono text-[32px] font-semibold leading-none tracking-[-.02em] text-foreground">
           {value}
         </span>
       </div>
-      <div className="grid h-10 w-10 flex-none place-items-center border border-[#E0E0E0] bg-[#F5F6F8] text-[#1B2A49]">
+      <div className="grid h-10 w-10 flex-none place-items-center border border-border bg-muted text-primary">
         <Icon className="h-5 w-5" />
       </div>
     </div>

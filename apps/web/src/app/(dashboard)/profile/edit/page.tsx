@@ -354,13 +354,13 @@ export default function ProfileEditPage() {
       </div>
 
       <Tabs defaultValue={initialTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 lg:w-auto h-auto p-1 bg-muted/50 rounded-xl">
-          <TabsTrigger value="basic" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Basis</TabsTrigger>
-          <TabsTrigger value="experience" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Erfahrung</TabsTrigger>
-          <TabsTrigger value="education" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Bildung</TabsTrigger>
-          <TabsTrigger value="skills" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Skills</TabsTrigger>
-          <TabsTrigger value="projects" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Projekte</TabsTrigger>
-          <TabsTrigger value="certificates" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Zertifikate</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 lg:w-auto">
+          <TabsTrigger value="basic" className="py-2">Basis</TabsTrigger>
+          <TabsTrigger value="experience" className="py-2">Erfahrung</TabsTrigger>
+          <TabsTrigger value="education" className="py-2">Bildung</TabsTrigger>
+          <TabsTrigger value="skills" className="py-2">Skills</TabsTrigger>
+          <TabsTrigger value="projects" className="py-2">Projekte</TabsTrigger>
+          <TabsTrigger value="certificates" className="py-2">Zertifikate</TabsTrigger>
         </TabsList>
 
         <Form {...form}>

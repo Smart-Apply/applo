@@ -39,6 +39,15 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-brand: var(--brand);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-destructive-soft: var(--destructive-soft);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -120,6 +129,9 @@
   --warning-foreground: #FFFFFF;
   --warning-soft: #FEF3C7;
   --destructive-soft: #FEE2E2;
+
+  /* Brand blue — constant across themes (logo/accent color) */
+  --brand: #5581C7;
 }
 
 .dark {
@@ -167,6 +179,9 @@
   --warning-foreground: #000000;
   --warning-soft: #422006;
   --destructive-soft: #7F1D1D;
+
+  /* Brand blue — constant across themes (logo/accent color) */
+  --brand: #5581C7;
 }
 
 /* Applo type system: Inter body, Archivo headings, IBM Plex Mono for labels/numbers */
