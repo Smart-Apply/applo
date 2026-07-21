@@ -169,14 +169,9 @@ function DashboardLayoutInner({
   return (
     <TooltipProvider delayDuration={150}>
     <div className="flex min-h-screen bg-muted/30">
-      {/* Email Verification Banner - shows above everything */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <EmailVerificationBanner />
-      </div>
-
       {/* Desktop Sidebar - Hidden in edit mode */}
       {!isEditMode && (
-        <aside className="hidden w-[290px] flex-none bg-[#1B2A49] md:block z-20">
+        <aside className="sticky top-0 hidden h-screen w-[290px] flex-none bg-[#1B2A49] md:block z-20">
           <div className="flex h-full flex-col">
             <div className="flex h-16 items-center px-4 border-b border-white/10">
               <Link href="/dashboard" className="flex items-center">
@@ -184,7 +179,7 @@ function DashboardLayoutInner({
               </Link>
             </div>
 
-            <nav className="flex-1 space-y-0.5 px-4 py-6">
+            <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
               <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.45)]">
                 Menu
               </div>
@@ -237,8 +232,16 @@ function DashboardLayoutInner({
         </aside>
       )}
 
-      {/* Content column — single {children} prevents double-mount */}
-      <div className="flex flex-1 flex-col">
+      {/* Content column — single {children} prevents double-mount.
+          min-w-0 is load-bearing: without it the flex item's implicit
+          min-width:auto lets any wide intrinsic content (nowrap rows,
+          horizontal scrollers) push the column past the viewport and the
+          whole page scrolls sideways on mobile. */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Email verification banner — in-flow (NOT fixed) so it pushes the
+            header/content down instead of overlapping the mobile header
+            and hamburger. */}
+        <EmailVerificationBanner />
         {/* bg-background/95 (was /80) so scrolled content doesn't bleed
             through and visually "hover above" the logo — the issue
             surfaced in wave-2 E2E on iOS Chrome. backdrop-blur stays for
