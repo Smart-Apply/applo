@@ -21,10 +21,11 @@ const NAVY = '#15233f';
 const SCREEN = '#eef3fb';
 const BORDER = 'rgba(21,35,63,.10)';
 const BLUE = '#40639C';
-const GREEN = '#15a34a';
+const ACCENT = '#5581C7';
+const GREEN = '#16A34A';
 const HAND = '#3a4f76';
 const RIM = 'rgba(255,255,255,0.12)';
-const ANT = '#26395c'; // deep navy — strong, crisp contrast on the light panel
+const ANT = '#26395c'; // deep navy — strong, crisp contrast on the navy pane
 
 export type AuthApploState =
   | 'idle'
@@ -75,7 +76,7 @@ export function AuthApplo({
       aria-label={`Applo – ${state}`}
     >
       {/* shadow stays grounded (sibling of aFloat) so it pulses, not floats */}
-      <ellipse className="aShadow" cx="120" cy="300" rx="52" ry="9" fill="rgba(0,0,0,.22)" />
+      <ellipse className="aShadow" cx="120" cy="300" rx="52" ry="9" fill="rgba(0,0,0,.28)" />
       <g className="aFloat">
         <g className="aRig">
           {/* antennas */}
@@ -237,8 +238,8 @@ export function AuthApplo({
           <g className="aConfetti">
             <circle className="cf cf1" cx="58" cy="64" r="5" fill={BLUE} />
             <circle className="cf cf2" cx="182" cy="70" r="5" fill={GREEN} />
-            <rect className="cf cf3" x="115" y="22" width="9" height="9" rx="2" fill={NAVY} transform="rotate(20 119 26)" />
-            <rect className="cf cf4" x="44" y="118" width="8" height="8" rx="2" fill={GREEN} transform="rotate(-15 48 122)" />
+            <rect className="cf cf3" x="115" y="22" width="9" height="9" fill={ACCENT} transform="rotate(20 119 26)" />
+            <rect className="cf cf4" x="44" y="118" width="8" height="8" fill={GREEN} transform="rotate(-15 48 122)" />
             <circle className="cf cf5" cx="196" cy="120" r="4.5" fill={BLUE} />
           </g>
         </g>

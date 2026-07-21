@@ -39,10 +39,10 @@ function scorePw(pw: string): number {
 }
 const STRENGTH = [
   { label: '', color: 'var(--aa-border)' },
-  { label: 'Schwach', color: '#dc2626' },
-  { label: 'Okay', color: '#e0951a' },
+  { label: 'Schwach', color: '#DC2626' },
+  { label: 'Okay', color: '#E0951A' },
   { label: 'Gut', color: '#40639C' },
-  { label: 'Stark', color: '#15a34a' },
+  { label: 'Stark', color: '#16A34A' },
 ];
 const COVER_BY_SCORE = [0, 0.32, 0.58, 0.82, 1];
 
@@ -70,15 +70,6 @@ function IcAlert() {
       <circle cx="12" cy="12" r="10" />
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-  );
-}
-function IcInfo() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="16" x2="12" y2="12" />
-      <line x1="12" y1="8" x2="12.01" y2="8" />
     </svg>
   );
 }
@@ -422,6 +413,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
             />
             <div className="brand-speech">{speech}</div>
             <div className="brand-tagline">{tagline}</div>
+            <div className="brand-hint">Fokussiere das Passwortfeld — Applo schaut weg</div>
           </div>
         </aside>
 
@@ -439,6 +431,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                 /* ===================== LOGIN ===================== */
                 <>
                   <div className="form-head">
+                    <p className="form-eyebrow">Anmelden</p>
                     <h1 className="form-title">Willkommen zurück</h1>
                     <p className="form-sub">Melde dich an, um deine Bewerbungen weiterzuführen.</p>
                   </div>
@@ -544,6 +537,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                 /* ===================== REGISTER ===================== */
                 <>
                   <div className="form-head">
+                    <p className="form-eyebrow">Konto erstellen</p>
                     <h1 className="form-title">Konto erstellen</h1>
                     <p className="form-sub">Starte mit Applo und behalte jede Bewerbung im Griff.</p>
                   </div>
@@ -703,12 +697,11 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                         render={({ field, fieldState }) => (
                           <Field label="Einladungscode" error={fieldState.error?.message}>
                             <input
-                              className={`input${fieldState.error ? ' invalid' : ''}`}
+                              className={`input input-mono${fieldState.error ? ' invalid' : ''}`}
                               placeholder="BETA-XXXX-XXXX-XXXX"
                               autoComplete="off"
                               autoCapitalize="characters"
                               spellCheck={false}
-                              style={{ letterSpacing: '.04em', fontFamily: 'ui-monospace, monospace' }}
                               {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value.toUpperCase())}
@@ -725,7 +718,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
                     {requireInviteCode && (
                       <div className="beta-note">
-                        <IcInfo />
+                        <span className="beta-tag">Beta</span>
                         Applo ist gerade in der geschlossenen Beta. Du brauchst einen Einladungscode, um dich zu
                         registrieren.
                       </div>

@@ -1,43 +1,36 @@
 /* ============================================================
    Applo — Auth screens (login / register / forgot).
-   VERBATIM port of the design handoff's auth.css (standalone
-   bundle, 2026-06-25), mechanically scoped under `.applo-auth`:
-   :root tokens -> .applo-auth and renamed --aa-* (so they never
-   clobber the app's shadcn vars), keyframes prefixed aa_. The
-   markup (auth-container.tsx / auth-applo.tsx) uses these exact
-   class names. JS-driven --lid/--cover/--coverShow are left as-is.
+   "Sharp + soft" redesign: navy brand pane with 4px blue rule,
+   mono field labels, square 3px-radius inputs/buttons. The Applo
+   password-shy state machine below is ported verbatim from the
+   design handoff and driven by --lid/--cover/--coverShow vars.
    ============================================================ */
-/* ============================================================
-   SmartApply — Auth (Sign in / Sign up / Reset)
-   Builds on the SmartApply design tokens. Navy + Inter.
-   ============================================================ */
-.applo-auth { --aa-bg:        #f6f8fb;
+.applo-auth { --aa-bg:        #F5F6F8;
   --aa-surface:   #ffffff;
-  --aa-surface-2: #f8fafc;
-  --aa-border:    #e7ebf1;
-  --aa-border-2:  #dfe5ee;
+  --aa-surface-2: #FAFAFA;
+  --aa-border:    #E0E0E0;
+  --aa-border-2:  #B0B0B0;
 
-  --aa-ink:       #15233f;
+  --aa-ink:       #1B2A49;
   --aa-ink-soft:  #33425c;
-  --aa-muted:     #64748b;
+  --aa-muted:     #6B6969;
   --aa-muted-2:   #94a3b8;
 
-  --aa-navy:      #15233f;
-  --aa-navy-2:    #1d3151;   /* curved-line tone on the brand pane */
-  --aa-navy-hover:#213a61;
+  --aa-navy:      #1B2A49;
+  --aa-navy-hover:#22345A;
 
   --aa-accent:    #5581C7;   /* tweakable */
-  --aa-field-r:   12px;      /* tweakable */
-  --aa-btn-r:     12px;      /* tweakable */
+  --aa-field-r:   3px;       /* tweakable */
+  --aa-btn-r:     3px;       /* tweakable */
 
-  --aa-red:    #dc2626;
+  --aa-red:    #DC2626;
   --aa-red-bg: #fdeced;
-  --aa-green:  #15a34a;
-  --aa-amber:  #e0951a;
+  --aa-green:  #16A34A;
+  --aa-amber:  #E0951A;
 
-  --aa-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-
-  --aa-sh-card: 0 24px 64px rgba(20,33,61,.10), 0 2px 8px rgba(20,33,61,.04); }
+  --aa-font: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --aa-mono: var(--font-mono-plex), "IBM Plex Mono", ui-monospace, monospace;
+  --aa-heading: var(--font-archivo), "Archivo", system-ui, sans-serif; }
 .applo-auth * { box-sizing: border-box; }
 .applo-auth { font-family: var(--aa-font);
   background: var(--aa-bg);
@@ -54,138 +47,143 @@
 .applo-auth .brand-pane, .applo-auth .form-pane { flex: 0 0 50%;
   width: 50%;
   height: 100%;
-  transition: transform .6s cubic-bezier(.76,0,.18,1);
+  transition: transform .55s cubic-bezier(.76,0,.18,1);
   will-change: transform; }
 /* register: Applo slides to the right, the form to the left */
 .applo-auth .auth.swapped .brand-pane { transform: translateX(100%); }
 .applo-auth .auth.swapped .form-pane { transform: translateX(-100%); }
-/* ---- brand pane (navy) ------------------------------------- */
+/* ---- brand pane (navy, 4px blue left rule) ------------------ */
 .applo-auth .brand-pane { position: relative;
   overflow: hidden;
-  color: var(--aa-ink);
+  color: #fff;
   display: flex;
   flex-direction: column;
-  padding: 44px 48px;
+  padding: 40px 44px;
   z-index: 2;
-  background:
-    radial-gradient(115% 78% at 16% 4%, color-mix(in srgb, var(--aa-accent) 16%, transparent) 0%, transparent 50%),
-    linear-gradient(155deg, #e9f0fc 0%, #dae6f8 52%, #cbdcf3 100%); }
-/* fine dot grid overlay */
+  border-left: 4px solid var(--aa-accent);
+  background: #1B2A49; }
+/* soft accent glows behind the mascot */
 .applo-auth .brand-pane::before { content: "";
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background-image: radial-gradient(rgba(21,35,63,.09) 1.4px, transparent 1.4px);
-  background-size: 26px 26px;
-  background-position: -8px -8px;
-  -webkit-mask-image: radial-gradient(125% 95% at 50% 42%, #000 32%, transparent 80%);
-          mask-image: radial-gradient(125% 95% at 50% 42%, #000 32%, transparent 80%); }
-.applo-auth .brand-curves { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; opacity: .9; }
-.applo-auth .brand-curves circle { fill: none; stroke: rgba(21,35,63,.11); stroke-width: 1.5; }
-.applo-auth .brand-top { position: relative; z-index: 2; display: flex; justify-content: center; }
+  background: radial-gradient(90% 70% at 50% 8%, rgba(85,129,199,.14) 0%, rgba(85,129,199,0) 62%); }
+.applo-auth .brand-pane::after { content: "";
+  position: absolute; left: 50%; top: 46%; z-index: 1; pointer-events: none;
+  width: 560px; height: 560px; transform: translate(-50%,-50%);
+  background: radial-gradient(circle, rgba(85,129,199,.22) 0%, rgba(85,129,199,0) 62%); }
+.applo-auth .brand-top { position: relative; z-index: 2; display: flex; justify-content: flex-start; }
 .applo-auth .brand-lockup { display: inline-flex; align-items: center; gap: 15px; }
-.applo-auth .brand-word { font-size: 31px; font-weight: 800; letter-spacing: -.02em; }
 .applo-auth .brand-stage { position: relative; z-index: 2;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: 18px;
   text-align: center; }
-.applo-auth .brand-applo { filter: drop-shadow(0 30px 50px rgba(0,0,0,.28)); }
-.applo-auth .brand-speech { min-height: 26px;
-  font-size: 16px; font-weight: 650; color: #3a4a6b;
+.applo-auth .brand-applo { filter: drop-shadow(0 24px 40px rgba(0,0,0,.35)); }
+.applo-auth .brand-speech { min-height: 24px;
+  font-family: var(--aa-mono);
+  font-size: 14px; font-weight: 500; color: #fff;
   letter-spacing: .01em;
   transition: opacity .25s; }
-.applo-auth .brand-tagline { font-size: 17px; line-height: 1.5; color: #58688a; max-width: 340px; }
-/* claim variant */
-.applo-auth .brand-claim { font-size: clamp(44px, 5.2vw, 80px);
-  font-weight: 850; line-height: .98; letter-spacing: -.03em;
-  text-align: left; align-self: stretch; margin: auto 0; }
-.applo-auth .brand-claim .accent { color: var(--aa-accent); }
-/* features variant */
-.applo-auth .brand-feats { display: flex; flex-direction: column; gap: 16px; align-self: stretch; max-width: 360px; margin: 0 auto; text-align: left; }
-.applo-auth .brand-feat { display: flex; gap: 13px; align-items: flex-start; }
-.applo-auth .brand-feat .fi { flex: none; width: 34px; height: 34px; border-radius: 10px;
-  background: var(--aa-navy); color: #fff;
-  display: grid; place-items: center; }
-.applo-auth .brand-feat b { display: block; font-size: 15.5px; font-weight: 700; }
-.applo-auth .brand-feat span { font-size: 13.5px; color: #58688a; line-height: 1.45; }
+.applo-auth .brand-tagline { font-size: 16px; line-height: 1.55; color: rgba(229,233,242,.72); max-width: 340px; }
+.applo-auth .brand-hint { margin-top: 8px;
+  font-family: var(--aa-mono);
+  font-size: 10.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(229,233,242,.4);
+  border-top: 1px solid rgba(255,255,255,.14);
+  padding-top: 14px; }
 /* ---- form pane --------------------------------------------- */
 .applo-auth .form-pane { display: flex; align-items: safe center; justify-content: center;
-  padding: 48px 28px; overflow-y: auto;
+  padding: 40px 28px; overflow-y: auto;
+  background: var(--aa-surface);
   z-index: 1; }
-.applo-auth .form-card { width: 100%; max-width: 416px;
+.applo-auth .form-card { width: 100%; max-width: 420px;
   min-height: 612px;
   display: flex; flex-direction: column; justify-content: center; }
 .applo-auth .form-mobilebrand { display: none; }
 .applo-auth .form-head { margin: 0 0 26px; }
-.applo-auth .form-title { font-size: 30px; font-weight: 800; letter-spacing: -.022em; margin: 0; }
+.applo-auth .form-eyebrow { margin: 0 0 10px;
+  font-family: var(--aa-mono);
+  font-size: 11px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--aa-accent); }
+.applo-auth .form-title { font-family: var(--aa-heading); font-size: 30px; font-weight: 800; letter-spacing: -.025em; margin: 0; }
 .applo-auth .form-sub { margin: 9px 0 0; color: var(--aa-muted); font-size: 15px; line-height: 1.5; }
-.applo-auth .form { display: flex; flex-direction: column; gap: 17px; }
+.applo-auth .form { display: flex; flex-direction: column; gap: 16px; }
 .applo-auth .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
 .applo-auth .field { display: flex; flex-direction: column; gap: 7px; }
-.applo-auth .field > label { font-size: 13.5px; font-weight: 650; color: var(--aa-ink-soft); }
+.applo-auth .field > label, .applo-auth .field-label-row label { font-family: var(--aa-mono);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--aa-muted); }
 .applo-auth .field-label-row { display: flex; align-items: baseline; justify-content: space-between; }
-.applo-auth .field-label-row a { font-size: 12.5px; font-weight: 600; color: var(--aa-accent); text-decoration: none; }
-.applo-auth .field-label-row a:hover { text-decoration: underline; }
+.applo-auth .field-label-row a, .applo-auth .field-label-row .link { font-size: 12px; font-weight: 600; color: var(--aa-accent); text-decoration: none; border-bottom: none; }
+.applo-auth .field-label-row a:hover, .applo-auth .field-label-row .link:hover { text-decoration: underline; color: var(--aa-accent); }
 .applo-auth .input-wrap { position: relative; }
-.applo-auth .input { width: 100%; padding: 13px 15px; font-size: 15px; color: var(--aa-ink);
+.applo-auth .input { width: 100%; padding: 12px 14px; font-size: 15px; color: var(--aa-ink);
   background: var(--aa-surface); border: 1.5px solid var(--aa-border-2);
   border-radius: var(--aa-field-r);
   transition: border-color .14s, box-shadow .14s, background .14s; }
 .applo-auth .input.has-icon { padding-right: 46px; }
+.applo-auth .input.input-mono { font-family: var(--aa-mono); font-size: 14px; letter-spacing: .06em; }
 .applo-auth .input::placeholder { color: var(--aa-muted-2); }
-.applo-auth .input:hover { border-color: #c9d3e3; }
-.applo-auth .input:focus { outline: none; border-color: var(--aa-accent); box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--aa-accent) 16%, transparent); }
+.applo-auth .input:hover { border-color: #9aa7ba; }
+.applo-auth .input:focus { outline: none; border-color: var(--aa-accent); box-shadow: inset 0 0 0 1px var(--aa-accent); }
 .applo-auth .input.invalid { border-color: var(--aa-red); }
-.applo-auth .input.invalid:focus { box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--aa-red) 14%, transparent); }
-.applo-auth .reveal { position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+.applo-auth .input.invalid:focus { box-shadow: inset 0 0 0 1px var(--aa-red); }
+.applo-auth .reveal { position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
   width: 34px; height: 34px; display: grid; place-items: center;
-  border: none; background: none; color: var(--aa-muted-2); border-radius: 9px; }
-.applo-auth .reveal:hover { color: var(--aa-ink-soft); background: var(--aa-surface-2); }
+  border: none; background: none; color: var(--aa-muted-2); border-radius: var(--aa-field-r); }
+.applo-auth .reveal:hover { color: var(--aa-ink); background: var(--aa-surface-2); }
 .applo-auth .reveal:focus-visible { outline: 2px solid var(--aa-accent); outline-offset: 1px; }
 .applo-auth .err { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 550; color: var(--aa-red); }
 .applo-auth .hint { font-size: 12.5px; color: var(--aa-muted); line-height: 1.5; }
-/* password strength */
+/* password strength — 4 square bars, mono label */
 .applo-auth .strength { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
 .applo-auth .strength-bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-.applo-auth .strength-bars i { height: 5px; border-radius: 999px; background: var(--aa-border); transition: background .2s; }
+.applo-auth .strength-bars i { height: 5px; background: var(--aa-border); transition: background .2s; }
 .applo-auth .strength-row { display: flex; justify-content: space-between; font-size: 12px; }
-.applo-auth .strength-label { font-weight: 650; }
+.applo-auth .strength-label { font-family: var(--aa-mono); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 /* submit */
 .applo-auth .btn-submit { margin-top: 4px;
   width: 100%; padding: 14px 20px; border: none; border-radius: var(--aa-btn-r);
-  background: var(--aa-navy); color: #fff; font-size: 15.5px; font-weight: 700;
+  background: var(--aa-navy); color: #fff; font-size: 15px; font-weight: 600;
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   transition: background .14s, transform .04s; }
 .applo-auth .btn-submit:hover { background: var(--aa-navy-hover); }
 .applo-auth .btn-submit:active { transform: translateY(1px); }
 .applo-auth .btn-submit:disabled { opacity: .75; cursor: default; }
-.applo-auth .spinner { width: 17px; height: 17px; border-radius: 50%;
+.applo-auth .spinner { width: 16px; height: 16px; border-radius: 50%;
   border: 2.4px solid rgba(255,255,255,.35); border-top-color: #fff;
   animation: aa_spin .7s linear infinite; }
 @keyframes aa_spin { to { transform: rotate(360deg); } }
 /* meta links */
-.applo-auth .form-foot { margin-top: 4px; text-align: center; font-size: 14.5px; color: var(--aa-muted); }
+.applo-auth .form-foot { margin-top: 6px; text-align: center; font-size: 14px; color: var(--aa-muted); }
 .applo-auth .form-foot a, .applo-auth .link { color: var(--aa-ink); font-weight: 700; text-decoration: none;
-  border: none; background: none; font-size: inherit; padding: 0; }
+  border: none; background: none; font-size: inherit; padding: 0;
+  border-bottom: 2px solid var(--aa-accent); }
 .applo-auth .form-foot a:hover, .applo-auth .link:hover { color: var(--aa-accent); }
-.applo-auth .link-quiet { display: block; text-align: center; margin-top: -2px; color: var(--aa-muted); font-weight: 600; font-size: 14px; }
+.applo-auth .link-quiet { display: block; text-align: center; margin-top: -2px; color: var(--aa-muted); font-weight: 600; font-size: 14px; border-bottom: none; }
 .applo-auth .link-quiet:hover { color: var(--aa-accent); }
 /* divider + social */
-.applo-auth .divider { display: flex; align-items: center; gap: 14px; margin: 22px 0 18px; color: var(--aa-muted-2); font-size: 13px; }
+.applo-auth .divider { display: flex; align-items: center; gap: 14px; margin: 18px 0 14px;
+  color: var(--aa-muted-2);
+  font-family: var(--aa-mono);
+  font-size: 10.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
 .applo-auth .divider::before, .applo-auth .divider::after { content: ""; height: 1px; flex: 1; background: var(--aa-border); }
 .applo-auth .social { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .applo-auth .social button { display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 12px; border: 1.5px solid var(--aa-border-2); border-radius: var(--aa-field-r);
-  background: var(--aa-surface); color: var(--aa-ink-soft); font-size: 14.5px; font-weight: 650;
+  padding: 12px; border: 1.5px solid var(--aa-border); border-radius: var(--aa-field-r);
+  background: var(--aa-surface); color: var(--aa-ink-soft); font-size: 14px; font-weight: 600;
   transition: border-color .14s, background .14s; }
-.applo-auth .social button:hover { border-color: #c9d3e3; background: var(--aa-surface-2); }
-.applo-auth .social svg { width: 19px; height: 19px; flex: none; }
-.applo-auth .beta-note { display: flex; gap: 10px; align-items: flex-start;
-  background: var(--aa-surface-2); border: 1px solid var(--aa-border);
-  border-radius: 11px; padding: 12px 13px; font-size: 12.5px; color: var(--aa-muted); line-height: 1.5; }
-.applo-auth .beta-note svg { flex: none; color: var(--aa-accent); margin-top: 1px; }
+.applo-auth .social button:hover { border-color: var(--aa-border-2); background: var(--aa-surface-2); }
+.applo-auth .social svg { width: 18px; height: 18px; flex: none; }
+.applo-auth .beta-note { display: flex; gap: 11px; align-items: flex-start;
+  background: #F5F6F8; border-left: 3px solid var(--aa-accent);
+  padding: 12px 14px; font-size: 12.5px; color: var(--aa-muted); line-height: 1.5; }
+.applo-auth .beta-note .beta-tag { flex: none; margin-top: 1px;
+  font-family: var(--aa-mono);
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--aa-accent); }
 /* success card */
 .applo-auth .success { text-align: center; animation: aa_pop .35s cubic-bezier(.34,1.4,.5,1) both; }
 .applo-auth .success h2 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 8px; }
@@ -280,7 +278,7 @@
 /* ============================================================
    Responsive — collapse brand pane into a compact top band
    ============================================================ */
-@media (max-width: 900px) {
+@media (max-width: 920px) {
   .applo-auth .auth { display: block; height: auto; min-height: 100vh; overflow: visible; }
   .applo-auth .brand-pane { display: none; }
   .applo-auth .form-pane { flex: 1; width: 100%; height: auto;
@@ -296,6 +294,6 @@
 }
 
 /* ---- app integration: we render <AppLogo>, not the prototype LogoMark ---- */
-.applo-auth .brand-top .aa-logo { height: 40px; width: auto; }
+.applo-auth .brand-top .aa-logo { height: 40px; width: auto; filter: brightness(0) invert(1); }
 .applo-auth .form-mobilebrand { align-items: center; }
 .applo-auth .form-mobilebrand .aa-logo { height: 34px; width: auto; }
