@@ -188,19 +188,22 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats — hairline 1px grid, mono numbers */}
-      <HairlineGrid className="sm:grid-cols-2 lg:grid-cols-4">
+      <HairlineGrid className="grid-cols-2 lg:grid-cols-4">
         <StatsCard title="Gesamt" value={stats.total} icon={FileText} />
         <StatsCard title="Aktiv" value={stats.active} icon={Clock} />
         <StatsCard title="Interviews" value={stats.interviews} icon={Calendar} />
         <StatsCard title="Angebote" value={stats.offers} icon={CheckCircle} />
       </HairlineGrid>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* grid-cols-1 (minmax(0,1fr)) is required: without it the implicit
+          `auto` track sizes to the widest nowrap row content and the whole
+          page overflows horizontally on mobile. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-6">
           {/* Recent Applications */}
           <Card className="gap-0 overflow-hidden py-0">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b px-5 py-5">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b px-5 py-5">
               <div>
                 <CardTitle className="font-heading text-lg font-bold tracking-[-.01em]">Aktuelle Bewerbungen</CardTitle>
                 <CardDescription className="mt-0.5 text-[13px]">Deine zuletzt bearbeiteten Bewerbungen</CardDescription>
@@ -237,9 +240,9 @@ export default function DashboardPage() {
                       return (
                         <div
                           key={app.id}
-                          className="group flex items-center justify-between gap-4 border-b border-border/60 px-5 py-3.5 transition-colors last:border-b-0 hover:bg-muted/50"
+                          className="group flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3.5 transition-colors last:border-b-0 hover:bg-muted/50 sm:gap-4 sm:px-5"
                         >
-                          <div className="flex min-w-0 items-center gap-4">
+                          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                             <span className="w-5 flex-none font-mono text-xs text-muted-foreground/70">
                               {String(i + 1).padStart(2, '0')}
                             </span>
@@ -250,11 +253,14 @@ export default function DashboardPage() {
                               <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
                                 {app.jobPosting?.company || app.jobPosting?.location || 'Keine Details'}
                               </p>
+                              <StatusChip tone={chip.tone} className="mt-1.5 sm:hidden">
+                                {chip.label}
+                              </StatusChip>
                             </div>
                           </div>
 
-                          <div className="flex flex-none items-center gap-5">
-                            <StatusChip tone={chip.tone} className="hidden md:inline-flex">
+                          <div className="flex flex-none items-center gap-3 sm:gap-5">
+                            <StatusChip tone={chip.tone} className="hidden sm:inline-flex">
                               {chip.label}
                             </StatusChip>
                             <div className="hidden min-w-[72px] text-right sm:block">
