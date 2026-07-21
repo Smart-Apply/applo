@@ -40,20 +40,17 @@ function SegmentedToggle({
   options: { value: string; label: string }[];
 }) {
   return (
-    <div
-      className="inline-flex rounded-xl p-0.5"
-      style={{ backgroundColor: '#F5F6F8', border: '1px solid #E6E8EE' }}
-    >
+    <div className="inline-flex items-center gap-px overflow-hidden rounded-[3px] border border-border bg-border">
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
           className={cn(
-            'rounded-[10px] px-3 py-1 text-xs font-medium transition-all duration-200',
+            'px-3 py-1 text-xs font-medium transition-colors',
             value === opt.value
-              ? 'bg-white text-[#1B2A49] shadow-sm'
-              : 'text-[#6B6969] hover:text-[#1B2A49]',
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
           )}
         >
           {opt.label}
@@ -93,34 +90,25 @@ function DropZone({
 
   if (chip) {
     return (
-      <div
-        className="flex items-center gap-3 rounded-xl px-4 py-3"
-        style={{ backgroundColor: '#EAF1FE', border: '1px solid #C7D0E4' }}
-      >
-        <div
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
-          style={{ backgroundColor: '#E5E9F2' }}
-        >
-          <FileText className="h-4 w-4" style={{ color: '#1B2A49' }} />
+      <div className="flex items-center gap-3 rounded-[3px] border border-primary-soft bg-primary-soft/40 px-4 py-3 dark:border-slate-600 dark:bg-slate-800/60">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center bg-primary-soft text-primary dark:bg-slate-700 dark:text-slate-200">
+          <FileText className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium text-[#1B2A49]">{chip.name}</span>
-            <span
-              className="flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold"
-              style={{ backgroundColor: '#E7F6EC', color: '#16A34A' }}
-            >
+            <span className="truncate text-sm font-medium text-foreground">{chip.name}</span>
+            <span className="flex-shrink-0 border border-[#BFE9CC] bg-[#ECFAF0] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-success dark:border-green-400/30 dark:bg-green-400/10">
               Erkannt
             </span>
           </div>
-          <p className="mt-0.5 text-xs" style={{ color: '#6B6969' }}>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {formatBytes(chip.size)} · Text erfolgreich gelesen
           </p>
         </div>
         <button
           type="button"
           onClick={onRemove}
-          className="flex-shrink-0 rounded-lg p-1 text-[#6B6969] hover:bg-red-50 hover:text-red-600 transition-colors"
+          className="flex-shrink-0 rounded-[3px] p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           aria-label="Datei entfernen"
         >
           <X className="h-4 w-4" />
@@ -142,12 +130,11 @@ function DropZone({
         const file = e.dataTransfer.files[0];
         if (file) void handleFile(file);
       }}
-      className="flex flex-col items-center justify-center gap-2 rounded-xl py-8 transition-colors duration-200"
-      style={{
-        border: `1.5px dashed ${isDragging ? '#5581C7' : '#C7D0E4'}`,
-        backgroundColor: isDragging ? '#EAF1FE' : '#EAF1FE',
-        cursor: isExtracting ? 'wait' : 'pointer',
-      }}
+      className={cn(
+        'flex flex-col items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-dashed py-8 transition-colors duration-200',
+        isDragging ? 'border-brand bg-primary-soft/60 dark:bg-slate-800' : 'border-primary-soft/80 bg-primary-soft/30 dark:border-slate-600 dark:bg-slate-800/40',
+        isExtracting ? 'cursor-wait' : 'cursor-pointer',
+      )}
       onClick={() => !isExtracting && inputRef.current?.click()}
       role="button"
       tabIndex={0}
@@ -165,20 +152,17 @@ function DropZone({
           if (file) void handleFile(file);
         }}
       />
-      <div
-        className="flex h-10 w-10 items-center justify-center rounded-xl"
-        style={{ backgroundColor: '#E5E9F2' }}
-      >
+      <div className="flex h-10 w-10 items-center justify-center bg-primary-soft text-primary dark:bg-slate-700 dark:text-slate-200">
         {isExtracting ? (
-          <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#1B2A49' }} />
+          <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
-          <Upload className="h-5 w-5" style={{ color: '#1B2A49' }} />
+          <Upload className="h-5 w-5" />
         )}
       </div>
-      <p className="text-sm text-[#1B2A49]">
+      <p className="text-sm text-foreground">
         <span className="font-semibold">Datei auswählen</span> oder hierher ziehen
       </p>
-      <p className="text-xs" style={{ color: '#6B6969' }}>
+      <p className="text-xs text-muted-foreground">
         PDF oder DOCX · max. 10 MB
       </p>
     </div>
@@ -209,19 +193,11 @@ export function DocumentInput({
   ];
 
   return (
-    <div
-      className="mx-auto w-full max-w-2xl rounded-[18px] p-7"
-      style={{
-        background: '#fff',
-        boxShadow:
-          '0 1px 2px rgba(27,42,73,.04), 0 6px 16px -8px rgba(27,42,73,.10)',
-        border: '1px solid #E6E8EE',
-      }}
-    >
+    <div className="mx-auto w-full max-w-2xl rounded-[4px] border bg-card p-7">
       {/* Card head */}
       <div className="mb-6">
-        <h2 className="text-[19px] font-bold tracking-tight text-[#1B2A49]">Deine Unterlagen</h2>
-        <p className="mt-1 text-sm" style={{ color: '#6B6969' }}>
+        <h2 className="font-heading text-[19px] font-bold tracking-tight text-foreground">Deine Unterlagen</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Nur der Lebenslauf ist Pflicht. Mit Anschreiben erhältst du noch präziseres Feedback.
         </p>
       </div>
@@ -229,8 +205,8 @@ export function DocumentInput({
       {/* Lebenslauf */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-[14.5px] font-semibold text-[#1B2A49]">
-            Lebenslauf <span className="text-red-500">*</span>
+          <Label className="text-[14.5px] font-semibold text-foreground">
+            Lebenslauf <span className="text-destructive">*</span>
           </Label>
           <SegmentedToggle
             value={resumeMode}
@@ -268,8 +244,10 @@ export function DocumentInput({
               style={{ minHeight: 150 }}
             />
             <span
-              className="absolute bottom-2.5 right-3 text-xs"
-              style={{ color: resumeText.length > 24000 ? '#DC2626' : '#6B6969' }}
+              className={cn(
+                'absolute bottom-2.5 right-3 font-mono text-xs tabular-nums',
+                resumeText.length > 24000 ? 'text-destructive' : 'text-muted-foreground',
+              )}
             >
               {resumeText.length.toLocaleString('de-DE')} / 24.000
             </span>
@@ -283,11 +261,7 @@ export function DocumentInput({
           <button
             type="button"
             onClick={() => setCoverVisible(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium transition-colors duration-200"
-            style={{
-              border: '1.5px dashed #C7D0E4',
-              color: '#1B2A49',
-            }}
+            className="flex w-full items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-dashed border-primary-soft/80 py-3 text-sm font-medium text-foreground transition-colors duration-200 hover:border-brand dark:border-slate-600"
           >
             <Plus className="h-4 w-4" />
             Anschreiben hinzufügen
@@ -295,9 +269,9 @@ export function DocumentInput({
         ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-[14.5px] font-semibold text-[#1B2A49]">
+              <Label className="text-[14.5px] font-semibold text-foreground">
                 Anschreiben{' '}
-                <span className="text-xs font-normal" style={{ color: '#6B6969' }}>
+                <span className="text-xs font-normal text-muted-foreground">
                   (optional)
                 </span>
               </Label>
@@ -314,8 +288,7 @@ export function DocumentInput({
                     onCoverLetterChange('');
                     setCoverChip(null);
                   }}
-                  className="text-xs font-medium transition-colors"
-                  style={{ color: '#6B6969' }}
+                  className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Entfernen
                 </button>
@@ -351,8 +324,10 @@ export function DocumentInput({
                   style={{ minHeight: 120 }}
                 />
                 <span
-                  className="absolute bottom-2.5 right-3 text-xs"
-                  style={{ color: coverLetterText.length > 12000 ? '#DC2626' : '#6B6969' }}
+                  className={cn(
+                    'absolute bottom-2.5 right-3 font-mono text-xs tabular-nums',
+                    coverLetterText.length > 12000 ? 'text-destructive' : 'text-muted-foreground',
+                  )}
                 >
                   {coverLetterText.length.toLocaleString('de-DE')} / 12.000
                 </span>
@@ -369,11 +344,6 @@ export function DocumentInput({
           onClick={onNext}
           disabled={!resumeValid}
           className="gap-2"
-          style={
-            resumeValid
-              ? { backgroundColor: '#1B2A49', color: '#fff' }
-              : undefined
-          }
         >
           {resumeValid && <CheckCircle2 className="h-4 w-4 opacity-70" />}
           Weiter zur Zielstelle

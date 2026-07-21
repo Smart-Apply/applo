@@ -106,7 +106,7 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
           </span>
         </div>
       </div>
-      <span className="text-xs font-medium" style={{ color: '#6B6969' }}>
+      <span className="text-xs font-medium text-muted-foreground">
         {label}
       </span>
     </div>
@@ -125,10 +125,10 @@ const VERDICT_MAP: Record<
 
 // ─── Category status icon ─────────────────────────────────────────────────────
 function CategoryStatusIcon({ status }: { status: ApplicationValidationStatus }) {
-  if (status === 'pass') return <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-600" />;
+  if (status === 'pass') return <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-success" />;
   if (status === 'warn')
-    return <AlertCircle className="h-4 w-4 flex-shrink-0 text-amber-600" />;
-  return <XCircle className="h-4 w-4 flex-shrink-0 text-red-600" />;
+    return <AlertCircle className="h-4 w-4 flex-shrink-0 text-[#A16207] dark:text-amber-300" />;
+  return <XCircle className="h-4 w-4 flex-shrink-0 text-destructive" />;
 }
 
 // ─── Animated progress bar ────────────────────────────────────────────────────
@@ -150,12 +150,9 @@ function ScoreBar({ score, delay = 0 }: { score: number; delay?: number }) {
   }, [score, delay]);
 
   return (
-    <div
-      className="h-1.5 w-full overflow-hidden rounded-full"
-      style={{ backgroundColor: '#EDEFF4' }}
-    >
+    <div className="h-1.5 w-full overflow-hidden bg-primary-soft dark:bg-slate-700">
       <div
-        className="h-full rounded-full transition-all duration-700"
+        className="h-full transition-all duration-700"
         style={{ width: `${width}%`, backgroundColor: color }}
       />
     </div>
@@ -176,40 +173,25 @@ function RecommendationItem({
 
   return (
     <li
-      className="flex items-start gap-3 rounded-xl border p-4 transition-colors duration-200"
-      style={{
-        borderColor: done ? '#E6E8EE' : '#E6E8EE',
-        backgroundColor: done ? '#F5F6F8' : '#fff',
-        opacity: done ? 0.6 : 1,
-      }}
+      className={`flex items-start gap-3 rounded-[3px] border p-4 transition-colors duration-200 ${
+        done ? 'bg-muted opacity-60' : 'bg-card'
+      }`}
     >
       <button
         type="button"
         aria-label={done ? 'Als offen markieren' : 'Als erledigt markieren'}
         onClick={() => setDone((d) => !d)}
-        className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition-all duration-200"
-        style={
-          done
-            ? { backgroundColor: '#16A34A', borderColor: '#16A34A' }
-            : { backgroundColor: '#fff', borderColor: '#C7D0E4' }
-        }
+        className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center border-2 transition-colors duration-200 ${
+          done ? 'border-success bg-success' : 'border-muted-foreground/40 bg-background'
+        }`}
       >
         {done && <CheckCircle2 className="h-3 w-3 text-white" />}
       </button>
       <div className="min-w-0">
-        <p
-          className="text-sm font-medium"
-          style={{
-            color: '#1B2A49',
-            textDecoration: done ? 'line-through' : 'none',
-          }}
-        >
+        <p className={`text-sm font-medium text-foreground ${done ? 'line-through' : ''}`}>
           {index + 1}. {title}
         </p>
-        <p
-          className="mt-0.5 text-sm"
-          style={{ color: '#6B6969', textDecoration: done ? 'line-through' : 'none' }}
-        >
+        <p className={`mt-0.5 text-sm text-muted-foreground ${done ? 'line-through' : ''}`}>
           {detail}
         </p>
       </div>
@@ -226,16 +208,7 @@ function SectionCard({
   className?: string;
 }) {
   return (
-    <div
-      className={className}
-      style={{
-        backgroundColor: '#fff',
-        border: '1px solid #E6E8EE',
-        borderRadius: 18,
-        padding: '24px 28px',
-        boxShadow: '0 1px 2px rgba(27,42,73,.04), 0 6px 16px -8px rgba(27,42,73,.10)',
-      }}
-    >
+    <div className={`rounded-[4px] border bg-card px-7 py-6 ${className ?? ''}`}>
       {children}
     </div>
   );
@@ -243,10 +216,7 @@ function SectionCard({
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <p
-      className="mb-4 text-xs font-bold uppercase tracking-[0.06em]"
-      style={{ color: '#6B6969' }}
-    >
+    <p className="mb-4 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
       {children}
     </p>
   );
@@ -277,8 +247,8 @@ export function ValidationResultView({ result, onNewCheck }: ValidationResultVie
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-green-600" />
-          <span className="text-base font-semibold text-[#1B2A49]">Dein Ergebnis</span>
+          <CheckCircle2 className="h-5 w-5 text-success" />
+          <span className="text-base font-semibold text-foreground">Dein Ergebnis</span>
         </div>
         {onNewCheck && (
           <Button variant="ghost" size="sm" onClick={onNewCheck} className="gap-1.5 text-sm">
@@ -296,29 +266,29 @@ export function ValidationResultView({ result, onNewCheck }: ValidationResultVie
             <ScoreRing score={result.overallScore} label="Gesamt-Score" />
             <div className="text-center">
               <div
-                className="text-2xl font-bold"
+                className="font-mono text-2xl font-bold tabular-nums"
                 style={{ color: scoreHex(result.atsScore) }}
               >
                 {result.atsScore}
               </div>
-              <div className="text-xs" style={{ color: '#6B6969' }}>
+              <div className="text-xs text-muted-foreground">
                 ATS-Score*
               </div>
             </div>
           </div>
 
           {/* Divider */}
-          <div className="h-full w-px self-stretch" style={{ backgroundColor: '#E6E8EE' }} />
+          <div className="h-full w-px self-stretch bg-border" />
 
           {/* Verdict + summary */}
           <div className="space-y-3">
             <span
-              className="inline-block rounded-full px-3 py-1 text-sm font-semibold"
+              className="inline-block px-3 py-1 font-mono text-[12px] font-semibold uppercase tracking-[.05em]"
               style={{ backgroundColor: verdict.bg, color: verdict.color }}
             >
               {verdict.label}
             </span>
-            <p className="text-sm leading-relaxed" style={{ color: '#1B2A49' }}>
+            <p className="text-sm leading-relaxed text-foreground">
               {result.summary}
             </p>
           </div>
@@ -333,11 +303,11 @@ export function ValidationResultView({ result, onNewCheck }: ValidationResultVie
             {sortedCategories.map((cat, i) => (
               <div key={cat.id} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 font-medium text-[#1B2A49]">
+                  <span className="flex items-center gap-2 font-medium text-foreground">
                     <CategoryStatusIcon status={cat.status} />
                     {cat.label}
                   </span>
-                  <span className="font-semibold" style={{ color: scoreHex(cat.score) }}>
+                  <span className="font-mono font-semibold tabular-nums" style={{ color: scoreHex(cat.score) }}>
                     {cat.score}
                   </span>
                 </div>
@@ -371,18 +341,18 @@ export function ValidationResultView({ result, onNewCheck }: ValidationResultVie
           <SectionHeading
             // green tint for strengths heading
           >
-            <span style={{ color: '#16A34A' }}>✓ Stärken</span>
+            <span className="text-success">✓ Stärken</span>
           </SectionHeading>
           <ul className="space-y-2">
             {result.strengths.map((strength, i) => (
               <li key={i} className="flex items-start gap-2.5">
                 <div
-                  className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full"
+                  className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center"
                   style={{ backgroundColor: scoreBg(80) }}
                 >
-                  <CheckCircle2 className="h-3 w-3 text-green-600" />
+                  <CheckCircle2 className="h-3 w-3 text-success" />
                 </div>
-                <span className="text-sm" style={{ color: '#1B2A49' }}>
+                <span className="text-sm text-foreground">
                   {strength}
                 </span>
               </li>
@@ -391,7 +361,7 @@ export function ValidationResultView({ result, onNewCheck }: ValidationResultVie
         </SectionCard>
       )}
 
-      <p className="px-1 text-xs italic" style={{ color: '#6B6969' }}>
+      <p className="px-1 text-xs italic text-muted-foreground">
         *Der ATS-Score ist eine KI-Einschätzung, kein echter ATS-Parser-Durchlauf.
       </p>
     </div>

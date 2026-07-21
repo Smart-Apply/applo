@@ -1,6 +1,7 @@
 'use client';
 
 import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export type WizardStep = 'step1' | 'step2' | 'loading' | 'result' | 'history';
 
@@ -31,36 +32,28 @@ export function CheckStepper({ step }: { step: WizardStep }) {
           <div key={s.num} className="flex items-start">
             {i > 0 && (
               <div
-                className="mt-4 h-px w-10 flex-shrink-0 transition-colors duration-500 sm:w-16"
-                style={{ backgroundColor: connectorFilled ? '#16A34A' : '#E6E8EE' }}
+                className={cn(
+                  'mt-4 h-px w-10 flex-shrink-0 transition-colors duration-500 sm:w-16',
+                  connectorFilled ? 'bg-success' : 'bg-border',
+                )}
               />
             )}
             <div className="flex flex-col items-center gap-1.5">
               <div
-                className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all duration-300"
-                style={
-                  done
-                    ? { backgroundColor: '#16A34A', color: '#fff' }
-                    : isActive
-                      ? {
-                          backgroundColor: '#1B2A49',
-                          color: '#fff',
-                          boxShadow: '0 0 0 4px #E5E9F2',
-                        }
-                      : {
-                          backgroundColor: '#fff',
-                          color: '#6B6969',
-                          border: '1.5px solid #E6E8EE',
-                        }
-                }
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center font-mono text-sm font-semibold transition-all duration-300',
+                  done && 'bg-success text-white',
+                  isActive && 'bg-primary text-primary-foreground ring-4 ring-primary-soft dark:ring-brand/20',
+                  !done && !isActive && 'border-[1.5px] border-border bg-background text-muted-foreground',
+                )}
               >
                 {done ? <Check className="h-3.5 w-3.5" /> : s.num}
               </div>
               <span
-                className="text-xs font-medium"
-                style={{
-                  color: done ? '#16A34A' : isActive ? '#1B2A49' : '#6B6969',
-                }}
+                className={cn(
+                  'text-xs font-medium',
+                  done ? 'text-success' : isActive ? 'text-foreground' : 'text-muted-foreground',
+                )}
               >
                 {s.label}
               </span>
