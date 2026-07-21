@@ -45,7 +45,7 @@ export function TwoFactorStatusCard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {status?.isEnabled ? (
-                <ShieldCheck className="h-5 w-5 text-green-500" />
+                <ShieldCheck className="h-5 w-5 text-success" />
               ) : (
                 <ShieldOff className="h-5 w-5 text-muted-foreground" />
               )}
@@ -62,7 +62,7 @@ export function TwoFactorStatusCard() {
         <CardContent className="space-y-4">
           {status?.isEnabled ? (
             <>
-              <div className="rounded-lg border p-4 space-y-3">
+              <div className="rounded-[4px] border p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm">
                     <Key className="h-4 w-4 text-muted-foreground" />
@@ -88,7 +88,7 @@ export function TwoFactorStatusCard() {
                 )}
               </div>
 
-              <div className="rounded-lg border p-4">
+              <div className="rounded-[4px] border p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm">
                     <Smartphone className="h-4 w-4 text-muted-foreground" />

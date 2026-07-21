@@ -35,34 +35,34 @@ export function SettingsNavGroup({ item }: { item: NavItemLike }) {
   const activeSection = resolveSection(pathname, searchParams.get('section'));
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       {/* Parent row — links to settings root, highlighted while on /settings */}
       <Link
         href="/settings"
-        className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+        className={`group flex items-center justify-between border-l-[3px] px-3 py-2.5 text-sm transition-colors duration-150 ${
           onSettings
-            ? 'bg-primary/5 text-primary shadow-sm'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            ? 'border-white bg-[#5581C7] font-semibold text-white'
+            : 'border-transparent font-medium text-[rgba(229,233,242,.72)] hover:bg-white/5 hover:text-white'
         }`}
       >
         <div className="flex items-center gap-3">
           <Icon
             className={`h-5 w-5 transition-colors ${
-              onSettings ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+              onSettings ? 'text-white' : 'text-[rgba(229,233,242,.72)] group-hover:text-white'
             }`}
           />
           {item.name}
         </div>
         <ChevronDown
           className={`h-4 w-4 transition-transform duration-200 ${
-            onSettings ? 'rotate-180 text-primary' : 'text-muted-foreground/70'
+            onSettings ? 'rotate-180 text-white' : 'text-[rgba(229,233,242,.5)]'
           }`}
         />
       </Link>
 
       {/* Sub-sections — only while the user is in settings */}
       {onSettings && (
-        <div className="relative ml-[1.4rem] space-y-0.5 border-l border-border pl-3">
+        <div className="relative ml-[1.4rem] space-y-0.5 border-l border-white/15 pl-3">
           {SETTINGS_SECTIONS.map((section: SettingsSection) => {
             const SubIcon = section.icon;
             const isActive = section.id === activeSection;
@@ -70,15 +70,15 @@ export function SettingsNavGroup({ item }: { item: NavItemLike }) {
               <Link
                 key={section.id}
                 href={`/settings?section=${section.id}`}
-                className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                className={`group flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
                   isActive
-                    ? 'bg-primary/5 font-semibold text-primary'
-                    : 'font-medium text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'bg-white/10 font-semibold text-white'
+                    : 'font-medium text-[rgba(229,233,242,.6)] hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <SubIcon
                   className={`h-4 w-4 transition-colors ${
-                    isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                    isActive ? 'text-white' : 'text-[rgba(229,233,242,.6)] group-hover:text-white'
                   }`}
                 />
                 {section.label}

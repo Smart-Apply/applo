@@ -73,7 +73,7 @@ function DeviceItem({
   return (
     <div className="flex items-start justify-between gap-4 py-3">
       <div className="flex items-start gap-3">
-        <div className="mt-1 rounded-lg bg-muted p-2">
+        <div className="mt-1 rounded-[3px] bg-muted p-2">
           <DeviceIcon os={device.os} className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="space-y-1">

@@ -29,10 +29,10 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
   const strengthPercentage = (metCount / requirements.length) * 100;
 
   const getStrengthColor = () => {
-    if (strengthPercentage === 0) return 'bg-gray-200';
-    if (strengthPercentage < 40) return 'bg-red-500';
-    if (strengthPercentage < 80) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (strengthPercentage === 0) return 'bg-muted';
+    if (strengthPercentage < 40) return 'bg-destructive';
+    if (strengthPercentage < 80) return 'bg-warning';
+    return 'bg-success';
   };
 
   const getStrengthText = () => {
@@ -49,22 +49,22 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
       {/* Strength bar */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-gray-600">Passwortstärke</span>
+          <span className="text-muted-foreground">Passwortstärke</span>
           {strengthPercentage > 0 && (
             <span
               className={`font-medium ${
                 strengthPercentage < 40
-                  ? 'text-red-600'
+                  ? 'text-destructive'
                   : strengthPercentage < 80
-                  ? 'text-yellow-600'
-                  : 'text-green-600'
+                  ? 'text-[#A16207] dark:text-amber-300/90'
+                  : 'text-success'
               }`}
             >
               {getStrengthText()}
             </span>
           )}
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+        <div className="h-2 w-full overflow-hidden rounded-[2px] bg-muted">
           <div
             className={`h-full transition-all duration-300 ${getStrengthColor()}`}
             style={{ width: `${strengthPercentage}%` }}
@@ -78,7 +78,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
           <li
             key={index}
             className={`flex items-center gap-2 ${
-              req.met ? 'text-green-600' : 'text-gray-500'
+              req.met ? 'text-success' : 'text-muted-foreground'
             }`}
           >
             <span className="flex-shrink-0">

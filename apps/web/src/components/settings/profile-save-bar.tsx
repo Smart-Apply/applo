@@ -22,7 +22,7 @@ interface ProfileSaveBarProps {
 export function ProfileSaveBar({ visible, saving, onSave, onDiscard }: ProfileSaveBarProps) {
   return (
     <div
-      className={`fixed bottom-6 left-4 right-4 z-40 mx-auto flex max-w-3xl items-center gap-4 rounded-2xl bg-primary px-5 py-3 text-primary-foreground shadow-2xl transition-all duration-300 md:left-[21rem] md:right-8 ${
+      className={`fixed bottom-6 left-4 right-4 z-40 mx-auto flex max-w-3xl items-center gap-4 rounded-[4px] bg-primary px-5 py-3 text-primary-foreground shadow-lg transition-all duration-300 md:left-[21rem] md:right-8 ${
         visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-[150%] opacity-0'
       }`}
       role="status"

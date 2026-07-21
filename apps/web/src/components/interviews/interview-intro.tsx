@@ -29,13 +29,13 @@ import {
 
 function ModePreview() {
   return (
-    <div className="w-full max-w-[460px] rounded-2xl border bg-card p-5 shadow-soft">
+    <div className="w-full max-w-[460px] rounded-[4px] border bg-card p-5">
       <div className="mb-3.5 flex items-center gap-2 text-sm font-semibold">
-        <Sparkles className="h-4 w-4 text-blue-600" /> Zwei Modi
+        <Sparkles className="h-4 w-4 text-brand" /> Zwei Modi
       </div>
       <div className="space-y-3">
-        <div className="flex items-start gap-3 rounded-xl border-[1.5px] border-primary p-3.5 ring-2 ring-primary/15">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex items-start gap-3 rounded-[3px] border-[1.5px] border-primary p-3.5 ring-2 ring-primary/15">
+          <span className="flex h-9 w-9 items-center justify-center rounded-[3px] bg-primary text-primary-foreground">
             <MessageSquare className="h-5 w-5" />
           </span>
           <div>
@@ -43,8 +43,8 @@ function ModePreview() {
             <div className="mt-0.5 text-xs text-muted-foreground">Übe für eine beliebige Position.</div>
           </div>
         </div>
-        <div className="flex items-start gap-3 rounded-xl border-[1.5px] p-3.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-foreground">
+        <div className="flex items-start gap-3 rounded-[3px] border-[1.5px] p-3.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-[3px] bg-muted text-foreground">
             <Briefcase className="h-5 w-5" />
           </span>
           <div>
@@ -59,13 +59,13 @@ function ModePreview() {
 
 function ChatPreview() {
   return (
-    <div className="w-full max-w-[460px] rounded-2xl border bg-card p-4 shadow-soft">
+    <div className="w-full max-w-[460px] rounded-[4px] border bg-card p-4">
       <div className="mb-3.5 flex gap-2.5">
-        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-[3px] bg-primary text-primary-foreground">
           <MessageSquare className="h-4 w-4" />
         </span>
-        <div className="rounded-xl border bg-muted px-3 py-2.5">
-          <span className="mb-2 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+        <div className="rounded-[4px] border bg-muted px-3 py-2.5">
+          <span className="mb-2 inline-block rounded-[2px] border border-primary-soft bg-primary-soft/40 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-foreground dark:border-slate-600 dark:bg-slate-800/60">
             Verhalten
           </span>
           <p className="text-xs leading-relaxed text-foreground/80">
@@ -75,16 +75,16 @@ function ChatPreview() {
         </div>
       </div>
       <div className="mb-3.5 flex justify-end gap-2.5">
-        <div className="max-w-[72%] rounded-xl bg-primary px-3 py-2 text-xs text-primary-foreground">
+        <div className="max-w-[72%] rounded-[4px] bg-primary px-3 py-2 text-xs text-primary-foreground">
           In meinem letzten Werkstudenten-Projekt habe ich …
         </div>
         <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-muted text-muted-foreground">
           <User className="h-4 w-4" />
         </span>
       </div>
-      <div className="flex items-center gap-2 rounded-xl border py-1.5 pl-3 pr-1.5">
+      <div className="flex items-center gap-2 rounded-[3px] border py-1.5 pl-3 pr-1.5">
         <span className="flex-1 text-xs text-muted-foreground">Deine Antwort eingeben …</span>
-        <span className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+        <span className="flex items-center gap-1.5 rounded-[3px] bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
           <Send className="h-3.5 w-3.5" /> Senden
         </span>
       </div>
@@ -94,27 +94,27 @@ function ChatPreview() {
 
 function FeedbackPreview() {
   return (
-    <div className="w-full max-w-[460px] rounded-2xl border bg-card p-4 shadow-soft">
+    <div className="w-full max-w-[460px] rounded-[4px] border bg-card p-4">
       <div className="flex gap-2.5">
-        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-[3px] bg-primary text-primary-foreground">
           <MessageSquare className="h-4 w-4" />
         </span>
-        <div className="flex-1 rounded-xl border bg-muted p-3.5">
+        <div className="flex-1 rounded-[4px] border bg-muted p-3.5">
           <div className="mb-2.5 flex items-center gap-2">
-            <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-green-600 text-white">
+            <span className="flex h-6 w-6 flex-none items-center justify-center rounded-[2px] bg-success text-white">
               <Check className="h-3.5 w-3.5" strokeWidth={3} />
             </span>
             <span className="text-sm font-bold">Feedback zu deiner Antwort</span>
-            <span className="ml-auto rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-extrabold text-green-700">
+            <span className="ml-auto rounded-[2px] border border-[#BFE9CC] bg-[#ECFAF0] px-2.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums tracking-[.05em] text-success dark:border-green-400/30 dark:bg-green-400/10">
               82/100
             </span>
           </div>
           <p className="mt-2 flex gap-2 text-xs leading-snug text-foreground/80">
-            <span className="flex-none font-bold text-green-700">Stärke:</span>
+            <span className="flex-none font-bold text-success">Stärke:</span>
             <span>Klare STAR-Struktur und ein konkretes Beispiel mit messbarem Ergebnis.</span>
           </p>
           <p className="mt-2 flex gap-2 text-xs leading-snug text-foreground/80">
-            <span className="flex-none font-bold text-blue-600">Tipp:</span>
+            <span className="flex-none font-bold text-brand">Tipp:</span>
             <span>Nenne zum Schluss, was du daraus gelernt hast — das rundet die Antwort ab.</span>
           </p>
         </div>
@@ -182,7 +182,7 @@ export function InterviewIntro({ onStart }: InterviewIntroProps) {
         {/* text */}
         <div key={step} className="max-w-xl animate-fade-in">
           <Applo state={s.pose} size={84} className="-ml-2 mb-1" aria-hidden />
-          <p className="mb-2.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-600">
+          <p className="mb-2.5 flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
             Schritt {step + 1} <span className="text-muted-foreground/60">von {STEPS.length}</span>
           </p>
           <h2 className="text-3xl font-bold leading-tight tracking-tight">{s.heading}</h2>
@@ -190,7 +190,7 @@ export function InterviewIntro({ onStart }: InterviewIntroProps) {
           <ul className="mt-5 space-y-3">
             {s.bullets.map(([title, desc]) => (
               <li key={title} className="flex items-start gap-3 text-sm leading-snug text-foreground/80">
-                <span className="mt-0.5 flex h-[22px] w-[22px] flex-none items-center justify-center rounded-md bg-green-100 text-green-700">
+                <span className="mt-0.5 flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[3px] border border-[#BFE9CC] bg-[#ECFAF0] text-success dark:border-green-400/30 dark:bg-green-400/10">
                   <Check className="h-3.5 w-3.5" strokeWidth={3} />
                 </span>
                 <span>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Poppins } from "next/font/google";
+import { Inter, Archivo, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -13,15 +13,22 @@ const inter = Inter({
   fallback: ["system-ui", "arial"],
 });
 
-const poppins = Poppins({
+const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-poppins",
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-archivo",
+  display: "swap",
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono-plex",
   display: "swap",
 });
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
+  themeColor: '#40639C',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -76,10 +83,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Applo" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-TileColor" content="#2563eb" />
+        <meta name="msapplication-TileColor" content="#40639C" />
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
-      <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${archivo.variable} ${plexMono.variable} font-sans antialiased`}>
         <ErrorBoundary>
           <Providers>{children}</Providers>
         </ErrorBoundary>

@@ -5,7 +5,7 @@ import { useProfile, useUpdateProfile } from '@/hooks/use-profile';
 import { useAuthStore } from '@/stores/auth-store';
 import { getLanguageLevelLabel } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusChip } from '@/components/ui/status-chip';
 import { ProfileSkeleton } from '@/components/shared/skeletons';
 import { ApploRig } from '@/components/ui/applo-rig';
 import type { ApploState } from '@/components/ui/applo-rig';
@@ -183,8 +183,8 @@ function InlineSkillInput({
       </div>
 
       {suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg border border-border bg-card p-1 shadow-md">
-          <p className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-[4px] border border-border bg-card p-1 shadow-md">
+          <p className="px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-muted-foreground">
             Vorschläge
           </p>
           {suggestions.map((s, i) => (
@@ -195,7 +195,7 @@ function InlineSkillInput({
                 submit(s);
               }}
               onMouseEnter={() => setHighlightIdx(i)}
-              className={`flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
+              className={`flex w-full items-center rounded-[3px] px-2 py-1.5 text-left text-sm transition-colors ${
                 i === highlightIdx
                   ? 'bg-primary/10 text-primary'
                   : 'text-foreground hover:bg-muted'
@@ -322,7 +322,7 @@ function InlineLanguageInput({
             <button
               key={l.value}
               onClick={() => addWithLevel(l.value)}
-              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-all duration-200 hover:border-primary hover:bg-primary hover:text-primary-foreground"
+              className="rounded-[3px] border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
             >
               {l.label}
             </button>
@@ -370,8 +370,8 @@ function InlineLanguageInput({
       />
 
       {suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg border border-border bg-card p-1 shadow-md">
-          <p className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-[4px] border border-border bg-card p-1 shadow-md">
+          <p className="px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-muted-foreground">
             Vorschläge
           </p>
           {suggestions.map((s, i) => (
@@ -382,7 +382,7 @@ function InlineLanguageInput({
                 selectLanguage(s);
               }}
               onMouseEnter={() => setHighlightIdx(i)}
-              className={`flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
+              className={`flex w-full items-center rounded-[3px] px-2 py-1.5 text-left text-sm transition-colors ${
                 i === highlightIdx
                   ? 'bg-primary/10 text-primary'
                   : 'text-foreground hover:bg-muted'
@@ -423,7 +423,7 @@ function LanguageRow({
 
   if (picking) {
     return (
-      <div ref={rowRef} className="space-y-2 rounded-lg bg-muted/40 p-2.5">
+      <div ref={rowRef} className="space-y-2 rounded-[3px] bg-muted/40 p-2.5">
         <p className="text-sm font-medium text-foreground">{lang.name}</p>
         <div className="flex flex-wrap gap-1.5">
           {LANGUAGE_LEVELS.map((l) => (
@@ -433,7 +433,7 @@ function LanguageRow({
                 onUpdateLevel(l.value);
                 setPicking(false);
               }}
-              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
+              className={`rounded-[3px] border px-2.5 py-1 text-xs font-medium transition-colors ${
                 lang.level === l.value
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-primary/5'
@@ -468,7 +468,7 @@ function LanguageRow({
         )}
         <button
           onClick={onRemove}
-          className="rounded-full p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/lang:opacity-100"
+          className="rounded-[3px] p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/lang:opacity-100"
         >
           <X className="h-3 w-3" />
         </button>
@@ -485,7 +485,7 @@ function CompanyMark({ name }: { name: string }) {
     .slice(0, 2)
     .toUpperCase();
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0c1d3f] text-xs font-bold text-white">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] bg-primary text-xs font-bold text-primary-foreground">
       {initials}
     </div>
   );
@@ -494,14 +494,14 @@ function CompanyMark({ name }: { name: string }) {
 /** Profile-strength ring — Applo-blue until complete, then green. */
 function StrengthRing({ pct }: { pct: number }) {
   const done = pct >= 100;
-  const color = done ? '#16a34a' : '#2563eb';
+  const color = done ? 'var(--success)' : 'var(--brand)';
   return (
     <div
       className="grid h-[84px] w-[84px] place-items-center rounded-full"
       style={{ background: `conic-gradient(${color} ${pct * 3.6}deg, var(--muted) 0deg)` }}
     >
       <div className="grid h-16 w-16 place-items-center rounded-full bg-card">
-        <span className="text-xl font-bold tabular-nums" style={{ color }}>
+        <span className="font-mono text-xl font-bold tabular-nums" style={{ color }}>
           {pct}
           <small className="ml-0.5 text-xs font-semibold">%</small>
         </span>
@@ -540,8 +540,8 @@ function CollapsibleCard({
     <div
       ref={cardRef}
       className={cn(
-        'scroll-mt-24 rounded-2xl border bg-card shadow-sm transition-all duration-200',
-        active ? 'tour-active border-[#2563eb]' : 'border-border',
+        'scroll-mt-24 rounded-[4px] border bg-card transition-colors duration-200',
+        active ? 'tour-active border-brand' : 'border-border',
       )}
     >
       <div className="flex items-center gap-2.5 px-6 py-5">
@@ -569,7 +569,7 @@ function CollapsibleCard({
             onClick={onAsk}
             title="Was bringt das?"
             className={cn(
-              'grid h-7 w-7 shrink-0 place-items-center rounded-md border transition-colors',
+              'grid h-7 w-7 shrink-0 place-items-center rounded-[3px] border transition-colors',
               active
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-border text-muted-foreground hover:border-primary hover:text-primary',
@@ -894,7 +894,7 @@ export default function ProfilePage() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
+      <div className="rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] p-6 text-center text-destructive dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300">
         Profil konnte nicht geladen werden. Bitte versuche es später erneut.
       </div>
     );
@@ -917,8 +917,8 @@ export default function ProfilePage() {
 
   const sectionCard = (id: string) =>
     cn(
-      'scroll-mt-24 rounded-2xl border bg-card p-6 shadow-sm transition-all duration-200',
-      activeSection === id ? 'tour-active border-[#2563eb]' : 'border-border',
+      'scroll-mt-24 rounded-[4px] border bg-card p-6 transition-colors duration-200',
+      activeSection === id ? 'tour-active border-brand' : 'border-border',
     );
 
   return (
@@ -935,7 +935,7 @@ export default function ProfilePage() {
         <Button
           variant="outline"
           size="sm"
-          className="group gap-1.5 transition-all duration-200 hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-md"
+          className="group gap-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
           onClick={() => setCvDialogOpen(true)}
         >
           <Upload className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5" />
@@ -947,8 +947,8 @@ export default function ProfilePage() {
       {tourStep !== null && <div className="h-[188px] sm:h-[196px]" />}
       <div
         className={cn(
-          'relative overflow-hidden rounded-2xl border bg-card p-4 shadow-sm sm:p-5',
-          isComplete ? 'border-green-200' : 'border-border',
+          'relative overflow-hidden rounded-[4px] border bg-card p-4 sm:p-5',
+          isComplete ? 'border-[#BFE9CC] dark:border-green-400/30' : 'border-border',
           tourStep !== null && 'fixed left-4 right-4 top-4 z-30 shadow-xl md:left-[336px]',
         )}
       >
@@ -957,19 +957,19 @@ export default function ProfilePage() {
           style={{
             background: isComplete
               ? 'radial-gradient(420px 150px at 8% 0%, rgba(22,163,74,0.08), transparent 70%)'
-              : 'radial-gradient(420px 150px at 8% 0%, rgba(37,99,235,0.06), transparent 70%)',
+              : 'radial-gradient(420px 150px at 8% 0%, rgba(85,129,199,0.08), transparent 70%)',
           }}
         />
         <div className="relative grid grid-cols-[auto_1fr] items-center gap-4 sm:gap-5 lg:grid-cols-[auto_1fr_auto]">
           <div
-            className="grid h-[140px] w-[120px] place-items-center rounded-xl"
-            style={{ background: 'radial-gradient(58% 52% at 50% 45%, rgba(37,99,235,0.10), transparent 72%)' }}
+            className="grid h-[140px] w-[120px] place-items-center rounded-[4px]"
+            style={{ background: 'radial-gradient(58% 52% at 50% 45%, rgba(85,129,199,0.12), transparent 72%)' }}
           >
             <ApploRig key={pose} state={pose} size={120} />
           </div>
           <div className="min-w-0">
-            <div className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_0_3px_rgba(37,99,235,0.15)]" />
+            <div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-brand">
+              <span className="h-1.5 w-1.5 bg-brand" />
               Applo · dein Profil-Coach
             </div>
             <p key={`${tourStep}-${activeSection}-${isComplete}`} className="mb-3.5 max-w-[60ch] text-[15px] leading-relaxed text-foreground">
@@ -1012,7 +1012,7 @@ export default function ProfilePage() {
           </div>
           <div className="hidden flex-col items-center gap-2 self-center border-l border-border pl-5 lg:flex">
             <StrengthRing pct={profileStrength} />
-            <span className="text-[11px] font-semibold text-muted-foreground">Profil-Stärke</span>
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">Profil-Stärke</span>
           </div>
         </div>
       </div>
@@ -1025,19 +1025,19 @@ export default function ProfilePage() {
           <div ref={setRef('identity')} className={sectionCard('identity')}>
             <div className="mb-6 flex items-start gap-4">
               <div className="relative shrink-0">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#0c1d3f] text-xl font-bold text-white">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
                   {initials}
                 </div>
                 <button
                   onClick={() => router.push('/profile/edit')}
-                  className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-white shadow-sm transition-colors hover:bg-muted"
+                  className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm transition-colors hover:bg-muted"
                 >
                   <Pencil className="h-3 w-3 text-muted-foreground" />
                 </button>
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold text-foreground">{fullName}</h1>
+                  <h1 className="font-heading text-xl font-bold text-foreground">{fullName}</h1>
                   <button
                     onClick={() => router.push('/profile/edit')}
                     className="text-muted-foreground transition-colors hover:text-foreground"
@@ -1045,9 +1045,9 @@ export default function ProfilePage() {
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <Badge className="mt-1.5 border-green-200 bg-green-100 text-xs font-medium text-green-700 hover:bg-green-100">
-                  ● Offen für neue Rollen
-                </Badge>
+                <StatusChip tone="success" className="mt-1.5">
+                  Offen für neue Rollen
+                </StatusChip>
                 {location && (
                   <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5" />
@@ -1074,7 +1074,7 @@ export default function ProfilePage() {
                     <span>E-Mail</span>
                   </div>
                   <span className="flex-1 font-medium text-foreground">{user.email}</span>
-                  <Check className="h-4 w-4 text-green-600" />
+                  <Check className="h-4 w-4 text-success" />
                 </div>
               )}
               <div className="flex items-center gap-4 text-sm">
@@ -1085,14 +1085,14 @@ export default function ProfilePage() {
                 {profile?.phone ? (
                   <>
                     <span className="flex-1 font-medium text-foreground">{profile.phone}</span>
-                    <Check className="h-4 w-4 text-green-600" />
+                    <Check className="h-4 w-4 text-success" />
                   </>
                 ) : (
                   <>
                     <span className="flex-1" />
                     <button
                       onClick={() => router.push('/profile/edit')}
-                      className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 transition-colors hover:bg-amber-200"
+                      className="border border-[#F3E3B3] bg-[#FDF6E7] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-[#A16207] transition-colors hover:bg-[#FBEECB] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20"
                     >
                       fehlt
                     </button>
@@ -1118,14 +1118,14 @@ export default function ProfilePage() {
                     ) : (
                       <span className="flex-1 font-medium text-foreground">{linkedinDisplay}</span>
                     )}
-                    <Check className="h-4 w-4 text-green-600" />
+                    <Check className="h-4 w-4 text-success" />
                   </>
                 ) : (
                   <>
                     <span className="flex-1" />
                     <button
                       onClick={() => router.push('/profile/edit')}
-                      className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 transition-colors hover:bg-amber-200"
+                      className="border border-[#F3E3B3] bg-[#FDF6E7] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-[#A16207] transition-colors hover:bg-[#FBEECB] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20"
                     >
                       fehlt
                     </button>
@@ -1160,7 +1160,7 @@ export default function ProfilePage() {
             ) : (
               <button
                 onClick={() => router.push('/profile/edit')}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-4 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+                className="flex w-full items-center justify-center gap-1.5 rounded-[3px] border border-dashed border-border py-4 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Steckbrief schreiben — Applos wichtigster Input
@@ -1196,7 +1196,7 @@ export default function ProfilePage() {
                           </span>
                           <button
                             onClick={() => handleRemoveExperience(i)}
-                            className="rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/exp:opacity-100"
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/exp:opacity-100"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -1244,12 +1244,12 @@ export default function ProfilePage() {
                 {profile!.skills!.map((skill, i) => (
                   <span
                     key={i}
-                    className="group relative inline-flex items-center rounded-md border border-primary bg-primary/10 py-1.5 pl-3 pr-7 text-xs font-medium text-primary transition-all duration-300 ease-in-out hover:bg-primary hover:text-primary-foreground"
+                    className="group relative inline-flex items-center rounded-[3px] border border-primary bg-primary/10 py-1.5 pl-3 pr-7 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
                   >
                     {skill.name}
                     <button
                       onClick={() => handleRemoveSkill(skill.name)}
-                      className="absolute right-1.5 shrink-0 rounded-full p-0.5 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100"
+                      className="absolute right-1.5 shrink-0 rounded-[2px] p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -1284,7 +1284,7 @@ export default function ProfilePage() {
               <div className="space-y-5">
                 {profile!.education!.map((edu, i) => (
                   <div key={i} className="group/edu flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
                       <GraduationCap className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -1301,7 +1301,7 @@ export default function ProfilePage() {
                           )}
                           <button
                             onClick={() => handleRemoveEducation(i)}
-                            className="rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/edu:opacity-100"
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/edu:opacity-100"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -1347,7 +1347,7 @@ export default function ProfilePage() {
               <div className="space-y-5">
                 {profile!.projects!.map((proj, i) => (
                   <div key={i} className="group/proj flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0c1d3f] text-xs font-bold text-white">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] bg-primary text-xs font-bold text-primary-foreground">
                       <FolderKanban className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -1374,7 +1374,7 @@ export default function ProfilePage() {
                         </div>
                         <button
                           onClick={() => handleRemoveProject(i)}
-                          className="shrink-0 rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/proj:opacity-100"
+                          className="shrink-0 rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/proj:opacity-100"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>
@@ -1426,7 +1426,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 {profile!.certificates!.map((cert, i) => (
                   <div key={i} className="group/cert flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0c1d3f] text-xs font-bold text-white">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] bg-primary text-xs font-bold text-primary-foreground">
                       <Award className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -1443,7 +1443,7 @@ export default function ProfilePage() {
                           )}
                           <button
                             onClick={() => handleRemoveCertificate(i)}
-                            className="rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/cert:opacity-100"
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/cert:opacity-100"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -1478,19 +1478,19 @@ export default function ProfilePage() {
         <div className="space-y-5">
           {/* Transparent profile check — hidden once the profile is complete */}
           {!isComplete && (
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-[4px] border border-border bg-card p-6">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
+                <Sparkles className="h-4 w-4 text-brand" />
                 <h2 className="font-semibold text-foreground">Profil-Check</h2>
               </div>
-              <span className={cn('text-xl font-bold tabular-nums', isComplete ? 'text-green-600' : 'text-primary')}>
+              <span className={cn('font-mono text-xl font-bold tabular-nums', isComplete ? 'text-success' : 'text-brand')}>
                 {profileStrength}%
               </span>
             </div>
-            <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="mb-3 h-1.5 overflow-hidden bg-primary-soft dark:bg-slate-700">
               <div
-                className={cn('h-full rounded-full transition-all duration-500', isComplete ? 'bg-green-600' : 'bg-primary')}
+                className={cn('h-full transition-all duration-500', isComplete ? 'bg-success' : 'bg-brand')}
                 style={{ width: `${profileStrength}%` }}
               />
             </div>
@@ -1503,29 +1503,29 @@ export default function ProfilePage() {
                 <button
                   key={i}
                   onClick={() => focusSection(c.id)}
-                  className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted"
+                  className="flex items-center gap-2.5 rounded-[3px] px-2.5 py-2 text-left transition-colors hover:bg-muted"
                 >
                   <span
                     className={cn(
-                      'grid h-5 w-5 shrink-0 place-items-center rounded-full',
-                      c.done ? 'bg-green-100 text-green-600' : '',
+                      'grid h-5 w-5 shrink-0 place-items-center',
+                      c.done ? 'bg-[#ECFAF0] text-success dark:bg-green-400/10' : '',
                     )}
                   >
                     {c.done ? (
                       <Check className="h-3 w-3" />
                     ) : (
-                      <span className="h-3.5 w-3.5 rounded-full border-[1.5px] border-muted-foreground/50" />
+                      <span className="box-border h-3.5 w-3.5 border-[1.5px] border-muted-foreground/50" />
                     )}
                   </span>
                   <span className="flex-1 text-[13px] font-medium text-foreground">{c.label}</span>
-                  <span className={cn('text-[11px] font-bold tabular-nums', c.done ? 'text-muted-foreground/60' : 'text-primary')}>
+                  <span className={cn('font-mono text-[11px] font-bold tabular-nums', c.done ? 'text-muted-foreground/60' : 'text-brand')}>
                     +{c.weight}%
                   </span>
                 </button>
               ))}
             </div>
-            <div className="flex gap-2.5 rounded-xl bg-primary/5 p-3 text-[11.5px] leading-relaxed text-foreground">
-              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-card text-primary">
+            <div className="flex gap-2.5 border-l-[3px] border-brand bg-muted p-3 text-[11.5px] leading-relaxed text-foreground">
+              <span className="grid h-5 w-5 shrink-0 place-items-center bg-card text-brand">
                 <Zap className="h-3 w-3" />
               </span>
               <span>
@@ -1573,7 +1573,7 @@ export default function ProfilePage() {
           </CollapsibleCard>
 
           {/* Datenschutz */}
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="rounded-[4px] border border-border bg-card p-5">
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
               <Mail className="h-3.5 w-3.5 text-muted-foreground" />
               Deine Daten, deine Kontrolle
@@ -1591,7 +1591,7 @@ export default function ProfilePage() {
         type="button"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         className={cn(
-          'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full border border-[#0c1d3f] bg-[#0c1d3f] px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:bg-[#162d5a]',
+          'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-[4px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition-all duration-200 hover:bg-primary/90',
           scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none',
         )}
       >

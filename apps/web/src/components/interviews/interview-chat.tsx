@@ -248,13 +248,13 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
         <div className="flex-shrink-0 border-b px-6 py-5">
           <div className="mb-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5 text-[17px] font-bold">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-primary">
+              <span className="flex h-7 w-7 items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
                 <Bot className="h-[18px] w-[18px]" />
               </span>
               Interview-Simulation
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-muted px-3 font-mono text-sm tabular-nums">
+              <span className="inline-flex h-8 items-center gap-1.5 rounded-[2px] bg-muted px-3 font-mono text-sm tabular-nums">
                 <Clock className="h-[15px] w-[15px] text-muted-foreground" />
                 {formatTime(timer)}
               </span>
@@ -262,7 +262,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAbandonDialog(true)}
-                className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
                 <XCircle className="mr-1 h-4 w-4" />
                 Abbrechen
@@ -279,9 +279,9 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
               {Math.round(progress)}&nbsp;% abgeschlossen
             </span>
           </div>
-          <div className="relative h-2.5 overflow-hidden rounded-full bg-muted">
+          <div className="relative h-2.5 overflow-hidden bg-muted">
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-accent transition-[width] duration-500"
+              className="absolute inset-y-0 left-0 bg-accent transition-[width] duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -291,7 +291,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
               <span
                 key={i}
                 className={cn(
-                  'h-1 flex-1 rounded-full',
+                  'h-1 flex-1',
                   i < answeredQuestions
                     ? 'bg-accent'
                     : i === answeredQuestions && currentQuestion
@@ -310,9 +310,9 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
               return (
                 <div
                   key={message.id}
-                  className="mx-auto flex max-w-[90%] items-center gap-2.5 rounded-xl bg-blue-50 px-4 py-2.5 text-[13.5px] italic text-[#28456f] dark:bg-blue-950/40 dark:text-blue-200"
+                  className="mx-auto flex max-w-[90%] items-center gap-2.5 rounded-[4px] border border-primary-soft bg-primary-soft/40 px-4 py-2.5 text-[13.5px] italic text-foreground dark:border-slate-600 dark:bg-slate-800/60"
                 >
-                  <Info className="h-[17px] w-[17px] shrink-0 text-accent" />
+                  <Info className="h-[17px] w-[17px] shrink-0 text-brand" />
                   {message.content}
                 </div>
               );
@@ -320,22 +320,22 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
             if (message.type === 'feedback') {
               return (
                 <div key={message.id} className="flex max-w-[82%] gap-3 self-start">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] border border-[#BFE9CC] bg-[#ECFAF0] text-success dark:border-green-400/30 dark:bg-green-400/10">
                     <CheckCircle2 className="h-5 w-5" />
                   </span>
-                  <div className="rounded-2xl rounded-tl-sm border border-green-200 bg-green-50 px-4 py-3 text-[15px] leading-relaxed text-green-900 dark:border-green-900 dark:bg-green-950/40 dark:text-green-100">
+                  <div className="rounded-[4px] rounded-tl-[2px] border border-[#BFE9CC] bg-[#ECFAF0] px-4 py-3 text-[15px] leading-relaxed text-[#3D7A55] dark:border-green-400/30 dark:bg-green-400/10 dark:text-green-200/80">
                     <p className="whitespace-pre-wrap">{message.content}</p>
                     {message.score !== undefined && (
                       <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
                         <span>Score:</span>
                         <span
                           className={cn(
-                            'rounded-full px-2 py-0.5 text-white',
+                            'rounded-[2px] border px-2.5 py-1 font-mono text-[11px] font-semibold tabular-nums tracking-[.05em]',
                             message.score >= 80
-                              ? 'bg-green-600'
+                              ? 'border-[#BFE9CC] bg-[#ECFAF0] text-success dark:border-green-400/30 dark:bg-green-400/10'
                               : message.score >= 60
-                                ? 'bg-amber-500'
-                                : 'bg-destructive',
+                                ? 'border-[#F3E3B3] bg-[#FDF6E7] text-[#A16207] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300'
+                                : 'border-[#F3C9C9] bg-[#FDEEEE] text-destructive dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300',
                           )}
                         >
                           {message.score}/100
@@ -354,22 +354,22 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
               >
                 <span
                   className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
-                    isAnswer ? 'bg-blue-50 text-accent dark:bg-blue-950/40' : 'bg-primary text-primary-foreground',
+                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px]',
+                    isAnswer ? 'border border-primary-soft bg-primary-soft/40 text-brand dark:border-slate-600 dark:bg-slate-800/60' : 'bg-primary text-primary-foreground',
                   )}
                 >
                   {isAnswer ? <User className="h-5 w-5" /> : <Bot className="h-[21px] w-[21px]" />}
                 </span>
                 <div
                   className={cn(
-                    'rounded-2xl px-4 py-3 text-[15px] leading-relaxed',
+                    'rounded-[4px] px-4 py-3 text-[15px] leading-relaxed',
                     isAnswer
-                      ? 'rounded-tr-sm bg-primary text-primary-foreground'
-                      : 'rounded-tl-sm bg-muted text-foreground',
+                      ? 'rounded-tr-[2px] bg-primary text-primary-foreground'
+                      : 'rounded-tl-[2px] bg-muted text-foreground',
                   )}
                 >
                   {message.type === 'question' && message.question && (
-                    <span className="mb-2.5 inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 text-[11.5px] font-semibold text-secondary">
+                    <span className="mb-2.5 inline-flex items-center gap-1.5 rounded-[2px] border bg-card px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[.05em] text-secondary">
                       <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                       {questionTypeLabel(message.question.questionType)}
                     </span>
@@ -403,7 +403,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Deine Antwort eingeben…  (Enter zum Senden · Shift+Enter für Zeilenumbruch)"
-                  className="max-h-[200px] min-h-[84px] w-full resize-none rounded-xl text-[15px]"
+                  className="max-h-[200px] min-h-[84px] w-full resize-none rounded-[3px] text-[15px]"
                   disabled={isLoading || !currentQuestion}
                   aria-invalid={usage.isOverLimit}
                 />
@@ -411,7 +411,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
               </div>
               <Button
                 size="lg"
-                className="h-[52px] rounded-xl px-6"
+                className="h-[52px] rounded-[3px] px-6"
                 onClick={handleSubmitAnswer}
                 disabled={!answer.trim() || isLoading || !currentQuestion || usage.isOverLimit}
               >

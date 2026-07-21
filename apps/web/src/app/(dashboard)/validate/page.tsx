@@ -98,17 +98,14 @@ export default function ValidatePage() {
       {/* Page header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[14px]"
-            style={{ backgroundColor: '#E5E9F2' }}
-          >
-            <ShieldCheck className="h-6 w-6" style={{ color: '#1B2A49' }} />
+          <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-primary dark:border-slate-600 dark:bg-slate-800">
+            <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-[27px] font-bold leading-tight tracking-tight text-[#1B2A49]">
+            <h1 className="font-heading text-[26px] font-extrabold leading-tight tracking-[-.025em] text-foreground">
               Bewerbungs-Check
             </h1>
-            <p className="mt-0.5 text-[15px]" style={{ color: '#6B6969' }}>
+            <p className="mt-0.5 text-[15px] text-muted-foreground">
               KI-Bewertung für Qualität &amp; ATS-Tauglichkeit deiner eigenen Bewerbung.
             </p>
           </div>
@@ -143,16 +140,13 @@ export default function ValidatePage() {
 
       {/* Quota exceeded banner */}
       {limitReached && step !== 'history' && (
-        <div
-          className="flex items-start gap-3 rounded-xl p-4"
-          style={{ backgroundColor: '#FBF1D9', border: '1px solid #F0D580' }}
-        >
-          <Lock className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
-          <div className="text-sm">
-            <p className="font-medium" style={{ color: '#92400E' }}>
+        <div className="flex items-start gap-3 rounded-[4px] border border-[#F3E3B3] bg-[#FDF6E7] p-4 dark:border-amber-400/30 dark:bg-amber-400/10">
+          <Lock className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#A16207] dark:text-amber-300" />
+          <div className="text-sm text-[#854D0E] dark:text-amber-300/90">
+            <p className="font-medium">
               Du hast dein monatliches Limit von {validations?.limit} Checks erreicht.
             </p>
-            <p className="mt-0.5" style={{ color: '#92400E' }}>
+            <p className="mt-0.5">
               Mit{' '}
               <Link href="/pricing" className="font-medium underline">
                 Pro
@@ -209,8 +203,8 @@ export default function ValidatePage() {
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
           {activeLoading ? (
             <div className="space-y-4">
-              <Skeleton className="h-40 w-full rounded-[18px]" />
-              <Skeleton className="h-32 w-full rounded-[18px]" />
+              <Skeleton className="h-40 w-full rounded-[4px]" />
+              <Skeleton className="h-32 w-full rounded-[4px]" />
             </div>
           ) : activeRecord ? (
             <ValidationResultView result={activeRecord.result} onNewCheck={handleNewCheck} />
@@ -221,29 +215,17 @@ export default function ValidatePage() {
       {/* History */}
       {step === 'history' && (
         <div className="animate-in fade-in duration-300">
-          <div
-            className="rounded-[18px] p-7"
-            style={{
-              background: '#fff',
-              border: '1px solid #E6E8EE',
-              boxShadow: '0 1px 2px rgba(27,42,73,.04), 0 6px 16px -8px rgba(27,42,73,.10)',
-            }}
-          >
+          <div className="rounded-[4px] border bg-card p-7">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="text-[19px] font-bold text-[#1B2A49]">Frühere Checks</h2>
-                <p className="mt-0.5 text-sm" style={{ color: '#6B6969' }}>
+                <h2 className="font-heading text-[19px] font-bold text-foreground">Frühere Checks</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
                   {tier === 'FREE'
                     ? 'Im Free-Tarif sind 5 Checks pro Monat enthalten.'
                     : 'Deine gespeicherten Prüfungen.'}
                 </p>
               </div>
-              <Button
-                size="sm"
-                onClick={handleNewCheck}
-                className="gap-1.5"
-                style={{ backgroundColor: '#1B2A49', color: '#fff' }}
-              >
+              <Button size="sm" onClick={handleNewCheck} className="gap-1.5">
                 <RotateCcw className="h-3.5 w-3.5" />
                 Neuer Check
               </Button>
@@ -251,11 +233,11 @@ export default function ValidatePage() {
 
             {historyLoading ? (
               <div className="space-y-3">
-                <Skeleton className="h-14 w-full rounded-xl" />
-                <Skeleton className="h-14 w-full rounded-xl" />
+                <Skeleton className="h-14 w-full rounded-[4px]" />
+                <Skeleton className="h-14 w-full rounded-[4px]" />
               </div>
             ) : !history || history.length === 0 ? (
-              <p className="py-6 text-center text-sm" style={{ color: '#6B6969' }}>
+              <p className="py-6 text-center text-sm text-muted-foreground">
                 Noch keine Prüfungen vorhanden.
               </p>
             ) : (
@@ -263,23 +245,22 @@ export default function ValidatePage() {
                 {history.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-center gap-3 rounded-xl px-4 py-3"
-                    style={{ border: '1px solid #E6E8EE' }}
+                    className="flex items-center gap-3 rounded-[3px] border px-4 py-3"
                   >
                     <span
-                      className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                      className="h-2.5 w-2.5 flex-shrink-0"
                       style={{ backgroundColor: verdictDot(item.verdict) }}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-[#1B2A49]">
+                      <p className="truncate text-sm font-medium text-foreground">
                         {item.title ?? 'Bewerbungs-Check'}
                       </p>
-                      <p className="text-xs" style={{ color: '#6B6969' }}>
+                      <p className="text-xs text-muted-foreground">
                         {formatDate(item.createdAt)}
                       </p>
                     </div>
                     <span
-                      className="text-sm font-semibold"
+                      className="font-mono text-sm font-semibold tabular-nums"
                       style={{ color: verdictScoreColor(item.verdict) }}
                     >
                       {item.score}
@@ -296,7 +277,7 @@ export default function ValidatePage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       onClick={() => deleteValidation.mutate(item.id)}
                       aria-label="Prüfung löschen"
                     >

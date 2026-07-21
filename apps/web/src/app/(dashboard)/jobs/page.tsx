@@ -75,15 +75,14 @@ export default function JobsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Stellenanzeigen</h1>
-          <p className="mt-1 text-muted-foreground">
+          <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Stellenanzeigen</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Verwalte deine gespeicherten Stellenanzeigen und erstelle daraus Bewerbungen.
           </p>
         </div>
         <Button
           onClick={() => setShowInput(!showInput)}
           variant={showInput ? "secondary" : "default"}
-          className={showInput ? "" : "shadow-md hover:shadow-lg transition-all"}
         >
           {showInput ? (
             <>
@@ -101,9 +100,9 @@ export default function JobsPage() {
 
       {/* Input Component with Tabs - Collapsible */}
       {showInput && (
-        <div className="animate-in fade-in slide-in-from-top-5 duration-300 border border-border/50 rounded-xl bg-card shadow-soft overflow-hidden">
-          <div className="p-6 border-b border-border/50 bg-muted/30">
-            <h2 className="text-lg font-semibold mb-1">Neue Stellenanzeige erfassen</h2>
+        <div className="animate-in fade-in slide-in-from-top-5 duration-300 border rounded-[4px] bg-card overflow-hidden">
+          <div className="p-6 border-b bg-muted/30">
+            <h2 className="font-heading text-lg font-semibold mb-1">Neue Stellenanzeige erfassen</h2>
             <p className="text-sm text-muted-foreground">
               Füge eine URL hinzu oder kopiere den Text, um die Stelle zu speichern.
             </p>
@@ -196,7 +195,7 @@ export default function JobsPage() {
                         {job.requirements && job.requirements.length > 0 && (
                           <div className="flex flex-wrap gap-1.5">
                             {job.requirements.slice(0, 5).map((req, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-[10px] font-normal bg-muted/50 text-muted-foreground hover:bg-muted">
+                              <Badge key={idx} variant="secondary" className="text-[10px] font-normal bg-muted text-muted-foreground">
                                 {req.length > 25 ? req.substring(0, 25) + '...' : req}
                               </Badge>
                             ))}
@@ -254,7 +253,7 @@ export default function JobsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-muted/10 animate-in fade-in zoom-in-95 duration-500">
+          <div className="rounded-[4px] border border-dashed border-border bg-muted/10 animate-in fade-in duration-500">
             <EmptyState
               icon={Briefcase}
               title="Keine Stellenanzeigen"
@@ -270,28 +269,28 @@ export default function JobsPage() {
 
       {/* Info Card */}
       {!showInput && (!jobPostings || jobPostings.length === 0) && (
-        <Card className="border-blue-200/50 bg-blue-50/50 dark:bg-blue-950/10 dark:border-blue-900/50 shadow-sm">
+        <Card className="border-primary-soft bg-primary-soft/40 dark:border-slate-700 dark:bg-slate-800/40">
           <CardContent className="pt-6">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <div className="grid h-8 w-8 place-items-center border border-primary-soft bg-background text-brand dark:border-slate-600">
                   <Loader2 className="h-4 w-4" />
                 </div>
-                <h3 className="font-semibold text-blue-900 dark:text-blue-300">
+                <h3 className="font-heading font-semibold text-foreground">
                   So funktioniert der Applo Workflow
                 </h3>
               </div>
               <div className="grid sm:grid-cols-3 gap-4 mt-4">
-                <div className="bg-background/60 p-4 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                  <div className="font-medium text-blue-800 dark:text-blue-300 mb-1">1. Stelle speichern</div>
+                <div className="bg-background p-4 rounded-[3px] border">
+                  <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-brand">1 · Stelle speichern</div>
                   <p className="text-sm text-muted-foreground">Füge eine URL von LinkedIn/Indeed hinzu oder kopiere den Text der Ausschreibung.</p>
                 </div>
-                <div className="bg-background/60 p-4 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                  <div className="font-medium text-blue-800 dark:text-blue-300 mb-1">2. Analysieren</div>
+                <div className="bg-background p-4 rounded-[3px] border">
+                  <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-brand">2 · Analysieren</div>
                   <p className="text-sm text-muted-foreground">Unsere KI extrahiert automatisch alle wichtigen Anforderungen und Skills.</p>
                 </div>
-                <div className="bg-background/60 p-4 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                  <div className="font-medium text-blue-800 dark:text-blue-300 mb-1">3. Bewerben</div>
+                <div className="bg-background p-4 rounded-[3px] border">
+                  <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-brand">3 · Bewerben</div>
                   <p className="text-sm text-muted-foreground">Erstelle mit einem Klick eine maßgeschneiderte Bewerbung für diese Stelle.</p>
                 </div>
               </div>

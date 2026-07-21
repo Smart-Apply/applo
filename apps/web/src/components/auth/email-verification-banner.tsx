@@ -67,17 +67,17 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <div className="relative bg-amber-50 border-b border-amber-200 px-4 py-3">
+    <div className="relative border-b border-[#F3E3B3] bg-[#FDF6E7] px-4 py-3 dark:border-amber-400/30 dark:bg-amber-400/10">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="flex-shrink-0">
-            <Mail className="h-5 w-5 text-amber-600" />
+            <Mail className="h-5 w-5 text-[#A16207] dark:text-amber-400" />
           </div>
           <div className="text-sm">
-            <span className="font-medium text-amber-800">
+            <span className="font-medium text-[#854D0E] dark:text-amber-200">
               Bitte verifiziere deine E-Mail-Adresse.
             </span>
-            <span className="text-amber-700 ml-1">
+            <span className="text-[#854D0E]/80 dark:text-amber-300/80 ml-1">
               Wir haben dir eine E-Mail an <strong>{user.email}</strong> gesendet.
             </span>
           </div>
@@ -88,7 +88,7 @@ export function EmailVerificationBanner() {
             size="sm"
             onClick={handleResendEmail}
             disabled={isSending}
-            className="border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
+            className="border-[#F3E3B3] text-[#854D0E] hover:bg-[#F9EDCE] hover:text-[#854D0E] dark:border-amber-400/30 dark:text-amber-300 dark:hover:bg-amber-400/15 dark:hover:text-amber-200"
           >
             {isSending ? (
               <>
@@ -101,7 +101,7 @@ export function EmailVerificationBanner() {
           </Button>
           <button
             onClick={() => setIsDismissed(true)}
-            className="text-amber-600 hover:text-amber-800 p-1"
+            className="text-[#A16207] hover:text-[#854D0E] dark:text-amber-400 dark:hover:text-amber-200 p-1"
             aria-label="Banner schließen"
           >
             <X className="h-4 w-4" />

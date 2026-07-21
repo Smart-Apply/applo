@@ -11,6 +11,55 @@ When a user requests a high-end landing page, an interactive portfolio, or a spe
 
 ---
 
+## 0. Applo House Style — the "Sharp" Design System (MANDATORY for apps/web)
+
+Applo's entire web app was migrated to a sharp, editorial-technical design system (branch `feat/sharp-redesign`, 2026-07). **All new frontend work must follow these conventions — they override the generic guidance below wherever they conflict.**
+
+### Identity
+- Navy `#1B2A49` primary, constant brand blue `#5581C7` (`--brand`), flat surfaces, hairline borders, square geometry. No decorative gradients, no pill badges, no soft shadows on static content.
+
+### Typography
+- Headings: `font-heading` (Archivo) — page h1: `font-heading text-[26px] font-extrabold tracking-[-.025em] md:text-[30px]`; section h2: `text-[22px] font-extrabold tracking-[-.02em]`.
+- Micro-labels/eyebrows/table headers: `SectionLabel` (`@/components/ui/section-label`) or `font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground`.
+- KPI numerals & counters: `font-mono tabular-nums`.
+- Body: Inter (`font-sans`). **Poppins was removed entirely — never reintroduce `font-poppins`.**
+
+### Radii
+- Containers/cards/boxes: `rounded-[4px]` · icon tiles/chips/small controls: `rounded-[3px]` · bars/marks/checkboxes: `rounded-[2px]` or `rounded-[1px]`.
+- KEEP ROUND: avatars, spinners, circular gauges (StrengthRing), tiny status dots, color swatches, mascot rings.
+
+### Color tokens (registered in globals.css `@theme`)
+- `text-brand`, `bg-brand`, `border-primary-soft`, `bg-primary-soft`, `text-success`/`bg-success`(+`-soft`), `text-warning`/`bg-warning`(+`-soft`), `bg-brand-wash`, `bg-brand-glow`.
+- **Never use raw palette classes** (`gray-*`, `blue-*`, `red-*`, `green-*`, `amber-*`…) in light-mode styling — only inside `dark:` tint variants below.
+
+### Canonical tinted boxes (light hex + dark variant, always paired)
+- Success: `border-[#BFE9CC] bg-[#ECFAF0] dark:border-green-400/30 dark:bg-green-400/10` (text `text-success`, long body text `text-[#3D7A55] dark:text-green-200/80`)
+- Warning: `border-[#F3E3B3] bg-[#FDF6E7] dark:border-amber-400/30 dark:bg-amber-400/10` (icon/label `text-[#A16207] dark:text-amber-400`, body `text-[#854D0E] dark:text-amber-300/90`)
+- Destructive: `border-[#F3C9C9] bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10` (text `text-destructive`)
+- Info/brand: `border-primary-soft bg-primary-soft/40 dark:border-slate-600 dark:bg-slate-800/60`
+- Icon tiles: `rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800`
+
+### Components
+- Status chips: use `StatusChip` / `TRACKING_STATUS_CHIP` (`@/components/ui/status-chip`) — square, mono uppercase, tone dot. Never hand-roll status colors.
+- Segmented controls: `inline-flex gap-px overflow-hidden rounded-[4px] border border-border bg-border` with buttons `bg-background` (inactive) / `bg-primary text-primary-foreground` (active).
+- Hairline grids: `HairlineGrid` or `gap-px` on `bg-border`.
+- Shadows: `shadow-none` for static cards (Card primitive default). Floating-only exceptions: popovers `shadow-md`, fixed bars `shadow-lg`, overlay pills `shadow-sm`.
+
+### Allowed exceptions
+- `bg-gradient-to-br from-slate-100 from-50% to-slate-800 to-50%` in `theme-cards.tsx` (hard-stop 50/50 "System" preview split — functional, not decorative). Slate hexes in theme previews are intentional (fixed light/dark rendering).
+- `bg-brand-wash`/`bg-brand-glow` utilities (canonical radial washes).
+- 2FA QR container keeps `bg-white` (scanner contrast).
+
+### Verification gate (run before any PR touching apps/web styling)
+```bash
+cd apps/web && pnpm exec tsc --noEmit && pnpm exec eslint <files> --max-warnings 0
+grep -rnE 'rounded-(2xl|3xl)|bg-gradient|font-poppins' src --include='*.tsx'   # only theme-cards may hit
+grep -rnE '(bg|text|border)-(gray|red|green|blue|yellow|purple)-[0-9]+' src/app src/components --include='*.tsx' | grep -v 'dark:'   # expect no NEW hits
+```
+Also spot-check dark mode (`document.documentElement.classList.add('dark')`) and a 375px viewport.
+
+---
+
 ## 1. Establishing the Creative Foundation
 
 Before generating layout code, ensure you understand the core emotional resonance the UI should deliver. Do not default to generic, unopinionated code. 

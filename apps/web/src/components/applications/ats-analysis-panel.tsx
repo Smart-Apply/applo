@@ -86,7 +86,7 @@ export function ATSAnalysisPanel({
     return (
       <Card className={cn('border-dashed', className)}>
         <CardContent className="py-12 text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4">
+          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <Sparkles className="h-6 w-6 text-muted-foreground" />
           </div>
           <h3 className="font-semibold mb-2">ATS-Analyse starten</h3>
@@ -120,8 +120,8 @@ export function ATSAnalysisPanel({
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
+          <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-brand" />
             ATS-Analyse
             <TooltipProvider>
               <Tooltip>
@@ -181,15 +181,15 @@ export function ATSAnalysisPanel({
 
       {/* Low score warning */}
       {analysis.matchAnalysis.overallScore < 40 && (
-        <Card className="border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20">
+        <Card className="border-[#F3E3B3] bg-[#FDF6E7] dark:border-amber-400/30 dark:bg-amber-400/10">
           <CardContent className="py-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
+              <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-[#A16207] dark:text-amber-300" />
               <div>
-                <h4 className="font-medium text-orange-800 dark:text-orange-200">
+                <h4 className="font-medium text-[#A16207] dark:text-amber-200">
                   Niedrige Übereinstimmung
                 </h4>
-                <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
+                <p className="text-sm text-[#854D0E] dark:text-amber-300/80 mt-1">
                   Dein Profil passt möglicherweise nicht optimal zu dieser Stelle. 
                   Überprüfe die fehlenden Keywords und aktualisiere dein Profil, 
                   um deine Chancen zu verbessern.

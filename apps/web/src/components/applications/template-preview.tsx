@@ -932,8 +932,8 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
 
   if (error || !template) {
     return (
-      <div className="flex items-center justify-center h-64 bg-red-50 rounded-lg border border-red-200">
-        <p className="text-sm text-red-600">Vorlage konnte nicht geladen werden</p>
+      <div className="flex items-center justify-center h-64 rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10">
+        <p className="text-sm text-destructive">Vorlage konnte nicht geladen werden</p>
       </div>
     );
   }
@@ -946,7 +946,7 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
         <p className="text-xs font-medium text-slate-600">
           Vorlage: <span className="text-slate-900">{template.name}</span>
           <span className="ml-2 text-slate-400">({template.category})</span>
-          {isDefaultTemplate && <span className="ml-2 text-blue-600">(Standard)</span>}
+          {isDefaultTemplate && <span className="ml-2 text-brand">(Standard)</span>}
         </p>
       </div>
       <div className="flex-1 min-h-0">
@@ -1193,8 +1193,8 @@ export function CoverLetterTemplatePreview({
 
   if (error || !template) {
     return (
-      <div className="flex items-center justify-center h-64 bg-red-50 rounded-lg border border-red-200">
-        <p className="text-sm text-red-600">Vorlage konnte nicht geladen werden</p>
+      <div className="flex items-center justify-center h-64 rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10">
+        <p className="text-sm text-destructive">Vorlage konnte nicht geladen werden</p>
       </div>
     );
   }
@@ -1207,7 +1207,7 @@ export function CoverLetterTemplatePreview({
         <div className="bg-slate-100 px-3 py-2 border-b border-slate-200">
           <p className="text-xs font-medium text-slate-600">
             Vorlage: <span className="text-slate-900">{template.name}</span>
-            {isDefaultTemplate && <span className="ml-2 text-blue-600">(Standard)</span>}
+            {isDefaultTemplate && <span className="ml-2 text-brand">(Standard)</span>}
           </p>
         </div>
         <div className="flex items-center justify-center h-64 bg-slate-50">
@@ -1223,7 +1223,7 @@ export function CoverLetterTemplatePreview({
         <p className="text-xs font-medium text-slate-600">
           Vorlage: <span className="text-slate-900">{template.name}</span>
           <span className="ml-2 text-slate-400">({template.category})</span>
-          {isDefaultTemplate && <span className="ml-2 text-blue-600">(Standard)</span>}
+          {isDefaultTemplate && <span className="ml-2 text-brand">(Standard)</span>}
         </p>
       </div>
       <div className="flex-1 min-h-0">

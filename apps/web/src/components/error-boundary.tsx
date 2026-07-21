@@ -46,11 +46,11 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       }
 
       return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+        <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
           <Card className="w-full max-w-md">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <AlertTriangle className="h-5 w-5 text-destructive" />
                 <CardTitle>Ein Fehler ist aufgetreten</CardTitle>
               </div>
               <CardDescription>
@@ -59,9 +59,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             </CardHeader>
             <CardContent className="space-y-4">
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="rounded-md bg-red-50 p-4">
-                  <p className="text-sm font-medium text-red-800">Fehlermeldung:</p>
-                  <p className="mt-1 text-sm text-red-700">{this.state.error.message}</p>
+                <div className="rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] p-4 dark:border-red-400/30 dark:bg-red-400/10">
+                  <p className="text-sm font-medium text-destructive">Fehlermeldung:</p>
+                  <p className="mt-1 text-sm text-destructive/90">{this.state.error.message}</p>
                 </div>
               )}
               

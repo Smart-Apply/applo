@@ -164,7 +164,7 @@ export function LanguagesManager({
                   type="button"
                   onClick={() => removeLanguage(lang.name)}
                   disabled={disabled}
-                  className="absolute right-1.5 shrink-0 rounded-full p-0.5 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="absolute right-1.5 shrink-0 rounded-[2px] p-0.5 opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label={`${lang.name} entfernen`}
                 >
                   <X className="h-3 w-3" />
@@ -174,8 +174,8 @@ export function LanguagesManager({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 py-10 text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+        <div className="flex flex-col items-center justify-center rounded-[4px] border border-dashed border-border bg-muted/20 py-10 text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <Languages className="h-6 w-6 text-muted-foreground" />
           </div>
           <h3 className="font-medium text-foreground">Keine Sprachen</h3>

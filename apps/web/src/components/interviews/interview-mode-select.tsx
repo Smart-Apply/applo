@@ -13,7 +13,7 @@ interface InterviewModeSelectProps {
 function Feature({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-center gap-2.5 text-sm font-medium text-secondary">
-      <Check className="h-4 w-4 shrink-0 text-green-600" />
+      <Check className="h-4 w-4 shrink-0 text-success" />
       {children}
     </li>
   );
@@ -46,9 +46,9 @@ export function InterviewModeSelect({
         <button
           type="button"
           onClick={onSelectText}
-          className="group relative overflow-hidden rounded-2xl border bg-card p-7 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+          className="group relative overflow-hidden rounded-[4px] border bg-card p-7 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
         >
-          <span className="flex h-[54px] w-[54px] items-center justify-center rounded-2xl bg-blue-50 text-accent dark:bg-blue-950/40">
+          <span className="flex h-[54px] w-[54px] items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
             <MessageSquare className="h-7 w-7" />
           </span>
           <h3 className="mt-4 text-xl font-bold tracking-tight">Text-Chat</h3>
@@ -61,7 +61,7 @@ export function InterviewModeSelect({
             <Feature>Feedback nach jeder Frage</Feature>
             <Feature>Kein Mikrofon nötig</Feature>
           </ul>
-          <span className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[15px] font-semibold text-primary-foreground transition-colors group-hover:bg-primary/90">
+          <span className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-[3px] bg-primary text-[15px] font-semibold text-primary-foreground transition-colors group-hover:bg-primary/90">
             Text-Chat starten
             <ArrowRight className="h-[18px] w-[18px]" />
           </span>
@@ -73,13 +73,13 @@ export function InterviewModeSelect({
           <button
             type="button"
             onClick={onSelectVoice}
-            className="group relative overflow-hidden rounded-2xl border bg-card p-7 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+            className="group relative overflow-hidden rounded-[4px] border bg-card p-7 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
           >
             <div className="flex items-start justify-between">
-              <span className="flex h-[54px] w-[54px] items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-primary">
+              <span className="flex h-[54px] w-[54px] items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
                 <Mic className="h-7 w-7" />
               </span>
-              <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-400">
+              <span className="rounded-[2px] border border-[#BFE9CC] bg-[#ECFAF0] px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[.05em] text-success dark:border-green-400/30 dark:bg-green-400/10">
                 Realistisch
               </span>
             </div>
@@ -98,7 +98,7 @@ export function InterviewModeSelect({
                   : ''}
               </Feature>
             </ul>
-            <span className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl border bg-card text-[15px] font-semibold text-primary transition-colors group-hover:border-primary group-hover:bg-muted">
+            <span className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-[3px] border bg-card text-[15px] font-semibold text-primary transition-colors group-hover:border-primary group-hover:bg-muted">
               Sprach-Interview wählen
               <ArrowRight className="h-[18px] w-[18px]" />
             </span>

@@ -27,7 +27,6 @@ import {
   FileText,
   Target,
   Download,
-  Eye,
   Maximize2,
 } from 'lucide-react';
 import type { JobPosting, Template } from '@/types';
@@ -54,12 +53,12 @@ const FINISH_ANIMATION_MS = 1600;
  */
 const MONOCHROME_TEMPLATES = new Set(['classic-ats-resume', 'harvard-classic-resume']);
 
-const LANGUAGE_OPTIONS: { value: ApplicationLanguage; label: string; flag: string }[] = [
-  { value: 'de', label: 'Deutsch', flag: '🇩🇪' },
-  { value: 'en', label: 'English', flag: '🇬🇧' },
-  { value: 'fr', label: 'Français', flag: '🇫🇷' },
-  { value: 'es', label: 'Español', flag: '🇪🇸' },
-  { value: 'it', label: 'Italiano', flag: '🇮🇹' },
+const LANGUAGE_OPTIONS: { value: ApplicationLanguage; label: string }[] = [
+  { value: 'de', label: 'Deutsch' },
+  { value: 'en', label: 'English' },
+  { value: 'fr', label: 'Français' },
+  { value: 'es', label: 'Español' },
+  { value: 'it', label: 'Italiano' },
 ];
 
 interface TemplateGroup {
@@ -287,17 +286,17 @@ export function ConfigureStep({
     const C = 2 * Math.PI * R;
 
     return (
-      <div className="max-w-[720px] mx-auto space-y-6">
-        <Card className="shadow-soft border-border/50">
-          <CardContent className="pt-8 pb-8">
+      <div className="max-w-[720px] mx-auto space-y-4">
+        <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
+          <CardContent className="p-8">
             <div className="flex items-center gap-6">
-              {/* Circular progress ring */}
+              {/* Circular progress ring — blue while running, green at 100% */}
               <div className="relative w-[116px] h-[116px] shrink-0">
                 <svg width="116" height="116" viewBox="0 0 116 116">
-                  <circle cx="58" cy="58" r={R} fill="none" stroke="hsl(var(--muted))" strokeWidth="9" />
+                  <circle cx="58" cy="58" r={R} fill="none" stroke="#E5E9F2" strokeWidth="9" />
                   <circle
                     cx="58" cy="58" r={R} fill="none"
-                    stroke="hsl(var(--primary))" strokeWidth="9" strokeLinecap="round"
+                    stroke={isRedirecting ? '#16A34A' : '#5581C7'} strokeWidth="9" strokeLinecap="butt"
                     strokeDasharray={C}
                     strokeDashoffset={C * (1 - pct / 100)}
                     transform="rotate(-90 58 58)"
@@ -309,19 +308,19 @@ export function ConfigureStep({
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-extrabold tracking-tight leading-none">{Math.round(pct)}%</span>
-                  <span className="text-xs text-muted-foreground font-semibold mt-0.5">erstellt</span>
+                  <span className="font-mono text-[28px] font-semibold leading-none tracking-[-.02em]">{Math.round(pct)}%</span>
+                  <span className="mt-1 font-mono text-[9.5px] font-medium uppercase tracking-[.14em] text-[#A0A0A0]">erstellt</span>
                 </div>
               </div>
 
               <div className="min-w-0">
-                <h2 className="text-xl font-bold">
+                <h2 className="font-heading text-[21px] font-bold tracking-[-.01em]">
                   {isRedirecting ? 'Fertig!' : filteredSteps[activeIdx].label}
                 </h2>
-                <div className="inline-flex items-center gap-2 mt-2 text-sm text-muted-foreground bg-muted/50 border border-border/50 px-3 py-1.5 rounded-full">
+                <div className="mt-2.5 inline-flex items-center gap-2 border border-[#E0E0E0] bg-[#F5F6F8] px-3 py-1.5 text-[13px] font-medium text-muted-foreground">
                   {isRedirecting ? (
                     <>
-                      <Check className="h-4 w-4 text-green-600" strokeWidth={2.8} />
+                      <Check className="h-4 w-4 text-[#16A34A]" strokeWidth={2.8} />
                       Bewerbung erstellt – du wirst weitergeleitet …
                     </>
                   ) : (
@@ -332,15 +331,15 @@ export function ConfigureStep({
                   )}
                 </div>
                 {!isRedirecting && (
-                  <p className="text-sm font-semibold text-muted-foreground mt-2">
+                  <p className="mt-2 text-sm font-semibold text-muted-foreground">
                     Bitte schließe dieses Fenster nicht.
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Step list */}
-            <div className="mt-7 space-y-2.5">
+            {/* Step list — hairline 1px-gap rows */}
+            <div className="mt-7 flex flex-col gap-px border border-[#E0E0E0] bg-[#E0E0E0]">
               {filteredSteps.map((step, i) => {
                 const StepIcon = step.icon;
                 const isDone = isRedirecting || i < activeIdx;
@@ -350,17 +349,17 @@ export function ConfigureStep({
                   <div
                     key={step.key}
                     className={cn(
-                      'flex items-center gap-3.5 px-4 py-3.5 rounded-xl border transition-all',
-                      isDone && 'border-green-200 bg-green-50/60',
-                      isActive && 'border-blue-200 bg-blue-50/40',
-                      !isDone && !isActive && 'border-border bg-background',
+                      'flex items-center gap-3.5 px-4 py-3.5 transition-colors',
+                      isDone && 'bg-[#F2FBF5]',
+                      isActive && 'bg-[#F1F6FE]',
+                      !isDone && !isActive && 'bg-white',
                     )}
                   >
                     <span className={cn(
-                      'inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg',
-                      isDone && 'bg-green-500 text-white',
-                      isActive && 'bg-primary text-primary-foreground',
-                      !isDone && !isActive && 'bg-muted text-muted-foreground',
+                      'grid h-[30px] w-[30px] shrink-0 place-items-center',
+                      isDone && 'bg-[#16A34A] text-white',
+                      isActive && 'bg-[#1B2A49] text-white',
+                      !isDone && !isActive && 'bg-[#F5F6F8] text-[#A0A0A0]',
                     )}>
                       {isDone ? (
                         <Check className="h-4 w-4" strokeWidth={2.8} />
@@ -371,14 +370,14 @@ export function ConfigureStep({
                       )}
                     </span>
                     <span className={cn(
-                      'text-sm font-semibold flex-1',
-                      !isDone && !isActive && 'text-muted-foreground/50',
+                      'flex-1 text-[13.5px] font-semibold',
+                      (isDone || isActive) ? 'text-foreground' : 'text-[#A0A0A0]',
                     )}>
                       {step.label}
                     </span>
                     {isDone && (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700">
-                        <Eye className="h-3.5 w-3.5" /> Fertig
+                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[.08em] text-[#16A34A]">
+                        Fertig
                       </span>
                     )}
                   </div>
@@ -387,7 +386,7 @@ export function ConfigureStep({
             </div>
           </CardContent>
         </Card>
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="text-center text-xs text-[#A0A0A0]">
           Fertige Schritte werden nach Abschluss automatisch als erledigt markiert.
         </p>
       </div>
@@ -401,37 +400,37 @@ export function ConfigureStep({
           (options | template list | live preview) so the whole step fits
           on a single screen. */}
       <div>
-        <Card className="shadow-soft border-border/50 gap-2 py-3">
-          <CardHeader className="pb-0">
-            <CardTitle className="text-base">Konfigurieren</CardTitle>
+        <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
+          <CardHeader className="border-b border-[#E0E0E0] px-5 py-4">
+            <CardTitle className="font-heading text-base font-bold">Konfigurieren</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:items-start">
+          <CardContent className="p-5">
+            <div className="grid gap-4 sm:grid-cols-2 lg:items-start">
               {/* Options bar spans both columns; the rail and preview below each
                   fill one column, so they line up exactly with the two fields. */}
-              <div className="grid gap-2.5 sm:grid-cols-2 sm:col-span-2">
+              <div className="grid gap-4 sm:grid-cols-2 sm:col-span-2">
                 <div
-                  className="flex items-start gap-2.5 p-2.5 rounded-xl border border-border/50 cursor-pointer hover:bg-muted/20 transition-colors"
+                  className="flex cursor-pointer items-start gap-3 border border-[#E0E0E0] p-3.5 transition-colors hover:bg-[#FAFAFA]"
                   onClick={() => setGenerateCoverLetter(!generateCoverLetter)}
                 >
                   <Checkbox
                     id="generateCoverLetter"
                     checked={generateCoverLetter}
                     onCheckedChange={checked => setGenerateCoverLetter(checked === true)}
-                    className="mt-0.5"
+                    className="mt-0.5 rounded-none border-[#B0B0B0] data-[state=checked]:border-[#1B2A49] data-[state=checked]:bg-[#1B2A49]"
                   />
                   <div className="grid gap-1 leading-none">
-                    <Label htmlFor="generateCoverLetter" className="text-sm font-medium cursor-pointer">
+                    <Label htmlFor="generateCoverLetter" className="cursor-pointer text-sm font-semibold">
                       Anschreiben generieren
                     </Label>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       Erstellt ein auf die Stelle zugeschnittenes Anschreiben.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-2.5 rounded-xl border border-border/50">
-                  <Label className="text-sm font-medium shrink-0">Sprache</Label>
+                <div className="flex items-center gap-3 border border-[#E0E0E0] p-3.5">
+                  <Label className="shrink-0 text-sm font-semibold">Sprache</Label>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {LANGUAGE_OPTIONS.map(option => (
                       <button
@@ -441,14 +440,13 @@ export function ConfigureStep({
                         title={option.label}
                         aria-label={option.label}
                         className={cn(
-                          'flex items-center gap-1 px-2 py-1 rounded-lg border transition-all duration-200 text-xs font-semibold',
+                          'inline-flex items-center border px-2.5 py-1.5 font-mono text-[11px] font-semibold tracking-[.04em] transition-colors',
                           selectedLanguage === option.value
-                            ? 'border-primary bg-primary/5 text-primary shadow-sm ring-2 ring-primary/20'
-                            : 'border-border/50 bg-background hover:bg-muted/50 text-muted-foreground'
+                            ? 'border-[#1B2A49] bg-[#1B2A49] text-white'
+                            : 'border-[#E0E0E0] bg-white text-[#6B6969] hover:bg-[#F5F6F8]',
                         )}
                       >
-                        <span className="text-sm">{option.flag}</span>
-                        <span>{option.value.toUpperCase()}</span>
+                        {option.value.toUpperCase()}
                       </button>
                     ))}
                   </div>
@@ -481,13 +479,13 @@ export function ConfigureStep({
                         }
                       }}
                       className={cn(
-                        'flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-all',
+                        'flex cursor-pointer items-start gap-3 border p-3 transition-colors',
                         selected
-                          ? 'border-primary bg-primary/5 shadow-sm ring-2 ring-primary/20'
-                          : 'border-border/50 bg-background hover:border-border hover:bg-muted/30',
+                          ? 'border-[#1B2A49] bg-[#F7F9FC]'
+                          : 'border-[#E0E0E0] bg-white hover:bg-[#FAFAFA]',
                       )}
                     >
-                      <div className="relative h-20 w-[60px] shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted">
+                      <div className="relative h-[70px] w-[52px] shrink-0 overflow-hidden border border-[#E0E0E0] bg-white">
                         <Image
                           src={templatePreviewUrl(group.baseTemplate.id)}
                           alt={`${group.baseTemplate.name} Miniatur`}
@@ -501,12 +499,15 @@ export function ConfigureStep({
                           <p className="truncate text-sm font-semibold text-foreground">
                             {group.baseTemplate.name.replace(/\s*\([^)]*\)\s*$/, '')}
                           </p>
-                          <Badge variant="secondary" className="shrink-0 text-[10px]">
+                          <Badge
+                            variant="secondary"
+                            className="shrink-0 rounded-none border border-[#E0E0E0] bg-[#F5F6F8] px-1.5 font-mono text-[9.5px] font-medium uppercase tracking-[.08em] text-[#6B6969]"
+                          >
                             {group.baseTemplate.category}
                           </Badge>
                         </div>
                         {group.baseTemplate.description && (
-                          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">
                             {group.baseTemplate.description}
                           </p>
                         )}
@@ -522,7 +523,7 @@ export function ConfigureStep({
                             className="mt-2 flex items-center gap-1.5"
                             onClick={e => e.stopPropagation()}
                           >
-                            <span className="text-xs text-muted-foreground">Farbe:</span>
+                            <span className="font-mono text-[10px] uppercase tracking-[.06em] text-[#A0A0A0]">Farbe</span>
                             {group.colorVariants.map(variant => {
                               const variantSelected = variant.id === effectiveResumeTemplateId;
                               return (
@@ -532,10 +533,8 @@ export function ConfigureStep({
                                   title={variant.colorVariantName}
                                   onClick={() => setSelectedResumeTemplateId(variant.id)}
                                   className={cn(
-                                    'h-5 w-5 rounded-full border-2 transition-all hover:scale-110',
-                                    variantSelected
-                                      ? 'border-primary ring-2 ring-primary/25'
-                                      : 'border-border hover:border-muted-foreground',
+                                    'h-[18px] w-[18px] border-2 transition-transform hover:scale-110',
+                                    variantSelected ? 'border-[#1B2A49]' : 'border-[#E0E0E0]',
                                   )}
                                   style={{ backgroundColor: variant.accentColor }}
                                 />
@@ -546,13 +545,13 @@ export function ConfigureStep({
                       </div>
                       <span
                         className={cn(
-                          'mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors',
+                          'mt-0.5 grid h-5 w-5 shrink-0 place-items-center border transition-colors',
                           selected
-                            ? 'bg-primary text-primary-foreground'
-                            : 'border border-border bg-background',
+                            ? 'border-[#1B2A49] bg-[#1B2A49] text-white'
+                            : 'border-[#E0E0E0] bg-white',
                         )}
                       >
-                        {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+                        {selected && <Check className="h-3 w-3" strokeWidth={3.4} />}
                       </span>
                     </div>
                   );
@@ -562,16 +561,16 @@ export function ConfigureStep({
               {/* Live preview pane — fills the right column (under "Sprache"),
                   so it's exactly as wide as the language field above. The CV page
                   stays height-constrained and centered inside it. */}
-              <div className="flex flex-col rounded-xl border border-border/50 bg-muted/30 p-4">
+              <div className="flex flex-col border border-[#E0E0E0] bg-[#FAFAFA] p-4">
                 <div className="mb-3 flex items-center justify-between px-1">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-[13px] text-muted-foreground">
                     Vorschau:{' '}
                     <span className="font-semibold text-foreground">
                       {shownGroup?.baseTemplate.name.replace(/\s*\([^)]*\)\s*$/, '')}
                     </span>
                   </p>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+                  <span className="inline-flex items-center gap-1.5 border border-[#E0E0E0] bg-white px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[.08em] text-[#6B6969]">
+                    <span className="h-1.5 w-1.5 animate-pulse bg-[#16A34A]" />
                     Live
                   </span>
                 </div>
@@ -581,7 +580,7 @@ export function ConfigureStep({
                       type="button"
                       onClick={() => setZoomOpen(true)}
                       title="Zum Vergrößern klicken"
-                      className="group relative aspect-[8.5/11] h-[560px] max-h-[calc(100vh-540px)] cursor-zoom-in overflow-hidden rounded-lg border border-border/50 bg-white shadow-xl ring-1 ring-black/5 transition-shadow hover:shadow-2xl"
+                      className="group relative aspect-[8.5/11] h-[560px] max-h-[calc(100vh-540px)] cursor-zoom-in overflow-hidden border border-[#B0B0B0] bg-white shadow-[8px_8px_0_#E5E9F2] transition-shadow hover:shadow-[8px_8px_0_#D8E0EF]"
                     >
                       <Image
                         key={shownTemplateId}
@@ -591,7 +590,7 @@ export function ConfigureStep({
                         unoptimized
                         className="object-cover animate-in fade-in duration-300"
                       />
-                      <span className="pointer-events-none absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[11px] font-medium text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                      <span className="pointer-events-none absolute right-2 top-2 inline-flex items-center gap-1 bg-[#1B2A49]/80 px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[.06em] text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
                         <Maximize2 className="h-3 w-3" /> Vergrößern
                       </span>
                     </button>
@@ -626,20 +625,20 @@ export function ConfigureStep({
 
       {/* Footer: back on the left, usage + submit on the right — one row
           instead of a submit block plus a separate wizard back-row. */}
-      <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/50">
-        <Button variant="outline" onClick={() => onStepChange('job')}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
+      <div className="flex items-center justify-between gap-4 border-t border-[#E0E0E0] pt-5">
+        <Button variant="outline" onClick={() => onStepChange('job')} className="rounded-[3px] border-[#1B2A49] font-semibold hover:bg-[#E5E9F2]">
+          <ChevronLeft className="mr-1 h-4 w-4" />
           Zurück
         </Button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {!dailyUsage.isUnlimited && !dailyUsage.isLoading && (
             <p
               className={cn(
-                'text-xs text-right',
+                'text-right font-mono text-[11px] tracking-[.04em]',
                 dailyUsage.isExhausted
-                  ? 'text-destructive font-medium'
+                  ? 'font-medium text-destructive'
                   : dailyUsage.isLow
-                    ? 'text-amber-600 font-medium'
+                    ? 'font-medium text-amber-600'
                     : 'text-muted-foreground',
               )}
             >
@@ -654,10 +653,10 @@ export function ConfigureStep({
             loadingText="Erstelle Bewerbung..."
             size="lg"
             disabled={dailyUsage.isExhausted}
-            className="shadow-lg hover:shadow-xl transition-all"
+            className="rounded-[3px] px-6 font-semibold"
           >
             Bewerbung erstellen
-            <Sparkles className="ml-2 h-4 w-4" />
+            <Sparkles className="ml-1 h-4 w-4" />
           </SubmitButton>
         </div>
       </div>

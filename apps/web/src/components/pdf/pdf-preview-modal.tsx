@@ -173,7 +173,7 @@ export function PDFPreviewModal({
             loading={<CenteredLoader message="Lädt PDF..." />}
             error={
               <div className="text-center p-8">
-                <p className="text-red-600 mb-2">PDF konnte nicht geladen werden</p>
+                <p className="text-destructive mb-2">PDF konnte nicht geladen werden</p>
                 <p className="text-sm text-muted-foreground">
                   Der Download-Link ist möglicherweise abgelaufen.
                 </p>

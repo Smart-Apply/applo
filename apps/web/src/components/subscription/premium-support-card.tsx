@@ -37,22 +37,22 @@ export function PremiumSupportCard() {
 
   if (hasAccess) {
     return (
-      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 dark:border-amber-900/40 dark:from-amber-950/20 dark:to-orange-950/20">
+      <Card className="border-[#F3E3B3] bg-[#FDF6E7] dark:border-amber-400/30 dark:bg-amber-400/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
+          <CardTitle className="flex items-center gap-2 text-[#854D0E] dark:text-amber-200">
             <Crown className="h-5 w-5" />
             Premium Support aktiv
           </CardTitle>
-          <CardDescription className="text-amber-800/80 dark:text-amber-300/80">
+          <CardDescription className="text-[#854D0E]/80 dark:text-amber-300/80">
             Deine Anfragen werden priorisiert bearbeitet — Antwort innerhalb 24h zugesagt.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-200">
+          <div className="flex items-center gap-2 font-mono text-sm text-[#854D0E] dark:text-amber-200">
             <Mail className="h-4 w-4" />
             <span>support@applo.ai</span>
           </div>
-          <Button asChild variant="default" className="bg-amber-600 hover:bg-amber-700">
+          <Button asChild variant="default">
             <Link href="/#contact">
               <LifeBuoy className="mr-2 h-4 w-4" />
               Support kontaktieren

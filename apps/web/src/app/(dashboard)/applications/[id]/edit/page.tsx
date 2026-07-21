@@ -49,7 +49,7 @@ const EditableCoverLetter = dynamic(
     import('@/components/applications/editable-cover-letter').then((m) => ({
       default: m.EditableCoverLetter,
     })),
-  { loading: () => <Skeleton className="mx-auto h-96 w-full max-w-[820px] rounded-2xl" />, ssr: false },
+  { loading: () => <Skeleton className="mx-auto h-96 w-full max-w-[820px] rounded-[4px]" />, ssr: false },
 );
 const CoverLetterCTA = dynamic(
   () =>
@@ -450,26 +450,26 @@ export default function ApplicationResumeEditorPage() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={() => router.push(`/applications/${applicationId}`)}
-                className="h-8 w-8 shrink-0"
+                className="h-8 w-8 shrink-0 rounded-none border-[#e0e0e0] bg-white text-[#1b2a49] hover:bg-[#f5f6f8]"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Zurück zur Übersicht</TooltipContent>
           </Tooltip>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+          <span className="inline-flex items-center gap-1.5 bg-[#16a34a] px-3 py-1 font-['IBM_Plex_Mono'] text-[11px] font-semibold tracking-[0.06em] text-white uppercase">
             <Check className="h-3.5 w-3.5" strokeWidth={3} /> Fertig
           </span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
+        <h1 className="font-['Archivo'] text-[26px] font-extrabold tracking-[-0.025em] text-[#1b2a49]">{title}</h1>
+        <p className="mt-1 text-sm text-[#6b6969]">{subtitle}</p>
 
         {/* Tab bar */}
-        <div className="mt-5 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card px-3 py-2 shadow-sm">
-          <div className="flex items-center gap-1">
+        <div className="mt-5 mb-5 flex flex-wrap items-center justify-between gap-3 border border-[#e0e0e0] bg-white p-2">
+          <div role="tablist" aria-label="Editor Tabs" className="flex items-center border border-[#e0e0e0] bg-[#e0e0e0]">
             {tabs.map((t) => {
               const Icon = t.icon;
               const active = activeTab === t.id;
@@ -477,13 +477,19 @@ export default function ApplicationResumeEditorPage() {
                 return (
                   <Tooltip key={t.id}>
                     <TooltipTrigger asChild>
-                      <span
-                        role="tab"
-                        aria-disabled="true"
-                        tabIndex={0}
-                        className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-semibold text-muted-foreground/60"
-                      >
-                        <Icon className="h-4 w-4" /> {t.label} <Lock className="h-3 w-3" />
+                      <span>
+                        <button
+                          id={`tab-${t.id}`}
+                          type="button"
+                          role="tab"
+                          aria-disabled="true"
+                          aria-selected="false"
+                          tabIndex={-1}
+                          disabled
+                          className="inline-flex cursor-not-allowed items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-[#94a3b8]"
+                        >
+                          <Icon className="h-4 w-4" /> {t.label} <Lock className="h-3 w-3" />
+                        </button>
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
@@ -498,11 +504,18 @@ export default function ApplicationResumeEditorPage() {
               return (
                 <button
                   key={t.id}
+                  id={`tab-${t.id}`}
                   type="button"
+                  role="tab"
+                  aria-selected={active}
+                  aria-controls={`tabpanel-${t.id}`}
+                  tabIndex={active ? 0 : -1}
                   onClick={() => handleTabChange(t.id)}
                   className={cn(
-                    'inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors',
-                    active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                    "inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors",
+                    active
+                      ? 'bg-[#1b2a49] text-white'
+                      : 'bg-white text-[#6b6969] hover:bg-[#f5f6f8] hover:text-[#1b2a49]',
                   )}
                 >
                   <Icon className="h-4 w-4" /> {t.label}
@@ -535,7 +548,7 @@ export default function ApplicationResumeEditorPage() {
                     loadingText="..."
                     disabled={!canExport}
                     size="sm"
-                    className="h-8 px-3 text-xs"
+                    className="h-8 rounded-none bg-[#1b2a49] px-3 text-xs text-white hover:bg-[#22345a]"
                   >
                     <Download className="mr-1.5 h-3.5 w-3.5" /> Export
                   </SubmitButton>
@@ -548,19 +561,19 @@ export default function ApplicationResumeEditorPage() {
 
         {/* Edit hint + auto-save status (document tabs only) */}
         {activeTab !== 'ats' && (
-          <div className="mx-auto mb-4 flex max-w-[820px] flex-wrap items-center justify-between gap-3 rounded-xl bg-primary/5 px-4 py-2.5 text-sm">
-            <span className="inline-flex items-center gap-2 font-medium text-foreground/80">
-              <Pencil className="h-4 w-4 text-primary" />
+          <div className="mx-auto mb-4 flex max-w-[820px] flex-wrap items-center justify-between gap-3 border-l-[3px] border-l-[#5581c7] bg-[#f5f6f8] px-4 py-2.5 text-sm">
+            <span className="inline-flex items-center gap-2 font-medium text-[#33425c]">
+              <Pencil className="h-4 w-4 text-[#5581c7]" />
               {activeTab === 'resume'
                 ? 'Klicke einen beliebigen Text an, um ihn zu bearbeiten.'
                 : 'Klicke in das Anschreiben, um Text, Anrede oder Absätze zu bearbeiten.'}
             </span>
             <span
               className={cn(
-                'inline-flex items-center gap-2 text-xs font-semibold',
-                saveStatus === 'saving' && 'text-muted-foreground',
-                saveStatus === 'dirty' && 'text-amber-600',
-                saveStatus === 'saved' && 'text-green-700',
+                "inline-flex items-center gap-2 font-['IBM_Plex_Mono'] text-[11px] font-semibold tracking-[0.06em] uppercase",
+                saveStatus === 'saving' && 'text-[#6b6969]',
+                saveStatus === 'dirty' && 'text-[#92400e]',
+                saveStatus === 'saved' && 'text-[#16a34a]',
               )}
             >
               {saveStatus === 'saving' ? (
@@ -580,7 +593,7 @@ export default function ApplicationResumeEditorPage() {
 
         {/* Tab content */}
         {activeTab === 'resume' && parsedResume && (
-          <div className="pb-10">
+          <div id="tabpanel-resume" role="tabpanel" aria-labelledby="tab-resume" className="pb-10">
             <EditableResume
               value={parsedResume}
               onChange={setParsedResume}
@@ -594,7 +607,7 @@ export default function ApplicationResumeEditorPage() {
         )}
 
         {activeTab === 'cover-letter' && (
-          <div className="pb-10">
+          <div id="tabpanel-cover-letter" role="tabpanel" aria-labelledby="tab-cover-letter" className="pb-10">
             {hasCover ? (
               <EditableCoverLetter
                 value={coverLetterValue}
@@ -613,7 +626,7 @@ export default function ApplicationResumeEditorPage() {
         )}
 
         {activeTab === 'ats' && parsedResume && (
-          <div className="h-[calc(100vh-15rem)] min-h-[520px] pb-2">
+          <div id="tabpanel-ats" role="tabpanel" aria-labelledby="tab-ats" className="h-[calc(100vh-15rem)] min-h-[520px] pb-2">
             <AtsOptimizer
               applicationId={applicationId}
               resume={parsedResume}

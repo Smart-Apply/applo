@@ -506,7 +506,7 @@ export function InterviewVoice({
       <Card className="overflow-hidden p-0">
         <div className="grid md:grid-cols-[300px_1fr]">
           {/* Mascot panel — sits in its own column, never overlaps text */}
-          <div className="flex items-center justify-center border-b bg-gradient-to-b from-[#EEF3FB] to-[#F6F9FE] p-8 md:border-b-0 md:border-r dark:from-[#1E293B] dark:to-[#0F172A]">
+          <div className="flex items-center justify-center border-b bg-muted p-8 md:border-b-0 md:border-r">
             <Applo state={phase === 'connecting' ? 'process' : 'wave'} size={200} />
           </div>
 
@@ -521,7 +521,7 @@ export function InterviewVoice({
             </p>
 
             {error !== null && (
-              <div className="mt-5 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+              <div className="mt-5 flex items-start gap-3 rounded-[3px] border border-[#F3E3B3] bg-[#FDF6E7] p-4 text-sm text-[#854D0E] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <div>
                   {error === 'mic' &&
@@ -550,16 +550,16 @@ export function InterviewVoice({
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="flex items-center gap-3.5 rounded-xl border bg-muted px-4 py-3.5"
+                  className="flex items-center gap-3.5 rounded-[4px] border bg-muted px-4 py-3.5"
                 >
-                  <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg border bg-card">
+                  <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[3px] border bg-card">
                     {item.icon}
                   </span>
                   <div className="flex-1">
                     <div className="text-sm font-semibold">{item.title}</div>
                     <div className="text-[12.5px] text-muted-foreground">{item.sub}</div>
                   </div>
-                  <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                  <span className="flex h-[22px] w-[22px] items-center justify-center rounded-[2px] border border-[#BFE9CC] bg-[#ECFAF0] text-success dark:border-green-400/30 dark:bg-green-400/10">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   </span>
                 </div>
@@ -580,9 +580,9 @@ export function InterviewVoice({
                       disabled={disabled}
                       onClick={() => setSelectedMinutes(minutes)}
                       className={cn(
-                        'h-[42px] rounded-xl border px-5 text-sm font-semibold transition-colors',
+                        'h-[42px] rounded-[3px] border px-5 text-sm font-semibold transition-colors',
                         active
-                          ? 'border-primary bg-[var(--primary-soft)] text-primary'
+                          ? 'border-primary bg-primary-soft text-primary'
                           : 'bg-card text-secondary hover:border-primary/40',
                         disabled && 'pointer-events-none opacity-40',
                       )}
@@ -603,7 +603,7 @@ export function InterviewVoice({
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Button
                 size="lg"
-                className="h-[54px] rounded-xl px-7 text-base"
+                className="h-[54px] rounded-[3px] px-7 text-base"
                 onClick={() => void start()}
                 loading={startMutation.isPending || phase === 'connecting'}
               >
@@ -612,7 +612,7 @@ export function InterviewVoice({
               </Button>
 
               {remainingMinutes >= 0 && (
-                <span className="inline-flex h-[38px] items-center gap-2 rounded-full bg-green-50 px-3.5 text-[13.5px] font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-400">
+                <span className="inline-flex h-[38px] items-center gap-2 rounded-[2px] border border-[#BFE9CC] bg-[#ECFAF0] px-3.5 text-[13.5px] font-semibold text-success dark:border-green-400/30 dark:bg-green-400/10">
                   <Clock className="h-4 w-4" />
                   {remainingMinutes} Min. verbleibend
                 </span>
@@ -639,14 +639,14 @@ export function InterviewVoice({
     <Card className="overflow-hidden p-0">
       <div className="flex items-center justify-between border-b px-6 py-5">
         <div className="flex items-center gap-2.5 text-[17px] font-bold">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-primary">
+          <span className="flex h-7 w-7 items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
             <Mic className="h-[18px] w-[18px]" />
           </span>
           {session.jobTitle ? `Sprach-Interview · ${session.jobTitle}` : 'Sprach-Interview'}
         </div>
         {phase === 'live' && (
           <Badge className="gap-1.5 bg-primary text-primary-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
             Verbunden
           </Badge>
         )}
@@ -667,7 +667,7 @@ export function InterviewVoice({
         </div>
 
         {/* Status pill */}
-        <div className="mt-3 inline-flex h-[38px] items-center gap-2.5 rounded-full bg-blue-50 px-4 text-[14.5px] font-semibold text-[#28456f] dark:bg-blue-950/40 dark:text-blue-200">
+        <div className="mt-3 inline-flex h-[38px] items-center gap-2.5 rounded-[2px] border border-primary-soft bg-primary-soft/40 px-4 text-[14.5px] font-semibold text-foreground dark:border-slate-600 dark:bg-slate-800/60">
           {phase === 'ending' ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -699,7 +699,7 @@ export function InterviewVoice({
 
         {/* Timer */}
         {phase === 'live' && (
-          <div className="mt-5 inline-flex h-[38px] items-center gap-2 rounded-full border bg-muted px-4 font-mono text-[15px] tabular-nums">
+          <div className="mt-5 inline-flex h-[38px] items-center gap-2 rounded-[2px] border bg-muted px-4 font-mono text-[15px] tabular-nums">
             <Clock className="h-4 w-4 text-muted-foreground" />
             {formatTime(elapsed)} <span className="text-muted-foreground">/</span>{' '}
             {formatTime(limitSeconds)}
@@ -708,7 +708,7 @@ export function InterviewVoice({
 
         {/* Wrap-up hint once the ~1-minute warning cue was sent */}
         {phase === 'live' && wrapUpHint && (
-          <div className="mt-3 inline-flex h-[32px] items-center gap-2 rounded-full bg-amber-50 px-3.5 text-[13px] font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+          <div className="mt-3 inline-flex h-[32px] items-center gap-2 rounded-[2px] border border-[#F3E3B3] bg-[#FDF6E7] px-3.5 text-[13px] font-semibold text-[#854D0E] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
             <Clock className="h-3.5 w-3.5" />
             Noch etwa 1 Minute
           </div>
@@ -721,7 +721,7 @@ export function InterviewVoice({
               <Mic className="h-4 w-4" />
               <span>Dein Mikrofon</span>
               {heardSpeech ? (
-                <span className="ml-auto inline-flex items-center gap-1 font-semibold text-green-600">
+                <span className="ml-auto inline-flex items-center gap-1 font-semibold text-success">
                   <Check className="h-[15px] w-[15px]" strokeWidth={3} />
                   Stimme erkannt
                 </span>
@@ -729,9 +729,9 @@ export function InterviewVoice({
                 <span className="ml-auto">Sprich, damit der Interviewer reagiert …</span>
               )}
             </div>
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-2.5 w-full overflow-hidden bg-muted">
               <div
-                className="h-full rounded-full bg-accent transition-[width] duration-75"
+                className="h-full bg-accent transition-[width] duration-75"
                 style={{ width: `${Math.round(micLevel * 100)}%` }}
               />
             </div>
@@ -740,7 +740,7 @@ export function InterviewVoice({
 
         {/* Captions */}
         {captions.length > 0 && (
-          <div className="mt-6 w-full max-w-[560px] space-y-3 rounded-2xl border bg-muted p-5">
+          <div className="mt-6 w-full max-w-[560px] space-y-3 rounded-[4px] border bg-muted p-5">
             {captions.map((turn, index) => (
               <div key={`${turn.role}-${index}`} className="text-[14.5px] leading-relaxed">
                 <span
@@ -765,9 +765,9 @@ export function InterviewVoice({
               size="lg"
               onClick={toggleMute}
               className={cn(
-                'h-[52px] rounded-xl px-6',
+                'h-[52px] rounded-[3px] px-6',
                 isMuted &&
-                  'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200',
+                  'border-[#F3E3B3] bg-[#FDF6E7] text-[#854D0E] hover:bg-[#FBEECB] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90 dark:hover:bg-amber-400/20',
               )}
             >
               {isMuted ? <MicOff className="h-[19px] w-[19px]" /> : <Mic className="h-[19px] w-[19px]" />}
@@ -777,7 +777,7 @@ export function InterviewVoice({
               variant="destructive"
               size="lg"
               onClick={() => void stop()}
-              className="h-[52px] rounded-xl px-6"
+              className="h-[52px] rounded-[3px] px-6"
             >
               <PhoneOff className="h-[19px] w-[19px]" />
               Gespräch beenden

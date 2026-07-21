@@ -614,13 +614,13 @@ export function ResumeFormEditor({
                   onClick={() => removeSkillCategory(index)}
                   disabled={disabled}
                 >
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </div>
           ))}
           {value.skillCategories.length === 0 && (
-            <p className="text-sm text-gray-500">Noch keine Fähigkeiten hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">Noch keine Fähigkeiten hinzugefügt</p>
           )}
         </CardContent>
       </Card>
@@ -717,13 +717,13 @@ export function ResumeFormEditor({
                   disabled={disabled}
                   className="ml-2"
                 >
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </div>
           ))}
           {value.experiences.length === 0 && (
-            <p className="text-sm text-gray-500">Noch keine Berufserfahrung hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">Noch keine Berufserfahrung hinzugefügt</p>
           )}
         </CardContent>
       </Card>
@@ -815,13 +815,13 @@ export function ResumeFormEditor({
                   disabled={disabled}
                   className="ml-2"
                 >
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </div>
           ))}
           {(!value.projects || value.projects.length === 0) && (
-            <p className="text-sm text-gray-500">Noch keine Projekte hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">Noch keine Projekte hinzugefügt</p>
           )}
         </CardContent>
       </Card>
@@ -898,13 +898,13 @@ export function ResumeFormEditor({
                   disabled={disabled}
                   className="ml-2"
                 >
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </div>
           ))}
           {(!value.education || value.education.length === 0) && (
-            <p className="text-sm text-gray-500">Noch keine Ausbildung hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">Noch keine Ausbildung hinzugefügt</p>
           )}
         </CardContent>
       </Card>
@@ -958,12 +958,12 @@ export function ResumeFormEditor({
                 onClick={() => removeCertification(index)}
                 disabled={disabled}
               >
-                <Trash2 className="h-4 w-4 text-red-600" />
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
           ))}
           {(!value.certifications || value.certifications.length === 0) && (
-            <p className="text-sm text-gray-500">Noch keine Zertifikate hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">Noch keine Zertifikate hinzugefügt</p>
           )}
         </CardContent>
       </Card>

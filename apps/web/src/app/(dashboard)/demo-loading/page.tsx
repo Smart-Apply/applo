@@ -43,8 +43,8 @@ export default function DemoLoadingPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Loading Components Demo</h1>
-        <p className="mt-1 text-gray-500">
+        <h1 className="font-heading text-3xl font-bold text-foreground">Loading Components Demo</h1>
+        <p className="mt-1 text-muted-foreground">
           Showcase of all loading states and skeleton components
         </p>
       </div>
@@ -59,19 +59,19 @@ export default function DemoLoadingPage() {
           <div className="flex items-center gap-8">
             <div className="text-center">
               <Spinner size="sm" />
-              <p className="mt-2 text-xs text-gray-500">Small</p>
+              <p className="mt-2 text-xs text-muted-foreground">Small</p>
             </div>
             <div className="text-center">
               <Spinner size="default" />
-              <p className="mt-2 text-xs text-gray-500">Default</p>
+              <p className="mt-2 text-xs text-muted-foreground">Default</p>
             </div>
             <div className="text-center">
               <Spinner size="lg" />
-              <p className="mt-2 text-xs text-gray-500">Large</p>
+              <p className="mt-2 text-xs text-muted-foreground">Large</p>
             </div>
             <div className="text-center">
               <Spinner size="xl" />
-              <p className="mt-2 text-xs text-gray-500">Extra Large</p>
+              <p className="mt-2 text-xs text-muted-foreground">Extra Large</p>
             </div>
           </div>
         </CardContent>
@@ -86,7 +86,7 @@ export default function DemoLoadingPage() {
         <CardContent className="space-y-6">
           <div>
             <h4 className="font-medium mb-3">Centered Loader</h4>
-            <div className="border rounded-lg">
+            <div className="border rounded-[4px]">
               <CenteredLoader message="Loading data..." />
             </div>
           </div>
@@ -252,15 +252,15 @@ export default function DemoLoadingPage() {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <ImageSkeleton aspectRatio="square" className="max-w-[200px]" />
-                <p className="text-xs text-gray-500 mt-2 text-center">Square</p>
+                <p className="text-xs text-muted-foreground mt-2 text-center">Square</p>
               </div>
               <div>
                 <ImageSkeleton aspectRatio="video" className="max-w-[200px]" />
-                <p className="text-xs text-gray-500 mt-2 text-center">Video (16:9)</p>
+                <p className="text-xs text-muted-foreground mt-2 text-center">Video (16:9)</p>
               </div>
               <div>
                 <ImageSkeleton aspectRatio="portrait" className="max-w-[200px]" />
-                <p className="text-xs text-gray-500 mt-2 text-center">Portrait (3:4)</p>
+                <p className="text-xs text-muted-foreground mt-2 text-center">Portrait (3:4)</p>
               </div>
             </div>
           </div>
@@ -274,7 +274,7 @@ export default function DemoLoadingPage() {
           <CardDescription>Full profile page loading state</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-lg p-4 bg-gray-50">
+          <div className="border rounded-[4px] p-4 bg-muted/30">
             <ProfileSkeleton />
           </div>
         </CardContent>

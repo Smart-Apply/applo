@@ -10,6 +10,7 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { StatusChip } from '@/components/ui/status-chip';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -153,7 +154,7 @@ export default function OnboardingPage() {
     <div className="max-w-2xl mx-auto space-y-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="font-heading text-3xl font-extrabold tracking-[-.025em] text-foreground">
           Willkommen bei Applo{user?.firstName ? `, ${user.firstName}` : ''}!
         </h1>
         <p className="text-muted-foreground max-w-lg mx-auto">
@@ -163,11 +164,11 @@ export default function OnboardingPage() {
 
       {/* Step: Upload */}
       {step === 'upload' && (
-        <Card className="shadow-soft border-border/50">
+        <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Upload className="h-5 w-5 text-primary" />
+              <div className="grid h-10 w-10 place-items-center border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
+                <Upload className="h-5 w-5" />
               </div>
               <div>
                 <CardTitle>Lebenslauf hochladen</CardTitle>
@@ -187,8 +188,8 @@ export default function OnboardingPage() {
             />
 
             {parseResume.isPending && (
-              <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-4">
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <div className="flex items-center gap-3 rounded-[3px] bg-muted/50 p-4">
+                <Loader2 className="h-5 w-5 animate-spin text-brand" />
                 <div>
                   <p className="text-sm font-medium">Lebenslauf wird analysiert...</p>
                   <p className="text-xs text-muted-foreground">Dies kann einige Sekunden dauern.</p>
@@ -229,22 +230,22 @@ export default function OnboardingPage() {
 
       {/* Step: Preview parsed data */}
       {step === 'preview' && parseResume.data && (
-        <Card className="shadow-soft border-border/50">
+        <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center dark:bg-green-900/50">
-                  <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <div className="grid h-10 w-10 place-items-center border border-[#BFE9CC] bg-[#ECFAF0] text-success dark:border-green-400/30 dark:bg-green-400/10">
+                  <Check className="h-5 w-5" />
                 </div>
                 <div>
                   <CardTitle>Lebenslauf analysiert</CardTitle>
                   <CardDescription>Wir haben folgende Daten erkannt:</CardDescription>
                 </div>
               </div>
-              <Badge variant="default" className="gap-1">
+              <StatusChip tone="success" withDot={false}>
                 <Check className="h-3 w-3" />
                 Erfolgreich
-              </Badge>
+              </StatusChip>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -258,14 +259,14 @@ export default function OnboardingPage() {
                 return (
                   <div
                     key={section}
-                    className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50/50 p-3 dark:bg-green-950/20 dark:border-green-900/50"
+                    className="flex items-center justify-between rounded-[3px] border border-[#BFE9CC] bg-[#ECFAF0]/60 p-3 dark:border-green-400/30 dark:bg-green-400/10"
                   >
                     <div className="flex items-center gap-3">
-                      <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <Check className="h-4 w-4 text-success" />
                       <span className="text-sm font-medium">{getSectionLabel(section)}</span>
                     </div>
                     {count !== null && count > 0 && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="font-mono text-xs">
                         {count} {count === 1 ? 'Eintrag' : 'Einträge'}
                       </Badge>
                     )}
@@ -277,7 +278,7 @@ export default function OnboardingPage() {
             {/* Skills preview */}
             {parseResume.data.skills && parseResume.data.skills.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground">Erkannte Skills</h4>
+                <h4 className="font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">Erkannte Skills</h4>
                 <div className="flex flex-wrap gap-2">
                   {parseResume.data.skills.slice(0, 10).map((skill, i) => (
                     <Badge key={i} variant="secondary">{skill.name}</Badge>
@@ -320,11 +321,11 @@ export default function OnboardingPage() {
 
       {/* Step: Manual quick-fill */}
       {step === 'manual' && (
-        <Card className="shadow-soft border-border/50">
+        <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Pencil className="h-5 w-5 text-primary" />
+              <div className="grid h-10 w-10 place-items-center border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
+                <Pencil className="h-5 w-5" />
               </div>
               <div>
                 <CardTitle>Kurzprofil erstellen</CardTitle>
@@ -337,7 +338,7 @@ export default function OnboardingPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">Vorname <span className="text-red-500">*</span></Label>
+                <Label htmlFor="firstName">Vorname <span className="text-destructive">*</span></Label>
                 <Input
                   id="firstName"
                   value={manualFirstName}
@@ -346,7 +347,7 @@ export default function OnboardingPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Nachname <span className="text-red-500">*</span></Label>
+                <Label htmlFor="lastName">Nachname <span className="text-destructive">*</span></Label>
                 <Input
                   id="lastName"
                   value={manualLastName}
@@ -388,9 +389,9 @@ export default function OnboardingPage() {
 
             {/* Recommendation hint */}
             {(!manualSummary.trim() || !manualSkills.trim()) && (
-              <div className="flex items-start gap-3 rounded-lg bg-amber-50/50 border border-amber-200 p-3 dark:bg-amber-950/20 dark:border-amber-900/50">
-                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 dark:text-amber-400" />
-                <p className="text-sm text-amber-700 dark:text-amber-400">
+              <div className="flex items-start gap-3 rounded-[3px] border border-[#F3E3B3] bg-[#FDF6E7] p-3 dark:border-amber-400/30 dark:bg-amber-400/10">
+                <AlertCircle className="mt-0.5 h-4 w-4 text-[#A16207] dark:text-amber-300" />
+                <p className="text-sm text-[#854D0E] dark:text-amber-300/90">
                   Zusammenfassung und Skills verbessern die Qualität deiner Bewerbungen deutlich.
                 </p>
               </div>
@@ -423,7 +424,7 @@ export default function OnboardingPage() {
       <div className="flex flex-col items-center gap-2 text-sm">
         <button
           onClick={() => router.push('/profile/edit')}
-          className="text-primary hover:underline transition-colors"
+          className="text-brand hover:underline transition-colors"
         >
           Profil vollständig bearbeiten →
         </button>

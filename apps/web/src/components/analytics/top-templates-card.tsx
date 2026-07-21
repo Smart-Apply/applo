@@ -38,10 +38,10 @@ export function TopTemplatesCard({ templates }: Props) {
         ) : (
           <div className="divide-y divide-border">
             {templates.map((t, i) => (
-              <div key={t.templateId} className="flex items-center gap-4 py-3 rounded-xl px-1 hover:bg-muted/40 transition-colors">
+              <div key={t.templateId} className="flex items-center gap-4 py-3 rounded-[3px] px-1 hover:bg-muted/40 transition-colors">
                 {/* Rank badge */}
                 <span className={cn(
-                  'grid place-items-center w-7 h-7 rounded-lg text-[12.5px] font-bold flex-none tabular-nums',
+                  'grid place-items-center w-7 h-7 rounded-[2px] font-mono text-[12.5px] font-bold flex-none tabular-nums',
                   i === 0
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground',
@@ -63,9 +63,9 @@ export function TopTemplatesCard({ templates }: Props) {
                     <span className="text-[13px] font-bold tabular-nums">{t.interviewRate}%</span>
                     <span className="text-[10.5px] text-muted-foreground font-semibold">Interview</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div className="h-1.5 bg-muted overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      className="h-full bg-primary transition-all duration-500"
                       style={{ width: `${Math.max((t.interviewRate / maxRate) * 100, 3)}%` }}
                     />
                   </div>

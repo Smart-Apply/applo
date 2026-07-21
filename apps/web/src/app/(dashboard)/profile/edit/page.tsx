@@ -322,12 +322,12 @@ export default function ProfileEditPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/profile')} className="rounded-full hover:bg-muted">
+          <Button variant="ghost" size="icon" onClick={() => router.push('/profile')} className="rounded-[3px] hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Profil bearbeiten</h1>
-            <p className="text-muted-foreground">Aktualisiere deine Informationen</p>
+            <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Profil bearbeiten</h1>
+            <p className="text-sm text-muted-foreground">Aktualisiere deine Informationen</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -345,7 +345,6 @@ export default function ProfileEditPage() {
             onClick={form.handleSubmit(onSubmit)} 
             isLoading={updateProfile.isPending}
             loadingText="Speichere..."
-            className="shadow-lg shadow-primary/20"
           >
             <Save className="mr-2 h-4 w-4" />
             Speichern
@@ -354,20 +353,20 @@ export default function ProfileEditPage() {
       </div>
 
       <Tabs defaultValue={initialTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 lg:w-auto h-auto p-1 bg-muted/50 rounded-xl">
-          <TabsTrigger value="basic" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Basis</TabsTrigger>
-          <TabsTrigger value="experience" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Erfahrung</TabsTrigger>
-          <TabsTrigger value="education" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Bildung</TabsTrigger>
-          <TabsTrigger value="skills" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Skills</TabsTrigger>
-          <TabsTrigger value="projects" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Projekte</TabsTrigger>
-          <TabsTrigger value="certificates" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">Zertifikate</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 lg:w-auto">
+          <TabsTrigger value="basic" className="py-2">Basis</TabsTrigger>
+          <TabsTrigger value="experience" className="py-2">Erfahrung</TabsTrigger>
+          <TabsTrigger value="education" className="py-2">Bildung</TabsTrigger>
+          <TabsTrigger value="skills" className="py-2">Skills</TabsTrigger>
+          <TabsTrigger value="projects" className="py-2">Projekte</TabsTrigger>
+          <TabsTrigger value="certificates" className="py-2">Zertifikate</TabsTrigger>
         </TabsList>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
             <TabsContent value="basic" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Card className="border-border/50 shadow-soft">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 text-primary" />
@@ -557,7 +556,7 @@ export default function ProfileEditPage() {
             </TabsContent>
 
             <TabsContent value="experience" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Card className="border-border/50 shadow-soft">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Briefcase className="h-5 w-5 text-primary" />
@@ -576,7 +575,7 @@ export default function ProfileEditPage() {
             </TabsContent>
 
             <TabsContent value="education" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Card className="border-border/50 shadow-soft">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-primary" />
@@ -595,7 +594,7 @@ export default function ProfileEditPage() {
             </TabsContent>
 
             <TabsContent value="skills" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Card className="border-border/50 shadow-soft">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Code className="h-5 w-5 text-primary" />
@@ -619,7 +618,7 @@ export default function ProfileEditPage() {
             </TabsContent>
 
             <TabsContent value="projects" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Card className="border-border/50 shadow-soft">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Code className="h-5 w-5 text-primary" />
@@ -638,7 +637,7 @@ export default function ProfileEditPage() {
             </TabsContent>
 
             <TabsContent value="certificates" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Card className="border-border/50 shadow-soft">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Award className="h-5 w-5 text-primary" />

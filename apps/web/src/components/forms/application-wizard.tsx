@@ -22,7 +22,7 @@ interface StepConfig {
 }
 
 const steps: StepConfig[] = [
-  { id: 'job', title: 'Stelle hinzufügen', icon: Briefcase },
+  { id: 'job', title: 'Stelle', icon: Briefcase },
   { id: 'configure', title: 'Konfigurieren', icon: Settings },
   { id: 'generate', title: 'Fertig', icon: Sparkles },
 ];
@@ -86,14 +86,13 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
   }
 
   return (
-    <div className={cn('space-y-4', currentStep === 'job' && 'mx-auto max-w-2xl')}>
-      {/* Compact centered header: Applo on top, step path right below
-          (gap comes from .applo-guide--compact margin-bottom). */}
+    <div className="space-y-4">
+      {/* Navy Applo guide strip + step indicator */}
       <div>
-        <ApploGuide step={guideStep} finishing={generation.finishing} compact />
+        <ApploGuide step={guideStep} finishing={generation.finishing} className="mb-7" />
 
-        {/* Step Indicator — equal 1fr columns so the middle step is perfectly centered */}
-        <div className="mx-auto grid w-full max-w-lg grid-cols-[1fr_auto_1fr_auto_1fr] items-start">
+        {/* Step Indicator — square tiles, mono labels, green fill connectors */}
+        <div className="mx-auto mb-8 grid w-full max-w-lg grid-cols-[1fr_auto_1fr_auto_1fr] items-start">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = currentStep === step.id;
@@ -106,35 +105,37 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
                   <div className="relative">
                     <div
                       className={cn(
-                        'flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300',
-                        isCompleted && 'bg-green-500 text-white',
-                        isActive && 'bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(27,42,73,0.28)]',
-                        isTodo && 'bg-muted text-muted-foreground',
+                        'flex h-10 w-10 items-center justify-center border transition-all duration-300',
+                        isCompleted && 'border-[#16A34A] bg-[#16A34A] text-white',
+                        isActive && 'border-[#1B2A49] bg-[#1B2A49] text-white',
+                        isTodo && 'border-[#E0E0E0] bg-[#F5F6F8] text-[#A0A0A0]',
                       )}
                     >
                       {isCompleted ? (
-                        <Check className="w-4 h-4" strokeWidth={2.6} />
+                        <Check className="h-4 w-4" strokeWidth={2.6} />
                       ) : (
-                        <Icon className="w-4 h-4" />
+                        <Icon className="h-4 w-4" />
                       )}
                     </div>
                     {isActive && (
-                      <span className="absolute -inset-[4px] rounded-[15px] border-2 border-primary/35 animate-[ringPulse_1.8s_ease-out_infinite]" />
+                      <span className="absolute -inset-[4px] border-2 border-[rgba(85,129,199,.4)] animate-[ringPulse_1.8s_ease-out_infinite]" />
                     )}
                   </div>
-                  <p className={cn(
-                    'text-xs font-bold whitespace-nowrap',
-                    isCompleted && 'text-green-600',
-                    isActive && 'text-foreground',
-                    isTodo && 'text-muted-foreground/50',
-                  )}>
+                  <p
+                    className={cn(
+                      'whitespace-nowrap font-mono text-[10.5px] font-semibold uppercase tracking-[.08em]',
+                      isCompleted && 'text-[#16A34A]',
+                      isActive && 'text-[#1B2A49]',
+                      isTodo && 'text-[#A0A0A0]',
+                    )}
+                  >
                     {step.title}
                   </p>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className="mt-[18.5px] h-[3px] w-12 sm:w-16 bg-muted rounded overflow-hidden">
+                  <div className="mt-[18.5px] h-[3px] w-12 overflow-hidden bg-[#E0E0E0] sm:w-16">
                     <div
-                      className="h-full bg-green-500 rounded transition-all duration-500"
+                      className="h-full bg-[#16A34A] transition-all duration-500"
                       style={{ width: isCompleted ? '100%' : '0%' }}
                     />
                   </div>
@@ -146,7 +147,7 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
       </div>
 
       {/* Step Content */}
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className={cn('animate-in fade-in slide-in-from-bottom-4 duration-500', currentStep === 'job' && 'mx-auto max-w-[680px]')}>
         {currentStep === 'job' && (
           <JobStep onJobCreated={handleJobCreated} />
         )}
@@ -162,17 +163,17 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
 
       {/* Navigation Buttons */}
       {currentStep === 'job' && (
-        <div className="flex items-center justify-between pt-4 border-t border-border/50">
-          <Button variant="ghost" onClick={handleCancel} className="text-muted-foreground hover:text-foreground">
+        <div className="mx-auto flex max-w-[680px] items-center justify-between border-t border-[#E0E0E0] pt-5">
+          <Button variant="ghost" onClick={handleCancel} className="rounded-[3px] font-semibold text-muted-foreground hover:text-foreground">
             Abbrechen
           </Button>
           <Button
             onClick={handleNext}
             disabled={!selectedJob}
-            className="shadow-md hover:shadow-lg transition-all"
+            className="rounded-[3px] px-5 font-semibold disabled:bg-[#E5E9F2] disabled:text-[#A0A0A0] disabled:opacity-100"
           >
             Weiter
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
       )}

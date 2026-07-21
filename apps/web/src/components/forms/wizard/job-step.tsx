@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link as LinkIcon, FileText, Check, Loader2 } from 'lucide-react';
 import { useParseJobPosting, useCreateJobPosting } from '@/hooks/use-job-postings';
+import { cn } from '@/lib/utils';
 import type { JobPosting } from '@/types';
 import {
   jobPostingUrlSchema,
@@ -99,51 +100,47 @@ export function JobStep({ onJobCreated }: JobStepProps) {
   // If we have parsed/created data, show success state
   if (parsedData && !isEditing) {
     return (
-      <Card className="shadow-soft border-border/50">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center dark:bg-green-900/50">
-                <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+      <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
+        <CardHeader className="border-b border-[#E0E0E0] px-6 py-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="grid h-10 w-10 flex-none place-items-center bg-[#ECFAF0]">
+                <Check className="h-5 w-5 text-[#16A34A]" strokeWidth={3} />
               </div>
               <div>
-                <CardTitle>Stelle erfasst</CardTitle>
-                <CardDescription>Die Stellenanzeige wurde erfolgreich gespeichert.</CardDescription>
+                <CardTitle className="font-heading text-lg font-bold tracking-[-.01em]">Stelle erfasst</CardTitle>
+                <CardDescription className="mt-0.5 text-[13.5px]">Die Stellenanzeige wurde erfolgreich gespeichert.</CardDescription>
               </div>
             </div>
-            <Badge variant="default" className="gap-1">
-              <Check className="h-3 w-3" />
+            <Badge className="gap-1.5 rounded-none bg-[#16A34A] px-2.5 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-[.06em] text-white hover:bg-[#16A34A]">
+              <Check className="h-3 w-3" strokeWidth={3.4} />
               Gespeichert
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3 rounded-xl border border-border/50 bg-card p-5 shadow-sm">
-            <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Titel</p>
-              <p className="text-lg font-semibold">{parsedData.title}</p>
+        <CardContent className="space-y-4 p-6">
+          <div className="border border-[#E0E0E0] bg-[#FAFAFA]">
+            <div className="grid grid-cols-[auto_1fr]">
+              <div className="border-b border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]">Titel</div>
+              <div className="border-b border-[#E5E9F2] px-4.5 py-3.5 text-[15px] font-semibold text-foreground">{parsedData.title}</div>
+              <div className={cn('border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]', (parsedData.location || parsedData.description) && 'border-b')}>Firma</div>
+              <div className={cn('px-4.5 py-3.5 text-[15px] text-foreground', (parsedData.location || parsedData.description) && 'border-b border-[#E5E9F2]')}>{parsedData.company}</div>
+              {parsedData.location && (
+                <>
+                  <div className={cn('border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]', parsedData.description && 'border-b')}>Standort</div>
+                  <div className={cn('px-4.5 py-3.5 text-[15px] text-foreground', parsedData.description && 'border-b border-[#E5E9F2]')}>{parsedData.location}</div>
+                </>
+              )}
+              {parsedData.description && (
+                <>
+                  <div className="border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]">Info</div>
+                  <div className="line-clamp-3 px-4.5 py-3.5 text-sm text-muted-foreground">{parsedData.description}</div>
+                </>
+              )}
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Unternehmen</p>
-              <p className="text-base">{parsedData.company}</p>
-            </div>
-            {parsedData.location && (
-              <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Standort</p>
-                <p className="text-base">{parsedData.location}</p>
-              </div>
-            )}
-            {parsedData.description && (
-              <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Beschreibung</p>
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {parsedData.description}
-                </p>
-              </div>
-            )}
           </div>
 
-          <Button variant="outline" size="sm" onClick={handleReset}>
+          <Button variant="outline" size="sm" onClick={handleReset} className="rounded-[3px] border-[#1B2A49] font-semibold hover:bg-[#E5E9F2]">
             Andere Stelle verwenden
           </Button>
         </CardContent>
@@ -152,21 +149,21 @@ export function JobStep({ onJobCreated }: JobStepProps) {
   }
 
   return (
-    <Card className="shadow-soft border-border/50">
-      <CardHeader>
-        <CardTitle>Stelle hinzufügen</CardTitle>
-        <CardDescription>
+    <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
+      <CardHeader className="px-6 pb-0 pt-6">
+        <CardTitle className="font-heading text-[19px] font-bold tracking-[-.01em]">Stelle hinzufügen</CardTitle>
+        <CardDescription className="text-[13.5px]">
           Füge die Stellenanzeige per Link oder durch Einfügen des Textes hinzu.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="url" className="gap-2">
+          <TabsList className="mb-6 grid w-full grid-cols-2">
+            <TabsTrigger value="url" className="gap-2 py-3 text-[13.5px]">
               <LinkIcon className="h-4 w-4" />
               Link einfügen
             </TabsTrigger>
-            <TabsTrigger value="text" className="gap-2">
+            <TabsTrigger value="text" className="gap-2 py-3 text-[13.5px]">
               <FileText className="h-4 w-4" />
               Text einfügen
             </TabsTrigger>
@@ -198,8 +195,8 @@ export function JobStep({ onJobCreated }: JobStepProps) {
             )}
             <form onSubmit={urlForm.handleSubmit(handleUrlParse)} className="space-y-4">
               <div>
-                <Label htmlFor="url">Link zur Stellenanzeige</Label>
-                <p className="text-sm text-muted-foreground mb-2">
+                <Label htmlFor="url" className="text-[13.5px] font-semibold">Link zur Stellenanzeige</Label>
+                <p className="mb-2.5 mt-1 text-[13px] text-muted-foreground">
                   Unterstützt LinkedIn, Indeed und weitere Jobportale.
                 </p>
                 <Input
@@ -207,16 +204,19 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                   type="text"
                   placeholder="https://www.linkedin.com/jobs/view/..."
                   {...urlForm.register('url')}
-                  className={urlForm.formState.errors.url ? 'border-red-500' : ''}
+                  className={cn(
+                    'rounded-[3px] border-[#B0B0B0] font-mono text-[13px] focus-visible:border-[#5581C7] focus-visible:ring-[#5581C7]/30',
+                    urlForm.formState.errors.url && 'border-destructive',
+                  )}
                 />
                 {urlForm.formState.errors.url && (
-                  <p className="text-sm text-red-500 mt-1">{urlForm.formState.errors.url.message}</p>
+                  <p className="text-sm text-destructive mt-1">{urlForm.formState.errors.url.message}</p>
                 )}
               </div>
               <Button
                 type="submit"
                 disabled={parseJobPosting.isPending}
-                className="w-full"
+                className="w-full rounded-[3px] font-semibold"
                 size="lg"
               >
                 {parseJobPosting.isPending ? (
@@ -237,30 +237,30 @@ export function JobStep({ onJobCreated }: JobStepProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="manual-title">
-                    Stellentitel <span className="text-red-500">*</span>
+                    Stellentitel <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="manual-title"
                     placeholder="z.B. Marketing Manager, Pflegefachkraft"
                     {...manualForm.register('title')}
-                    className={manualForm.formState.errors.title ? 'border-red-500' : ''}
+                    className={manualForm.formState.errors.title ? 'border-destructive' : ''}
                   />
                   {manualForm.formState.errors.title && (
-                    <p className="text-sm text-red-500 mt-1">{manualForm.formState.errors.title.message}</p>
+                    <p className="text-sm text-destructive mt-1">{manualForm.formState.errors.title.message}</p>
                   )}
                 </div>
                 <div>
                   <Label htmlFor="manual-company">
-                    Unternehmen <span className="text-red-500">*</span>
+                    Unternehmen <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="manual-company"
                     placeholder="z.B. Unternehmen GmbH"
                     {...manualForm.register('company')}
-                    className={manualForm.formState.errors.company ? 'border-red-500' : ''}
+                    className={manualForm.formState.errors.company ? 'border-destructive' : ''}
                   />
                   {manualForm.formState.errors.company && (
-                    <p className="text-sm text-red-500 mt-1">{manualForm.formState.errors.company.message}</p>
+                    <p className="text-sm text-destructive mt-1">{manualForm.formState.errors.company.message}</p>
                   )}
                 </div>
               </div>
@@ -276,7 +276,7 @@ export function JobStep({ onJobCreated }: JobStepProps) {
 
               <div>
                 <Label htmlFor="manual-fullText">
-                  Stellenbeschreibung <span className="text-red-500">*</span>
+                  Stellenbeschreibung <span className="text-destructive">*</span>
                 </Label>
                 <p className="text-sm text-muted-foreground mb-2">
                   Kopiere den gesamten Text der Stellenanzeige und füge ihn hier ein.
@@ -286,17 +286,17 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                   placeholder="Füge hier den vollständigen Text der Stellenanzeige ein..."
                   rows={8}
                   {...manualForm.register('fullText')}
-                  className={manualForm.formState.errors.fullText ? 'border-red-500' : ''}
+                  className={manualForm.formState.errors.fullText ? 'border-destructive' : ''}
                 />
                 {manualForm.formState.errors.fullText && (
-                  <p className="text-sm text-red-500 mt-1">{manualForm.formState.errors.fullText.message}</p>
+                  <p className="text-sm text-destructive mt-1">{manualForm.formState.errors.fullText.message}</p>
                 )}
               </div>
 
               <Button
                 type="submit"
                 disabled={createJobPosting.isPending}
-                className="w-full"
+                className="w-full rounded-[3px] font-semibold"
                 size="lg"
               >
                 {createJobPosting.isPending ? (

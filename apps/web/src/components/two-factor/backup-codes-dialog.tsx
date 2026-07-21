@@ -89,7 +89,7 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
         <div className="space-y-4 py-4">
           {newCodes ? (
             <>
-              <div className="rounded-lg border p-4 bg-muted/50">
+              <div className="rounded-[4px] border p-4 bg-muted/50">
                 <div className="grid grid-cols-2 gap-2 font-mono text-sm">
                   {newCodes.map((code, index) => (
                     <div key={index} className="px-2 py-1 bg-background rounded">
@@ -124,7 +124,7 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
             </>
           ) : showRegenerate ? (
             <>
-              <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-400">
+              <div className="rounded-[4px] border border-[#F3E3B3] bg-[#FDF6E7] p-4 text-sm text-[#854D0E] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
                 <p className="font-medium">Achtung:</p>
                 <p className="mt-1">
                   Alle bestehenden Backup-Codes werden ungültig. Speichere die neuen Codes sicher.
@@ -176,7 +176,7 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
               </div>
 
               {status && status.backupCodesRemaining < 3 && (
-                <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-400">
+                <div className="rounded-[4px] border border-[#F3E3B3] bg-[#FDF6E7] p-4 text-sm text-[#854D0E] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
                   Du hast nur noch wenige Backup-Codes. Generiere neue Codes für den Notfall.
                 </div>
               )}

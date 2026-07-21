@@ -22,25 +22,25 @@ const tierConfig: Record<
 > = {
   FREE: {
     label: 'Free',
-    className: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+    className: 'border-border bg-muted text-muted-foreground',
     icon: null,
   },
   PREMIUM: {
     label: 'Premium',
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    className: 'border-primary-soft bg-primary-soft/40 text-brand dark:border-slate-600 dark:bg-slate-800/60',
     icon: Crown,
   },
   PREMIUM_PLUS: {
     label: 'Premium+',
-    className: 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 dark:from-purple-900/40 dark:to-pink-900/40 dark:text-purple-300',
+    className: 'border-primary bg-primary text-primary-foreground',
     icon: Sparkles,
   },
 };
 
 const sizeConfig = {
-  sm: 'text-xs px-2 py-0.5',
-  md: 'text-sm px-2.5 py-1',
-  lg: 'text-base px-3 py-1.5',
+  sm: 'px-1.5 py-0.5 text-[10px]',
+  md: 'px-2 py-0.5 text-[10.5px]',
+  lg: 'px-2.5 py-1 text-xs',
 };
 
 const iconSizeConfig = {
@@ -71,7 +71,7 @@ export function TierBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full font-medium transition-colors',
+        'inline-flex items-center gap-1.5 rounded-[3px] border font-mono font-medium uppercase tracking-[.08em] transition-colors',
         config.className,
         sizeConfig[size],
         className
@@ -99,7 +99,7 @@ export function CurrentTierBadge({
     return (
       <span
         className={cn(
-          'inline-flex items-center rounded-full bg-muted animate-pulse',
+          'inline-flex items-center rounded-[3px] bg-muted animate-pulse',
           sizeConfig[size],
           className
         )}

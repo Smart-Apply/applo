@@ -36,15 +36,15 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
   const feedback = session.feedback;
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 dark:text-green-400';
-    if (score >= 60) return 'text-amber-600 dark:text-amber-400';
-    return 'text-red-600 dark:text-red-400';
+    if (score >= 80) return 'text-success';
+    if (score >= 60) return 'text-[#A16207] dark:text-amber-300';
+    return 'text-destructive';
   };
 
   const getScoreBg = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-amber-500';
-    return 'bg-red-500';
+    if (score >= 80) return 'bg-success';
+    if (score >= 60) return 'bg-warning';
+    return 'bg-destructive';
   };
 
   const getScoreBadgeVariant = (score: number): 'default' | 'secondary' | 'destructive' => {
@@ -72,7 +72,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
   return (
     <div className="space-y-6">
       {/* Overall Score Card */}
-      <Card className="border-2 border-primary/20">
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -81,7 +81,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
             </CardTitle>
             <Badge
               variant={getScoreBadgeVariant(feedback.overallScore)}
-              className="text-lg px-4 py-1"
+              className="px-4 py-1 font-mono text-lg tabular-nums"
             >
               {feedback.overallScore}/100
             </Badge>
@@ -114,7 +114,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
         {/* Strengths */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2 text-green-600 dark:text-green-400">
+            <CardTitle className="text-base flex items-center gap-2 text-success">
               <TrendingUp className="h-5 w-5" />
               Stärken
             </CardTitle>
@@ -123,7 +123,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
             <ul className="space-y-2">
               {feedback.strengths.map((strength, index) => (
                 <li key={index} className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-success flex-shrink-0" />
                   <span className="text-sm">{strength}</span>
                 </li>
               ))}
@@ -134,7 +134,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
         {/* Improvements */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2 text-amber-600 dark:text-amber-400">
+            <CardTitle className="text-base flex items-center gap-2 text-[#A16207] dark:text-amber-300">
               <TrendingDown className="h-5 w-5" />
               Verbesserungspotenzial
             </CardTitle>
@@ -143,7 +143,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
             <ul className="space-y-2">
               {feedback.improvements.map((improvement, index) => (
                 <li key={index} className="flex items-start gap-2">
-                  <XCircle className="h-4 w-4 mt-0.5 text-amber-500 flex-shrink-0" />
+                  <XCircle className="h-4 w-4 mt-0.5 text-[#A16207] dark:text-amber-300 flex-shrink-0" />
                   <span className="text-sm">{improvement}</span>
                 </li>
               ))}
@@ -259,7 +259,7 @@ function QuestionFeedbackItem({
           </Badge>
         )}
       </div>
-      <p className="text-sm bg-muted/50 rounded-lg p-3">{feedback}</p>
+      <p className="text-sm bg-muted/50 rounded-[3px] p-3">{feedback}</p>
     </div>
   );
 }

@@ -56,6 +56,7 @@ import { EditableTitle } from '@/components/applications/editable-title';
 import { StatusDropdown } from '@/components/applications/status-dropdown';
 import { ATSAnalysisPanel } from '@/components/applications/ats-analysis-panel';
 import { UpgradePrompt } from '@/components/subscription/upgrade-prompt';
+import { StatusChip } from '@/components/ui/status-chip';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
 import { formatFullTimestamp, formatDate } from '@/lib/format-date';
 import { LOADING_MESSAGES } from '@/lib/constants';
@@ -69,7 +70,7 @@ const PDFPreviewModal = dynamic(
   {
     loading: () => (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8">
+        <div className="bg-background rounded-[4px] p-8">
           <CenteredLoader message={LOADING_MESSAGES.PDF_PREVIEW} />
         </div>
       </div>
@@ -325,11 +326,11 @@ export default function ApplicationDetailPage() {
     return (
       <div className="mx-auto max-w-5xl space-y-6">
         <BackLink onClick={() => router.push('/applications')} />
-        <Card className="rounded-[18px]">
+        <Card>
           <CardContent className="py-12">
             <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-[#1B2A49] mb-2">Bewerbung nicht gefunden</h3>
+              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">Bewerbung nicht gefunden</h3>
               <p className="text-muted-foreground mb-6">
                 Die angeforderte Bewerbung existiert nicht oder du hast keine Berechtigung.
               </p>
@@ -388,16 +389,17 @@ export default function ApplicationDetailPage() {
               variant="dropdown"
             />
             {application.statusSource === 'EMAIL_TRACKING' && (
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
+              <StatusChip
+                tone="info"
+                withDot={false}
                 title="Status wurde durch automatisches E-Mail-Tracking aktualisiert"
               >
-                📧 Auto-Tracking
-              </span>
+                Auto-Tracking
+              </StatusChip>
             )}
           </div>
         ) : (
-          <div className="rounded bg-red-50 px-2 py-1 text-xs text-red-500">
+          <div className="rounded-[3px] bg-destructive-soft px-2 py-1 text-xs text-destructive">
             Kein Status (bitte Seite neu laden)
           </div>
         )}
@@ -501,7 +503,7 @@ function BackLink({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-[#1B2A49]"
+      className="inline-flex items-center gap-2 rounded-[3px] px-2.5 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
       <ArrowLeft className="h-4 w-4" />
       Zurück zu Bewerbungen
@@ -518,36 +520,23 @@ function CelebrationHero({
   company?: string | null;
 }) {
   return (
-    <div
-      className="relative grid grid-cols-[auto_1fr] items-center gap-5 overflow-hidden rounded-[20px] border p-6 sm:gap-7 sm:p-8"
-      style={{
-        borderColor: '#CBEBD6',
-        background:
-          'radial-gradient(120% 140% at 12% -10%, rgba(59,130,246,.10), rgba(59,130,246,0) 55%), linear-gradient(180deg,#E7F6EC,#F3FBF6 70%)',
-      }}
-    >
-      <div
-        className="hidden self-end sm:block"
-        style={{ filter: 'drop-shadow(0 12px 18px rgba(20,33,61,.10))', marginBottom: -6 }}
-      >
+    <div className="relative grid grid-cols-[auto_1fr] items-center gap-5 overflow-hidden rounded-[4px] border border-[#BFE9CC] bg-[#ECFAF0] p-6 dark:border-green-400/30 dark:bg-green-400/10 sm:gap-7 sm:p-8">
+      <div className="hidden self-end sm:block" style={{ marginBottom: -6 }}>
         <ApploRig state="success" size={132} aria-hidden />
       </div>
       <div className="block sm:hidden" style={{ marginBottom: -4 }}>
         <ApploRig state="success" size={84} aria-hidden />
       </div>
       <div>
-        <p
-          className="mb-2 text-xs font-bold uppercase tracking-[0.1em]"
-          style={{ color: '#15803D' }}
-        >
+        <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-[#15803D] dark:text-green-300">
           Bereit zum Absenden
         </p>
-        <h2 className="font-poppins text-[24px] font-bold leading-tight tracking-tight text-[#1B2A49] sm:text-[26px]">
+        <h2 className="font-heading text-[24px] font-bold leading-tight tracking-[-.02em] text-foreground sm:text-[26px]">
           {firstName ? `Geschafft, ${firstName}!` : 'Geschafft!'} 🎉
         </h2>
         <p className="mt-2 max-w-[48ch] text-[15px] leading-relaxed text-muted-foreground text-pretty">
-          Dein <b className="font-semibold text-[#1B2A49]">Anschreiben</b> und dein{' '}
-          <b className="font-semibold text-[#1B2A49]">Lebenslauf</b> sind fertig — lade sie herunter
+          Dein <b className="font-semibold text-foreground">Anschreiben</b> und dein{' '}
+          <b className="font-semibold text-foreground">Lebenslauf</b> sind fertig — lade sie herunter
           und bewirb dich
           {company ? ` bei ${company}` : ''}.
         </p>
@@ -584,7 +573,7 @@ function DocumentsCard({
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-3 px-0.5">
-        <h3 className="text-[13px] font-bold uppercase tracking-[0.07em] text-muted-foreground">
+        <h3 className="font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground">
           Bewerbungsunterlagen
         </h3>
         {files?.resume && (
@@ -661,22 +650,16 @@ function DocCard({
   downloading?: boolean;
 }) {
   return (
-    <div className="flex flex-col rounded-[16px] border bg-card p-5 shadow-sm transition-all hover:shadow-md">
+    <div className="flex flex-col rounded-[4px] border bg-card p-5 transition-colors hover:bg-muted/40">
       <div className="mb-4 flex items-center gap-3.5">
-        <div
-          className="relative grid h-[60px] w-[50px] shrink-0 place-items-center rounded-[9px]"
-          style={{ backgroundColor: '#EAF1FE', border: '1px solid #D2E2FC', color: '#3B82F6' }}
-        >
+        <div className="relative grid h-[60px] w-[50px] shrink-0 place-items-center border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
           <FileText className="h-6 w-6" />
-          <span
-            className="absolute -bottom-[7px] left-1/2 -translate-x-1/2 rounded px-1.5 text-[8px] font-semibold tracking-wide text-white"
-            style={{ backgroundColor: '#3B82F6', fontFamily: 'var(--font-geist-mono, monospace)' }}
-          >
+          <span className="absolute -bottom-[7px] left-1/2 -translate-x-1/2 bg-brand px-1.5 font-mono text-[8px] font-semibold tracking-wide text-white">
             PDF
           </span>
         </div>
         <div className="min-w-0">
-          <p className="text-[16.5px] font-bold tracking-tight text-[#1B2A49]">{name}</p>
+          <p className="font-heading text-[16.5px] font-bold tracking-tight text-foreground">{name}</p>
           <p className="mt-0.5 text-[13px] text-muted-foreground">PDF-Dokument</p>
         </div>
       </div>
@@ -696,12 +679,12 @@ function DocCard({
 
 function DocCardEmpty({ name, note }: { name: string; note: string }) {
   return (
-    <div className="flex items-start gap-3.5 rounded-[16px] border border-dashed bg-muted/40 p-5">
-      <div className="grid h-[60px] w-[50px] shrink-0 place-items-center rounded-[9px] bg-muted text-muted-foreground">
+    <div className="flex items-start gap-3.5 rounded-[4px] border border-dashed bg-muted/40 p-5">
+      <div className="grid h-[60px] w-[50px] shrink-0 place-items-center border border-border bg-muted text-muted-foreground">
         <FileText className="h-6 w-6" />
       </div>
       <div className="min-w-0">
-        <p className="text-[16.5px] font-bold tracking-tight text-muted-foreground">{name}</p>
+        <p className="font-heading text-[16.5px] font-bold tracking-tight text-muted-foreground">{name}</p>
         <p className="mt-0.5 text-[13px] text-muted-foreground/80">Nicht vorhanden</p>
         <p className="mt-1 text-[12px] text-muted-foreground/70">{note}</p>
       </div>
@@ -727,33 +710,18 @@ function NextStepCard({
 }) {
   if (applied) {
     return (
-      <div
-        className="relative grid grid-cols-[46px_1fr] gap-4 overflow-hidden rounded-[18px] border p-5 sm:p-6"
-        style={{ backgroundColor: '#E7F6EC', borderColor: '#CBEBD6' }}
-      >
-        <span
-          className="grid h-[46px] w-[46px] place-items-center rounded-[13px] bg-white"
-          style={{ color: '#16A34A' }}
-        >
+      <div className="relative grid grid-cols-[46px_1fr] gap-4 overflow-hidden rounded-[4px] border border-[#BFE9CC] bg-[#ECFAF0] p-5 dark:border-green-400/30 dark:bg-green-400/10 sm:p-6">
+        <span className="grid h-[46px] w-[46px] place-items-center border border-[#BFE9CC] bg-background text-success dark:border-green-400/30">
           <CheckCircle className="h-5 w-5" />
         </span>
         <div>
-          <p
-            className="mb-1.5 text-[11.5px] font-bold uppercase tracking-[0.1em]"
-            style={{ color: '#16A34A' }}
-          >
+          <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-success">
             Beworben ✓
           </p>
-          <h3
-            className="font-poppins text-[19px] font-bold tracking-tight"
-            style={{ color: '#15803D' }}
-          >
+          <h3 className="font-heading text-[19px] font-bold tracking-tight text-[#15803D] dark:text-green-300">
             Stark — Bewerbung eingereicht!
           </h3>
-          <p
-            className="mt-1.5 max-w-[54ch] text-[14px] leading-relaxed text-pretty"
-            style={{ color: '#3D7A55' }}
-          >
+          <p className="mt-1.5 max-w-[54ch] text-[14px] leading-relaxed text-pretty text-[#3D7A55] dark:text-green-200/80">
             Viel Erfolg{company ? ` bei ${company}` : ''}. Bereite dich jetzt gezielt mit dem
             Interview-Coach auf das Gespräch vor.
           </p>
@@ -769,34 +737,18 @@ function NextStepCard({
   }
 
   return (
-    <div
-      className="relative grid grid-cols-[46px_1fr] gap-4 overflow-hidden rounded-[18px] p-5 text-white sm:p-6"
-      style={{ backgroundColor: '#1B2A49' }}
-    >
-      <div
-        className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full"
-        style={{ background: 'rgba(59,130,246,.18)' }}
-      />
-      <span
-        className="relative grid h-[46px] w-[46px] place-items-center rounded-[13px]"
-        style={{ background: 'rgba(255,255,255,.12)' }}
-      >
+    <div className="bg-brand-glow relative grid grid-cols-[46px_1fr] gap-4 overflow-hidden rounded-[4px] p-5 text-white sm:p-6">
+      <span className="relative grid h-[46px] w-[46px] place-items-center bg-white/10">
         <Send className="h-5 w-5" />
       </span>
       <div className="relative">
-        <p
-          className="mb-1.5 text-[11.5px] font-bold uppercase tracking-[0.1em]"
-          style={{ color: '#9DB6E8' }}
-        >
+        <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-brand">
           Nächster Schritt
         </p>
-        <h3 className="font-poppins text-[19px] font-bold tracking-tight">
+        <h3 className="font-heading text-[19px] font-bold tracking-tight">
           {company ? `Bei ${company} bewerben` : 'Jetzt bewerben'}
         </h3>
-        <p
-          className="mt-1.5 max-w-[54ch] text-[14px] leading-relaxed text-pretty"
-          style={{ color: '#C7D0E4' }}
-        >
+        <p className="mt-1.5 max-w-[54ch] text-[14px] leading-relaxed text-pretty text-[rgba(229,233,242,.75)]">
           Reiche deine Unterlagen auf der Karriereseite ein — und markiere die Bewerbung danach als
           &quot;Beworben&quot;, damit Applo den Status für dich verfolgt.
         </p>
@@ -804,7 +756,7 @@ function NextStepCard({
           <Button
             onClick={onMarkApplied}
             loading={applying}
-            className="bg-white text-[#1B2A49] hover:bg-gray-100"
+            className="rounded-[3px] bg-white text-[#1B2A49] hover:bg-[#E5E9F2]"
           >
             <Check className="h-4 w-4" />
             Als beworben markieren
@@ -813,7 +765,7 @@ function NextStepCard({
             <Button
               variant="outline"
               onClick={onOpenJobUrl}
-              className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+              className="rounded-[3px] border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
             >
               <ExternalLink className="h-4 w-4" />
               Zur Stellenanzeige
@@ -832,7 +784,7 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
   if (curIdx < 0) curIdx = rejected ? 1 : 0;
 
   return (
-    <div className="flex items-center rounded-[16px] border bg-card px-5 py-4 shadow-sm">
+    <div className="flex items-center rounded-[4px] border bg-card px-5 py-4">
       {TRACK_STEPS.map((s, i) => {
         const done = i < curIdx;
         const current = i === curIdx && !rejected;
@@ -841,35 +793,30 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
             <div className="flex shrink-0 items-center gap-2.5">
               <span
                 className={cn(
-                  'grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full border-2 text-xs font-bold transition-all',
-                  done && 'border-transparent text-white',
-                  current && 'text-white',
+                  'grid h-[30px] w-[30px] shrink-0 place-items-center border-2 font-mono text-xs font-bold transition-all',
+                  done && 'border-success bg-success text-white',
+                  current && 'border-brand bg-brand text-white ring-4 ring-primary-soft dark:ring-brand/20',
                   !done && !current && 'border-border bg-card text-muted-foreground',
                 )}
-                style={{
-                  backgroundColor: done ? '#16A34A' : current ? '#3B82F6' : undefined,
-                  borderColor: done ? '#16A34A' : current ? '#3B82F6' : undefined,
-                  boxShadow: current ? '0 0 0 4px #EAF1FE' : undefined,
-                }}
               >
                 {done ? <Check className="h-4 w-4" /> : i + 1}
               </span>
               <span
                 className={cn(
                   'text-[13.5px] font-semibold',
-                  done && 'text-[#1B2A49]',
+                  done && 'text-foreground',
+                  current && 'text-brand',
                   !done && !current && 'text-muted-foreground',
                 )}
-                style={{ color: current ? '#3B82F6' : undefined }}
               >
                 {s.label}
               </span>
             </div>
             {i < TRACK_STEPS.length - 1 && (
-              <span className="mx-3 h-0.5 min-w-[18px] flex-1 overflow-hidden rounded-full bg-border">
+              <span className="mx-3 h-0.5 min-w-[18px] flex-1 overflow-hidden bg-border">
                 <span
-                  className="block h-full rounded-full transition-all"
-                  style={{ width: done ? '100%' : '0%', backgroundColor: '#16A34A' }}
+                  className="block h-full bg-success transition-all"
+                  style={{ width: done ? '100%' : '0%' }}
                 />
               </span>
             )}
@@ -877,12 +824,9 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
         );
       })}
       {rejected && (
-        <span
-          className="ml-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12.5px] font-bold"
-          style={{ backgroundColor: '#FCEBEB', color: '#B42222' }}
-        >
+        <StatusChip tone="destructive" withDot={false} className="ml-3">
           Abgelehnt
-        </span>
+        </StatusChip>
       )}
     </div>
   );
@@ -892,21 +836,18 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
 function AtsDisclosure({ applicationId }: { applicationId: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="overflow-hidden rounded-[16px] border bg-card shadow-sm">
+    <div className="overflow-hidden rounded-[4px] border bg-card">
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-3.5 px-5 py-4 text-left"
       >
-        <span
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px]"
-          style={{ backgroundColor: '#EAF1FE', color: '#3B82F6' }}
-        >
+        <span className="grid h-9 w-9 shrink-0 place-items-center border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
           <Sparkles className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold text-[#1B2A49]">ATS-Analyse</p>
+          <p className="text-[15px] font-semibold text-foreground">ATS-Analyse</p>
           <p className="mt-0.5 text-[12.5px] text-muted-foreground">
             Wie gut deine Unterlagen zur Stelle passen — Keywords &amp; Optimierungen.
           </p>
@@ -947,21 +888,18 @@ type JobPostingData = {
 function JobPostingDisclosure({ jobPosting }: { jobPosting: JobPostingData }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="overflow-hidden rounded-[16px] border bg-card shadow-sm">
+    <div className="overflow-hidden rounded-[4px] border bg-card">
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-3.5 px-5 py-4 text-left"
       >
-        <span
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px]"
-          style={{ backgroundColor: '#E5E9F2', color: '#1B2A49' }}
-        >
+        <span className="grid h-9 w-9 shrink-0 place-items-center border border-border bg-muted text-primary">
           <Briefcase className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold text-[#1B2A49]">Stellenanzeige</p>
+          <p className="text-[15px] font-semibold text-foreground">Stellenanzeige</p>
           <p className="mt-0.5 truncate text-[12.5px] text-muted-foreground">
             {jobPosting.company}
             {jobPosting.location ? ` · ${jobPosting.location}` : ''}
@@ -984,7 +922,7 @@ function JobPostingDisclosure({ jobPosting }: { jobPosting: JobPostingData }) {
           <div className="space-y-4 px-5 pb-5 pt-1">
             {jobPosting.description && (
               <div className="border-t pt-4">
-                <h4 className="mb-2 text-[13px] font-bold uppercase tracking-wide text-muted-foreground">
+                <h4 className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground">
                   Beschreibung
                 </h4>
                 <p className="whitespace-pre-line text-[14px] leading-relaxed text-muted-foreground text-pretty">
@@ -994,7 +932,7 @@ function JobPostingDisclosure({ jobPosting }: { jobPosting: JobPostingData }) {
             )}
             {jobPosting.requirements && jobPosting.requirements.length > 0 && (
               <div className="border-t pt-4">
-                <h4 className="mb-2 text-[13px] font-bold uppercase tracking-wide text-muted-foreground">
+                <h4 className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground">
                   Anforderungen
                 </h4>
                 <ul className="space-y-2">
@@ -1003,7 +941,7 @@ function JobPostingDisclosure({ jobPosting }: { jobPosting: JobPostingData }) {
                       key={i}
                       className="flex gap-2.5 text-[14px] leading-snug text-muted-foreground"
                     >
-                      <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#3B82F6' }} />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
                       {req}
                     </li>
                   ))}
@@ -1031,21 +969,18 @@ function MetaFooter({
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-1.5 pt-1.5 text-[12.5px] text-muted-foreground">
       <span className="flex items-center gap-1.5">
         <Calendar className="h-3.5 w-3.5" />
-        Erstellt <b className="font-semibold text-[#5C6373]">{formatFullTimestamp(createdAt)}</b>
+        Erstellt <b className="font-semibold text-foreground/70">{formatFullTimestamp(createdAt)}</b>
       </span>
-      <span className="h-1 w-1 rounded-full bg-border" />
+      <span className="h-1 w-1 bg-border" />
       <span className="flex items-center gap-1.5">
         <RefreshCw className="h-3.5 w-3.5" />
         Aktualisiert{' '}
-        <b className="font-semibold text-[#5C6373]">{formatFullTimestamp(updatedAt)}</b>
+        <b className="font-semibold text-foreground/70">{formatFullTimestamp(updatedAt)}</b>
       </span>
-      <span className="h-1 w-1 rounded-full bg-border" />
+      <span className="h-1 w-1 bg-border" />
       <span className="flex items-center gap-1.5">
         <Hash className="h-3.5 w-3.5" />
-        <code
-          className="rounded border bg-card px-1.5 py-0.5 text-[11.5px]"
-          style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
-        >
+        <code className="rounded-[3px] border bg-card px-1.5 py-0.5 font-mono text-[11.5px]">
           {id}
         </code>
       </span>
@@ -1056,9 +991,9 @@ function MetaFooter({
 /* ---- GENERATING ---- */
 function GeneratingView({ progress, message }: { progress: number; message: string }) {
   return (
-    <div className="flex flex-col items-center rounded-[20px] border bg-card px-6 py-9 text-center shadow-sm">
+    <div className="flex flex-col items-center rounded-[4px] border bg-card px-6 py-9 text-center">
       <ApploRig state="process" size={140} aria-hidden />
-      <h2 className="mt-2 font-poppins text-[23px] font-bold tracking-tight text-[#1B2A49]">
+      <h2 className="font-heading mt-2 text-[23px] font-bold tracking-[-.02em] text-foreground">
         Deine Bewerbung wird erstellt …
       </h2>
       <p className="mx-auto mt-2 max-w-[44ch] text-[15px] leading-relaxed text-muted-foreground text-pretty">
@@ -1068,9 +1003,9 @@ function GeneratingView({ progress, message }: { progress: number; message: stri
       <div className="mt-6 w-full max-w-[440px]">
         <Progress value={progress} className="h-2.5" />
         <div className="mt-3 flex items-center justify-between text-[13.5px]">
-          <span className="font-semibold text-[#1B2A49]">{message || 'Wird vorbereitet …'}</span>
+          <span className="font-semibold text-foreground">{message || 'Wird vorbereitet …'}</span>
           {progress > 0 && (
-            <span className="font-semibold tabular-nums text-muted-foreground">{progress}%</span>
+            <span className="font-mono font-semibold tabular-nums text-muted-foreground">{progress}%</span>
           )}
         </div>
       </div>
@@ -1081,9 +1016,9 @@ function GeneratingView({ progress, message }: { progress: number; message: stri
 /* ---- PENDING ---- */
 function PendingView({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex flex-col items-center rounded-[20px] border bg-card px-6 py-9 text-center shadow-sm">
+    <div className="flex flex-col items-center rounded-[4px] border bg-card px-6 py-9 text-center">
       <ApploRig state="wave" size={140} aria-hidden />
-      <h2 className="mt-2 font-poppins text-[23px] font-bold tracking-tight text-[#1B2A49]">
+      <h2 className="font-heading mt-2 text-[23px] font-bold tracking-[-.02em] text-foreground">
         Deine Bewerbung ist angelegt
       </h2>
       <p className="mx-auto mt-2 max-w-[44ch] text-[15px] leading-relaxed text-muted-foreground text-pretty">
@@ -1109,16 +1044,13 @@ function FailedView({
   onRetry: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center rounded-[20px] border bg-card px-6 py-9 text-center shadow-sm">
-      <span
-        className="mb-3.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-bold"
-        style={{ backgroundColor: '#FCEBEB', color: '#B42222' }}
-      >
+    <div className="flex flex-col items-center rounded-[4px] border bg-card px-6 py-9 text-center">
+      <StatusChip tone="destructive" withDot={false} className="mb-3.5">
         <AlertCircle className="h-3.5 w-3.5" />
         Fehlgeschlagen
-      </span>
+      </StatusChip>
       <ApploRig state="idle" size={128} aria-hidden />
-      <h2 className="mt-2 font-poppins text-[23px] font-bold tracking-tight text-[#1B2A49]">
+      <h2 className="font-heading mt-2 text-[23px] font-bold tracking-[-.02em] text-foreground">
         Da ist leider etwas schiefgelaufen
       </h2>
       <p className="mx-auto mt-2 max-w-[44ch] text-[15px] leading-relaxed text-muted-foreground text-pretty">
@@ -1126,15 +1058,7 @@ function FailedView({
         meist klappt es beim zweiten Anlauf.
       </p>
       {errorMessage && (
-        <p
-          className="mx-auto mt-4 max-w-[480px] rounded-[11px] px-4 py-3 text-left text-[12.5px] leading-relaxed"
-          style={{
-            backgroundColor: '#FCEBEB',
-            border: '1px solid #F3CFCF',
-            color: '#B42222',
-            fontFamily: 'var(--font-geist-mono, monospace)',
-          }}
-        >
+        <p className="mx-auto mt-4 max-w-[480px] rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] px-4 py-3 text-left font-mono text-[12.5px] leading-relaxed text-destructive dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300">
           {errorMessage}
         </p>
       )}

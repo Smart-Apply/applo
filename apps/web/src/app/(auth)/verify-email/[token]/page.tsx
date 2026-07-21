@@ -55,16 +55,16 @@ export default function VerifyEmailPage() {
   if (status === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-        <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
+        <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
           <div className="mb-6 flex justify-center">
             <AppLogo className="h-12 w-auto" />
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[4px] border border-primary-soft bg-primary-soft/60 dark:border-slate-600 dark:bg-slate-800">
+              <Loader2 className="h-8 w-8 text-brand animate-spin" />
             </div>
-            <h1 className="mb-2 font-poppins text-2xl font-semibold text-foreground">
+            <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
               E-Mail wird verifiziert...
             </h1>
             <p className="text-muted-foreground">Bitte warte einen Moment.</p>
@@ -77,16 +77,16 @@ export default function VerifyEmailPage() {
   if (status === 'success') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-        <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
+        <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
           <div className="mb-6 flex justify-center">
             <AppLogo className="h-12 w-auto" />
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[4px] border border-[#BFE9CC] bg-[#ECFAF0] dark:border-green-400/30 dark:bg-green-400/10">
+              <CheckCircle className="h-8 w-8 text-success" />
             </div>
-            <h1 className="mb-2 font-poppins text-2xl font-semibold text-foreground">
+            <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
               E-Mail verifiziert!
             </h1>
             <p className="mb-2 text-muted-foreground">
@@ -111,16 +111,16 @@ export default function VerifyEmailPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
-      <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-lg border border-border">
+      <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
         <div className="mb-6 flex justify-center">
           <AppLogo className="h-12 w-auto" />
         </div>
 
         <div className="flex flex-col items-center text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-            <XCircle className="h-8 w-8 text-red-600" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10">
+            <XCircle className="h-8 w-8 text-destructive" />
           </div>
-          <h1 className="mb-2 font-poppins text-2xl font-semibold text-foreground">
+          <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
             Verifizierung fehlgeschlagen
           </h1>
           <p className="mb-6 text-muted-foreground">{errorMessage}</p>

@@ -65,10 +65,10 @@ function DeltaChip({ delta }: { delta: DeltaValue }) {
 
   return (
     <span className={cn(
-      'inline-flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0.5 rounded-full',
+      'inline-flex items-center gap-0.5 rounded-[2px] px-1.5 py-0.5 font-mono text-xs font-semibold',
       flat              && 'bg-muted text-muted-foreground',
-      good === true     && 'bg-[#E8F2EC] text-[#1F7A54]',
-      good === false    && 'bg-[#F6ECEA] text-[#B14A3F]',
+      good === true     && 'bg-[#ECFAF0] text-[#16A34A] dark:bg-green-400/10 dark:text-green-300',
+      good === false    && 'bg-[#FDEEEE] text-[#DC2626] dark:bg-red-400/10 dark:text-red-300',
     )}>
       <Arrow size={12} strokeWidth={2.4} />
       {Math.abs(value)}{suffix}
@@ -111,7 +111,7 @@ export function KpiCard({
       <CardContent className="pt-4 pb-3 px-4 flex flex-col flex-1 gap-0">
         {/* label row */}
         <div className="flex items-center gap-1.5 text-muted-foreground">
-          <span className="grid place-items-center w-6 h-6 rounded-lg bg-primary/10 text-primary flex-none">
+          <span className="grid place-items-center w-6 h-6 rounded-[2px] bg-primary/10 text-primary flex-none">
             <Icon size={14} strokeWidth={2} />
           </span>
           <span className="text-[13px] font-semibold">{label}</span>
@@ -119,7 +119,7 @@ export function KpiCard({
         </div>
 
         {/* value */}
-        <p className="mt-2.5 text-[30px] leading-none font-bold tracking-tight tabular-nums">
+        <p className="mt-2.5 font-mono text-[30px] leading-none font-semibold tracking-[-.02em] tabular-nums">
           {value}
           {unit && !empty && (
             <span className="text-[17px] font-semibold text-muted-foreground ml-0.5">{unit}</span>

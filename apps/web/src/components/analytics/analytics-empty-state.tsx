@@ -12,7 +12,7 @@ export function AnalyticsEmptyState() {
   return (
     <Card>
       <CardContent className="py-16 flex flex-col items-center text-center gap-3">
-        <span className="grid place-items-center w-14 h-14 rounded-2xl bg-primary/8 text-primary/60 mb-1">
+        <span className="grid place-items-center w-14 h-14 rounded-[4px] border border-border bg-muted text-primary/60 mb-1">
           <Inbox size={26} strokeWidth={1.8} />
         </span>
 

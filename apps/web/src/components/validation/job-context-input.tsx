@@ -51,20 +51,17 @@ function SegmentedToggle({
   options: { value: string; label: string }[];
 }) {
   return (
-    <div
-      className="inline-flex rounded-xl p-0.5"
-      style={{ backgroundColor: '#F5F6F8', border: '1px solid #E6E8EE' }}
-    >
+    <div className="inline-flex items-center gap-px overflow-hidden rounded-[3px] border border-border bg-border">
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
           className={cn(
-            'rounded-[10px] px-3 py-1 text-xs font-medium transition-all duration-200',
+            'px-3 py-1 text-xs font-medium transition-colors',
             value === opt.value
-              ? 'bg-white text-[#1B2A49] shadow-sm'
-              : 'text-[#6B6969] hover:text-[#1B2A49]',
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
           )}
         >
           {opt.label}
@@ -135,20 +132,13 @@ export function JobContextInput({
   ];
 
   return (
-    <div
-      className="mx-auto w-full max-w-2xl rounded-[18px] p-7"
-      style={{
-        background: '#fff',
-        boxShadow: '0 1px 2px rgba(27,42,73,.04), 0 6px 16px -8px rgba(27,42,73,.10)',
-        border: '1px solid #E6E8EE',
-      }}
-    >
+    <div className="mx-auto w-full max-w-2xl rounded-[4px] border bg-card p-7">
       {/* Card head */}
       <div className="mb-6">
-        <h2 className="text-[19px] font-bold tracking-tight text-[#1B2A49]">
+        <h2 className="font-heading text-[19px] font-bold tracking-tight text-foreground">
           Zielstelle & Feedback
         </h2>
-        <p className="mt-1 text-sm" style={{ color: '#6B6969' }}>
+        <p className="mt-1 text-sm text-muted-foreground">
           Optional — aber mit Stellenkontext bewertet die KI auch die Passung zur Stelle.
         </p>
       </div>
@@ -156,9 +146,9 @@ export function JobContextInput({
       {/* Job context */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-[14.5px] font-semibold text-[#1B2A49]">
+          <Label className="text-[14.5px] font-semibold text-foreground">
             Stellenanzeige{' '}
-            <span className="text-xs font-normal" style={{ color: '#6B6969' }}>
+            <span className="text-xs font-normal text-muted-foreground">
               (optional)
             </span>
           </Label>
@@ -177,36 +167,27 @@ export function JobContextInput({
           <div className="space-y-2">
             {fetchStatus === 'success' && parsedChip ? (
               /* Success chip */
-              <div
-                className="flex items-center gap-3 rounded-xl px-4 py-3"
-                style={{ backgroundColor: '#EAF1FE', border: '1px solid #C7D0E4' }}
-              >
-                <div
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: '#E5E9F2' }}
-                >
-                  <Globe className="h-4 w-4" style={{ color: '#1B2A49' }} />
+              <div className="flex items-center gap-3 rounded-[3px] border border-primary-soft bg-primary-soft/40 px-4 py-3 dark:border-slate-600 dark:bg-slate-800/60">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center bg-primary-soft text-primary dark:bg-slate-700 dark:text-slate-200">
+                  <Globe className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-medium text-[#1B2A49]">
+                    <span className="truncate text-sm font-medium text-foreground">
                       {parsedChip.title}
                     </span>
-                    <span
-                      className="flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold"
-                      style={{ backgroundColor: '#E7F6EC', color: '#16A34A' }}
-                    >
+                    <span className="flex-shrink-0 border border-[#BFE9CC] bg-[#ECFAF0] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-success dark:border-green-400/30 dark:bg-green-400/10">
                       Analysiert
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs" style={{ color: '#6B6969' }}>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {parsedChip.host} · Anzeige erfolgreich gelesen
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleRemoveLink}
-                  className="flex-shrink-0 rounded-lg p-1 text-[#6B6969] hover:bg-red-50 hover:text-red-600 transition-colors"
+                  className="flex-shrink-0 rounded-[3px] p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   aria-label="Link entfernen"
                 >
                   <X className="h-4 w-4" />
@@ -216,10 +197,7 @@ export function JobContextInput({
               /* URL input row */
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Globe
-                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-                    style={{ color: '#6B6969' }}
-                  />
+                  <Globe className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="url"
                     placeholder="https://example.com/jobs/..."
@@ -236,7 +214,7 @@ export function JobContextInput({
                   type="button"
                   onClick={() => void handleAnalyze()}
                   disabled={!jobUrl.trim() || fetchStatus === 'loading'}
-                  style={{ backgroundColor: '#1B2A49', color: '#fff', minWidth: '110px' }}
+                  className="min-w-[110px]"
                 >
                   {fetchStatus === 'loading' ? (
                     <>
@@ -255,12 +233,9 @@ export function JobContextInput({
 
             {/* Error note */}
             {fetchStatus === 'error' && (
-              <div
-                className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
-                style={{ backgroundColor: '#FBF1D9', border: '1px solid #F0D580' }}
-              >
-                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
-                <div style={{ color: '#92400E' }}>
+              <div className="flex items-start gap-2.5 rounded-[3px] border border-[#F3E3B3] bg-[#FDF6E7] px-4 py-3 text-sm dark:border-amber-400/30 dark:bg-amber-400/10">
+                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#A16207] dark:text-amber-300" />
+                <div className="text-[#854D0E] dark:text-amber-300/90">
                   Der Link konnte nicht gelesen werden.{' '}
                   <button
                     type="button"
@@ -289,8 +264,10 @@ export function JobContextInput({
             <div className="mt-1 flex items-center justify-between">
               <span />
               <span
-                className="text-xs"
-                style={{ color: jobContext.length > 24000 ? '#DC2626' : '#6B6969' }}
+                className={cn(
+                  'font-mono text-xs tabular-nums',
+                  jobContext.length > 24000 ? 'text-destructive' : 'text-muted-foreground',
+                )}
               >
                 {jobContext.length.toLocaleString('de-DE')} / 24.000
               </span>
@@ -302,9 +279,9 @@ export function JobContextInput({
       {/* Title + language row */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label className="text-[14.5px] font-semibold text-[#1B2A49]">
+          <Label className="text-[14.5px] font-semibold text-foreground">
             Titel{' '}
-            <span className="text-xs font-normal" style={{ color: '#6B6969' }}>
+            <span className="text-xs font-normal text-muted-foreground">
               (optional)
             </span>
           </Label>
@@ -316,7 +293,7 @@ export function JobContextInput({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-[14.5px] font-semibold text-[#1B2A49]">
+          <Label className="text-[14.5px] font-semibold text-foreground">
             Sprache des Feedbacks
           </Label>
           <Select value={language} onValueChange={onLanguageChange}>
@@ -333,10 +310,7 @@ export function JobContextInput({
       </div>
 
       {/* Privacy note */}
-      <div
-        className="mt-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
-        style={{ backgroundColor: '#EAF1FE', border: '1px solid #C7D0E4', color: '#1B2A49' }}
-      >
+      <div className="mt-5 flex items-start gap-2.5 border-l-[3px] border-brand bg-muted px-4 py-3 text-sm text-foreground">
         <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 opacity-60" />
         <p>
           Deine Unterlagen werden nur für diese Prüfung verwendet und nicht gespeichert. Ohne
@@ -356,7 +330,6 @@ export function JobContextInput({
           loading={isSubmitting}
           disabled={isSubmitting || limitReached}
           className="gap-2"
-          style={{ backgroundColor: '#1B2A49', color: '#fff' }}
         >
           <Sparkles className="h-4 w-4" />
           Bewerbung prüfen

@@ -165,13 +165,13 @@ export function ExperienceManager({
             return (
               <Card
                 key={displayIndex}
-                className="border-border/50 shadow-sm transition-all hover:shadow-md"
+                className="transition-colors"
               >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start gap-3">
-                        <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[3px] bg-primary/10">
                           <Briefcase className="h-4 w-4 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -245,8 +245,8 @@ export function ExperienceManager({
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 py-10 text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+        <div className="flex flex-col items-center justify-center rounded-[4px] border border-dashed border-border bg-muted/20 py-10 text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <Briefcase className="h-6 w-6 text-muted-foreground" />
           </div>
           <h3 className="font-medium text-foreground">Keine Berufserfahrung</h3>
@@ -341,7 +341,7 @@ export function ExperienceManager({
             </div>
 
             {/* Current checkbox */}
-            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border px-4 py-3">
+            <label className="flex cursor-pointer items-center gap-3 rounded-[3px] border border-border px-4 py-3">
               <Checkbox
                 checked={current}
                 onCheckedChange={(checked) => {

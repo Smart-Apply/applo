@@ -56,8 +56,8 @@ export function TwoFactorChallengeForm({
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
-        <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <Shield className="h-6 w-6 text-primary" />
+        <div className="mx-auto w-12 h-12 rounded-[3px] border border-primary-soft bg-primary-soft/60 flex items-center justify-center mb-4 dark:border-slate-600 dark:bg-slate-800">
+          <Shield className="h-6 w-6 text-brand" />
         </div>
         <CardTitle>Zwei-Faktor-Authentifizierung</CardTitle>
         <CardDescription>
