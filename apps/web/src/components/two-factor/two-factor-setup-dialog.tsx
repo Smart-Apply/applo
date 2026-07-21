@@ -152,7 +152,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
           {step === 'scan' && setupMutation.data && (
             <>
               <div className="flex justify-center">
-                <div className="border rounded-lg p-2 bg-white">
+                <div className="border rounded-[3px] p-2 bg-white">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={setupMutation.data.qrCodeDataUrl}
@@ -215,7 +215,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
 
           {step === 'backup' && (
             <>
-              <div className="rounded-lg border p-4 bg-muted/50">
+              <div className="rounded-[4px] border p-4 bg-muted/50">
                 <div className="grid grid-cols-2 gap-2 font-mono text-sm">
                   {backupCodes.map((backupCode, index) => (
                     <div key={index} className="px-2 py-1 bg-background rounded">

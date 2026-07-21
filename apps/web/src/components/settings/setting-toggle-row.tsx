@@ -34,7 +34,7 @@ export function SettingToggleRow({
   return (
     <div className="flex items-center gap-4 py-1">
       {Icon && (
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
           <Icon className="h-[18px] w-[18px]" />
         </span>
       )}

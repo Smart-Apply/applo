@@ -250,7 +250,7 @@ function ConnectionRow({
   comingSoon,
 }: ConnectionRowProps) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
+    <div className="flex items-start justify-between gap-4 rounded-[4px] border p-4">
       <div className="space-y-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-medium leading-none">{providerLabel}</p>

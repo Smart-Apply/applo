@@ -68,7 +68,7 @@ export function UpgradePrompt({
           className
         )}
       >
-        <Lock className="h-4 w-4 text-amber-500" />
+        <Lock className="h-4 w-4 text-[#A16207] dark:text-amber-400" />
         <span>
           {feature} benötigt {tierLabel}.{' '}
           <button
@@ -87,13 +87,13 @@ export function UpgradePrompt({
     return (
       <div
         className={cn(
-          'flex items-center justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/20',
+          'flex items-center justify-between gap-4 rounded-[4px] border border-[#F3E3B3] bg-[#FDF6E7] p-4 dark:border-amber-400/30 dark:bg-amber-400/10',
           className
         )}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
-            <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-[3px] border border-[#F3E3B3] bg-background dark:border-amber-400/30 dark:bg-transparent">
+            <Lock className="h-4 w-4 text-[#A16207] dark:text-amber-400" />
           </div>
           <div>
             <p className="font-medium text-foreground">{feature}</p>
@@ -113,16 +113,16 @@ export function UpgradePrompt({
   return (
     <Card
       className={cn(
-        'overflow-hidden border-amber-200 dark:border-amber-900/50',
+        'overflow-hidden border-[#F3E3B3] dark:border-amber-400/30',
         className
       )}
     >
       <CardContent className="p-0">
-        {/* Gradient header */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-8 dark:from-amber-950/30 dark:to-orange-950/30">
+        {/* Tinted header */}
+        <div className="border-b border-[#F3E3B3] bg-[#FDF6E7] px-6 py-8 dark:border-amber-400/30 dark:bg-amber-400/10">
           <div className="flex items-center justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/50 dark:to-orange-900/50">
-              <Sparkles className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-[4px] border border-[#F3E3B3] bg-background text-[#A16207] dark:border-amber-400/30 dark:bg-transparent dark:text-amber-400">
+              <Sparkles className="h-8 w-8" />
             </div>
           </div>
         </div>
@@ -130,7 +130,7 @@ export function UpgradePrompt({
         {/* Content */}
         <div className="space-y-4 p-6 text-center">
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-foreground">
+            <h3 className="font-heading text-xl font-bold text-foreground">
               {feature}
             </h3>
             {description && (
@@ -138,7 +138,7 @@ export function UpgradePrompt({
             )}
             <p className="text-sm text-muted-foreground">
               Dieses Feature ist nur mit{' '}
-              <span className="font-medium text-amber-600 dark:text-amber-400">
+              <span className="font-medium text-[#A16207] dark:text-amber-400">
                 {tierLabel}
               </span>{' '}
               verfügbar.
@@ -183,13 +183,13 @@ export function LimitReachedPrompt({
   return (
     <Card
       className={cn(
-        'border-destructive/50 bg-destructive/5',
+        'border-[#F3C9C9] bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10',
         className
       )}
     >
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] border border-[#F3C9C9] bg-background dark:border-red-400/30 dark:bg-transparent">
             <Lock className="h-5 w-5 text-destructive" />
           </div>
           <div className="flex-1 space-y-3">

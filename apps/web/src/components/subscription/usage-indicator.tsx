@@ -72,10 +72,10 @@ export function UsageIndicator({
     return (
       <div className={cn('space-y-2 animate-pulse', className)}>
         <div className="flex justify-between">
-          <div className="h-4 w-24 bg-muted rounded" />
-          <div className="h-4 w-12 bg-muted rounded" />
+          <div className="h-4 w-24 bg-muted rounded-[2px]" />
+          <div className="h-4 w-12 bg-muted rounded-[2px]" />
         </div>
-        <div className={cn('bg-muted rounded-full', config.progress)} />
+        <div className={cn('bg-muted rounded-[2px]', config.progress)} />
       </div>
     );
   }
@@ -98,13 +98,13 @@ export function UsageIndicator({
         <span className="text-muted-foreground">{label}</span>
         <div className="flex items-center gap-2">
           {isLow && !isExhausted && (
-            <AlertTriangle className={cn(config.icon, 'text-amber-500')} />
+            <AlertTriangle className={cn(config.icon, 'text-warning')} />
           )}
           <span
             className={cn(
-              'font-medium',
+              'font-mono font-medium tabular-nums',
               isExhausted && 'text-destructive',
-              isLow && !isExhausted && 'text-amber-600 dark:text-amber-400'
+              isLow && !isExhausted && 'text-[#A16207] dark:text-amber-300/90'
             )}
           >
             {used} / {limit}
@@ -118,7 +118,7 @@ export function UsageIndicator({
         className={cn(
           config.progress,
           isExhausted && '[&>div]:bg-destructive',
-          isLow && !isExhausted && '[&>div]:bg-amber-500'
+          isLow && !isExhausted && '[&>div]:bg-warning'
         )}
       />
 

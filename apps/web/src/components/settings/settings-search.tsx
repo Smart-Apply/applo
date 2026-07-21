@@ -27,7 +27,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, i)}
-      <mark className="rounded-sm bg-amber-200 px-0.5 text-foreground">
+      <mark className="rounded-[2px] bg-warning-soft px-0.5 text-foreground dark:bg-amber-400/25">
         {text.slice(i, i + query.length)}
       </mark>
       {text.slice(i + query.length)}
@@ -72,13 +72,13 @@ export function SettingsSearch() {
         onBlur={() => setTimeout(() => setFocused(false), 150)}
         placeholder="Einstellungen durchsuchen…"
         aria-label="Einstellungen durchsuchen"
-        className="h-11 w-full rounded-xl border border-input bg-background pl-11 pr-10 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+        className="h-11 w-full rounded-[4px] border border-input bg-background pl-11 pr-10 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
       />
       {query && (
         <button
           type="button"
           onClick={() => { setQuery(''); inputRef.current?.focus(); }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted"
+          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-[3px] p-1 text-muted-foreground hover:bg-muted"
           aria-label="Suche zurücksetzen"
         >
           <X className="h-4 w-4" />
@@ -86,7 +86,7 @@ export function SettingsSearch() {
       )}
 
       {open && (
-        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
+        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-[4px] border border-border bg-popover shadow-md">
           {hits.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
               Keine Einstellung zu &bdquo;<span className="font-medium text-foreground">{query}</span>&ldquo; gefunden.
@@ -103,7 +103,7 @@ export function SettingsSearch() {
                       onClick={() => go(it.section)}
                       className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted"
                     >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
                         <Icon className="h-[18px] w-[18px]" />
                       </span>
                       <span className="min-w-0 flex-1">

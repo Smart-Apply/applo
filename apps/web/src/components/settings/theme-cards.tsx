@@ -38,7 +38,7 @@ const THEMES: ThemeOption[] = [
   },
   {
     value: 'dark', name: 'Dunkel', icon: Moon,
-    surface: 'bg-slate-900', side: 'bg-slate-800', bar: 'bg-slate-600', barActive: 'bg-blue-400',
+    surface: 'bg-slate-900', side: 'bg-slate-800', bar: 'bg-slate-600', barActive: 'bg-brand',
   },
 ];
 
@@ -61,25 +61,25 @@ export function ThemeCards({ value, onChange, disabled }: ThemeCardsProps) {
             disabled={disabled}
             onClick={() => onChange(theme.value)}
             aria-pressed={isActive}
-            className={`rounded-xl border-2 p-3 text-left transition-all ${
+            className={`rounded-[4px] border p-3 text-left transition-colors ${
               isActive
-                ? 'border-primary ring-2 ring-primary/15'
+                ? 'border-primary ring-1 ring-primary'
                 : 'border-border hover:border-primary/40'
             } ${disabled ? 'pointer-events-none opacity-50' : ''}`}
           >
-            <div className={`flex h-[74px] overflow-hidden rounded-lg border border-border/60 ${theme.surface}`}>
+            <div className={`flex h-[74px] overflow-hidden rounded-[3px] border border-border/60 ${theme.surface}`}>
               <span className={`h-full w-[30%] ${theme.side}`} />
               <span className="flex flex-1 flex-col gap-1.5 p-2">
-                <span className={`h-[7px] w-[60%] rounded-full ${theme.barActive}`} />
-                <span className={`h-[7px] w-full rounded-full ${theme.bar}`} />
-                <span className={`h-[7px] w-[80%] rounded-full ${theme.bar}`} />
+                <span className={`h-[7px] w-[60%] rounded-[1px] ${theme.barActive}`} />
+                <span className={`h-[7px] w-full rounded-[1px] ${theme.bar}`} />
+                <span className={`h-[7px] w-[80%] rounded-[1px] ${theme.bar}`} />
               </span>
             </div>
             <div className="mt-2.5 flex items-center gap-2">
               <Icon className="h-4 w-4 text-foreground" />
               <span className="text-sm font-semibold text-foreground">{theme.name}</span>
               {isActive && (
-                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-[3px] bg-primary text-primary-foreground">
                   <Check className="h-3 w-3" />
                 </span>
               )}

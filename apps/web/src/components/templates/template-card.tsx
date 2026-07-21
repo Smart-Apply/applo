@@ -33,14 +33,14 @@ export function TemplateCard({
 
   return (
     <Card 
-      className={`relative cursor-pointer transition-all hover:shadow-lg ${
-        isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''
+      className={`relative cursor-pointer transition-colors ${
+        isSelected ? 'border-primary ring-1 ring-primary' : 'hover:border-primary/40'
       }`}
       onClick={() => onSelect(displayTemplateId)}
     >
       {isSelected && (
         <div className="absolute -top-2 -right-2 z-10">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-primary text-primary-foreground shadow-sm">
             <Check className="h-5 w-5" />
           </div>
         </div>
@@ -62,10 +62,10 @@ export function TemplateCard({
 
       <CardContent className="space-y-3">
         {/* Template Preview/Thumbnail - Real PDF Preview */}
-        <div className={`relative aspect-[8.5/11] rounded-lg border-2 overflow-hidden transition-all bg-gray-100 ${
+        <div className={`relative aspect-[8.5/11] rounded-[3px] border overflow-hidden transition-colors bg-muted ${
           isSelected 
-            ? 'border-blue-500 ring-2 ring-blue-200' 
-            : 'border-gray-200 hover:border-gray-300'
+            ? 'border-primary ring-1 ring-primary' 
+            : 'border-border hover:border-primary/40'
         }`}>
           {/* Real Template Preview Image - cache bust with templateId to ensure fresh load per variant */}
           <Image
@@ -79,7 +79,7 @@ export function TemplateCard({
           
           {/* Category Label Overlay */}
           <div className="absolute bottom-2 right-2 z-10">
-            <Badge variant="secondary" className="text-[10px] px-2 py-0.5 shadow-sm backdrop-blur-sm bg-white/90">
+            <Badge variant="secondary" className="text-[10px] px-2 py-0.5 shadow-sm backdrop-blur-sm bg-background/90">
               {template.category}
             </Badge>
           </div>
@@ -102,10 +102,10 @@ export function TemplateCard({
                       e.stopPropagation();
                       onSelect(variant.id);
                     }}
-                    className={`h-5 w-5 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                    className={`h-5 w-5 rounded-full border-2 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 ${
                       isVariantSelected 
-                        ? 'border-blue-500 ring-2 ring-blue-200' 
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? 'border-primary ring-1 ring-primary' 
+                        : 'border-border hover:border-muted-foreground'
                     }`}
                     style={{ backgroundColor: variant.accentColor }}
                   />

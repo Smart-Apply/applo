@@ -149,7 +149,7 @@ export default function SessionsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-2">Aktive Sitzungen</h1>
+        <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Aktive Sitzungen</h1>
         <p className="text-muted-foreground mb-8">
           Verwalte deine aktiven Sitzungen auf verschiedenen Geräten.
         </p>
@@ -173,7 +173,7 @@ export default function SessionsPage() {
   if (error) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-2">Aktive Sitzungen</h1>
+        <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Aktive Sitzungen</h1>
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive flex items-center gap-2">
@@ -197,7 +197,7 @@ export default function SessionsPage() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-3xl font-bold">Aktive Sitzungen</h1>
+        <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Aktive Sitzungen</h1>
         {sessions.length > 1 && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -236,7 +236,7 @@ export default function SessionsPage() {
         {/* Current Session */}
         {currentSession && (
           <div>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+            <h2 className="mb-3 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
               Aktuelle Sitzung
             </h2>
             <SessionCard
@@ -252,7 +252,7 @@ export default function SessionsPage() {
           <>
             <Separator />
             <div>
-              <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+              <h2 className="mb-3 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
                 Andere Sitzungen ({otherSessions.length})
               </h2>
               <div className="space-y-3">
@@ -271,7 +271,7 @@ export default function SessionsPage() {
 
         {/* Empty State - Only one session */}
         {sessions.length === 1 && (
-          <div className="rounded-xl border border-dashed border-border bg-muted/10">
+          <div className="rounded-[4px] border border-dashed border-border bg-muted/10">
             <EmptyState
               icon={Shield}
               title="Nur eine aktive Sitzung"

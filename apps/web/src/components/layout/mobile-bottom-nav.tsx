@@ -138,7 +138,7 @@ function BottomNavLink({
       {isActive && (
         <span
           aria-hidden
-          className="absolute inset-x-6 top-0 h-0.5 rounded-full bg-primary"
+          className="absolute inset-x-6 top-0 h-0.5 bg-primary"
         />
       )}
     </Link>

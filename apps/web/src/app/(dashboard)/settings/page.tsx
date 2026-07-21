@@ -227,7 +227,7 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-3xl pb-28">
       {/* Page head + search */}
       <div className="mb-6">
-        <h1 className="mb-2 text-3xl font-bold">Einstellungen</h1>
+        <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Einstellungen</h1>
         <p className="text-muted-foreground">
           Verwalte deinen Account, deine Sicherheit und deine Präferenzen.
         </p>
@@ -238,7 +238,7 @@ export default function SettingsPage() {
 
       {/* Mobile section switcher (desktop nav lives in the sidebar dropdown) */}
       <div className="-mx-4 mb-6 overflow-x-auto px-4 md:hidden">
-        <div className="inline-flex gap-1 rounded-xl bg-muted p-1">
+        <div className="inline-flex gap-px overflow-hidden rounded-[4px] border border-border bg-border">
           {SETTINGS_SECTIONS.map((s) => {
             const Icon = s.icon;
             const active = s.id === section;
@@ -246,8 +246,8 @@ export default function SettingsPage() {
               <button
                 key={s.id}
                 onClick={() => setSection(s.id)}
-                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
-                  active ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
+                className={`inline-flex items-center gap-2 whitespace-nowrap px-4 py-2 text-sm font-semibold transition-colors ${
+                  active ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -270,7 +270,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="mb-6 flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-2xl font-bold text-primary">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-primary-soft bg-primary-soft/60 font-heading text-2xl font-bold text-brand dark:border-slate-600 dark:bg-slate-800">
                   {initial}
                 </div>
                 <div>
@@ -392,8 +392,8 @@ export default function SettingsPage() {
             </CardHeader>
             {isOAuthOnlyAccount ? (
               <CardContent>
-                <div className="flex items-center gap-4 rounded-xl border border-border p-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                <div className="flex items-center gap-4 rounded-[4px] border border-border p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
                     <Key className="h-[18px] w-[18px]" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -648,8 +648,8 @@ function SectionHeader({
 }: { icon: React.ComponentType<{ className?: string }>; title: string; sub: string }) {
   return (
     <div>
-      <h2 className="flex items-center gap-3 text-2xl font-bold">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+      <h2 className="flex items-center gap-3 font-heading text-[22px] font-extrabold tracking-[-.02em]">
+        <span className="flex h-9 w-9 items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
           <Icon className="h-[19px] w-[19px]" />
         </span>
         {title}

@@ -26,11 +26,11 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
+            <AlertTriangle className="h-5 w-5 text-destructive" />
             <CardTitle>Ein Fehler ist aufgetreten</CardTitle>
           </div>
           <CardDescription>
@@ -39,11 +39,11 @@ export default function Error({
         </CardHeader>
         <CardContent className="space-y-4">
           {process.env.NODE_ENV === 'development' && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm font-medium text-red-800">Fehlermeldung:</p>
-              <p className="mt-1 text-sm text-red-700">{error.message}</p>
+            <div className="rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] p-4 dark:border-red-400/30 dark:bg-red-400/10">
+              <p className="text-sm font-medium text-destructive">Fehlermeldung:</p>
+              <p className="mt-1 text-sm text-destructive/90">{error.message}</p>
               {error.digest && (
-                <p className="mt-1 text-xs text-red-600">Digest: {error.digest}</p>
+                <p className="mt-1 font-mono text-xs text-destructive/80">Digest: {error.digest}</p>
               )}
             </div>
           )}

@@ -50,7 +50,7 @@ export function TwoFactorDisableDialog({ open, onOpenChange }: TwoFactorDisableD
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          <div className="rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] p-4 text-sm text-destructive dark:border-red-400/30 dark:bg-red-400/10">
             <p className="font-medium">Warnung:</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Alle vertrauenswürdigen Geräte werden entfernt</li>
