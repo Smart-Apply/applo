@@ -64,13 +64,10 @@ const STEPS: Record<
 export function ApploGuide({
   step = 'add',
   finishing = false,
-  compact = false,
   className,
 }: {
   step?: ApploGuideStep;
   finishing?: boolean;
-  /** Smaller avatar + tighter bubble — dense headers like the wizard. */
-  compact?: boolean;
   className?: string;
 }) {
   const baseStep: ApploGuideStep = step === 'loading' && finishing ? 'finishing' : step;
@@ -91,20 +88,23 @@ export function ApploGuide({
     return () => clearTimeout(id);
   }, [cfg.pose]);
 
+  // Navy guide strip: 104px mascot cell + per-step message (sharp redesign).
   return (
     <div
-      className={cn('applo-guide', compact && 'applo-guide--compact', className)}
+      className={cn('flex items-stretch border border-[#1B2A49] bg-[#1B2A49]', className)}
       role="status"
       aria-live="polite"
     >
-      <div className="applo-guide-av">
-        <ApploRig key={baseStep + pose} state={pose} size={compact ? 90 : 132} />
+      <div className="grid w-[104px] flex-none place-items-center border-r border-white/15 bg-[#22345A] py-2">
+        <ApploRig key={baseStep + pose} state={pose} size={80} />
       </div>
-      <div className="applo-bubble">
-        <div className="applo-bubble-inner">
-          <p className="ab-eyebrow">{cfg.eyebrow}</p>
-          <p className="ab-msg">{cfg.msg}</p>
-        </div>
+      <div className="flex min-w-0 flex-1 flex-col justify-center px-5 py-4">
+        <p className="mb-1 font-mono text-[10.5px] font-medium uppercase tracking-[.16em] text-[#5581C7]">
+          {cfg.eyebrow}
+        </p>
+        <p className="text-[15px] leading-normal text-[rgba(229,233,242,.9)] [&_b]:font-bold [&_b]:text-white">
+          {cfg.msg}
+        </p>
       </div>
     </div>
   );
