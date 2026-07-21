@@ -147,7 +147,7 @@ export function StartInterviewDialog({
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-8 text-center">
+                <div className="flex flex-col items-center gap-3 rounded-[3px] border border-dashed py-8 text-center">
                   <p className="max-w-sm text-sm text-muted-foreground">
                     Du hast noch keine fertige Bewerbung. Erstelle zuerst eine
                     Bewerbung, um daraus passende Interview-Fragen zu generieren.

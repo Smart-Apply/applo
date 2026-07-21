@@ -41,9 +41,11 @@ const SESSION_FILTERS: [string, string][] = [
 
 /** Score → badge colour, matching the design's green/amber/red tiers. */
 function scoreTone(score: number): string {
-  if (score >= 85) return 'bg-green-100 text-green-700';
-  if (score >= 60) return 'bg-amber-100 text-amber-700';
-  return 'bg-red-100 text-red-700';
+  if (score >= 85)
+    return 'border-[#BFE9CC] bg-[#ECFAF0] text-success dark:border-green-400/30 dark:bg-green-400/10';
+  if (score >= 60)
+    return 'border-[#F3E3B3] bg-[#FDF6E7] text-[#A16207] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300';
+  return 'border-[#F3C9C9] bg-[#FDEEEE] text-destructive dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300';
 }
 
 function StatCell({
@@ -59,11 +61,11 @@ function StatCell({
 }) {
   return (
     <div className="flex flex-1 items-center gap-4 p-6">
-      <span className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-muted text-muted-foreground">
+      <span className="flex h-12 w-12 flex-none items-center justify-center rounded-[3px] bg-muted text-muted-foreground">
         {icon}
       </span>
       <div className="min-w-0">
-        <div className={cn('text-3xl font-bold leading-none', good && 'text-green-600')}>
+        <div className={cn('font-mono text-3xl font-bold leading-none tabular-nums', good && 'text-success')}>
           {value}
         </div>
         <div className="mt-1.5 truncate text-sm text-muted-foreground">{label}</div>
@@ -99,7 +101,7 @@ function SessionRow({ session }: { session: InterviewSession }) {
       }}
       className="group flex cursor-pointer items-center gap-4 py-4 outline-none"
     >
-      <span className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-muted text-muted-foreground">
+      <span className="flex h-12 w-12 flex-none items-center justify-center rounded-[3px] bg-muted text-muted-foreground">
         <MessageSquare className="h-6 w-6" />
       </span>
       <div className="min-w-0 flex-1">
@@ -109,15 +111,15 @@ function SessionRow({ session }: { session: InterviewSession }) {
         <div className="mt-0.5 truncate text-sm text-muted-foreground">{meta}</div>
       </div>
       {running ? (
-        <span className="flex flex-none items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Laufend
+        <span className="flex flex-none items-center gap-1.5 rounded-[2px] border border-primary-soft bg-primary-soft/40 px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[.05em] text-foreground dark:border-slate-600 dark:bg-slate-800/60">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" /> Laufend
         </span>
       ) : session.status === 'ABANDONED' ? (
         <span className="flex-none text-sm text-muted-foreground">Abgebrochen</span>
       ) : score != null && score > 0 ? (
         <span
           className={cn(
-            'flex-none rounded-full px-3 py-1.5 text-sm font-bold',
+            'flex-none rounded-[2px] border px-2.5 py-1 font-mono text-[11px] font-semibold tabular-nums tracking-[.05em]',
             scoreTone(score)
           )}
         >
@@ -136,12 +138,12 @@ function SessionRowsSkeleton() {
     <>
       {[1, 2, 3].map((i) => (
         <div key={i} className="flex items-center gap-4 py-4">
-          <Skeleton className="h-12 w-12 flex-none rounded-xl" />
+          <Skeleton className="h-12 w-12 flex-none rounded-[3px]" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-2/3" />
             <Skeleton className="h-3 w-1/3" />
           </div>
-          <Skeleton className="h-7 w-14 rounded-full" />
+          <Skeleton className="h-7 w-14 rounded-[2px]" />
         </div>
       ))}
     </>
@@ -151,10 +153,10 @@ function SessionRowsSkeleton() {
 function DashboardSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col divide-y rounded-xl border bg-card sm:flex-row sm:divide-x sm:divide-y-0">
+      <div className="flex flex-col divide-y rounded-[4px] border bg-card sm:flex-row sm:divide-x sm:divide-y-0">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="flex flex-1 items-center gap-3 p-4">
-            <Skeleton className="h-9 w-9 flex-none rounded-lg" />
+            <Skeleton className="h-9 w-9 flex-none rounded-[3px]" />
             <div className="space-y-2">
               <Skeleton className="h-5 w-12" />
               <Skeleton className="h-3 w-24" />
@@ -170,7 +172,7 @@ function DashboardSkeleton() {
         </Card>
         <Card>
           <CardContent className="p-6">
-            <Skeleton className="h-36 w-full rounded-xl" />
+            <Skeleton className="h-36 w-full rounded-[4px]" />
             <Skeleton className="mx-auto mt-4 h-6 w-2/3" />
             <Skeleton className="mx-auto mt-2 h-4 w-1/2" />
           </CardContent>
@@ -225,7 +227,7 @@ export default function InterviewsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Interview Coach</h1>
+          <h1 className="font-heading text-3xl font-extrabold tracking-[-.025em]">Interview Coach</h1>
           <p className="mt-1 text-muted-foreground">
             Üben Sie Vorstellungsgespräche mit KI-gestütztem Feedback
           </p>
@@ -270,7 +272,7 @@ export default function InterviewsPage() {
             ) : (
               <div className="space-y-6">
                 {/* Stat strip */}
-                <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card shadow-sm sm:flex-row sm:divide-x sm:divide-y-0">
+                <div className="flex flex-col divide-y overflow-hidden rounded-[4px] border bg-card sm:flex-row sm:divide-x sm:divide-y-0">
                   <StatCell
                     icon={<MessageSquare className="h-5 w-5" />}
                     value={stats.completedSessions}
@@ -311,7 +313,7 @@ export default function InterviewsPage() {
                               key={id}
                               onClick={() => setActiveTab(id)}
                               className={cn(
-                                'rounded-full border px-3.5 py-2 text-sm font-medium transition-colors',
+                                'rounded-[3px] border px-3.5 py-2 text-sm font-medium transition-colors',
                                 activeTab === id
                                   ? 'border-primary bg-primary text-primary-foreground'
                                   : 'text-muted-foreground hover:border-muted-foreground/40'
@@ -341,13 +343,7 @@ export default function InterviewsPage() {
 
                   <Card>
                     <CardContent className="flex h-full flex-col p-6">
-                      <div
-                        className="grid h-36 place-items-center rounded-xl"
-                        style={{
-                          background:
-                            'radial-gradient(55% 60% at 50% 45%, rgba(85,129,199,0.12) 0%, transparent 72%)',
-                        }}
-                      >
+                      <div className="grid h-36 place-items-center rounded-[4px]">
                         <Applo state="success" size={116} aria-hidden />
                       </div>
                       <h3 className="mt-3 text-center text-xl font-semibold">
@@ -359,9 +355,9 @@ export default function InterviewsPage() {
 
                       <button
                         onClick={() => setDialogOpen(true)}
-                        className="mb-3 flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left transition-colors hover:bg-muted/50"
+                        className="mb-3 flex w-full items-center gap-3 rounded-[3px] border bg-card p-3.5 text-left transition-colors hover:bg-muted/50"
                       >
-                        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-muted text-foreground">
+                        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[3px] bg-muted text-foreground">
                           <MessageSquare className="h-5 w-5" />
                         </span>
                         <span>
@@ -373,9 +369,9 @@ export default function InterviewsPage() {
                       </button>
                       <button
                         onClick={() => setDialogOpen(true)}
-                        className="flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left transition-colors hover:bg-muted/50"
+                        className="flex w-full items-center gap-3 rounded-[3px] border bg-card p-3.5 text-left transition-colors hover:bg-muted/50"
                       >
-                        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-muted text-foreground">
+                        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[3px] bg-muted text-foreground">
                           <RefreshCw className="h-5 w-5" />
                         </span>
                         <span>
@@ -413,9 +409,9 @@ export default function InterviewsPage() {
                 <Link
                   href="/#pricing"
                   aria-label="Nur in Premium verfügbar – jetzt upgraden"
-                  className="absolute inset-0 z-10 flex cursor-not-allowed items-start justify-center rounded-lg pt-12"
+                  className="absolute inset-0 z-10 flex cursor-not-allowed items-start justify-center rounded-[3px] pt-12"
                 >
-                  <span className="rounded-full border border-amber-300 bg-amber-100/95 px-4 py-2 text-sm font-medium text-amber-900 shadow-sm backdrop-blur">
+                  <span className="rounded-[2px] border border-[#F3E3B3] bg-[#FDF6E7]/95 px-4 py-2 text-sm font-medium text-[#854D0E] shadow-sm backdrop-blur dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
                     <Lock className="mr-1 inline h-4 w-4" />
                     Nur in Premium verfügbar
                   </span>

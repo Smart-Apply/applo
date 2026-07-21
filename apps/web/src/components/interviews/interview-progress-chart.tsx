@@ -12,15 +12,15 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
   const categoryData = useMemo(() => {
     const { averageCategoryScores } = stats;
     const categories = [
-      { name: 'Kommunikation', score: averageCategoryScores.communication, color: 'bg-blue-500' },
-      { name: 'Präsentation', score: averageCategoryScores.presentation, color: 'bg-green-500' },
+      { name: 'Kommunikation', score: averageCategoryScores.communication, color: 'bg-brand' },
+      { name: 'Präsentation', score: averageCategoryScores.presentation, color: 'bg-success' },
     ];
 
     if (averageCategoryScores.technical !== undefined && averageCategoryScores.technical > 0) {
       categories.push({
         name: 'Fachkompetenz',
         score: averageCategoryScores.technical,
-        color: 'bg-purple-500',
+        color: 'bg-primary',
       });
     }
 
@@ -31,7 +31,7 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
       categories.push({
         name: 'Problemlösung',
         score: averageCategoryScores.problemSolving,
-        color: 'bg-orange-500',
+        color: 'bg-warning',
       });
     }
 
@@ -39,7 +39,7 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
       categories.push({
         name: 'Kulturfit',
         score: averageCategoryScores.cultureFit,
-        color: 'bg-pink-500',
+        color: 'bg-destructive',
       });
     }
 
@@ -50,10 +50,10 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
   const typeDistribution = useMemo(() => {
     const { sessionsByType } = stats;
     const types = [
-      { name: 'Verhalten', count: sessionsByType.BEHAVIORAL, color: 'bg-blue-400' },
-      { name: 'Technisch', count: sessionsByType.TECHNICAL, color: 'bg-purple-400' },
-      { name: 'Fallstudie', count: sessionsByType.CASE_STUDY, color: 'bg-orange-400' },
-      { name: 'Gemischt', count: sessionsByType.MIXED, color: 'bg-green-400' },
+      { name: 'Verhalten', count: sessionsByType.BEHAVIORAL, color: 'bg-brand' },
+      { name: 'Technisch', count: sessionsByType.TECHNICAL, color: 'bg-primary' },
+      { name: 'Fallstudie', count: sessionsByType.CASE_STUDY, color: 'bg-warning' },
+      { name: 'Gemischt', count: sessionsByType.MIXED, color: 'bg-success' },
     ].filter((t) => t.count > 0);
 
     const total = types.reduce((sum, t) => sum + t.count, 0);
@@ -85,7 +85,7 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
                 <span>{category.name}</span>
                 <span className="font-medium">{category.score}/100</span>
               </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-2 bg-muted overflow-hidden">
                 <div
                   className={`h-full ${category.color} transition-all duration-500`}
                   style={{ width: `${category.score}%` }}
@@ -108,7 +108,7 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
                   {type.count} ({type.percentage}%)
                 </span>
               </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-2 bg-muted overflow-hidden">
                 <div
                   className={`h-full ${type.color} transition-all duration-500`}
                   style={{ width: `${type.percentage}%` }}

@@ -106,7 +106,7 @@ export default function InterviewSessionPage() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold">{session.jobTitle || 'Allgemeines Interview'}</h1>
+            <h1 className="font-heading text-2xl font-extrabold tracking-[-.025em]">{session.jobTitle || 'Allgemeines Interview'}</h1>
             <Badge variant={config.variant}>{config.label}</Badge>
           </div>
           {session.company && <p className="text-muted-foreground">{session.company}</p>}
@@ -120,7 +120,7 @@ export default function InterviewSessionPage() {
             </Badge>
             {session.overallScore !== undefined && session.overallScore !== null && (
               <Badge variant="outline" className="gap-1">
-                <Trophy className="h-3 w-3 text-yellow-500" />
+                <Trophy className="h-3 w-3 text-[#A16207] dark:text-amber-300" />
                 {session.overallScore}/100 Punkte
               </Badge>
             )}
@@ -142,7 +142,7 @@ export default function InterviewSessionPage() {
             {/* Shared segmented switch — change mode at any time. */}
             {voiceAvailable && (
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="inline-flex gap-1 rounded-xl border bg-card p-1.5 shadow-sm">
+                <div className="inline-flex gap-1 rounded-[3px] border bg-card p-1.5">
                   {(
                     [
                       { key: 'text' as const, label: 'Text-Chat', icon: MessageSquare },
@@ -154,9 +154,9 @@ export default function InterviewSessionPage() {
                       type="button"
                       onClick={() => setSelectedMode(key)}
                       className={cn(
-                        'inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors',
+                        'inline-flex h-10 items-center gap-2 rounded-[2px] px-4 text-sm font-semibold transition-colors',
                         mode === key
-                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          ? 'bg-primary text-primary-foreground'
                           : 'text-secondary hover:text-foreground',
                       )}
                     >
