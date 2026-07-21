@@ -54,7 +54,7 @@ function TechTagInput({
   return (
     <div
       onClick={() => inputRef.current?.focus()}
-      className="flex min-h-[42px] cursor-text flex-wrap items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1"
+      className="flex min-h-[42px] cursor-text flex-wrap items-center gap-1.5 rounded-[3px] border border-input bg-background px-3 py-2 transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1"
     >
       {tags.map((tag, i) => (
         <span
@@ -68,7 +68,7 @@ function TechTagInput({
               e.stopPropagation();
               removeTag(i);
             }}
-            className="rounded-full p-0.5 transition-colors hover:bg-primary/20"
+            className="rounded-[2px] p-0.5 transition-colors hover:bg-primary/20"
           >
             <X className="h-2.5 w-2.5" />
           </button>
@@ -254,13 +254,13 @@ export function ProjectsManager({
             return (
               <Card
                 key={displayIndex}
-                className="border-border/50 shadow-sm transition-all hover:shadow-md"
+                className="transition-colors"
               >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start gap-3">
-                        <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[3px] bg-primary/10">
                           <FolderGit2 className="h-4 w-4 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -271,7 +271,7 @@ export function ProjectsManager({
                                 href={project.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 rounded-full bg-primary/5 px-2 py-0.5 text-xs text-primary transition-colors hover:text-primary/80"
+                                className="flex items-center gap-1 rounded-[3px] bg-primary/10 px-2 py-0.5 text-xs text-primary transition-colors hover:text-primary/80"
                               >
                                 <ExternalLink className="h-3 w-3" />
                                 <span>Link</span>
@@ -341,8 +341,8 @@ export function ProjectsManager({
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 py-10 text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+        <div className="flex flex-col items-center justify-center rounded-[4px] border border-dashed border-border bg-muted/20 py-10 text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <FolderGit2 className="h-6 w-6 text-muted-foreground" />
           </div>
           <h3 className="font-medium text-foreground">Keine Projekte</h3>
