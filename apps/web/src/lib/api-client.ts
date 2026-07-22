@@ -66,6 +66,7 @@ import {
 } from './errors';
 import { getCsrfToken, refreshCsrfToken, fetchCsrfToken } from './csrf';
 import { getApiBaseUrl, getApiBaseUrlSync } from './config';
+import { getActiveLocale } from './i18n-runtime';
 
 interface RequestOptions extends RequestInit {
   retry?: boolean;
@@ -344,8 +345,11 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
 
           const { toast } = await import('sonner');
           toast.warning(
-            `Nur noch ${rateLimitRemaining} Aktionen verfügbar. ` +
-              `Limit wird zurückgesetzt in ${minutesUntilReset} Minute${minutesUntilReset !== 1 ? 'n' : ''}.`,
+            getActiveLocale() === 'de'
+              ? `Nur noch ${rateLimitRemaining} Aktionen verfügbar. ` +
+                `Limit wird zurückgesetzt in ${minutesUntilReset} Minute${minutesUntilReset !== 1 ? 'n' : ''}.`
+              : `Only ${rateLimitRemaining} actions remaining. ` +
+                `The limit resets in ${minutesUntilReset} minute${minutesUntilReset !== 1 ? 's' : ''}.`,
             { id: RATE_LIMIT_TOAST_ID },
           );
         }
@@ -530,7 +534,9 @@ async function apiRequestFormData<T>(endpoint: string, options: RequestOptions =
 
           throw new ApiError(
             429,
-            `Zu viele Uploads. Du kannst maximal 10 Lebensläufe pro Stunde analysieren. Bitte warte ${retryMinutes} Minute${retryMinutes !== 1 ? 'n' : ''}.`,
+            getActiveLocale() === 'de'
+              ? `Zu viele Uploads. Du kannst maximal 10 Lebensläufe pro Stunde analysieren. Bitte warte ${retryMinutes} Minute${retryMinutes !== 1 ? 'n' : ''}.`
+              : `Too many uploads. You can analyze at most 10 résumés per hour. Please wait ${retryMinutes} minute${retryMinutes !== 1 ? 's' : ''}.`,
             errorData,
           );
         }
@@ -592,7 +598,7 @@ async function apiRequestFormData<T>(endpoint: string, options: RequestOptions =
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new NetworkError('Netzwerkfehler. Bitte überprüfe deine Internetverbindung.');
+      throw new NetworkError();
     }
   };
 

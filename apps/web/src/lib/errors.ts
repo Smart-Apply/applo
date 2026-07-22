@@ -3,6 +3,12 @@
  */
 
 import { getErrorMessage as getLocalizedErrorMessage, formatValidationErrors } from './error-messages';
+import { getActiveLocale, pick } from './i18n-runtime';
+
+const NETWORK_ERROR_MESSAGE = {
+  de: 'Netzwerkfehler. Bitte überprüfe deine Internetverbindung.',
+  en: 'Network error. Please check your internet connection.',
+};
 
 /**
  * Custom API Error class with additional context
@@ -49,8 +55,8 @@ export class ApiError extends Error {
  * Network error class for connection issues
  */
 export class NetworkError extends Error {
-  constructor(message = 'Netzwerkfehler. Bitte überprüfe deine Internetverbindung.') {
-    super(message);
+  constructor(message?: string) {
+    super(message ?? pick(NETWORK_ERROR_MESSAGE));
     this.name = 'NetworkError';
   }
 }
@@ -110,7 +116,9 @@ export function getErrorMessage(error: unknown): string {
       case ErrorType.SERVER_ERROR:
         return getLocalizedErrorMessage('INTERNAL_SERVER_ERROR');
       default:
-        return `Ein Fehler ist aufgetreten: ${error.statusText}`;
+        return getActiveLocale() === 'de'
+          ? `Ein Fehler ist aufgetreten: ${error.statusText}`
+          : `An error occurred: ${error.statusText}`;
     }
   }
 

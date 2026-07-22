@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "title": "Applo - KI-gestützte Bewerbungen",
+    "description": "Erstelle personalisierte Bewerbungen mit KI-Unterstützung"
+  },
+  "language": {
+    "label": "Sprache",
+    "switchLabel": "Sprache wechseln",
+    "de": "Deutsch",
+    "en": "English"
+  },
+  "actions": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "back": "Zurück",
+    "next": "Weiter",
+    "retry": "Erneut versuchen",
+    "loading": "Lädt...",
+    "understood": "Verstanden"
+  },
+  "loadingMessages": {
+    "pdfPreview": "Lädt PDF-Vorschau...",
+    "editor": "Lädt Editor...",
+    "form": "Lädt Formular..."
+  },
+  "cookieBanner": {
+    "ariaLabel": "Cookie-Hinweis",
+    "text": "Wir verwenden ausschließlich technisch notwendige Cookies, damit du eingeloggt bleibst und Formulare sicher abgesendet werden. Es findet kein Tracking statt. Mehr dazu in unserer <privacyLink>Datenschutzerklärung</privacyLink>.",
+    "dismiss": "Verstanden"
+  },
+  "errorPage": {
+    "title": "Ein Fehler ist aufgetreten",
+    "description": "Beim Laden dieser Seite ist ein Fehler aufgetreten.",
+    "errorMessageLabel": "Fehlermeldung:",
+    "retry": "Erneut versuchen",
+    "toDashboard": "Zum Dashboard"
+  },
+  "serviceWorker": {
+    "updateTitle": "Neue Version verfügbar",
+    "updateDescription": "Lade die Seite neu, um die aktuelle Version von Applo zu sehen. Deine Eingaben in offenen Formularen gehen dabei verloren.",
+    "updateAction": "Jetzt aktualisieren"
+  },
+  "fileUpload": {
+    "dropActive": "Datei hier ablegen...",
+    "dropPrompt": "Datei hierher ziehen oder klicken",
+    "defaultHint": "PDF oder DOCX, max. 10 MB",
+    "removeFile": "Datei entfernen",
+    "errorTooLarge": "Die Datei ist zu groß. Maximal 10 MB sind erlaubt.",
+    "errorInvalidType": "Ungültiger Dateityp. Nur PDF- und DOCX-Dateien sind erlaubt.",
+    "errorGeneric": "Die Datei konnte nicht hochgeladen werden."
+  },
+  "passwordStrength": {
+    "label": "Passwortstärke",
+    "weak": "Schwach",
+    "medium": "Mittel",
+    "strong": "Stark",
+    "requirementMinLength": "Mindestens 8 Zeichen",
+    "requirementUppercase": "Ein Großbuchstabe",
+    "requirementLowercase": "Ein Kleinbuchstabe",
+    "requirementNumber": "Eine Zahl",
+    "requirementSpecial": "Ein Sonderzeichen (@$!%*?&#)"
+  }
+}

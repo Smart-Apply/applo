@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { getActiveLocale } from '@/lib/i18n-runtime';
 
 /**
  * Centralized Zod validation schemas matching backend DTOs
@@ -6,8 +7,13 @@ import { z } from 'zod';
  * All schemas mirror backend class-validator rules to ensure
  * client-side validation catches errors before API calls.
  * 
- * Error messages are in German for consistency with the UI.
+ * Error messages are bilingual (de/en): the `m()` helper returns a lazy
+ * Zod error function that resolves the active UI language at VALIDATION
+ * time (not at module load), so schemas react to locale switches.
  */
+
+/** Lazy bilingual error message for Zod's `error` param. */
+const m = (de: string, en: string) => () => (getActiveLocale() === 'de' ? de : en);
 
 // ============================================================================
 // AUTHENTICATION SCHEMAS
@@ -19,63 +25,66 @@ import { z } from 'zod';
  */
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[\w@$!%*?&#]{8,}$/;
 
+const emailInvalid = m('Ungültige E-Mail-Adresse', 'Invalid email address');
+const passwordMinLength = m(
+  'Passwort muss mindestens 8 Zeichen lang sein',
+  'Password must be at least 8 characters long'
+);
+const passwordComplexity = m(
+  'Passwort muss einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen (@$!%*?&#) enthalten',
+  'Password must contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#)'
+);
+const passwordsMismatch = m('Passwörter stimmen nicht überein', 'Passwords do not match');
+const urlInvalid = m('Ungültige URL', 'Invalid URL');
+
 export const loginSchema = z.object({
-  email: z.string().email('Ungültige E-Mail-Adresse'),
-  password: z.string().min(8, 'Passwort muss mindestens 8 Zeichen lang sein'),
+  email: z.string().email({ error: emailInvalid }),
+  password: z.string().min(8, { error: passwordMinLength }),
 });
 
 export const registerSchema = z.object({
-  firstName: z.string().min(1, 'Vorname ist erforderlich').optional(),
-  lastName: z.string().min(1, 'Nachname ist erforderlich').optional(),
-  email: z.string().email('Ungültige E-Mail-Adresse'),
+  firstName: z.string().min(1, { error: m('Vorname ist erforderlich', 'First name is required') }).optional(),
+  lastName: z.string().min(1, { error: m('Nachname ist erforderlich', 'Last name is required') }).optional(),
+  email: z.string().email({ error: emailInvalid }),
   password: z
     .string()
-    .min(8, 'Passwort muss mindestens 8 Zeichen lang sein')
-    .regex(
-      PASSWORD_REGEX,
-      'Passwort muss einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen (@$!%*?&#) enthalten'
-    ),
+    .min(8, { error: passwordMinLength })
+    .regex(PASSWORD_REGEX, { error: passwordComplexity }),
   confirmPassword: z.string(),
   // Closed-beta invite code. Optional in the schema because we don't know
   // at build time whether the gate is enabled — the AuthContainer fetches
   // GET /auth/config and decides at render time whether to require it.
   // Bounded to 64 chars to match the backend DTO.
-  inviteCode: z.string().max(64, 'Einladungscode ist zu lang').optional(),
+  inviteCode: z.string().max(64, { error: m('Einladungscode ist zu lang', 'Invite code is too long') }).optional(),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwörter stimmen nicht überein',
+  error: passwordsMismatch,
   path: ['confirmPassword'],
 });
 
 export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'Aktuelles Passwort ist erforderlich'),
+  currentPassword: z.string().min(1, { error: m('Aktuelles Passwort ist erforderlich', 'Current password is required') }),
   newPassword: z
     .string()
-    .min(8, 'Neues Passwort muss mindestens 8 Zeichen lang sein')
-    .regex(
-      PASSWORD_REGEX,
-      'Passwort muss einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen (@$!%*?&#) enthalten'
-    ),
+    .min(8, { error: m('Neues Passwort muss mindestens 8 Zeichen lang sein', 'New password must be at least 8 characters long') })
+    .regex(PASSWORD_REGEX, { error: passwordComplexity }),
   confirmNewPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmNewPassword, {
-  message: 'Passwörter stimmen nicht überein',
+  error: passwordsMismatch,
   path: ['confirmNewPassword'],
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email('Ungültige E-Mail-Adresse'),
+  email: z.string().email({ error: emailInvalid }),
 });
 
 export const resetPasswordSchema = z.object({
   password: z
     .string()
-    .min(8, 'Passwort muss mindestens 8 Zeichen lang sein')
-    .regex(
-      PASSWORD_REGEX,
-      'Passwort muss einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen (@$!%*?&#) enthalten'
-    ),
+    .min(8, { error: passwordMinLength })
+    .regex(PASSWORD_REGEX, { error: passwordComplexity }),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwörter stimmen nicht überein',
+  error: passwordsMismatch,
   path: ['confirmPassword'],
 });
 
@@ -126,48 +135,48 @@ const sanitizeUrl = (val: string): string => {
 const GERMAN_PLZ_REGEX = /^\d{5}$/;
 
 export const profileSchema = z.object({
-  firstName: z.string().min(1, 'Vorname ist erforderlich').optional(),
-  lastName: z.string().min(1, 'Nachname ist erforderlich').optional(),
-  email: z.string().email('Ungültige E-Mail-Adresse').optional(),
+  firstName: z.string().min(1, { error: m('Vorname ist erforderlich', 'First name is required') }).optional(),
+  lastName: z.string().min(1, { error: m('Nachname ist erforderlich', 'Last name is required') }).optional(),
+  email: z.string().email({ error: emailInvalid }).optional(),
   phone: z
     .string()
-    .regex(phoneRegex, 'Telefonnummer muss im internationalen Format sein (z.B. +49123456789)')
+    .regex(phoneRegex, { error: m('Telefonnummer muss im internationalen Format sein (z.B. +49123456789)', 'Phone number must be in international format (e.g. +49123456789)') })
     .optional()
     .or(z.literal('')),
-  street: z.string().max(200, 'Straße darf maximal 200 Zeichen haben').optional().or(z.literal('')),
+  street: z.string().max(200, { error: m('Straße darf maximal 200 Zeichen haben', 'Street may be at most 200 characters') }).optional().or(z.literal('')),
   postalCode: z
     .string()
-    .regex(GERMAN_PLZ_REGEX, 'PLZ muss genau 5 Ziffern haben')
+    .regex(GERMAN_PLZ_REGEX, { error: m('PLZ muss genau 5 Ziffern haben', 'Postal code must be exactly 5 digits') })
     .optional()
     .or(z.literal('')),
-  city: z.string().max(100, 'Stadt darf maximal 100 Zeichen haben').optional().or(z.literal('')),
-  country: z.string().max(100, 'Land darf maximal 100 Zeichen haben').optional().or(z.literal('')),
-  linkedinUrl: z.string().transform(sanitizeUrl).pipe(z.string().url('Ungültige URL').or(z.literal(''))).optional().or(z.literal('')),
-  githubUrl: z.string().transform(sanitizeUrl).pipe(z.string().url('Ungültige URL').or(z.literal(''))).optional().or(z.literal('')),
-  portfolioUrl: z.string().transform(sanitizeUrl).pipe(z.string().url('Ungültige URL').or(z.literal(''))).optional().or(z.literal('')),
+  city: z.string().max(100, { error: m('Stadt darf maximal 100 Zeichen haben', 'City may be at most 100 characters') }).optional().or(z.literal('')),
+  country: z.string().max(100, { error: m('Land darf maximal 100 Zeichen haben', 'Country may be at most 100 characters') }).optional().or(z.literal('')),
+  linkedinUrl: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
+  githubUrl: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
+  portfolioUrl: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
   summary: z.string().optional(),
 });
 
 export const skillSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, 'Skill-Name ist erforderlich'),
+  name: z.string().min(1, { error: m('Skill-Name ist erforderlich', 'Skill name is required') }),
   level: z.string().optional(),
 });
 
 export const certificateSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, 'Name ist erforderlich'),
-  issuer: z.string().min(1, 'Aussteller ist erforderlich'),
+  name: z.string().min(1, { error: m('Name ist erforderlich', 'Name is required') }),
+  issuer: z.string().min(1, { error: m('Aussteller ist erforderlich', 'Issuer is required') }),
   dateObtained: z.string().optional(),
-  url: z.string().transform(sanitizeUrl).pipe(z.string().url('Ungültige URL').or(z.literal(''))).optional().or(z.literal('')),
+  url: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
 });
 
 export const experienceSchema = z.object({
   id: z.string().optional(),
-  title: z.string().min(1, 'Jobtitel ist erforderlich'),
-  company: z.string().min(1, 'Firma ist erforderlich'),
+  title: z.string().min(1, { error: m('Jobtitel ist erforderlich', 'Job title is required') }),
+  company: z.string().min(1, { error: m('Firma ist erforderlich', 'Company is required') }),
   location: z.string().optional(),
-  startDate: z.string().min(1, 'Startdatum ist erforderlich'),
+  startDate: z.string().min(1, { error: m('Startdatum ist erforderlich', 'Start date is required') }),
   endDate: z.string().optional(),
   current: z.boolean().optional(),
   description: z.string().optional(),
@@ -175,16 +184,16 @@ export const experienceSchema = z.object({
 
 export const projectSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, 'Projektname ist erforderlich'),
+  name: z.string().min(1, { error: m('Projektname ist erforderlich', 'Project name is required') }),
   description: z.string().optional(),
   technologies: z.array(z.string()).optional(),
-  url: z.string().transform(sanitizeUrl).pipe(z.string().url('Ungültige URL').or(z.literal(''))).optional().or(z.literal('')),
+  url: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
 });
 
 export const educationSchema = z.object({
   id: z.string().optional(),
-  degree: z.string().min(1, 'Abschluss ist erforderlich'),
-  institution: z.string().min(1, 'Institution ist erforderlich'),
+  degree: z.string().min(1, { error: m('Abschluss ist erforderlich', 'Degree is required') }),
+  institution: z.string().min(1, { error: m('Institution ist erforderlich', 'Institution is required') }),
   fieldOfStudy: z.string().optional(),
   startYear: z.string().optional(), // DateString format
   endYear: z.string().optional(), // DateString format
@@ -194,8 +203,8 @@ export const educationSchema = z.object({
 
 export const languageSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, 'Sprachname ist erforderlich'),
-  level: z.string().min(1, 'Sprachniveau ist erforderlich'),
+  name: z.string().min(1, { error: m('Sprachname ist erforderlich', 'Language name is required') }),
+  level: z.string().min(1, { error: m('Sprachniveau ist erforderlich', 'Language level is required') }),
 });
 
 // ============================================================================
@@ -203,30 +212,30 @@ export const languageSchema = z.object({
 // ============================================================================
 
 export const jobPostingSchema = z.object({
-  title: z.string().min(1, 'Titel ist erforderlich').max(200, 'Titel darf maximal 200 Zeichen haben'),
-  company: z.string().min(1, 'Unternehmen ist erforderlich').max(200, 'Unternehmen darf maximal 200 Zeichen haben'),
-  location: z.string().max(200, 'Standort darf maximal 200 Zeichen haben').optional(),
-  language: z.string().max(10, 'Sprache darf maximal 10 Zeichen haben').optional(),
-  url: z.string().url('Ungültige URL').optional().or(z.literal('')),
-  fullText: z.string().min(1, 'Volltext ist erforderlich'),
-  salary: z.string().max(100, 'Gehalt darf maximal 100 Zeichen haben').optional(),
-  employmentType: z.string().max(50, 'Beschäftigungsart darf maximal 50 Zeichen haben').optional(),
+  title: z.string().min(1, { error: m('Titel ist erforderlich', 'Title is required') }).max(200, { error: m('Titel darf maximal 200 Zeichen haben', 'Title may be at most 200 characters') }),
+  company: z.string().min(1, { error: m('Unternehmen ist erforderlich', 'Company is required') }).max(200, { error: m('Unternehmen darf maximal 200 Zeichen haben', 'Company may be at most 200 characters') }),
+  location: z.string().max(200, { error: m('Standort darf maximal 200 Zeichen haben', 'Location may be at most 200 characters') }).optional(),
+  language: z.string().max(10, { error: m('Sprache darf maximal 10 Zeichen haben', 'Language may be at most 10 characters') }).optional(),
+  url: z.string().url({ error: urlInvalid }).optional().or(z.literal('')),
+  fullText: z.string().min(1, { error: m('Volltext ist erforderlich', 'Full text is required') }),
+  salary: z.string().max(100, { error: m('Gehalt darf maximal 100 Zeichen haben', 'Salary may be at most 100 characters') }).optional(),
+  employmentType: z.string().max(50, { error: m('Beschäftigungsart darf maximal 50 Zeichen haben', 'Employment type may be at most 50 characters') }).optional(),
 });
 
 export const jobPostingEditSchema = z.object({
-  title: z.string().min(1, 'Titel ist erforderlich').max(200, 'Titel darf maximal 200 Zeichen haben'),
-  company: z.string().min(1, 'Unternehmen ist erforderlich').max(200, 'Unternehmen darf maximal 200 Zeichen haben'),
-  location: z.string().max(200, 'Standort darf maximal 200 Zeichen haben').optional(),
+  title: z.string().min(1, { error: m('Titel ist erforderlich', 'Title is required') }).max(200, { error: m('Titel darf maximal 200 Zeichen haben', 'Title may be at most 200 characters') }),
+  company: z.string().min(1, { error: m('Unternehmen ist erforderlich', 'Company is required') }).max(200, { error: m('Unternehmen darf maximal 200 Zeichen haben', 'Company may be at most 200 characters') }),
+  location: z.string().max(200, { error: m('Standort darf maximal 200 Zeichen haben', 'Location may be at most 200 characters') }).optional(),
   description: z.string().optional(),
   requirements: z.string().optional(),
 });
 
 export const jobPostingUrlSchema = z.object({
-  url: z.string().url('Bitte gebe eine gültige URL ein'),
+  url: z.string().url({ error: m('Bitte gebe eine gültige URL ein', 'Please enter a valid URL') }),
 });
 
 export const jobPostingTextSchema = z.object({
-  text: z.string().min(10, 'Text muss mindestens 10 Zeichen lang sein'),
+  text: z.string().min(10, { error: m('Text muss mindestens 10 Zeichen lang sein', 'Text must be at least 10 characters long') }),
 });
 
 // ============================================================================
@@ -234,7 +243,7 @@ export const jobPostingTextSchema = z.object({
 // ============================================================================
 
 export const createApplicationSchema = z.object({
-  jobPostingId: z.string().min(1, 'Job Posting ID ist erforderlich'),
+  jobPostingId: z.string().min(1, { error: m('Job Posting ID ist erforderlich', 'Job posting ID is required') }),
   coverLetterTemplateId: z.string().optional(),
   resumeTemplateId: z.string().optional(),
   generateCoverLetter: z.boolean().optional(),
@@ -244,8 +253,8 @@ export const createApplicationSchema = z.object({
 export const updateApplicationTitleSchema = z.object({
   title: z
     .string()
-    .min(3, 'Titel muss mindestens 3 Zeichen lang sein')
-    .max(200, 'Titel darf maximal 200 Zeichen haben'),
+    .min(3, { error: m('Titel muss mindestens 3 Zeichen lang sein', 'Title must be at least 3 characters long') })
+    .max(200, { error: m('Titel darf maximal 200 Zeichen haben', 'Title may be at most 200 characters') }),
 });
 
 // ============================================================================

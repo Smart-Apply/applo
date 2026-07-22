@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 import path from "path";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import createNextIntlPlugin from "next-intl/plugin";
+
+// Cookie-based i18n (de/en) without URL routing — per-request config
+// lives in src/i18n/request.ts (the plugin's default lookup path).
+const withNextIntl = createNextIntlPlugin();
 
 // Bundle analyzer for webpack analysis (ANALYZE=true npm run build)
 const withBundleAnalyzer = bundleAnalyzer({
@@ -114,5 +119,5 @@ const nextConfig: NextConfig = {
 // NestJS API is unaffected and continues to capture server-side errors.
 // To re-enable: `git log --diff-filter=D -- apps/web/src/sentry*.ts`
 // and revert the removing commit, then `npm install @sentry/nextjs`.
-export default withBundleAnalyzer(nextConfig);
+export default withBundleAnalyzer(withNextIntl(nextConfig));
 
