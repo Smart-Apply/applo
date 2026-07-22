@@ -607,7 +607,7 @@ h1, h2, h3, .font-heading {
   .rd-skill .neu { margin-left: 6px; font-size: 8.5px; font-weight: 800; letter-spacing: 0.04em; color: #fff; background: var(--green); padding: 1px 5px; border-radius: 5px; }
 
   /* ---- ATS optimizer split ---- */
-  .opti-split { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+  .opti-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 520px); gap: 20px; }
   .opti-pane { background: #fff; border: 1px solid var(--border); border-radius: 0; box-shadow: none; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
   .opti-pane-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); flex: none; gap: 12px; background: #fafafa; }
   .opti-pane-head .t { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 9px; color: var(--ink); }
