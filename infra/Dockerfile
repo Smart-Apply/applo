@@ -48,11 +48,21 @@ COPY apps/api/prisma.config.ts ./apps/api/
 COPY apps/api/prisma ./apps/api/prisma
 COPY apps/api/scripts ./apps/api/scripts
 
-# Install full workspace (dev deps included — needed for nest build, tsc, swc).
-# `--filter @applo/api...` would skip the web workspace, but we need
-# turbo to be able to build packages/shared too, so install the full graph.
+# Install only the API's slice of the workspace, dev deps included:
+#   --filter @applo/api...    → @applo/api + its workspace deps (@applo/shared,
+#                               resolved transitively by the `...` suffix).
+#   --include-workspace-root  → the workspace-root project, whose devDeps hold
+#                               the build tooling shared by every stage below
+#                               (@nestjs/cli for `nest build`, typescript +
+#                               @swc/core for the compile, ts for the seed tsc).
+# This DROPS @applo/web and its heavy dev deps (next, wrangler,
+# @opennextjs/cloudflare, tailwindcss, @sentry/nextjs, babel-plugin-react-
+# compiler, vite, …) — none of which this image ever builds — shrinking the
+# biggest cache-bustable layer. NB: the earlier "we need turbo to build
+# packages/shared" note was wrong on two counts — the `...` selector already
+# pulls shared in, and the builds below call `pnpm --filter`, never `turbo`.
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --filter @applo/api... --include-workspace-root
 
 # Copy source AFTER install so manifest changes don't bust the source layer.
 COPY packages/shared/tsconfig.json ./packages/shared/
