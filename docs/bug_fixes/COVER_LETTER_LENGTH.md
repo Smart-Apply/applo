@@ -1,8 +1,16 @@
 # Fix Plan: Cover-Letter Length Is Prompt-Enforced Only (No Deterministic Gate)
 
-> **Status:** Planned · **Priority:** P2 (quality-assurance gap; direct competitor-review theme)
+> **Status:** ✅ Implemented (2026-07-22) · **Priority:** P2 (quality-assurance gap; direct competitor-review theme)
 > **Affected area:** `apps/api/src/applications` (generation pipeline, `style-lint.util.ts`), wizard length preference, eval harness
 > **Related competitor feedback:** jobstep.io review — *"Vorschläge für Anschreiben sind grundsätzlich immer viel zu lang (2 Seiten, das liest kein Mensch!)"* — and the reviewer's kicker: ChatGPT *"achtet wenigstens auch auf so etwas wie die Länge der Dokumente."* Applo's 350–400-word cap exists **only as a prompt instruction**; nothing measures or enforces it after generation.
+>
+> **Implementation deltas vs. this plan:**
+> - All steps (1–7) shipped in one PR instead of the suggested three-PR split — the measurement baseline, teeth, and preference are behind the same guarded, fail-open pattern, so a staged rollout added no safety.
+> - Budgets/tolerances live in `applications/constants.ts` (`COVER_LETTER_BUDGETS`, `resolveCoverLetterBudget`); German gets a slightly wider tolerance band (20% vs 15%) per §3's "small DE tolerance".
+> - The governor's keyword-survival guard derives the must-keep set from the priority-1 profile-supported keywords *present in the pre-shorten draft* (superset of the woven ones — strictly safer).
+> - The governor also runs in `generateWithSinglePipeline` (regenerate) and `upsertCoverLetter` (edit-mode fresh regenerate), not just `createWithGeneration` — all three paths render `{{lengthBudget}}` and share `runLengthGovernorPass`.
+> - Eval integration extends the actual harness (`scripts/eval/*`: `pipeline-runner.ts` mirror pass + `--no-length-governor` A/B flag + `length` block in `aggregate.ts`) — the plan's "headless `--score`" wording referred to a seam that lives on a feature branch.
+> - Page-count backstop uses `pdf-parse` v2's `getInfo().total` (already a dependency) in `application.processor.ts`.
 
 ---
 

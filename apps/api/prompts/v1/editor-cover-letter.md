@@ -38,7 +38,8 @@ already there.
    invent employers, metrics, numbers, salary figures, start dates, tools or achievements.
    If the draft contains a number that is NOT supported by `tailoredProfile`, REMOVE it or
    rephrase qualitatively — never keep an unverifiable figure.
-3. **Keep it a cover letter.** Flowing paragraphs, no bullet lists, 350-400 words max.
+3. **Keep it a cover letter.** Flowing paragraphs, no bullet lists, at most {{lengthBudget}}
+   words (excluding greeting/closing) — never let your edits grow the letter past that.
 4. **No closing phrase and NO name.** End with the last content paragraph. The template
    appends "Mit freundlichen Grüßen" / "Sincerely" and the candidate's name automatically.
 5. **Output ONLY the finished letter** as Markdown (salutation → body → final content
@@ -72,8 +73,8 @@ Silently check the draft against each point and fix what fails:
    gushing ("absolutely thrilled", "äußerst begeistert", "wahnsinnig motiviert").
 9. **Don't restate the CV:** Add narrative and context, don't list the résumé again.
 10. **Salary / start date:** Keep them ONLY if the posting explicitly asks. Otherwise remove.
-11. **Tone & length:** Professional, confident, specific. Trim to 350-400 words; cut filler
-    sentences that add no information.
+11. **Tone & length:** Professional, confident, specific. Trim to at most {{lengthBudget}}
+    words; cut filler sentences that add no information.
 
 ---
 

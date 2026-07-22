@@ -8,6 +8,53 @@ export const APPLICATION_ID_DISPLAY_LENGTH = 8;
 export const ELLIPSIS_LENGTH = 3; // Length of "..." for truncation
 
 /**
+ * Cover-letter word budgets by user preference (body words, excluding the
+ * salutation line and the closing block — the same definition the
+ * `cover-letter.md` prompt uses). Named constants so the prompt renderer, the
+ * deterministic length lint, the guarded shorten pass and the eval harness all
+ * measure against the SAME number — no drift between what we ask the LLM for
+ * and what we check.
+ */
+export const COVER_LETTER_BUDGETS = {
+  /** "Kompakt" — auf den Punkt (~1/2 page). */
+  kurz: 250,
+  /** Default — the classic one-page letter. */
+  standard: 350,
+} as const;
+
+export type CoverLetterLength = keyof typeof COVER_LETTER_BUDGETS;
+
+export const DEFAULT_COVER_LETTER_LENGTH: CoverLetterLength = 'standard';
+
+/**
+ * Fractional slack on top of the budget before the lint reports an overrun
+ * (borderline results only log, they never trigger the shorten pass).
+ */
+export const COVER_LETTER_LENGTH_TOLERANCE = 0.15;
+/**
+ * German gets a slightly wider band: formal DE business letters carry fixed
+ * formality overhead (Anrede-Bezüge, Schlussformeln im Fließtext) that consumes
+ * words without adding content. See the fix plan's "small DE tolerance".
+ */
+export const COVER_LETTER_LENGTH_TOLERANCE_DE = 0.2;
+/**
+ * `words >= budget × factor` classifies as `critical` — the "2 Seiten, das
+ * liest kein Mensch" failure class from the competitor review.
+ */
+export const COVER_LETTER_CRITICAL_FACTOR = 1.5;
+
+/**
+ * Resolve a stored/user-supplied length preference to its word budget,
+ * defaulting unknown or missing values to the standard budget.
+ */
+export function resolveCoverLetterBudget(length: string | null | undefined): number {
+  if (length && length in COVER_LETTER_BUDGETS) {
+    return COVER_LETTER_BUDGETS[length as CoverLetterLength];
+  }
+  return COVER_LETTER_BUDGETS[DEFAULT_COVER_LETTER_LENGTH];
+}
+
+/**
  * Shared system-message anchor for the LLM generation calls (cover letter +
  * resume rewrite). Per the GPT-4.1 prompting guide, the static non-negotiables
  * belong in the system turn while the data + detailed task stay in the user

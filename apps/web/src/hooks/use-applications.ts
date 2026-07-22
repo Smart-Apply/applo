@@ -117,6 +117,7 @@ export function useCreateApplicationWithGeneration() {
       resumeTemplateId?: string;
       generateCoverLetter?: boolean;
       language?: string;
+      coverLetterLength?: 'kurz' | 'standard';
     }) => api.applications.createWithGeneration(data),
     onSuccess: (application) => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });

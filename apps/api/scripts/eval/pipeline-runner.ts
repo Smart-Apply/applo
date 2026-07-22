@@ -20,6 +20,7 @@ import {
   matchAtsKeywordsToProfile,
   selectKeywordsToWeave,
   computePriority1Coverage,
+  isKeywordPresent,
   type MatchedAtsKeywords,
   type CoverageReport,
 } from '../../src/applications/keyword-coverage.util';
@@ -29,8 +30,14 @@ import {
   normalizeJobFacts,
   type JobFactsDto,
 } from '../../src/applications/job-facts.util';
-import { GENERATION_SYSTEM_ANCHOR } from '../../src/applications/constants';
-import { lintGeneratedStyle, evaluateStyleRewrite } from '../../src/applications/style-lint.util';
+import { GENERATION_SYSTEM_ANCHOR, resolveCoverLetterBudget } from '../../src/applications/constants';
+import {
+  lintGeneratedStyle,
+  evaluateStyleRewrite,
+  lintCoverLetterLength,
+  evaluateShortenRewrite,
+  type LengthLintResult,
+} from '../../src/applications/style-lint.util';
 import type {
   TailoredProfileDto,
   RewrittenProfileDto,
@@ -95,6 +102,12 @@ export interface GeneratedDocuments {
   resumeStyleViolationsBefore: number;
   /** Deterministic style violations in the FINAL résumé prose (after teeth). */
   resumeStyleViolationsAfter: number;
+  /** Deterministic length lint of the FINAL cover letter (null when no letter). */
+  lengthLint: LengthLintResult | null;
+  /** True when the length-governor shorten pass replaced the overrun draft. */
+  lengthGovernorApplied: boolean;
+  /** Body words of the cover letter BEFORE the governor pass. */
+  wordsBeforeGovernor: number;
   durationMs: number;
 }
 
@@ -111,6 +124,12 @@ export interface GenerateOptions {
    * deterministic-linter enforcement step.
    */
   applyStyleRewrite?: boolean;
+  /**
+   * When false, skip the guarded length-governor shorten pass — for a clean
+   * A/B of the deterministic length enforcement (and to measure the raw
+   * overrun rate the base prompts produce).
+   */
+  applyLengthGovernor?: boolean;
 }
 
 /**
@@ -123,12 +142,13 @@ async function runEditorPass(
   job: Record<string, unknown>,
   tailoredProfile: TailoredProfileDto,
   language: string,
+  lengthBudget: number,
   fixtureId: string,
 ): Promise<{ text: string; applied: boolean }> {
   try {
     const edited = await llm.callText(
       'v1/editor-cover-letter.md',
-      { draft, job, tailoredProfile, language, userId: fixtureId, jobPostingId: fixtureId },
+      { draft, job, tailoredProfile, language, lengthBudget, userId: fixtureId, jobPostingId: fixtureId },
       { temperature: 0.4, maxTokens: 1500 },
     );
     if (!edited || edited.trim().length < draft.trim().length * 0.5) {
@@ -151,13 +171,14 @@ async function runWeavePass(
   keywords: string[],
   tailoredProfile: TailoredProfileDto,
   language: string,
+  lengthBudget: number,
   fixtureId: string,
 ): Promise<{ text: string; applied: boolean }> {
   if (keywords.length === 0) return { text: draft, applied: false };
   try {
     const woven = await llm.callText(
       'v1/keyword-weave.md',
-      { draft, keywords, tailoredProfile, language, userId: fixtureId, jobPostingId: fixtureId },
+      { draft, keywords, tailoredProfile, language, lengthBudget, userId: fixtureId, jobPostingId: fixtureId },
       { temperature: 0.3, maxTokens: 1500 },
     );
     if (!woven || woven.trim().length < draft.trim().length * 0.6) {
@@ -198,6 +219,53 @@ async function runStyleRewrite(
     return { text: rewritten, applied: true, before: decision.before, after: decision.after };
   } catch {
     return { text: draft, applied: false, before: before.total, after: before.total };
+  }
+}
+
+/**
+ * Replicates `runLengthGovernorPass` (the length "teeth"): one guarded shorten
+ * pass when the finished letter overruns its word budget, keeping the
+ * pre-shorten draft unless `evaluateShortenRewrite` accepts the candidate
+ * (within budget, not gutted, salutation verbatim, style not regressed, woven
+ * priority-1 keywords retained). Skips the LLM call when within budget.
+ */
+async function runLengthGovernor(
+  llm: LLMService,
+  draft: string,
+  atsKeywords: MatchedAtsKeywords,
+  tailoredProfile: TailoredProfileDto,
+  language: string,
+  lengthBudget: number,
+  fixtureId: string,
+): Promise<{ text: string; applied: boolean; wordsBefore: number }> {
+  const lint = lintCoverLetterLength(draft, lengthBudget, language);
+  if (!lint.overrun) return { text: draft, applied: false, wordsBefore: lint.words };
+
+  const mustKeepKeywords = (atsKeywords.hard_skills ?? [])
+    .filter(
+      (kw) => kw.priority === 1 && kw.source === 'both' && isKeywordPresent(draft, kw.keyword),
+    )
+    .map((kw) => kw.keyword);
+
+  try {
+    const shortened = await llm.callText(
+      'v1/shorten-cover-letter.md',
+      {
+        draft,
+        lengthBudget,
+        currentWords: lint.words,
+        tailoredProfile,
+        language,
+        userId: fixtureId,
+        jobPostingId: fixtureId,
+      },
+      { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
+    );
+    const decision = evaluateShortenRewrite(draft, shortened, lengthBudget, language, mustKeepKeywords);
+    if (!decision.accept) return { text: draft, applied: false, wordsBefore: lint.words };
+    return { text: shortened, applied: true, wordsBefore: lint.words };
+  } catch {
+    return { text: draft, applied: false, wordsBefore: lint.words };
   }
 }
 
@@ -333,12 +401,16 @@ export async function generateForFixture(
 ): Promise<GeneratedDocuments> {
   const applyWeave = options.applyWeave !== false;
   const applyStyleRewrite = options.applyStyleRewrite !== false;
+  const applyLengthGovernor = options.applyLengthGovernor !== false;
   const systemMessage = options.applyAnchor === false ? undefined : GENERATION_SYSTEM_ANCHOR;
   const start = Date.now();
   const profile = hydrateProfile(fixture);
   const serializedProfile = serializeProfileForLlm(profile);
   const serializedJob = serializeJobPostingForLlm(fixture.jobPosting);
   const language = fixture.language;
+  // Fixtures carry no per-user length preference — measure against the default
+  // budget, exactly what a wizard submission without a choice resolves to.
+  const lengthBudget = resolveCoverLetterBudget(undefined);
 
   // Step 1: skill selector (temp 0.2), in parallel with job-facts (#5).
   const [tailoredProfile, jobFacts] = await Promise.all([
@@ -372,6 +444,7 @@ export async function generateForFixture(
       jobFacts,
       salutation: buildSalutation(jobFacts, language),
       language,
+      lengthBudget,
       userId: fixture.id,
       jobPostingId: fixture.id,
     },
@@ -410,7 +483,7 @@ export async function generateForFixture(
 
   // Step 3: cover-letter editor pass (#1).
   const editor = coverLetterDraft
-    ? await runEditorPass(llm, coverLetterDraft, serializedJob, tailoredProfile, language, fixture.id)
+    ? await runEditorPass(llm, coverLetterDraft, serializedJob, tailoredProfile, language, lengthBudget, fixture.id)
     : { text: '', applied: false };
 
   // Coverage BEFORE the weave (priority-1 profile-supported keywords).
@@ -420,7 +493,7 @@ export async function generateForFixture(
   const weaveKeywords = applyWeave ? selectKeywordsToWeave(atsKeywords, editor.text) : [];
   const weave =
     coverLetterDraft && weaveKeywords.length > 0
-      ? await runWeavePass(llm, editor.text, weaveKeywords, tailoredProfile, language, fixture.id)
+      ? await runWeavePass(llm, editor.text, weaveKeywords, tailoredProfile, language, lengthBudget, fixture.id)
       : { text: editor.text, applied: false };
 
   // Coverage is measured on the post-weave letter (the weave's own effect),
@@ -440,7 +513,31 @@ export async function generateForFixture(
           before: styleViolationsBefore,
           after: styleViolationsBefore,
         };
-  const finalCoverLetter = postWeave ? styleRewrite.text : null;
+
+  // Length governor — guarded shorten pass when the finished letter overruns
+  // its word budget (runs after the last content-modifying pass, as in prod).
+  const governor =
+    postWeave && applyLengthGovernor
+      ? await runLengthGovernor(
+          llm,
+          styleRewrite.text,
+          atsKeywords,
+          tailoredProfile,
+          language,
+          lengthBudget,
+          fixture.id,
+        )
+      : {
+          text: postWeave ? styleRewrite.text : '',
+          applied: false,
+          wordsBefore: postWeave
+            ? lintCoverLetterLength(styleRewrite.text, lengthBudget, language).words
+            : 0,
+        };
+  const finalCoverLetter = postWeave ? governor.text : null;
+  const lengthLint = finalCoverLetter
+    ? lintCoverLetterLength(finalCoverLetter, lengthBudget, language)
+    : null;
 
   // Resume editor pass (#1) — JSON→JSON critique with ID-preservation guard.
   const resumeEditor = rewrittenProfile
@@ -489,6 +586,9 @@ export async function generateForFixture(
     resumeStyleRewriteApplied: resumeStyle.applied,
     resumeStyleViolationsBefore: resumeStyle.before,
     resumeStyleViolationsAfter: resumeStyle.after,
+    lengthLint,
+    lengthGovernorApplied: governor.applied,
+    wordsBeforeGovernor: governor.wordsBefore,
     durationMs: Date.now() - start,
   };
 }

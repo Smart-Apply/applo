@@ -124,6 +124,13 @@ export class ApplicationResponseDto {
   sourceLanguage?: string;
 
   @ApiPropertyOptional({
+    example: 'standard',
+    description: 'Cover-letter length preference ("kurz" ~250 Wörter, "standard" ~350 Wörter)',
+    enum: ['kurz', 'standard'],
+  })
+  coverLetterLength?: string;
+
+  @ApiPropertyOptional({
     example: 'TRANSLATION_FALLBACK',
     description:
       'Set when the last cross-language export could not be translated — the PDFs were ' +

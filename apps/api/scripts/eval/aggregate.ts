@@ -38,6 +38,21 @@ export interface FixtureStyleSummary {
   verbFirstBullets: string[];
 }
 
+export interface FixtureLengthSummary {
+  /** Body words of the FINAL cover letter (salutation/closing excluded). */
+  words: number;
+  /** The word budget the letter was generated against. */
+  budget: number;
+  /** Whether the final letter still overruns budget + tolerance. */
+  overrun: boolean;
+  /** 'critical' = the "2-page" class (words >= budget × 1.5). */
+  severity: 'ok' | 'warn' | 'critical';
+  /** True when the guarded shorten pass replaced an overrun draft. */
+  governorApplied: boolean;
+  /** Body words BEFORE the governor pass. */
+  wordsBefore: number;
+}
+
 export interface FixtureResult {
   id: string;
   profession: string;
@@ -46,6 +61,8 @@ export interface FixtureResult {
   grounding?: FixtureGroundingSummary;
   coverage?: FixtureCoverageSummary;
   style?: FixtureStyleSummary;
+  /** Deterministic length lint of the FINAL cover letter (absent when no letter). */
+  length?: FixtureLengthSummary;
   /** True when the style-rewrite "teeth" pass replaced the draft with a cleaner one. */
   styleRewriteApplied?: boolean;
   /** Deterministic style violations in the cover letter BEFORE the teeth pass. */
@@ -109,6 +126,18 @@ export interface EvalSummary {
     /** Total German verb-first résumé bullets across fixtures (the anglicised opener). */
     verbFirstViolations: number;
   };
+  length: {
+    /** % of fixtures whose FINAL cover letter overruns budget + tolerance. */
+    overrunRate: number;
+    /** Mean body word count of the final cover letters. */
+    meanWords: number;
+    /** The word budget measured against. */
+    budget: number;
+    /** Fixtures in the 'critical' (≥ budget × 1.5) class. */
+    criticalCount: number;
+    /** Fixtures where the guarded shorten pass replaced an overrun draft. */
+    governorAppliedCount: number;
+  };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
 }
@@ -158,6 +187,21 @@ export function summarize(
     verbFirstViolations: ok.reduce((acc, r) => acc + (r.style?.verbFirstBullets?.length ?? 0), 0),
   };
 
+  // Length (deterministic) — only over fixtures that produced a cover letter.
+  const withLength = ok.filter((r) => r.length);
+  const length = {
+    overrunRate:
+      withLength.length === 0
+        ? 0
+        : Math.round(
+            (withLength.filter((r) => r.length!.overrun).length / withLength.length) * 100,
+          ),
+    meanWords: mean(withLength.map((r) => r.length!.words)),
+    budget: withLength[0]?.length?.budget ?? 0,
+    criticalCount: withLength.filter((r) => r.length!.severity === 'critical').length,
+    governorAppliedCount: withLength.filter((r) => r.length!.governorApplied).length,
+  };
+
   const byLanguage: Record<string, LanguageBreakdown> = {};
   for (const lang of ['de', 'en'] as EvalLanguage[]) {
     const subset = ok.filter((r) => r.language === lang);
@@ -187,6 +231,7 @@ export function summarize(
     },
     coverage,
     style,
+    length,
     byLanguage,
     results,
   };
@@ -228,6 +273,13 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    DE verb-first bullets          ${summary.style.verbFirstViolations}`);
   lines.push(`    style-rewrite applied          ${summary.style.styleRewriteAppliedCount} fixtures`);
   lines.push(`    résumé-style-rewrite applied   ${summary.style.resumeStyleRewriteAppliedCount} fixtures`);
+  lines.push('');
+  lines.push('  Cover-letter length (deterministic, body words):');
+  lines.push(`    budget                         ${summary.length.budget} words`);
+  lines.push(`    mean word count                ${summary.length.meanWords.toFixed(0)}`);
+  lines.push(`    overrun rate (final letters)   ${summary.length.overrunRate}%`);
+  lines.push(`    critical (≥1.5× budget)        ${summary.length.criticalCount} fixtures`);
+  lines.push(`    length governor applied        ${summary.length.governorAppliedCount} fixtures`);
   lines.push('');
   lines.push('  By language:');
   for (const [lang, b] of Object.entries(summary.byLanguage)) {

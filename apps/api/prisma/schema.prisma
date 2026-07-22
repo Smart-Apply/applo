@@ -337,6 +337,10 @@ model Application {
   // Language preference for generated content (ISO 639-1 code)
   language String? @default("de") // de, en, fr, es, it
 
+  // Cover-letter length preference: 'kurz' (~250 body words) | 'standard' (~350).
+  // Resolved to a word budget for the prompts + deterministic length checks.
+  coverLetterLength String @default("standard")
+
   // Metadata
   notes        String?
   errorMessage String?
