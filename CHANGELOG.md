@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.8.0](https://github.com/Smart-Apply/applo/compare/v4.7.1...v4.8.0) (2026-07-22)
+
+
+### Features
+
+* **web:** bilingual UI — full English translation with language switcher ([#675](https://github.com/Smart-Apply/applo/issues/675)) ([0e98ec1](https://github.com/Smart-Apply/applo/commit/0e98ec1d4b9a1c227396c737e49db976aa5fa752))
+
+
+### Performance Improvements
+
+* **api:** slim API Docker builder install to the api workspace slice ([#677](https://github.com/Smart-Apply/applo/issues/677)) ([22a88f2](https://github.com/Smart-Apply/applo/commit/22a88f202c82037cfcc5d12232378c6aebed8195))
+
 ## [4.7.1](https://github.com/Smart-Apply/applo/compare/v4.7.0...v4.7.1) (2026-07-22)
 
 
