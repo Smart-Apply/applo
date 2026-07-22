@@ -4,7 +4,7 @@
 Deliver a production-grade, multi-provider application with:
 1) **Frontend (Next.js 16 + React 19)**: Auth (email/password + OAuth + 2FA), profile management, job-posting ingestion, application dashboard with PDF preview/editing, deployed to **Cloudflare Workers** via OpenNext.
 2) **Backend API (NestJS 11)**: Candidate profile (skills, experiences, education, certificates, projects, languages), ingests job postings (text/URL/file → normalized), generates tailored cover letter + resume on Azure OpenAI / mock.
-3) **PDF Generation**: `@react-pdf/renderer` (TSX templates, 50 variants, ATS-optimized), stored via pluggable storage (Cloudflare R2 / disk) and retrieved via signed URLs.
+3) **PDF Generation**: `@react-pdf/renderer` (TSX templates — 3 registered designs × color variants, ATS-optimized), stored via pluggable storage (Cloudflare R2 / disk) and retrieved via signed URLs.
 
 ## Agent Instructions
 For specific tasks, refer to these specialized instruction files:
@@ -154,7 +154,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
   - Resume parsing intake: `pdf-parse` (PDF text) + `mammoth` (DOCX text).
-  - Currently registered TSX designs: `classic-ats`, `harvard-classic`, `elegant-sidebar` (all 5 color variants resolve via single factory + DB `accentColor`). Templates without a registered factory cause `PdfService` to throw — there is no fallback path.
+  - Currently registered TSX designs: `classic-ats`, `harvard-classic`, `elegant-sidebar` (all 5 color variants resolve via single factory + DB `accentColor`). Templates without a registered factory cause `PdfService` to throw — there is no fallback path; as defense in depth, `TemplatesService` filters such rows out of the catalog + language resolution at read time, and the canonical seed (`prisma/seed-react-pdf-templates.ts`, `pnpm prisma:seed:templates`, also run by `prisma db seed` via `seed-all`) upserts the registered rows and **deactivates** any active row without a factory (legacy HBS-era seeds were deleted). New designs must be added to BOTH `template-registry.ts` and the seed's `DESIGNS` array.
 - **Email:** Resend (`resend`) for transactional mail
 - **Logging:** Pino (request logs) + Winston with daily rotation (audit, 90-day retention)
 - **Monitoring:** Sentry (`@sentry/node` + `@sentry/profiling-node`)
@@ -205,7 +205,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `resume-parser` — PDF/DOCX → Profile bootstrap (pdf-parse + mammoth)
 - `storage` — pluggable providers (`disk` | `r2`)
 - `subscription` — plans & usage limits
-- `templates` — template catalog
+- `templates` — template catalog. Read paths are registry-filtered: `findAll`, `findByCategoryAndLanguage` and `findDefault` only return rows whose design resolves to a registered react-pdf factory (`pdf-v2/template-registry.ts#isRenderableTemplate`), so the wizard can never offer a template that would crash generation. Rows are seeded by `prisma/seed-react-pdf-templates.ts` (the canonical source; deactivates unresolvable active rows).
 - `uploads` — file uploads
 - `user-preferences` — per-user settings
 - `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Applo. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 5/month, Pro+ unlimited); usage recorded only after success. Each check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
@@ -362,7 +362,7 @@ All endpoints under `/api/v1/mailbox-sync/*` are gated by `@RequiresFeature('ema
 
 ### Templates (Protected)
 
-**GET /api/v1/templates** — list available PDF templates (50 variants, by language × design)
+**GET /api/v1/templates** — list available PDF templates (registry-filtered: only designs with a registered react-pdf factory, grouped client-side by `baseTemplateId` for color swatches)
 
 ### Profile Endpoints (Protected)
 

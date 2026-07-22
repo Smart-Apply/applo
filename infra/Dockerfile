@@ -80,7 +80,7 @@ RUN pnpm --filter @applo/api build
 
 # Compile Prisma seed scripts to JavaScript so the runtime image doesn't need
 # ts-node. Output goes to apps/api/prisma/dist/.
-RUN echo '{"extends":"./tsconfig.json","compilerOptions":{"module":"commonjs","target":"ES2021","outDir":"./prisma/dist","moduleResolution":"node","esModuleInterop":true,"skipLibCheck":true,"resolveJsonModule":true,"allowSyntheticDefaultImports":true,"baseUrl":"."},"include":["prisma/seed.ts","prisma/seed-all.ts","prisma/seed-multilingual-templates.ts","prisma/seed-templates-autodiscover.ts"]}' > apps/api/tsconfig.seed.json && \
+RUN echo '{"extends":"./tsconfig.json","compilerOptions":{"module":"commonjs","target":"ES2021","outDir":"./prisma/dist","moduleResolution":"node","esModuleInterop":true,"skipLibCheck":true,"resolveJsonModule":true,"allowSyntheticDefaultImports":true,"baseUrl":"."},"include":["prisma/seed.ts","prisma/seed-all.ts","prisma/seed-react-pdf-templates.ts"]}' > apps/api/tsconfig.seed.json && \
     cd apps/api && pnpm exec tsc --project tsconfig.seed.json
 
 # ---------------------------------------------------------------------------

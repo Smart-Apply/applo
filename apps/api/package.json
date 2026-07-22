@@ -33,8 +33,7 @@
     "prisma:generate": "prisma generate --schema=./prisma/schema.prisma && node scripts/sanitize-prisma-client.js",
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
     "prisma:seed": "dotenv -e .env -- ts-node -r tsconfig-paths/register prisma/seed.ts",
-    "prisma:seed:templates": "dotenv -e .env -- ts-node -r tsconfig-paths/register prisma/seed-templates-autodiscover.ts",
-    "prisma:seed:templates:legacy": "dotenv -e .env -- ts-node -r tsconfig-paths/register prisma/seed-multilingual-templates.ts",
+    "prisma:seed:templates": "dotenv -e .env -- ts-node -r tsconfig-paths/register prisma/seed-react-pdf-templates.ts",
     "prisma:cleanup:templates": "dotenv -e .env -- ts-node -r tsconfig-paths/register prisma/cleanup-old-templates.ts",
     "prisma:studio": "prisma studio --schema=./prisma/schema.prisma",
     "template:create": "ts-node -r tsconfig-paths/register scripts/create-template.ts",
@@ -150,6 +149,6 @@
     "uuid": "^14.0.1"
   },
   "prisma": {
-    "seed": "node prisma/dist/seed-all.js"
+    "seed": "node prisma/dist/prisma/seed-all.js"
   }
 }

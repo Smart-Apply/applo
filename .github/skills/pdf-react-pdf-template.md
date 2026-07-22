@@ -218,7 +218,13 @@ const REGISTRY: RegisteredReactPdfTemplate[] = [
 ];
 ```
 
-That's the only wiring needed — `ReactPdfRendererService.supports()` and the per-call selector in `PdfService` pick it up automatically. Templates not in the registry fall back to Puppeteer.
+Then add the design (id, name, category, color variants) to the `DESIGNS` array in
+[`apps/api/prisma/seed-react-pdf-templates.ts`](../../apps/api/prisma/seed-react-pdf-templates.ts)
+and run `pnpm prisma:seed:templates` — the seed is the canonical source of catalog rows and
+**deactivates** active rows without a registered factory (`TemplatesService` also hides such
+rows from the catalog at read time, and `PdfService` throws if one is ever rendered). A
+registry entry without a seed entry means your design has no DB rows; a seed entry without a
+registry entry gets deactivated on the next run.
 
 ### 6. Validate
 

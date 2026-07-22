@@ -1,6 +1,6 @@
 # Fix Plan: Template Customization Gap (Fonts, Sizing, Photo, Layout Breadth)
 
-> **Status:** Planned · **Priority:** P2 (competitor-parity; contains one real P1 bug in §2.5)
+> **Status:** Planned · **Priority:** P2 (competitor-parity; contained one real P1 bug in §2.5 — **✅ fixed 2026-07-22**, see §3.1)
 > **Affected area:** `apps/api/src/pdf-v2/*` (renderer, registry, meta contract), `apps/api/src/templates`, `apps/api/prisma/schema.prisma`, edit-page design UI
 > **Related competitor feedback:** jobstep.io review — *"Die Templates sind nett, aber leider nur sehr eingeschränkt anpassbar. Farbe und Schriftgröße ändern geht — viel mehr nicht."* Applo currently offers **less** than that: color variants yes, font size **no**.
 
@@ -65,11 +65,13 @@ Every template hardcodes `fontFamily: 'Helvetica'` with fixed `FS`/`SP` px-deriv
 3. **Photo is profile data + a per-application toggle**, mirroring how DACH users actually work (one photo, per-application decision to include it).
 4. **Fix the catalog/registry integrity bug first** — it's small and independent.
 
-### 3.1 Catalog integrity fix (bug, ship first)
+### 3.1 Catalog integrity fix (bug, ship first) — ✅ Implemented (2026-07-22)
 
 - `TemplatesService.findAll`: filter rows through `resolveReactPdfTemplate` (or the existing `ReactPdfRendererService.supports()`) so unregistered designs never reach the client. Log a warning listing hidden rows.
 - One-off cleanup guidance (no migration): deactivate legacy seed rows in staging/prod DBs; delete the dead legacy seeds (`seed-templates.ts`, `seed-multilingual-templates.ts`) in favor of the autodiscover/TSX-era seeding, or mark their entries `isActive: false`.
 - Defense in depth: keep the `PdfService` throw (correct last line of defense).
+
+> **Implementation deltas:** shipped as `fix(templates)` with a type-aware pure helper (`isRenderableTemplate` in `template-registry.ts`) filtering `findAll`, `findByCategoryAndLanguage` (both language + EN-fallback picks — a same-category legacy row could previously win the language resolution and crash the export processor) and `findDefault`. The "autodiscover" seed turned out to be HBS-era and dead (read a deleted `src/pdf/templates` folder), and `seed-all.ts` (the `prisma db seed` hook) was still re-seeding the legacy multilingual rows — all three legacy seeds were deleted and replaced by the canonical `prisma/seed-react-pdf-templates.ts`, which upserts the 18 registered rows and idempotently **deactivates** any active row without a TSX factory (the staging/prod cleanup, expressed as seed logic instead of manual SQL). Compiled-seed paths in `seed-all`/`package.json#prisma.seed` were fixed en route (they pointed at the wrong `prisma/dist` depth).
 
 ### 3.2 Schema + DTO
 

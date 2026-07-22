@@ -255,7 +255,7 @@ recorded baselines live in
 | **JobPosting**     | Parsed job listings                            |
 | **Application**    | Generated applications + PDFs (+ per-language translation cache in `translations` Json) |
 | **Validation**     | Standalone AI check of an external application |
-| **ResumeTemplate** | PDF templates (50 variants)                    |
+| **ResumeTemplate** | PDF templates (3 designs × colors × 2 types)   |
 | **Interview**      | AI-generated interview Q&A                     |
 | **RefreshToken**   | Rotated refresh tokens                         |
 | **Session**        | Device/IP/UA tracking                          |
@@ -404,7 +404,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/mailbox-sync/microsoft/callback` | OAuth redirect target (public)                                              |
 | POST     | `/mailbox-sync/microsoft/webhook`  | MS Graph push notifications (public)                                        |
 | DELETE   | `/mailbox-sync/connections/:id`    | Disconnect mailbox (Premium)                                                |
-| GET      | `/templates`                       | Template catalog                                                            |
+| GET      | `/templates`                       | Template catalog (registry-filtered: only designs with a react-pdf factory) |
 | GET      | `/sessions`                        | Active sessions                                                             |
 | DELETE   | `/sessions/:id`                    | Remote logout                                                               |
 | GET      | `/subscription`                    | Plan & usage                                                                |

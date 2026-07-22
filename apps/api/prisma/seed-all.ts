@@ -18,17 +18,18 @@ async function main() {
   console.log('📍 Current directory:', __dirname);
   
   try {
+    // Child seeds are compiled next to this file (prisma/dist/prisma/*.js in
+    // the Docker image) — resolve them sibling-relative so the layout of the
+    // tsc output can't break the paths.
     // 1. Seed demo data (user, profile, etc.)
     console.log('\n📦 Step 1: Seeding demo data...');
-    execSync('node prisma/dist/seed.js', {
-      cwd: join(__dirname, '..', '..'),
+    execSync(`node "${join(__dirname, 'seed.js')}"`, {
       stdio: 'inherit',
     });
     
-    // 2. Seed multilingual templates
-    console.log('\n📦 Step 2: Seeding multilingual templates...');
-    execSync('node prisma/dist/seed-multilingual-templates.js', {
-      cwd: join(__dirname, '..', '..'),
+    // 2. Seed the react-pdf (TSX) template catalog + deactivate legacy rows
+    console.log('\n📦 Step 2: Seeding react-pdf templates...');
+    execSync(`node "${join(__dirname, 'seed-react-pdf-templates.js')}"`, {
       stdio: 'inherit',
     });
     
