@@ -201,17 +201,13 @@ export function useUpdateApplicationResume(applicationId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { resume: ResumeData; contentLanguage?: string }) =>
+    mutationFn: (data: { resume: ResumeData }) =>
       api.applications.updateResume(applicationId, data),
     onSuccess: (updatedApplication) => {
       // Optimistic update: Update cache directly without refetching
       queryClient.setQueryData(['applications', applicationId], updatedApplication);
       // Invalidate keywords query (secondary data)
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId, 'keywords'] });
-      // Invalidate translation cache status (contentLanguage may have changed)
-      queryClient.invalidateQueries({
-        queryKey: ['applications', applicationId, 'translation-cache-status'],
-      });
       toastSuccess('Lebenslauf gespeichert');
     },
     onError: (error: unknown) => {
@@ -299,7 +295,7 @@ export function useExportApplication(applicationId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (language?: 'de' | 'en' | 'fr' | 'es' | 'it') =>
+    mutationFn: (language?: 'de' | 'en') =>
       api.applications.export(applicationId, language),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId] });

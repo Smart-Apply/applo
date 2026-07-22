@@ -31,7 +31,9 @@ import {
 } from 'lucide-react';
 import type { JobPosting, Template } from '@/types';
 
-export type ApplicationLanguage = 'de' | 'en' | 'fr' | 'es' | 'it';
+// Only de/en — the generation prompts never fully supported fr/es/it
+// (see docs/bug_fixes/LANGUAGE_SWITCH_EXPORT.md).
+export type ApplicationLanguage = 'de' | 'en';
 
 /** Faked generation progress: estimated total duration of the pipeline. */
 const TOTAL_SECONDS = 60;
@@ -56,9 +58,6 @@ const MONOCHROME_TEMPLATES = new Set(['classic-ats-resume', 'harvard-classic-res
 const LANGUAGE_OPTIONS: { value: ApplicationLanguage; label: string }[] = [
   { value: 'de', label: 'Deutsch' },
   { value: 'en', label: 'English' },
-  { value: 'fr', label: 'Français' },
-  { value: 'es', label: 'Español' },
-  { value: 'it', label: 'Italiano' },
 ];
 
 interface TemplateGroup {

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 class SkillCategoryDto {
   @ApiPropertyOptional({ example: 'skill-cat-123' })
@@ -51,6 +51,11 @@ class ExperienceEntryDto {
   @IsString()
   endDate?: string;
 
+  @ApiPropertyOptional({ example: false, description: 'Whether this is the current position' })
+  @IsOptional()
+  @IsBoolean()
+  isCurrent?: boolean;
+
   @ApiPropertyOptional({ example: 'Verantwortlich für die Entwicklung von Cloud-Lösungen...' })
   @IsOptional()
   @IsString()
@@ -83,6 +88,11 @@ class ProjectEntryDto {
   @IsString()
   date?: string;
 
+  @ApiPropertyOptional({ example: '2024-03-01', description: 'Raw ISO date backing `date`' })
+  @IsOptional()
+  @IsString()
+  startDate?: string;
+
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
@@ -107,6 +117,16 @@ class EducationEntryDto {
   @ApiProperty({ example: '2019 – 2023' })
   @IsString()
   year: string;
+
+  @ApiPropertyOptional({ example: '2019-10-01', description: 'Raw ISO date backing `year`' })
+  @IsOptional()
+  @IsString()
+  startDate?: string;
+
+  @ApiPropertyOptional({ example: '2023-09-30', description: 'Raw ISO date backing `year`' })
+  @IsOptional()
+  @IsString()
+  endDate?: string;
 
   @ApiPropertyOptional({ example: 'Informatik' })
   @IsOptional()
@@ -289,8 +309,11 @@ export class UpdateResumeDto {
 
   @ApiPropertyOptional({
     example: 'en',
+    deprecated: true,
     description:
-      'The language the content is currently in (ISO 639-1). Used to track content language when user edits in a translated view.',
+      'DEPRECATED and ignored. Content is always edited in its source language; ' +
+      'cross-language exports translate on the fly (kept only so older clients ' +
+      'sending the field do not fail the whitelist validation).',
   })
   @IsOptional()
   @IsString()

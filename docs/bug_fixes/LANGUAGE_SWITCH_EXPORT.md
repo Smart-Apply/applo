@@ -1,8 +1,22 @@
 # Bug Fix Plan: Language Switch Leaves Content Untranslated on Export
 
-> **Status:** Planned · **Priority:** P1 (competitor-parity issue)
+> **Status:** ✅ Implemented (2026-07-22) · **Priority:** P1 (competitor-parity issue)
 > **Affected area:** `apps/api/src/applications` (export flow), `apps/api/src/jobs/processors/application.processor.ts`, `apps/api/src/applications/resume-template.util.ts`, edit-page export UI
 > **Related competitor feedback:** jobstep.io review — *"Wenn ich mich auf Englisch bewerben möchte, kann ich zwar die Sprache umstellen, es bleiben jedoch Felder, die nicht ins Englische übersetzt werden."* We currently have the **same class of bug**.
+>
+> **Implementation notes (delta vs. plan):** shipped as designed with one strengthening
+> deviation — §3.2's "structured JSON→JSON translation" was implemented as **segment-based**
+> translation (`translation/translation-segments.util.ts`): only flat `{ id, text }` display
+> strings pass through the LLM (strict `json_schema`, `v1/translate-resume.md`), so ids,
+> dates, URLs and contact data cannot be mangled by construction; the guard rejects any
+> incomplete/duplicated segment set. On failure the export renders **fully in the source
+> language** (labels included, never mixed) and surfaces `exportWarning:
+> 'TRANSLATION_FALLBACK'`. §3.1's date fix additionally token-maps month names /
+> "Heute"/"Present" on legacy rows without raw dates (`resume-date-localizer.util.ts`),
+> and raw-ISO `project.date`/`certification.date` strings that legacy generated rows
+> rendered verbatim are now detected and formatted. fr/es/it were removed from the export
+> **and** creation surfaces (§3.6). `UpdateResumeDto.contentLanguage` was kept as a
+> deprecated no-op field (deploy-window safety) and removed from the frontend.
 
 ---
 

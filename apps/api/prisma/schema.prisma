@@ -355,6 +355,11 @@ model Application {
   // Source language tracking (for initial generation)
   sourceLanguage String? // Original content language when app was created (ISO 639-1)
 
+  // Cached per-language translations for cross-language exports.
+  // Shape: { [lang]: { resume, coverLetter, sourceHash, cachedAt } | { failedAt, sourceHash } }
+  // Invalidated by content hash (xxhash of resumeText+coverLetterText).
+  translations Json?
+
   // Interview sessions for this application
   interviewSessions InterviewSession[]
 

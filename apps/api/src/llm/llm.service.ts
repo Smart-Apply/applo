@@ -132,8 +132,11 @@ export class LLMService {
    * Detect the language of the provided text content
    * Uses simple heuristics based on common words and patterns
    * Returns 'en' or 'de' (defaults to 'en' if uncertain)
+   *
+   * Public: also used by the export processor to determine the source
+   * language of stored content on legacy rows without `sourceLanguage`.
    */
-  private detectContentLanguage(text: string): 'en' | 'de' {
+  detectContentLanguage(text: string): 'en' | 'de' {
     if (!text || text.trim().length === 0) return 'en';
 
     // Strip HTML tags for analysis

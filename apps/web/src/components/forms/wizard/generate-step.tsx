@@ -27,14 +27,13 @@ import {
 } from 'lucide-react';
 import type { JobPosting, Template } from '@/types';
 
-export type ApplicationLanguage = 'de' | 'en' | 'fr' | 'es' | 'it';
+// Only de/en — the generation prompts never fully supported fr/es/it
+// (see docs/bug_fixes/LANGUAGE_SWITCH_EXPORT.md).
+export type ApplicationLanguage = 'de' | 'en';
 
 const LANGUAGE_OPTIONS: { value: ApplicationLanguage; label: string; flag: string }[] = [
   { value: 'de', label: 'Deutsch', flag: '🇩🇪' },
   { value: 'en', label: 'English', flag: '🇬🇧' },
-  { value: 'fr', label: 'Français', flag: '🇫🇷' },
-  { value: 'es', label: 'Español', flag: '🇪🇸' },
-  { value: 'it', label: 'Italiano', flag: '🇮🇹' },
 ];
 
 // Helper to group templates by base template for color variants

@@ -23,7 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EditableResume, resolveResumeDesign } from '@/components/applications/editable-resume';
 import { AtsOptimizer } from '@/components/applications/ats-optimizer';
 import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
-import { LanguageSelector } from '@/components/applications/language-selector';
+import { LanguageSelector, toExportLanguage, type ExportLanguage } from '@/components/applications/language-selector';
 import {
   useApplication,
   useExportApplication,
@@ -120,7 +120,7 @@ export default function ApplicationResumeEditorPage() {
   const [genLoading, setGenLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<Tab>('resume');
-  const [selectedLanguage, setSelectedLanguage] = useState<'de' | 'en' | 'fr' | 'es' | 'it'>('de');
+  const [selectedLanguage, setSelectedLanguage] = useState<ExportLanguage>('de');
   const [languageInitialized, setLanguageInitialized] = useState(false);
 
   // Serialised payloads we've already attempted to save. Prevents the auto-save
@@ -141,8 +141,7 @@ export default function ApplicationResumeEditorPage() {
   // ── init language ──
   useEffect(() => {
     if (application?.language && !languageInitialized) {
-      const lang = application.language as 'de' | 'en' | 'fr' | 'es' | 'it';
-      if (['de', 'en', 'fr', 'es', 'it'].includes(lang)) setSelectedLanguage(lang);
+      setSelectedLanguage(toExportLanguage(application.language));
       setLanguageInitialized(true);
     }
   }, [application?.language, languageInitialized]);
@@ -194,7 +193,7 @@ export default function ApplicationResumeEditorPage() {
     lastAttemptedResume.current = snapshot;
     try {
       const normalized = normalizeResumeForSave(parsedResume);
-      await updateResume.mutateAsync({ resume: normalized, contentLanguage: selectedLanguage });
+      await updateResume.mutateAsync({ resume: normalized });
       // Reconcile to the normalized value so we don't loop on trim/format diffs —
       // but ONLY if nothing was edited (e.g. via the AI assistant) while this save
       // was in flight, otherwise we'd clobber the newer change. A surviving diff
@@ -207,7 +206,7 @@ export default function ApplicationResumeEditorPage() {
         description: (err as Error).message,
       });
     }
-  }, [parsedResume, selectedLanguage, updateResume]);
+  }, [parsedResume, updateResume]);
 
   useEffect(() => {
     if (!resumeInitialized || !hasResumeChanges || updateResume.isPending) return;
@@ -400,6 +399,18 @@ export default function ApplicationResumeEditorPage() {
   const handleExport = async () => {
     if (!canExport) return;
     try {
+      // Cross-language export: the backend translates the content on the fly —
+      // set the expectation and ask the user to double-check the result.
+      const contentLanguage = toExportLanguage(application.sourceLanguage ?? application.language);
+      if (selectedLanguage !== contentLanguage) {
+        toast.info('Inhalte werden automatisch übersetzt', {
+          id: 'export-translation-hint',
+          description:
+            selectedLanguage === 'en'
+              ? 'Der Export wird ins Englische übersetzt – bitte prüfe das Ergebnis.'
+              : 'Der Export wird ins Deutsche übersetzt – bitte prüfe das Ergebnis.',
+        });
+      }
       await exportApplication.mutateAsync(selectedLanguage);
       toast.success('Export gestartet! Du wirst zur Detailseite weitergeleitet...');
       setTimeout(() => router.push(`/applications/${applicationId}`), 1500);
@@ -538,7 +549,11 @@ export default function ApplicationResumeEditorPage() {
                 description="Beschreibe, wie das Anschreiben angepasst werden soll."
               />
             )}
-            <LanguageSelector value={selectedLanguage} />
+            <LanguageSelector
+              value={selectedLanguage}
+              onChange={setSelectedLanguage}
+              disabled={application.status === 'GENERATING' || exportApplication.isPending}
+            />
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>

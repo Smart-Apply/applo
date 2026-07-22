@@ -885,7 +885,7 @@ export const api = {
         method: 'DELETE',
       }),
 
-    updateResume: (id: string, data: { resume: ResumeData; contentLanguage?: string }) =>
+    updateResume: (id: string, data: { resume: ResumeData }) =>
       apiRequest<Application>(`/applications/${id}/resume`, {
         method: 'PUT',
         body: JSON.stringify(data),
@@ -942,7 +942,7 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
-    export: (id: string, language?: 'de' | 'en' | 'fr' | 'es' | 'it') =>
+    export: (id: string, language?: 'de' | 'en') =>
       apiRequest<Application>(`/applications/${id}/export`, {
         method: 'POST',
         body: language ? JSON.stringify({ language }) : undefined,

@@ -37,14 +37,16 @@ export class CreateApplicationDto {
   generateCoverLetter?: boolean = true;
 
   @ApiPropertyOptional({
-    description: 'Sprache der Bewerbungsunterlagen (ISO 639-1 Code)',
+    description:
+      'Sprache der Bewerbungsunterlagen (ISO 639-1 Code). Nur de/en — weitere Sprachen ' +
+      'werden von der Prompt-Kette nicht unterstützt.',
     example: 'de',
-    enum: ['de', 'en', 'fr', 'es', 'it'],
+    enum: ['de', 'en'],
     default: 'de',
   })
   @IsOptional()
   @IsString()
-  @IsIn(['de', 'en', 'fr', 'es', 'it'])
+  @IsIn(['de', 'en'])
   language?: string = 'de';
 
   @ApiPropertyOptional({
