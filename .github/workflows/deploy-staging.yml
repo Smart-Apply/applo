@@ -83,20 +83,52 @@ jobs:
     if: needs.detect-changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     # `staging` GitHub Environment — no required reviewers (auto-deploys).
-    # Provides the staging-scoped FLY_API_TOKEN.
+    # Uses the repo-level FLY_REGISTRY_TOKEN (org-scoped) for the registry
+    # push + the cross-app image promote.
     environment: staging
     steps:
       - uses: actions/checkout@v7
       - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Deploy staging API
+      # Build the API image ONCE on the runner (GitHub-native type=gha
+      # cache), push it to Fly's registry under the shared prod-app
+      # namespace, then promote that exact image with `flyctl deploy
+      # --image` (no Fly-side rebuild). deploy-prod later promotes the SAME
+      # sha-tagged image, so prod never does the old cold Depot rebuild.
+      - name: Authenticate Docker to Fly registry
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          # Org-scoped token: pushes to registry.fly.io AND deploys both
+          # apps (staging pulls the prod-namespace image built here).
+          FLY_API_TOKEN: ${{ secrets.FLY_REGISTRY_TOKEN }}
+        run: flyctl auth docker
+
+      - name: Build + push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: registry.fly.io/smart-apply-api:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Plain single-arch image manifest (no attestation index) so
+          # `flyctl deploy --image` gets a runnable image, not an OCI
+          # attestation manifest.
+          provenance: false
+
+      - name: Deploy staging API (promote image)
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_REGISTRY_TOKEN }}
+        # `flyctl deploy --image` skips the build entirely — it just pulls
+        # the pre-built image, runs release_command (prisma migrate deploy)
+        # against staging's DIRECT_URL, then rolling-restarts.
         run: |
           flyctl deploy \
             --app "${{ env.STAGING_FLY_APP }}" \
             --config fly.staging.toml \
-            --remote-only \
+            --image "registry.fly.io/smart-apply-api:sha-${{ github.sha }}" \
             --strategy rolling \
             --wait-timeout 600
 
@@ -128,7 +160,7 @@ jobs:
       - name: Show recent Fly logs on failure
         if: failure()
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_REGISTRY_TOKEN }}
         run: |
           echo "=== Last 100 log lines ==="
           flyctl logs --app "${{ env.STAGING_FLY_APP }}" --no-tail 2>&1 | tail -100 || true

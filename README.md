@@ -227,9 +227,11 @@ via `/api/config`, the `PUBLIC_API_URL` GitHub Variable trap) lives in
 **CI/CD** — four GitHub Actions workflows:
 
 - [`ci.yml`](.github/workflows/ci.yml) — lint + unit tests + lockfile sync + per-PR Neon migration dry-run (on every PR)
-- [`deploy-staging.yml`](.github/workflows/deploy-staging.yml) — auto-deploy on push to `main`
-- [`deploy-prod.yml`](.github/workflows/deploy-prod.yml) — deploy on tag `v*.*.*` push, gated by the `production` GitHub Environment
+- [`deploy-staging.yml`](.github/workflows/deploy-staging.yml) — auto-deploy on push to `main`; **builds the API image once on the runner** (GitHub-native `type=gha` cache) and pushes it to `registry.fly.io` for promotion
+- [`deploy-prod.yml`](.github/workflows/deploy-prod.yml) — deploy on tag `v*.*.*` push, gated by the `production` GitHub Environment; **promotes the exact image staging built** (`flyctl deploy --image`, no rebuild)
 - [`release-please.yml`](.github/workflows/release-please.yml) — maintains the SemVer Release PR + tags from Conventional Commits
+
+> The API build-once-promote flow needs the `FLY_REGISTRY_TOKEN` repo secret (org-scoped Fly token). See [docs/security/SECRETS_ROTATION.md](docs/security/SECRETS_ROTATION.md).
 
 ## 📖 Documentation
 

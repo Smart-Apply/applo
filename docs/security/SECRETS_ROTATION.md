@@ -40,7 +40,8 @@
 | `QSTASH_TOKEN` + signing keys   | Fly Secrets ← Upstash    | API (background job queue)           |
 | `RESEND_API_KEY`                | Fly Secrets ← Resend     | API (transactional email)            |
 | OAuth client secrets (Google / Microsoft / Azure AD) | Fly Secrets ← provider console | API (OAuth flows)        |
-| `FLY_API_TOKEN`                 | GitHub Environment ← Fly | CI deploy workflow                   |
+| `FLY_API_TOKEN` (per-app)       | GitHub Environment ← Fly | Manual `flyctl` break-glass / per-app deploys (CI now uses `FLY_REGISTRY_TOKEN`) |
+| `FLY_REGISTRY_TOKEN` (org)      | Repo secret ← Fly (org)  | CI API deploy — build-once-promote (`registry.fly.io` push + cross-app `flyctl deploy --image`) |
 | `CLOUDFLARE_API_TOKEN`          | GitHub Environment ← CF  | CI deploy workflow                   |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`| Public — committed       | Frontend (CAPTCHA widget)            |
 | `TURNSTILE_SECRET_KEY`          | Fly Secrets ← Cloudflare | API (CAPTCHA verification)           |
@@ -380,27 +381,34 @@ fly secrets set --app smart-apply-api \
 
 ---
 
-## 9. Fly deploy token (CI)
+## 9. Fly deploy tokens (CI)
 
 **Blast radius:** GitHub Actions deploys fail until the new token is in
-GitHub Environment secrets. Doesn't affect the running app.
+the repo/Environment secrets. Doesn't affect the running app.
 
 **Cadence:** Annually, OR immediately when a contributor leaves the org.
 
-```bash
-# ── Step 1: Create new token, scoped to ONE app ──
-# Prod token (for the production environment):
-fly tokens create deploy --app smart-apply-api --name "github-actions-prod-$(date +%Y%m)" --expiry 8760h
+CI uses the **build-once-promote** flow (build the API image once on the
+runner → push to `registry.fly.io` → `flyctl deploy --image` to both apps).
+That needs an **org-scoped** token (`FLY_REGISTRY_TOKEN`) because staging
+pulls the shared prod-namespace image — a per-app token can't do the
+cross-app pull, nor push to the registry.
 
-# Staging token (for the staging environment):
+```bash
+# ── Step 1: Create the org token CI uses (build-once-promote) ──
+# `personal` is the org slug (see `flyctl orgs list`).
+flyctl tokens create org personal --name "github-actions-registry-$(date +%Y%m)"
+# Copy the FlyV1 ... token immediately — Fly shows it once.
+
+# (Optional) per-app deploy tokens for manual `flyctl` break-glass only —
+# CI no longer reads these:
+fly tokens create deploy --app smart-apply-api --name "github-actions-prod-$(date +%Y%m)" --expiry 8760h
 fly tokens create deploy --app smart-apply-api-staging --name "github-actions-staging-$(date +%Y%m)" --expiry 8760h
 
-# Copy the FlyV1 fm2_... token immediately — Fly shows it once.
-
 # ── Step 2: GitHub UI ──
-# Repo → Settings → Environments →
-#   production environment → Secrets → FLY_API_TOKEN → Update
-#   staging environment    → Secrets → FLY_API_TOKEN → Update
+# Repo → Settings → Secrets and variables → Actions →
+#   Repository secrets → FLY_REGISTRY_TOKEN → Update   (the one CI uses)
+# (legacy) Environments → production / staging → Secrets → FLY_API_TOKEN → Update
 
 # ── Step 3: Revoke the old token ──
 fly tokens list
@@ -446,7 +454,8 @@ affect the running Worker.
 | QStash token + signing keys     | 12 months     | Suspected leak                             |
 | Resend API key                  | 12 months     | Suspected leak                             |
 | Google / MS / Azure AD OAuth    | Per provider  | Provider expiration warning email          |
-| Fly deploy token (CI)           | 12 months     | Contributor leaves org                     |
+| Fly registry token (CI, org)    | 12 months     | Contributor leaves org                     |
+| Fly deploy token (CI, per-app)  | 12 months     | Contributor leaves org                     |
 | Cloudflare API token (CI)       | 12 months     | Contributor leaves org                     |
 
 ---
