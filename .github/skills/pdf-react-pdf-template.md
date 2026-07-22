@@ -23,7 +23,15 @@ Do **not** use this for:
 
 - Pure styling tweaks to an already-ported design (just edit the `.tsx` file directly)
 - New Handlebars (`.hbs`) templates — use [`PDF-Template-Agent`](../agents/pdf-template-agent.md) for the legacy pipeline
-- Adding fonts (font registration is its own follow-up; defer for now and use Helvetica/Times-Roman)
+
+**Fonts:** three OFL families are bundled under `apps/api/assets/fonts/` (Lato, Source Sans 3,
+Merriweather) and registered by `react-pdf-loader.ts`; templates consume them through
+`resolveFontStack(meta.fontFamily, FALLBACK_FONTS)` — always define built-in fallback faces
+(Helvetica/Times) so a missing assets folder degrades instead of crashing. To add a family:
+drop Regular/Bold/Italic TTFs + the OFL.txt into a new `assets/fonts/<slug>/` folder, add an
+entry to `BUNDLED_FONT_FAMILIES` in the loader and to `REGISTERED_FONT_FAMILIES` in
+`design-tokens.ts`, extend the `TemplateFontFamily` union in `@applo/shared` + the PATCH DTO
+enum, and re-run the validate script (it renders every design with every family).
 
 ---
 
@@ -114,6 +122,7 @@ Skeleton:
 
 ```tsx
 import { createElement, type ReactElement } from 'react';
+import { resolveDesignTokens } from '../design-tokens';
 import { tLabel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import type { ReactPdfNamespace } from '../react-pdf-loader';
@@ -128,13 +137,26 @@ const inch = (n: number) => n * 72;
 
 const ACCENT_FALLBACK = '#1a1a1a';
 
-const buildResumeStyles = (rp: ReactPdfNamespace, accent: string) =>
+// Base (unscaled) font-size + spacing tables. Render functions resolve them
+// against the per-application design settings (fontScale/density) via
+// resolveDesignTokens — REQUIRED for every new template so templateSettings
+// work uniformly. buildStyles takes the scaled tables as params.
+const FS_BASE = { base: px(11) /* ... */ };
+const SP_BASE = { md: px(8) /* ... */ };
+
+const buildResumeStyles = (
+  rp: ReactPdfNamespace,
+  accent: string,
+  FS: typeof FS_BASE,
+  SP: typeof SP_BASE,
+  lh: (base: number) => number, // wrap body lineHeights: lineHeight: lh(1.5)
+) =>
   rp.StyleSheet.create({
     page: {
       paddingTop: inch(0.5),
       // ...
       fontFamily: 'Helvetica',
-      fontSize: px(11),
+      fontSize: FS.base,
       color: '#1a1a1a',
     },
     // ...
@@ -144,7 +166,8 @@ function ResumeFactory(rp: ReactPdfNamespace) {
   const renderRichText = createRichTextRenderer(rp);
   return ({ data, meta }: ReactPdfResumeProps): ReactElement => {
     const accent = meta.accentColor ?? ACCENT_FALLBACK;
-    const styles = buildResumeStyles(rp, accent);
+    const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+    const styles = buildResumeStyles(rp, accent, FS, SP, lineHeight);
     const t = (k: string) => tLabel(k, meta.language);
     return createElement(
       rp.Document,

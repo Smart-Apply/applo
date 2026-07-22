@@ -15,6 +15,7 @@ import type { ComponentType, ReactElement } from 'react';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import * as nodePath from 'node:path';
+import * as nodeFs from 'node:fs';
 
 export type ReactPdfStyle = Record<string, unknown>;
 
@@ -88,7 +89,142 @@ export function loadReactPdf(): Promise<ReactPdfNamespace> {
       m: string,
     ) => Promise<ReactPdfNamespace>;
     const entryUrl = pathToFileURL(resolveReactPdfEntry()).href;
-    cached = dynamicImport(entryUrl);
+    cached = dynamicImport(entryUrl).then((ns) => {
+      registerBundledFonts(ns);
+      return ns;
+    });
   }
   return cached;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Bundled font registration (TEMPLATE_CUSTOMIZATION §3.4).
+ *
+ * The curated OFL families live under apps/api/assets/fonts/<family>/ and are
+ * registered ONCE, right after the namespace loads — global and idempotent
+ * (registration happens inside the cached promise). Rendering never depends
+ * on them: when the assets folder is missing (unexpected deploy layout) we
+ * log and fall back to react-pdf's built-in faces; `resolveFontFamily` in
+ * design-tokens.ts consults `isFontFamilyRegistered` so templates only ever
+ * reference families that actually registered.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+interface BundledFontCut {
+  file: string;
+  fontWeight?: number;
+  fontStyle?: 'italic';
+}
+
+interface BundledFontFamily {
+  /** react-pdf family name (what templates reference). */
+  family: string;
+  /** Folder under assets/fonts/. */
+  dir: string;
+  fonts: BundledFontCut[];
+}
+
+const BUNDLED_FONT_FAMILIES: BundledFontFamily[] = [
+  {
+    family: 'Lato',
+    dir: 'lato',
+    fonts: [
+      { file: 'Lato-Regular.ttf', fontWeight: 400 },
+      { file: 'Lato-Bold.ttf', fontWeight: 700 },
+      { file: 'Lato-Italic.ttf', fontWeight: 400, fontStyle: 'italic' },
+    ],
+  },
+  {
+    family: 'Source Sans 3',
+    dir: 'source-sans',
+    fonts: [
+      { file: 'SourceSans3-Regular.ttf', fontWeight: 400 },
+      { file: 'SourceSans3-Bold.ttf', fontWeight: 700 },
+      { file: 'SourceSans3-Italic.ttf', fontWeight: 400, fontStyle: 'italic' },
+    ],
+  },
+  {
+    family: 'Merriweather',
+    dir: 'merriweather',
+    fonts: [
+      { file: 'Merriweather-Regular.ttf', fontWeight: 400 },
+      { file: 'Merriweather-Bold.ttf', fontWeight: 700 },
+      { file: 'Merriweather-Italic.ttf', fontWeight: 400, fontStyle: 'italic' },
+    ],
+  },
+];
+
+const registeredFamilies = new Set<string>();
+
+/**
+ * Resolve the assets/fonts directory across every runtime layout:
+ * • apps/api cwd (nest start, ts-node scripts, vitest) → ./assets/fonts
+ * • compiled dist (dist/apps/api/pdf-v2/…) → ../../../../apps/api/assets/fonts
+ * • Docker (/app with assets copied next to dist) → /app/assets/fonts via cwd
+ */
+function resolveFontsDir(): string | undefined {
+  const candidates = [
+    nodePath.join(process.cwd(), 'assets', 'fonts'),
+    nodePath.resolve(__dirname, '../../../../apps/api/assets/fonts'),
+    nodePath.resolve(__dirname, '../../assets/fonts'),
+  ];
+  for (const dir of candidates) {
+    if (nodeFs.existsSync(dir)) return dir;
+  }
+  return undefined;
+}
+
+/**
+ * Register the bundled families against a react-pdf namespace. Called
+ * automatically by `loadReactPdf`; exported so vitest specs (which import
+ * @react-pdf/renderer statically — the eval-based dynamic import above is
+ * not available under the test runner) can register against their namespace.
+ * Idempotent: re-registering a family is a no-op for the Set and harmless
+ * for react-pdf.
+ */
+export function registerBundledFonts(ns: ReactPdfNamespace): void {
+  const fontsDir = resolveFontsDir();
+  if (!fontsDir) {
+     
+    console.warn(
+      '[react-pdf-loader] assets/fonts not found — bundled font families unavailable, using built-in faces',
+    );
+    return;
+  }
+
+  for (const bundle of BUNDLED_FONT_FAMILIES) {
+    const fonts = bundle.fonts
+      .map((cut) => ({
+        src: nodePath.join(fontsDir, bundle.dir, cut.file),
+        fontWeight: cut.fontWeight,
+        fontStyle: cut.fontStyle,
+      }))
+      .filter((cut) => nodeFs.existsSync(cut.src));
+
+    if (fonts.length !== bundle.fonts.length) {
+       
+      console.warn(
+        `[react-pdf-loader] incomplete font set for "${bundle.family}" — skipping registration`,
+      );
+      continue;
+    }
+
+    try {
+      ns.Font.register({ family: bundle.family, fonts });
+      registeredFamilies.add(bundle.family);
+    } catch (err) {
+       
+      console.warn(
+        `[react-pdf-loader] failed to register "${bundle.family}": ${err instanceof Error ? err.message : err}`,
+      );
+    }
+  }
+}
+
+/**
+ * Whether a bundled family registered successfully in this process. Consulted
+ * by `design-tokens.ts#resolveFontFamily` so templates never reference an
+ * unregistered family (react-pdf would throw at render time).
+ */
+export function isFontFamilyRegistered(family: string): boolean {
+  return registeredFamilies.has(family);
 }

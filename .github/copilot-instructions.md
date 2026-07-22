@@ -199,7 +199,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `logger` — Pino + Winston audit logger
 - `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification.
 - `pdf` — thin façade over `pdf-v2/ReactPdfRendererService`. Kept so external callers (`application.processor.ts`, tests) preserve the `PdfService` API surface. Throws when a template has no react-pdf factory registered.
-- `pdf-v2` — the active PDF subsystem. Owns `ReactPdfRendererService` (TSX → PDF buffer), `PreviewRendererService` (PDF → PNG via `pdfjs-dist` + `@napi-rs/canvas`), the template registry, and the shared template-data types. See [`.github/skills/pdf-react-pdf-template.md`](./skills/pdf-react-pdf-template.md) for the porting recipe. Quick standalone check: `npx ts-node -r tsconfig-paths/register scripts/validate-react-pdf-templates.ts`.
+- `pdf-v2` — the active PDF subsystem. Owns `ReactPdfRendererService` (TSX → PDF buffer), `PreviewRendererService` (PDF → PNG via `pdfjs-dist` + `@napi-rs/canvas`), the template registry, `design-tokens.ts` (the per-application `TemplateSettings` scale math — font scale ±8 %, density spacing/line-height factors, `normalizeTemplateSettings` read-guard, `resolveFontStack` font selection; all templates resolve their base FS/SP tables through `resolveDesignTokens`), bundled **OFL font families** (Lato, Source Sans 3, Merriweather under `apps/api/assets/fonts/`, registered lazily by `react-pdf-loader.ts`; unregistered/missing families degrade to the design's built-in Helvetica/Times faces), and the shared template-data types. See [`.github/skills/pdf-react-pdf-template.md`](./skills/pdf-react-pdf-template.md) for the porting recipe. Quick standalone check (incl. the fontScale × density settings matrix + a render per bundled family): `npx ts-node -r tsconfig-paths/register scripts/validate-react-pdf-templates.ts`.
 - `prisma` — PrismaService
 - `profile` — CRUD with **differential updates** (Skills, Experiences, Education, Certificates, Projects, Languages)
 - `resume-parser` — PDF/DOCX → Profile bootstrap (pdf-parse + mammoth)
@@ -234,7 +234,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 ## Data Model (Prisma 6)
 16 models in `apps/api/prisma/schema.prisma`:
 - **User**, **Profile**, **Skill**, **Experience**, **Education**, **Certificate**, **Project**, **Language**
-- **JobPosting**, **Application** (incl. `translations` Json — per-language translation cache for cross-language exports, invalidated by content xxhash — and `coverLetterLength` — the persisted length preference `kurz` ~250 / `standard` ~350 body words that all cover-letter generation/regeneration paths resolve to a word budget), **ResumeTemplate**, **Interview**
+- **JobPosting**, **Application** (incl. `translations` Json — per-language translation cache for cross-language exports, invalidated by content xxhash — `coverLetterLength` — the persisted length preference `kurz` ~250 / `standard` ~350 body words that all cover-letter generation/regeneration paths resolve to a word budget — and `templateSettings` Json — per-application design tuning: `fontScale` sm/md/lg (±8 %), `density` compact/normal/relaxed, free `accentColor` hex override, curated `fontFamily`; see the shared `TemplateSettings` type), **ResumeTemplate**, **Interview**
 - **Validation** (Bewerbungs-Check — standalone AI check of an external application; inputs + cached result, scoped to user)
 - **RefreshToken**, **Session** (auth/security)
 - **InviteCode** (closed-beta gate — hashed, single-use, optional expiry)
@@ -444,6 +444,13 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
 
 **GET /api/v1/applications/:id/stream**
 - **SSE** stream of pipeline status updates (PENDING → GENERATING → READY/FAILED)
+
+**PATCH /api/v1/applications/:id/template-settings**
+- Partial update of the per-application design tuning (`Application.templateSettings`)
+- Body: `{ fontFamily?: 'default'|'lato'|'source-sans'|'merriweather', fontScale?: 'sm'|'md'|'lg', density?: 'compact'|'normal'|'relaxed', accentColor?: '#rrggbb' | null }`
+- Absent fields keep their stored value; `accentColor: null` removes the override (the template variant's color applies again). The named font families are bundled OFL fonts (Lato, Source Sans 3, Merriweather) registered at renderer load — if a family fails to register (missing assets), rendering degrades to the design's built-in faces.
+- Settings take effect on the next PDF export (`buildMeta` merges them into the react-pdf meta; `settings.accentColor` beats the template row's variant color); read-side values are defensively normalized (`pdf-v2/design-tokens.ts#normalizeTemplateSettings`)
+- Returns the updated application (incl. `templateSettings`)
 
 **POST /api/v1/applications/:id/export**
 - Re-render the PDFs, optionally in a different language

@@ -341,6 +341,11 @@ model Application {
   // Resolved to a word budget for the prompts + deterministic length checks.
   coverLetterLength String @default("standard")
 
+  // Per-application design tuning (TemplateSettings from @applo/shared):
+  // fontFamily/fontScale/density enums + optional accentColor hex override.
+  // The Template row defines the design; these settings tune it.
+  templateSettings Json?
+
   // Metadata
   notes        String?
   errorMessage String?

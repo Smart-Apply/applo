@@ -13,15 +13,17 @@
  *
  * Fonts
  * -----
- * Source CSS uses `'Times New Roman', 'Georgia', serif`. Falls back to
- * react-pdf's built-in Times-Roman family. Bold/italic via the corresponding
- * built-in faces (Times-Bold, Times-Italic, Times-BoldItalic).
+ * Source CSS uses `'Times New Roman', 'Georgia', serif`. Defaults to
+ * react-pdf's built-in Times-Roman family (bold/italic via Times-Bold /
+ * Times-Italic); per application, `meta.fontFamily` can swap in a bundled OFL
+ * family — Merriweather being the natural serif choice (react-pdf-loader.ts).
  *
  * Factory pattern: receives the lazily-loaded @react-pdf/renderer namespace.
  * See react-pdf-loader.ts for why we don't import the package statically.
  */
 
 import { createElement, type ReactElement, type ReactNode } from 'react';
+import { resolveDesignTokens, resolveFontStack, type FontStack } from '../design-tokens';
 import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import { resolveSectionOrder } from '../template-data';
@@ -43,15 +45,17 @@ const DEFAULT_SECTION_ORDER = [
   'languages',
 ] as const;
 
-/** Source CSS uses pt directly — no conversion needed. */
-const FS = {
+/** Source CSS uses pt directly — no conversion needed. Base (unscaled)
+ * tables — the render functions resolve them against the per-application
+ * font-scale/density via `resolveDesignTokens`. */
+const FS_BASE = {
   contact: 10,
   base: 11,
   section: 11,
   name: 14,
 };
 
-const SP = {
+const SP_BASE = {
   xxs: 2,
   xs: 4,
   sm: 6,
@@ -69,10 +73,24 @@ const COLORS = {
 /** Charcoal — the original monochrome look when the DB row has no accent. */
 const ACCENT_FALLBACK = COLORS.text;
 
+/** Built-in serif faces used when no bundled family is selected. */
+const FALLBACK_FONTS = {
+  regular: 'Times-Roman',
+  bold: 'Times-Bold',
+  italic: 'Times-Italic',
+};
+
 /** CSS inches → PDF pt. */
 const inch = (n: number) => n * 72;
 
-const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
+const buildStyles = (
+  rp: ReactPdfNamespace,
+  accent: string,
+  FS: typeof FS_BASE,
+  SP: typeof SP_BASE,
+  lh: (base: number) => number,
+  F: FontStack,
+) =>
   rp.StyleSheet.create({
     // ── Page (CSS: padding 0.5in) ──
     page: {
@@ -80,10 +98,10 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       paddingRight: inch(0.5),
       paddingBottom: inch(0.5),
       paddingLeft: inch(0.5),
-      fontFamily: 'Times-Roman',
+      ...F.regular,
       fontSize: FS.base,
       color: COLORS.text,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
 
     // ── Header (CSS: text-align center, margin-bottom 4pt) ──
@@ -93,7 +111,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     },
     candidateName: {
       fontSize: FS.name,
-      fontFamily: 'Times-Bold',
+      ...F.bold,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       lineHeight: 1.15,
@@ -113,7 +131,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       textAlign: 'center',
       fontSize: FS.contact,
       marginBottom: SP.lg,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
     contactSeparator: {
       color: COLORS.textMuted,
@@ -126,7 +144,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     // ── Section header (CSS: text-align center, font-weight bold, margin-top lg, margin-bottom 6pt) ──
     sectionHeader: {
       textAlign: 'center',
-      fontFamily: 'Times-Bold',
+      ...F.bold,
       fontSize: FS.section,
       textTransform: 'uppercase',
       marginTop: SP.lg,
@@ -154,11 +172,11 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     },
 
     organizationName: {
-      fontFamily: 'Times-Bold',
+      ...F.bold,
       fontSize: FS.base,
     },
     positionTitle: {
-      fontFamily: 'Times-Bold',
+      ...F.bold,
       fontSize: FS.base,
     },
     location: {
@@ -175,7 +193,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       marginTop: SP.xxs,
       fontSize: FS.base,
       color: COLORS.textMuted,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
 
     // ── Bullets (CSS: margin-left 0.2in, list-style disc, margin-top 4pt) ──
@@ -196,7 +214,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     bulletText: {
       flex: 1,
       fontSize: FS.base,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
       textAlign: 'justify',
     },
 
@@ -205,10 +223,10 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       flexDirection: 'row',
       marginBottom: SP.xs,
       fontSize: FS.base,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
     skillType: {
-      fontFamily: 'Times-Bold',
+      ...F.bold,
       marginRight: SP.xs,
     },
     skillItems: {
@@ -219,14 +237,14 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     summaryText: {
       fontSize: FS.base,
       textAlign: 'justify',
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
     },
 
     // ── Cover letter ──
     coverLetterBody: {
       fontSize: FS.base,
       textAlign: 'justify',
-      lineHeight: 1.6,
+      lineHeight: lh(1.6),
     },
     coverLetterParagraph: {
       marginBottom: SP.lg,
@@ -315,12 +333,14 @@ function buildCoverLetterContactParts(data: ReactPdfCoverLetterProps['data']): C
 export const HarvardClassicFactory: ReactPdfTemplateFactory = {
   resume: (rp) => {
     const { Document, Page, View, Text } = rp;
-    const renderRichText = createRichTextRenderer(rp);
     const ContactInfo = ContactInfoFactory(rp);
 
     return function HarvardClassicResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const accent = meta.accentColor || ACCENT_FALLBACK;
-      const styles = buildStyles(rp, accent);
+      const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const F = resolveFontStack(meta.fontFamily, FALLBACK_FONTS);
+      const renderRichText = createRichTextRenderer(rp, { strong: F.bold, em: F.italic });
+      const styles = buildStyles(rp, accent, FS, SP, lineHeight, F);
       // Prefer the explicit export-request language (data.language) over the
       // DB template row's language (meta.language). The DB row may be the
       // English fallback when no DE/FR/ES/IT variant has been seeded for
@@ -651,18 +671,21 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
 
   coverLetter: (rp) => {
     const { Document, Page, View, Text } = rp;
-    const renderRichText = createRichTextRenderer(rp);
     const ContactInfo = ContactInfoFactory(rp);
 
     return function HarvardClassicCoverLetter({
       data,
+      meta,
     }: ReactPdfCoverLetterProps): ReactElement {
       // Harvard Classic cover letters are intentionally monochrome — the name
       // and header divider use the same charcoal as the body text rather than
       // the DB template's accent colour (which renders red/maroon on some
       // variants). The résumé still honours meta.accentColor.
       const accent = ACCENT_FALLBACK;
-      const styles = buildStyles(rp, accent);
+      const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const F = resolveFontStack(meta.fontFamily, FALLBACK_FONTS);
+      const renderRichText = createRichTextRenderer(rp, { strong: F.bold, em: F.italic });
+      const styles = buildStyles(rp, accent, FS, SP, lineHeight, F);
       const contactParts = buildCoverLetterContactParts(data);
 
       return createElement(

@@ -1,6 +1,6 @@
 # Fix Plan: Template Customization Gap (Fonts, Sizing, Photo, Layout Breadth)
 
-> **Status:** Planned · **Priority:** P2 (competitor-parity; contained one real P1 bug in §2.5 — **✅ fixed 2026-07-22**, see §3.1)
+> **Status:** In progress — shipped so far: §3.1 catalog fix (✅ 2026-07-22), §3.2+§3.3 per-application design settings (✅ 2026-07-22: `Application.templateSettings` + shared `TemplateSettings` type, `PATCH /applications/:id/template-settings`, `pdf-v2/design-tokens.ts` scale helpers, all 3 templates consume `resolveDesignTokens`, settings matrix in the validate script), §3.4 font bundling (✅ 2026-07-22: OFL TTFs for Lato/Source Sans 3/Merriweather under `apps/api/assets/fonts/`, lazy `Font.register` in `react-pdf-loader.ts`, `resolveFontStack` threads the family through all templates incl. rich-text `<strong>`/`<em>` cuts, Docker copies the assets, graceful fallback to built-in faces). Next: §3.5 photo, §3.6 design panel, §3.7 new layouts. · **Priority:** P2 (competitor-parity; contained one real P1 bug in §2.5 — **✅ fixed 2026-07-22**, see §3.1)
 > **Affected area:** `apps/api/src/pdf-v2/*` (renderer, registry, meta contract), `apps/api/src/templates`, `apps/api/prisma/schema.prisma`, edit-page design UI
 > **Related competitor feedback:** jobstep.io review — *"Die Templates sind nett, aber leider nur sehr eingeschränkt anpassbar. Farbe und Schriftgröße ändern geht — viel mehr nicht."* Applo currently offers **less** than that: color variants yes, font size **no**.
 

@@ -165,7 +165,8 @@ export class ApplicationProcessor {
         const coverLetterPdf = await this.pdfService.generateCoverLetterPDF(
           coverLetterTemplateData,
           coverLetterTemplateId || undefined,
-          { atsOptimized: false }, // Use DB template instead of filesystem template
+          // atsOptimized false: use DB template; settings: per-application design tuning
+          { atsOptimized: false, settings: application.templateSettings },
         );
 
         // Deterministic page-count backstop: a cover letter must fit ONE page.
@@ -205,7 +206,8 @@ export class ApplicationProcessor {
       const resumePdf = await this.pdfService.generateResumePDF(
         resumeDataWithLanguage,
         resumeTemplateId || undefined,
-        { atsOptimized: false }, // Use DB template instead of filesystem template
+        // atsOptimized false: use DB template; settings: per-application design tuning
+        { atsOptimized: false, settings: application.templateSettings },
       );
 
       // 5. Upload resume to Storage

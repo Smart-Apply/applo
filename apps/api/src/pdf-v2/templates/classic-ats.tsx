@@ -15,15 +15,17 @@
  *
  * Fonts
  * -----
- * Falls back to react-pdf's built-in Helvetica family. The HTML version uses
- * Lato/Source Sans 3 — registering those via Font.register() is deferred to
- * the font-bundling follow-up (font-size cascade is matched here regardless).
+ * Defaults to react-pdf's built-in Helvetica family (the original look). Per
+ * application, `meta.fontFamily` can swap in a bundled OFL family (Lato,
+ * Source Sans 3, Merriweather — registered by react-pdf-loader.ts); the
+ * font-size cascade is matched here regardless of family.
  *
  * Factory pattern: receives the lazily-loaded @react-pdf/renderer namespace.
  * See react-pdf-loader.ts for why we don't import the package statically.
  */
 
 import { createElement, type ReactElement, type ReactNode } from 'react';
+import { resolveDesignTokens, resolveFontStack, type FontStack } from '../design-tokens';
 import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import { resolveSectionOrder } from '../template-data';
@@ -35,6 +37,13 @@ import type {
 } from '../types';
 
 const ACCENT_FALLBACK = '#1a1a1a';
+
+/** Built-in faces used when no bundled family is selected (the original look). */
+const FALLBACK_FONTS = {
+  regular: 'Helvetica',
+  bold: 'Helvetica-Bold',
+  italic: 'Helvetica-Oblique',
+};
 
 /** Default section order — matches the template's original hardcoded layout. */
 const DEFAULT_SECTION_ORDER = [
@@ -54,7 +63,9 @@ const px = (n: number) => n * 0.75;
 const inch = (n: number) => n * 72;
 
 // CSS custom-property mirrors. Names match `:root` block in styles.css.
-const FS = {
+// Base (unscaled) tables — the render functions resolve them against the
+// per-application font-scale/density via `resolveDesignTokens`.
+const FS_BASE = {
   xs: px(9),
   sm: px(10),
   base: px(11),
@@ -65,7 +76,7 @@ const FS = {
   xxxl: px(28),
 };
 
-const SP = {
+const SP_BASE = {
   xs: px(2),
   sm: px(4),
   md: px(8),
@@ -79,7 +90,14 @@ const COLORS = {
   textMuted: '#666666',
 };
 
-const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
+const buildStyles = (
+  rp: ReactPdfNamespace,
+  accent: string,
+  FS: typeof FS_BASE,
+  SP: typeof SP_BASE,
+  lh: (base: number) => number,
+  F: FontStack,
+) =>
   rp.StyleSheet.create({
     // ── Resume page (CSS: .resume padding 0.5in 0.5in 0.4in 0.5in) ──
     resumePage: {
@@ -87,10 +105,10 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       paddingRight: inch(0.5),
       paddingBottom: inch(0.4),
       paddingLeft: inch(0.5),
-      fontFamily: 'Helvetica',
+      ...F.regular,
       fontSize: FS.base,
       color: COLORS.text,
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
     },
     // ── Cover-letter page (CSS: .cover-letter padding 0.6in 0.6in 0.5in 0.6in) ──
     coverLetterPage: {
@@ -98,10 +116,10 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       paddingRight: inch(0.6),
       paddingBottom: inch(0.5),
       paddingLeft: inch(0.6),
-      fontFamily: 'Helvetica',
+      ...F.regular,
       fontSize: FS.md,
       color: COLORS.text,
-      lineHeight: 1.7,
+      lineHeight: lh(1.7),
     },
 
     // ── Resume header (CSS: .resume-header text-align center, margin-bottom var(--spacing-lg)) ──
@@ -123,7 +141,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     // line box collapses and the next sibling overlaps the descenders.
     candidateName: {
       fontSize: FS.xxxl,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       letterSpacing: px(0.5),
       textTransform: 'uppercase',
       color: accent,
@@ -132,7 +150,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     },
     candidateNameCoverLetter: {
       fontSize: FS.xxl,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       letterSpacing: px(0.5),
       textTransform: 'uppercase',
       color: accent,
@@ -150,7 +168,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       fontSize: FS.sm,
       color: COLORS.textSecondary,
       textAlign: 'center',
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
     // Separator pseudo-element in CSS gets `color: var(--text-muted)` and the
     // surrounding `gap: var(--spacing-sm)` produces ~3pt of whitespace on each
@@ -168,7 +186,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     section: { marginBottom: SP.lg },
     sectionTitle: {
       fontSize: FS.lg,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       textTransform: 'uppercase',
       letterSpacing: px(0.8),
       color: accent,
@@ -180,7 +198,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     },
 
     // ── Summary ──
-    summaryText: { fontSize: FS.base, lineHeight: 1.6, color: COLORS.text },
+    summaryText: { fontSize: FS.base, lineHeight: lh(1.6), color: COLORS.text },
 
     // ── Item (experience / education / project / certification) ──
     item: { marginBottom: SP.md },
@@ -191,7 +209,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     },
     itemTitle: {
       fontSize: FS.md,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       color: COLORS.text,
     },
     itemDate: {
@@ -217,7 +235,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     itemBody: {
       marginTop: SP.sm,
       fontSize: FS.base,
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
       color: COLORS.text,
     },
 
@@ -239,7 +257,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     bulletText: {
       flex: 1,
       fontSize: FS.base,
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
       color: COLORS.text,
     },
 
@@ -249,10 +267,10 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       flexDirection: 'row',
       marginBottom: SP.sm,
       fontSize: FS.base,
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
     },
     skillCategoryLabel: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       color: COLORS.text,
       marginRight: SP.sm,
     },
@@ -280,7 +298,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     // ── Cover-letter body (CSS: font-size md, line-height 1.7) ──
     coverLetterBody: {
       fontSize: FS.md,
-      lineHeight: 1.7,
+      lineHeight: lh(1.7),
       color: COLORS.text,
     },
     // CSS: .cover-letter-body p { margin-bottom: var(--spacing-lg); text-align: justify; }
@@ -296,7 +314,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     coverLetterListItem: {
       marginBottom: SP.sm,
       fontSize: FS.md,
-      lineHeight: 1.7,
+      lineHeight: lh(1.7),
     },
 
     // ── Cover-letter closing (CSS: margin-top xl, font-size md) ──
@@ -309,7 +327,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     },
     coverLetterSignature: {
       marginTop: SP.xl,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
     },
   });
 
@@ -379,12 +397,14 @@ function buildCoverLetterContactParts(data: ReactPdfCoverLetterProps['data']): C
 export const ClassicAtsFactory: ReactPdfTemplateFactory = {
   resume: (rp) => {
     const { Document, Page, View, Text } = rp;
-    const renderRichText = createRichTextRenderer(rp);
     const ContactInfo = ContactInfoFactory(rp);
 
     return function ClassicAtsResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const accent = meta.accentColor || ACCENT_FALLBACK;
-      const styles = buildStyles(rp, accent);
+      const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const F = resolveFontStack(meta.fontFamily, FALLBACK_FONTS);
+      const renderRichText = createRichTextRenderer(rp, { strong: F.bold, em: F.italic });
+      const styles = buildStyles(rp, accent, FS, SP, lineHeight, F);
       // Prefer the explicit export-request language (data.language) over the
       // DB template row's language (meta.language). See issue #536.
       const lang = data.language || meta.language || 'en';
@@ -646,7 +666,6 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
 
   coverLetter: (rp) => {
     const { Document, Page, View, Text } = rp;
-    const renderRichText = createRichTextRenderer(rp);
     const ContactInfo = ContactInfoFactory(rp);
 
     return function ClassicAtsCoverLetter({
@@ -654,7 +673,10 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
       meta,
     }: ReactPdfCoverLetterProps): ReactElement {
       const accent = meta.accentColor || ACCENT_FALLBACK;
-      const styles = buildStyles(rp, accent);
+      const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const F = resolveFontStack(meta.fontFamily, FALLBACK_FONTS);
+      const renderRichText = createRichTextRenderer(rp, { strong: F.bold, em: F.italic });
+      const styles = buildStyles(rp, accent, FS, SP, lineHeight, F);
       const contactParts = buildCoverLetterContactParts(data);
 
       return createElement(

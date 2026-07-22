@@ -27,6 +27,7 @@ import { ApplicationResponseDto, ApplicationStatus } from './dto/application-res
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
 import { ApplicationStatusResponseDto } from './dto/application-status-response.dto';
 import { UpdateResumeDto } from './dto/update-resume.dto';
+import { UpdateTemplateSettingsDto } from './dto/update-template-settings.dto';
 import { CoverLetterDto } from './dto/cover-letter.dto';
 import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
 import { TailoredProfileDto, RewrittenProfileDto } from './dto/tailored-profile.dto';
@@ -38,7 +39,8 @@ import {
   ConflictWithCode,
 } from '../common/exceptions/coded-http.exception';
 import { assertPromptWithinLimits } from '../common/guardrails/prompt-guardrail';
-import { normalizeSkillCategory } from '@applo/shared';
+import { normalizeSkillCategory, type TemplateSettings } from '@applo/shared';
+import { normalizeTemplateSettings } from '../pdf-v2/design-tokens';
 import {
   buildResumeTemplateData,
   ProfileWithRelations,
@@ -3106,6 +3108,50 @@ export class ApplicationsService {
   }
 
   /**
+   * Update the per-application design settings (font scale, density, accent
+   * override, curated font family). Partial merge: absent DTO fields keep
+   * their stored value; `accentColor: null` removes the color override. The
+   * settings take effect on the next PDF export (the processor passes them
+   * into the react-pdf renderer's meta).
+   */
+  async updateTemplateSettings(
+    userId: string,
+    applicationId: string,
+    dto: UpdateTemplateSettingsDto,
+  ): Promise<ApplicationResponseDto> {
+    this.logger.log(`Updating template settings for application ${applicationId}`);
+
+    const application = await this.ensureApplicationOwnership(userId, applicationId);
+
+    // Merge onto the (defensively normalized) stored settings.
+    const merged: TemplateSettings = {
+      ...(normalizeTemplateSettings(application.templateSettings) ?? {}),
+    };
+    if (dto.fontFamily !== undefined) merged.fontFamily = dto.fontFamily;
+    if (dto.fontScale !== undefined) merged.fontScale = dto.fontScale;
+    if (dto.density !== undefined) merged.density = dto.density;
+    if (dto.accentColor !== undefined) {
+      if (dto.accentColor === null) {
+        delete merged.accentColor;
+      } else {
+        merged.accentColor = dto.accentColor;
+      }
+    }
+
+    const updated = await this.prisma.application.update({
+      where: { id: applicationId },
+      data: {
+        templateSettings: Object.keys(merged).length > 0 ? (merged as Prisma.InputJsonValue) : Prisma.DbNull,
+      },
+      include: {
+        jobPosting: true,
+      },
+    });
+
+    return this.mapToResponseDto(updated);
+  }
+
+  /**
    * Update the custom title of an application
    */
   async updateTitle(
@@ -3233,6 +3279,7 @@ export class ApplicationsService {
       language: application.language,
       sourceLanguage: application.sourceLanguage,
       coverLetterLength: application.coverLetterLength,
+      templateSettings: normalizeTemplateSettings(application.templateSettings) ?? null,
       exportWarning: this.deriveExportWarning(application),
       errorMessage: application.errorMessage,
       createdAt: application.createdAt,

@@ -166,8 +166,13 @@ User → Frontend (Next.js)
 │ PDF Service (@react-pdf/renderer)    │
 │ 1. Resolve template via              │
 │    pdf-v2/template-registry.ts       │
-│ 2. Render TSX → PDF buffer           │
-│ 3. Page-count backstop: warn when a  │
+│ 2. Apply per-application design      │
+│    settings (font scale, density,    │
+│    accent override, bundled OFL      │
+│    font families) via                │
+│    pdf-v2/design-tokens.ts           │
+│ 3. Render TSX → PDF buffer           │
+│ 4. Page-count backstop: warn when a  │
 │    cover letter renders > 1 page     │
 │ Throws if no react-pdf factory is    │
 │ registered for the template (no      │
@@ -320,7 +325,7 @@ User 1:1 Subscription
 | Cache         | Upstash Redis · node-cache                                                                                                          |
 | Storage       | Cloudflare R2 (S3-compatible) · local disk                                                                                          |
 | LLM           | Azure AI Foundry · Azure OpenAI · mock                                                                                              |
-| PDF           | `@react-pdf/renderer` 4.5 (TSX templates) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake) |
+| PDF           | `@react-pdf/renderer` 4.5 (TSX templates, bundled OFL fonts: Lato · Source Sans 3 · Merriweather) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake) |
 | Email         | Resend                                                                                                                              |
 | Logging       | Pino (req logs) + Winston (audit, daily rotation)                                                                                   |
 | Monitoring    | Sentry (`@sentry/node` + profiling)                                                                                                 |
@@ -393,6 +398,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | POST     | `/job-postings/parse`              | Parse text/URL/file                                                         |
 | GET/POST | `/applications`                    | Application pipeline                                                        |
 | GET      | `/applications/:id/files`          | SAS download URLs                                                           |
+| PATCH    | `/applications/:id/template-settings` | Per-application design tuning (font scale, density, accent override)    |
 | GET      | `/applications/:id/stream`         | SSE status stream                                                           |
 | POST     | `/validation`                      | Check an external application (AI quality + ATS; Free 5/mo, Pro+ unlimited) |
 | GET      | `/validation`                      | Validation history                                                          |

@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createElement } from 'react';
+import type { TemplateSettings } from '@applo/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import type {
   CoverLetterTemplateData,
   ResumeTemplateData,
 } from './template-data';
 import { loadReactPdf, type ReactPdfNamespace } from './react-pdf-loader';
+import { normalizeTemplateSettings } from './design-tokens';
 import { resolveReactPdfTemplate } from './template-registry';
 import type { ReactPdfTemplateMeta } from './types';
 
@@ -55,7 +57,7 @@ export class ReactPdfRendererService {
   async renderResume(
     data: ResumeTemplateData,
     templateId: string | undefined,
-    options: { atsOptimized?: boolean } = {},
+    options: { atsOptimized?: boolean; settings?: unknown } = {},
   ): Promise<Buffer | undefined> {
     const meta = await this.loadTemplateMeta(templateId);
     if (!meta) return undefined;
@@ -82,7 +84,7 @@ export class ReactPdfRendererService {
   async renderCoverLetter(
     data: CoverLetterTemplateData,
     templateId: string | undefined,
-    options: { atsOptimized?: boolean } = {},
+    options: { atsOptimized?: boolean; settings?: unknown } = {},
   ): Promise<Buffer | undefined> {
     const meta = await this.loadTemplateMeta(templateId);
     if (!meta) return undefined;
@@ -108,13 +110,21 @@ export class ReactPdfRendererService {
 
   private buildMeta(
     meta: DbTemplateMeta,
-    options: { atsOptimized?: boolean },
+    options: { atsOptimized?: boolean; settings?: unknown },
   ): ReactPdfTemplateMeta {
+    // Per-application design settings tune the DB row's design. Stored as
+    // Prisma Json — normalize defensively so out-of-enum values can never
+    // reach a template (the PATCH DTO validates on write; this guards reads).
+    const settings: TemplateSettings | undefined = normalizeTemplateSettings(options.settings);
     return {
       language: meta.language,
-      accentColor: meta.accentColor ?? undefined,
+      // Free accent override beats the variant's fixed color.
+      accentColor: settings?.accentColor ?? meta.accentColor ?? undefined,
       colorVariantName: meta.colorVariantName ?? undefined,
       atsOptimized: options.atsOptimized,
+      fontScale: settings?.fontScale,
+      density: settings?.density,
+      fontFamily: settings?.fontFamily,
     };
   }
 

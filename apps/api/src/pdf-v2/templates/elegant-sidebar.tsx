@@ -21,9 +21,9 @@
  *
  * Fonts
  * -----
- * Source CSS uses Poppins / Montserrat. Falls back to react-pdf's built-in
- * Helvetica family — registering the real fonts is the deferred follow-up
- * tracked in REARCHITECTURE_PLAN.md.
+  * Source CSS uses Poppins / Montserrat. Defaults to react-pdf's built-in
+ * Helvetica family; per application, `meta.fontFamily` can swap in a bundled
+ * OFL family (Lato, Source Sans 3, Merriweather — see react-pdf-loader.ts).
  *
  * Page-break behavior
  * -------------------
@@ -36,6 +36,7 @@
  */
 
 import { createElement, type ReactElement, type ReactNode } from 'react';
+import { resolveDesignTokens, resolveFontStack, type FontStack } from '../design-tokens';
 import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import { deriveElegantSidebarPalette } from '../color-utils';
@@ -59,7 +60,7 @@ const MAIN_SECTION_ORDER = ['profile', 'experience', 'projects', 'certs'] as con
 /** CSS px → PDF pt at 96 DPI. */
 const px = (n: number) => n * 0.75;
 
-const FS = {
+const FS_BASE = {
   xxs: px(9),
   xs: px(10),
   sm: px(11),
@@ -72,18 +73,36 @@ const FS = {
   xxxxl: px(26),
 };
 
+/** No spacing table — this design spaces via inline px() values, so density
+ * tuning affects line height only (see resolveDesignTokens). */
+const SP_BASE = {};
+
+/** Built-in faces used when no bundled family is selected (the original look). */
+const FALLBACK_FONTS = {
+  regular: 'Helvetica',
+  bold: 'Helvetica-Bold',
+  italic: 'Helvetica-Oblique',
+};
+
 const SIDEBAR_WIDTH_PCT = '32%';
 /** Header bar height in pt. CSS: `padding: 18px 25px` + ~ name+sub line height. */
 const HEADER_HEIGHT_PT = px(85);
 
-const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof deriveElegantSidebarPalette>) =>
+const buildResumeStyles = (
+  rp: ReactPdfNamespace,
+  palette: ReturnType<typeof deriveElegantSidebarPalette>,
+  FS: typeof FS_BASE,
+  lh: (base: number) => number,
+  fontScaled: (value: number) => number,
+  F: FontStack,
+) =>
   rp.StyleSheet.create({
     // ── Page (no padding — header/sidebar bleed to edges) ──
     page: {
-      fontFamily: 'Helvetica',
+      ...F.regular,
       fontSize: FS.xs,
       color: palette.textPrimary,
-      lineHeight: 1.6,
+      lineHeight: lh(1.6),
     },
 
     // ── Sidebar background — fixed so it repeats on every page. ──
@@ -108,11 +127,11 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      minHeight: HEADER_HEIGHT_PT,
+      minHeight: fontScaled(HEADER_HEIGHT_PT),
     },
     profileName: {
       fontSize: FS.xxxxl,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       letterSpacing: px(1.5),
       textTransform: 'uppercase',
       color: palette.textOnHeader,
@@ -145,7 +164,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
     },
     sidebarSectionTitle: {
       fontSize: FS.base,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       color: palette.textAccent,
       textTransform: 'uppercase',
       letterSpacing: px(1),
@@ -156,7 +175,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       fontSize: FS.sm,
       color: palette.textPrimary,
       marginBottom: px(6),
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
     contactItemLink: {
       color: palette.textPrimary,
@@ -167,7 +186,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       marginBottom: px(8),
     },
     eduDegree: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       fontSize: FS.sm,
       color: palette.textPrimary,
       letterSpacing: px(0.5),
@@ -188,7 +207,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       marginBottom: px(10),
     },
     skillCategoryTitle: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       fontSize: FS.xs,
       color: palette.textAccent,
       textTransform: 'uppercase',
@@ -199,7 +218,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       flexDirection: 'column',
     },
     skillItem: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       fontSize: FS.xs,
       color: palette.textPrimary,
       backgroundColor: palette.bgSecondary,
@@ -225,7 +244,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       marginBottom: px(5),
     },
     languageName: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       fontSize: FS.xs,
       color: palette.textPrimary,
     },
@@ -247,7 +266,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       marginBottom: px(10),
     },
     mainSectionTitle: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       fontSize: FS.lg,
       textTransform: 'uppercase',
       letterSpacing: px(1),
@@ -264,7 +283,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       fontSize: FS.xxs,
       color: palette.textSecondary,
       textAlign: 'justify',
-      lineHeight: 1.7,
+      lineHeight: lh(1.7),
     },
 
     item: {
@@ -277,7 +296,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       marginBottom: px(3),
     },
     itemTitle: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       fontSize: FS.md,
       letterSpacing: px(1),
       color: palette.textAccent,
@@ -286,7 +305,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
     itemPeriod: {
       fontSize: FS.xs,
       color: palette.textMuted,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       backgroundColor: palette.bgSecondary,
       paddingTop: px(3),
       paddingBottom: px(3),
@@ -295,7 +314,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       borderRadius: px(12),
     },
     itemCompany: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       fontSize: FS.sm,
       letterSpacing: px(0.5),
       marginBottom: px(3),
@@ -304,7 +323,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
     itemDescription: {
       fontSize: FS.xxs,
       color: palette.textSecondary,
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
       marginBottom: px(4),
     },
     achievementsList: {
@@ -324,13 +343,16 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       flex: 1,
       fontSize: FS.xxs,
       color: palette.textSecondary,
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
     },
   });
 
 const buildCoverLetterStyles = (
   rp: ReactPdfNamespace,
   palette: ReturnType<typeof deriveElegantSidebarPalette>,
+  FS: typeof FS_BASE,
+  lh: (base: number) => number,
+  F: FontStack,
 ) =>
   rp.StyleSheet.create({
     page: {
@@ -339,7 +361,7 @@ const buildCoverLetterStyles = (
       paddingLeft: px(50),
       paddingRight: px(50),
       backgroundColor: palette.bgPrimary,
-      fontFamily: 'Helvetica',
+      ...F.regular,
       fontSize: FS.sm,
       color: palette.textSecondary,
     },
@@ -351,7 +373,7 @@ const buildCoverLetterStyles = (
       borderBottomStyle: 'solid',
     },
     name: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       fontSize: FS.xxxl,
       letterSpacing: px(1.5),
       textTransform: 'uppercase',
@@ -389,7 +411,7 @@ const buildCoverLetterStyles = (
     body: {
       fontSize: FS.sm,
       color: palette.textSecondary,
-      lineHeight: 1.8,
+      lineHeight: lh(1.8),
       textAlign: 'justify',
     },
     paragraph: {
@@ -404,7 +426,7 @@ const buildCoverLetterStyles = (
       marginBottom: px(8),
     },
     signature: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       fontSize: FS.lg,
       color: palette.textAccent,
       marginTop: px(15),
@@ -438,11 +460,13 @@ function buildCoverLetterContactParts(data: ReactPdfCoverLetterProps['data']): C
 export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
   resume: (rp) => {
     const { Document, Page, View, Text, Link } = rp;
-    const renderRichText = createRichTextRenderer(rp);
 
     return function ElegantSidebarResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const palette = deriveElegantSidebarPalette(meta.accentColor);
-      const styles = buildResumeStyles(rp, palette);
+      const { fs: FS, lineHeight, fontScaled } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const F = resolveFontStack(meta.fontFamily, FALLBACK_FONTS);
+      const renderRichText = createRichTextRenderer(rp, { strong: F.bold, em: F.italic });
+      const styles = buildResumeStyles(rp, palette, FS, lineHeight, fontScaled, F);
       // Prefer the explicit export-request language (data.language) over the
       // DB template row's language (meta.language). See issue #536.
       const lang = data.language || meta.language || 'en';
@@ -754,14 +778,16 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
 
   coverLetter: (rp) => {
     const { Document, Page, View, Text, Link } = rp;
-    const renderRichText = createRichTextRenderer(rp);
 
     return function ElegantSidebarCoverLetter({
       data,
       meta,
     }: ReactPdfCoverLetterProps): ReactElement {
       const palette = deriveElegantSidebarPalette(meta.accentColor);
-      const styles = buildCoverLetterStyles(rp, palette);
+      const { fs: FS, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const F = resolveFontStack(meta.fontFamily, FALLBACK_FONTS);
+      const renderRichText = createRichTextRenderer(rp, { strong: F.bold, em: F.italic });
+      const styles = buildCoverLetterStyles(rp, palette, FS, lineHeight, F);
       const contactParts = buildCoverLetterContactParts(data);
 
       const renderContactItem = (part: ContactPart, idx: number): ReactElement => {

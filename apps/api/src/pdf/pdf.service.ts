@@ -20,6 +20,12 @@ export interface PdfGenerationOptions {
    */
   atsOptimized?: boolean;
   /**
+   * Per-application design tuning (`Application.templateSettings` Json —
+   * font scale, density, accent override). Normalized defensively by the
+   * renderer; absent = the design's original look.
+   */
+  settings?: unknown;
+  /**
    * Optional metadata. Currently informational only — react-pdf sets
    * basic title/author internally and we no longer post-process with
    * pdf-lib. Kept on the type for API stability.
@@ -49,6 +55,7 @@ export class PdfService {
   ): Promise<Buffer> {
     const buf = await this.reactPdfRenderer.renderCoverLetter(data, templateId, {
       atsOptimized: options.atsOptimized,
+      settings: options.settings,
     });
     if (!buf) {
       throw new Error(
@@ -66,6 +73,7 @@ export class PdfService {
   ): Promise<Buffer> {
     const buf = await this.reactPdfRenderer.renderResume(data, templateId, {
       atsOptimized: options.atsOptimized,
+      settings: options.settings,
     });
     if (!buf) {
       throw new Error(

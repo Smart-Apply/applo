@@ -62,6 +62,7 @@ COPY apps/api/nest-cli.json ./apps/api/
 COPY apps/api/src ./apps/api/src
 COPY apps/api/test ./apps/api/test
 COPY apps/api/prompts ./apps/api/prompts
+COPY apps/api/assets ./apps/api/assets
 COPY turbo.json ./
 
 # Build shared first (api imports its compiled output).
@@ -169,6 +170,11 @@ COPY --chown=nestjs:nodejs --from=builder /app/apps/api/src/email/templates ./di
 # Prompt templates loaded by ApplicationsService at runtime. The path
 # resolution in code expects /app/prompts.
 COPY --chown=nestjs:nodejs --from=builder /app/apps/api/prompts ./prompts
+
+# Bundled OFL font families (Lato, Source Sans 3, Merriweather) registered
+# by pdf-v2/react-pdf-loader.ts at runtime. Resolution expects
+# /app/assets/fonts (process.cwd()-relative, mirroring prompts/).
+COPY --chown=nestjs:nodejs --from=builder /app/apps/api/assets ./assets
 
 # Root package.json so that `node` reports the right version on `--version`
 # checks and so that scripts (e.g. `node dist/apps/api/main`) inherit any
