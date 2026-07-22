@@ -31,6 +31,7 @@ import type {
   ResumeProject,
   ResumeCertification,
   ResumeSkillCategory,
+  TemplateSettings,
 } from '@/types';
 
 let _uid = 0;
@@ -249,17 +250,38 @@ interface EditableResumeProps {
   accent: string;
   /** Which export template the edit surface should mimic (P1). */
   design?: ResumeDesign;
+  /**
+   * Approximate the per-application design settings on the edit surface
+   * (font scale via zoom, family via a CSS stack, density via rhythm
+   * overrides). The exported PDF stays the authoritative rendering.
+   */
+  designSettings?: TemplateSettings | null;
   /** AI assists (P5) — return the generated text, or null when the request failed. */
   onGenerateSummary?: (args: GenerateSummaryArgs) => Promise<string | null>;
   onGenerateExperience?: (args: GenerateExperienceArgs) => Promise<string | null>;
   onGenerateProject?: (args: GenerateProjectArgs) => Promise<string | null>;
 }
 
+/** CSS zoom factors mirroring `pdf-v2/design-tokens.ts` FONT_SCALE_FACTORS. */
+const PREVIEW_FONT_SCALE: Record<string, number> = { sm: 0.92, md: 1, lg: 1.08 };
+
+/**
+ * Web-safe approximations of the bundled OFL families (the real fonts are
+ * embedded in the PDF only): sans choices map to a neutral sans stack,
+ * Merriweather to a serif stack.
+ */
+const PREVIEW_FONT_FAMILY: Record<string, string> = {
+  lato: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+  'source-sans': "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+  merriweather: "Georgia, 'Times New Roman', serif",
+};
+
 export function EditableResume({
   value,
   onChange,
   accent,
   design = 'classic-ats',
+  designSettings,
   onGenerateSummary,
   onGenerateExperience,
   onGenerateProject,
@@ -1054,9 +1076,27 @@ export function EditableResume({
   const rootClass = isSidebar ? 'rd--sidebar' : design === 'harvard-classic' ? 'rd--harvard' : 'rd--classic';
   const sidebarTint = `color-mix(in srgb, ${accent} 10%, #ffffff)`;
 
+  // Approximate the export design settings on the mimic: font scale as CSS
+  // zoom (the rd skins are px-based), family as a web-safe stack, density
+  // via the rd--density-* rhythm overrides in globals.css.
+  const previewZoom = PREVIEW_FONT_SCALE[designSettings?.fontScale ?? 'md'] ?? 1;
+  const previewFamily = designSettings?.fontFamily
+    ? PREVIEW_FONT_FAMILY[designSettings.fontFamily]
+    : undefined;
+  const densityClass =
+    designSettings?.density === 'compact'
+      ? 'rd--density-compact'
+      : designSettings?.density === 'relaxed'
+        ? 'rd--density-relaxed'
+        : undefined;
+  const docStyle: React.CSSProperties = {
+    ...(previewZoom !== 1 ? { zoom: previewZoom } : {}),
+    ...(previewFamily ? { fontFamily: previewFamily } : {}),
+  };
+
   return (
     <div className="animate-in fade-in duration-300">
-      <div className={cn('rd', rootClass)}>
+      <div className={cn('rd', rootClass, densityClass)} style={docStyle}>
         {isSidebar ? (
           <>
             <div className="rd-topbar" style={{ background: accent }}>

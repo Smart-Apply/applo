@@ -24,6 +24,7 @@ import { EditableResume, resolveResumeDesign } from '@/components/applications/e
 import { AtsOptimizer } from '@/components/applications/ats-optimizer';
 import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
 import { LanguageSelector, toExportLanguage, type ExportLanguage } from '@/components/applications/language-selector';
+import { DesignSettingsPanel } from '@/components/applications/design-settings-panel';
 import {
   useApplication,
   useExportApplication,
@@ -133,6 +134,10 @@ export default function ApplicationResumeEditorPage() {
   const coverLetterText = application ? (application.coverLetterText ?? '') : null;
 
   const accent =
+    application?.templateSettings?.accentColor ||
+    resumeTemplates?.find((t) => t.id === application?.resumeTemplateId)?.accentColor ||
+    '#1B2A49';
+  const templateAccent =
     resumeTemplates?.find((t) => t.id === application?.resumeTemplateId)?.accentColor || '#1B2A49';
 
   // Which export template the click-to-edit surface should mimic (P1).
@@ -549,6 +554,12 @@ export default function ApplicationResumeEditorPage() {
                 description="Beschreibe, wie das Anschreiben angepasst werden soll."
               />
             )}
+            <DesignSettingsPanel
+              applicationId={applicationId}
+              settings={application.templateSettings}
+              templateAccent={templateAccent}
+              disabled={application.status === 'GENERATING' || exportApplication.isPending}
+            />
             <LanguageSelector
               value={selectedLanguage}
               onChange={setSelectedLanguage}
@@ -614,6 +625,7 @@ export default function ApplicationResumeEditorPage() {
               onChange={setParsedResume}
               accent={accent}
               design={resumeDesign}
+              designSettings={application.templateSettings}
               onGenerateSummary={handleGenerateSummary}
               onGenerateExperience={handleGenerateExperience}
               onGenerateProject={handleGenerateProject}
