@@ -91,12 +91,20 @@ export function useUpdateProfile() {
  */
 export function useProfilePhoto(enabled = true) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const queryClient = useQueryClient();
 
   return useQuery<string | null>({
     queryKey: ['profile', 'photo'],
     queryFn: async () => {
       const blob = await api.profile.getPhotoBlob();
-      return blob ? URL.createObjectURL(blob) : null;
+      const nextUrl = blob ? URL.createObjectURL(blob) : null;
+
+      const previousUrl = queryClient.getQueryData<string | null>(['profile', 'photo']);
+      if (previousUrl && previousUrl !== nextUrl) {
+        URL.revokeObjectURL(previousUrl);
+      }
+
+      return nextUrl;
     },
     enabled: isAuthenticated && enabled,
     staleTime: Infinity,
