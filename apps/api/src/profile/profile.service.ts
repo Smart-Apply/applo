@@ -481,7 +481,7 @@ export class ProfileService {
       select: { photoKey: true },
     });
     if (!profile?.photoKey) {
-      throw new NotFoundWithCode(ErrorCode.PROFILE_NOT_FOUND, 'Kein Bewerbungsfoto vorhanden');
+      throw new NotFoundWithCode(ErrorCode.NOT_FOUND, 'Kein Bewerbungsfoto vorhanden');
     }
     const buffer = await this.storageService.getFile(profile.photoKey);
     const mimeType = profile.photoKey.endsWith('.png') ? 'image/png' : 'image/jpeg';
