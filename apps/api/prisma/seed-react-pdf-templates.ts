@@ -109,6 +109,42 @@ const DESIGNS: TsxDesign[] = [
       { id: 'green', name: 'Forest Green', accent: '#16a34a' },
     ],
   },
+  {
+    id: 'modern-two-column',
+    name: 'Modern Two-Column',
+    description:
+      'Helles zweispaltiges Layout mit dezenter Trennlinie — modern, klar und gut lesbar.',
+    category: 'Modern',
+    variants: [
+      { id: 'slate', name: 'Slate', accent: '#334155' },
+      { id: 'blue', name: 'Royal Blue', accent: '#2563eb' },
+      { id: 'emerald', name: 'Emerald', accent: '#059669' },
+    ],
+  },
+  {
+    id: 'minimal-single-column',
+    name: 'Minimal Single-Column',
+    description:
+      'Reduziertes einspaltiges Layout mit viel Weißraum — maximal klar und ATS-sicher.',
+    category: 'Minimal',
+    variants: [
+      { id: 'graphite', name: 'Graphit', accent: '#1f2937' },
+      { id: 'indigo', name: 'Indigo', accent: '#4f46e5' },
+      { id: 'rose', name: 'Rosé', accent: '#9f1239' },
+    ],
+  },
+  {
+    id: 'executive-serif',
+    name: 'Executive Serif',
+    description:
+      'Formelles Serifen-Layout mit Doppellinie und zentrierten Überschriften für Führungsrollen.',
+    category: 'Executive',
+    variants: [
+      { id: 'black', name: 'Klassisch Schwarz', accent: '#1a1a1a' },
+      { id: 'burgundy', name: 'Burgund', accent: '#7f1d1d' },
+      { id: 'navy', name: 'Navy', accent: '#1e3a5f' },
+    ],
+  },
 ];
 
 async function seedReactPdfTemplates(): Promise<void> {

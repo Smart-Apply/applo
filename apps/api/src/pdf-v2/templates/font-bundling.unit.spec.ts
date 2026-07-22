@@ -19,6 +19,9 @@ import { resolveFontFamily, resolveFontStack } from '../design-tokens';
 import { ClassicAtsFactory } from './classic-ats';
 import { HarvardClassicFactory } from './harvard-classic';
 import { ElegantSidebarFactory } from './elegant-sidebar';
+import { ModernTwoColumnFactory } from './modern-two-column';
+import { MinimalSingleColumnFactory } from './minimal-single-column';
+import { ExecutiveSerifFactory } from './executive-serif';
 import type { ResumeTemplateData } from '../template-data';
 import type { ReactPdfTemplateFactory } from '../types';
 
@@ -43,6 +46,9 @@ const FACTORIES: [string, ReactPdfTemplateFactory][] = [
   ['classic-ats', ClassicAtsFactory],
   ['harvard-classic', HarvardClassicFactory],
   ['elegant-sidebar', ElegantSidebarFactory],
+  ['modern-two-column', ModernTwoColumnFactory],
+  ['minimal-single-column', MinimalSingleColumnFactory],
+  ['executive-serif', ExecutiveSerifFactory],
 ];
 
 // Specs import @react-pdf/renderer statically (the loader's eval-based

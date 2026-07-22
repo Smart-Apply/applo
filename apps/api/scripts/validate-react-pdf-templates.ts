@@ -18,6 +18,9 @@ import { loadReactPdf } from '../src/pdf-v2/react-pdf-loader';
 import { ClassicAtsFactory } from '../src/pdf-v2/templates/classic-ats';
 import { HarvardClassicFactory } from '../src/pdf-v2/templates/harvard-classic';
 import { ElegantSidebarFactory } from '../src/pdf-v2/templates/elegant-sidebar';
+import { ModernTwoColumnFactory } from '../src/pdf-v2/templates/modern-two-column';
+import { MinimalSingleColumnFactory } from '../src/pdf-v2/templates/minimal-single-column';
+import { ExecutiveSerifFactory } from '../src/pdf-v2/templates/executive-serif';
 import type { ReactPdfTemplateFactory, ReactPdfTemplateMeta } from '../src/pdf-v2/types';
 import type {
   CoverLetterTemplateData,
@@ -137,6 +140,21 @@ const TARGETS: Target[] = [
     key: 'elegant-sidebar-ocean-blue',
     factory: ElegantSidebarFactory,
     meta: { language: 'en', accentColor: '#2e5c8a', colorVariantName: 'Ocean Blue' },
+  },
+  {
+    key: 'modern-two-column',
+    factory: ModernTwoColumnFactory,
+    meta: { language: 'en', accentColor: '#334155', colorVariantName: 'Slate' },
+  },
+  {
+    key: 'minimal-single-column',
+    factory: MinimalSingleColumnFactory,
+    meta: { language: 'en', accentColor: '#1f2937', colorVariantName: 'Graphit' },
+  },
+  {
+    key: 'executive-serif',
+    factory: ExecutiveSerifFactory,
+    meta: { language: 'en', accentColor: '#1a1a1a', colorVariantName: 'Klassisch Schwarz' },
   },
 ];
 

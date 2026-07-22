@@ -177,7 +177,11 @@ export function resolveResumeDesign(templateId?: string | null): ResumeDesign {
   const id = templateId || '';
   if (id.startsWith('harvard-classic')) return 'harvard-classic';
   if (id.startsWith('elegant-sidebar')) return 'elegant-sidebar';
-  return 'classic-ats';
+  // New TSX designs map to the closest existing edit-surface skin — the
+  // exported PDF carries the real design (the mimic is an approximation).
+  if (id.startsWith('modern-two-column')) return 'elegant-sidebar';
+  if (id.startsWith('executive-serif')) return 'harvard-classic';
+  return 'classic-ats'; // incl. minimal-single-column
 }
 
 /** Document sections the user can remove / re-add in the editor (P3). */

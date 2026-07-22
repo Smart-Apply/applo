@@ -1,6 +1,9 @@
 import { ClassicAtsFactory } from './templates/classic-ats';
 import { ElegantSidebarFactory } from './templates/elegant-sidebar';
+import { ExecutiveSerifFactory } from './templates/executive-serif';
 import { HarvardClassicFactory } from './templates/harvard-classic';
+import { MinimalSingleColumnFactory } from './templates/minimal-single-column';
+import { ModernTwoColumnFactory } from './templates/modern-two-column';
 import type { RegisteredReactPdfTemplate } from './types';
 
 /**
@@ -22,6 +25,9 @@ const REGISTRY: RegisteredReactPdfTemplate[] = [
   { key: 'classic-ats', factory: ClassicAtsFactory },
   { key: 'harvard-classic', factory: HarvardClassicFactory },
   { key: 'elegant-sidebar', factory: ElegantSidebarFactory },
+  { key: 'modern-two-column', factory: ModernTwoColumnFactory },
+  { key: 'minimal-single-column', factory: MinimalSingleColumnFactory },
+  { key: 'executive-serif', factory: ExecutiveSerifFactory },
 ];
 
 const REGISTRY_BY_KEY = new Map(REGISTRY.map((t) => [t.key, t]));
