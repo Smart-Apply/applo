@@ -142,6 +142,10 @@ export function useDeleteProfilePhoto() {
     mutationFn: () => api.profile.deletePhoto(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+
+      const previousUrl = queryClient.getQueryData<string | null>(['profile', 'photo']);
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
+
       queryClient.setQueryData(['profile', 'photo'], null);
       toastSuccess('Bewerbungsfoto entfernt');
     },
