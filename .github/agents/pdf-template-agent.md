@@ -250,27 +250,22 @@ Your CSS must use variables that can be overridden. Define base colors and deriv
 
 ### Step 3: How the Seed Script Processes Variants
 
-The seed script (`prisma/seed-templates-autodiscover.ts`) automatically:
+The seed script (`prisma/seed-react-pdf-templates.ts`, run via `pnpm prisma:seed:templates`)
+is the canonical source of catalog rows. For every design listed in its `DESIGNS` array it:
 
-1. **Reads `colorVariants`** from your config.json
-2. **Creates one database entry per variant** with IDs like:
+1. **Creates one database entry per color variant × type** with IDs like:
    - `elegant-sidebar-brown-resume`
    - `elegant-sidebar-blue-resume`
    - `elegant-sidebar-green-resume`
-3. **Prepends CSS overrides** to each variant's styles:
-   ```css
-   /* Color Variant: Ocean Blue */
-   :root { 
-     --accent-color: #3182ce !important; 
-     --header-bg: #3182ce !important; 
-     --bg-sidebar: #ebf4fc !important; 
-     --bg-secondary: #dbeafe !important; 
-     --text-accent: #1e4e8c !important; 
-     --border-light: #ebf4fc !important; 
-   }
-   ```
-4. **Sets `baseTemplateId`** to link variants together for UI grouping
-5. **Stores `accentColor` and `colorVariantName`** for frontend display
+2. **Sets `baseTemplateId`** (e.g. `elegant-sidebar-resume`) to link variants together for UI grouping
+3. **Stores `accentColor` and `colorVariantName`** — the TSX component derives its full palette
+   from the accent hex via `pdf-v2/color-utils.ts` (no CSS involved)
+4. **Deactivates every other still-active row** that has no factory registered in
+   `pdf-v2/template-registry.ts`, so the catalog can never offer a design that would crash
+   generation
+
+**When adding a new design you MUST register its factory in `template-registry.ts` AND add
+its entry to the seed's `DESIGNS` array** — otherwise the next seed run deactivates its rows.
 
 ### Step 4: Run Seed and Generate Previews
 

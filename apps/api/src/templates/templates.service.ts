@@ -4,9 +4,19 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { ConfigService } from '../config/config.service';
 import { PreviewRendererService } from '../pdf-v2/preview-renderer.service';
+import { isRenderableTemplate } from '../pdf-v2/template-registry';
 import { TemplateType } from '../generated/prisma/client';
 import { TemplateResponseDto, TemplateWithContentResponseDto } from './dto/template-response.dto';
 import { CreateTemplateDto } from './dto/create-template.dto';
+
+/** The row fields the react-pdf registry needs to resolve a design. */
+interface RegistryLookupRow {
+  id: string;
+  name: string;
+  baseTemplateId: string | null;
+  category: string;
+  type: TemplateType;
+}
 
 @Injectable()
 export class TemplatesService {
@@ -84,15 +94,38 @@ export class TemplatesService {
       },
     });
 
-    // Return all templates - frontend will group by baseTemplateId for color variant swatches
-    // Previously we grouped here, but now color variants need to be sent to frontend for UI grouping
-    const result = allTemplates;
+    // Only offer designs that actually render: every active row must resolve
+    // to a registered react-pdf factory for its type, otherwise picking it in
+    // the wizard would crash generation later ("has no react-pdf
+    // implementation registered"). Legacy HBS-era seed rows are the known
+    // offenders. `PdfService` throwing stays the last line of defense.
+    const result = allTemplates.filter((t) => this.isRenderable(t));
+    const hidden = allTemplates.filter((t) => !this.isRenderable(t));
+    if (hidden.length > 0) {
+      this.logger.warn(
+        `Catalog hides ${hidden.length} active template(s) without a registered react-pdf factory: ` +
+          hidden.map((t) => `${t.id} ("${t.name}")`).join(', '),
+      );
+    }
 
     // Store in cache
     this.cache.set(cacheKey, result);
     this.logger.debug(`Cached ${result.length} templates with key ${cacheKey}`);
 
     return result;
+  }
+
+  /** Registry check for a DB row, matching exactly how the renderer resolves it. */
+  private isRenderable(row: RegistryLookupRow): boolean {
+    return isRenderableTemplate(
+      {
+        baseTemplateId: row.baseTemplateId,
+        templateId: row.id,
+        name: row.name,
+        category: row.category,
+      },
+      row.type,
+    );
   }
 
   /**
@@ -122,14 +155,18 @@ export class TemplatesService {
       `Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
     );
 
-    const template = await this.prisma.template.findFirst({
+    const candidates = await this.prisma.template.findMany({
       where: {
         category,
         language,
         isActive: true,
         ...(type && { type: { in: [type, TemplateType.BOTH] } }),
       },
+      orderBy: [{ isDefault: 'desc' }, { name: 'asc' }],
     });
+    // Same-category legacy rows without a react-pdf factory must never win
+    // the language resolution — they would crash the PDF render later.
+    const template = candidates.find((t) => this.isRenderable(t)) ?? null;
 
     if (!template) {
       // Fallback to English if specific language not found
@@ -150,14 +187,16 @@ export class TemplatesService {
         return cachedFallback;
       }
 
-      const fallback = await this.prisma.template.findFirst({
+      const fallbackCandidates = await this.prisma.template.findMany({
         where: {
           category,
           language: 'en',
           isActive: true,
           ...(type && { type: { in: [type, TemplateType.BOTH] } }),
         },
+        orderBy: [{ isDefault: 'desc' }, { name: 'asc' }],
       });
+      const fallback = fallbackCandidates.find((t) => this.isRenderable(t)) ?? null;
 
       // Cache under fallback key only (not original key)
       this.cache.set(fallbackCacheKey, fallback);
@@ -286,7 +325,7 @@ export class TemplatesService {
       `Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
     );
 
-    const template = await this.prisma.template.findFirst({
+    const defaults = await this.prisma.template.findMany({
       where: {
         type: { in: [type, TemplateType.BOTH] },
         isActive: true,
@@ -294,16 +333,18 @@ export class TemplatesService {
       },
       orderBy: { createdAt: 'asc' },
     });
+    const template = defaults.find((t) => this.isRenderable(t)) ?? null;
 
     if (!template) {
       // Fallback to first active template of this type
-      const fallback = await this.prisma.template.findFirst({
+      const fallbackCandidates = await this.prisma.template.findMany({
         where: {
           type: { in: [type, TemplateType.BOTH] },
           isActive: true,
         },
         orderBy: { createdAt: 'asc' },
       });
+      const fallback = fallbackCandidates.find((t) => this.isRenderable(t)) ?? null;
 
       if (!fallback) {
         throw new NotFoundException(`No active template found for type ${type}`);

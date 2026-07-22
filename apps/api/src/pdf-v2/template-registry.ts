@@ -63,3 +63,32 @@ export function resolveReactPdfTemplate(
 export function listRegisteredKeys(): string[] {
   return Array.from(REGISTRY_BY_KEY.keys());
 }
+
+/**
+ * Whether a DB template row resolves to a registered factory that can render
+ * its declared type ('RESUME' needs `factory.resume`, 'COVER_LETTER' needs
+ * `factory.coverLetter`, 'BOTH' needs both). Pure — used by the catalog and
+ * language resolution in `TemplatesService` so unrenderable rows never reach
+ * a client or the generation pipeline (`PdfService` throwing stays the last
+ * line of defense).
+ */
+export function isRenderableTemplate(
+  input: ResolveInput,
+  type: 'RESUME' | 'COVER_LETTER' | 'BOTH' | string,
+): boolean {
+  const registered = resolveReactPdfTemplate(input);
+  if (!registered) return false;
+  const hasResume = Boolean(registered.factory.resume);
+  const hasCoverLetter = Boolean(registered.factory.coverLetter);
+  switch (type) {
+    case 'RESUME':
+      return hasResume;
+    case 'COVER_LETTER':
+      return hasCoverLetter;
+    case 'BOTH':
+      return hasResume && hasCoverLetter;
+    default:
+      // Unknown/legacy type strings: require a fully renderable design.
+      return hasResume && hasCoverLetter;
+  }
+}
