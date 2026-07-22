@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.7.0](https://github.com/Smart-Apply/applo/compare/v4.6.1...v4.7.0) (2026-07-22)
+
+
+### Features
+
+* **applications:** deterministic cover-letter length gate with guarded shorten pass ([#665](https://github.com/Smart-Apply/applo/issues/665)) ([ad1cf75](https://github.com/Smart-Apply/applo/commit/ad1cf7525beaba2018919355ab4e3b79a225fc01))
+* **profile:** optional application photo with per-application toggle ([#670](https://github.com/Smart-Apply/applo/issues/670)) ([4aa03b3](https://github.com/Smart-Apply/applo/commit/4aa03b3987148f863cb7ccdb9ac77a9907e67002))
+* **web:** design panel in application editor ([#668](https://github.com/Smart-Apply/applo/issues/668)) ([1712555](https://github.com/Smart-Apply/applo/commit/171255501bb994f9dcb01ed7222ab1163928e211))
+
+
+### Bug Fixes
+
+* **applications:** translate content on cross-language export and localize date labels ([#663](https://github.com/Smart-Apply/applo/issues/663)) ([646f1d9](https://github.com/Smart-Apply/applo/commit/646f1d927f47549993c6f166bf401d0e59dffce8))
+* **applications:** widen ATS optimizer panel in editor ([#672](https://github.com/Smart-Apply/applo/issues/672)) ([86a23a5](https://github.com/Smart-Apply/applo/commit/86a23a57e08d45b116ed0910990ed303ff4597e2))
+* **templates:** hide catalog designs without a registered react-pdf factory ([#666](https://github.com/Smart-Apply/applo/issues/666)) ([2fa0f6e](https://github.com/Smart-Apply/applo/commit/2fa0f6eb22d5e7978e9b73b012d6b3cf754a000b))
+* **web:** remove em-dashes from landing page copy ([#669](https://github.com/Smart-Apply/applo/issues/669)) ([914b8f1](https://github.com/Smart-Apply/applo/commit/914b8f1abfba6c9b16459d1294774b2bfd520a8b))
+
 ## [4.6.1](https://github.com/Smart-Apply/applo/compare/v4.6.0...v4.6.1) (2026-07-21)
 
 
