@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/stores/auth-store';
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api-client';
 import { toastSuccess, toastError } from '@/lib/toast';
 import type {
@@ -56,6 +57,7 @@ export function useApplication(id: string) {
  */
 export function useCreateApplication() {
   const queryClient = useQueryClient();
+  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (data: { jobPostingId: string }) => api.applications.create(data),
@@ -91,7 +93,7 @@ export function useCreateApplication() {
       if (context?.previousApplications) {
         queryClient.setQueryData(['applications'], context.previousApplications);
       }
-      toastError(error, 'Fehler beim Erstellen der Bewerbung');
+      toastError(error, t('hooks.createError'));
     },
 
     // Replace temp ID with real data on success
@@ -100,7 +102,7 @@ export function useCreateApplication() {
         if (!old) return [newApplication];
         return old.map((app) => (app.id.startsWith('temp-') ? newApplication : app));
       });
-      toastSuccess('Bewerbung wird erstellt...');
+      toastSuccess(t('hooks.createSuccess'));
     },
 
     // Always refetch after mutation for data consistency
@@ -115,6 +117,7 @@ export function useCreateApplication() {
  */
 export function useCreateApplicationWithGeneration() {
   const queryClient = useQueryClient();
+  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (data: {
@@ -130,7 +133,7 @@ export function useCreateApplicationWithGeneration() {
       queryClient.setQueryData(['applications', application.id], application);
     },
     onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Generieren der Bewerbung');
+      toastError(error, t('hooks.generateError'));
     },
   });
 }
@@ -153,6 +156,7 @@ export function useApplicationFiles(id: string) {
  */
 export function useDeleteApplication() {
   const queryClient = useQueryClient();
+  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (id: string) => api.applications.delete(id),
@@ -188,12 +192,12 @@ export function useDeleteApplication() {
       if (context?.previousApplication && context?.deletedId) {
         queryClient.setQueryData(['applications', context.deletedId], context.previousApplication);
       }
-      toastError(error, 'Fehler beim Löschen der Bewerbung');
+      toastError(error, t('hooks.deleteError'));
     },
 
     // Show success message
     onSuccess: () => {
-      toastSuccess('Bewerbung wurde gelöscht');
+      toastSuccess(t('hooks.deleteSuccess'));
     },
 
     // Always refetch after mutation for data consistency
@@ -206,6 +210,7 @@ export function useDeleteApplication() {
 
 export function useUpdateApplicationResume(applicationId: string) {
   const queryClient = useQueryClient();
+  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (data: { resume: ResumeData }) =>
@@ -215,16 +220,17 @@ export function useUpdateApplicationResume(applicationId: string) {
       queryClient.setQueryData(['applications', applicationId], updatedApplication);
       // Invalidate keywords query (secondary data)
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId, 'keywords'] });
-      toastSuccess('Lebenslauf gespeichert');
+      toastSuccess(t('hooks.resumeSaved'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Lebenslauf konnte nicht gespeichert werden');
+      toastError(error, t('hooks.resumeSaveError'));
     },
   });
 }
 
 export function useUpsertCoverLetter(applicationId: string) {
   const queryClient = useQueryClient();
+  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (data: { instructions?: string; content?: string; regenerate?: boolean }) =>
@@ -232,10 +238,10 @@ export function useUpsertCoverLetter(applicationId: string) {
     onSuccess: (updatedApplication) => {
       // Optimistic update: Update cache directly without refetching
       queryClient.setQueryData(['applications', applicationId], updatedApplication);
-      toastSuccess('Anschreiben aktualisiert');
+      toastSuccess(t('hooks.coverLetterUpdated'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Anschreiben konnte nicht aktualisiert werden');
+      toastError(error, t('hooks.coverLetterUpdateError'));
     },
   });
 }
@@ -245,12 +251,14 @@ export function useUpsertCoverLetter(applicationId: string) {
  * Returns the generated summary text (not persisted - user applies in editor)
  */
 export function useGenerateSummary(applicationId: string) {
+  const t = useTranslations('applications');
+
   return useMutation({
     mutationFn: (data: { instructions: string; currentSummary?: string; regenerate?: boolean }) =>
       api.applications.generateSummary(applicationId, data),
     // Note: No onSuccess toast - handled in component with streaming effect
     onError: (error: unknown) => {
-      toastError(error, 'Zusammenfassung konnte nicht generiert werden');
+      toastError(error, t('hooks.summaryGenerateError'));
     },
   });
 }
@@ -260,6 +268,8 @@ export function useGenerateSummary(applicationId: string) {
  * Returns the generated HTML description (not persisted - user applies in editor)
  */
 export function useGenerateExperienceDescription(applicationId: string) {
+  const t = useTranslations('applications');
+
   return useMutation({
     mutationFn: (data: {
       instructions: string;
@@ -272,7 +282,7 @@ export function useGenerateExperienceDescription(applicationId: string) {
     }) => api.applications.generateExperienceDescription(applicationId, data),
     // Note: No onSuccess toast - handled in component with streaming effect
     onError: (error: unknown) => {
-      toastError(error, 'Beschreibung konnte nicht generiert werden');
+      toastError(error, t('hooks.descriptionGenerateError'));
     },
   });
 }
@@ -282,6 +292,8 @@ export function useGenerateExperienceDescription(applicationId: string) {
  * Returns the generated HTML description (not persisted - user applies in editor)
  */
 export function useGenerateProjectDescription(applicationId: string) {
+  const t = useTranslations('applications');
+
   return useMutation({
     mutationFn: (data: {
       instructions: string;
@@ -293,23 +305,24 @@ export function useGenerateProjectDescription(applicationId: string) {
     }) => api.applications.generateProjectDescription(applicationId, data),
     // Note: No onSuccess toast - handled in component with streaming effect
     onError: (error: unknown) => {
-      toastError(error, 'Beschreibung konnte nicht generiert werden');
+      toastError(error, t('hooks.descriptionGenerateError'));
     },
   });
 }
 
 export function useExportApplication(applicationId: string) {
   const queryClient = useQueryClient();
+  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (language?: 'de' | 'en') =>
       api.applications.export(applicationId, language),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId] });
-      toastSuccess('PDF-Export gestartet');
+      toastSuccess(t('hooks.exportStarted'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Export konnte nicht gestartet werden');
+      toastError(error, t('hooks.exportStartError'));
     },
   });
 }
@@ -322,6 +335,7 @@ export function useExportApplication(applicationId: string) {
  */
 export function useUpdateTemplateSettings(applicationId: string) {
   const queryClient = useQueryClient();
+  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (settings: {
@@ -355,7 +369,7 @@ export function useUpdateTemplateSettings(applicationId: string) {
       if (context?.previous) {
         queryClient.setQueryData(['applications', applicationId], context.previous);
       }
-      toastError(error, 'Design-Einstellungen konnten nicht gespeichert werden');
+      toastError(error, t('hooks.designSettingsError'));
     },
     onSuccess: (application) => {
       queryClient.setQueryData(['applications', applicationId], application);
@@ -369,16 +383,17 @@ export function useUpdateTemplateSettings(applicationId: string) {
  */
 export function useAnalyzeKeywords(applicationId: string) {
   const queryClient = useQueryClient();
+  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: () => api.applications.analyzeKeywords(applicationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId] });
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId, 'keywords'] });
-      toastSuccess('Keywords wurden analysiert');
+      toastSuccess(t('hooks.keywordsAnalyzed'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Keywords konnten nicht analysiert werden');
+      toastError(error, t('hooks.keywordsAnalyzeError'));
     },
   });
 }
@@ -404,6 +419,7 @@ export function useKeywordsAnalysis(applicationId: string) {
  */
 export function useRetryApplication() {
   const queryClient = useQueryClient();
+  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (id: string) => api.applications.regenerate(id),
@@ -411,10 +427,10 @@ export function useRetryApplication() {
       // Update cache with new status (should be GENERATING)
       queryClient.setQueryData(['applications', updatedApplication.id], updatedApplication);
       queryClient.invalidateQueries({ queryKey: ['applications'] });
-      toastSuccess('Generierung wurde erneut gestartet');
+      toastSuccess(t('hooks.retryStarted'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Fehler beim erneuten Generieren');
+      toastError(error, t('hooks.retryError'));
     },
   });
 }

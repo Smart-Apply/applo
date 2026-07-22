@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Calendar, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Experience } from '@/types';
+import { getIntlLocale } from '@/lib/i18n-runtime';
+import { useTranslations } from 'next-intl';
 
 interface ExperienceManagerProps {
   experiences: Experience[];
@@ -28,6 +30,7 @@ export function ExperienceManager({
   onExperiencesChange,
   disabled = false,
 }: ExperienceManagerProps) {
+  const t = useTranslations('profile');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
@@ -87,20 +90,20 @@ export function ExperienceManager({
 
   const handleSubmit = () => {
     if (!title.trim()) {
-      toast.error('Bitte gib einen Jobtitel ein');
+      toast.error(t('experience.errors.title'));
       titleRef.current?.focus();
       return;
     }
     if (!company.trim()) {
-      toast.error('Bitte gib eine Firma ein');
+      toast.error(t('experience.errors.company'));
       return;
     }
     if (!startDate) {
-      toast.error('Bitte gib ein Startdatum ein');
+      toast.error(t('experience.errors.startDate'));
       return;
     }
     if (!current && endDate && new Date(endDate) < new Date(startDate)) {
-      toast.error('Enddatum muss nach dem Startdatum liegen');
+      toast.error(t('experience.errors.dateOrder'));
       return;
     }
 
@@ -119,10 +122,10 @@ export function ExperienceManager({
       const existing = experiences[editingIndex];
       updated = [...experiences];
       updated[editingIndex] = { ...newExp, ...(existing.id && { id: existing.id }) };
-      toast.success('Erfahrung aktualisiert');
+      toast.success(t('experience.toasts.updated'));
     } else {
       updated = [...experiences, newExp];
-      toast.success('Erfahrung hinzugefügt');
+      toast.success(t('experience.toasts.added'));
     }
 
     onExperiencesChange(updated);
@@ -133,22 +136,22 @@ export function ExperienceManager({
   const handleDelete = (index: number) => {
     onExperiencesChange(experiences.filter((_, i) => i !== index));
     setDeleteConfirmIndex(null);
-    toast.success('Erfahrung entfernt');
+    toast.success(t('experience.toasts.removed'));
   };
 
   const fmtDate = (d: string) =>
-    new Date(d).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
+    new Date(d).toLocaleDateString(getIntlLocale(), { month: 'short', year: 'numeric' });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Berufserfahrung</h3>
-          <p className="text-sm text-muted-foreground">Deine bisherigen Arbeitsstellen</p>
+          <h3 className="text-lg font-medium">{t('experience.title')}</h3>
+          <p className="text-sm text-muted-foreground">{t('experience.description')}</p>
         </div>
         <Button type="button" onClick={openAddDialog} disabled={disabled} size="sm">
           <Plus className="mr-2 h-4 w-4" />
-          Hinzufügen
+          {t('actions.add')}
         </Button>
       </div>
 
@@ -201,7 +204,7 @@ export function ExperienceManager({
                                   variant="secondary"
                                   className="h-5 px-1.5 py-0 text-[10px]"
                                 >
-                                  Aktuell
+                                  {t('labels.current')}
                                 </Badge>
                               )}
                             </span>
@@ -249,9 +252,9 @@ export function ExperienceManager({
           <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <Briefcase className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 className="font-medium text-foreground">Keine Berufserfahrung</h3>
+          <h3 className="font-medium text-foreground">{t('experience.emptyTitle')}</h3>
           <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-            Füge deine bisherigen Arbeitsstellen hinzu, um dein Profil zu vervollständigen.
+            {t('experience.emptyDescription')}
           </p>
           <Button
             type="button"
@@ -261,7 +264,7 @@ export function ExperienceManager({
             className="mt-4"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Erste Erfahrung hinzufügen
+            {t('experience.addFirst')}
           </Button>
         </div>
       )}
@@ -271,7 +274,7 @@ export function ExperienceManager({
         <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
           <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>
-              {editingIndex !== null ? 'Erfahrung bearbeiten' : 'Neue Erfahrung'}
+              {editingIndex !== null ? t('experience.editTitle') : t('experience.newTitle')}
             </DialogTitle>
           </DialogHeader>
 
@@ -279,13 +282,13 @@ export function ExperienceManager({
             {/* Title */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Jobtitel <span className="text-destructive">*</span>
+                {t('labels.jobTitle')} <span className="text-destructive">*</span>
               </label>
               <Input
                 ref={titleRef}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="z.B. Projektmanager, Softwareentwickler"
+                placeholder={t('experience.titlePlaceholder')}
                 onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               />
             </div>
@@ -294,24 +297,24 @@ export function ExperienceManager({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">
-                  Firma <span className="text-destructive">*</span>
+                  {t('labels.company')} <span className="text-destructive">*</span>
                 </label>
                 <Input
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
-                  placeholder="z.B. Muster GmbH"
+                  placeholder={t('experience.companyPlaceholder')}
                   onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">
-                  Standort{' '}
-                  <span className="font-normal text-muted-foreground">– optional</span>
+                  {t('labels.location')}{' '}
+                  <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
                 </label>
                 <Input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="z.B. Berlin"
+                  placeholder={t('experience.locationPlaceholder')}
                   onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
                 />
               </div>
@@ -321,7 +324,7 @@ export function ExperienceManager({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">
-                  Von <span className="text-destructive">*</span>
+                  {t('labels.from')} <span className="text-destructive">*</span>
                 </label>
                 <Input
                   type="date"
@@ -330,7 +333,7 @@ export function ExperienceManager({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Bis</label>
+                <label className="text-sm font-medium text-foreground">{t('labels.to')}</label>
                 <Input
                   type="date"
                   value={endDate}
@@ -349,34 +352,34 @@ export function ExperienceManager({
                   if (checked) setEndDate('');
                 }}
               />
-              <span className="text-sm text-foreground">Ich arbeite derzeit hier</span>
+              <span className="text-sm text-foreground">{t('experience.currentHere')}</span>
             </label>
 
             {/* Description */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Beschreibung{' '}
-                <span className="font-normal text-muted-foreground">– optional</span>
+                {t('labels.description')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
               </label>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Deine Hauptaufgaben und Erfolge …"
+                placeholder={t('experience.descriptionPlaceholder')}
                 rows={3}
                 className="resize-none"
               />
               <p className="text-xs text-muted-foreground">
-                Diese Beschreibung erscheint in generierten Lebensläufen.
+                {t('experience.descriptionHelp')}
               </p>
             </div>
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>
-                Abbrechen
+                {t('actions.cancel')}
               </Button>
               <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-                {editingIndex !== null ? 'Speichern' : 'Hinzufügen'}
+                {editingIndex !== null ? t('actions.save') : t('actions.add')}
               </Button>
             </div>
           </div>
@@ -390,15 +393,14 @@ export function ExperienceManager({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Erfahrung löschen</DialogTitle>
+            <DialogTitle>{t('experience.deleteTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Möchtest du diesen Eintrag wirklich löschen? Das kann nicht rückgängig gemacht
-            werden.
+            {t('experience.deleteConfirm')}
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setDeleteConfirmIndex(null)}>
-              Abbrechen
+              {t('actions.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -406,7 +408,7 @@ export function ExperienceManager({
                 deleteConfirmIndex !== null && handleDelete(deleteConfirmIndex)
               }
             >
-              Löschen
+              {t('actions.delete')}
             </Button>
           </div>
         </DialogContent>

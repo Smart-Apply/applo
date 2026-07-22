@@ -1,1 +1,84 @@
-{}
+{
+  "list": {
+    "title": "Stellenanzeigen",
+    "description": "Verwalte deine gespeicherten Stellenanzeigen und erstelle daraus Bewerbungen.",
+    "toasts": {
+      "saved": "Stellenanzeige gespeichert",
+      "created": "Stellenanzeige erstellt",
+      "deleted": "Stellenanzeige gelöscht"
+    },
+    "actions": {
+      "close": "Schließen",
+      "add": "Neue Stelle hinzufügen",
+      "openOriginal": "Original öffnen",
+      "showDetails": "Details anzeigen",
+      "apply": "Bewerben",
+      "delete": "Löschen"
+    },
+    "input": {
+      "title": "Neue Stellenanzeige erfassen",
+      "description": "Füge eine URL hinzu oder kopiere den Text, um die Stelle zu speichern.",
+      "tabs": {
+        "link": "Per Link",
+        "manual": "Manuell"
+      }
+    },
+    "moreRequirements": "+{count} weitere",
+    "empty": {
+      "title": "Keine Stellenanzeigen",
+      "description": "Du hast noch keine Stellenanzeigen gespeichert. Füge deine erste Stelle hinzu, um loszulegen.",
+      "action": "Erste Stelle hinzufügen"
+    },
+    "workflow": {
+      "title": "So funktioniert der Applo Workflow",
+      "step1": {
+        "title": "1 · Stelle speichern",
+        "description": "Füge eine URL von LinkedIn/Indeed hinzu oder kopiere den Text der Ausschreibung."
+      },
+      "step2": {
+        "title": "2 · Analysieren",
+        "description": "Unsere KI extrahiert automatisch alle wichtigen Anforderungen und Skills."
+      },
+      "step3": {
+        "title": "3 · Bewerben",
+        "description": "Erstelle mit einem Klick eine maßgeschneiderte Bewerbung für diese Stelle."
+      }
+    },
+    "deleteDialog": {
+      "title": "Stellenanzeige löschen?",
+      "description": "Möchtest du die Stellenanzeige <strong>{title}</strong> wirklich löschen?",
+      "cancel": "Abbrechen",
+      "confirm": "Löschen",
+      "deleting": "Wird gelöscht..."
+    }
+  },
+  "detail": {
+    "loading": "Lädt Stellenanzeige...",
+    "back": "Zurück",
+    "notFound": {
+      "title": "Stellenanzeige nicht gefunden",
+      "description": "Die angeforderte Stellenanzeige existiert nicht oder du hast keine Berechtigung.",
+      "toApplications": "Zu Bewerbungen"
+    },
+    "source": "Quelle",
+    "sections": {
+      "description": "Stellenbeschreibung",
+      "requirements": "Anforderungen",
+      "responsibilities": "Aufgaben & Verantwortlichkeiten",
+      "niceToHave": "Wünschenswert",
+      "rawText": "Original-Text"
+    },
+    "showFullText": "Vollständigen Text anzeigen"
+  },
+  "hooks": {
+    "createError": "Fehler beim Erstellen der Stellenanzeige",
+    "createSuccess": "Stellenanzeige erfolgreich erstellt",
+    "loadingTitle": "Lädt...",
+    "analyzingTitle": "Wird analysiert...",
+    "unknownCompany": "Unbekannt",
+    "parseError": "Fehler beim Analysieren der Stellenanzeige",
+    "parseSuccess": "Stellenanzeige erfolgreich analysiert",
+    "deleteError": "Fehler beim Löschen der Stellenanzeige",
+    "deleteSuccess": "Stellenanzeige erfolgreich gelöscht"
+  }
+}

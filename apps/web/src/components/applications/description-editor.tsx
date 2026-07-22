@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
+import { useTranslations } from 'next-intl';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Bold, Italic, List, ListOrdered } from 'lucide-react';
@@ -51,9 +52,11 @@ export function DescriptionEditor({
   // the prop is kept for API compatibility with callers that pass one
   // (and so a future `Placeholder` extension can plug in without a
   // breaking change), but it isn't wired into the editor right now.
-  placeholder: _placeholder = 'Beschreiben Sie Ihre Aufgaben, Verantwortlichkeiten und Erfolge...',
+  placeholder: _placeholder,
   minHeight = '160px'
 }: DescriptionEditorProps) {
+  const t = useTranslations('editor');
+  const _resolvedPlaceholder = _placeholder ?? t('description.defaultPlaceholder');
   const editor = useEditor(
     {
       extensions: [
@@ -137,28 +140,28 @@ export function DescriptionEditor({
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')}
           icon={<Bold className="h-3.5 w-3.5" />}
-          label="Fett"
+          label={t('richText.bold')}
           disabled={disabled}
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive('italic')}
           icon={<Italic className="h-3.5 w-3.5" />}
-          label="Kursiv"
+          label={t('richText.italic')}
           disabled={disabled}
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive('bulletList')}
           icon={<List className="h-3.5 w-3.5" />}
-          label="Aufzählung"
+          label={t('richText.bulletList')}
           disabled={disabled}
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive('orderedList')}
           icon={<ListOrdered className="h-3.5 w-3.5" />}
-          label="Nummerierte Liste"
+          label={t('richText.orderedList')}
           disabled={disabled}
         />
       </div>

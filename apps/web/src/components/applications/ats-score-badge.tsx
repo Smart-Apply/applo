@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 interface ATSScoreBadgeProps {
@@ -15,7 +16,7 @@ interface ATSScoreBadgeProps {
 const getScoreInfo = (score: number) => {
   if (score >= 80) {
     return {
-      label: 'Ausgezeichnet',
+      labelKey: 'atsScoreBadge.excellent',
       color: 'text-[#16A34A]',
       bg: 'bg-[#D1FADF]',
       border: 'border-[#16A34A]',
@@ -24,7 +25,7 @@ const getScoreInfo = (score: number) => {
   }
   if (score >= 60) {
     return {
-      label: 'Gut',
+      labelKey: 'atsScoreBadge.good',
       color: 'text-[#EAB308]',
       bg: 'bg-[#FEF3C7]',
       border: 'border-[#EAB308]',
@@ -33,7 +34,7 @@ const getScoreInfo = (score: number) => {
   }
   if (score >= 40) {
     return {
-      label: 'Ausbaufähig',
+      labelKey: 'atsScoreBadge.needsWork',
       color: 'text-[#EAB308]',
       bg: 'bg-[#FEF3C7]',
       border: 'border-[#EAB308]',
@@ -41,7 +42,7 @@ const getScoreInfo = (score: number) => {
     };
   }
   return {
-    label: 'Niedrig',
+    labelKey: 'atsScoreBadge.low',
     color: 'text-[#DC2626]',
     bg: 'bg-[#FEE2E2]',
     border: 'border-[#DC2626]',
@@ -76,6 +77,7 @@ export function ATSScoreBadge({
   size = 'md',
   className,
 }: ATSScoreBadgeProps) {
+  const t = useTranslations('applications');
   const scoreInfo = getScoreInfo(score);
   const Icon = scoreInfo.icon;
 
@@ -93,7 +95,7 @@ export function ATSScoreBadge({
     >
       {showIcon && <Icon className={cn('mr-1', iconSizeClasses[size])} />}
       {Math.round(score)}%
-      {showLabel && <span className="ml-1.5 opacity-90">{scoreInfo.label}</span>}
+      {showLabel && <span className="ml-1.5 opacity-90">{t(scoreInfo.labelKey)}</span>}
     </Badge>
   );
 }

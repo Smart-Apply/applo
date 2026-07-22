@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,9 +32,13 @@ import type { JobPosting, Template } from '@/types';
 // (see docs/bug_fixes/LANGUAGE_SWITCH_EXPORT.md).
 export type ApplicationLanguage = 'de' | 'en';
 
-const LANGUAGE_OPTIONS: { value: ApplicationLanguage; label: string; flag: string }[] = [
-  { value: 'de', label: 'Deutsch', flag: '🇩🇪' },
-  { value: 'en', label: 'English', flag: '🇬🇧' },
+const LANGUAGE_OPTIONS: {
+  value: ApplicationLanguage;
+  labelKey: 'configureStep.language.de' | 'configureStep.language.en';
+  flag: string;
+}[] = [
+  { value: 'de', labelKey: 'configureStep.language.de', flag: '🇩🇪' },
+  { value: 'en', labelKey: 'configureStep.language.en', flag: '🇬🇧' },
 ];
 
 // Helper to group templates by base template for color variants
@@ -84,6 +89,7 @@ interface GenerateStepProps {
 
 export function GenerateStep({ jobPosting }: GenerateStepProps) {
   const router = useRouter();
+  const t = useTranslations('wizard');
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const { data: profile } = useProfile();
@@ -163,7 +169,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
       router.push(`/applications/${application.id}/edit`);
     } catch (error: unknown) {
-      let message = 'Ein unbekannter Fehler ist aufgetreten';
+      let message = t('configureStep.errors.unknown');
       let applicationId: string | null = null;
       let errorCode: string | undefined;
       if (error && typeof error === 'object') {
@@ -183,7 +189,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
         toast.error(message, {
           duration: 10000,
           action: {
-            label: 'E-Mail erneut senden',
+            label: t('configureStep.errors.resendEmail'),
             onClick: () => router.push('/settings?verify=resend'),
           },
         });
@@ -198,7 +204,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
         // wizard with a duplicate-conflict error.
         setIsRedirecting(true);
         queryClient.invalidateQueries({ queryKey: ['applications'] });
-        toast.info('Für diese Stelle besteht bereits eine Bewerbung. Wir öffnen sie für dich.');
+        toast.info(t('generateStep.toasts.existingApplication'));
         router.push(`/applications/${applicationId}/edit`);
         return;
       }
@@ -215,7 +221,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
     group.colorVariants.find(v => v.id === effectiveResumeTemplateId)?.id;
 
   if (clLoading || rtLoading) {
-    return <CenteredLoader message="Vorlagen werden geladen..." />;
+    return <CenteredLoader message={t('configureStep.loadingTemplates')} />;
   }
 
   // ── Generating or redirecting: show loading UI ──
@@ -226,16 +232,16 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
     // is generated.
     const STEPS: { label: string; doneAt: number }[] = generateCoverLetter
       ? [
-          { label: 'Profil und Stellenanzeige werden analysiert', doneAt: 6 },
-          { label: 'Anschreiben wird mit KI generiert', doneAt: 28 },
-          { label: 'Lebenslauf wird auf die Stelle zugeschnitten', doneAt: 48 },
-          { label: 'Anschreiben wird geprüft und verfeinert', doneAt: 66 },
-          { label: 'Dokumente werden gespeichert', doneAt: 74 },
+          { label: t('generateStep.progress.steps.analyze'), doneAt: 6 },
+          { label: t('generateStep.progress.steps.cover'), doneAt: 28 },
+          { label: t('generateStep.progress.steps.resume'), doneAt: 48 },
+          { label: t('generateStep.progress.steps.refineCover'), doneAt: 66 },
+          { label: t('generateStep.progress.steps.save'), doneAt: 74 },
         ]
       : [
-          { label: 'Profil und Stellenanzeige werden analysiert', doneAt: 6 },
-          { label: 'Lebenslauf wird auf die Stelle zugeschnitten', doneAt: 45 },
-          { label: 'Dokumente werden gespeichert', doneAt: 55 },
+          { label: t('generateStep.progress.steps.analyze'), doneAt: 6 },
+          { label: t('generateStep.progress.steps.resume'), doneAt: 45 },
+          { label: t('generateStep.progress.steps.save'), doneAt: 55 },
         ];
 
     const totalEstimate = STEPS[STEPS.length - 1].doneAt;
@@ -246,11 +252,11 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Bewerbung wird erstellt...</CardTitle>
+          <CardTitle>{t('generateStep.progress.title')}</CardTitle>
           <CardDescription>
             {isOverdue
-              ? 'Dauert länger als gewöhnlich, einen Moment noch …'
-              : `Das dauert üblicherweise ${generateCoverLetter ? '45–75' : '30–55'} Sekunden. Bitte schließ dieses Fenster nicht.`}
+              ? t('generateStep.progress.overdue')
+              : t('generateStep.progress.estimate', { seconds: generateCoverLetter ? '45–75' : '30–55' })}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -259,7 +265,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
               <div className="flex items-center gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 <p className="text-sm font-medium">
-                  Deine Bewerbung wird mit KI erstellt...
+                  {t('generateStep.progress.creating')}
                 </p>
               </div>
               <span
@@ -324,7 +330,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
       {/* Summary Card: Profile ↔ Job */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg">Zusammenfassung</CardTitle>
+          <CardTitle className="text-lg">{t('generateStep.summary.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -332,23 +338,23 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
             <div className="rounded-[3px] border bg-muted/20 p-4 space-y-2">
               <div className="flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
                 <User className="h-3.5 w-3.5" />
-                Dein Profil
+                {t('generateStep.summary.profile')}
               </div>
               <p className="font-semibold">{user?.firstName || ''} {user?.lastName || ''}</p>
               <div className="flex flex-wrap gap-1.5">
                 {profile?.skills && profile.skills.length > 0 && (
                   <Badge variant="secondary" className="text-xs">
-                    {profile.skills.length} Skills
+                    {t('generateStep.summary.skills', { count: profile.skills.length })}
                   </Badge>
                 )}
                 {profile?.experiences && profile.experiences.length > 0 && (
                   <Badge variant="secondary" className="text-xs">
-                    {profile.experiences.length} Erfahrungen
+                    {t('generateStep.summary.experiences', { count: profile.experiences.length })}
                   </Badge>
                 )}
                 {profile?.education && profile.education.length > 0 && (
                   <Badge variant="secondary" className="text-xs">
-                    {profile.education.length} Bildung
+                    {t('generateStep.summary.education', { count: profile.education.length })}
                   </Badge>
                 )}
               </div>
@@ -358,7 +364,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
             <div className="rounded-[3px] border bg-muted/20 p-4 space-y-2">
               <div className="flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
                 <Briefcase className="h-3.5 w-3.5" />
-                Diese Stelle
+                {t('generateStep.summary.job')}
               </div>
               <p className="font-semibold">{jobPosting.title}</p>
               <p className="text-sm text-muted-foreground">{jobPosting.company}</p>
@@ -373,7 +379,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
       {/* Options: Cover Letter + Language */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg">Optionen</CardTitle>
+          <CardTitle className="text-lg">{t('generateStep.options.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start space-x-3 p-4 rounded-[3px] bg-muted/30 border">
@@ -385,19 +391,19 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
             />
             <div className="grid gap-1.5 leading-none">
               <Label htmlFor="generateCoverLetter" className="text-base font-medium cursor-pointer">
-                Anschreiben generieren
+                {t('configureStep.options.generateCoverLetter')}
               </Label>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Erstellt ein auf die Stelle zugeschnittenes Anschreiben.
+                {t('configureStep.options.generateCoverLetterHelp')}
               </p>
             </div>
           </div>
 
           <div className="p-4 rounded-[3px] bg-muted/30 border">
             <div className="grid gap-1.5 leading-none mb-3">
-              <Label className="text-base font-medium">Sprache der Bewerbung</Label>
+              <Label className="text-base font-medium">{t('generateStep.options.languageTitle')}</Label>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Wird automatisch erkannt. Hier kannst du sie anpassen.
+                {t('generateStep.options.languageHelp')}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -414,7 +420,7 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
                   )}
                 >
                   <span className="text-base">{option.flag}</span>
-                  <span>{option.label}</span>
+                  <span>{t(option.labelKey)}</span>
                 </button>
               ))}
             </div>
@@ -427,15 +433,15 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-lg">Design auswählen</CardTitle>
+              <CardTitle className="text-lg">{t('generateStep.templates.title')}</CardTitle>
               <CardDescription>
-                Wähle eine Vorlage für deinen Lebenslauf.
-                {generateCoverLetter && ' Das Anschreiben wird automatisch im passenden Design erstellt.'}
+                {t('generateStep.templates.description')}
+                {generateCoverLetter && ` ${t('generateStep.templates.coverLetterNote')}`}
               </CardDescription>
             </div>
             {resumeTemplateGroups.length > 3 && (
               <Button variant="ghost" size="sm" onClick={() => setShowAllTemplates(!showAllTemplates)}>
-                {showAllTemplates ? 'Weniger' : 'Alle anzeigen'}
+                {showAllTemplates ? t('generateStep.templates.showLess') : t('generateStep.templates.showAll')}
               </Button>
             )}
           </div>
@@ -470,18 +476,18 @@ export function GenerateStep({ jobPosting }: GenerateStepProps) {
             )}
           >
             {dailyUsage.isExhausted
-              ? `Tageslimit erreicht (${dailyUsage.used}/${dailyUsage.limit}). Bitte komm in 24 Stunden wieder.`
-              : `Heute noch ${dailyUsage.remaining} von ${dailyUsage.limit} Bewerbungen möglich`}
+              ? t('configureStep.usage.exhausted', { used: dailyUsage.used, limit: dailyUsage.limit })
+              : t('configureStep.usage.remaining', { remaining: dailyUsage.remaining, limit: dailyUsage.limit })}
           </p>
         )}
         <SubmitButton
           onClick={handleSubmit}
           isLoading={createApplication.isPending}
-          loadingText="Erstelle Bewerbung..."
+          loadingText={t('configureStep.actions.creating')}
           size="lg"
           disabled={dailyUsage.isExhausted}
         >
-          Bewerbung erstellen
+          {t('configureStep.actions.create')}
           <Sparkles className="ml-2 h-4 w-4" />
         </SubmitButton>
       </div>

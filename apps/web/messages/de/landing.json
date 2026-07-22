@@ -1,1 +1,268 @@
-{}
+{
+  "mascot": {
+    "wave": {
+      "title": "Hi, ich bin Applo!",
+      "text": "Ich helfe dir bei ehrlichen Bewerbungen."
+    },
+    "search": {
+      "text": "Ich lese deinen CV."
+    },
+    "process": {
+      "text": "Ich schreibe …"
+    },
+    "success": {
+      "text": "Stark gemacht!"
+    },
+    "idle": {
+      "text": "Ehrlich & ruhig."
+    },
+    "love": {
+      "text": "Für dich gebaut."
+    },
+    "auto": {
+      "text": "Stellen im Nu."
+    },
+    "coach": {
+      "text": "Üb mit mir."
+    },
+    "think": {
+      "text": "Mal sehen …"
+    },
+    "done": {
+      "text": "Erledigt!"
+    }
+  },
+  "nav": {
+    "ariaLabel": "Hauptnavigation",
+    "features": "Features",
+    "values": "Werte",
+    "pricing": "Preise",
+    "faq": "FAQ",
+    "login": "Anmelden",
+    "start": "Kostenlos starten"
+  },
+  "hero": {
+    "eyebrow": "Bewerben, ehrlich gemacht",
+    "title": "Bewerbungen, die zu <highlight>dir</highlight> passen, nicht zu einer erfundenen Version von dir.",
+    "lead": "Applo schreibt Anschreiben und Lebenslauf aus deinem <strong>echten Profil</strong>: KI-gestützt, ATS-optimiert und transparent. Du behältst die Kontrolle, die KI erfindet nichts dazu.",
+    "primaryCta": "Kostenlos starten",
+    "secondaryCta": "So funktioniert’s",
+    "trust": {
+      "hosting": "EU-Hosting",
+      "gdpr": "DSGVO",
+      "grounded": "Keine erfundenen Daten"
+    }
+  },
+  "receipt": {
+    "file": "bewerbung_vertriebsleitung.pdf",
+    "language": "DE",
+    "profileLabel": "PROFIL",
+    "profileValue": "Lena Weber · Vertriebsleiterin",
+    "jobLabel": "STELLE",
+    "jobValue": "Vertriebsleitung · Nordwind GmbH",
+    "generationLabel": "KI-GENERIERUNG",
+    "note": "Grounding-Check aktiv: keine erfundenen Kennzahlen.",
+    "scoreLabel": "ATS-SCORE",
+    "keywords": "KEYWORDS 21/24",
+    "scoreWord": "STARK",
+    "export": "Als PDF exportieren",
+    "hint": "50 VORLAGEN · DE/EN"
+  },
+  "how": {
+    "eyebrow": "01 · So funktioniert’s",
+    "title": "In drei Schritten zur fertigen Bewerbung",
+    "lead": "Vom Lebenslauf zur abgeschickten, ATS-optimierten Bewerbung, ohne Copy-Paste-Chaos.",
+    "steps": {
+      "one": {
+        "title": "Profil & CV hochladen",
+        "desc": "Lade deinen Lebenslauf hoch. Der Resume-Parser liest ihn aus und füllt dein Profil automatisch. Du prüfst und korrigierst."
+      },
+      "two": {
+        "title": "Stelle einfügen",
+        "desc": "Füge eine Stelle als Text, URL oder PDF ein. Die KI schreibt Anschreiben und Lebenslauf passend zur Ausschreibung, ATS-optimiert."
+      },
+      "three": {
+        "title": "Als PDF exportieren",
+        "desc": "Wähle aus 50 ATS-Vorlagen, exportiere als PDF (DE/EN) und bewirb dich. Fertig."
+      }
+    }
+  },
+  "features": {
+    "eyebrow": "02 · Features",
+    "title": "Alles, was eine ehrliche Bewerbung braucht",
+    "lead": "Konkrete Werkzeuge statt leerer Versprechen. Gebaut, damit deine Bewerbung stark <emphasis>und</emphasis> wahr ist.",
+    "items": {
+      "generation": {
+        "title": "KI-Generierung",
+        "desc": "Self-Review & ATS-Keyword-Loop verfeinern Anschreiben und CV automatisch, auf Basis deiner echten Daten."
+      },
+      "ingestion": {
+        "title": "Smart Job-Ingestion",
+        "desc": "Stellen aus Indeed, LinkedIn und Glassdoor einlesen: als Text, URL oder PDF."
+      },
+      "validation": {
+        "title": "Bewerbungs-Check",
+        "desc": "ATS-Score plus Ampel-Feedback zeigt dir, was vor dem Absenden noch besser geht."
+      },
+      "templates": {
+        "title": "50 ATS-PDF-Vorlagen",
+        "desc": "Sauber strukturierte Vorlagen in Deutsch und Englisch, optimiert für Bewerbungssysteme."
+      },
+      "interviews": {
+        "title": "Mock-Interviews",
+        "desc": "Übe Interviews als Text oder per Voice und erhalte konkretes Feedback.<tag>Premium</tag>"
+      },
+      "tracking": {
+        "title": "E-Mail-Tracking",
+        "desc": "Verbinde Outlook/M365. Der Status deiner Bewerbungen aktualisiert sich automatisch.<tag>Premium</tag>"
+      },
+      "languages": {
+        "title": "Mehrsprachig DE/EN",
+        "desc": "Erstelle und exportiere Bewerbungen wahlweise auf Deutsch oder Englisch."
+      },
+      "pipeline": {
+        "title": "Live-Status der Pipeline",
+        "desc": "Behalte alle Bewerbungen und ihren aktuellen Stand an einem Ort im Blick."
+      }
+    }
+  },
+  "values": {
+    "eyebrow": "03 · Werte & Transparenz",
+    "title": "Ehrlich. Nachprüfbar. Auf deiner Seite.",
+    "lead": "Transparenz ist kein Feature-Häkchen, sondern das Fundament. Wir sagen klar, was passiert und was nicht.",
+    "items": {
+      "grounded": {
+        "title": "Keine erfundenen Daten",
+        "desc": "Die KI nutzt nur, was dein Profil belegt. Ein Grounding-Check markiert erfundene Kennzahlen, bevor sie in deine Bewerbung geraten."
+      },
+      "eu": {
+        "title": "Deine Daten bleiben in der EU",
+        "desc": "Hosting und Speicherung erfolgen in der EU, nach DSGVO."
+      },
+      "audio": {
+        "title": "Interviews: kein Audio gespeichert",
+        "desc": "Von Mock-Interviews bleiben nur Transcript und Feedback, keine Audioaufnahme."
+      },
+      "email": {
+        "title": "E-Mail-Tracking ohne Inhalte",
+        "desc": "Wir lesen den Status, nicht deine Nachrichten. Mail-Inhalte werden nicht gespeichert."
+      },
+      "security": {
+        "title": "Sicherheit eingebaut",
+        "desc": "HttpOnly-JWT, 2FA, CSRF-Schutz, Rate-Limiting und Audit-Logs sind standardmäßig aktiv."
+      },
+      "candidate": {
+        "title": "Für dich, nicht für Recruiter",
+        "desc": "Dein Profil ist die Basis <strong>deiner</strong> Bewerbungen, kein durchsuchbares Schaufenster für Firmen."
+      }
+    },
+    "not": {
+      "title": "Was Applo <underline>nicht</underline> tut",
+      "items": {
+        "spam": "Keine Massen-Spam-Bewerbungen in deinem Namen.",
+        "fake": "Keine Fake-Erfolge und keine erfundenen Kennzahlen.",
+        "sale": "Kein Verkauf deiner Daten, an niemanden."
+      }
+    }
+  },
+  "pricing": {
+    "eyebrow": "04 · Preise",
+    "title": "Fair und ohne Überraschungen",
+    "lead": "Starte kostenlos. Upgrade nur, wenn du mehr brauchst. Jederzeit kündbar.",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "currency": "€",
+        "amount": "0",
+        "period": "/ Monat",
+        "tagline": "Zum Ausprobieren",
+        "features": {
+          "0": "5 Bewerbungs-Checks / Monat",
+          "1": "KI-Generierung & ATS-Score",
+          "2": "50 ATS-PDF-Vorlagen",
+          "3": "DE/EN"
+        },
+        "cta": "Kostenlos starten"
+      },
+      "pro": {
+        "badge": "Beliebt",
+        "name": "Pro",
+        "currency": "€",
+        "amount": "TBD",
+        "period": "/ Monat",
+        "tagline": "Preis folgt",
+        "features": {
+          "0": "Unlimitierte Bewerbungs-Checks",
+          "1": "Smart Job-Ingestion",
+          "2": "Live-Status der Pipeline",
+          "3": "Alles aus Free"
+        },
+        "cta": "Pro wählen"
+      },
+      "premium": {
+        "name": "Premium",
+        "currency": "€",
+        "amount": "TBD",
+        "period": "/ Monat",
+        "tagline": "Preis folgt",
+        "features": {
+          "0": "Mock-Interviews (Text & Voice)",
+          "1": "E-Mail-Tracking (Outlook/M365)",
+          "2": "Alles aus Pro"
+        },
+        "cta": "Premium wählen"
+      }
+    },
+    "stats": {
+      "templates": "ATS-Vorlagen",
+      "languagesSuffix": " Sprachen",
+      "languages": "Deutsch & Englisch",
+      "hosting": "EU-Hosting & DSGVO"
+    }
+  },
+  "faq": {
+    "eyebrow": "05 · FAQ",
+    "title": "Klare Antworten",
+    "items": {
+      "data": {
+        "q": "Was passiert mit meinen Daten?",
+        "a": "Deine Daten werden in der EU gehostet und gespeichert, nach DSGVO. Wir verkaufen deine Daten nicht. Bei Mock-Interviews wird kein Audio gespeichert, beim E-Mail-Tracking keine Mail-Inhalte."
+      },
+      "fabrication": {
+        "q": "Erfindet die KI Dinge über mich?",
+        "a": "Nein. Die KI nutzt nur, was dein Profil belegt. Ein Grounding-Check markiert erfundene Kennzahlen, damit nichts Unwahres in deine Bewerbung gerät."
+      },
+      "recruiters": {
+        "q": "Können Recruiter mein Profil sehen oder finden?",
+        "a": "Nein. Dein Profil ist die private Basis deiner eigenen Bewerbungen, kein durchsuchbares Schaufenster. Es wird Firmen nicht zur Suche angeboten."
+      },
+      "languages": {
+        "q": "In welchen Sprachen kann ich bewerben?",
+        "a": "Du kannst Bewerbungen auf Deutsch und Englisch erstellen und als PDF exportieren."
+      },
+      "cancel": {
+        "q": "Ist Applo kündbar?",
+        "a": "Ja, jederzeit. Free bleibt kostenlos; bezahlte Tarife sind ohne lange Bindung kündbar."
+      },
+      "ownership": {
+        "q": "Wem gehören meine Daten?",
+        "a": "Dir. Dein Profil und deine Inhalte gehören dir. Applo nutzt sie nur, um deine Bewerbungen zu erstellen."
+      }
+    }
+  },
+  "final": {
+    "title": "Bereit für ehrliche Bewerbungen?",
+    "lead": "Starte kostenlos: keine erfundenen Daten, keine Massen-Spam-Bewerbungen.",
+    "cta": "Kostenlos starten",
+    "trust": {
+      "hosting": "EU-Hosting",
+      "gdpr": "DSGVO",
+      "cancel": "jederzeit kündbar"
+    }
+  },
+  "footer": {
+    "tagline": "Bewerbungen aus deinem echten Profil: ehrlich, ATS-optimiert, in der EU gehostet.",
+    "compliance": "EU · DSGVO",
+    "license": "Source-available · BSL 1.1"
+  }
+}

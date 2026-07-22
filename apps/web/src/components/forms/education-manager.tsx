@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Calendar, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Education } from '@/types';
+import { useTranslations } from 'next-intl';
 
 interface EducationManagerProps {
   education: Education[];
@@ -27,6 +28,7 @@ export function EducationManager({
   onEducationChange,
   disabled = false,
 }: EducationManagerProps) {
+  const t = useTranslations('profile');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
@@ -84,18 +86,18 @@ export function EducationManager({
 
   const handleSubmit = () => {
     if (!institution.trim()) {
-      toast.error('Bitte gib eine Institution ein');
+      toast.error(t('education.errors.institution'));
       institutionRef.current?.focus();
       return;
     }
     if (!degree.trim()) {
-      toast.error('Bitte gib einen Abschluss ein');
+      toast.error(t('education.errors.degree'));
       return;
     }
     const sy = startYear ? parseInt(startYear, 10) : undefined;
     const ey = endYear ? parseInt(endYear, 10) : null;
     if (sy && ey && ey < sy) {
-      toast.error('Endjahr muss nach dem Startjahr liegen');
+      toast.error(t('education.errors.yearOrder'));
       return;
     }
 
@@ -114,10 +116,10 @@ export function EducationManager({
       const existing = education[editingIndex];
       updated = [...education];
       updated[editingIndex] = { ...newEdu, ...(existing.id && { id: existing.id }) };
-      toast.success('Bildung aktualisiert');
+      toast.success(t('education.toasts.updated'));
     } else {
       updated = [...education, newEdu];
-      toast.success('Bildung hinzugefügt');
+      toast.success(t('education.toasts.added'));
     }
 
     onEducationChange(updated);
@@ -128,19 +130,19 @@ export function EducationManager({
   const handleDelete = (index: number) => {
     onEducationChange(education.filter((_, i) => i !== index));
     setDeleteConfirmIndex(null);
-    toast.success('Bildung entfernt');
+    toast.success(t('education.toasts.removed'));
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Bildung</h3>
-          <p className="text-sm text-muted-foreground">Deine akademische Ausbildung</p>
+          <h3 className="text-lg font-medium">{t('education.title')}</h3>
+          <p className="text-sm text-muted-foreground">{t('education.description')}</p>
         </div>
         <Button type="button" onClick={openAddDialog} disabled={disabled} size="sm">
           <Plus className="mr-2 h-4 w-4" />
-          Hinzufügen
+          {t('actions.add')}
         </Button>
       </div>
 
@@ -187,14 +189,14 @@ export function EducationManager({
                                   variant="secondary"
                                   className="h-5 px-1.5 py-0 text-[10px]"
                                 >
-                                  Heute
+                                  {t('labels.today')}
                                 </Badge>
                               )}
                             </span>
                           </div>
                           {edu.gpa && (
                             <p className="mt-1 text-xs text-muted-foreground">
-                              Note: {edu.gpa}
+                              {t('labels.grade')}: {edu.gpa}
                             </p>
                           )}
                           {edu.description && (
@@ -239,9 +241,9 @@ export function EducationManager({
           <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <GraduationCap className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 className="font-medium text-foreground">Keine Bildung</h3>
+          <h3 className="font-medium text-foreground">{t('education.emptyTitle')}</h3>
           <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-            Füge deine akademische Ausbildung hinzu, um dein Profil zu vervollständigen.
+            {t('education.emptyDescription')}
           </p>
           <Button
             type="button"
@@ -251,7 +253,7 @@ export function EducationManager({
             className="mt-4"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Erste Bildung hinzufügen
+            {t('education.addFirst')}
           </Button>
         </div>
       )}
@@ -261,7 +263,7 @@ export function EducationManager({
         <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
           <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>
-              {editingIndex !== null ? 'Bildung bearbeiten' : 'Neue Bildung'}
+              {editingIndex !== null ? t('education.editTitle') : t('education.newTitle')}
             </DialogTitle>
           </DialogHeader>
 
@@ -269,13 +271,13 @@ export function EducationManager({
             {/* Institution */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Institution <span className="text-destructive">*</span>
+                {t('labels.institution')} <span className="text-destructive">*</span>
               </label>
               <Input
                 ref={institutionRef}
                 value={institution}
                 onChange={(e) => setInstitution(e.target.value)}
-                placeholder="z.B. Technische Universität München"
+                placeholder={t('education.institutionPlaceholder')}
                 onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               />
             </div>
@@ -283,12 +285,12 @@ export function EducationManager({
             {/* Degree */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Abschluss <span className="text-destructive">*</span>
+                {t('labels.degree')} <span className="text-destructive">*</span>
               </label>
               <Input
                 value={degree}
                 onChange={(e) => setDegree(e.target.value)}
-                placeholder="z.B. Bachelor of Science"
+                placeholder={t('education.degreePlaceholder')}
                 onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               />
             </div>
@@ -296,13 +298,13 @@ export function EducationManager({
             {/* Field of study */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Studiengang{' '}
-                <span className="font-normal text-muted-foreground">– optional</span>
+                {t('labels.fieldOfStudy')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
               </label>
               <Input
                 value={fieldOfStudy}
                 onChange={(e) => setFieldOfStudy(e.target.value)}
-                placeholder="z.B. Informatik, BWL"
+                placeholder={t('education.fieldPlaceholder')}
                 onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               />
             </div>
@@ -311,40 +313,40 @@ export function EducationManager({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">
-                  Von{' '}
-                  <span className="font-normal text-muted-foreground">– optional</span>
+                  {t('labels.from')}{' '}
+                  <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
                 </label>
                 <Input
                   type="number"
                   value={startYear}
                   onChange={(e) => setStartYear(e.target.value)}
-                  placeholder="z.B. 2020"
+                  placeholder={t('education.startYearPlaceholder')}
                   min="1900"
                   max={new Date().getFullYear() + 10}
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">
-                  Bis{' '}
-                  <span className="font-normal text-muted-foreground">– optional</span>
+                  {t('labels.to')}{' '}
+                  <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
                 </label>
                 <Input
                   type="number"
                   value={endYear}
                   onChange={(e) => setEndYear(e.target.value)}
-                  placeholder="z.B. 2024"
+                  placeholder={t('education.endYearPlaceholder')}
                   min="1900"
                   max={new Date().getFullYear() + 10}
                 />
-                <p className="text-xs text-muted-foreground">Leer = noch laufend</p>
+                <p className="text-xs text-muted-foreground">{t('education.ongoingHelp')}</p>
               </div>
             </div>
 
             {/* GPA */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Note{' '}
-                <span className="font-normal text-muted-foreground">– optional</span>
+                {t('labels.grade')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
               </label>
               <Input
                 value={gpa}
@@ -357,13 +359,13 @@ export function EducationManager({
             {/* Description */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Beschreibung{' '}
-                <span className="font-normal text-muted-foreground">– optional</span>
+                {t('labels.description')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
               </label>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Relevante Kurse, Projekte oder Auszeichnungen …"
+                placeholder={t('education.descriptionPlaceholder')}
                 rows={3}
                 className="resize-none"
               />
@@ -372,10 +374,10 @@ export function EducationManager({
             {/* Actions */}
             <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>
-                Abbrechen
+                {t('actions.cancel')}
               </Button>
               <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-                {editingIndex !== null ? 'Speichern' : 'Hinzufügen'}
+                {editingIndex !== null ? t('actions.save') : t('actions.add')}
               </Button>
             </div>
           </div>
@@ -389,15 +391,14 @@ export function EducationManager({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bildung löschen</DialogTitle>
+            <DialogTitle>{t('education.deleteTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Möchtest du diesen Eintrag wirklich löschen? Das kann nicht rückgängig gemacht
-            werden.
+            {t('education.deleteConfirm')}
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setDeleteConfirmIndex(null)}>
-              Abbrechen
+              {t('actions.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -405,7 +406,7 @@ export function EducationManager({
                 deleteConfirmIndex !== null && handleDelete(deleteConfirmIndex)
               }
             >
-              Löschen
+              {t('actions.delete')}
             </Button>
           </div>
         </DialogContent>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Check, MessageSquare, Mic, ArrowRight, Clock } from 'lucide-react';
 import { Applo } from './applo';
 
@@ -31,13 +32,13 @@ export function InterviewModeSelect({
   onSelectText,
   onSelectVoice,
 }: InterviewModeSelectProps) {
+  const t = useTranslations('interviews');
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold tracking-tight">Wie möchtest du üben?</h2>
+        <h2 className="text-xl font-bold tracking-tight">{t('modeSelect.title')}</h2>
         <p className="mt-1 max-w-xl text-[15px] text-muted-foreground">
-          Wähle deinen Interview-Modus. Beide Varianten führen durch dieselben Fragen und enden mit
-          einer vollständigen Auswertung{voiceAvailable ? ' — du kannst jederzeit wechseln.' : '.'}
+          {t(voiceAvailable ? 'modeSelect.descriptionWithVoice' : 'modeSelect.descriptionTextOnly')}
         </p>
       </div>
 
@@ -51,18 +52,17 @@ export function InterviewModeSelect({
           <span className="flex h-[54px] w-[54px] items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
             <MessageSquare className="h-7 w-7" />
           </span>
-          <h3 className="mt-4 text-xl font-bold tracking-tight">Text-Chat</h3>
+          <h3 className="mt-4 text-xl font-bold tracking-tight">{t('modeSelect.text.title')}</h3>
           <p className="mt-1.5 min-h-[44px] text-sm leading-relaxed text-muted-foreground">
-            Schreibe deine Antworten in Ruhe und deinem eigenen Tempo — ideal zum Formulieren und
-            Überarbeiten.
+            {t('modeSelect.text.description')}
           </p>
           <ul className="mt-4 space-y-2.5">
-            <Feature>Antworte ohne Zeitdruck</Feature>
-            <Feature>Feedback nach jeder Frage</Feature>
-            <Feature>Kein Mikrofon nötig</Feature>
+            <Feature>{t('modeSelect.text.features.noTimePressure')}</Feature>
+            <Feature>{t('modeSelect.text.features.feedback')}</Feature>
+            <Feature>{t('modeSelect.text.features.noMic')}</Feature>
           </ul>
           <span className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-[3px] bg-primary text-[15px] font-semibold text-primary-foreground transition-colors group-hover:bg-primary/90">
-            Text-Chat starten
+            {t('modeSelect.text.cta')}
             <ArrowRight className="h-[18px] w-[18px]" />
           </span>
           <MessageSquare className="pointer-events-none absolute -bottom-6 -right-5 h-40 w-40 text-primary opacity-[0.04]" />
@@ -80,26 +80,25 @@ export function InterviewModeSelect({
                 <Mic className="h-7 w-7" />
               </span>
               <span className="rounded-[2px] border border-[#BFE9CC] bg-[#ECFAF0] px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[.05em] text-success dark:border-green-400/30 dark:bg-green-400/10">
-                Realistisch
+                {t('modeSelect.voice.badge')}
               </span>
             </div>
-            <h3 className="mt-4 text-xl font-bold tracking-tight">Sprach-Interview</h3>
+            <h3 className="mt-4 text-xl font-bold tracking-tight">{t('modeSelect.voice.title')}</h3>
             <p className="mt-1.5 min-h-[44px] text-sm leading-relaxed text-muted-foreground">
-              Führe ein echtes Gespräch mit deinem KI-Interviewer. Sprich frei, wie im richtigen
-              Interview.
+              {t('modeSelect.voice.description')}
             </p>
             <ul className="mt-4 space-y-2.5">
-              <Feature>Natürliches Hin &amp; Her</Feature>
-              <Feature>Übe Aussprache &amp; Souveränität</Feature>
+              <Feature>{t('modeSelect.voice.features.conversation')}</Feature>
+              <Feature>{t('modeSelect.voice.features.confidence')}</Feature>
               <Feature>
-                Mikrofon erforderlich
+                {t('modeSelect.voice.features.micRequired')}
                 {typeof remainingMinutes === 'number' && remainingMinutes >= 0
-                  ? ` · ${remainingMinutes} Min. verfügbar`
+                  ? ` · ${t('voice.minutesAvailable', { count: remainingMinutes })}`
                   : ''}
               </Feature>
             </ul>
             <span className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-[3px] border bg-card text-[15px] font-semibold text-primary transition-colors group-hover:border-primary group-hover:bg-muted">
-              Sprach-Interview wählen
+              {t('modeSelect.voice.cta')}
               <ArrowRight className="h-[18px] w-[18px]" />
             </span>
             <span className="pointer-events-none absolute -bottom-10 -right-8 opacity-[0.05]">
@@ -112,7 +111,7 @@ export function InterviewModeSelect({
       {voiceAvailable && typeof remainingMinutes === 'number' && remainingMinutes >= 0 && (
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />
-          Verbleibendes Sprach-Kontingent: {remainingMinutes} Min.
+          {t('voice.remainingQuota', { count: remainingMinutes })}
         </p>
       )}
     </div>

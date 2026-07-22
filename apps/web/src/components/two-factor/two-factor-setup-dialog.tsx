@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Loader2, Copy, Check, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useSetup2FA, useVerify2FASetup } from '@/hooks/use-two-factor';
 import { toast } from 'sonner';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 
 interface TwoFactorSetupDialogProps {
   open: boolean;
@@ -23,6 +25,7 @@ interface TwoFactorSetupDialogProps {
 type Step = 'intro' | 'scan' | 'backup';
 
 export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialogProps) {
+  const t = useTranslations('twoFactor');
   const [step, setStep] = useState<Step>('intro');
   const [code, setCode] = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
@@ -65,7 +68,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
     if (setupMutation.data?.tempSecret) {
       navigator.clipboard.writeText(setupMutation.data.tempSecret);
       setCopiedSecret(true);
-      toast.success('Secret kopiert');
+      toast.success(t('setup.secretCopiedToast'));
       setTimeout(() => setCopiedSecret(false), 2000);
     }
   };
@@ -74,12 +77,13 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
     const codesText = backupCodes.join('\n');
     navigator.clipboard.writeText(codesText);
     setCopiedBackup(true);
-    toast.success('Backup-Codes kopiert');
+    toast.success(t('setup.backupCopiedToast'));
     setTimeout(() => setCopiedBackup(false), 2000);
   };
 
   const handleDownloadBackupCodes = () => {
-    const codesText = `Applo - Backup-Codes für 2FA\n${'='.repeat(40)}\n\nDiese Codes können jeweils einmal verwendet werden.\nBewahre sie an einem sicheren Ort auf.\n\n${backupCodes.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nGeneriert am: ${new Date().toLocaleString('de-DE')}`;
+    const generatedAt = new Date().toLocaleString(getIntlLocale());
+    const codesText = `${t('setup.downloadTitle')}\n${'='.repeat(40)}\n\n${t('setup.downloadDescription')}\n${t('setup.downloadStorageHint')}\n\n${backupCodes.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\n${t('setup.downloadGeneratedAt', { date: generatedAt })}`;
     const blob = new Blob([codesText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -89,7 +93,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success('Backup-Codes heruntergeladen');
+    toast.success(t('setup.backupDownloadedToast'));
   };
 
   const handleClose = (isOpen: boolean) => {
@@ -109,14 +113,14 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {step === 'intro' && '2FA aktivieren'}
-            {step === 'scan' && 'Authenticator einrichten'}
-            {step === 'backup' && 'Backup-Codes sichern'}
+            {step === 'intro' && t('setup.introTitle')}
+            {step === 'scan' && t('setup.scanTitle')}
+            {step === 'backup' && t('setup.backupTitle')}
           </DialogTitle>
           <DialogDescription>
-            {step === 'intro' && 'Erhöhe die Sicherheit deines Kontos mit Zwei-Faktor-Authentifizierung.'}
-            {step === 'scan' && 'Scanne den QR-Code und gib dann den 6-stelligen Code ein.'}
-            {step === 'backup' && 'Speichere diese Codes an einem sicheren Ort. Du benötigst sie, falls du keinen Zugriff auf deine Authenticator-App hast.'}
+            {step === 'intro' && t('setup.introDescription')}
+            {step === 'scan' && t('setup.scanDescription')}
+            {step === 'backup' && t('setup.backupDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -124,7 +128,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
           {step === 'intro' && (
             <>
               <div className="text-sm text-muted-foreground space-y-2">
-                <p>Du benötigst eine Authenticator-App wie:</p>
+                <p>{t('setup.appIntro')}</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li>Google Authenticator</li>
                   <li>Authy</li>
@@ -140,10 +144,10 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
                 {setupMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Wird vorbereitet...
+                    {t('setup.preparing')}
                   </>
                 ) : (
-                  'Weiter'
+                  t('setup.next')
                 )}
               </Button>
             </>
@@ -156,7 +160,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={setupMutation.data.qrCodeDataUrl}
-                    alt="QR Code für 2FA"
+                    alt={t('setup.qrAlt')}
                     width={180}
                     height={180}
                   />
@@ -165,7 +169,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
 
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">
-                  Oder manuell eingeben:
+                  {t('setup.manualLabel')}
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -184,7 +188,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
               </div>
 
               <div className="space-y-2 pt-2 border-t">
-                <Label htmlFor="code">6-stelliger Code aus der App</Label>
+                <Label htmlFor="code">{t('setup.codeLabel')}</Label>
                 <Input
                   id="code"
                   value={code}
@@ -204,10 +208,10 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
                 {verifyMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Wird aktiviert...
+                    {t('setup.activating')}
                   </>
                 ) : (
-                  'Aktivieren'
+                  t('setup.activate')
                 )}
               </Button>
             </>
@@ -232,7 +236,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
                   className="flex-1"
                 >
                   {copiedBackup ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                  Kopieren
+                  {t('setup.copy')}
                 </Button>
                 <Button
                   variant="outline"
@@ -240,16 +244,16 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
                   className="flex-1"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Herunterladen
+                  {t('setup.download')}
                 </Button>
               </div>
 
               <p className="text-xs text-destructive font-medium">
-                Diese Codes werden nur einmal angezeigt!
+                {t('setup.shownOnce')}
               </p>
 
               <Button onClick={() => handleClose(false)} className="w-full">
-                Fertig
+                {t('setup.done')}
               </Button>
             </>
           )}

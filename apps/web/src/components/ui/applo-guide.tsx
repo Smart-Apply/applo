@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ApploRig } from '@/components/ui/applo-rig';
 import type { ApploState } from '@/components/ui/applo-rig';
 import { cn } from '@/lib/utils';
@@ -9,54 +10,31 @@ export type ApploGuideStep = 'add' | 'config' | 'loading' | 'finishing' | 'done'
 
 const STEPS: Record<
   ApploGuideStep,
-  { eyebrow: string; msg: React.ReactNode; pose: ApploState }
+  { eyebrowKey: string; msgKey: string; pose: ApploState }
 > = {
   add: {
-    eyebrow: 'Schritt 1 von 3',
-    msg: (
-      <>
-        Hi, ich bin <b>Applo</b>! Füge eine Stellenanzeige per Link oder Text ein – den Rest
-        übernehme ich.
-      </>
-    ),
+    eyebrowKey: 'guide.steps.add.eyebrow',
+    msgKey: 'guide.steps.add.message',
     pose: 'wave',
   },
   config: {
-    eyebrow: 'Schritt 2 von 3',
-    msg: (
-      <>
-        Stark! Jetzt stellen wir <b>Sprache, Anschreiben &amp; Design</b> ein. Fahr über eine
-        Vorlage für die Vorschau.
-      </>
-    ),
+    eyebrowKey: 'guide.steps.config.eyebrow',
+    msgKey: 'guide.steps.config.message',
     pose: 'think',
   },
   loading: {
-    eyebrow: 'Schritt 3 von 3',
-    msg: (
-      <>
-        Ich <b>analysiere die Stelle</b> und schreibe deine Dokumente. Das dauert nur einen
-        kleinen Moment …
-      </>
-    ),
+    eyebrowKey: 'guide.steps.loading.eyebrow',
+    msgKey: 'guide.steps.loading.message',
     pose: 'process',
   },
   finishing: {
-    eyebrow: 'Schritt 3 von 3',
-    msg: (
-      <>
-        Geschafft! Deine Bewerbung ist <b>fertig</b> – gleich geht&apos;s weiter …
-      </>
-    ),
+    eyebrowKey: 'guide.steps.finishing.eyebrow',
+    msgKey: 'guide.steps.finishing.message',
     pose: 'success',
   },
   done: {
-    eyebrow: 'Fertig',
-    msg: (
-      <>
-        Deine Bewerbung ist <b>fertig</b>! Schau sie dir an und lade sie direkt herunter.
-      </>
-    ),
+    eyebrowKey: 'guide.steps.done.eyebrow',
+    msgKey: 'guide.steps.done.message',
     pose: 'success',
   },
 };
@@ -70,6 +48,7 @@ export function ApploGuide({
   finishing?: boolean;
   className?: string;
 }) {
+  const t = useTranslations('dashboard');
   const baseStep: ApploGuideStep = step === 'loading' && finishing ? 'finishing' : step;
   const cfg = STEPS[baseStep];
 
@@ -100,10 +79,12 @@ export function ApploGuide({
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-center px-5 py-4">
         <p className="mb-1 font-mono text-[10.5px] font-medium uppercase tracking-[.16em] text-[#5581C7]">
-          {cfg.eyebrow}
+          {t(cfg.eyebrowKey)}
         </p>
         <p className="text-[15px] leading-normal text-[rgba(229,233,242,.9)] [&_b]:font-bold [&_b]:text-white">
-          {cfg.msg}
+          {t.rich(cfg.msgKey, {
+            b: (chunks) => <b>{chunks}</b>,
+          })}
         </p>
       </div>
     </div>

@@ -1,1 +1,96 @@
-{}
+{
+  "page": {
+    "title": "Bewerbungs-Check",
+    "subtitle": "KI-Bewertung für Qualität & ATS-Tauglichkeit deiner eigenen Bewerbung.",
+    "quotaBadge": "{remaining} / {limit} Checks",
+    "newCheck": "Neuer Check",
+    "history": "Frühere Checks",
+    "limitReachedTitle": "Du hast dein monatliches Limit von {limit} Checks erreicht.",
+    "limitReachedDescription": "prüfst du unbegrenzt.",
+    "historyTitle": "Frühere Checks",
+    "freeHistoryDescription": "Im Free-Tarif sind 5 Checks pro Monat enthalten.",
+    "savedHistoryDescription": "Deine gespeicherten Prüfungen.",
+    "noHistory": "Noch keine Prüfungen vorhanden.",
+    "open": "Öffnen",
+    "deleteAria": "Prüfung löschen",
+    "createSuccess": "Bewerbung geprüft",
+    "createError": "Prüfung fehlgeschlagen",
+    "deleteSuccess": "Prüfung gelöscht",
+    "deleteError": "Prüfung konnte nicht gelöscht werden"
+  },
+  "documentInput": {
+    "fileReadError": "Die Datei konnte nicht gelesen werden",
+    "detected": "Erkannt",
+    "fileReadSuccess": "{size} · Text erfolgreich gelesen",
+    "removeFileAria": "Datei entfernen",
+    "chooseFile": "Datei auswählen",
+    "orDragHere": "oder hierher ziehen",
+    "fileHint": "PDF oder DOCX · max. 10 MB",
+    "toggle": {
+      "upload": "Datei hochladen",
+      "text": "Text einfügen"
+    },
+    "title": "Deine Unterlagen",
+    "subtitle": "Nur der Lebenslauf ist Pflicht. Mit Anschreiben erhältst du noch präziseres Feedback.",
+    "resumeLabel": "Lebenslauf",
+    "resumePlaceholder": "Füge hier den Text deines Lebenslaufs ein…",
+    "addCoverLetter": "Anschreiben hinzufügen",
+    "coverLetterLabel": "Anschreiben",
+    "optional": "(optional)",
+    "remove": "Entfernen",
+    "coverLetterPlaceholder": "Füge hier den Text deines Anschreibens ein…",
+    "next": "Weiter zur Zielstelle"
+  },
+  "jobContext": {
+    "toggle": {
+      "link": "Link analysieren",
+      "text": "Text einfügen"
+    },
+    "title": "Zielstelle & Feedback",
+    "subtitle": "Optional — aber mit Stellenkontext bewertet die KI auch die Passung zur Stelle.",
+    "jobPostingLabel": "Stellenanzeige",
+    "optional": "(optional)",
+    "analyzed": "Analysiert",
+    "readSuccess": "{host} · Anzeige erfolgreich gelesen",
+    "removeLinkAria": "Link entfernen",
+    "analyzing": "Analysiere…",
+    "analyze": "Analysieren",
+    "linkError": "Der Link konnte nicht gelesen werden.",
+    "pasteAdText": "Text der Anzeige einfügen →",
+    "textPlaceholder": "z.B. Stationsleitung Pflege — oder die komplette Stellenanzeige einfügen…",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "z.B. Bewerbung Klinikum München",
+    "feedbackLanguage": "Sprache des Feedbacks",
+    "languageAuto": "Automatisch",
+    "languageGerman": "Deutsch",
+    "privacyNote": "Deine Unterlagen werden nur für diese Prüfung verwendet und nicht gespeichert. Ohne Stellenkontext bewertet die KI ausschließlich Qualität und ATS-Aufbau.",
+    "back": "Zurück",
+    "submit": "Bewerbung prüfen"
+  },
+  "loading": {
+    "title": "Deine Bewerbung wird geprüft …",
+    "subtitle": "Das dauert meist 15–30 Sekunden.",
+    "checklist": {
+      "documents": "Dokumente werden gelesen",
+      "quality": "Qualität wird bewertet",
+      "ats": "ATS-Tauglichkeit wird geprüft",
+      "recommendations": "Empfehlungen werden erstellt"
+    }
+  },
+  "result": {
+    "verdict": {
+      "strong": "Bereit zum Absenden",
+      "good": "Solide, kleine Verbesserungen",
+      "needsWork": "Überarbeitung empfohlen"
+    },
+    "yourResult": "Dein Ergebnis",
+    "overallScore": "Gesamt-Score",
+    "atsScore": "ATS-Score*",
+    "categoryScores": "Bewertung nach Kategorie",
+    "recommendationsChecklist": "Empfehlungen · zum Abhaken",
+    "markOpen": "Als offen markieren",
+    "markDone": "Als erledigt markieren",
+    "strengthsHeading": "✓ Stärken",
+    "atsDisclaimer": "*Der ATS-Score ist eine KI-Einschätzung, kein echter ATS-Parser-Durchlauf."
+  }
+}

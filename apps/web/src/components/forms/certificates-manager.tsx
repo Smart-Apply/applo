@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Calendar, Award, ExternalLink, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Certificate } from '@/types';
+import { getIntlLocale } from '@/lib/i18n-runtime';
+import { useTranslations } from 'next-intl';
 
 interface CertificatesManagerProps {
   certificates: Certificate[];
@@ -26,6 +28,7 @@ export function CertificatesManager({
   onCertificatesChange,
   disabled = false,
 }: CertificatesManagerProps) {
+  const t = useTranslations('profile');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
@@ -88,12 +91,12 @@ export function CertificatesManager({
 
   const handleSubmit = () => {
     if (!name.trim()) {
-      toast.error('Bitte gib einen Zertifikatsnamen ein');
+      toast.error(t('certificates.errors.name'));
       nameRef.current?.focus();
       return;
     }
     if (!issuer.trim()) {
-      toast.error('Bitte gib die ausstellende Organisation ein');
+      toast.error(t('certificates.errors.issuer'));
       return;
     }
     if (credentialUrl.trim()) {
@@ -104,12 +107,12 @@ export function CertificatesManager({
             : `https://${credentialUrl.trim()}`,
         );
       } catch {
-        setUrlError('Bitte gib eine gültige URL ein');
+        setUrlError(t('certificates.errors.url'));
         return;
       }
     }
     if (issueDate && expiryDate && new Date(expiryDate) < new Date(issueDate)) {
-      toast.error('Ablaufdatum muss nach dem Ausstellungsdatum liegen');
+      toast.error(t('certificates.errors.dateOrder'));
       return;
     }
 
@@ -132,10 +135,10 @@ export function CertificatesManager({
       const existing = certificates[editingIndex];
       updated = [...certificates];
       updated[editingIndex] = { ...newCert, ...(existing.id && { id: existing.id }) };
-      toast.success('Zertifikat aktualisiert');
+      toast.success(t('certificates.toasts.updated'));
     } else {
       updated = [...certificates, newCert];
-      toast.success('Zertifikat hinzugefügt');
+      toast.success(t('certificates.toasts.added'));
     }
 
     onCertificatesChange(updated);
@@ -146,11 +149,11 @@ export function CertificatesManager({
   const handleDelete = (index: number) => {
     onCertificatesChange(certificates.filter((_, i) => i !== index));
     setDeleteConfirmIndex(null);
-    toast.success('Zertifikat entfernt');
+    toast.success(t('certificates.toasts.removed'));
   };
 
   const fmtDate = (d: string) =>
-    new Date(d).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
+    new Date(d).toLocaleDateString(getIntlLocale(), { month: 'short', year: 'numeric' });
 
   const isExpired = (d: string | null | undefined) =>
     d ? new Date(d) < new Date() : false;
@@ -159,14 +162,14 @@ export function CertificatesManager({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Zertifikate</h3>
+          <h3 className="text-lg font-medium">{t('certificates.title')}</h3>
           <p className="text-sm text-muted-foreground">
-            Deine beruflichen Zertifizierungen
+            {t('certificates.description')}
           </p>
         </div>
         <Button type="button" onClick={openAddDialog} disabled={disabled} size="sm">
           <Plus className="mr-2 h-4 w-4" />
-          Hinzufügen
+          {t('actions.add')}
         </Button>
       </div>
 
@@ -204,19 +207,19 @@ export function CertificatesManager({
                           {cert.dateObtained && (
                             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                               <Calendar className="h-3 w-3" />
-                              <span>Ausgestellt: {fmtDate(cert.dateObtained)}</span>
+                              <span>{t('certificates.issued')}: {fmtDate(cert.dateObtained)}</span>
                             </div>
                           )}
 
                           {cert.expiryDate && (
                             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                              <span>Läuft ab: {fmtDate(cert.expiryDate)}</span>
+                              <span>{t('certificates.expires')}: {fmtDate(cert.expiryDate)}</span>
                               {expired && (
                                 <Badge
                                   variant="destructive"
                                   className="h-4 px-1.5 py-0 text-[10px]"
                                 >
-                                  Abgelaufen
+                                  {t('certificates.expired')}
                                 </Badge>
                               )}
                             </div>
@@ -236,7 +239,7 @@ export function CertificatesManager({
                               className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 hover:underline"
                             >
                               <ExternalLink className="h-3 w-3" />
-                              Zertifikat anzeigen
+                              {t('certificates.view')}
                             </a>
                           )}
                         </div>
@@ -276,10 +279,9 @@ export function CertificatesManager({
           <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <Award className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 className="font-medium text-foreground">Keine Zertifikate</h3>
+          <h3 className="font-medium text-foreground">{t('certificates.emptyTitle')}</h3>
           <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-            Füge deine beruflichen Zertifizierungen hinzu, um deine Qualifikationen zu
-            belegen.
+            {t('certificates.emptyDescription')}
           </p>
           <Button
             type="button"
@@ -289,7 +291,7 @@ export function CertificatesManager({
             className="mt-4"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Erstes Zertifikat hinzufügen
+            {t('certificates.addFirst')}
           </Button>
         </div>
       )}
@@ -299,7 +301,7 @@ export function CertificatesManager({
         <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
           <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>
-              {editingIndex !== null ? 'Zertifikat bearbeiten' : 'Neues Zertifikat'}
+              {editingIndex !== null ? t('certificates.editTitle') : t('certificates.newTitle')}
             </DialogTitle>
           </DialogHeader>
 
@@ -307,13 +309,13 @@ export function CertificatesManager({
             {/* Name */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Zertifikatsname <span className="text-destructive">*</span>
+                {t('certificates.name')} <span className="text-destructive">*</span>
               </label>
               <Input
                 ref={nameRef}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="z.B. AWS Solutions Architect"
+                placeholder={t('certificates.namePlaceholder')}
                 onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               />
             </div>
@@ -321,12 +323,12 @@ export function CertificatesManager({
             {/* Issuer */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Ausstellende Organisation <span className="text-destructive">*</span>
+                {t('certificates.issuer')} <span className="text-destructive">*</span>
               </label>
               <Input
                 value={issuer}
                 onChange={(e) => setIssuer(e.target.value)}
-                placeholder="z.B. Amazon Web Services"
+                placeholder={t('certificates.issuerPlaceholder')}
                 onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               />
             </div>
@@ -335,8 +337,8 @@ export function CertificatesManager({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">
-                  Ausgestellt am{' '}
-                  <span className="font-normal text-muted-foreground">– optional</span>
+                  {t('certificates.issuedAt')}{' '}
+                  <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
                 </label>
                 <Input
                   type="date"
@@ -346,8 +348,8 @@ export function CertificatesManager({
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">
-                  Läuft ab am{' '}
-                  <span className="font-normal text-muted-foreground">– optional</span>
+                  {t('certificates.expiresAt')}{' '}
+                  <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
                 </label>
                 <Input
                   type="date"
@@ -355,7 +357,7 @@ export function CertificatesManager({
                   onChange={(e) => setExpiryDate(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Leer = kein Ablaufdatum
+                  {t('certificates.noExpiry')}
                 </p>
               </div>
             </div>
@@ -363,13 +365,13 @@ export function CertificatesManager({
             {/* Credential ID */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Credential-ID{' '}
-                <span className="font-normal text-muted-foreground">– optional</span>
+                {t('certificates.credentialId')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
               </label>
               <Input
                 value={credentialId}
                 onChange={(e) => setCredentialId(e.target.value)}
-                placeholder="z.B. ABC-123-456"
+                placeholder={t('certificates.credentialPlaceholder')}
                 onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               />
             </div>
@@ -377,8 +379,8 @@ export function CertificatesManager({
             {/* URL */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Link{' '}
-                <span className="font-normal text-muted-foreground">– optional</span>
+                {t('labels.link')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
               </label>
               <div className="relative">
                 <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -399,10 +401,10 @@ export function CertificatesManager({
             {/* Actions */}
             <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>
-                Abbrechen
+                {t('actions.cancel')}
               </Button>
               <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-                {editingIndex !== null ? 'Speichern' : 'Hinzufügen'}
+                {editingIndex !== null ? t('actions.save') : t('actions.add')}
               </Button>
             </div>
           </div>
@@ -416,15 +418,14 @@ export function CertificatesManager({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Zertifikat löschen</DialogTitle>
+            <DialogTitle>{t('certificates.deleteTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Möchtest du dieses Zertifikat wirklich löschen? Das kann nicht rückgängig gemacht
-            werden.
+            {t('certificates.deleteConfirm')}
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setDeleteConfirmIndex(null)}>
-              Abbrechen
+              {t('actions.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -432,7 +433,7 @@ export function CertificatesManager({
                 deleteConfirmIndex !== null && handleDelete(deleteConfirmIndex)
               }
             >
-              Löschen
+              {t('actions.delete')}
             </Button>
           </div>
         </DialogContent>

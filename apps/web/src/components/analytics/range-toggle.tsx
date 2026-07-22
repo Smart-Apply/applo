@@ -6,12 +6,13 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import type { AnalyticsRange } from '@/lib/analytics-utils';
 
-const OPTIONS: { value: AnalyticsRange; label: string }[] = [
-  { value: 7,  label: '7 T.'  },
-  { value: 30, label: '30 T.' },
-  { value: 90, label: '90 T.' },
+const OPTIONS: { value: AnalyticsRange; labelKey: string }[] = [
+  { value: 7,  labelKey: 'range.days7'  },
+  { value: 30, labelKey: 'range.days30' },
+  { value: 90, labelKey: 'range.days90' },
 ];
 
 interface Props {
@@ -20,10 +21,11 @@ interface Props {
 }
 
 export function RangeToggle({ value, onChange }: Props) {
+  const t = useTranslations('analytics');
   return (
     <div
       role="tablist"
-      aria-label="Zeitraum auswählen"
+      aria-label={t('range.ariaLabel')}
       className="inline-flex items-center gap-px overflow-hidden rounded-[4px] border border-border bg-border"
     >
       {OPTIONS.map(o => (
@@ -39,7 +41,7 @@ export function RangeToggle({ value, onChange }: Props) {
               : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
           )}
         >
-          {o.label}
+          {t(o.labelKey)}
         </button>
       ))}
     </div>

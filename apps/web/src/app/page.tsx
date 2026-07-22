@@ -2,25 +2,13 @@
 
 import './home.css';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { ApploRig, type ApploState } from '@/components/ui/applo-rig';
 
 /** Inline reveal-delay helper (drives the CSS `--d` custom property). */
 const d = (delay: string): CSSProperties => ({ ['--d']: delay }) as CSSProperties;
-
-/** Dock speech-bubble copy per Applo pose. */
-const POSE_BUBBLE: Record<ApploState, { title?: string; text: string }> = {
-  wave: { title: 'Hi, ich bin Applo!', text: 'Ich helfe dir bei ehrlichen Bewerbungen.' },
-  search: { text: 'Ich lese deinen CV.' },
-  process: { text: 'Ich schreibe …' },
-  success: { text: 'Stark gemacht!' },
-  idle: { text: 'Ehrlich & ruhig.' },
-  love: { text: 'Für dich gebaut.' },
-  auto: { text: 'Stellen im Nu.' },
-  coach: { text: 'Üb mit mir.' },
-  think: { text: 'Mal sehen …' },
-  done: { text: 'Erledigt!' },
-};
 
 /** Applo wordmark/logo. `light` flips it for the dark footer. */
 function BrandMark({ light = false }: { light?: boolean }) {
@@ -53,6 +41,7 @@ function Check({ color = '#16A34A' }: { color?: string }) {
 }
 
 export default function Home() {
+  const t = useTranslations('landing');
   const rootRef = useRef<HTMLDivElement>(null);
   const [pose, setPose] = useState<ApploState>('wave');
   const [docked, setDocked] = useState<'hero' | 'float'>('hero');
@@ -202,7 +191,19 @@ export default function Home() {
     };
   }, []);
 
-  const bubble = POSE_BUBBLE[pose];
+  const poseBubble: Record<ApploState, { title?: string; text: string }> = {
+    wave: { title: t('mascot.wave.title'), text: t('mascot.wave.text') },
+    search: { text: t('mascot.search.text') },
+    process: { text: t('mascot.process.text') },
+    success: { text: t('mascot.success.text') },
+    idle: { text: t('mascot.idle.text') },
+    love: { text: t('mascot.love.text') },
+    auto: { text: t('mascot.auto.text') },
+    coach: { text: t('mascot.coach.text') },
+    think: { text: t('mascot.think.text') },
+    done: { text: t('mascot.done.text') },
+  };
+  const bubble = poseBubble[pose];
 
   return (
     <div className="applo-home" ref={rootRef}>
@@ -233,18 +234,19 @@ export default function Home() {
             <BrandMark />
             <span>Applo</span>
           </a>
-          <nav className="nav-links" aria-label="Hauptnavigation">
-            <a href="#features">Features</a>
-            <a href="#werte">Werte</a>
-            <a href="#preise">Preise</a>
-            <a href="#faq">FAQ</a>
+          <nav className="nav-links" aria-label={t('nav.ariaLabel')}>
+            <a href="#features">{t('nav.features')}</a>
+            <a href="#werte">{t('nav.values')}</a>
+            <a href="#preise">{t('nav.pricing')}</a>
+            <a href="#faq">{t('nav.faq')}</a>
           </nav>
           <div className="nav-cta">
+            <LanguageSwitcher />
             <Link className="nav-login" href="/login">
-              Anmelden
+              {t('nav.login')}
             </Link>
             <Link className="btn btn-primary" href="/register">
-              Kostenlos starten
+              {t('nav.start')}
             </Link>
           </div>
         </div>
@@ -257,71 +259,73 @@ export default function Home() {
             <div>
               <p className="eyebrow reveal">
                 <span className="sq" />
-                Bewerben, ehrlich gemacht
+                {t('hero.eyebrow')}
               </p>
               <h1 className="reveal" style={d('.05s')}>
-                Bewerbungen, die zu <span className="hl">dir</span> passen, nicht zu einer erfundenen
-                Version von dir.
+                {t.rich('hero.title', {
+                  highlight: (chunks) => <span className="hl">{chunks}</span>,
+                })}
               </h1>
               <p className="lead reveal" style={d('.12s')}>
-                Applo schreibt Anschreiben und Lebenslauf aus deinem <b>echten Profil</b>: KI-gestützt, ATS-optimiert und
-                transparent. Du behältst die Kontrolle, die KI erfindet nichts dazu.
+                {t.rich('hero.lead', {
+                  strong: (chunks) => <b>{chunks}</b>,
+                })}
               </p>
               <div className="hero-cta reveal" style={d('.18s')}>
                 <Link className="btn btn-primary" href="/register">
-                  Kostenlos starten<span className="m">→</span>
+                  {t('nav.start')}<span className="m">→</span>
                 </Link>
                 <a className="btn btn-ghost" href="#how">
-                  So funktioniert’s<span className="m">↓</span>
+                  {t('hero.secondaryCta')}<span className="m">↓</span>
                 </a>
               </div>
               <div className="trust reveal" style={d('.24s')}>
-                <span className="dot" /> EU-Hosting
-                <span className="dot" /> DSGVO
-                <span className="dot" /> Keine erfundenen Daten
+                <span className="dot" /> {t('hero.trust.hosting')}
+                <span className="dot" /> {t('hero.trust.gdpr')}
+                <span className="dot" /> {t('hero.trust.grounded')}
               </div>
             </div>
             <div className="hero-stage reveal" style={d('.1s')} aria-hidden="true">
               {/* “Receipt” product card, the mascot dock peeks out behind it */}
               <div className="receipt">
                 <div className="r-top">
-                  <span className="r-file">bewerbung_vertriebsleitung.pdf</span>
-                  <span className="r-lang">DE</span>
+                  <span className="r-file">{t('receipt.file')}</span>
+                  <span className="r-lang">{t('receipt.language')}</span>
                 </div>
                 <div className="r-row">
                   <div className="r-field">
-                    <span className="r-label">PROFIL</span>
-                    <span className="r-val">Lena Weber · Vertriebsleiterin</span>
+                    <span className="r-label">{t('receipt.profileLabel')}</span>
+                    <span className="r-val">{t('receipt.profileValue')}</span>
                   </div>
                   <svg width="16" height="16" viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" fill="#16A34A" /><path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" /></svg>
                 </div>
                 <div className="r-row">
                   <div className="r-field">
-                    <span className="r-label">STELLE</span>
-                    <span className="r-val">Vertriebsleitung · Nordwind GmbH</span>
+                    <span className="r-label">{t('receipt.jobLabel')}</span>
+                    <span className="r-val">{t('receipt.jobValue')}</span>
                   </div>
                   <svg width="16" height="16" viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" fill="#16A34A" /><path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" /></svg>
                 </div>
                 <div className="r-row" style={{ display: 'block' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span className="r-label">KI-GENERIERUNG</span>
+                    <span className="r-label">{t('receipt.generationLabel')}</span>
                     <svg width="26" height="10" viewBox="0 0 26 10" aria-hidden="true"><circle className="fv-t1" cx="4" cy="5" r="2.4" fill="#5581C7" /><circle className="fv-t2" cx="13" cy="5" r="2.4" fill="#5581C7" /><circle className="fv-t3" cx="22" cy="5" r="2.4" fill="#5581C7" /></svg>
                   </div>
-                  <p className="r-note">Grounding-Check aktiv: keine erfundenen Kennzahlen.</p>
+                  <p className="r-note">{t('receipt.note')}</p>
                 </div>
                 <div className="r-score">
                   <div className="r-field">
-                    <span className="r-label">ATS-SCORE</span>
+                    <span className="r-label">{t('receipt.scoreLabel')}</span>
                     <span className="r-num">87<small>/100</small></span>
                   </div>
                   <div className="r-track">
                     <div className="r-bar"><span /></div>
-                    <div className="r-meta"><span>KEYWORDS 21/24</span><span className="ok">STARK</span></div>
+                    <div className="r-meta"><span>{t('receipt.keywords')}</span><span className="ok">{t('receipt.scoreWord')}</span></div>
                   </div>
                 </div>
                 <div className="r-foot">
-                  <span className="r-export">Als PDF exportieren</span>
-                  <span className="r-hint">50 VORLAGEN · DE/EN</span>
+                  <span className="r-export">{t('receipt.export')}</span>
+                  <span className="r-hint">{t('receipt.hint')}</span>
                 </div>
               </div>
             </div>
@@ -333,26 +337,26 @@ export default function Home() {
           <div className="wrap">
             <div className="sec-row reveal">
               <div>
-                <p className="eyebrow">01 · So funktioniert’s</p>
-                <h2 className="h2">In drei Schritten zur fertigen Bewerbung</h2>
+                <p className="eyebrow">{t('how.eyebrow')}</p>
+                <h2 className="h2">{t('how.title')}</h2>
               </div>
-              <p className="lead">Vom Lebenslauf zur abgeschickten, ATS-optimierten Bewerbung, ohne Copy-Paste-Chaos.</p>
+              <p className="lead">{t('how.lead')}</p>
             </div>
             <div className="grid steps">
               <article className="card reveal" style={d('0s')}>
                 <div className="step-n">01</div>
-                <h3 className="h3">Profil &amp; CV hochladen</h3>
-                <p>Lade deinen Lebenslauf hoch. Der Resume-Parser liest ihn aus und füllt dein Profil automatisch. Du prüfst und korrigierst.</p>
+                <h3 className="h3">{t('how.steps.one.title')}</h3>
+                <p>{t('how.steps.one.desc')}</p>
               </article>
               <article className="card reveal" style={d('.1s')}>
                 <div className="step-n">02</div>
-                <h3 className="h3">Stelle einfügen</h3>
-                <p>Füge eine Stelle als Text, URL oder PDF ein. Die KI schreibt Anschreiben und Lebenslauf passend zur Ausschreibung, ATS-optimiert.</p>
+                <h3 className="h3">{t('how.steps.two.title')}</h3>
+                <p>{t('how.steps.two.desc')}</p>
               </article>
               <article className="card reveal" style={d('.2s')}>
                 <div className="step-n">03</div>
-                <h3 className="h3">Als PDF exportieren</h3>
-                <p>Wähle aus 50 ATS-Vorlagen, exportiere als PDF (DE/EN) und bewirb dich. Fertig.</p>
+                <h3 className="h3">{t('how.steps.three.title')}</h3>
+                <p>{t('how.steps.three.desc')}</p>
               </article>
             </div>
           </div>
@@ -363,10 +367,10 @@ export default function Home() {
           <div className="wrap">
             <div className="sec-row reveal">
               <div>
-                <p className="eyebrow">02 · Features</p>
-                <h2 className="h2">Alles, was eine ehrliche Bewerbung braucht</h2>
+                <p className="eyebrow">{t('features.eyebrow')}</p>
+                <h2 className="h2">{t('features.title')}</h2>
               </div>
-              <p className="lead">Konkrete Werkzeuge statt leerer Versprechen. Gebaut, damit deine Bewerbung stark <i>und</i> wahr ist.</p>
+              <p className="lead">{t.rich('features.lead', { emphasis: (chunks) => <i>{chunks}</i> })}</p>
             </div>
             <div className="grid feat-grid">
               <article className="card feat reveal">
@@ -383,8 +387,8 @@ export default function Home() {
                     </g>
                   </svg>
                 </div>
-                <h3 className="h3">KI-Generierung</h3>
-                <p>Self-Review &amp; ATS-Keyword-Loop verfeinern Anschreiben und CV automatisch, auf Basis deiner echten Daten.</p>
+                <h3 className="h3">{t('features.items.generation.title')}</h3>
+                <p>{t('features.items.generation.desc')}</p>
               </article>
 
               <article className="card feat reveal" style={d('.06s')}>
@@ -399,8 +403,8 @@ export default function Home() {
                     <rect x="167" y="53" width="22" height="5" fill="#5581C7" />
                   </svg>
                 </div>
-                <h3 className="h3">Smart Job-Ingestion</h3>
-                <p>Stellen aus Indeed, LinkedIn und Glassdoor einlesen: als Text, URL oder PDF.</p>
+                <h3 className="h3">{t('features.items.ingestion.title')}</h3>
+                <p>{t('features.items.ingestion.desc')}</p>
               </article>
 
               <article className="card feat reveal" style={d('.12s')}>
@@ -418,8 +422,8 @@ export default function Home() {
                     <rect x="174" y="65" width="24" height="4" fill="#E5E9F2" />
                   </svg>
                 </div>
-                <h3 className="h3">Bewerbungs-Check</h3>
-                <p>ATS-Score plus Ampel-Feedback zeigt dir, was vor dem Absenden noch besser geht.</p>
+                <h3 className="h3">{t('features.items.validation.title')}</h3>
+                <p>{t('features.items.validation.desc')}</p>
               </article>
 
               <article className="card feat reveal" style={d('.18s')}>
@@ -438,8 +442,8 @@ export default function Home() {
                     <g className="fv-badge" style={{ transformOrigin: '162px 26px' }}><rect x="148" y="12" width="28" height="28" fill="#5581C7" /><text x="162" y="27" textAnchor="middle" dominantBaseline="central" fontFamily="var(--font-mono-plex),IBM Plex Mono,monospace" fontWeight="600" fontSize="12" fill="#fff">50</text></g>
                   </svg>
                 </div>
-                <h3 className="h3">50 ATS-PDF-Vorlagen</h3>
-                <p>Sauber strukturierte Vorlagen in Deutsch und Englisch, optimiert für Bewerbungssysteme.</p>
+                <h3 className="h3">{t('features.items.templates.title')}</h3>
+                <p>{t('features.items.templates.desc')}</p>
               </article>
 
               <article className="card feat reveal">
@@ -453,8 +457,8 @@ export default function Home() {
                     <circle cx="160" cy="71" r="3.6" fill="#fff" className="fv-typ fv-t3" />
                   </svg>
                 </div>
-                <h3 className="h3">Mock-Interviews</h3>
-                <p>Übe Interviews als Text oder per Voice und erhalte konkretes Feedback.<span className="tag">Premium</span></p>
+                <h3 className="h3">{t('features.items.interviews.title')}</h3>
+                <p>{t.rich('features.items.interviews.desc', { tag: (chunks) => <span className="tag">{chunks}</span> })}</p>
               </article>
 
               <article className="card feat reveal" style={d('.06s')}>
@@ -468,8 +472,8 @@ export default function Home() {
                     </g>
                   </svg>
                 </div>
-                <h3 className="h3">E-Mail-Tracking</h3>
-                <p>Verbinde Outlook/M365. Der Status deiner Bewerbungen aktualisiert sich automatisch.<span className="tag">Premium</span></p>
+                <h3 className="h3">{t('features.items.tracking.title')}</h3>
+                <p>{t.rich('features.items.tracking.desc', { tag: (chunks) => <span className="tag">{chunks}</span> })}</p>
               </article>
 
               <article className="card feat reveal" style={d('.12s')}>
@@ -481,8 +485,8 @@ export default function Home() {
                     <text x="150" y="52" textAnchor="middle" dominantBaseline="central" fontFamily="var(--font-mono-plex),IBM Plex Mono,monospace" fontWeight="600" fontSize="13" fill="#A0A0A0" className="fv-en">EN</text>
                   </svg>
                 </div>
-                <h3 className="h3">Mehrsprachig DE/EN</h3>
-                <p>Erstelle und exportiere Bewerbungen wahlweise auf Deutsch oder Englisch.</p>
+                <h3 className="h3">{t('features.items.languages.title')}</h3>
+                <p>{t('features.items.languages.desc')}</p>
               </article>
 
               <article className="card feat reveal" style={d('.18s')}>
@@ -499,8 +503,8 @@ export default function Home() {
                     <rect x="99" y="42" width="42" height="13" fill="#5581C7" opacity=".4" className="fv-move" />
                   </svg>
                 </div>
-                <h3 className="h3">Live-Status der Pipeline</h3>
-                <p>Behalte alle Bewerbungen und ihren aktuellen Stand an einem Ort im Blick.</p>
+                <h3 className="h3">{t('features.items.pipeline.title')}</h3>
+                <p>{t('features.items.pipeline.desc')}</p>
               </article>
             </div>
           </div>
@@ -511,52 +515,52 @@ export default function Home() {
           <div className="wrap">
             <div className="sec-row reveal">
               <div>
-                <p className="eyebrow">03 · Werte &amp; Transparenz</p>
-                <h2 className="h2">Ehrlich. Nachprüfbar. Auf deiner Seite.</h2>
+                <p className="eyebrow">{t('values.eyebrow')}</p>
+                <h2 className="h2">{t('values.title')}</h2>
               </div>
-              <p className="lead">Transparenz ist kein Feature-Häkchen, sondern das Fundament. Wir sagen klar, was passiert und was nicht.</p>
+              <p className="lead">{t('values.lead')}</p>
             </div>
             <div className="grid val-grid">
               <article className="card val reveal">
                 <div className="chk"><Check /></div>
-                <h3 className="h3">Keine erfundenen Daten</h3>
-                <p>Die KI nutzt nur, was dein Profil belegt. Ein Grounding-Check markiert erfundene Kennzahlen, bevor sie in deine Bewerbung geraten.</p>
+                <h3 className="h3">{t('values.items.grounded.title')}</h3>
+                <p>{t('values.items.grounded.desc')}</p>
               </article>
               <article className="card val reveal" style={d('.06s')}>
                 <div className="chk"><Check /></div>
-                <h3 className="h3">Deine Daten bleiben in der EU</h3>
-                <p>Hosting und Speicherung erfolgen in der EU, nach DSGVO.</p>
+                <h3 className="h3">{t('values.items.eu.title')}</h3>
+                <p>{t('values.items.eu.desc')}</p>
               </article>
               <article className="card val reveal" style={d('.12s')}>
                 <div className="chk"><Check /></div>
-                <h3 className="h3">Interviews: kein Audio gespeichert</h3>
-                <p>Von Mock-Interviews bleiben nur Transcript und Feedback, keine Audioaufnahme.</p>
+                <h3 className="h3">{t('values.items.audio.title')}</h3>
+                <p>{t('values.items.audio.desc')}</p>
               </article>
               <article className="card val reveal">
                 <div className="chk"><Check /></div>
-                <h3 className="h3">E-Mail-Tracking ohne Inhalte</h3>
-                <p>Wir lesen den Status, nicht deine Nachrichten. Mail-Inhalte werden nicht gespeichert.</p>
+                <h3 className="h3">{t('values.items.email.title')}</h3>
+                <p>{t('values.items.email.desc')}</p>
               </article>
               <article className="card val reveal" style={d('.06s')}>
                 <div className="chk"><Check /></div>
-                <h3 className="h3">Sicherheit eingebaut</h3>
-                <p>HttpOnly-JWT, 2FA, CSRF-Schutz, Rate-Limiting und Audit-Logs sind standardmäßig aktiv.</p>
+                <h3 className="h3">{t('values.items.security.title')}</h3>
+                <p>{t('values.items.security.desc')}</p>
               </article>
               <article className="card val reveal" style={d('.12s')}>
                 <div className="chk"><Check /></div>
-                <h3 className="h3">Für dich, nicht für Recruiter</h3>
-                <p>Dein Profil ist die Basis <b>deiner</b> Bewerbungen, kein durchsuchbares Schaufenster für Firmen.</p>
+                <h3 className="h3">{t('values.items.candidate.title')}</h3>
+                <p>{t.rich('values.items.candidate.desc', { strong: (chunks) => <b>{chunks}</b> })}</p>
               </article>
             </div>
 
             <div className="not reveal">
               <h3 className="h3">
-                Was Applo <span className="u">nicht</span> tut
+                {t.rich('values.not.title', { underline: (chunks) => <span className="u">{chunks}</span> })}
               </h3>
               <ul>
-                <li><span className="x">×</span><span>Keine Massen-Spam-Bewerbungen in deinem Namen.</span></li>
-                <li><span className="x">×</span><span>Keine Fake-Erfolge und keine erfundenen Kennzahlen.</span></li>
-                <li><span className="x">×</span><span>Kein Verkauf deiner Daten, an niemanden.</span></li>
+                <li><span className="x">×</span><span>{t('values.not.items.spam')}</span></li>
+                <li><span className="x">×</span><span>{t('values.not.items.fake')}</span></li>
+                <li><span className="x">×</span><span>{t('values.not.items.sale')}</span></li>
               </ul>
             </div>
           </div>
@@ -567,53 +571,53 @@ export default function Home() {
           <div className="wrap">
             <div className="sec-row reveal">
               <div>
-                <p className="eyebrow">04 · Preise</p>
-                <h2 className="h2">Fair und ohne Überraschungen</h2>
+                <p className="eyebrow">{t('pricing.eyebrow')}</p>
+                <h2 className="h2">{t('pricing.title')}</h2>
               </div>
-              <p className="lead">Starte kostenlos. Upgrade nur, wenn du mehr brauchst. Jederzeit kündbar.</p>
+              <p className="lead">{t('pricing.lead')}</p>
             </div>
             <div className="grid price-grid">
               <article className="card price reveal">
-                <div className="pname">Free</div>
-                <div className="pamt">€ 0 <small>/ Monat</small></div>
-                <div className="ptbd">Zum Ausprobieren</div>
+                <div className="pname">{t('pricing.plans.free.name')}</div>
+                <div className="pamt">{t('pricing.plans.free.currency')} {t('pricing.plans.free.amount')} <small>{t('pricing.plans.free.period')}</small></div>
+                <div className="ptbd">{t('pricing.plans.free.tagline')}</div>
                 <ul>
-                  <li><span className="ck"><Check /></span> 5 Bewerbungs-Checks / Monat</li>
-                  <li><span className="ck"><Check /></span> KI-Generierung &amp; ATS-Score</li>
-                  <li><span className="ck"><Check /></span> 50 ATS-PDF-Vorlagen</li>
-                  <li><span className="ck"><Check /></span> DE/EN</li>
+                  <li><span className="ck"><Check /></span> {t('pricing.plans.free.features.0')}</li>
+                  <li><span className="ck"><Check /></span> {t('pricing.plans.free.features.1')}</li>
+                  <li><span className="ck"><Check /></span> {t('pricing.plans.free.features.2')}</li>
+                  <li><span className="ck"><Check /></span> {t('pricing.plans.free.features.3')}</li>
                 </ul>
-                <Link className="btn btn-ghost" href="/register">Kostenlos starten</Link>
+                <Link className="btn btn-ghost" href="/register">{t('pricing.plans.free.cta')}</Link>
               </article>
               <article className="card price feature reveal" style={d('.08s')}>
-                <span className="badge">Beliebt</span>
-                <div className="pname">Pro</div>
-                <div className="pamt">€ <span style={{ color: 'rgba(229,233,242,.5)' }}>TBD</span> <small>/ Monat</small></div>
-                <div className="ptbd">Preis folgt</div>
+                <span className="badge">{t('pricing.plans.pro.badge')}</span>
+                <div className="pname">{t('pricing.plans.pro.name')}</div>
+                <div className="pamt">{t('pricing.plans.pro.currency')} <span style={{ color: 'rgba(229,233,242,.5)' }}>{t('pricing.plans.pro.amount')}</span> <small>{t('pricing.plans.pro.period')}</small></div>
+                <div className="ptbd">{t('pricing.plans.pro.tagline')}</div>
                 <ul>
-                  <li><span className="ck"><Check color="#5581C7" /></span> Unlimitierte Bewerbungs-Checks</li>
-                  <li><span className="ck"><Check color="#5581C7" /></span> Smart Job-Ingestion</li>
-                  <li><span className="ck"><Check color="#5581C7" /></span> Live-Status der Pipeline</li>
-                  <li><span className="ck"><Check color="#5581C7" /></span> Alles aus Free</li>
+                  <li><span className="ck"><Check color="#5581C7" /></span> {t('pricing.plans.pro.features.0')}</li>
+                  <li><span className="ck"><Check color="#5581C7" /></span> {t('pricing.plans.pro.features.1')}</li>
+                  <li><span className="ck"><Check color="#5581C7" /></span> {t('pricing.plans.pro.features.2')}</li>
+                  <li><span className="ck"><Check color="#5581C7" /></span> {t('pricing.plans.pro.features.3')}</li>
                 </ul>
-                <Link className="btn btn-primary" href="/register">Pro wählen<span className="m">→</span></Link>
+                <Link className="btn btn-primary" href="/register">{t('pricing.plans.pro.cta')}<span className="m">→</span></Link>
               </article>
               <article className="card price reveal" style={d('.16s')}>
-                <div className="pname">Premium</div>
-                <div className="pamt">€ <span style={{ color: 'var(--muted-2)' }}>TBD</span> <small>/ Monat</small></div>
-                <div className="ptbd">Preis folgt</div>
+                <div className="pname">{t('pricing.plans.premium.name')}</div>
+                <div className="pamt">{t('pricing.plans.premium.currency')} <span style={{ color: 'var(--muted-2)' }}>{t('pricing.plans.premium.amount')}</span> <small>{t('pricing.plans.premium.period')}</small></div>
+                <div className="ptbd">{t('pricing.plans.premium.tagline')}</div>
                 <ul>
-                  <li><span className="ck"><Check /></span> Mock-Interviews (Text &amp; Voice)</li>
-                  <li><span className="ck"><Check /></span> E-Mail-Tracking (Outlook/M365)</li>
-                  <li><span className="ck"><Check /></span> Alles aus Pro</li>
+                  <li><span className="ck"><Check /></span> {t('pricing.plans.premium.features.0')}</li>
+                  <li><span className="ck"><Check /></span> {t('pricing.plans.premium.features.1')}</li>
+                  <li><span className="ck"><Check /></span> {t('pricing.plans.premium.features.2')}</li>
                 </ul>
-                <Link className="btn btn-ghost" href="/register">Premium wählen</Link>
+                <Link className="btn btn-ghost" href="/register">{t('pricing.plans.premium.cta')}</Link>
               </article>
             </div>
             <div className="stats reveal" id="stats">
-              <div className="stat"><b data-count="50">0</b><span>ATS-Vorlagen</span></div>
-              <div className="stat"><b data-count="2" data-suffix=" Sprachen">0</b><span>Deutsch &amp; Englisch</span></div>
-              <div className="stat"><b data-suffix="%" data-count="100">0</b><span>EU-Hosting &amp; DSGVO</span></div>
+              <div className="stat"><b data-count="50">0</b><span>{t('pricing.stats.templates')}</span></div>
+              <div className="stat"><b data-count="2" data-suffix={t('pricing.stats.languagesSuffix')}>0</b><span>{t('pricing.stats.languages')}</span></div>
+              <div className="stat"><b data-suffix="%" data-count="100">0</b><span>{t('pricing.stats.hosting')}</span></div>
             </div>
           </div>
         </section>
@@ -622,16 +626,16 @@ export default function Home() {
         <section className="section faq-sec" id="faq" data-pose="think">
           <div className="wrap faq-grid">
             <div className="reveal">
-              <p className="eyebrow">05 · FAQ</p>
-              <h2 className="h2" style={{ marginTop: 12 }}>Klare Antworten</h2>
+              <p className="eyebrow">{t('faq.eyebrow')}</p>
+              <h2 className="h2" style={{ marginTop: 12 }}>{t('faq.title')}</h2>
             </div>
             <div className="faq-list">
-              <details className="faq reveal"><summary>Was passiert mit meinen Daten?<span className="pls" /></summary><div className="ans">Deine Daten werden in der EU gehostet und gespeichert, nach DSGVO. Wir verkaufen deine Daten nicht. Bei Mock-Interviews wird kein Audio gespeichert, beim E-Mail-Tracking keine Mail-Inhalte.</div></details>
-              <details className="faq reveal"><summary>Erfindet die KI Dinge über mich?<span className="pls" /></summary><div className="ans">Nein. Die KI nutzt nur, was dein Profil belegt. Ein Grounding-Check markiert erfundene Kennzahlen, damit nichts Unwahres in deine Bewerbung gerät.</div></details>
-              <details className="faq reveal"><summary>Können Recruiter mein Profil sehen oder finden?<span className="pls" /></summary><div className="ans">Nein. Dein Profil ist die private Basis deiner eigenen Bewerbungen, kein durchsuchbares Schaufenster. Es wird Firmen nicht zur Suche angeboten.</div></details>
-              <details className="faq reveal"><summary>In welchen Sprachen kann ich bewerben?<span className="pls" /></summary><div className="ans">Du kannst Bewerbungen auf Deutsch und Englisch erstellen und als PDF exportieren.</div></details>
-              <details className="faq reveal"><summary>Ist Applo kündbar?<span className="pls" /></summary><div className="ans">Ja, jederzeit. Free bleibt kostenlos; bezahlte Tarife sind ohne lange Bindung kündbar.</div></details>
-              <details className="faq reveal"><summary>Wem gehören meine Daten?<span className="pls" /></summary><div className="ans">Dir. Dein Profil und deine Inhalte gehören dir. Applo nutzt sie nur, um deine Bewerbungen zu erstellen.</div></details>
+              <details className="faq reveal"><summary>{t('faq.items.data.q')}<span className="pls" /></summary><div className="ans">{t('faq.items.data.a')}</div></details>
+              <details className="faq reveal"><summary>{t('faq.items.fabrication.q')}<span className="pls" /></summary><div className="ans">{t('faq.items.fabrication.a')}</div></details>
+              <details className="faq reveal"><summary>{t('faq.items.recruiters.q')}<span className="pls" /></summary><div className="ans">{t('faq.items.recruiters.a')}</div></details>
+              <details className="faq reveal"><summary>{t('faq.items.languages.q')}<span className="pls" /></summary><div className="ans">{t('faq.items.languages.a')}</div></details>
+              <details className="faq reveal"><summary>{t('faq.items.cancel.q')}<span className="pls" /></summary><div className="ans">{t('faq.items.cancel.a')}</div></details>
+              <details className="faq reveal"><summary>{t('faq.items.ownership.q')}<span className="pls" /></summary><div className="ans">{t('faq.items.ownership.a')}</div></details>
             </div>
           </div>
         </section>
@@ -642,13 +646,13 @@ export default function Home() {
             <div className={`cta-applo-wrap${ctaRevealed ? ' revealed' : ''}`} aria-hidden>
               <ApploRig state={ctaState} className="cta-applo" aria-hidden />
             </div>
-            <h2 className="h2 reveal" style={d('.05s')}>Bereit für ehrliche Bewerbungen?</h2>
-            <p className="lead reveal" style={d('.1s')}>Starte kostenlos: keine erfundenen Daten, keine Massen-Spam-Bewerbungen.</p>
+            <h2 className="h2 reveal" style={d('.05s')}>{t('final.title')}</h2>
+            <p className="lead reveal" style={d('.1s')}>{t('final.lead')}</p>
             <div className="hero-cta reveal" style={{ ...d('.16s'), justifyContent: 'center' }}>
-              <Link className="btn btn-primary" href="/register">Kostenlos starten<span className="m">→</span></Link>
+              <Link className="btn btn-primary" href="/register">{t('final.cta')}<span className="m">→</span></Link>
             </div>
             <p className="trust reveal" style={{ ...d('.22s'), justifyContent: 'center' }}>
-              <span className="dot" /> EU-Hosting <span className="dot" /> DSGVO <span className="dot" /> jederzeit kündbar
+              <span className="dot" /> {t('final.trust.hosting')} <span className="dot" /> {t('final.trust.gdpr')} <span className="dot" /> {t('final.trust.cancel')}
             </p>
           </div>
         </section>
@@ -663,7 +667,7 @@ export default function Home() {
               <span>Applo</span>
             </a>
             <p style={{ maxWidth: 240, lineHeight: 1.6, marginTop: 4 }}>
-              Bewerbungen aus deinem echten Profil: ehrlich, ATS-optimiert, in der EU gehostet.
+              {t('footer.tagline')}
             </p>
           </div>
           <div className="fcol">
@@ -672,8 +676,8 @@ export default function Home() {
             <Link href="/agb">AGB</Link>
           </div>
           <div className="fcol fmeta">
-            <div>EU · DSGVO</div>
-            <span className="pill">Source-available · BSL 1.1</span>
+            <div>{t('footer.compliance')}</div>
+            <span className="pill">{t('footer.license')}</span>
           </div>
         </div>
       </footer>

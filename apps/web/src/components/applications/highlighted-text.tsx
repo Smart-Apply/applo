@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { KeywordMatch } from '@/types';
 
@@ -23,6 +24,7 @@ export function HighlightedText({
   highlightClassName,
   showTooltip = true,
 }: HighlightedTextProps) {
+  const t = useTranslations('applications');
   const highlightedContent = useMemo(() => {
     if (!keywords || keywords.length === 0) {
       return text;
@@ -96,7 +98,9 @@ export function HighlightedText({
             {matchedText}
             <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10">
               <span className="bg-popover text-popover-foreground text-xs rounded shadow-lg px-2 py-1 whitespace-nowrap border">
-                {pos.keyword.found ? '✓ In Profil gefunden' : '⚠ Nicht in Profil'}
+                {pos.keyword.found
+                  ? t('highlightedText.tooltipFound')
+                  : t('highlightedText.tooltipMissing')}
                 {pos.keyword.confidence && (
                   <span className="ml-1 opacity-70">
                     ({Math.round(pos.keyword.confidence * 100)}%)
@@ -126,7 +130,7 @@ export function HighlightedText({
     }
 
     return parts;
-  }, [text, keywords, showTooltip, highlightClassName]);
+  }, [text, keywords, showTooltip, highlightClassName, t]);
 
   return <span className={className}>{highlightedContent}</span>;
 }
@@ -164,15 +168,17 @@ interface KeywordLegendProps {
  * Legend explaining the highlight colors
  */
 export function KeywordLegend({ className }: KeywordLegendProps) {
+  const t = useTranslations('applications');
+
   return (
     <div className={cn('flex items-center gap-4 text-xs text-muted-foreground', className)}>
       <div className="flex items-center gap-1.5">
         <span className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/50 border border-green-300 dark:border-green-700" />
-        <span>In Profil vorhanden</span>
+        <span>{t('highlightedText.legendFound')}</span>
       </div>
       <div className="flex items-center gap-1.5">
         <span className="w-3 h-3 rounded bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-300 dark:border-yellow-700" />
-        <span>Fehlt im Profil</span>
+        <span>{t('highlightedText.legendMissing')}</span>
       </div>
     </div>
   );

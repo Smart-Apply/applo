@@ -1,6 +1,7 @@
 'use client';
 
 import { Monitor, Smartphone, LogOut, AlertTriangle, Shield } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useSessions, useRevokeSession, useRevokeAllSessions } from '@/hooks/use-sessions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,6 +81,7 @@ function SessionCard({ session, isCurrentSession, onRevoke }: {
   isCurrentSession: boolean; 
   onRevoke: (sessionId: string) => void;
 }) {
+  const t = useTranslations('settings');
   const { device, browser, os } = parseUserAgent(session.userAgent);
   const DeviceIcon = device === 'Mobile' ? Smartphone : Monitor;
 
@@ -98,7 +100,7 @@ function SessionCard({ session, isCurrentSession, onRevoke }: {
           </div>
         </div>
         {isCurrentSession && (
-          <Badge variant="default" className="ml-2">Aktuell</Badge>
+          <Badge variant="default" className="ml-2">{t('sessions.currentBadge')}</Badge>
         )}
       </CardHeader>
       <CardContent>
@@ -107,7 +109,7 @@ function SessionCard({ session, isCurrentSession, onRevoke }: {
             <Tooltip>
               <TooltipTrigger asChild>
                 <p className="text-sm text-muted-foreground cursor-help">
-                  Zuletzt aktiv: {formatDateSmart(session.lastUsedAt)}
+                  {t('sessions.lastActive', { date: formatDateSmart(session.lastUsedAt) })}
                 </p>
               </TooltipTrigger>
               <TooltipContent>
@@ -122,7 +124,7 @@ function SessionCard({ session, isCurrentSession, onRevoke }: {
             className="text-destructive hover:text-destructive"
           >
             <LogOut className="h-4 w-4 mr-2" />
-            {isCurrentSession ? 'Abmelden' : 'Beenden'}
+            {isCurrentSession ? t('sessions.signOut') : t('sessions.end')}
           </Button>
         </div>
       </CardContent>
@@ -134,6 +136,7 @@ function SessionCard({ session, isCurrentSession, onRevoke }: {
  * Sessions Management Page
  */
 export default function SessionsPage() {
+  const t = useTranslations('settings');
   const { data, isLoading, error } = useSessions();
   const revokeSession = useRevokeSession();
   const revokeAllSessions = useRevokeAllSessions();
@@ -149,9 +152,9 @@ export default function SessionsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Aktive Sitzungen</h1>
+        <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">{t('sessions.title')}</h1>
         <p className="text-muted-foreground mb-8">
-          Verwalte deine aktiven Sitzungen auf verschiedenen Geräten.
+          {t('sessions.shortDescription')}
         </p>
         <div className="space-y-4">
           {[1, 2].map((i) => (
@@ -173,15 +176,15 @@ export default function SessionsPage() {
   if (error) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Aktive Sitzungen</h1>
+        <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">{t('sessions.title')}</h1>
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Fehler beim Laden der Sitzungen
+              {t('sessions.loadErrorTitle')}
             </CardTitle>
             <CardDescription>
-              {error.message || 'Aktive Sitzungen konnten nicht geladen werden'}
+              {error.message || t('sessions.loadErrorDescription')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -197,30 +200,29 @@ export default function SessionsPage() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       <div className="flex items-center justify-between mb-2">
-        <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Aktive Sitzungen</h1>
+        <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">{t('sessions.title')}</h1>
         {sessions.length > 1 && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
-                Von allen Geräten abmelden
+                {t('sessions.signOutAll')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Von allen Geräten abmelden?</AlertDialogTitle>
+                <AlertDialogTitle>{t('sessions.signOutAllTitle')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Du wirst von allen {sessions.length} aktiven Sitzung{sessions.length !== 1 ? 'en' : ''} abgemeldet, einschließlich diesem Gerät.
-                  Du musst dich auf allen Geräten neu anmelden.
+                  {t('sessions.signOutAllDescription', { count: sessions.length })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                <AlertDialogCancel>{t('sessions.cancel')}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleRevokeAll}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Von allen Geräten abmelden
+                  {t('sessions.signOutAll')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -229,7 +231,7 @@ export default function SessionsPage() {
       </div>
       
       <p className="text-muted-foreground mb-8">
-        Verwalte deine aktiven Sitzungen auf verschiedenen Geräten. Du kannst den Zugriff von jedem Gerät jederzeit beenden.
+        {t('sessions.description')}
       </p>
 
       <div className="space-y-6">
@@ -237,7 +239,7 @@ export default function SessionsPage() {
         {currentSession && (
           <div>
             <h2 className="mb-3 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-              Aktuelle Sitzung
+              {t('sessions.currentSession')}
             </h2>
             <SessionCard
               session={currentSession}
@@ -253,7 +255,7 @@ export default function SessionsPage() {
             <Separator />
             <div>
               <h2 className="mb-3 font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-                Andere Sitzungen ({otherSessions.length})
+                {t('sessions.otherSessions', { count: otherSessions.length })}
               </h2>
               <div className="space-y-3">
                 {otherSessions.map((session) => (
@@ -274,8 +276,8 @@ export default function SessionsPage() {
           <div className="rounded-[4px] border border-dashed border-border bg-muted/10">
             <EmptyState
               icon={Shield}
-              title="Nur eine aktive Sitzung"
-              description="Dies ist deine einzige aktive Sitzung. Melde dich von einem anderen Gerät an, um weitere Sitzungen hier zu sehen."
+              title={t('sessions.emptyTitle')}
+              description={t('sessions.emptyDescription')}
             />
           </div>
         )}

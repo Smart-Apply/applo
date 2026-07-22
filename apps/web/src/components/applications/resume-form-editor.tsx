@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -152,6 +153,7 @@ export function ResumeFormEditor({
   onAiProjectRequest,
   projectAiLoadingIndex = -1,
 }: ResumeFormEditorProps) {
+  const t = useTranslations('editor');
   // Section navigation state
   const [activeSection, setActiveSection] = useState<string>('personal');
   
@@ -380,19 +382,19 @@ export function ResumeFormEditor({
     <div className="space-y-6">
       {/* Section Selector */}
       <div className="flex items-center gap-4">
-        <Label className="whitespace-nowrap font-medium">Abschnitt bearbeiten:</Label>
+        <Label className="whitespace-nowrap font-medium">{t('resumeForm.sectionSelector.label')}</Label>
         <Select value={activeSection} onValueChange={setActiveSection}>
           <SelectTrigger className="w-[300px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="personal">Persönliche Daten</SelectItem>
-            <SelectItem value="job-details">Stellendetails</SelectItem>
-            <SelectItem value="skills">Fähigkeiten</SelectItem>
-            <SelectItem value="experience">Berufserfahrung</SelectItem>
-            <SelectItem value="projects">Projekte</SelectItem>
-            <SelectItem value="education">Ausbildung</SelectItem>
-            <SelectItem value="certifications">Zertifikate</SelectItem>
+            <SelectItem value="personal">{t('resumeForm.sections.personal')}</SelectItem>
+            <SelectItem value="job-details">{t('resumeForm.sections.jobDetails')}</SelectItem>
+            <SelectItem value="skills">{t('resumeForm.sections.skills')}</SelectItem>
+            <SelectItem value="experience">{t('resumeForm.sections.experience')}</SelectItem>
+            <SelectItem value="projects">{t('resumeForm.sections.projects')}</SelectItem>
+            <SelectItem value="education">{t('resumeForm.sections.education')}</SelectItem>
+            <SelectItem value="certifications">{t('resumeForm.sections.certifications')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -401,18 +403,18 @@ export function ResumeFormEditor({
       {activeSection === 'personal' && (
       <Card>
         <CardHeader>
-          <CardTitle>Persönliche Daten</CardTitle>
+          <CardTitle>{t('resumeForm.sections.personal')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="candidateName">Name *</Label>
+              <Label htmlFor="candidateName">{t('resumeForm.personal.name')}</Label>
               <Input
                 id="candidateName"
                 value={value.candidateName}
                 onChange={(e) => updateField('candidateName', e.target.value)}
                 disabled={disabled}
-                placeholder="Vor- und Nachname"
+                placeholder={t('resumeForm.personal.namePlaceholder')}
               />
             </div>
             <div className="space-y-2">
@@ -427,7 +429,7 @@ export function ResumeFormEditor({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefon</Label>
+              <Label htmlFor="phone">{t('resumeForm.personal.phone')}</Label>
               <Input
                 id="phone"
                 value={value.phone || ''}
@@ -437,17 +439,17 @@ export function ResumeFormEditor({
               />
             </div>
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="street">Straße und Hausnummer</Label>
+              <Label htmlFor="street">{t('resumeForm.personal.street')}</Label>
               <Input
                 id="street"
                 value={value.street || ''}
                 onChange={(e) => updateField('street', e.target.value)}
                 disabled={disabled}
-                placeholder="Musterstraße 123"
+                placeholder={t('resumeForm.personal.streetPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="postalCode">Postleitzahl</Label>
+              <Label htmlFor="postalCode">{t('resumeForm.personal.postalCode')}</Label>
               <Input
                 id="postalCode"
                 value={value.postalCode || ''}
@@ -458,7 +460,7 @@ export function ResumeFormEditor({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="city">Stadt</Label>
+              <Label htmlFor="city">{t('resumeForm.personal.city')}</Label>
               <Input
                 id="city"
                 value={value.city || ''}
@@ -468,13 +470,13 @@ export function ResumeFormEditor({
               />
             </div>
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="country">Land <span className="text-muted-foreground text-xs font-normal">(optional)</span></Label>
+              <Label htmlFor="country">{t('resumeForm.personal.country')} <span className="text-muted-foreground text-xs font-normal">{t('resumeForm.optional')}</span></Label>
               <Input
                 id="country"
                 value={value.country || ''}
                 onChange={(e) => updateField('country', e.target.value)}
                 disabled={disabled}
-                placeholder="z.B. Deutschland"
+                placeholder={t('resumeForm.personal.countryPlaceholder')}
               />
             </div>
             <div className="space-y-2">
@@ -500,7 +502,7 @@ export function ResumeFormEditor({
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="summary">Zusammenfassung</Label>
+              <Label htmlFor="summary">{t('resumeForm.personal.summary')}</Label>
               {onAiSummaryRequest && applicationId && (
                 <AiAssistantPopover
                   open={summaryAiOpen}
@@ -509,10 +511,10 @@ export function ResumeFormEditor({
                   onInstructionsChange={setSummaryInstructions}
                   onApply={handleApplySummaryAI}
                   isLoading={isAiSummaryLoading}
-                  placeholder="Z.B.: Betone meine Projektmanagement-Erfahrung und Führungsqualitäten..."
-                  title="Zusammenfassung optimieren"
-                  description="Beschreibe, wie die Zusammenfassung angepasst werden soll (3-5 Sätze)."
-                  warningMessage="Die AI generiert eine neue Zusammenfassung. Danach musst du manuell speichern."
+                  placeholder={t('resumeForm.ai.summaryPlaceholder')}
+                  title={t('resumeForm.ai.summaryTitle')}
+                  description={t('resumeForm.ai.summaryDescription')}
+                  warningMessage={t('resumeForm.ai.summaryWarning')}
                 />
               )}
             </div>
@@ -520,7 +522,7 @@ export function ResumeFormEditor({
               value={value.summary || ''}
               onChange={(html) => updateField('summary', html)}
               disabled={disabled}
-              placeholder="Kurze Zusammenfassung deiner Qualifikationen und wichtigsten Fähigkeiten. Nutzen Sie - + Leerzeichen für Aufzählungen."
+              placeholder={t('resumeForm.personal.summaryPlaceholder')}
               minHeight="140px"
             />
           </div>
@@ -532,27 +534,27 @@ export function ResumeFormEditor({
       {activeSection === 'job-details' && (
       <Card>
         <CardHeader>
-          <CardTitle>Stellendetails</CardTitle>
+          <CardTitle>{t('resumeForm.sections.jobDetails')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="targetJobTitle">Zielposition *</Label>
+              <Label htmlFor="targetJobTitle">{t('resumeForm.jobDetails.targetJobTitle')}</Label>
               <Input
                 id="targetJobTitle"
                 value={targetJobTitle || ''}
                 onChange={(e) => onTargetJobTitleChange?.(e.target.value)}
                 onBlur={(e) => onTargetJobTitleBlur?.(e.target.value)}
                 disabled={disabled || isTargetJobTitleLoading}
-                placeholder="z.B. Senior Software Engineer"
+                placeholder={t('resumeForm.jobDetails.targetJobTitlePlaceholder')}
                 maxLength={100}
               />
               <p className="text-xs text-muted-foreground">
-                Der Jobtitel, der auf deinem Lebenslauf erscheint
+                {t('resumeForm.jobDetails.targetJobTitleHelp')}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="company">Unternehmen</Label>
+              <Label htmlFor="company">{t('resumeForm.jobDetails.company')}</Label>
               <Input
                 id="company"
                 value={company || ''}
@@ -560,7 +562,7 @@ export function ResumeFormEditor({
                 className="bg-muted"
               />
               <p className="text-xs text-muted-foreground">
-                Das Unternehmen aus der Stellenanzeige (nicht editierbar)
+                {t('resumeForm.jobDetails.companyHelp')}
               </p>
             </div>
           </div>
@@ -573,7 +575,7 @@ export function ResumeFormEditor({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Fähigkeiten</CardTitle>
+            <CardTitle>{t('resumeForm.sections.skills')}</CardTitle>
             <Button
               type="button"
               variant="outline"
@@ -582,7 +584,7 @@ export function ResumeFormEditor({
               disabled={disabled}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Kategorie hinzufügen
+              {t('resumeForm.skills.addCategory')}
             </Button>
           </div>
         </CardHeader>
@@ -597,13 +599,13 @@ export function ResumeFormEditor({
                       updateSkillCategory(index, e.target.value, category.skills)
                     }
                     disabled={disabled}
-                    placeholder="Kategorie (optional, z.B. Programmiersprachen)"
+                    placeholder={t('resumeForm.skills.categoryPlaceholder')}
                   />
                   <CommaSeparatedTextarea
                     value={category.skills}
                     onChange={(skills) => updateSkillCategory(index, category.type, skills)}
                     disabled={disabled}
-                    placeholder="Skills durch Komma trennen (z.B. TypeScript, React, Node.js)"
+                    placeholder={t('resumeForm.skills.skillsPlaceholder')}
                     rows={2}
                   />
                 </div>
@@ -620,7 +622,7 @@ export function ResumeFormEditor({
             </div>
           ))}
           {value.skillCategories.length === 0 && (
-            <p className="text-sm text-muted-foreground">Noch keine Fähigkeiten hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">{t('resumeForm.skills.empty')}</p>
           )}
         </CardContent>
       </Card>
@@ -631,7 +633,7 @@ export function ResumeFormEditor({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Berufserfahrung</CardTitle>
+            <CardTitle>{t('resumeForm.sections.experience')}</CardTitle>
             <Button
               type="button"
               variant="outline"
@@ -640,7 +642,7 @@ export function ResumeFormEditor({
               disabled={disabled}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Erfahrung hinzufügen
+              {t('resumeForm.experience.add')}
             </Button>
           </div>
         </CardHeader>
@@ -654,30 +656,30 @@ export function ResumeFormEditor({
                       value={exp.title}
                       onChange={(e) => updateExperience(index, 'title', e.target.value)}
                       disabled={disabled}
-                      placeholder="Position *"
+                      placeholder={t('resumeForm.experience.positionPlaceholder')}
                     />
                     <Input
                       value={exp.company}
                       onChange={(e) => updateExperience(index, 'company', e.target.value)}
                       disabled={disabled}
-                      placeholder="Unternehmen *"
+                      placeholder={t('resumeForm.experience.companyPlaceholder')}
                     />
                     <Input
                       value={exp.location || ''}
                       onChange={(e) => updateExperience(index, 'location', e.target.value)}
                       disabled={disabled}
-                      placeholder="Standort"
+                      placeholder={t('resumeForm.experience.locationPlaceholder')}
                     />
                     <Input
                       value={exp.dateRange}
                       onChange={(e) => updateExperience(index, 'dateRange', e.target.value)}
                       disabled={disabled}
-                      placeholder="Zeitraum (z.B. Jan 2020 - Dez 2023)"
+                      placeholder={t('resumeForm.experience.dateRangePlaceholder')}
                     />
                   </div>
                   <div>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor={`exp-description-${index}`}>Beschreibung</Label>
+                      <Label htmlFor={`exp-description-${index}`}>{t('resumeForm.description')}</Label>
                       {onAiExperienceRequest && exp.title && exp.company && (
                         <AiAssistantPopover
                           open={experienceAiOpenIndex === index}
@@ -693,10 +695,10 @@ export function ResumeFormEditor({
                           onInstructionsChange={setExperienceInstructions}
                           onApply={() => handleApplyExperienceAI(index)}
                           isLoading={experienceAiLoadingIndex === index}
-                          placeholder="z.B. Betone messbare Erfolge und Teamführung"
-                          title="Beschreibung mit AI verbessern"
-                          description="Die KI generiert aussagekräftige Bullet-Points mit Aktionsverben und quantifizierbaren Erfolgen."
-                          warningMessage="Geben Sie Anweisungen ein, um die Beschreibung zu generieren."
+                          placeholder={t('resumeForm.ai.experiencePlaceholder')}
+                          title={t('resumeForm.ai.descriptionTitle')}
+                          description={t('resumeForm.ai.experienceDescription')}
+                          warningMessage={t('resumeForm.ai.descriptionWarning')}
                         />
                       )}
                     </div>
@@ -704,7 +706,7 @@ export function ResumeFormEditor({
                       value={exp.description || ''}
                       onChange={(html) => updateExperience(index, 'description', html)}
                       disabled={disabled}
-                      placeholder="Beschreiben Sie Ihre Aufgaben, Verantwortlichkeiten und Erfolge bei dieser Position. Nutzen Sie - + Leerzeichen für Aufzählungen."
+                      placeholder={t('resumeForm.experience.descriptionPlaceholder')}
                       minHeight="160px"
                     />
                   </div>
@@ -723,7 +725,7 @@ export function ResumeFormEditor({
             </div>
           ))}
           {value.experiences.length === 0 && (
-            <p className="text-sm text-muted-foreground">Noch keine Berufserfahrung hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">{t('resumeForm.experience.empty')}</p>
           )}
         </CardContent>
       </Card>
@@ -734,7 +736,7 @@ export function ResumeFormEditor({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Projekte</CardTitle>
+            <CardTitle>{t('resumeForm.sections.projects')}</CardTitle>
             <Button
               type="button"
               variant="outline"
@@ -743,7 +745,7 @@ export function ResumeFormEditor({
               disabled={disabled}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Projekt hinzufügen
+              {t('resumeForm.projects.add')}
             </Button>
           </div>
         </CardHeader>
@@ -757,18 +759,18 @@ export function ResumeFormEditor({
                       value={project.name}
                       onChange={(e) => updateProject(index, 'name', e.target.value)}
                       disabled={disabled}
-                      placeholder="Projektname *"
+                      placeholder={t('resumeForm.projects.namePlaceholder')}
                     />
                     <Input
                       value={project.date || ''}
                       onChange={(e) => updateProject(index, 'date', e.target.value)}
                       disabled={disabled}
-                      placeholder="Zeitraum"
+                      placeholder={t('resumeForm.projects.datePlaceholder')}
                     />
                   </div>
                   <div>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor={`project-description-${index}`}>Beschreibung</Label>
+                      <Label htmlFor={`project-description-${index}`}>{t('resumeForm.description')}</Label>
                       {onAiProjectRequest && project.name && (
                         <AiAssistantPopover
                           open={projectAiOpenIndex === index}
@@ -784,10 +786,10 @@ export function ResumeFormEditor({
                           onInstructionsChange={setProjectInstructions}
                           onApply={() => handleApplyProjectAI(index)}
                           isLoading={projectAiLoadingIndex === index}
-                          placeholder="z.B. Betone die verwendeten Technologien und den Business-Impact"
-                          title="Beschreibung mit AI verbessern"
-                          description="Die KI generiert aussagekräftige Bullet-Points mit Technologie-Fokus und messbaren Ergebnissen."
-                          warningMessage="Geben Sie Anweisungen ein, um die Beschreibung zu generieren."
+                          placeholder={t('resumeForm.ai.projectPlaceholder')}
+                          title={t('resumeForm.ai.descriptionTitle')}
+                          description={t('resumeForm.ai.projectDescription')}
+                          warningMessage={t('resumeForm.ai.descriptionWarning')}
                         />
                       )}
                     </div>
@@ -795,7 +797,7 @@ export function ResumeFormEditor({
                       value={project.description || ''}
                       onChange={(html) => updateProject(index, 'description', html)}
                       disabled={disabled}
-                      placeholder="Beschreiben Sie das Projekt, Ihre Rolle und erreichte Ergebnisse. Nutzen Sie - + Leerzeichen für Aufzählungen."
+                      placeholder={t('resumeForm.projects.descriptionPlaceholder')}
                       minHeight="120px"
                     />
                   </div>
@@ -803,7 +805,7 @@ export function ResumeFormEditor({
                     value={project.highlights || []}
                     onChange={(highlights) => updateProject(index, 'highlights', highlights)}
                     disabled={disabled}
-                    placeholder="Highlights (eine pro Zeile)"
+                    placeholder={t('resumeForm.projects.highlightsPlaceholder')}
                     rows={3}
                   />
                 </div>
@@ -821,7 +823,7 @@ export function ResumeFormEditor({
             </div>
           ))}
           {(!value.projects || value.projects.length === 0) && (
-            <p className="text-sm text-muted-foreground">Noch keine Projekte hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">{t('resumeForm.projects.empty')}</p>
           )}
         </CardContent>
       </Card>
@@ -832,7 +834,7 @@ export function ResumeFormEditor({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Ausbildung</CardTitle>
+            <CardTitle>{t('resumeForm.sections.education')}</CardTitle>
             <Button
               type="button"
               variant="outline"
@@ -841,7 +843,7 @@ export function ResumeFormEditor({
               disabled={disabled}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Ausbildung hinzufügen
+              {t('resumeForm.education.add')}
             </Button>
           </div>
         </CardHeader>
@@ -855,38 +857,38 @@ export function ResumeFormEditor({
                       value={edu.degree}
                       onChange={(e) => updateEducation(index, 'degree', e.target.value)}
                       disabled={disabled}
-                      placeholder="Abschluss *"
+                      placeholder={t('resumeForm.education.degreePlaceholder')}
                     />
                     <Input
                       value={edu.institution}
                       onChange={(e) => updateEducation(index, 'institution', e.target.value)}
                       disabled={disabled}
-                      placeholder="Institution *"
+                      placeholder={t('resumeForm.education.institutionPlaceholder')}
                     />
                     <Input
                       value={edu.year}
                       onChange={(e) => updateEducation(index, 'year', e.target.value)}
                       disabled={disabled}
-                      placeholder="Jahr *"
+                      placeholder={t('resumeForm.education.yearPlaceholder')}
                     />
                     <Input
                       value={edu.fieldOfStudy || ''}
                       onChange={(e) => updateEducation(index, 'fieldOfStudy', e.target.value)}
                       disabled={disabled}
-                      placeholder="Studienrichtung"
+                      placeholder={t('resumeForm.education.fieldPlaceholder')}
                     />
                   </div>
                   <Input
                     value={edu.gpa || ''}
                     onChange={(e) => updateEducation(index, 'gpa', e.target.value)}
                     disabled={disabled}
-                    placeholder="Note/GPA"
+                    placeholder={t('resumeForm.education.gpaPlaceholder')}
                   />
                   <DescriptionEditor
                     value={edu.description || ''}
                     onChange={(html) => updateEducation(index, 'description', html)}
                     disabled={disabled}
-                    placeholder="Weitere Details wie Schwerpunkte, relevante Kurse oder Auszeichnungen. Nutzen Sie - + Leerzeichen für Aufzählungen."
+                    placeholder={t('resumeForm.education.descriptionPlaceholder')}
                     minHeight="100px"
                   />
                 </div>
@@ -904,7 +906,7 @@ export function ResumeFormEditor({
             </div>
           ))}
           {(!value.education || value.education.length === 0) && (
-            <p className="text-sm text-muted-foreground">Noch keine Ausbildung hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">{t('resumeForm.education.empty')}</p>
           )}
         </CardContent>
       </Card>
@@ -915,7 +917,7 @@ export function ResumeFormEditor({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Zertifikate</CardTitle>
+            <CardTitle>{t('resumeForm.sections.certifications')}</CardTitle>
             <Button
               type="button"
               variant="outline"
@@ -924,7 +926,7 @@ export function ResumeFormEditor({
               disabled={disabled}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Zertifikat hinzufügen
+              {t('resumeForm.certifications.add')}
             </Button>
           </div>
         </CardHeader>
@@ -936,19 +938,19 @@ export function ResumeFormEditor({
                   value={cert.name}
                   onChange={(e) => updateCertification(index, 'name', e.target.value)}
                   disabled={disabled}
-                  placeholder="Zertifikat *"
+                  placeholder={t('resumeForm.certifications.namePlaceholder')}
                 />
                 <Input
                   value={cert.issuer}
                   onChange={(e) => updateCertification(index, 'issuer', e.target.value)}
                   disabled={disabled}
-                  placeholder="Aussteller *"
+                  placeholder={t('resumeForm.certifications.issuerPlaceholder')}
                 />
                 <Input
                   value={cert.date || ''}
                   onChange={(e) => updateCertification(index, 'date', e.target.value)}
                   disabled={disabled}
-                  placeholder="Datum"
+                  placeholder={t('resumeForm.certifications.datePlaceholder')}
                 />
               </div>
               <Button
@@ -963,7 +965,7 @@ export function ResumeFormEditor({
             </div>
           ))}
           {(!value.certifications || value.certifications.length === 0) && (
-            <p className="text-sm text-muted-foreground">Noch keine Zertifikate hinzugefügt</p>
+            <p className="text-sm text-muted-foreground">{t('resumeForm.certifications.empty')}</p>
           )}
         </CardContent>
       </Card>

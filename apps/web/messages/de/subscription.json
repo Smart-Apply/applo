@@ -1,1 +1,26 @@
-{}
+{
+  "upgradePrompt": {
+    "defaultCta": "Upgrade auf {tier}",
+    "upgradeNow": "Jetzt upgraden",
+    "inlineNeeds": "{feature} benötigt {tier}.",
+    "onlyWithTier": "Nur mit {tier} verfügbar",
+    "onlyWithTierPrefix": "Dieses Feature ist nur mit",
+    "onlyWithTierSuffix": "verfügbar."
+  },
+  "limit": {
+    "title": "Monatliches Limit erreicht",
+    "description": "Du hast {used} von {limit} {action} diesen Monat verwendet. Upgrade für mehr Kapazität.",
+    "actions": {
+      "applications": "Bewerbungen",
+      "interviews": "Interview-Sessions"
+    }
+  },
+  "premiumSupport": {
+    "activeTitle": "Premium Support aktiv",
+    "activeDescription": "Deine Anfragen werden priorisiert bearbeitet — Antwort innerhalb 24h zugesagt.",
+    "contact": "Support kontaktieren",
+    "title": "Premium Support",
+    "description": "Mit Premium erhältst du priorisierten Support mit garantierter Antwort innerhalb von 24h.",
+    "unlock": "Mit Premium freischalten"
+  }
+}

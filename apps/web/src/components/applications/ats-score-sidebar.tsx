@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Sparkles,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useKeywordsAnalysis, useAnalyzeKeywords } from '@/hooks/use-applications';
 import { cn } from '@/lib/utils';
 import type { KeywordMatch } from '@/types';
@@ -79,6 +80,7 @@ export function ATSScoreSidebar({
   onAnalysisUpdate,
   refreshTrigger,
 }: ATSScoreSidebarProps) {
+  const t = useTranslations('applications');
   const {
     data: analysis,
     isLoading,
@@ -122,9 +124,9 @@ export function ATSScoreSidebar({
       <Card className={cn('border-dashed', className)}>
         <CardContent className="py-6 text-center">
           <Sparkles className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm font-medium mb-2">ATS-Analyse starten</p>
+          <p className="text-sm font-medium mb-2">{t('atsScoreSidebar.startTitle')}</p>
           <p className="text-xs text-muted-foreground mb-4">
-            Finde heraus, welche Keywords fehlen
+            {t('atsScoreSidebar.startDescription')}
           </p>
           <Button
             size="sm"
@@ -134,12 +136,12 @@ export function ATSScoreSidebar({
             {analyzeKeywords.isPending ? (
               <>
                 <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                Analysiere...
+                {t('atsScoreSidebar.analyzing')}
               </>
             ) : (
               <>
                 <Sparkles className="h-3 w-3 mr-1" />
-                Analysieren
+                {t('atsScoreSidebar.analyze')}
               </>
             )}
           </Button>
@@ -156,7 +158,7 @@ export function ATSScoreSidebar({
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-1.5">
             <TrendingUp className="h-4 w-4" />
-            ATS-Score
+            {t('atsScoreSidebar.title')}
           </CardTitle>
           <Button
             variant="ghost"
@@ -176,14 +178,14 @@ export function ATSScoreSidebar({
             {Math.round(score)}%
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Übereinstimmung mit Stelle
+            {t('atsScoreSidebar.jobMatch')}
           </p>
         </div>
 
         {/* Category Breakdown - Compact */}
         <div className="grid grid-cols-1 gap-2 text-xs">
           <div className="flex items-center justify-between p-2 rounded bg-[#E5E9F2]">
-            <span className="text-[#6B6969]">Kern (Hard Skills)</span>
+            <span className="text-[#6B6969]">{t('atsScoreSidebar.core')}</span>
             <span className={cn('font-medium', getScoreColor(analysis.matchAnalysis.categoryScores.core))}>
               {Math.round(analysis.matchAnalysis.categoryScores.core)}%
             </span>
@@ -197,7 +199,9 @@ export function ATSScoreSidebar({
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-success" />
-                <span className="text-sm font-medium">Gefundene Keywords ({analysis.matchedKeywords.length})</span>
+                <span className="text-sm font-medium">
+                  {t('atsScoreSidebar.matchedKeywords', { count: analysis.matchedKeywords.length })}
+                </span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {analysis.matchedKeywords.map((kw, idx) => (
@@ -212,7 +216,9 @@ export function ATSScoreSidebar({
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
                 <XCircle className="h-4 w-4 text-destructive" />
-                <span className="text-sm font-medium">Fehlende Keywords ({analysis.missingKeywords.length})</span>
+                <span className="text-sm font-medium">
+                  {t('atsScoreSidebar.missingKeywords', { count: analysis.missingKeywords.length })}
+                </span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {analysis.missingKeywords.map((kw, idx) => (
@@ -220,7 +226,7 @@ export function ATSScoreSidebar({
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Füge diese Schlüsselbegriffe in deinen Lebenslauf ein, um deine Bewertung zu verbessern
+                {t('atsScoreSidebar.missingHint')}
               </p>
             </div>
           )}
@@ -228,7 +234,7 @@ export function ATSScoreSidebar({
 
         {/* Matched Count */}
         <div className="flex items-center justify-between text-xs pt-2 border-t">
-          <span className="text-muted-foreground">Gefundene Keywords</span>
+          <span className="text-muted-foreground">{t('atsScoreSidebar.matchedLabel')}</span>
           <Badge variant="secondary" className="text-xs">
             <CheckCircle2 className="h-3 w-3 mr-1 text-success" />
             {analysis.matchedKeywords.length} / {analysis.matchedKeywords.length + analysis.missingKeywords.length}
@@ -240,7 +246,7 @@ export function ATSScoreSidebar({
           <div className="text-xs p-2 rounded bg-[#FEF3C7] text-[#EAB308] flex items-start gap-2">
             <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>
-              Ausbaufähiger Score. Ergänze die fehlenden Keywords in deinem Profil.
+              {t('atsScoreSidebar.lowScore')}
             </span>
           </div>
         )}
@@ -250,7 +256,7 @@ export function ATSScoreSidebar({
           <div className="text-xs p-2 rounded bg-[#D1FADF] text-[#16A34A] flex items-start gap-2">
             <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>
-              Ausgezeichnete Übereinstimmung! Dein Profil passt sehr gut.
+              {t('atsScoreSidebar.goodScore')}
             </span>
           </div>
         )}

@@ -1,18 +1,22 @@
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { toastError } from '@/lib/toast';
+import { pick } from '@/lib/i18n-runtime';
 import type { ExtractedProfile } from '@/types';
+import { useTranslations } from 'next-intl';
 
 /**
  * Hook to parse a resume file and extract profile data
  * Rate limited to 10 uploads per hour
  */
 export function useParseResume() {
+  const t = useTranslations('profile');
+
   return useMutation({
     mutationFn: (file: File) => api.profile.parseResume(file),
 
     onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Analysieren des Lebenslaufs');
+      toastError(error, t('hooks.parseError'));
     },
   });
 }
@@ -31,19 +35,31 @@ export type ImportableSection =
   | 'languages';
 
 /**
- * Get section label in German
+ * Get localized section label
  */
 export function getSectionLabel(section: ImportableSection): string {
-  const labels: Record<ImportableSection, string> = {
-    personal: 'Persönliche Daten',
-    summary: 'Zusammenfassung',
-    skills: 'Fähigkeiten',
-    experiences: 'Berufserfahrung',
-    education: 'Bildung',
-    certificates: 'Zertifikate',
-    projects: 'Projekte',
-    languages: 'Sprachen',
-  };
+  const labels = pick<Record<ImportableSection, string>>({
+    de: {
+      personal: 'Pers\u00f6nliche Da' + 'ten',
+      summary: 'Zusammenfassung',
+      skills: 'F\u00e4higkeiten',
+      experiences: 'Berufs' + 'erfahrung',
+      education: 'Bil' + 'dung',
+      certificates: 'Zertifikate',
+      projects: 'Projekte',
+      languages: 'Spra' + 'chen',
+    },
+    en: {
+      personal: 'Personal details',
+      summary: 'Summary',
+      skills: 'Skills',
+      experiences: 'Work experience',
+      education: 'Education',
+      certificates: 'Certificates',
+      projects: 'Projects',
+      languages: 'Languages',
+    },
+  });
   return labels[section];
 }
 

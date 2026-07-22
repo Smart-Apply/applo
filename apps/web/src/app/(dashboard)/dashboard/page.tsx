@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProfile } from '@/hooks/use-profile';
 import { api } from '@/lib/api-client';
@@ -35,9 +36,11 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { formatDateSmart } from '@/lib/format-date';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const t = useTranslations('dashboard');
   const { user } = useAuthStore();
   const { data: profile, isLoading: isProfileLoading } = useProfile();
   const [applications, setApplications] = useState<Application[]>([]);
@@ -115,12 +118,12 @@ export default function DashboardPage() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Guten Morgen';
-    if (hour < 18) return 'Guten Tag';
-    return 'Guten Abend';
+    if (hour < 12) return t('page.greeting.morning');
+    if (hour < 18) return t('page.greeting.day');
+    return t('page.greeting.evening');
   };
 
-  const monthLabel = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(new Date());
+  const monthLabel = new Intl.DateTimeFormat(getIntlLocale(), { month: 'long', year: 'numeric' }).format(new Date());
 
   if (isLoading) {
     return (
@@ -136,19 +139,20 @@ export default function DashboardPage() {
       <div
         className="bg-brand-glow relative cursor-pointer overflow-hidden rounded-[4px] p-7 sm:p-9"
         onClick={replayFlyIn}
-        title="Klicken für Applos Anflug"
+        title={t('page.heroReplayTitle')}
       >
         <div className="relative z-10">
           <p className="font-mono text-[11.5px] font-medium uppercase tracking-[.14em] text-brand">
-            Dashboard · {monthLabel}
+            {t('page.eyebrow', { month: monthLabel })}
           </p>
           <h1 className="font-heading mt-3 text-[clamp(28px,3.4vw,38px)] font-extrabold tracking-[-.03em] text-white">
-            {getGreeting()}, {user?.firstName || 'Nutzer'}!
+            {t('page.welcome', { greeting: getGreeting(), name: user?.firstName || t('page.fallbackUser') })}
           </h1>
           <p className="mt-2.5 max-w-[600px] text-base leading-relaxed text-[rgba(229,233,242,.75)]">
-            Überblick über deine aktuellen Bewerbungen. Du hast{' '}
-            <span className="font-bold text-white">{stats.active}</span>{' '}
-            aktive Bewerbungen am Laufen.
+            {t.rich('page.summary', {
+              count: stats.active,
+              strong: (chunks) => <span className="font-bold text-white">{chunks}</span>,
+            })}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
@@ -159,7 +163,7 @@ export default function DashboardPage() {
               }}
             >
               <Plus className="mr-1 h-4 w-4" />
-              Neue Bewerbung
+              {t('page.actions.newApplication')}
             </Button>
             <Button
               variant="outline"
@@ -170,7 +174,7 @@ export default function DashboardPage() {
               }}
             >
               <Briefcase className="mr-1 h-4 w-4" />
-              Jobs finden
+              {t('page.actions.findJobs')}
             </Button>
           </div>
         </div>
@@ -189,10 +193,10 @@ export default function DashboardPage() {
 
       {/* Stats — hairline 1px grid, mono numbers */}
       <HairlineGrid className="grid-cols-2 lg:grid-cols-4">
-        <StatsCard title="Gesamt" value={stats.total} icon={FileText} />
-        <StatsCard title="Aktiv" value={stats.active} icon={Clock} />
-        <StatsCard title="Interviews" value={stats.interviews} icon={Calendar} />
-        <StatsCard title="Angebote" value={stats.offers} icon={CheckCircle} />
+        <StatsCard title={t('page.stats.total')} value={stats.total} icon={FileText} />
+        <StatsCard title={t('page.stats.active')} value={stats.active} icon={Clock} />
+        <StatsCard title={t('page.stats.interviews')} value={stats.interviews} icon={Calendar} />
+        <StatsCard title={t('page.stats.offers')} value={stats.offers} icon={CheckCircle} />
       </HairlineGrid>
 
       {/* grid-cols-1 (minmax(0,1fr)) is required: without it the implicit
@@ -205,8 +209,8 @@ export default function DashboardPage() {
           <Card className="gap-0 overflow-hidden py-0">
             <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b px-5 py-5">
               <div>
-                <CardTitle className="font-heading text-lg font-bold tracking-[-.01em]">Aktuelle Bewerbungen</CardTitle>
-                <CardDescription className="mt-0.5 text-[13px]">Deine zuletzt bearbeiteten Bewerbungen</CardDescription>
+                <CardTitle className="font-heading text-lg font-bold tracking-[-.01em]">{t('page.recent.title')}</CardTitle>
+                <CardDescription className="mt-0.5 text-[13px]">{t('page.recent.description')}</CardDescription>
               </div>
               <Button
                 variant="outline"
@@ -214,17 +218,17 @@ export default function DashboardPage() {
                 className="rounded-[3px] text-[13px] font-semibold"
                 onClick={() => router.push('/applications')}
               >
-                Alle anzeigen <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                {t('page.recent.showAll')} <ArrowRight className="ml-1 h-3.5 w-3.5" />
               </Button>
             </CardHeader>
             <CardContent className="p-0">
               {applications.length === 0 ? (
                 <EmptyState
                   icon={FileText}
-                  title="Keine Bewerbungen"
-                  description="Du hast noch keine Bewerbungen angelegt. Erstelle deine erste Bewerbung in nur 2 Schritten!"
+                  title={t('page.recent.emptyTitle')}
+                  description={t('page.recent.emptyDescription')}
                   action={{
-                    label: 'Erste Bewerbung erstellen',
+                    label: t('page.recent.emptyAction'),
                     onClick: () => router.push('/applications/new'),
                   }}
                 />
@@ -232,7 +236,7 @@ export default function DashboardPage() {
                 <>
                   <div className="grid grid-cols-[24px_1fr] border-b bg-muted/50 px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-muted-foreground/70">
                     <span>#</span>
-                    <span>Position / Firma</span>
+                    <span>{t('page.recent.positionCompany')}</span>
                   </div>
                   <div>
                     {applications.slice(0, 5).map((app, i) => {
@@ -248,10 +252,10 @@ export default function DashboardPage() {
                             </span>
                             <div className="min-w-0">
                               <h4 className="truncate text-[15px] font-semibold text-foreground">
-                                {app.title || 'Unbenannte Bewerbung'}
+                                {app.title || t('page.recent.untitledApplication')}
                               </h4>
                               <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
-                                {app.jobPosting?.company || app.jobPosting?.location || 'Keine Details'}
+                                {app.jobPosting?.company || app.jobPosting?.location || t('page.recent.noDetails')}
                               </p>
                               <StatusChip tone={chip.tone} className="mt-1.5 sm:hidden">
                                 {chip.label}
@@ -264,7 +268,7 @@ export default function DashboardPage() {
                               {chip.label}
                             </StatusChip>
                             <div className="hidden min-w-[72px] text-right sm:block">
-                              <SectionLabel className="text-[9.5px] tracking-[.1em] text-muted-foreground/70">Aktualisiert</SectionLabel>
+                              <SectionLabel className="text-[9.5px] tracking-[.1em] text-muted-foreground/70">{t('page.recent.updated')}</SectionLabel>
                               <p className="mt-0.5 text-[12.5px] font-medium text-foreground">
                                 {formatDateSmart(app.updatedAt)}
                               </p>
@@ -293,8 +297,8 @@ export default function DashboardPage() {
           {/* Profile Completion */}
           <Card className="gap-0 py-0">
             <CardHeader className="border-b px-5 py-4">
-              <CardTitle className="font-heading text-base font-bold">Profilstatus</CardTitle>
-              <CardDescription className="text-[13px]">Vervollständige dein Profil</CardDescription>
+              <CardTitle className="font-heading text-base font-bold">{t('page.profile.title')}</CardTitle>
+              <CardDescription className="text-[13px]">{t('page.profile.description')}</CardDescription>
             </CardHeader>
             <CardContent className="p-5">
               {isProfileLoading ? (
@@ -309,7 +313,7 @@ export default function DashboardPage() {
                       <span className="text-base text-muted-foreground/70">%</span>
                     </span>
                     <span className="font-mono text-[11px] uppercase tracking-[.08em] text-brand">
-                      {profileStrength.score === 100 ? 'Perfekt!' : 'Fast geschafft'}
+                      {profileStrength.score === 100 ? t('page.profile.perfect') : t('page.profile.almostDone')}
                     </span>
                   </div>
                   <div className="h-2 w-full overflow-hidden bg-primary-soft dark:bg-slate-700">
@@ -343,7 +347,7 @@ export default function DashboardPage() {
                     className="mt-1.5 w-full rounded-[3px] border-primary font-semibold hover:bg-primary-soft"
                     onClick={() => router.push('/profile')}
                   >
-                    Profil bearbeiten
+                    {t('page.profile.edit')}
                   </Button>
                 </div>
               )}
@@ -355,9 +359,9 @@ export default function DashboardPage() {
             <CardHeader className="border-b px-5 py-4">
               <CardTitle className="font-heading flex items-center gap-2 text-base font-bold">
                 <Zap className="h-4 w-4 text-brand" />
-                Kontingent
+                {t('page.usage.title')}
               </CardTitle>
-              <CardDescription className="text-[13px]">Dein monatliches Kontingent</CardDescription>
+              <CardDescription className="text-[13px]">{t('page.usage.description')}</CardDescription>
             </CardHeader>
             <CardContent className="p-5">
               <UsageSummary showPeriod />
@@ -369,16 +373,16 @@ export default function DashboardPage() {
             <CardHeader className="border-b px-5 py-4">
               <CardTitle className="font-heading flex items-center gap-2 text-base font-bold">
                 <TrendingUp className="h-4 w-4 text-brand" />
-                Markttrends
+                {t('page.trends.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5">
               <div className="border-l-[3px] border-brand bg-muted px-4 py-3.5">
                 <p className="text-[13.5px] leading-relaxed text-foreground">
                   <span className="mb-1 block font-mono text-[11px] font-semibold uppercase tracking-[.08em] text-brand">
-                    Tipp
+                    {t('page.trends.tipLabel')}
                   </span>
-                  Pflegekräfte und Projektmanager werden aktuell stark gesucht. Aktualisiere deine Fähigkeiten!
+                  {t('page.trends.tip')}
                 </p>
               </div>
             </CardContent>

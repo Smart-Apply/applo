@@ -1,1 +1,105 @@
-{}
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "profile": "Profil",
+    "applications": "Bewerbungen",
+    "applicationCheck": "Bewerbungs-Check",
+    "analytics": "Analytics",
+    "interviewCoach": "Interview-Coach",
+    "settings": "Einstellungen",
+    "start": "Start",
+    "menu": "Menu",
+    "mainNavigation": "Hauptnavigation",
+    "openMore": "Weitere Menüpunkte öffnen",
+    "more": "Mehr",
+    "openMenu": "Menü öffnen",
+    "mainMenu": "Hauptmenü",
+    "sheetDescription": "Navigation des Applo Dashboards.",
+    "upgradeTitle": "Upgrade jetzt zu Premium",
+    "upgradeDescription": "{feature} ist nur für Premium-Mitglieder verfügbar."
+  },
+  "page": {
+    "loading": "Laden...",
+    "oauthFinishing": "Anmeldung wird abgeschlossen...",
+    "greeting": {
+      "morning": "Guten Morgen",
+      "day": "Guten Tag",
+      "evening": "Guten Abend"
+    },
+    "heroReplayTitle": "Klicken für Applos Anflug",
+    "eyebrow": "Dashboard · {month}",
+    "welcome": "{greeting}, {name}!",
+    "fallbackUser": "Nutzer",
+    "summary": "Überblick über deine aktuellen Bewerbungen. Du hast <strong>{count}</strong> aktive Bewerbungen am Laufen.",
+    "actions": {
+      "newApplication": "Neue Bewerbung",
+      "findJobs": "Jobs finden"
+    },
+    "stats": {
+      "total": "Gesamt",
+      "active": "Aktiv",
+      "interviews": "Interviews",
+      "offers": "Angebote"
+    },
+    "recent": {
+      "title": "Aktuelle Bewerbungen",
+      "description": "Deine zuletzt bearbeiteten Bewerbungen",
+      "showAll": "Alle anzeigen",
+      "emptyTitle": "Keine Bewerbungen",
+      "emptyDescription": "Du hast noch keine Bewerbungen angelegt. Erstelle deine erste Bewerbung in nur 2 Schritten!",
+      "emptyAction": "Erste Bewerbung erstellen",
+      "positionCompany": "Position / Firma",
+      "untitledApplication": "Unbenannte Bewerbung",
+      "noDetails": "Keine Details",
+      "updated": "Aktualisiert"
+    },
+    "profile": {
+      "title": "Profilstatus",
+      "description": "Vervollständige dein Profil",
+      "perfect": "Perfekt!",
+      "almostDone": "Fast geschafft",
+      "edit": "Profil bearbeiten"
+    },
+    "usage": {
+      "title": "Kontingent",
+      "description": "Dein monatliches Kontingent"
+    },
+    "trends": {
+      "title": "Markttrends",
+      "tipLabel": "Tipp",
+      "tip": "Pflegekräfte und Projektmanager werden aktuell stark gesucht. Aktualisiere deine Fähigkeiten!"
+    }
+  },
+  "guide": {
+    "steps": {
+      "add": {
+        "eyebrow": "Schritt 1 von 3",
+        "message": "Hi, ich bin <b>Applo</b>! Füge eine Stellenanzeige per Link oder Text ein – den Rest übernehme ich."
+      },
+      "config": {
+        "eyebrow": "Schritt 2 von 3",
+        "message": "Stark! Jetzt stellen wir <b>Sprache, Anschreiben & Design</b> ein. Fahr über eine Vorlage für die Vorschau."
+      },
+      "loading": {
+        "eyebrow": "Schritt 3 von 3",
+        "message": "Ich <b>analysiere die Stelle</b> und schreibe deine Dokumente. Das dauert nur einen kleinen Moment …"
+      },
+      "finishing": {
+        "eyebrow": "Schritt 3 von 3",
+        "message": "Geschafft! Deine Bewerbung ist <b>fertig</b> – gleich geht's weiter …"
+      },
+      "done": {
+        "eyebrow": "Fertig",
+        "message": "Deine Bewerbung ist <b>fertig</b>! Schau sie dir an und lade sie direkt herunter."
+      }
+    }
+  },
+  "promptUsage": {
+    "chars": "Zeichen: {count} / {max}",
+    "tokens": "Tokens: {count} / {max}",
+    "charsOver": "{count} Zeichen",
+    "tokensOver": "{count} Tokens",
+    "joiner": " bzw. ",
+    "tooLong": "Eingabe zu lang. Bitte kürze um {overage}."
+  }
+}

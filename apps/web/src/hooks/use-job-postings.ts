@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { toastSuccess, toastError } from '@/lib/toast';
 import type { JobPosting } from '@/types';
+import { useTranslations } from 'next-intl';
 
 /**
  * Hook to fetch all job postings
@@ -39,6 +40,7 @@ export function useJobPosting(id: string) {
  */
 export function useCreateJobPosting() {
   const queryClient = useQueryClient();
+  const t = useTranslations('jobs');
 
   return useMutation({
     mutationFn: (data: {
@@ -82,7 +84,7 @@ export function useCreateJobPosting() {
       if (context?.previousJobPostings) {
         queryClient.setQueryData(['job-postings'], context.previousJobPostings);
       }
-      toastError(error, 'Fehler beim Erstellen der Stellenanzeige');
+      toastError(error, t('hooks.createError'));
     },
     
     // Replace temp ID with real data on success
@@ -93,7 +95,7 @@ export function useCreateJobPosting() {
           jp.id.startsWith('temp-') ? newJobPosting : jp
         );
       });
-      toastSuccess('Stellenanzeige erfolgreich erstellt');
+      toastSuccess(t('hooks.createSuccess'));
     },
     
     // Always refetch after mutation for data consistency
@@ -108,6 +110,7 @@ export function useCreateJobPosting() {
  */
 export function useParseJobPosting() {
   const queryClient = useQueryClient();
+  const t = useTranslations('jobs');
 
   return useMutation({
     mutationFn: (data: { text?: string; url?: string; fileId?: string }) =>
@@ -125,8 +128,8 @@ export function useParseJobPosting() {
       queryClient.setQueryData(['job-postings'], (old: JobPosting[] | undefined) => {
         const tempJobPosting: JobPosting = {
           id: 'temp-' + Date.now(),
-          title: parseData.url ? 'Lädt...' : 'Wird analysiert...',
-          company: parseData.url || 'Unbekannt',
+          title: parseData.url ? t('hooks.loadingTitle') : t('hooks.analyzingTitle'),
+          company: parseData.url || t('hooks.unknownCompany'),
           description: parseData.text || '',
           sourceUrl: parseData.url,
           createdAt: new Date().toISOString(),
@@ -144,7 +147,7 @@ export function useParseJobPosting() {
       if (context?.previousJobPostings) {
         queryClient.setQueryData(['job-postings'], context.previousJobPostings);
       }
-      toastError(error, 'Fehler beim Analysieren der Stellenanzeige');
+      toastError(error, t('hooks.parseError'));
     },
     
     // Replace temp ID with real data on success
@@ -155,7 +158,7 @@ export function useParseJobPosting() {
           jp.id.startsWith('temp-') ? parsedJobPosting : jp
         );
       });
-      toastSuccess('Stellenanzeige erfolgreich analysiert');
+      toastSuccess(t('hooks.parseSuccess'));
     },
     
     // Always refetch after mutation for data consistency
@@ -170,6 +173,7 @@ export function useParseJobPosting() {
  */
 export function useDeleteJobPosting() {
   const queryClient = useQueryClient();
+  const t = useTranslations('jobs');
 
   return useMutation({
     mutationFn: (id: string) => api.jobPostings.delete(id),
@@ -205,12 +209,12 @@ export function useDeleteJobPosting() {
       if (context?.previousJobPosting && context?.deletedId) {
         queryClient.setQueryData(['job-postings', context.deletedId], context.previousJobPosting);
       }
-      toastError(error, 'Fehler beim Löschen der Stellenanzeige');
+      toastError(error, t('hooks.deleteError'));
     },
     
     // Show success message
     onSuccess: () => {
-      toastSuccess('Stellenanzeige erfolgreich gelöscht');
+      toastSuccess(t('hooks.deleteSuccess'));
     },
     
     // Always refetch after mutation for data consistency

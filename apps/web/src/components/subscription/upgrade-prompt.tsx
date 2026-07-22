@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -51,9 +52,10 @@ export function UpgradePrompt({
   variant = 'default',
 }: UpgradePromptProps) {
   const router = useRouter();
+  const t = useTranslations('subscription');
 
   const tierLabel = requiredTier === 'PREMIUM' ? 'Premium' : 'Premium+';
-  const defaultCta = `Upgrade auf ${tierLabel}`;
+  const defaultCta = t('upgradePrompt.defaultCta', { tier: tierLabel });
 
   const handleUpgrade = () => {
     router.push('/#pricing');
@@ -70,12 +72,12 @@ export function UpgradePrompt({
       >
         <Lock className="h-4 w-4 text-[#A16207] dark:text-amber-400" />
         <span>
-          {feature} benötigt {tierLabel}.{' '}
+          {t('upgradePrompt.inlineNeeds', { feature, tier: tierLabel })}{' '}
           <button
             onClick={handleUpgrade}
             className="text-primary hover:underline font-medium"
           >
-            Jetzt upgraden
+            {t('upgradePrompt.upgradeNow')}
           </button>
         </span>
       </div>
@@ -98,7 +100,7 @@ export function UpgradePrompt({
           <div>
             <p className="font-medium text-foreground">{feature}</p>
             <p className="text-sm text-muted-foreground">
-              Nur mit {tierLabel} verfügbar
+              {t('upgradePrompt.onlyWithTier', { tier: tierLabel })}
             </p>
           </div>
         </div>
@@ -137,11 +139,11 @@ export function UpgradePrompt({
               <p className="text-muted-foreground">{description}</p>
             )}
             <p className="text-sm text-muted-foreground">
-              Dieses Feature ist nur mit{' '}
+              {t('upgradePrompt.onlyWithTierPrefix')}{' '}
               <span className="font-medium text-[#A16207] dark:text-amber-400">
                 {tierLabel}
               </span>{' '}
-              verfügbar.
+              {t('upgradePrompt.onlyWithTierSuffix')}
             </p>
           </div>
 
@@ -177,8 +179,9 @@ export function LimitReachedPrompt({
   className,
 }: LimitReachedPromptProps) {
   const router = useRouter();
+  const t = useTranslations('subscription');
 
-  const actionLabel = action === 'application' ? 'Bewerbungen' : 'Interview-Sessions';
+  const actionLabel = action === 'application' ? t('limit.actions.applications') : t('limit.actions.interviews');
 
   return (
     <Card
@@ -195,16 +198,15 @@ export function LimitReachedPrompt({
           <div className="flex-1 space-y-3">
             <div>
               <h3 className="font-semibold text-foreground">
-                Monatliches Limit erreicht
+                {t('limit.title')}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Du hast {used} von {limit} {actionLabel} diesen Monat verwendet.
-                Upgrade für mehr Kapazität.
+                {t('limit.description', { used, limit, action: actionLabel })}
               </p>
             </div>
             <Button onClick={() => router.push('/#pricing')} size="sm">
               <Sparkles className="mr-2 h-4 w-4" />
-              Jetzt upgraden
+              {t('upgradePrompt.upgradeNow')}
             </Button>
           </div>
         </div>

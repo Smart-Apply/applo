@@ -15,6 +15,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Target,
   FileText,
@@ -35,14 +36,14 @@ import type { ResumeDesign } from '@/components/applications/editable-resume';
 import type { ResumeData, KeywordMatch, KeywordCategory } from '@/types';
 
 const CATEGORY_LABEL: Record<KeywordCategory, string> = {
-  core: 'Kernkompetenz',
-  soft: 'Soft Skill',
-  responsibility: 'Aufgabe',
-  requirement: 'Anforderung',
-  methodology: 'Methodik / Tool',
-  industry: 'Branche',
-  seniority: 'Level',
-  misc: 'Sonstiges',
+  core: 'atsOptimizer.categoryLabels.core',
+  soft: 'atsOptimizer.categoryLabels.soft',
+  responsibility: 'atsOptimizer.categoryLabels.responsibility',
+  requirement: 'atsOptimizer.categoryLabels.requirement',
+  methodology: 'atsOptimizer.categoryLabels.methodology',
+  industry: 'atsOptimizer.categoryLabels.industry',
+  seniority: 'atsOptimizer.categoryLabels.seniority',
+  misc: 'atsOptimizer.categoryLabels.misc',
 };
 
 type Tone = 'green' | 'amber' | 'red';
@@ -86,6 +87,7 @@ function hl(text: string, terms: string[]): React.ReactNode {
 }
 
 function ScoreRing({ value, size = 124 }: { value: number; size?: number }) {
+  const t = useTranslations('applications');
   const sw = 11;
   const R = (size - sw) / 2;
   const C = 2 * Math.PI * R;
@@ -123,7 +125,7 @@ function ScoreRing({ value, size = 124 }: { value: number; size?: number }) {
               marginTop: 3,
             }}
           >
-            Match
+            {t('atsOptimizer.match')}
           </div>
         </div>
       </div>
@@ -145,6 +147,7 @@ function CvOptiView({
   foundTerms: string[];
   addedTerms: string[];
 }) {
+  const t = useTranslations('applications');
   const isHl = (s: string) =>
     foundTerms.some((f) => f.toLowerCase() === s.toLowerCase()) ||
     addedTerms.some((f) => f.toLowerCase() === s.toLowerCase());
@@ -179,13 +182,13 @@ function CvOptiView({
   );
 
   const profileSec = resume.summary
-    ? sec('Profil', <p className="rd-p">{hl(htmlToText(resume.summary), foundTerms)}</p>)
+    ? sec(t('atsOptimizer.preview.profile'), <p className="rd-p">{hl(htmlToText(resume.summary), foundTerms)}</p>)
     : null;
 
   const experienceSec =
     experiences.length > 0
       ? sec(
-          'Berufserfahrung',
+          t('atsOptimizer.preview.experience'),
           experiences.map((x, i) => (
             <div className="rd-item" key={i}>
               <div className="rd-item-top">
@@ -202,7 +205,7 @@ function CvOptiView({
   const educationSec =
     education.length > 0
       ? sec(
-          'Ausbildung',
+          t('atsOptimizer.preview.education'),
           education.map((e, i) => (
             <div className="rd-item" key={i}>
               <div className="rd-item-top">
@@ -218,7 +221,7 @@ function CvOptiView({
   const projectsSec =
     projects.length > 0
       ? sec(
-          'Projekte',
+          t('atsOptimizer.preview.projects'),
           projects.map((p, i) => (
             <div className="rd-item" key={i}>
               <div className="rd-item-top">
@@ -234,12 +237,12 @@ function CvOptiView({
   const skillsSec =
     allSkills.length > 0
       ? sec(
-          'Fähigkeiten',
+          t('atsOptimizer.preview.skills'),
           <div className="rd-skills">
             {allSkills.map((s, i) => (
               <span key={i} className={cn('rd-skill', isHl(s) && 'hl', isNew(s) && 'new')}>
                 {s}
-                {isNew(s) && <span className="neu">NEU</span>}
+                {isNew(s) && <span className="neu">{t('atsOptimizer.preview.new')}</span>}
               </span>
             ))}
           </div>,
@@ -249,7 +252,7 @@ function CvOptiView({
   const languagesSec =
     languages.length > 0
       ? sec(
-          'Sprachen',
+          t('atsOptimizer.preview.languages'),
           <div className="rd-skills">
             {languages.map((l, i) => (
               <span key={i} className="rd-skill">
@@ -263,7 +266,7 @@ function CvOptiView({
   const certsSec =
     certifications.length > 0
       ? sec(
-          'Zertifikate',
+          t('atsOptimizer.preview.certificates'),
           certifications.map((c, i) => (
             <div className="rd-item" key={i}>
               <div className="rd-item-top">
@@ -288,7 +291,7 @@ function CvOptiView({
           <aside className="rd-aside" style={{ background: sidebarTint }}>
             <div className="rd-sec">
               <div className="rd-sec-title" style={{ color: accent }}>
-                Kontakt
+                {t('atsOptimizer.preview.contact')}
               </div>
               {resume.fullAddress && <div className="rd-contact-item">{resume.fullAddress}</div>}
               {resume.phone && <div className="rd-contact-item">{resume.phone}</div>}
@@ -370,6 +373,7 @@ export function AtsOptimizer({
   onExport,
   exportDisabled,
 }: AtsOptimizerProps) {
+  const t = useTranslations('applications');
   const { data: analysis, isLoading, error, refetch } = useKeywordsAnalysis(applicationId);
   const analyzeKeywords = useAnalyzeKeywords(applicationId);
 
@@ -395,18 +399,18 @@ export function AtsOptimizer({
     return (
       <div className="mx-auto max-w-md border border-dashed border-border bg-card/40 p-10 text-center">
         <Sparkles className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-        <p className="mb-1 text-sm font-semibold">ATS-Analyse starten</p>
+        <p className="mb-1 text-sm font-semibold">{t('atsOptimizer.startTitle')}</p>
         <p className="mb-4 text-xs text-muted-foreground">
-          Finde heraus, welche Begriffe aus der Stelle in deinem Lebenslauf fehlen.
+          {t('atsOptimizer.startDescription')}
         </p>
         <Button size="sm" onClick={reanalyze} disabled={analyzeKeywords.isPending}>
           {analyzeKeywords.isPending ? (
             <>
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Analysiere…
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" /> {t('atsOptimizer.analyzing')}
             </>
           ) : (
             <>
-              <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Analysieren
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" /> {t('atsOptimizer.analyze')}
             </>
           )}
         </Button>
@@ -449,14 +453,14 @@ export function AtsOptimizer({
         <div className="opti-pane-head">
           <div>
             <div className="t">
-              <FileText className="h-[18px] w-[18px]" /> Dein Lebenslauf
+              <FileText className="h-[18px] w-[18px]" /> {t('atsOptimizer.resumeTitle')}
             </div>
             <div className="sub">
-              <span className="hl-legend" /> blau = von der Stelle erkannte Begriffe
+              <span className="hl-legend" /> {t('atsOptimizer.legend')}
             </div>
           </div>
           <span className="inline-flex items-center gap-1.5 border border-[#e0e0e0] bg-white px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-medium tracking-[0.08em] text-[#5581c7] uppercase">
-            <Eye className="h-3.5 w-3.5" /> Live-Vorschau
+            <Eye className="h-3.5 w-3.5" /> {t('atsOptimizer.livePreview')}
           </span>
         </div>
         <div className="opti-body" style={{ background: 'var(--surface-2)' }}>
@@ -469,9 +473,9 @@ export function AtsOptimizer({
         <div className="opti-pane-head">
           <div>
             <div className="t">
-              <Target className="h-[18px] w-[18px]" /> ATS-Optimierung
+              <Target className="h-[18px] w-[18px]" /> {t('atsOptimizer.title')}
             </div>
-            <div className="sub">So kommt dein Lebenslauf durch die Bewerber-Filter</div>
+            <div className="sub">{t('atsOptimizer.subtitle')}</div>
           </div>
           <Button
             variant="outline"
@@ -481,7 +485,7 @@ export function AtsOptimizer({
             className="h-8 rounded-none border-[#1b2a49] bg-white px-2 text-xs text-[#1b2a49] hover:bg-[#e5e9f2]"
           >
             <RefreshCw className={cn('mr-1.5 h-3.5 w-3.5', reAnalyzing && 'animate-spin')} />
-            Neu analysieren
+            {t('atsOptimizer.reanalyze')}
           </Button>
         </div>
 
@@ -498,23 +502,30 @@ export function AtsOptimizer({
               <div className="msg">
                 {done ? (
                   <>
-                    Perfekt! Dein Lebenslauf enthält jetzt <b>alle wichtigen Begriffe</b> – du bist
-                    ATS-bereit. 🎉
+                    {t.rich('atsOptimizer.coach.done', {
+                      b: (chunks) => <b>{chunks}</b>,
+                    })}
                   </>
                 ) : allAddedPending ? (
                   <>
-                    Stark! Du hast alle Begriffe ergänzt. Klicke <b>Neu analysieren</b>, um deinen
-                    Score zu aktualisieren.
+                    {t.rich('atsOptimizer.coach.pending', {
+                      b: (chunks) => <b>{chunks}</b>,
+                    })}
                   </>
                 ) : added.length > 0 ? (
                   <>
-                    Weiter so! Noch <b>{remaining.length} Begriff{remaining.length > 1 ? 'e' : ''}</b>,
-                    dann hast du alle übernommen.
+                    {t.rich('atsOptimizer.coach.remaining', {
+                      count: remaining.length,
+                      b: (chunks) => <b>{chunks}</b>,
+                    })}
                   </>
                 ) : (
                   <>
-                    Dein Lebenslauf passt zu <b>{Math.round(score)}%</b> auf diese Stelle. Übernimm die{' '}
-                    <b>{remaining.length} fehlenden Begriffe</b>, um besser durch die Filter zu kommen.
+                    {t.rich('atsOptimizer.coach.initial', {
+                      score: Math.round(score),
+                      count: remaining.length,
+                      b: (chunks) => <b>{chunks}</b>,
+                    })}
                   </>
                 )}
               </div>
@@ -525,16 +536,16 @@ export function AtsOptimizer({
           <div className="ats-explain">
             <Lightbulb className="h-4 w-4" />
             <span>
-              <b>Was ist das?</b> Firmen filtern Bewerbungen mit einer Software (ATS) nach Begriffen
-              aus der Stelle. Je mehr passende Begriffe dein Lebenslauf enthält, desto eher landest
-              du im Interview.
+              {t.rich('atsOptimizer.explanation', {
+                b: (chunks) => <b>{chunks}</b>,
+              })}
             </span>
           </div>
 
           {/* coverage bar */}
           <div className="cov">
             <div className="barlbl">
-              <span>Schlüsselbegriffe abgedeckt</span>
+              <span>{t('atsOptimizer.coverageLabel')}</span>
               <span style={{ color: TONE_COLOR[tone(coverage)] }}>
                 {coveredCount} / {total}
               </span>
@@ -549,23 +560,23 @@ export function AtsOptimizer({
             <>
               <div className="miss-head">
                 <div className="h">
-                  <span className="dotbadge" style={{ background: 'var(--red)' }} /> Fehlende Begriffe (
-                  {remaining.length})
+                  <span className="dotbadge" style={{ background: 'var(--red)' }} />
+                  {t('atsOptimizer.missingTerms', { count: remaining.length })}
                 </div>
                 <Button variant="ghost" size="sm" onClick={addAll} className="h-8 px-2 text-xs">
-                  <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2.6} /> Alle übernehmen
+                  <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2.6} /> {t('atsOptimizer.addAll')}
                 </Button>
               </div>
               {remaining.map((m) => (
                 <div className="miss-card" key={m.keyword}>
                   <div className="info">
                     <div className="kwl">
-                      {m.keyword} <span className="impact">{CATEGORY_LABEL[m.category]}</span>
+                      {m.keyword} <span className="impact">{t(CATEGORY_LABEL[m.category])}</span>
                     </div>
-                    <div className="meta hint">wird zu deinen Fähigkeiten hinzugefügt</div>
+                    <div className="meta hint">{t('atsOptimizer.addedToSkillsHint')}</div>
                   </div>
                   <Button size="sm" onClick={() => add(m.keyword)} className="add-btn h-8 px-3 text-xs">
-                    <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2.8} /> Hinzufügen
+                    <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2.8} /> {t('atsOptimizer.add')}
                   </Button>
                 </div>
               ))}
@@ -579,11 +590,10 @@ export function AtsOptimizer({
               </span>
               <div>
                 <div className="t" style={{ color: 'var(--ink)' }}>
-                  Alle Begriffe ergänzt
+                  {t('atsOptimizer.allTermsAddedTitle')}
                 </div>
                 <div className="d">
-                  Sie stehen jetzt in deinem Lebenslauf. Klicke „Neu analysieren“, um den
-                  aktualisierten Score zu sehen.
+                  {t('atsOptimizer.allTermsAddedDescription')}
                 </div>
               </div>
             </div>
@@ -595,10 +605,9 @@ export function AtsOptimizer({
                 <Check className="h-[22px] w-[22px]" strokeWidth={3} />
               </span>
               <div>
-                <div className="t">Alle Begriffe übernommen</div>
+                <div className="t">{t('atsOptimizer.allTermsCoveredTitle')}</div>
                 <div className="d">
-                  Dein Lebenslauf ist optimal auf diese Stelle abgestimmt. Du kannst ihn jetzt
-                  exportieren.
+                  {t('atsOptimizer.allTermsCoveredDescription')}
                 </div>
               </div>
             </div>
@@ -607,8 +616,8 @@ export function AtsOptimizer({
           {/* already-covered keywords */}
           <div className="found-block">
             <div className="h">
-              <Check className="h-4 w-4" strokeWidth={2.6} style={{ color: 'var(--green)' }} /> Bereits
-              enthalten ({matched.length + pendingAdded.length})
+              <Check className="h-4 w-4" strokeWidth={2.6} style={{ color: 'var(--green)' }} />
+              {t('atsOptimizer.alreadyIncluded', { count: matched.length + pendingAdded.length })}
             </div>
             <div className="kw-wrap">
               {matched.map((k: KeywordMatch) => (
@@ -632,27 +641,30 @@ export function AtsOptimizer({
           <div className="foot-meta">
             {done ? (
               <span className="inline-flex items-center gap-1.5 font-bold" style={{ color: 'var(--green-ink)' }}>
-                <Check className="h-4 w-4" strokeWidth={3} /> ATS-bereit
+                <Check className="h-4 w-4" strokeWidth={3} /> {t('atsOptimizer.atsReady')}
               </span>
             ) : (
               <span className="text-muted-foreground">
-                <b className="text-foreground">{remaining.length}</b> Begriffe offen
+                {t.rich('atsOptimizer.openTerms', {
+                  count: remaining.length,
+                  b: (chunks) => <b className="text-foreground">{chunks}</b>,
+                })}
               </span>
             )}
           </div>
           {allAddedPending || done ? (
             done ? (
               <Button onClick={onExport} disabled={exportDisabled} className="rounded-none bg-[#1b2a49] text-white hover:bg-[#22345a]">
-                <Download className="mr-2 h-4 w-4" /> Lebenslauf exportieren
+                <Download className="mr-2 h-4 w-4" /> {t('atsOptimizer.exportResume')}
               </Button>
             ) : (
               <Button onClick={reanalyze} disabled={reAnalyzing} className="rounded-none bg-[#1b2a49] text-white hover:bg-[#22345a]">
-                <RefreshCw className={cn('mr-2 h-4 w-4', reAnalyzing && 'animate-spin')} /> Neu analysieren
+                <RefreshCw className={cn('mr-2 h-4 w-4', reAnalyzing && 'animate-spin')} /> {t('atsOptimizer.reanalyze')}
               </Button>
             )
           ) : (
             <Button onClick={addAll} className="rounded-none bg-[#1b2a49] text-white hover:bg-[#22345a]">
-              <Sparkles className="mr-2 h-4 w-4" /> Alle übernehmen
+              <Sparkles className="mr-2 h-4 w-4" /> {t('atsOptimizer.addAll')}
             </Button>
           )}
         </div>

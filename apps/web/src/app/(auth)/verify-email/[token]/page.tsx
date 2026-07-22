@@ -1,17 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { AppLogo } from '@/components/ui/app-logo';
 import { api } from '@/lib/api-client';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { useAuthStore } from '@/stores/auth-store';
 
 type VerificationStatus = 'loading' | 'success' | 'error';
 
 export default function VerifyEmailPage() {
+  const t = useTranslations('auth');
   const params = useParams();
   const token = params.token as string;
   const [status, setStatus] = useState<VerificationStatus>('loading');
@@ -36,12 +39,12 @@ export default function VerifyEmailPage() {
         const { ApiError } = await import('@/lib/errors');
         if (ApiError.isApiError(error)) {
           if (error.data?.code === 'INVALID_OR_EXPIRED_TOKEN') {
-            setErrorMessage('Der Verifizierungslink ist ungültig oder abgelaufen.');
+            setErrorMessage(t('verifyEmail.invalidTokenError'));
           } else {
-            setErrorMessage('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
+            setErrorMessage(t('verifyEmail.genericError'));
           }
         } else {
-          setErrorMessage('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
+          setErrorMessage(t('verifyEmail.genericError'));
         }
         setStatus('error');
       }
@@ -50,11 +53,14 @@ export default function VerifyEmailPage() {
     if (token) {
       verifyEmail();
     }
-  }, [token, updateUser]);
+  }, [token, updateUser, t]);
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+      <div className="relative flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+        <div className="absolute right-4 top-4 z-10">
+          <LanguageSwitcher variant="labeled" />
+        </div>
         <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
           <div className="mb-6 flex justify-center">
             <AppLogo className="h-12 w-auto" />
@@ -65,9 +71,9 @@ export default function VerifyEmailPage() {
               <Loader2 className="h-8 w-8 text-brand animate-spin" />
             </div>
             <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
-              E-Mail wird verifiziert...
+              {t('verifyEmail.loadingTitle')}
             </h1>
-            <p className="text-muted-foreground">Bitte warte einen Moment.</p>
+            <p className="text-muted-foreground">{t('verifyEmail.loadingDescription')}</p>
           </div>
         </div>
       </div>
@@ -76,7 +82,10 @@ export default function VerifyEmailPage() {
 
   if (status === 'success') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+      <div className="relative flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+        <div className="absolute right-4 top-4 z-10">
+          <LanguageSwitcher variant="labeled" />
+        </div>
         <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
           <div className="mb-6 flex justify-center">
             <AppLogo className="h-12 w-auto" />
@@ -87,20 +96,20 @@ export default function VerifyEmailPage() {
               <CheckCircle className="h-8 w-8 text-success" />
             </div>
             <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
-              E-Mail verifiziert!
+              {t('verifyEmail.successTitle')}
             </h1>
             <p className="mb-2 text-muted-foreground">
-              Deine E-Mail-Adresse wurde erfolgreich verifiziert.
+              {t('verifyEmail.successDescription')}
             </p>
             {email && (
               <p className="mb-6 text-sm font-medium text-foreground">{email}</p>
             )}
             <div className="flex gap-3">
               <Link href="/login">
-                <Button>Zur Anmeldung</Button>
+                <Button>{t('verifyEmail.toLogin')}</Button>
               </Link>
               <Link href="/dashboard">
-                <Button variant="outline">Zum Dashboard</Button>
+                <Button variant="outline">{t('verifyEmail.toDashboard')}</Button>
               </Link>
             </div>
           </div>
@@ -110,7 +119,10 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+    <div className="relative flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+      <div className="absolute right-4 top-4 z-10">
+        <LanguageSwitcher variant="labeled" />
+      </div>
       <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
         <div className="mb-6 flex justify-center">
           <AppLogo className="h-12 w-auto" />
@@ -121,12 +133,12 @@ export default function VerifyEmailPage() {
             <XCircle className="h-8 w-8 text-destructive" />
           </div>
           <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
-            Verifizierung fehlgeschlagen
+            {t('verifyEmail.errorTitle')}
           </h1>
           <p className="mb-6 text-muted-foreground">{errorMessage}</p>
           <div className="flex gap-3">
             <Link href="/login">
-              <Button variant="outline">Zur Anmeldung</Button>
+              <Button variant="outline">{t('verifyEmail.toLogin')}</Button>
             </Link>
           </div>
         </div>

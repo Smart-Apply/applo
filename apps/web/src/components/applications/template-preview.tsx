@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useMemo } from 'react';
 import Handlebars from 'handlebars';
+import { useTranslations } from 'next-intl';
 import { useTemplate, useResumeTemplates, useCoverLetterTemplates, getDefaultTemplate } from '@/hooks/use-templates';
 import type { ResumeData } from '@/types';
 import { Loader2 } from 'lucide-react';
@@ -740,6 +741,7 @@ interface CoverLetterTemplatePreviewProps {
  * If no templateId provided, loads and uses the default resume template.
  */
 export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: ResumeTemplatePreviewProps) {
+  const t = useTranslations('editor');
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
   // Load all resume templates to find the default if no templateId is provided
@@ -925,7 +927,7 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
     return (
       <div className="flex items-center justify-center h-64 bg-slate-50 rounded-lg">
         <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-        <span className="ml-2 text-sm text-slate-500">Vorlage wird geladen...</span>
+        <span className="ml-2 text-sm text-slate-500">{t('templatePreview.loadingTemplate')}</span>
       </div>
     );
   }
@@ -933,7 +935,7 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
   if (error || !template) {
     return (
       <div className="flex items-center justify-center h-64 rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10">
-        <p className="text-sm text-destructive">Vorlage konnte nicht geladen werden</p>
+        <p className="text-sm text-destructive">{t('templatePreview.loadFailed')}</p>
       </div>
     );
   }
@@ -944,15 +946,15 @@ export function ResumeTemplatePreview({ resume, templateId, language = 'en' }: R
     <div className="w-full rounded-lg border border-slate-200 bg-white shadow-sm flex flex-col">
       <div className="bg-slate-100 px-3 py-2 border-b border-slate-200 shrink-0">
         <p className="text-xs font-medium text-slate-600">
-          Vorlage: <span className="text-slate-900">{template.name}</span>
+          {t('templatePreview.templateLabel')} <span className="text-slate-900">{template.name}</span>
           <span className="ml-2 text-slate-400">({template.category})</span>
-          {isDefaultTemplate && <span className="ml-2 text-brand">(Standard)</span>}
+          {isDefaultTemplate && <span className="ml-2 text-brand">{t('templatePreview.defaultBadge')}</span>}
         </p>
       </div>
       <div className="flex-1 min-h-0">
         <iframe
           ref={iframeRef}
-          title="Lebenslauf-Vorschau"
+          title={t('templatePreview.resumeTitle')}
           className="w-full border-0"
           style={{ background: '#f8fafc', minHeight: '800px' }}
           sandbox="allow-same-origin allow-scripts"
@@ -978,6 +980,7 @@ export function CoverLetterTemplatePreview({
   templateId,
   language = 'en',
 }: CoverLetterTemplatePreviewProps) {
+  const t = useTranslations('editor');
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
   // Load all cover letter templates to find the default if no templateId is provided
@@ -1186,7 +1189,7 @@ export function CoverLetterTemplatePreview({
     return (
       <div className="flex items-center justify-center h-64 bg-slate-50 rounded-lg">
         <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-        <span className="ml-2 text-sm text-slate-500">Vorlage wird geladen...</span>
+        <span className="ml-2 text-sm text-slate-500">{t('templatePreview.loadingTemplate')}</span>
       </div>
     );
   }
@@ -1194,7 +1197,7 @@ export function CoverLetterTemplatePreview({
   if (error || !template) {
     return (
       <div className="flex items-center justify-center h-64 rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10">
-        <p className="text-sm text-destructive">Vorlage konnte nicht geladen werden</p>
+        <p className="text-sm text-destructive">{t('templatePreview.loadFailed')}</p>
       </div>
     );
   }
@@ -1206,12 +1209,12 @@ export function CoverLetterTemplatePreview({
       <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <div className="bg-slate-100 px-3 py-2 border-b border-slate-200">
           <p className="text-xs font-medium text-slate-600">
-            Vorlage: <span className="text-slate-900">{template.name}</span>
-            {isDefaultTemplate && <span className="ml-2 text-brand">(Standard)</span>}
+            {t('templatePreview.templateLabel')} <span className="text-slate-900">{template.name}</span>
+            {isDefaultTemplate && <span className="ml-2 text-brand">{t('templatePreview.defaultBadge')}</span>}
           </p>
         </div>
         <div className="flex items-center justify-center h-64 bg-slate-50">
-          <p className="text-sm text-slate-500">Noch kein Anschreiben vorhanden</p>
+          <p className="text-sm text-slate-500">{t('templatePreview.noCoverLetter')}</p>
         </div>
       </div>
     );
@@ -1221,15 +1224,15 @@ export function CoverLetterTemplatePreview({
     <div className="w-full h-full rounded-lg border border-slate-200 bg-white shadow-sm flex flex-col">
       <div className="bg-slate-100 px-3 py-2 border-b border-slate-200 flex-shrink-0">
         <p className="text-xs font-medium text-slate-600">
-          Vorlage: <span className="text-slate-900">{template.name}</span>
+          {t('templatePreview.templateLabel')} <span className="text-slate-900">{template.name}</span>
           <span className="ml-2 text-slate-400">({template.category})</span>
-          {isDefaultTemplate && <span className="ml-2 text-brand">(Standard)</span>}
+          {isDefaultTemplate && <span className="ml-2 text-brand">{t('templatePreview.defaultBadge')}</span>}
         </p>
       </div>
       <div className="flex-1 min-h-0">
         <iframe
           ref={iframeRef}
-          title="Anschreiben-Vorschau"
+          title={t('templatePreview.coverLetterTitle')}
           className="w-full border-0"
           style={{ minHeight: '800px', background: '#f8fafc' }}
           sandbox="allow-same-origin allow-scripts"

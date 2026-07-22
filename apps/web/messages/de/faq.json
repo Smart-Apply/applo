@@ -1,1 +1,80 @@
-{}
+{
+  "meta": {
+    "title": "FAQ – Applo",
+    "description": "Häufig gestellte Fragen zu Applo: geschlossene Beta, Einladungscodes, Bewerbungen, Lebenslauf, Anschreiben, Datenschutz und Preise."
+  },
+  "title": "Häufige Fragen (FAQ)",
+  "intro": "Antworten auf die häufigsten Fragen zu Applo. Findest du deine Frage nicht? Schreib uns über das Kontaktformular auf der <home>Startseite</home>.",
+  "betaNotice": {
+    "ariaLabel": "Hinweis zur geschlossenen Beta",
+    "strong": "Applo ist gerade in der geschlossenen Beta.",
+    "text": "Die Registrierung erfolgt nur per Einladungscode, alle Features sind während der Beta kostenlos, und du hilfst uns aktiv dabei, Rauheiten zu finden — vielen Dank!"
+  },
+  "sections": {
+    "beta": "Während der geschlossenen Beta",
+    "general": "Allgemein"
+  },
+  "items": {
+    "inviteCode": {
+      "q": "Wie funktioniert der Einladungscode?",
+      "a": "Während der geschlossenen Beta ist die Registrierung nur mit einem persönlichen Einladungscode möglich (Format <code>BETA-XXXX-XXXX-XXXX</code>). Den Code hast du per E-Mail bekommen — trage ihn unten auf der Registrierungsseite ein. Jeder Code lässt sich nur einmal einlösen."
+    },
+    "oauth": {
+      "q": "Kann ich mich mit Google oder Microsoft anmelden?",
+      "a": "Während der Beta noch nicht: „Mit Google anmelden“ funktioniert nur für Konten, die bereits per E-Mail registriert sind. Lege also zuerst dein Konto mit Einladungscode + E-Mail an — danach kannst du in den Einstellungen Google oder Microsoft mit deinem Konto verknüpfen und dich damit anmelden."
+    },
+    "betaCost": {
+      "q": "Was kostet Applo während der Beta?",
+      "a": "Für alle Beta-Tester ist Applo kostenlos — inklusive aller Pro- und Premium-Features (E-Mail-Tracking, Interview-Coach, unbegrenzte Bewerbungen). Wenn du in der Beta aktiv mitgetestet hast, behältst du Premium auch nach dem offenen Launch ein Stück weit kostenlos — wir geben rechtzeitig Bescheid, wenn sich daran etwas ändert."
+    },
+    "betaIssues": {
+      "q": "Was kann (noch) schiefgehen?",
+      "a": "Applo ist eine frühe Version. Erwartbare Stolperstellen:<list><item>Vereinzelt brauchen Stellenanzeigen-URLs einen zweiten Versuch</item><item>Die PDF-Vorschau lädt auf älteren iPhones manchmal langsam</item><item>Lebenslauf-Upload (PDF/DOCX) klappt bei sehr exotischen Layouts nicht perfekt — dann am besten die Felder manuell ausfüllen</item><item>Wenn eine neue Version live geht und du gerade ein Formular ausfüllst, erscheint oben rechts ein Hinweis „Neue Version verfügbar“ — klick auf „Jetzt aktualisieren“, sobald du fertig bist.</item></list>"
+    },
+    "feedback": {
+      "q": "Wie melde ich Fehler oder Feedback?",
+      "a": "Schreib uns an <email>support@applo.ai</email>. Für Beta-Tester antworten wir in der Regel innerhalb weniger Stunden. Hilfreich sind: Browser + Gerät, was du gemacht hast und was passiert ist (gern auch ein Screenshot). Frontend-Fehler landen automatisch in unserem Monitoring — du brauchst keine Konsolen-Logs zu kopieren."
+    },
+    "betaData": {
+      "q": "Was passiert mit meinen Daten, wenn die Beta endet?",
+      "a": "Nichts — dein Konto und alle erstellten Bewerbungen bleiben erhalten und gehen 1-zu-1 in den offenen Launch über. Wir setzen die Datenbank nicht zurück. Wenn du dein Konto vorher löschen möchtest, geht das jederzeit unter Einstellungen → Konto löschen, und vorher kannst du alles als JSON exportieren (Einstellungen → Daten exportieren)."
+    },
+    "what": {
+      "q": "Was macht Applo genau?",
+      "a": "Applo erstellt aus deinem Profil und einer Stellenanzeige in wenigen Sekunden ein passendes Anschreiben und einen optimierten Lebenslauf als PDF — beides individuell auf die jeweilige Stelle zugeschnitten. Du kannst die Texte direkt im Editor anpassen, bevor du sie herunterlädst."
+    },
+    "industries": {
+      "q": "Funktioniert Applo auch außerhalb von IT-Berufen?",
+      "a": "Ja. Applo ist bewusst branchenneutral entwickelt. Die Vorlagen und Prompts arbeiten u. a. mit Berufen aus Pflege, Vertrieb, Marketing, Handwerk, Verwaltung, Bildung und Logistik — nicht nur Tech."
+    },
+    "languages": {
+      "q": "In welcher Sprache werden meine Bewerbungen erstellt?",
+      "a": "Wir erkennen die Sprache der Stellenanzeige automatisch (aktuell Deutsch und Englisch) und erzeugen Anschreiben und Lebenslauf in derselben Sprache. Fachbegriffe (z. B. Tool-Namen) bleiben unverändert in ihrer üblichen Schreibweise."
+    },
+    "data": {
+      "q": "Was passiert mit meinen Daten?",
+      "a": "Deine Profil- und Bewerbungsdaten liegen verschlüsselt in einer EU-Datenbank (Microsoft Azure, Schweden). Wir verkaufen oder verwenden deine Daten nicht für Werbung oder zum Trainieren von Modellen. Details findest du in unserer <privacy>Datenschutzerklärung</privacy>. Du kannst deine Daten jederzeit unter „Einstellungen → Daten exportieren“ herunterladen oder dein Konto vollständig löschen."
+    },
+    "pricing": {
+      "q": "Was kostet Applo?",
+      "a": "Der Einstieg ist kostenlos und ohne Kreditkarte. Im Free-Plan kannst du Applo mit 3 Bewerbungen pro Monat in Ruhe ausprobieren. Pro (9,99 € / Monat) hilft dir, jede Bewerbung mit KI zu optimieren. Premium (19,99 € / Monat) ergänzt das um E-Mail-Tracking und Interview-Coach. Alle Preise sind transparent, monatlich kündbar und ohne versteckte Kosten — Details auf unserer <pricing>Preisseite</pricing>."
+    },
+    "editing": {
+      "q": "Wie kann ich meine Bewerbung nach der Generierung noch anpassen?",
+      "a": "Nach der Generierung öffnet sich automatisch ein Editor, in dem du Anschreiben und Lebenslauf direkt im Browser bearbeiten und neu als PDF exportieren kannst — ohne erneute Generierung und ohne Token zu verbrauchen."
+    },
+    "ats": {
+      "q": "Sind die generierten Lebensläufe ATS-kompatibel?",
+      "a": "Ja. Alle PDF-Vorlagen sind so gebaut, dass sie von gängigen Bewerber-Tracking-Systemen (ATS) korrekt gelesen werden: einspaltiges Layout, einfache HTML-Struktur, keine Tabellen oder Grafiken in kritischen Bereichen, klare Section-Header und Standard-Schriftarten."
+    },
+    "contact": {
+      "q": "Ich habe einen Fehler gefunden oder eine Idee — wo melde ich mich?",
+      "a": "Schreib uns über das Kontaktformular auf der <home>Startseite</home> oder direkt an <email>support@applo.ai</email>. Wir antworten in der Regel innerhalb von 1–2 Werktagen."
+    }
+  },
+  "legalLayout": {
+    "backHome": "← Zurück zur Startseite",
+    "home": "Startseite",
+    "copyright": "© {year} Applo. Alle Rechte vorbehalten."
+  }
+}

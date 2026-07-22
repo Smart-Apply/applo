@@ -12,6 +12,7 @@
  */
 
 import { Mail, ArrowRight, Loader2, Target, Sparkles, Edit3 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { CoverLetterEditor } from '@/components/applications/cover-letter-editor';
 
@@ -58,6 +59,13 @@ interface CoverLetterCTAProps {
 }
 
 export function CoverLetterCTA({ onGenerate, loading }: CoverLetterCTAProps) {
+  const t = useTranslations('editor');
+  const benefits = [
+    { icon: Target, label: t('coverLetter.benefits.tailored') },
+    { icon: Sparkles, label: t('coverLetter.benefits.aiWritten') },
+    { icon: Edit3, label: t('coverLetter.benefits.editable') },
+  ];
+
   return (
     <div className="mx-auto max-w-[820px] animate-in fade-in duration-300">
       <div className="rounded-[4px] border border-dashed border-primary/30 bg-primary-soft/30 p-6 sm:p-7">
@@ -66,31 +74,25 @@ export function CoverLetterCTA({ onGenerate, loading }: CoverLetterCTAProps) {
             <Mail className="h-6 w-6" />
           </span>
           <div className="flex-1">
-            <div className="font-heading text-lg font-bold">Noch kein Anschreiben vorhanden</div>
+            <div className="font-heading text-lg font-bold">{t('coverLetter.cta.title')}</div>
             <p className="mt-1 max-w-[460px] text-sm leading-relaxed text-muted-foreground">
-              Ein individuelles Anschreiben hebt deine Bewerbung hervor und steigert deine
-              Antwortchance. Es wird auf Basis deines Profils und dieser Stelle erstellt – in
-              ca. 20 Sekunden.
+              {t('coverLetter.cta.description')}
             </p>
           </div>
           <Button onClick={onGenerate} disabled={loading} size="lg" className="shrink-0">
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Wird generiert…
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('coverLetter.cta.generating')}
               </>
             ) : (
               <>
-                Anschreiben jetzt generieren <ArrowRight className="ml-2 h-4 w-4" />
+                {t('coverLetter.cta.generate')} <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}
           </Button>
         </div>
         <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-border/60 pt-5">
-          {[
-            { icon: Target, label: 'Auf die Stelle zugeschnitten' },
-            { icon: Sparkles, label: 'KI-gestützt formuliert' },
-            { icon: Edit3, label: 'Voll editierbar nach Erstellung' },
-          ].map(({ icon: Icon, label }) => (
+          {benefits.map(({ icon: Icon, label }) => (
             <div key={label} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Icon className="h-4 w-4 text-foreground" />
               {label}

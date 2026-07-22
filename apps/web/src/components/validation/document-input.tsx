@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { Upload, FileText, X, ArrowRight, Plus, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api-client';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 import { toastError } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 
@@ -73,6 +75,7 @@ function DropZone({
   chip: FileChip | null;
   onRemove: () => void;
 }) {
+  const t = useTranslations('validation');
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -83,7 +86,7 @@ function DropZone({
       const { text } = await api.validation.extractText(file);
       onFileExtracted(text);
     } catch (err) {
-      toastError(err, 'Die Datei konnte nicht gelesen werden');
+      toastError(err, t('documentInput.fileReadError'));
       onRemove();
     }
   };
@@ -98,18 +101,18 @@ function DropZone({
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium text-foreground">{chip.name}</span>
             <span className="flex-shrink-0 border border-[#BFE9CC] bg-[#ECFAF0] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-success dark:border-green-400/30 dark:bg-green-400/10">
-              Erkannt
+              {t('documentInput.detected')}
             </span>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {formatBytes(chip.size)} · Text erfolgreich gelesen
+            {t('documentInput.fileReadSuccess', { size: formatBytes(chip.size) })}
           </p>
         </div>
         <button
           type="button"
           onClick={onRemove}
           className="flex-shrink-0 rounded-[3px] p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-          aria-label="Datei entfernen"
+          aria-label={t('documentInput.removeFileAria')}
         >
           <X className="h-4 w-4" />
         </button>
@@ -160,10 +163,10 @@ function DropZone({
         )}
       </div>
       <p className="text-sm text-foreground">
-        <span className="font-semibold">Datei auswählen</span> oder hierher ziehen
+        <span className="font-semibold">{t('documentInput.chooseFile')}</span> {t('documentInput.orDragHere')}
       </p>
       <p className="text-xs text-muted-foreground">
-        PDF oder DOCX · max. 10 MB
+        {t('documentInput.fileHint')}
       </p>
     </div>
   );
@@ -176,6 +179,7 @@ export function DocumentInput({
   onCoverLetterChange,
   onNext,
 }: DocumentInputProps) {
+  const t = useTranslations('validation');
   const [resumeMode, setResumeMode] = useState<InputMode>('upload');
   const [coverMode, setCoverMode] = useState<InputMode>('upload');
   const [coverVisible, setCoverVisible] = useState(false);
@@ -188,17 +192,17 @@ export function DocumentInput({
   const resumeValid = resumeText.trim().length >= 50 || resumeChip !== null;
 
   const toggleOptions = [
-    { value: 'upload', label: 'Datei hochladen' },
-    { value: 'text', label: 'Text einfügen' },
+    { value: 'upload', label: t('documentInput.toggle.upload') },
+    { value: 'text', label: t('documentInput.toggle.text') },
   ];
 
   return (
     <div className="mx-auto w-full max-w-2xl rounded-[4px] border bg-card p-7">
       {/* Card head */}
       <div className="mb-6">
-        <h2 className="font-heading text-[19px] font-bold tracking-tight text-foreground">Deine Unterlagen</h2>
+        <h2 className="font-heading text-[19px] font-bold tracking-tight text-foreground">{t('documentInput.title')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Nur der Lebenslauf ist Pflicht. Mit Anschreiben erhältst du noch präziseres Feedback.
+          {t('documentInput.subtitle')}
         </p>
       </div>
 
@@ -206,7 +210,7 @@ export function DocumentInput({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-[14.5px] font-semibold text-foreground">
-            Lebenslauf <span className="text-destructive">*</span>
+            {t('documentInput.resumeLabel')} <span className="text-destructive">*</span>
           </Label>
           <SegmentedToggle
             value={resumeMode}
@@ -237,7 +241,7 @@ export function DocumentInput({
           <div className="relative">
             <Textarea
               rows={8}
-              placeholder="Füge hier den Text deines Lebenslaufs ein…"
+              placeholder={t('documentInput.resumePlaceholder')}
               value={resumeText}
               onChange={(e) => onResumeChange(e.target.value)}
               className="resize-y text-sm"
@@ -249,7 +253,7 @@ export function DocumentInput({
                 resumeText.length > 24000 ? 'text-destructive' : 'text-muted-foreground',
               )}
             >
-              {resumeText.length.toLocaleString('de-DE')} / 24.000
+              {resumeText.length.toLocaleString(getIntlLocale())} / 24.000
             </span>
           </div>
         )}
@@ -264,15 +268,15 @@ export function DocumentInput({
             className="flex w-full items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-dashed border-primary-soft/80 py-3 text-sm font-medium text-foreground transition-colors duration-200 hover:border-brand dark:border-slate-600"
           >
             <Plus className="h-4 w-4" />
-            Anschreiben hinzufügen
+            {t('documentInput.addCoverLetter')}
           </button>
         ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-[14.5px] font-semibold text-foreground">
-                Anschreiben{' '}
+                {t('documentInput.coverLetterLabel')}{' '}
                 <span className="text-xs font-normal text-muted-foreground">
-                  (optional)
+                  {t('documentInput.optional')}
                 </span>
               </Label>
               <div className="flex items-center gap-3">
@@ -290,7 +294,7 @@ export function DocumentInput({
                   }}
                   className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  Entfernen
+                  {t('documentInput.remove')}
                 </button>
               </div>
             </div>
@@ -317,7 +321,7 @@ export function DocumentInput({
               <div className="relative">
                 <Textarea
                   rows={6}
-                  placeholder="Füge hier den Text deines Anschreibens ein…"
+                  placeholder={t('documentInput.coverLetterPlaceholder')}
                   value={coverLetterText}
                   onChange={(e) => onCoverLetterChange(e.target.value)}
                   className="resize-y text-sm"
@@ -329,7 +333,7 @@ export function DocumentInput({
                     coverLetterText.length > 12000 ? 'text-destructive' : 'text-muted-foreground',
                   )}
                 >
-                  {coverLetterText.length.toLocaleString('de-DE')} / 12.000
+                  {coverLetterText.length.toLocaleString(getIntlLocale())} / 12.000
                 </span>
               </div>
             )}
@@ -346,7 +350,7 @@ export function DocumentInput({
           className="gap-2"
         >
           {resumeValid && <CheckCircle2 className="h-4 w-4 opacity-70" />}
-          Weiter zur Zielstelle
+          {t('documentInput.next')}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

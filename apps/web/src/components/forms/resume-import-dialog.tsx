@@ -26,6 +26,7 @@ import {
 } from '@/hooks/use-parse-resume';
 import type { ExtractedProfile } from '@/types';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface ResumeImportDialogProps {
   onImport: (data: ExtractedProfile, sections: ImportableSection[]) => void;
@@ -44,6 +45,7 @@ const ALL_SECTIONS: ImportableSection[] = [
 ];
 
 export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProps) {
+  const t = useTranslations('profile');
   const [open, setOpen] = React.useState(false);
   const [step, setStep] = React.useState<'upload' | 'preview'>('upload');
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
@@ -134,7 +136,7 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
         {trigger || (
           <Button variant="outline" className="gap-2">
             <Upload className="h-4 w-4" />
-            Lebenslauf importieren
+            {t('resumeImport.trigger')}
           </Button>
         )}
       </DialogTrigger>
@@ -142,12 +144,12 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            {step === 'upload' ? 'Lebenslauf importieren' : 'Daten auswählen'}
+            {step === 'upload' ? t('resumeImport.uploadTitle') : t('resumeImport.previewTitle')}
           </DialogTitle>
           <DialogDescription>
             {step === 'upload'
-              ? 'Lade deinen Lebenslauf hoch, um dein Profil automatisch auszufüllen.'
-              : 'Wähle aus, welche Daten importiert werden sollen.'}
+              ? t('resumeImport.uploadDescription')
+              : t('resumeImport.previewDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -158,16 +160,16 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
               onFileRemove={handleFileRemove}
               isUploading={parseResume.isPending}
               error={(parseResume.error as Error | null)?.message}
-              hint="PDF oder DOCX, max. 10 MB"
+              hint={t('resumeImport.fileHint')}
             />
 
             {parseResume.isPending && (
               <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-4">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 <div>
-                  <p className="text-sm font-medium">Lebenslauf wird analysiert...</p>
+                  <p className="text-sm font-medium">{t('resumeImport.analyzing')}</p>
                   <p className="text-xs text-muted-foreground">
-                    Dies kann einige Sekunden dauern.
+                    {t('resumeImport.analyzingDescription')}
                   </p>
                 </div>
               </div>
@@ -178,7 +180,7 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
             {/* Section selection */}
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                {sectionsWithData.length} Abschnitte erkannt
+                {t('units.sectionsDetected', { count: sectionsWithData.length })}
               </p>
               <div className="flex gap-2">
                 <Button
@@ -187,7 +189,7 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
                   onClick={handleSelectAll}
                   className="h-7 text-xs"
                 >
-                  Alle auswählen
+                  {t('actions.selectAll')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -195,7 +197,7 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
                   onClick={handleSelectNone}
                   className="h-7 text-xs"
                 >
-                  Keine
+                  {t('actions.none')}
                 </Button>
               </div>
             </div>
@@ -237,14 +239,14 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
                           </Label>
                           {!hasData && (
                             <p className="text-xs text-muted-foreground">
-                              Keine Daten gefunden
+                              {t('resumeImport.noData')}
                             </p>
                           )}
                         </div>
                       </div>
                       {count !== null && count > 0 && (
                         <Badge variant="secondary" className="text-xs">
-                          {count} {count === 1 ? 'Eintrag' : 'Einträge'}
+                          {t('units.entry', { count })}
                         </Badge>
                       )}
                     </div>
@@ -257,8 +259,7 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
               <div className="flex items-center gap-2 rounded-lg bg-green-50 dark:bg-green-950/30 p-3 text-sm text-green-700 dark:text-green-400">
                 <Check className="h-4 w-4" />
                 <span>
-                  {selectedCount} {selectedCount === 1 ? 'Abschnitt' : 'Abschnitte'} werden
-                  importiert
+                  {t('resumeImport.selectedImport', { count: selectedCount })}
                 </span>
               </div>
             )}
@@ -266,7 +267,7 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
             {selectedCount === 0 && (
               <div className="flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 p-3 text-sm text-amber-700 dark:text-amber-400">
                 <AlertCircle className="h-4 w-4" />
-                <span>Wähle mindestens einen Abschnitt zum Importieren aus</span>
+                <span>{t('resumeImport.selectAtLeastOne')}</span>
               </div>
             )}
           </div>
@@ -276,7 +277,7 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
           {step === 'upload' ? (
             <>
               <Button variant="outline" onClick={handleClose}>
-                Abbrechen
+                {t('actions.cancel')}
               </Button>
               <Button
                 onClick={handleUpload}
@@ -285,12 +286,12 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
                 {parseResume.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Analysiere...
+                    {t('actions.analyzing')}
                   </>
                 ) : (
                   <>
                     <Upload className="mr-2 h-4 w-4" />
-                    Analysieren
+                    {t('actions.analyze')}
                   </>
                 )}
               </Button>
@@ -298,11 +299,11 @@ export function ResumeImportDialog({ onImport, trigger }: ResumeImportDialogProp
           ) : (
             <>
               <Button variant="outline" onClick={() => setStep('upload')}>
-                Zurück
+                {t('actions.back')}
               </Button>
               <Button onClick={handleImport} disabled={selectedCount === 0}>
                 <Check className="mr-2 h-4 w-4" />
-                Importieren
+                {t('actions.import')}
               </Button>
             </>
           )}

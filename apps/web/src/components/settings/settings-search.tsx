@@ -11,15 +11,13 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Search, X, ChevronRight } from 'lucide-react';
 import {
   SETTINGS_SEARCH_INDEX,
   SETTINGS_SECTIONS,
   type SettingsSearchEntry,
 } from '@/lib/settings-sections';
-
-const sectionLabel = (id: string) =>
-  SETTINGS_SECTIONS.find((s) => s.id === id)?.label ?? '';
 
 function Highlight({ text, query }: { text: string; query: string }) {
   const i = text.toLowerCase().indexOf(query.toLowerCase());
@@ -37,6 +35,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
 
 export function SettingsSearch() {
   const router = useRouter();
+  const t = useTranslations('settings');
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,11 +45,15 @@ export function SettingsSearch() {
     () =>
       q
         ? SETTINGS_SEARCH_INDEX.filter((it) =>
-            `${it.title} ${it.keywords}`.toLowerCase().includes(q),
+            `${t(it.titleKey)} ${t(it.keywordsKey)}`.toLowerCase().includes(q),
           )
         : [],
-    [q],
+    [q, t],
   );
+  const sectionLabel = (id: string) => {
+    const section = SETTINGS_SECTIONS.find((s) => s.id === id);
+    return section ? t(section.labelKey) : '';
+  };
 
   const go = (section: string) => {
     setQuery('');
@@ -70,8 +73,8 @@ export function SettingsSearch() {
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
-        placeholder="Einstellungen durchsuchen…"
-        aria-label="Einstellungen durchsuchen"
+        placeholder={t('search.placeholder')}
+        aria-label={t('search.ariaLabel')}
         className="h-11 w-full rounded-[4px] border border-input bg-background pl-11 pr-10 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
       />
       {query && (
@@ -79,7 +82,7 @@ export function SettingsSearch() {
           type="button"
           onClick={() => { setQuery(''); inputRef.current?.focus(); }}
           className="absolute right-3 top-1/2 -translate-y-1/2 rounded-[3px] p-1 text-muted-foreground hover:bg-muted"
-          aria-label="Suche zurücksetzen"
+          aria-label={t('search.reset')}
         >
           <X className="h-4 w-4" />
         </button>
@@ -89,7 +92,10 @@ export function SettingsSearch() {
         <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-[4px] border border-border bg-popover shadow-md">
           {hits.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-              Keine Einstellung zu &bdquo;<span className="font-medium text-foreground">{query}</span>&ldquo; gefunden.
+              {t.rich('search.noResults', {
+                query,
+                strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+              })}
             </p>
           ) : (
             <ul className="max-h-80 overflow-y-auto py-1">
@@ -108,7 +114,7 @@ export function SettingsSearch() {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium text-foreground">
-                          <Highlight text={it.title} query={query} />
+                          <Highlight text={t(it.titleKey)} query={query} />
                         </span>
                         <span className="block text-xs text-muted-foreground">
                           {sectionLabel(it.section)}

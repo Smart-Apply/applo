@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { CategoryScores } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -28,12 +29,14 @@ export function MatchScoreCard({
   overallScore,
   className,
 }: MatchScoreCardProps) {
+  const t = useTranslations('applications');
+
   return (
     <Card className={cn('overflow-hidden', className)}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
           <TrendingUp className="h-5 w-5" />
-          Profil-Match-Analyse
+          {t('matchScore.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="py-8">
@@ -43,7 +46,7 @@ export function MatchScoreCard({
             {Math.round(overallScore)}%
           </div>
           <p className="text-sm text-[#6B6969]">
-            Profil-Übereinstimmung
+            {t('matchScore.profileMatch')}
           </p>
         </div>
       </CardContent>

@@ -23,6 +23,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import {
   User, Shield, Bell, Palette, Trash2, ChevronRight, Loader2, Download,
@@ -56,11 +57,16 @@ import { SettingToggleRow } from '@/components/settings/setting-toggle-row';
 import { ThemeCards } from '@/components/settings/theme-cards';
 import { ProfileSaveBar } from '@/components/settings/profile-save-bar';
 import { SettingsSearch } from '@/components/settings/settings-search';
+import { useLocaleSwitch } from '@/components/i18n/language-switcher';
 
 export default function SettingsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const locale = useLocale();
+  const t = useTranslations('settings');
+  const tLanguage = useTranslations('common.language');
+  const { switchLocale } = useLocaleSwitch();
   const section = resolveSection(pathname, searchParams.get('section'));
   const setSection = (id: SettingsSectionId) =>
     router.push(`/settings?section=${id}`, { scroll: false });
@@ -101,25 +107,25 @@ export default function SettingsPage() {
         setPreferences(data);
       } catch (error) {
         console.error('Failed to load preferences:', error);
-        toast.error('Fehler beim Laden der Einstellungen');
+        toast.error(t('page.toasts.loadError'));
       } finally {
         setIsLoadingPreferences(false);
       }
     };
     loadPreferences();
-  }, []);
+  }, [t]);
 
   const saveProfile = async () => {
     setIsLoading(true);
     try {
       const updatedUser = await api.auth.updateProfile({ firstName, lastName });
       updateUser({ firstName: updatedUser.firstName, lastName: updatedUser.lastName });
-      toast.success('Profil erfolgreich aktualisiert');
+      toast.success(t('account.toasts.profileUpdated'));
     } catch (error) {
       if (error instanceof ApiError) {
-        toast.error(error.message || 'Fehler beim Aktualisieren des Profils');
+        toast.error(error.message || t('account.toasts.profileUpdateError'));
       } else {
-        toast.error('Fehler beim Aktualisieren des Profils');
+        toast.error(t('account.toasts.profileUpdateError'));
       }
     } finally {
       setIsLoading(false);
@@ -140,18 +146,18 @@ export default function SettingsPage() {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      toast.error('Passwörter stimmen nicht überein');
+      toast.error(t('security.toasts.passwordMismatch'));
       return;
     }
     if (newPassword.length < 8) {
-      toast.error('Passwort muss mindestens 8 Zeichen lang sein');
+      toast.error(t('security.toasts.passwordTooShort'));
       return;
     }
 
     setIsLoading(true);
     try {
       await api.auth.changePassword({ currentPassword, newPassword });
-      toast.success('Passwort erfolgreich geändert. Bitte melden Sie sich erneut an.');
+      toast.success(t('security.toasts.passwordChanged'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -159,10 +165,10 @@ export default function SettingsPage() {
       router.push('/login');
     } catch (error) {
       if (error instanceof ApiError) {
-        const message = error.data?.message || error.message || 'Fehler beim Ändern des Passworts';
+        const message = error.data?.message || error.message || t('security.toasts.passwordChangeError');
         toast.error(Array.isArray(message) ? message[0] : message);
       } else {
-        toast.error('Fehler beim Ändern des Passworts');
+        toast.error(t('security.toasts.passwordChangeError'));
       }
     } finally {
       setIsLoading(false);
@@ -172,26 +178,26 @@ export default function SettingsPage() {
   const handleDeleteAccount = async () => {
     if (isOAuthOnlyAccount) {
       if (deleteEmailConfirm.trim().toLowerCase() !== (user?.email ?? '').toLowerCase()) {
-        toast.error('Bitte gib deine E-Mail-Adresse zur Bestätigung ein');
+        toast.error(t('account.toasts.emailConfirmRequired'));
         return;
       }
     } else if (!deletePassword) {
-      toast.error('Bitte geben Sie Ihr Passwort ein');
+      toast.error(t('account.toasts.passwordRequired'));
       return;
     }
 
     setIsDeleting(true);
     try {
       await api.auth.deleteAccount(isOAuthOnlyAccount ? {} : { password: deletePassword });
-      toast.success('Account wurde gelöscht');
+      toast.success(t('account.toasts.deleted'));
       clearAuth();
       router.push('/');
     } catch (error) {
       if (error instanceof ApiError) {
-        const message = error.data?.message || error.message || 'Fehler beim Löschen des Accounts';
+        const message = error.data?.message || error.message || t('account.toasts.deleteError');
         toast.error(Array.isArray(message) ? message[0] : message);
       } else {
-        toast.error('Fehler beim Löschen des Accounts');
+        toast.error(t('account.toasts.deleteError'));
       }
     } finally {
       setIsDeleting(false);
@@ -205,12 +211,12 @@ export default function SettingsPage() {
     try {
       const updatedPreferences = await api.userPreferences.update({ [key]: value });
       setPreferences(updatedPreferences);
-      toast.success('Einstellung gespeichert');
+      toast.success(t('page.toasts.preferenceSaved'));
     } catch (error) {
       if (error instanceof ApiError) {
-        toast.error(error.message || 'Fehler beim Speichern der Einstellung');
+        toast.error(error.message || t('page.toasts.preferenceSaveError'));
       } else {
-        toast.error('Fehler beim Speichern der Einstellung');
+        toast.error(t('page.toasts.preferenceSaveError'));
       }
     }
   };
@@ -227,9 +233,9 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-3xl pb-28">
       {/* Page head + search */}
       <div className="mb-6">
-        <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Einstellungen</h1>
+        <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">{t('page.title')}</h1>
         <p className="text-muted-foreground">
-          Verwalte deinen Account, deine Sicherheit und deine Präferenzen.
+          {t('page.description')}
         </p>
         <div className="mt-4">
           <SettingsSearch />
@@ -251,7 +257,7 @@ export default function SettingsPage() {
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                {s.label}
+                {t(s.labelKey)}
               </button>
             );
           })}
@@ -261,12 +267,12 @@ export default function SettingsPage() {
       {/* ================= ACCOUNT ================= */}
       {section === 'account' && (
         <div className="space-y-6">
-          <SectionHeader icon={User} title="Account" sub="Verwalte deine persönlichen Informationen und Account-Daten." />
+          <SectionHeader icon={User} title={t('sections.account.label')} sub={t('sections.account.headerSub')} />
 
           <Card>
             <CardHeader>
-              <CardTitle>Profil-Informationen</CardTitle>
-              <CardDescription>Diese Angaben erscheinen auf deinen generierten Unterlagen.</CardDescription>
+              <CardTitle>{t('account.profile.title')}</CardTitle>
+              <CardDescription>{t('account.profile.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="mb-6 flex items-center gap-4">
@@ -276,33 +282,33 @@ export default function SettingsPage() {
                 <div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="gap-2" type="button">
-                      <Camera className="h-4 w-4" /> Bild hochladen
+                      <Camera className="h-4 w-4" /> {t('account.profile.uploadPhoto')}
                     </Button>
-                    <Button variant="ghost" size="sm" type="button">Entfernen</Button>
+                    <Button variant="ghost" size="sm" type="button">{t('account.profile.removePhoto')}</Button>
                   </div>
-                  <p className="mt-1.5 text-xs text-muted-foreground">JPG oder PNG, max. 2 MB.</p>
+                  <p className="mt-1.5 text-xs text-muted-foreground">{t('account.profile.photoHint')}</p>
                 </div>
               </div>
 
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">Vorname</Label>
+                    <Label htmlFor="firstName">{t('account.profile.firstName')}</Label>
                     <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Max" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Nachname</Label>
+                    <Label htmlFor="lastName">{t('account.profile.lastName')}</Label>
                     <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Mustermann" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">E-Mail-Adresse</Label>
+                  <Label htmlFor="email">{t('account.profile.email')}</Label>
                   <div className="relative">
                     <Input id="email" type="email" value={email} disabled className="bg-muted pr-9" />
                     <Lock className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   </div>
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Lock className="h-3 w-3" /> Mit deinem Anbieter verknüpft — die E-Mail-Adresse kann nicht geändert werden.
+                    <Lock className="h-3 w-3" /> {t('account.profile.emailLinked')}
                   </p>
                 </div>
                 {/* submit handled by the sticky ProfileSaveBar; this enables Enter-to-save */}
@@ -313,41 +319,39 @@ export default function SettingsPage() {
 
           <Card className="border-destructive/50">
             <CardHeader>
-              <CardTitle className="text-destructive">Account löschen</CardTitle>
-              <CardDescription>Lösche deinen Account und alle zugehörigen Daten permanent.</CardDescription>
+              <CardTitle className="text-destructive">{t('account.delete.title')}</CardTitle>
+              <CardDescription>{t('account.delete.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" className="gap-2">
-                    <Trash2 className="h-4 w-4" /> Account löschen
+                    <Trash2 className="h-4 w-4" /> {t('account.delete.action')}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Bist du dir sicher?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('account.delete.dialogTitle')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Diese Aktion kann nicht rückgängig gemacht werden. Alle deine Daten,
-                      einschließlich Profil, Bewerbungen und Stellenanzeigen werden permanent gelöscht.
+                      {t('account.delete.dialogDescription')}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <div className="py-4">
                     {isOAuthOnlyAccount ? (
                       <>
-                        <Label htmlFor="deleteEmailConfirm">Gib deine E-Mail-Adresse zur Bestätigung ein</Label>
+                        <Label htmlFor="deleteEmailConfirm">{t('account.delete.emailConfirmLabel')}</Label>
                         <Input
                           id="deleteEmailConfirm" type="email" autoComplete="off"
                           value={deleteEmailConfirm} onChange={(e) => setDeleteEmailConfirm(e.target.value)}
                           placeholder={user?.email ?? ''} className="mt-2"
                         />
                         <p className="mt-2 text-xs text-muted-foreground">
-                          Du hast dich mit einem externen Anbieter angemeldet und kein Passwort gesetzt.
-                          Bitte tippe stattdessen deine E-Mail-Adresse ein, um die Löschung zu bestätigen.
+                          {t('account.delete.oauthHint')}
                         </p>
                       </>
                     ) : (
                       <>
-                        <Label htmlFor="deletePassword">Passwort zur Bestätigung</Label>
+                        <Label htmlFor="deletePassword">{t('account.delete.passwordLabel')}</Label>
                         <Input
                           id="deletePassword" type="password" value={deletePassword}
                           onChange={(e) => setDeletePassword(e.target.value)} placeholder="••••••••" className="mt-2"
@@ -357,14 +361,14 @@ export default function SettingsPage() {
                   </div>
                   <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => { setDeletePassword(''); setDeleteEmailConfirm(''); }}>
-                      Abbrechen
+                      {t('account.delete.cancel')}
                     </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDeleteAccount}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       disabled={isDeleting || !canConfirmDelete}
                     >
-                      {isDeleting ? 'Wird gelöscht...' : 'Account löschen'}
+                      {isDeleting ? t('account.delete.deleting') : t('account.delete.action')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -379,15 +383,15 @@ export default function SettingsPage() {
       {/* ================= SECURITY ================= */}
       {section === 'security' && (
         <div className="space-y-6">
-          <SectionHeader icon={Shield} title="Sicherheit" sub="Schütze deinen Account mit zusätzlichen Sicherheitsmaßnahmen." />
+          <SectionHeader icon={Shield} title={t('sections.security.label')} sub={t('sections.security.headerSub')} />
 
           <Card>
             <CardHeader>
-              <CardTitle>Passwort ändern</CardTitle>
+              <CardTitle>{t('security.password.title')}</CardTitle>
               <CardDescription>
                 {isOAuthOnlyAccount
-                  ? 'Dein Account ist mit einem externen Anbieter verknüpft. Es ist kein Passwort gesetzt, das du ändern könntest.'
-                  : 'Aktualisiere dein Passwort regelmäßig für mehr Sicherheit'}
+                  ? t('security.password.oauthDescription')
+                  : t('security.password.description')}
               </CardDescription>
             </CardHeader>
             {isOAuthOnlyAccount ? (
@@ -398,14 +402,17 @@ export default function SettingsPage() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold">
-                      Anmeldung über <span className="capitalize">{user?.provider ?? 'OAuth'}</span>
+                      {t.rich('security.password.providerLogin', {
+                        provider: user?.provider ?? 'OAuth',
+                        providerSpan: (chunks) => <span className="capitalize">{chunks}</span>,
+                      })}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Verwalte dein Passwort direkt bei deinem Anbieter.
+                      {t('security.password.providerHint')}
                     </p>
                   </div>
                   <Button variant="outline" size="sm" className="gap-2" type="button">
-                    <ExternalLink className="h-4 w-4" /> Verwalten
+                    <ExternalLink className="h-4 w-4" /> {t('security.password.manage')}
                   </Button>
                 </div>
               </CardContent>
@@ -413,19 +420,19 @@ export default function SettingsPage() {
               <CardContent>
                 <form onSubmit={handleChangePassword} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Aktuelles Passwort</Label>
+                    <Label htmlFor="currentPassword">{t('security.password.current')}</Label>
                     <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••••" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword">Neues Passwort</Label>
+                    <Label htmlFor="newPassword">{t('security.password.new')}</Label>
                     <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
+                    <Label htmlFor="confirmPassword">{t('security.password.confirm')}</Label>
                     <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" />
                   </div>
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading ? 'Wird geändert...' : 'Passwort ändern'}
+                    {isLoading ? t('security.password.changing') : t('security.password.action')}
                   </Button>
                 </form>
               </CardContent>
@@ -436,14 +443,14 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Aktive Sitzungen</CardTitle>
-              <CardDescription>Verwalte deine aktiven Sitzungen auf verschiedenen Geräten</CardDescription>
+              <CardTitle>{t('sessions.title')}</CardTitle>
+              <CardDescription>{t('sessions.cardDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/settings/sessions">
                 <Button variant="outline" className="w-full justify-between">
                   <span className="flex items-center gap-2">
-                    <Monitor className="h-4 w-4" /> Sitzungen verwalten
+                    <Monitor className="h-4 w-4" /> {t('sessions.manage')}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -456,12 +463,12 @@ export default function SettingsPage() {
       {/* ================= NOTIFICATIONS ================= */}
       {section === 'notifications' && (
         <div className="space-y-6">
-          <SectionHeader icon={Bell} title="Benachrichtigungen" sub="Entscheide, worüber und wann Applo dich auf dem Laufenden hält." />
+          <SectionHeader icon={Bell} title={t('sections.notifications.label')} sub={t('sections.notifications.headerSub')} />
 
           <Card>
             <CardHeader>
-              <CardTitle>E-Mail-Benachrichtigungen</CardTitle>
-              <CardDescription>Wähle aus, welche E-Mails du erhalten möchtest</CardDescription>
+              <CardTitle>{t('notifications.email.title')}</CardTitle>
+              <CardDescription>{t('notifications.email.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingPreferences ? (
@@ -471,8 +478,8 @@ export default function SettingsPage() {
                   <div className="pb-3">
                     <SettingToggleRow
                       icon={FileText}
-                      title="Bewerbungs-Updates"
-                      description="Status-Änderungen und Erinnerungen zu deinen Bewerbungen."
+                      title={t('notifications.email.applicationUpdates.title')}
+                      description={t('notifications.email.applicationUpdates.description')}
                       checked={!!preferences?.applicationUpdates}
                       onCheckedChange={(v) => handleUpdatePreference('applicationUpdates', v)}
                     />
@@ -480,8 +487,8 @@ export default function SettingsPage() {
                   <div className="py-3">
                     <SettingToggleRow
                       icon={Search}
-                      title="Neue Stellenanzeigen"
-                      description="Passende Stellen, sobald sie verfügbar sind."
+                      title={t('notifications.email.newJobPostings.title')}
+                      description={t('notifications.email.newJobPostings.description')}
                       checked={!!preferences?.newJobPostings}
                       onCheckedChange={(v) => handleUpdatePreference('newJobPostings', v)}
                     />
@@ -489,8 +496,8 @@ export default function SettingsPage() {
                   <div className="pt-3">
                     <SettingToggleRow
                       icon={Mail}
-                      title="Produkt & Newsletter"
-                      description="Neue Features, Tipps und gelegentliche Angebote."
+                      title={t('notifications.email.marketing.title')}
+                      description={t('notifications.email.marketing.description')}
                       checked={!!preferences?.marketingEmails}
                       onCheckedChange={(v) => handleUpdatePreference('marketingEmails', v)}
                     />
@@ -512,28 +519,32 @@ export default function SettingsPage() {
       {/* ================= PREFERENCES ================= */}
       {section === 'preferences' && (
         <div className="space-y-6">
-          <SectionHeader icon={Palette} title="Präferenzen" sub="Passe Applo an deine Sprache, dein Design und deine Datenschutz-Wünsche an." />
+          <SectionHeader icon={Palette} title={t('sections.preferences.label')} sub={t('sections.preferences.headerSub')} />
 
           <Card>
             <CardHeader>
-              <CardTitle>Sprache & Region</CardTitle>
-              <CardDescription>Bestimmt die Sprache der Oberfläche und der generierten Unterlagen.</CardDescription>
+              <CardTitle>{t('preferences.language.title')}</CardTitle>
+              <CardDescription>{t('preferences.language.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingPreferences ? (
                 <PrefLoader />
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="language">Sprache</Label>
-                  <Select value={preferences?.language || 'de'} onValueChange={(value) => handleUpdatePreference('language', value)}>
+                  <Label htmlFor="language">{t('preferences.language.label')}</Label>
+                  <Select
+                    value={locale}
+                    onValueChange={(value) => {
+                      void handleUpdatePreference('language', value);
+                      switchLocale(value as 'de' | 'en');
+                    }}
+                  >
                     <SelectTrigger id="language" className="max-w-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
-                      <SelectItem value="en">🇬🇧 English</SelectItem>
-                      <SelectItem value="fr">🇫🇷 Français</SelectItem>
-                      <SelectItem value="es">🇪🇸 Español</SelectItem>
+                      <SelectItem value="de">{tLanguage('de')}</SelectItem>
+                      <SelectItem value="en">{tLanguage('en')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -543,8 +554,8 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Design</CardTitle>
-              <CardDescription>Wähle, wie Applo aussehen soll. &bdquo;System&ldquo; folgt den Einstellungen deines Geräts.</CardDescription>
+              <CardTitle>{t('preferences.design.title')}</CardTitle>
+              <CardDescription>{t('preferences.design.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingPreferences ? (
@@ -565,8 +576,8 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Datenschutz</CardTitle>
-              <CardDescription>Du behältst die Kontrolle über deine Daten.</CardDescription>
+              <CardTitle>{t('preferences.privacy.title')}</CardTitle>
+              <CardDescription>{t('preferences.privacy.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingPreferences ? (
@@ -577,8 +588,8 @@ export default function SettingsPage() {
                     <div className="pb-3">
                       <SettingToggleRow
                         icon={User}
-                        title="Öffentliches Profil"
-                        description="Dein Profil kann von anderen gesehen werden."
+                        title={t('preferences.privacy.publicProfile.title')}
+                        description={t('preferences.privacy.publicProfile.description')}
                         checked={!!preferences?.profilePublic}
                         onCheckedChange={(v) => handleUpdatePreference('profilePublic', v)}
                       />
@@ -586,8 +597,8 @@ export default function SettingsPage() {
                     <div className="pt-3">
                       <SettingToggleRow
                         icon={BarChart3}
-                        title="Anonyme Nutzungsdaten"
-                        description="Hilf uns, Applo zu verbessern. Keine personenbezogenen Inhalte."
+                        title={t('preferences.privacy.analytics.title')}
+                        description={t('preferences.privacy.analytics.description')}
                         checked={!!preferences?.analyticsEnabled}
                         onCheckedChange={(v) => handleUpdatePreference('analyticsEnabled', v)}
                       />
@@ -598,9 +609,9 @@ export default function SettingsPage() {
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="space-y-0.5">
-                      <Label>Meine Daten exportieren</Label>
+                      <Label>{t('preferences.export.title')}</Label>
                       <p className="text-sm text-muted-foreground">
-                        Lade alle deine bei uns gespeicherten Daten als JSON-Datei herunter (DSGVO Art. 15 / 20).
+                        {t('preferences.export.description')}
                       </p>
                     </div>
                     <Button
@@ -609,18 +620,18 @@ export default function SettingsPage() {
                         setIsExporting(true);
                         try {
                           await api.auth.exportData();
-                          toast.success('Datenexport heruntergeladen');
+                          toast.success(t('preferences.export.success'));
                         } catch {
-                          toast.error('Datenexport fehlgeschlagen. Bitte versuche es erneut.');
+                          toast.error(t('preferences.export.error'));
                         } finally {
                           setIsExporting(false);
                         }
                       }}
                     >
                       {isExporting ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Wird vorbereitet...</>
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('preferences.export.preparing')}</>
                       ) : (
-                        <><Download className="mr-2 h-4 w-4" /> Herunterladen</>
+                        <><Download className="mr-2 h-4 w-4" /> {t('preferences.export.download')}</>
                       )}
                     </Button>
                   </div>

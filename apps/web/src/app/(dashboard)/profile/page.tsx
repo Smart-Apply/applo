@@ -51,23 +51,7 @@ import {
 } from '@/components/ui/dialog';
 import { FileUpload } from '@/components/ui/file-upload';
 import type { UpdateProfileDto, EducationDto } from '@/types';
-
-const SKILL_SUGGESTIONS = [
-  'JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'C++', 'Go', 'Rust', 'PHP', 'Ruby',
-  'Swift', 'Kotlin', 'React', 'Next.js', 'Vue.js', 'Angular', 'Svelte', 'Node.js', 'NestJS',
-  'Express', 'Django', 'Flask', 'Spring Boot', 'Laravel', '.NET', 'Ruby on Rails',
-  'HTML', 'CSS', 'Tailwind CSS', 'SASS', 'Bootstrap',
-  'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'Firebase', 'Supabase',
-  'Docker', 'Kubernetes', 'AWS', 'Azure', 'Google Cloud', 'Terraform', 'CI/CD',
-  'Git', 'GitHub', 'GitLab', 'Jira', 'Confluence',
-  'REST API', 'GraphQL', 'gRPC', 'WebSockets',
-  'Linux', 'Bash', 'PowerShell',
-  'Figma', 'Adobe XD', 'Photoshop', 'Illustrator',
-  'Agile', 'Scrum', 'Kanban', 'Projektmanagement',
-  'SAP', 'Salesforce', 'Power BI', 'Tableau', 'Excel', 'Microsoft Office',
-  'Machine Learning', 'Data Science', 'TensorFlow', 'PyTorch',
-  'Verhandlungsführung', 'Kommunikation', 'Teamführung', 'Kundenbetreuung',
-];
+import { useTranslations } from 'next-intl';
 
 function InlineSkillInput({
   existingSkills,
@@ -76,6 +60,7 @@ function InlineSkillInput({
   existingSkills: string[];
   onAdd: (name: string) => void;
 }) {
+  const t = useTranslations('profile');
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
   const [highlightIdx, setHighlightIdx] = useState(-1);
@@ -87,20 +72,21 @@ function InlineSkillInput({
     [existingSkills],
   );
 
+  const skillSuggestions = t.raw('page.skillSuggestions') as string[];
   const suggestions =
     value.trim().length > 0
-      ? SKILL_SUGGESTIONS.filter(
+      ? skillSuggestions.filter(
           (s) =>
             s.toLowerCase().includes(value.toLowerCase()) && !existing.has(s.toLowerCase()),
         ).slice(0, 6)
-      : SKILL_SUGGESTIONS.filter((s) => !existing.has(s.toLowerCase())).slice(0, 6);
+      : skillSuggestions.filter((s) => !existing.has(s.toLowerCase())).slice(0, 6);
 
   const submit = useCallback(
     (name: string) => {
       const trimmed = name.trim();
       if (!trimmed) return;
       if (existing.has(trimmed.toLowerCase())) {
-        toast.error('Dieser Skill existiert bereits');
+        toast.error(t('page.inline.duplicateSkill'));
         return;
       }
       onAdd(trimmed);
@@ -108,7 +94,7 @@ function InlineSkillInput({
       setHighlightIdx(-1);
       inputRef.current?.focus();
     },
-    [existing, onAdd],
+    [existing, onAdd, t],
   );
 
   useEffect(() => {
@@ -134,7 +120,7 @@ function InlineSkillInput({
         className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <Plus className="h-3.5 w-3.5" />
-        Skill hinzufügen
+        {t('page.add.skill')}
       </button>
     );
   }
@@ -169,7 +155,7 @@ function InlineSkillInput({
               setHighlightIdx(-1);
             }
           }}
-          placeholder="z.B. React, Python, Projektmanagement…"
+          placeholder={t('page.inline.skillPlaceholder')}
           className="h-9 text-sm"
         />
         <Button
@@ -179,14 +165,14 @@ function InlineSkillInput({
           className="shrink-0"
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" />
-          Hinzufügen
+          {t('actions.add')}
         </Button>
       </div>
 
       {suggestions.length > 0 && (
         <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-[4px] border border-border bg-card p-1 shadow-md">
           <p className="px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-            Vorschläge
+            {t('page.inline.suggestions')}
           </p>
           {suggestions.map((s, i) => (
             <button
@@ -211,21 +197,13 @@ function InlineSkillInput({
   );
 }
 
-const LANGUAGE_SUGGESTIONS = [
-  'Deutsch', 'Englisch', 'Französisch', 'Spanisch', 'Italienisch', 'Portugiesisch',
-  'Niederländisch', 'Polnisch', 'Russisch', 'Türkisch', 'Arabisch', 'Chinesisch',
-  'Japanisch', 'Koreanisch', 'Hindi', 'Griechisch', 'Tschechisch', 'Schwedisch',
-  'Dänisch', 'Norwegisch', 'Finnisch', 'Rumänisch', 'Ungarisch', 'Kroatisch',
-  'Serbisch', 'Ukrainisch', 'Bulgarisch', 'Hebräisch', 'Vietnamesisch', 'Thailändisch',
-];
-
 const LANGUAGE_LEVELS = [
-  { value: 'NATIVE', label: 'Muttersprache' },
-  { value: 'FLUENT', label: 'Fließend' },
-  { value: 'ADVANCED', label: 'Fortgeschritten' },
-  { value: 'INTERMEDIATE', label: 'Gut' },
-  { value: 'BASIC', label: 'Grundkenntnisse' },
-];
+  'NATIVE',
+  'FLUENT',
+  'ADVANCED',
+  'INTERMEDIATE',
+  'BASIC',
+] as const;
 
 function InlineLanguageInput({
   existingLanguages,
@@ -234,6 +212,7 @@ function InlineLanguageInput({
   existingLanguages: string[];
   onAdd: (name: string, level: string) => void;
 }) {
+  const t = useTranslations('profile');
   const [step, setStep] = useState<'closed' | 'name' | 'level'>('closed');
   const [name, setName] = useState('');
   const [highlightIdx, setHighlightIdx] = useState(-1);
@@ -245,27 +224,28 @@ function InlineLanguageInput({
     [existingLanguages],
   );
 
+  const languageSuggestions = t.raw('page.languageSuggestions') as string[];
   const suggestions =
     name.trim().length > 0
-      ? LANGUAGE_SUGGESTIONS.filter(
+      ? languageSuggestions.filter(
           (s) =>
             s.toLowerCase().includes(name.toLowerCase()) && !existing.has(s.toLowerCase()),
         ).slice(0, 6)
-      : LANGUAGE_SUGGESTIONS.filter((s) => !existing.has(s.toLowerCase())).slice(0, 6);
+      : languageSuggestions.filter((s) => !existing.has(s.toLowerCase())).slice(0, 6);
 
   const selectLanguage = useCallback(
     (langName: string) => {
       const trimmed = langName.trim();
       if (!trimmed) return;
       if (existing.has(trimmed.toLowerCase())) {
-        toast.error('Diese Sprache existiert bereits');
+        toast.error(t('page.inline.duplicateLanguage'));
         return;
       }
       setName(trimmed);
       setStep('level');
       setHighlightIdx(-1);
     },
-    [existing],
+    [existing, t],
   );
 
   const addWithLevel = useCallback(
@@ -306,7 +286,7 @@ function InlineLanguageInput({
         className="mt-4 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <Plus className="h-3.5 w-3.5" />
-        Sprache hinzufügen
+        {t('page.add.language')}
       </button>
     );
   }
@@ -316,16 +296,16 @@ function InlineLanguageInput({
       <div ref={containerRef} className="mt-4 space-y-3">
         <p className="text-sm text-foreground">
           <span className="font-medium">{name}</span>
-          <span className="text-muted-foreground"> — Wie gut sprichst du diese Sprache?</span>
+          <span className="text-muted-foreground">{t('page.inline.askLanguageLevel')}</span>
         </p>
         <div className="flex flex-wrap gap-2">
-          {LANGUAGE_LEVELS.map((l) => (
+          {LANGUAGE_LEVELS.map((level) => (
             <button
-              key={l.value}
-              onClick={() => addWithLevel(l.value)}
+              key={level}
+              onClick={() => addWithLevel(level)}
               className="rounded-[3px] border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
             >
-              {l.label}
+              {getLanguageLevelLabel(level)}
             </button>
           ))}
         </div>
@@ -333,7 +313,7 @@ function InlineLanguageInput({
           onClick={() => { setStep('name'); setName(''); }}
           className="text-xs text-muted-foreground hover:text-foreground"
         >
-          ← Zurück
+          ← {t('actions.back')}
         </button>
       </div>
     );
@@ -366,14 +346,14 @@ function InlineLanguageInput({
             reset();
           }
         }}
-        placeholder="z.B. Englisch, Französisch…"
+        placeholder={t('page.inline.languagePlaceholder')}
         className="h-9 text-sm"
       />
 
       {suggestions.length > 0 && (
         <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-[4px] border border-border bg-card p-1 shadow-md">
           <p className="px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-            Vorschläge
+            {t('page.inline.suggestions')}
           </p>
           {suggestions.map((s, i) => (
             <button
@@ -407,6 +387,7 @@ function LanguageRow({
   onRemove: () => void;
   onUpdateLevel: (level: string) => void;
 }) {
+  const t = useTranslations('profile');
   const [picking, setPicking] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
 
@@ -427,20 +408,20 @@ function LanguageRow({
       <div ref={rowRef} className="space-y-2 rounded-[3px] bg-muted/40 p-2.5">
         <p className="text-sm font-medium text-foreground">{lang.name}</p>
         <div className="flex flex-wrap gap-1.5">
-          {LANGUAGE_LEVELS.map((l) => (
+          {LANGUAGE_LEVELS.map((level) => (
             <button
-              key={l.value}
+              key={level}
               onClick={() => {
-                onUpdateLevel(l.value);
+                onUpdateLevel(level);
                 setPicking(false);
               }}
               className={`rounded-[3px] border px-2.5 py-1 text-xs font-medium transition-colors ${
-                lang.level === l.value
+                lang.level === level
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-primary/5'
               }`}
             >
-              {l.label}
+              {getLanguageLevelLabel(level)}
             </button>
           ))}
         </div>
@@ -464,7 +445,7 @@ function LanguageRow({
             onClick={() => setPicking(true)}
             className="text-xs italic text-primary/60 transition-colors hover:text-primary"
           >
-            Einstufung wählen
+            {t('page.inline.chooseLevel')}
           </button>
         )}
         <button
@@ -537,6 +518,7 @@ function CollapsibleCard({
   action?: ReactNode;
   children: ReactNode;
 }) {
+  const t = useTranslations('profile');
   return (
     <div
       ref={cardRef}
@@ -568,7 +550,7 @@ function CollapsibleCard({
           <button
             type="button"
             onClick={onAsk}
-            title="Was bringt das?"
+            title={t('page.askTitle')}
             className={cn(
               'grid h-7 w-7 shrink-0 place-items-center rounded-[3px] border transition-colors',
               active
@@ -595,6 +577,7 @@ interface Criterion {
 }
 
 export default function ProfilePage() {
+  const t = useTranslations('profile');
   const router = useRouter();
   const { data: profile, isLoading, error } = useProfile();
   const updateProfile = useUpdateProfile();
@@ -663,14 +646,14 @@ export default function ProfilePage() {
         }
 
         await updateProfile.mutateAsync(updateData);
-        toast.success('Lebenslauf erfolgreich importiert!');
+        toast.success(t('page.cvUpload.success'));
         setCvDialogOpen(false);
         parseResume.reset();
       } catch {
-        toast.error('Lebenslauf konnte nicht verarbeitet werden.');
+        toast.error(t('page.cvUpload.error'));
       }
     },
-    [parseResume, updateProfile],
+    [parseResume, updateProfile, t],
   );
 
   const handleAddSkill = useCallback(
@@ -767,16 +750,16 @@ export default function ProfilePage() {
     const hasEducation = (profile?.education?.length ?? 0) > 0;
     const hasLinkedin = !!profile?.linkedinUrl;
     return [
-      { id: 'identity', label: 'Kontaktdaten', weight: 10, done: hasBasic, hint: 'Name & E-Mail landen in jeder Bewerbung.' },
-      { id: 'identity', label: 'Telefonnummer', weight: 10, done: hasPhone, hint: 'Erhöht deine Rückmeldequote spürbar.' },
-      { id: 'identity', label: 'Adresse', weight: 10, done: hasAddress, hint: 'Dein Ort hilft beim Matching regionaler Stellen.' },
-      { id: 'about', label: 'Über mich', weight: 15, done: hasSummary, hint: 'Mein wichtigster Input für deine Anschreiben.' },
-      { id: 'skills', label: 'Fähigkeiten', weight: 15, done: hasSkills, hint: 'Recruiter filtern zuerst nach Skills.' },
-      { id: 'experience', label: 'Berufserfahrung', weight: 15, done: hasExperience, hint: 'Konkrete Erfolge überzeugen am meisten.' },
-      { id: 'education', label: 'Ausbildung', weight: 15, done: hasEducation, hint: 'Schaltet passende Stellenfilter frei.' },
-      { id: 'identity', label: 'LinkedIn', weight: 10, done: hasLinkedin, hint: 'Verknüpft dein öffentliches Profil.' },
+      { id: 'identity', label: t('page.criteria.contact'), weight: 10, done: hasBasic, hint: t('page.hints.contact') },
+      { id: 'identity', label: t('page.criteria.phone'), weight: 10, done: hasPhone, hint: t('page.hints.phone') },
+      { id: 'identity', label: t('page.criteria.address'), weight: 10, done: hasAddress, hint: t('page.hints.address') },
+      { id: 'about', label: t('page.criteria.about'), weight: 15, done: hasSummary, hint: t('page.hints.about') },
+      { id: 'skills', label: t('page.criteria.skills'), weight: 15, done: hasSkills, hint: t('page.hints.skills') },
+      { id: 'experience', label: t('page.criteria.experience'), weight: 15, done: hasExperience, hint: t('page.hints.experience') },
+      { id: 'education', label: t('page.criteria.education'), weight: 15, done: hasEducation, hint: t('page.hints.education') },
+      { id: 'identity', label: t('page.criteria.linkedin'), weight: 10, done: hasLinkedin, hint: t('page.hints.linkedin') },
     ];
-  }, [profile, user]);
+  }, [profile, user, t]);
 
   const profileStrength = criteria.reduce((sum, c) => sum + (c.done ? c.weight : 0), 0);
   const openItems = criteria.filter((c) => !c.done);
@@ -786,36 +769,36 @@ export default function ProfilePage() {
   // ── Applo tour script (main-column sections) ───────────────────────────
   const tour = useMemo(
     () => [
-      { id: 'identity', msg: <>Fangen wir oben an: deine <b>Kontaktdaten</b> übernehme ich 1:1 in jede Bewerbung. Eine Telefonnummer bringt dir mehr Rückmeldungen.</> },
-      { id: 'about', msg: <>Dein <b>Steckbrief</b> ist mein wichtigster Input. 2–3 Sätze über deine Stärken reichen — den Rest formuliere ich pro Stelle neu.</> },
-      { id: 'experience', msg: <>Bei der <b>Berufserfahrung</b> zählen konkrete Erfolge mit Zahlen. Ich hebe automatisch hervor, was zur jeweiligen Stelle passt.</> },
-      { id: 'skills', msg: <>Pflege deine <b>Fähigkeiten</b> — Recruiter filtern zuerst danach, und ich matche dich gezielter auf passende Stellen.</> },
-      { id: 'education', msg: <>Deine <b>Ausbildung</b> rundet das Profil ab und schaltet weitere Stellenfilter frei.</> },
-      { id: 'projects', msg: <>Mit <b>Projekten</b> zeigst du, was du praktisch draufhast — gerade ohne lange Berufserfahrung ein starkes Argument. Ich greife sie passend zur Stelle auf.</> },
-      { id: 'certificates', msg: <>Zum Schluss deine <b>Zertifikate</b> — sie belegen dein Können offiziell. Ich erwähne sie dort, wo sie für die Stelle den Unterschied machen.</> },
+      { id: 'identity', msg: t.rich('page.tour.identity', { bold: (chunks) => <b>{chunks}</b> }) },
+      { id: 'about', msg: t.rich('page.tour.about', { bold: (chunks) => <b>{chunks}</b> }) },
+      { id: 'experience', msg: t.rich('page.tour.experience', { bold: (chunks) => <b>{chunks}</b> }) },
+      { id: 'skills', msg: t.rich('page.tour.skills', { bold: (chunks) => <b>{chunks}</b> }) },
+      { id: 'education', msg: t.rich('page.tour.education', { bold: (chunks) => <b>{chunks}</b> }) },
+      { id: 'projects', msg: t.rich('page.tour.projects', { bold: (chunks) => <b>{chunks}</b> }) },
+      { id: 'certificates', msg: t.rich('page.tour.certificates', { bold: (chunks) => <b>{chunks}</b> }) },
     ],
-    [],
+    [t],
   );
 
-  const firstName = user?.firstName || user?.email?.split('@')[0] || 'du';
+  const firstName = user?.firstName || user?.email?.split('@')[0] || t('page.defaultName');
 
   const sectionMsg: Record<string, ReactNode> = {
-    identity: <>Deine <b>Kontaktdaten</b> landen direkt in jeder Bewerbung. {profile?.phone ? 'Top — alles vollständig.' : 'Ergänze deine Telefonnummer für mehr Rückmeldungen.'}</>,
-    about: <>Dein <b>Steckbrief</b> ist mein wichtigster Input. Schreib 2–3 Sätze über deine Stärken — pro Stelle texte ich daraus ein passendes Anschreiben.</>,
-    experience: <>Konkrete Erfolge mit <b>Zahlen</b> überzeugen am meisten. Ich wähle pro Bewerbung automatisch die relevantesten Punkte aus.</>,
-    skills: <>Recruiter filtern zuerst nach <b>Skills</b>. Je vollständiger deine Liste, desto besser matche ich dich auf passende Stellen.</>,
-    education: <>Deine <b>Ausbildung</b> rundet das Profil ab und passt zu mehr Stellenfiltern.</>,
+    identity: t.rich(profile?.phone ? 'page.coach.identityComplete' : 'page.coach.identityMissing', { bold: (chunks) => <b>{chunks}</b> }),
+    about: t.rich('page.coach.about', { bold: (chunks) => <b>{chunks}</b> }),
+    experience: t.rich('page.coach.experience', { bold: (chunks) => <b>{chunks}</b> }),
+    skills: t.rich('page.coach.skills', { bold: (chunks) => <b>{chunks}</b> }),
+    education: t.rich('page.coach.education', { bold: (chunks) => <b>{chunks}</b> }),
   };
 
   let message: ReactNode;
   if (tourStep !== null) {
     message = tour[tourStep].msg;
   } else if (isComplete) {
-    message = <>Stark, {firstName}! Dein Profil ist zu <b>100 %</b> vollständig. Jetzt kann ich deine Bewerbungen so treffsicher wie möglich für dich schreiben.</>;
+    message = t.rich('page.coach.complete', { name: firstName, bold: (chunks) => <b>{chunks}</b> });
   } else if (activeSection && sectionMsg[activeSection]) {
     message = sectionMsg[activeSection];
   } else {
-    message = <>Hi, ich bin <b>Applo</b> — dein Profil-Coach. Je mehr ich über dich weiß, desto besser passe ich deine Bewerbungen an. Lass uns dein Profil startklar machen.</>;
+    message = t.rich('page.coach.intro', { bold: (chunks) => <b>{chunks}</b> });
   }
 
   // ── Applo pose — derived from coach state, with two one-shot timers ──────
@@ -896,7 +879,7 @@ export default function ProfilePage() {
   if (error) {
     return (
       <div className="rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] p-6 text-center text-destructive dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300">
-        Profil konnte nicht geladen werden. Bitte versuche es später erneut.
+        {t('page.error')}
       </div>
     );
   }
@@ -931,7 +914,7 @@ export default function ProfilePage() {
             Applo
           </Link>
           <span>→</span>
-          <span className="font-medium text-foreground">Mein Profil</span>
+          <span className="font-medium text-foreground">{t('page.breadcrumb')}</span>
         </nav>
         <Button
           variant="outline"
@@ -940,7 +923,7 @@ export default function ProfilePage() {
           onClick={() => setCvDialogOpen(true)}
         >
           <Upload className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5" />
-          CV hochladen
+          {t('page.uploadCv')}
         </Button>
       </div>
 
@@ -971,7 +954,7 @@ export default function ProfilePage() {
           <div className="min-w-0">
             <div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-brand">
               <span className="h-1.5 w-1.5 bg-brand" />
-              Applo · dein Profil-Coach
+              {t('page.coachLabel')}
             </div>
             <p key={`${tourStep}-${activeSection}-${isComplete}`} className="mb-3.5 max-w-[60ch] text-[15px] leading-relaxed text-foreground">
               {message}
@@ -980,11 +963,11 @@ export default function ProfilePage() {
               {tourStep !== null ? (
                 <>
                   <Button size="sm" className="gap-1.5" onClick={tourNext}>
-                    {tourStep >= tour.length - 1 ? 'Rundgang beenden' : 'Weiter'}
+                    {tourStep >= tour.length - 1 ? t('page.endTour') : t('page.next')}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={endTour}>
-                    Überspringen
+                    {t('page.skip')}
                   </Button>
                   <span className="text-xs font-semibold tabular-nums text-muted-foreground">
                     {tourStep + 1} / {tour.length}
@@ -993,19 +976,19 @@ export default function ProfilePage() {
               ) : isComplete ? (
                 <Button size="sm" className="gap-1.5" onClick={startTour}>
                   <Sparkles className="h-3.5 w-3.5" />
-                  Profil noch einmal durchgehen
+                  {t('page.completeTour')}
                 </Button>
               ) : (
                 <>
                   {nextOpen && (
                     <Button size="sm" className="gap-1.5" onClick={goToNext}>
-                      Als Nächstes: {nextOpen.label}
+                      {t('page.nextOpen', { label: nextOpen.label })}
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
                   )}
                   <Button size="sm" variant="ghost" className="gap-1.5 text-primary hover:text-primary" onClick={startTour}>
                     <Sparkles className="h-3.5 w-3.5" />
-                    Geführter Rundgang
+                    {t('page.guidedTour')}
                   </Button>
                 </>
               )}
@@ -1013,7 +996,7 @@ export default function ProfilePage() {
           </div>
           <div className="hidden flex-col items-center gap-2 self-center border-l border-border pl-5 lg:flex">
             <StrengthRing pct={profileStrength} />
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">Profil-Stärke</span>
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">{t('page.profileStrength')}</span>
           </div>
         </div>
       </div>
@@ -1037,7 +1020,7 @@ export default function ProfilePage() {
                   </button>
                 </div>
                 <StatusChip tone="success" className="mt-1.5">
-                  Offen für neue Rollen
+                  {t('page.openForRoles')}
                 </StatusChip>
                 {location && (
                   <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -1053,7 +1036,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
                     <Briefcase className="h-4 w-4" />
-                    <span>Aktuelle Position</span>
+                    <span>{t('page.currentPosition')}</span>
                   </div>
                   <span className="font-medium text-foreground">{currentPosition}</span>
                 </div>
@@ -1062,7 +1045,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
                     <Mail className="h-4 w-4" />
-                    <span>E-Mail</span>
+                    <span>{t('labels.email')}</span>
                   </div>
                   <span className="flex-1 font-medium text-foreground">{user.email}</span>
                   <Check className="h-4 w-4 text-success" />
@@ -1071,7 +1054,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex w-40 shrink-0 items-center gap-2 text-muted-foreground">
                   <Phone className="h-4 w-4" />
-                  <span>Telefon</span>
+                  <span>{t('labels.phone')}</span>
                 </div>
                 {profile?.phone ? (
                   <>
@@ -1085,7 +1068,7 @@ export default function ProfilePage() {
                       onClick={() => router.push('/profile/edit')}
                       className="border border-[#F3E3B3] bg-[#FDF6E7] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-[#A16207] transition-colors hover:bg-[#FBEECB] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20"
                     >
-                      fehlt
+                      {t('page.missing')}
                     </button>
                   </>
                 )}
@@ -1118,7 +1101,7 @@ export default function ProfilePage() {
                       onClick={() => router.push('/profile/edit')}
                       className="border border-[#F3E3B3] bg-[#FDF6E7] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-[#A16207] transition-colors hover:bg-[#FBEECB] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20"
                     >
-                      fehlt
+                      {t('page.missing')}
                     </button>
                   </>
                 )}
@@ -1130,8 +1113,8 @@ export default function ProfilePage() {
           <CollapsibleCard
             cardRef={setRef('about')}
             icon={Sparkles}
-            title="Über mich"
-            meta={profile?.summary ? `${profile.summary.length} Zeichen` : undefined}
+            title={t('page.sections.about')}
+            meta={profile?.summary ? t('units.characters', { count: profile.summary.length }) : undefined}
             active={activeSection === 'about'}
             open={true}
             onToggle={() => {}}
@@ -1154,7 +1137,7 @@ export default function ProfilePage() {
                 className="flex w-full items-center justify-center gap-1.5 rounded-[3px] border border-dashed border-border py-4 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Steckbrief schreiben — Applos wichtigster Input
+                {t('page.empty.about')}
               </button>
             )}
           </CollapsibleCard>
@@ -1163,8 +1146,8 @@ export default function ProfilePage() {
           <CollapsibleCard
             cardRef={setRef('experience')}
             icon={Briefcase}
-            title="Berufserfahrung"
-            meta={(profile?.experiences?.length ?? 0) > 0 ? `${profile!.experiences!.length} Stationen` : undefined}
+            title={t('page.sections.experience')}
+            meta={(profile?.experiences?.length ?? 0) > 0 ? t('units.stations', { count: profile!.experiences!.length }) : undefined}
             active={activeSection === 'experience'}
             open={isOpen('experience')}
             onToggle={() => toggleSection('experience')}
@@ -1205,7 +1188,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Noch keine Berufserfahrung eingetragen.
+                {t('page.empty.experience')}
               </p>
             )}
 
@@ -1214,7 +1197,7 @@ export default function ProfilePage() {
               className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
-              Berufserfahrung hinzufügen
+              {t('page.add.experience')}
             </button>
           </CollapsibleCard>
 
@@ -1222,8 +1205,8 @@ export default function ProfilePage() {
           <CollapsibleCard
             cardRef={setRef('skills')}
             icon={Code2}
-            title="Fähigkeiten"
-            meta={(profile?.skills?.length ?? 0) > 0 ? `${profile!.skills!.length} Skills` : undefined}
+            title={t('page.sections.skills')}
+            meta={(profile?.skills?.length ?? 0) > 0 ? t('units.skills', { count: profile!.skills!.length }) : undefined}
             active={activeSection === 'skills'}
             open={isOpen('skills')}
             onToggle={() => toggleSection('skills')}
@@ -1249,7 +1232,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Noch keine Fähigkeiten eingetragen.
+                {t('page.empty.skills')}
               </p>
             )}
 
@@ -1263,8 +1246,8 @@ export default function ProfilePage() {
           <CollapsibleCard
             cardRef={setRef('education')}
             icon={GraduationCap}
-            title="Ausbildung"
-            meta={(profile?.education?.length ?? 0) > 0 ? `${profile!.education!.length} Abschlüsse` : undefined}
+            title={t('page.sections.education')}
+            meta={(profile?.education?.length ?? 0) > 0 ? t('units.degrees', { count: profile!.education!.length }) : undefined}
             active={activeSection === 'education'}
             open={isOpen('education')}
             onToggle={() => toggleSection('education')}
@@ -1287,7 +1270,7 @@ export default function ProfilePage() {
                         <div className="flex shrink-0 items-center gap-2">
                           {(edu.startYear || edu.endYear) && (
                             <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                              {[edu.startYear, edu.endYear ?? 'heute'].filter(Boolean).join(' – ')}
+                              {[edu.startYear, edu.endYear ?? t('labels.emptyCurrent')].filter(Boolean).join(' – ')}
                             </span>
                           )}
                           <button
@@ -1309,7 +1292,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Noch keine Ausbildung eingetragen.
+                {t('page.empty.education')}
               </p>
             )}
 
@@ -1318,7 +1301,7 @@ export default function ProfilePage() {
               className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
-              Ausbildung hinzufügen
+              {t('page.add.education')}
             </button>
           </CollapsibleCard>
 
@@ -1326,8 +1309,8 @@ export default function ProfilePage() {
           <CollapsibleCard
             cardRef={setRef('projects')}
             icon={FolderKanban}
-            title="Projekte"
-            meta={(profile?.projects?.length ?? 0) > 0 ? `${profile!.projects!.length} Projekte` : undefined}
+            title={t('page.sections.projects')}
+            meta={(profile?.projects?.length ?? 0) > 0 ? t('units.projects', { count: profile!.projects!.length }) : undefined}
             active={activeSection === 'projects'}
             onAsk={() => setActiveSection('projects')}
             open={isOpen('projects')}
@@ -1388,7 +1371,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Noch keine Projekte eingetragen.
+                {t('page.empty.projects')}
               </p>
             )}
 
@@ -1397,7 +1380,7 @@ export default function ProfilePage() {
               className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
-              Projekt hinzufügen
+              {t('page.add.project')}
             </button>
           </CollapsibleCard>
 
@@ -1405,8 +1388,8 @@ export default function ProfilePage() {
           <CollapsibleCard
             cardRef={setRef('certificates')}
             icon={Award}
-            title="Zertifikate"
-            meta={(profile?.certificates?.length ?? 0) > 0 ? `${profile!.certificates!.length} Zertifikate` : undefined}
+            title={t('page.sections.certificates')}
+            meta={(profile?.certificates?.length ?? 0) > 0 ? t('units.certificates', { count: profile!.certificates!.length }) : undefined}
             active={activeSection === 'certificates'}
             onAsk={() => setActiveSection('certificates')}
             open={isOpen('certificates')}
@@ -1451,7 +1434,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Noch keine Zertifikate eingetragen.
+                {t('page.empty.certificates')}
               </p>
             )}
 
@@ -1460,7 +1443,7 @@ export default function ProfilePage() {
               className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
-              Zertifikat hinzufügen
+              {t('page.add.certificate')}
             </button>
           </CollapsibleCard>
         </div>
@@ -1473,7 +1456,7 @@ export default function ProfilePage() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-brand" />
-                <h2 className="font-semibold text-foreground">Profil-Check</h2>
+                <h2 className="font-semibold text-foreground">{t('page.profileCheck.title')}</h2>
               </div>
               <span className={cn('font-mono text-xl font-bold tabular-nums', isComplete ? 'text-success' : 'text-brand')}>
                 {profileStrength}%
@@ -1486,8 +1469,7 @@ export default function ProfilePage() {
               />
             </div>
             <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-              Noch {openItems.length} {openItems.length === 1 ? 'Schritt' : 'Schritte'} bis zum
-              vollständigen Profil.
+              {t('units.stepsRemaining', { count: openItems.length })}
             </p>
             <div className="mb-4 flex flex-col gap-0.5">
               {criteria.map((c, i) => (
@@ -1520,8 +1502,9 @@ export default function ProfilePage() {
                 <Zap className="h-3 w-3" />
               </span>
               <span>
-                <b className="font-bold">Warum?</b> Jedes ausgefüllte Feld macht Applos KI-Bewerbungen
-                genauer und schaltet mehr passende Stellen frei.
+                {t.rich('page.profileCheck.why', {
+                 bold: (chunks) => <b className="font-bold">{chunks}</b>,
+                })}
               </span>
             </div>
           </div>
@@ -1530,7 +1513,7 @@ export default function ProfilePage() {
           {/* Sprachen */}
           <CollapsibleCard
             icon={Languages}
-            title="Sprachen"
+            title={t('page.sections.languages')}
             meta={(profile?.languages?.length ?? 0) > 0 ? `${profile!.languages!.length}` : undefined}
             open={isOpen('languages')}
             onToggle={() => toggleSection('languages')}
@@ -1553,7 +1536,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <p className="py-2 text-center text-sm text-muted-foreground">
-                Noch keine Sprachen eingetragen.
+                {t('page.empty.languages')}
               </p>
             )}
 
@@ -1567,11 +1550,10 @@ export default function ProfilePage() {
           <div className="rounded-[4px] border border-border bg-card p-5">
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
               <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-              Deine Daten, deine Kontrolle
+              {t('page.privacy.title')}
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Applo nutzt dein Profil ausschließlich, um deine Bewerbungen zu schreiben. Du
-              entscheidest pro Bewerbung, welche Angaben mitgeschickt werden.
+              {t('page.privacy.body')}
             </p>
           </div>
         </div>
@@ -1587,7 +1569,7 @@ export default function ProfilePage() {
         )}
       >
         <ChevronDown className="h-4 w-4 rotate-180" />
-        Nach oben
+        {t('page.backToTop')}
       </button>
 
       {/* ── CV Upload Dialog ── */}
@@ -1602,10 +1584,9 @@ export default function ProfilePage() {
       >
         <DialogContent showCloseButton={!cvUploading}>
           <DialogHeader>
-            <DialogTitle>Lebenslauf hochladen</DialogTitle>
+            <DialogTitle>{t('page.cvUpload.title')}</DialogTitle>
             <DialogDescription>
-              Lade deinen Lebenslauf hoch — wir lesen ihn aus und füllen dein Profil
-              automatisch aus.
+              {t('page.cvUpload.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -1614,18 +1595,18 @@ export default function ProfilePage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm font-medium text-foreground">
                 {parseResume.isPending
-                  ? 'Lebenslauf wird analysiert…'
-                  : 'Profil wird aktualisiert…'}
+                  ? t('page.cvUpload.parsing')
+                  : t('page.cvUpload.updating')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Das kann einen Moment dauern.
+                {t('page.cvUpload.wait')}
               </p>
             </div>
           ) : (
             <FileUpload
               onFileSelect={handleCvUpload}
               onFileRemove={() => parseResume.reset()}
-              hint="PDF oder DOCX, max. 10 MB"
+              hint={t('page.cvUpload.hint')}
             />
           )}
         </DialogContent>

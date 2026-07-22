@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   Home,
   FileText,
@@ -26,7 +27,7 @@ import { cn } from '@/lib/utils';
  *    nothing is hidden — just deprioritised on a narrow screen.
  */
 interface BottomNavItem {
-  name: string;
+  nameKey: string;
   href: string;
   icon: LucideIcon;
   /**
@@ -38,9 +39,9 @@ interface BottomNavItem {
 }
 
 const BOTTOM_NAV_ITEMS: BottomNavItem[] = [
-  { name: 'Start', href: '/dashboard', icon: Home },
-  { name: 'Bewerbungen', href: '/applications', icon: FileText },
-  { name: 'Profil', href: '/profile', icon: User },
+  { nameKey: 'nav.start', href: '/dashboard', icon: Home },
+  { nameKey: 'nav.applications', href: '/applications', icon: FileText },
+  { nameKey: 'nav.profile', href: '/profile', icon: User },
 ];
 
 interface MobileBottomNavProps {
@@ -54,10 +55,11 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ onMoreClick }: MobileBottomNavProps) {
   const pathname = usePathname();
+  const t = useTranslations('dashboard');
 
   return (
     <nav
-      aria-label="Hauptnavigation"
+      aria-label={t('nav.mainNavigation')}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden',
         // Respect the iOS home indicator so the tap row never sits under it.
@@ -74,7 +76,7 @@ export function MobileBottomNav({ onMoreClick }: MobileBottomNavProps) {
           <button
             type="button"
             onClick={onMoreClick}
-            aria-label="Weitere Menüpunkte öffnen"
+            aria-label={t('nav.openMore')}
             className={cn(
               'flex min-h-[56px] flex-col items-center justify-center gap-0.5 px-1 py-1.5',
               'text-[11px] font-medium text-muted-foreground',
@@ -83,7 +85,7 @@ export function MobileBottomNav({ onMoreClick }: MobileBottomNavProps) {
             )}
           >
             <Menu className="h-5 w-5" aria-hidden />
-            <span>Mehr</span>
+            <span>{t('nav.more')}</span>
           </button>
         </li>
       </ul>
@@ -107,6 +109,7 @@ function BottomNavLink({
   // upsell. We only use the gate result to render a small lock badge so
   // free users get a heads-up before tapping.
   const featureKey = item.requiresFeature;
+  const t = useTranslations('dashboard');
   const gate = useFeatureGate(featureKey ?? 'linkedinImport');
   const isLocked = featureKey != null && !gate.isLoading && !gate.hasAccess;
   const isActive = pathname === item.href;
@@ -134,7 +137,7 @@ function BottomNavLink({
           />
         )}
       </span>
-      <span className="leading-tight">{item.name}</span>
+      <span className="leading-tight">{t(item.nameKey)}</span>
       {isActive && (
         <span
           aria-hidden

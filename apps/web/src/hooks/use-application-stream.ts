@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import type { ApplicationStatus } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -31,6 +32,7 @@ interface UseApplicationStreamReturn {
  * ```
  */
 export function useApplicationStream(applicationId: string | undefined): UseApplicationStreamReturn {
+  const t = useTranslations('applications');
   const [status, setStatus] = useState<ApplicationStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -72,7 +74,7 @@ export function useApplicationStream(applicationId: string | undefined): UseAppl
         }
       } catch (err) {
         console.error('Failed to parse SSE event:', err);
-        setError('Status konnte nicht verarbeitet werden');
+        setError(t('hooks.streamStatusParseError'));
       }
     };
 
@@ -83,10 +85,10 @@ export function useApplicationStream(applicationId: string | undefined): UseAppl
       // EventSource automatically attempts to reconnect on error
       // We only need to handle the error state
       if (eventSource.readyState === EventSource.CLOSED) {
-        setError('Connection closed');
+        setError(t('hooks.streamConnectionClosed'));
         setIsConnected(false);
       } else {
-        setError('Connection error, retrying...');
+        setError(t('hooks.streamConnectionRetrying'));
       }
     };
 
@@ -103,7 +105,7 @@ export function useApplicationStream(applicationId: string | undefined): UseAppl
       eventSource.close();
       eventSourceRef.current = null;
     };
-  }, [applicationId]);
+  }, [applicationId, t]);
 
   return {
     status,

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { LifeBuoy, Mail, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +23,7 @@ import { useFeatureGate } from '@/hooks/use-tier-gate';
  * tier (best-effort detection from the access_token cookie).
  */
 export function PremiumSupportCard() {
+  const t = useTranslations('subscription');
   const { hasAccess, isLoading } = useFeatureGate('prioritySupport');
 
   if (isLoading) {
@@ -41,10 +43,10 @@ export function PremiumSupportCard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-[#854D0E] dark:text-amber-200">
             <Crown className="h-5 w-5" />
-            Premium Support aktiv
+            {t('premiumSupport.activeTitle')}
           </CardTitle>
           <CardDescription className="text-[#854D0E]/80 dark:text-amber-300/80">
-            Deine Anfragen werden priorisiert bearbeitet — Antwort innerhalb 24h zugesagt.
+            {t('premiumSupport.activeDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -55,7 +57,7 @@ export function PremiumSupportCard() {
           <Button asChild variant="default">
             <Link href="/#contact">
               <LifeBuoy className="mr-2 h-4 w-4" />
-              Support kontaktieren
+              {t('premiumSupport.contact')}
             </Link>
           </Button>
         </CardContent>
@@ -68,17 +70,17 @@ export function PremiumSupportCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LifeBuoy className="h-5 w-5 text-muted-foreground" />
-          Premium Support
+          {t('premiumSupport.title')}
         </CardTitle>
         <CardDescription>
-          Mit Premium erhältst du priorisierten Support mit garantierter Antwort innerhalb von 24h.
+          {t('premiumSupport.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Button asChild variant="outline" className="gap-2">
           <Link href="/#pricing">
             <Lock className="h-4 w-4" />
-            Mit Premium freischalten
+            {t('premiumSupport.unlock')}
           </Link>
         </Button>
       </CardContent>

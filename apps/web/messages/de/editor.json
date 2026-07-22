@@ -1,1 +1,363 @@
-{}
+{
+  "page": {
+    "loadingApplication": "Lädt Bewerbungsdaten...",
+    "backToApplications": "Zurück zu Bewerbungen",
+    "backToOverview": "Zurück zur Übersicht",
+    "unavailableTitle": "Editor nicht verfügbar",
+    "unavailableDescription": "Die Bewerbung konnte nicht geladen werden.",
+    "fallbackTitle": "Bewerbung",
+    "readyBadge": "Fertig",
+    "tabs": {
+      "ariaLabel": "Editor Tabs",
+      "resume": "Lebenslauf",
+      "coverLetter": "Anschreiben",
+      "optimize": "Optimieren"
+    },
+    "upgrade": {
+      "title": "Upgrade jetzt zu Premium",
+      "description": "Upgrade jetzt zu Premium um dieses Feature zu benutzen."
+    },
+    "created": {
+      "today": "heute",
+      "onDate": "am {date}",
+      "label": "erstellt {value}"
+    },
+    "ai": {
+      "title": "AI-Anweisungen",
+      "coverLetterPlaceholder": "Z.B.: Betone meine Projektmanagement-Erfahrung stärker...",
+      "coverLetterDescription": "Beschreibe, wie das Anschreiben angepasst werden soll."
+    },
+    "editHint": {
+      "resume": "Klicke einen beliebigen Text an, um ihn zu bearbeiten.",
+      "coverLetter": "Klicke in das Anschreiben, um Text, Anrede oder Absätze zu bearbeiten."
+    },
+    "saveStatus": {
+      "saving": "Speichert…",
+      "dirty": "Nicht gespeicherte Änderungen",
+      "saved": "Änderungen automatisch gespeichert"
+    },
+    "export": {
+      "button": "Export",
+      "tooltip": "PDFs exportieren",
+      "translationTitle": "Inhalte werden automatisch übersetzt",
+      "translationDescriptionEn": "Der Export wird ins Englische übersetzt – bitte prüfe das Ergebnis.",
+      "translationDescriptionDe": "Der Export wird ins Deutsche übersetzt – bitte prüfe das Ergebnis.",
+      "disabled": {
+        "generating": "Export läuft bereits. Bitte warte auf den Abschluss.",
+        "savingChanges": "Änderungen werden gespeichert …",
+        "missingResume": "Lebenslauf fehlt.",
+        "missingCoverLetter": "Anschreiben fehlt."
+      }
+    },
+    "toasts": {
+      "resumeSaveFailed": "Lebenslauf konnte nicht gespeichert werden",
+      "coverLetterSaveFailed": "Anschreiben konnte nicht gespeichert werden",
+      "coverLetterGenerateFailed": "Anschreiben konnte nicht generiert werden: {message}",
+      "instructionsRequired": "Bitte gib Anweisungen für die AI ein",
+      "aiChangesApplied": "AI-Änderungen übernommen",
+      "aiGenerationFailed": "AI-Generierung fehlgeschlagen: {message}",
+      "exportStarted": "Export gestartet! Du wirst zur Detailseite weitergeleitet..."
+    },
+    "errors": {
+      "emptyServerResponse": "Keine Antwort vom Server erhalten"
+    }
+  },
+  "coverLetter": {
+    "cta": {
+      "title": "Noch kein Anschreiben vorhanden",
+      "description": "Ein individuelles Anschreiben hebt deine Bewerbung hervor und steigert deine Antwortchance. Es wird auf Basis deines Profils und dieser Stelle erstellt – in ca. 20 Sekunden.",
+      "generating": "Wird generiert…",
+      "generate": "Anschreiben jetzt generieren"
+    },
+    "benefits": {
+      "tailored": "Auf die Stelle zugeschnitten",
+      "aiWritten": "KI-gestützt formuliert",
+      "editable": "Voll editierbar nach Erstellung"
+    }
+  },
+  "resume": {
+    "moveUp": "Nach oben verschieben",
+    "moveDown": "Nach unten verschieben",
+    "moveLeft": "Nach links verschieben",
+    "moveRight": "Nach rechts verschieben",
+    "categoryMoveUp": "Kategorie nach oben verschieben",
+    "categoryMoveDown": "Kategorie nach unten verschieben",
+    "sectionMoveUp": "{label} nach oben verschieben",
+    "sectionMoveDown": "{label} nach unten verschieben",
+    "sectionRemove": "{label} entfernen",
+    "addSection": "Abschnitt hinzufügen:",
+    "photoAlt": "Bewerbungsfoto",
+    "sections": {
+      "profile": "Profil",
+      "experience": "Berufserfahrung",
+      "education": "Ausbildung",
+      "projects": "Projekte",
+      "skills": "Fähigkeiten",
+      "languages": "Sprachen",
+      "certs": "Zertifikate"
+    },
+    "contact": {
+      "button": "Kontaktdaten",
+      "edit": "Kontaktdaten bearbeiten",
+      "street": "Straße",
+      "city": "Stadt",
+      "country": "Land",
+      "sectionTitle": "Kontakt",
+      "postalCode": "PLZ"
+    },
+    "ai": {
+      "profileTitle": "KI: Profil",
+      "profileDescription": "Beschreibe, wie dein Profil angepasst werden soll.",
+      "profilePlaceholder": "Z.B.: Betone meine Führungserfahrung stärker...",
+      "profileApply": "Profil anpassen",
+      "descriptionTitle": "KI: Beschreibung",
+      "experienceDescription": "Beschreibe, wie diese Station angepasst werden soll.",
+      "experiencePlaceholder": "Z.B.: Mehr messbare Erfolge, kürzer...",
+      "descriptionApply": "Beschreibung anpassen",
+      "projectTitle": "KI: Projekt",
+      "projectDescription": "Beschreibe, wie dieses Projekt angepasst werden soll.",
+      "projectPlaceholder": "Z.B.: Betone den Impact...",
+      "projectApply": "Projekt anpassen"
+    },
+    "placeholders": {
+      "summary": "Kurzes Profil über dich …",
+      "position": "Position",
+      "dateRange": "Zeitraum",
+      "company": "Unternehmen",
+      "achievement": "Was hast du erreicht?",
+      "degree": "Abschluss",
+      "year": "Jahr",
+      "institution": "Institution",
+      "projectName": "Projektname",
+      "projectBullet": "Was hast du gemacht?",
+      "category": "Kategorie",
+      "skill": "Skill",
+      "addSkill": "Skill hinzufügen…",
+      "language": "Sprache",
+      "level": "Niveau",
+      "certificate": "Zertifikat",
+      "date": "Datum",
+      "issuer": "Aussteller",
+      "name": "Dein Name",
+      "role": "Angestrebte Position"
+    },
+    "remove": {
+      "station": "Station entfernen",
+      "entry": "Eintrag entfernen",
+      "bullet": "Stichpunkt entfernen",
+      "project": "Projekt entfernen",
+      "generic": "Entfernen"
+    },
+    "add": {
+      "bullet": "Stichpunkt",
+      "station": "Station hinzufügen",
+      "entry": "Eintrag hinzufügen",
+      "project": "Projekt hinzufügen",
+      "category": "Kategorie",
+      "language": "Sprache",
+      "certificate": "Zertifikat hinzufügen",
+      "generic": "Hinzufügen"
+    }
+  },
+  "resumeForm": {
+    "optional": "(optional)",
+    "description": "Beschreibung",
+    "sectionSelector": {
+      "label": "Abschnitt bearbeiten:"
+    },
+    "sections": {
+      "personal": "Persönliche Daten",
+      "jobDetails": "Stellendetails",
+      "skills": "Fähigkeiten",
+      "experience": "Berufserfahrung",
+      "projects": "Projekte",
+      "education": "Ausbildung",
+      "certifications": "Zertifikate"
+    },
+    "personal": {
+      "name": "Name *",
+      "namePlaceholder": "Vor- und Nachname",
+      "phone": "Telefon",
+      "street": "Straße und Hausnummer",
+      "streetPlaceholder": "Musterstraße 123",
+      "postalCode": "Postleitzahl",
+      "city": "Stadt",
+      "country": "Land",
+      "countryPlaceholder": "z.B. Deutschland",
+      "summary": "Zusammenfassung",
+      "summaryPlaceholder": "Kurze Zusammenfassung deiner Qualifikationen und wichtigsten Fähigkeiten. Nutzen Sie - + Leerzeichen für Aufzählungen."
+    },
+    "jobDetails": {
+      "targetJobTitle": "Zielposition *",
+      "targetJobTitlePlaceholder": "z.B. Senior Software Engineer",
+      "targetJobTitleHelp": "Der Jobtitel, der auf deinem Lebenslauf erscheint",
+      "company": "Unternehmen",
+      "companyHelp": "Das Unternehmen aus der Stellenanzeige (nicht editierbar)"
+    },
+    "skills": {
+      "addCategory": "Kategorie hinzufügen",
+      "categoryPlaceholder": "Kategorie (optional, z.B. Programmiersprachen)",
+      "skillsPlaceholder": "Skills durch Komma trennen (z.B. TypeScript, React, Node.js)",
+      "empty": "Noch keine Fähigkeiten hinzugefügt"
+    },
+    "experience": {
+      "add": "Erfahrung hinzufügen",
+      "positionPlaceholder": "Position *",
+      "companyPlaceholder": "Unternehmen *",
+      "locationPlaceholder": "Standort",
+      "dateRangePlaceholder": "Zeitraum (z.B. Jan 2020 - Dez 2023)",
+      "descriptionPlaceholder": "Beschreiben Sie Ihre Aufgaben, Verantwortlichkeiten und Erfolge bei dieser Position. Nutzen Sie - + Leerzeichen für Aufzählungen.",
+      "empty": "Noch keine Berufserfahrung hinzugefügt"
+    },
+    "projects": {
+      "add": "Projekt hinzufügen",
+      "namePlaceholder": "Projektname *",
+      "datePlaceholder": "Zeitraum",
+      "descriptionPlaceholder": "Beschreiben Sie das Projekt, Ihre Rolle und erreichte Ergebnisse. Nutzen Sie - + Leerzeichen für Aufzählungen.",
+      "highlightsPlaceholder": "Highlights (eine pro Zeile)",
+      "empty": "Noch keine Projekte hinzugefügt"
+    },
+    "education": {
+      "add": "Ausbildung hinzufügen",
+      "degreePlaceholder": "Abschluss *",
+      "institutionPlaceholder": "Institution *",
+      "yearPlaceholder": "Jahr *",
+      "fieldPlaceholder": "Studienrichtung",
+      "gpaPlaceholder": "Note/GPA",
+      "descriptionPlaceholder": "Weitere Details wie Schwerpunkte, relevante Kurse oder Auszeichnungen. Nutzen Sie - + Leerzeichen für Aufzählungen.",
+      "empty": "Noch keine Ausbildung hinzugefügt"
+    },
+    "certifications": {
+      "add": "Zertifikat hinzufügen",
+      "namePlaceholder": "Zertifikat *",
+      "issuerPlaceholder": "Aussteller *",
+      "datePlaceholder": "Datum",
+      "empty": "Noch keine Zertifikate hinzugefügt"
+    },
+    "ai": {
+      "summaryPlaceholder": "Z.B.: Betone meine Projektmanagement-Erfahrung und Führungsqualitäten...",
+      "summaryTitle": "Zusammenfassung optimieren",
+      "summaryDescription": "Beschreibe, wie die Zusammenfassung angepasst werden soll (3-5 Sätze).",
+      "summaryWarning": "Die AI generiert eine neue Zusammenfassung. Danach musst du manuell speichern.",
+      "experiencePlaceholder": "z.B. Betone messbare Erfolge und Teamführung",
+      "projectPlaceholder": "z.B. Betone die verwendeten Technologien und den Business-Impact",
+      "descriptionTitle": "Beschreibung mit AI verbessern",
+      "experienceDescription": "Die KI generiert aussagekräftige Bullet-Points mit Aktionsverben und quantifizierbaren Erfolgen.",
+      "projectDescription": "Die KI generiert aussagekräftige Bullet-Points mit Technologie-Fokus und messbaren Ergebnissen.",
+      "descriptionWarning": "Geben Sie Anweisungen ein, um die Beschreibung zu generieren."
+    }
+  },
+  "designPanel": {
+    "tooltip": "Schriftgröße, Dichte, Schrift & Akzentfarbe anpassen",
+    "title": "Design anpassen",
+    "description": "Wirkt auf die exportierten PDFs. Die Vorschau im Editor ist eine Näherung.",
+    "fontScale": {
+      "label": "Schriftgröße",
+      "sm": {
+        "label": "S",
+        "hint": "Kleiner (−8 %)"
+      },
+      "md": {
+        "label": "M",
+        "hint": "Original"
+      },
+      "lg": {
+        "label": "L",
+        "hint": "Größer (+8 %)"
+      }
+    },
+    "density": {
+      "label": "Dichte",
+      "compact": {
+        "label": "Kompakt",
+        "hint": "Engere Abstände — mehr Inhalt pro Seite"
+      },
+      "normal": {
+        "label": "Normal",
+        "hint": "Original-Abstände des Designs"
+      },
+      "relaxed": {
+        "label": "Locker",
+        "hint": "Großzügigere Abstände"
+      }
+    },
+    "fontFamily": {
+      "label": "Schrift",
+      "default": "Standard (Design-Schrift)",
+      "lato": "Lato (serifenlos)",
+      "sourceSans": "Source Sans 3 (serifenlos)",
+      "merriweather": "Merriweather (Serifen)"
+    },
+    "accent": {
+      "label": "Akzentfarbe",
+      "reset": "Zurücksetzen",
+      "ariaPreset": "Akzentfarbe {name}",
+      "customTitle": "Eigene Farbe wählen",
+      "customAria": "Eigene Akzentfarbe wählen",
+      "presets": {
+        "navy": "Navy",
+        "anthracite": "Anthrazit",
+        "carmine": "Karminrot",
+        "teal": "Petrol",
+        "forestGreen": "Waldgrün",
+        "brown": "Braun"
+      }
+    },
+    "photo": {
+      "label": "Bewerbungsfoto",
+      "uploadPrefix": "Lade zuerst ein Foto in deinem",
+      "profileLink": "Profil",
+      "uploadSuffix": "hoch.",
+      "aria": "Bewerbungsfoto im Lebenslauf anzeigen",
+      "atsWarning": "Für ATS-Systeme und Bewerbungen außerhalb der DACH-Region empfohlen: ohne Foto."
+    }
+  },
+  "fontSize": {
+    "ariaLabel": "Schriftgröße",
+    "placeholder": "Größe"
+  },
+  "pdfPreview": {
+    "loading": "Lädt PDF...",
+    "loadingShort": "Lädt...",
+    "errorTitle": "PDF konnte nicht geladen werden",
+    "errorDescription": "Der Download-Link ist möglicherweise abgelaufen.",
+    "previousPage": "Vorherige Seite",
+    "nextPage": "Nächste Seite",
+    "zoomOut": "Verkleinern",
+    "zoomIn": "Vergrößern",
+    "pageCount": "Seite {page} / {pages}",
+    "download": "Download"
+  },
+  "richText": {
+    "bold": "Fett",
+    "italic": "Kursiv",
+    "bulletList": "Aufzählung",
+    "orderedList": "Nummerierte Liste",
+    "quote": "Zitat",
+    "defaultPlaceholder": "Beginnen Sie mit dem Schreiben..."
+  },
+  "aiAssistant": {
+    "trigger": "AI-Assistent",
+    "defaultPlaceholder": "Z.B.: Betone meine React-Erfahrung stärker...",
+    "title": "AI-Anweisungen",
+    "description": "Beschreibe, wie der Inhalt angepasst werden soll.",
+    "loading": "AI arbeitet...",
+    "warning": "Die AI passt den Inhalt an. Die Änderungen werden automatisch gespeichert.",
+    "apply": "Anwenden"
+  },
+  "description": {
+    "defaultPlaceholder": "Beschreiben Sie Ihre Aufgaben, Verantwortlichkeiten und Erfolge..."
+  },
+  "templatePreview": {
+    "loadingTemplate": "Vorlage wird geladen...",
+    "loadFailed": "Vorlage konnte nicht geladen werden",
+    "templateLabel": "Vorlage:",
+    "defaultBadge": "(Standard)",
+    "resumeTitle": "Lebenslauf-Vorschau",
+    "coverLetterTitle": "Anschreiben-Vorschau",
+    "noCoverLetter": "Noch kein Anschreiben vorhanden"
+  },
+  "resumePreview": {
+    "footer": "Vorschau · Das finale PDF wird beim Herunterladen erstellt"
+  }
+}

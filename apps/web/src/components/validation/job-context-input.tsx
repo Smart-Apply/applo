@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   ArrowLeft,
   Sparkles,
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api-client';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 import { cn } from '@/lib/utils';
 
 interface JobContextInputProps {
@@ -83,6 +85,7 @@ export function JobContextInput({
   isSubmitting,
   limitReached,
 }: JobContextInputProps) {
+  const t = useTranslations('validation');
   const [jobMode, setJobMode] = useState<JobMode>('link');
   const [jobUrl, setJobUrl] = useState('');
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>('idle');
@@ -127,8 +130,8 @@ export function JobContextInput({
   };
 
   const jobModeOptions = [
-    { value: 'link', label: 'Link analysieren' },
-    { value: 'text', label: 'Text einfügen' },
+    { value: 'link', label: t('jobContext.toggle.link') },
+    { value: 'text', label: t('jobContext.toggle.text') },
   ];
 
   return (
@@ -136,10 +139,10 @@ export function JobContextInput({
       {/* Card head */}
       <div className="mb-6">
         <h2 className="font-heading text-[19px] font-bold tracking-tight text-foreground">
-          Zielstelle & Feedback
+          {t('jobContext.title')}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Optional — aber mit Stellenkontext bewertet die KI auch die Passung zur Stelle.
+          {t('jobContext.subtitle')}
         </p>
       </div>
 
@@ -147,9 +150,9 @@ export function JobContextInput({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-[14.5px] font-semibold text-foreground">
-            Stellenanzeige{' '}
+            {t('jobContext.jobPostingLabel')}{' '}
             <span className="text-xs font-normal text-muted-foreground">
-              (optional)
+              {t('jobContext.optional')}
             </span>
           </Label>
           <SegmentedToggle
@@ -177,18 +180,18 @@ export function JobContextInput({
                       {parsedChip.title}
                     </span>
                     <span className="flex-shrink-0 border border-[#BFE9CC] bg-[#ECFAF0] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-success dark:border-green-400/30 dark:bg-green-400/10">
-                      Analysiert
+                      {t('jobContext.analyzed')}
                     </span>
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {parsedChip.host} · Anzeige erfolgreich gelesen
+                    {t('jobContext.readSuccess', { host: parsedChip.host })}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleRemoveLink}
                   className="flex-shrink-0 rounded-[3px] p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  aria-label="Link entfernen"
+                  aria-label={t('jobContext.removeLinkAria')}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -219,12 +222,12 @@ export function JobContextInput({
                   {fetchStatus === 'loading' ? (
                     <>
                       <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      Analysiere…
+                      {t('jobContext.analyzing')}
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                      Analysieren
+                      {t('jobContext.analyze')}
                     </>
                   )}
                 </Button>
@@ -236,7 +239,7 @@ export function JobContextInput({
               <div className="flex items-start gap-2.5 rounded-[3px] border border-[#F3E3B3] bg-[#FDF6E7] px-4 py-3 text-sm dark:border-amber-400/30 dark:bg-amber-400/10">
                 <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#A16207] dark:text-amber-300" />
                 <div className="text-[#854D0E] dark:text-amber-300/90">
-                  Der Link konnte nicht gelesen werden.{' '}
+                  {t('jobContext.linkError')}{' '}
                   <button
                     type="button"
                     className="font-semibold underline"
@@ -245,7 +248,7 @@ export function JobContextInput({
                       setFetchStatus('idle');
                     }}
                   >
-                    Text der Anzeige einfügen →
+                    {t('jobContext.pasteAdText')}
                   </button>
                 </div>
               </div>
@@ -256,7 +259,7 @@ export function JobContextInput({
           <div className="relative">
             <Textarea
               rows={5}
-              placeholder="z.B. Stationsleitung Pflege — oder die komplette Stellenanzeige einfügen…"
+              placeholder={t('jobContext.textPlaceholder')}
               value={jobContext}
               onChange={(e) => onJobContextChange(e.target.value)}
               className="resize-y text-sm"
@@ -269,7 +272,7 @@ export function JobContextInput({
                   jobContext.length > 24000 ? 'text-destructive' : 'text-muted-foreground',
                 )}
               >
-                {jobContext.length.toLocaleString('de-DE')} / 24.000
+                {jobContext.length.toLocaleString(getIntlLocale())} / 24.000
               </span>
             </div>
           </div>
@@ -280,13 +283,13 @@ export function JobContextInput({
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label className="text-[14.5px] font-semibold text-foreground">
-            Titel{' '}
+            {t('jobContext.titleLabel')}{' '}
             <span className="text-xs font-normal text-muted-foreground">
-              (optional)
+              {t('jobContext.optional')}
             </span>
           </Label>
           <Input
-            placeholder="z.B. Bewerbung Klinikum München"
+            placeholder={t('jobContext.titlePlaceholder')}
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             className="text-sm"
@@ -294,15 +297,15 @@ export function JobContextInput({
         </div>
         <div className="space-y-1.5">
           <Label className="text-[14.5px] font-semibold text-foreground">
-            Sprache des Feedbacks
+            {t('jobContext.feedbackLanguage')}
           </Label>
           <Select value={language} onValueChange={onLanguageChange}>
             <SelectTrigger className="text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="auto">Automatisch</SelectItem>
-              <SelectItem value="de">Deutsch</SelectItem>
+              <SelectItem value="auto">{t('jobContext.languageAuto')}</SelectItem>
+              <SelectItem value="de">{t('jobContext.languageGerman')}</SelectItem>
               <SelectItem value="en">English</SelectItem>
             </SelectContent>
           </Select>
@@ -313,8 +316,7 @@ export function JobContextInput({
       <div className="mt-5 flex items-start gap-2.5 border-l-[3px] border-brand bg-muted px-4 py-3 text-sm text-foreground">
         <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 opacity-60" />
         <p>
-          Deine Unterlagen werden nur für diese Prüfung verwendet und nicht gespeichert. Ohne
-          Stellenkontext bewertet die KI ausschließlich Qualität und ATS-Aufbau.
+          {t('jobContext.privacyNote')}
         </p>
       </div>
 
@@ -322,7 +324,7 @@ export function JobContextInput({
       <div className="mt-8 flex items-center justify-between">
         <Button type="button" variant="ghost" onClick={onBack} className="gap-1.5">
           <ArrowLeft className="h-4 w-4" />
-          Zurück
+          {t('jobContext.back')}
         </Button>
         <Button
           type="button"
@@ -332,7 +334,7 @@ export function JobContextInput({
           className="gap-2"
         >
           <Sparkles className="h-4 w-4" />
-          Bewerbung prüfen
+          {t('jobContext.submit')}
         </Button>
       </div>
     </div>

@@ -5,6 +5,7 @@
  * Place at: apps/web/src/components/analytics/insight-strip.tsx
  */
 import { Lightbulb } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { AnalyticsOverview } from '@/types';
 import { buildFunnel, leakiestStep } from '@/lib/analytics-utils';
 
@@ -13,9 +14,12 @@ interface Props {
 }
 
 export function InsightStrip({ data }: Props) {
+  const t = useTranslations('analytics');
   const funnel = buildFunnel(data.totals);
   const leak   = leakiestStep(funnel);
   const isNew  = data.totals.applications < 8;
+  const stageLabel = (label: string) =>
+    t(`stages.${funnel.find((stage) => stage.label === label)?.key ?? 'CREATED'}`);
 
   return (
     <div className="flex items-start gap-3 px-4 py-3.5 bg-card border border-border border-l-4 border-l-brand rounded-[4px]">
@@ -26,31 +30,31 @@ export function InsightStrip({ data }: Props) {
       <p className="text-sm leading-relaxed text-foreground text-balance">
         {isNew ? (
           <>
-            Guter Start —{' '}
-            <strong className="font-semibold">{data.totals.applications} Bewerbungen</strong>{' '}
-            erstellt, davon{' '}
-            <strong className="font-semibold">{data.totals.applied} abgeschickt</strong>.{' '}
-            <span className="text-muted-foreground">
-              Erstelle ein paar mehr, damit aussagekräftige Trends entstehen.
-            </span>
+            {t.rich('insight.new', {
+              applications: data.totals.applications,
+              applied: data.totals.applied,
+              strong: (chunks) => <strong className="font-semibold">{chunks}</strong>,
+              muted: (chunks) => <span className="text-muted-foreground">{chunks}</span>,
+            })}
           </>
         ) : (
           <>
-            Deine Interview-Quote liegt bei{' '}
-            <strong className="font-semibold">{data.interviewRate}%</strong>
-            {data.interviewRate >= 20 && ' — über dem Durchschnitt'}.
+            {t.rich(data.interviewRate >= 20 ? 'insight.establishedAboveAverage' : 'insight.established', {
+              rate: data.interviewRate,
+              strong: (chunks) => <strong className="font-semibold">{chunks}</strong>,
+            })}
             {leak && (
               <>
-                {' '}Die größte Hürde ist{' '}
+                {' '}{t('insight.biggestHurdle')}{' '}
                 <strong className="font-semibold">
-                  {leak.from} → {leak.to}
+                  {stageLabel(leak.from)} → {stageLabel(leak.to)}
                 </strong>{' '}
-                ({leak.conv}% gehen weiter).
+                {t('insight.continue', { value: leak.conv })}
               </>
             )}
             {' '}
             <span className="text-muted-foreground">
-              Tipp: Ein höherer ATS-Score senkt die Abbruchrate spürbar.
+              {t('insight.tip')}
             </span>
           </>
         )}

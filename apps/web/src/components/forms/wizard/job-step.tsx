@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +27,7 @@ interface JobStepProps {
 }
 
 export function JobStep({ onJobCreated }: JobStepProps) {
+  const t = useTranslations('wizard');
   const [parsedData, setParsedData] = useState<JobPosting | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('url');
@@ -108,32 +110,32 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                 <Check className="h-5 w-5 text-[#16A34A]" strokeWidth={3} />
               </div>
               <div>
-                <CardTitle className="font-heading text-lg font-bold tracking-[-.01em]">Stelle erfasst</CardTitle>
-                <CardDescription className="mt-0.5 text-[13.5px]">Die Stellenanzeige wurde erfolgreich gespeichert.</CardDescription>
+                <CardTitle className="font-heading text-lg font-bold tracking-[-.01em]">{t('jobStep.success.title')}</CardTitle>
+                <CardDescription className="mt-0.5 text-[13.5px]">{t('jobStep.success.description')}</CardDescription>
               </div>
             </div>
             <Badge className="gap-1.5 rounded-none bg-[#16A34A] px-2.5 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-[.06em] text-white hover:bg-[#16A34A]">
               <Check className="h-3 w-3" strokeWidth={3.4} />
-              Gespeichert
+              {t('jobStep.success.badge')}
             </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4 p-6">
           <div className="border border-[#E0E0E0] bg-[#FAFAFA]">
             <div className="grid grid-cols-[auto_1fr]">
-              <div className="border-b border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]">Titel</div>
+              <div className="border-b border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]">{t('jobStep.summary.title')}</div>
               <div className="border-b border-[#E5E9F2] px-4.5 py-3.5 text-[15px] font-semibold text-foreground">{parsedData.title}</div>
-              <div className={cn('border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]', (parsedData.location || parsedData.description) && 'border-b')}>Firma</div>
+              <div className={cn('border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]', (parsedData.location || parsedData.description) && 'border-b')}>{t('jobStep.summary.company')}</div>
               <div className={cn('px-4.5 py-3.5 text-[15px] text-foreground', (parsedData.location || parsedData.description) && 'border-b border-[#E5E9F2]')}>{parsedData.company}</div>
               {parsedData.location && (
                 <>
-                  <div className={cn('border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]', parsedData.description && 'border-b')}>Standort</div>
+                  <div className={cn('border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]', parsedData.description && 'border-b')}>{t('jobStep.summary.location')}</div>
                   <div className={cn('px-4.5 py-3.5 text-[15px] text-foreground', parsedData.description && 'border-b border-[#E5E9F2]')}>{parsedData.location}</div>
                 </>
               )}
               {parsedData.description && (
                 <>
-                  <div className="border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]">Info</div>
+                  <div className="border-r border-[#E5E9F2] bg-white px-4.5 py-3.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-[#A0A0A0]">{t('jobStep.summary.info')}</div>
                   <div className="line-clamp-3 px-4.5 py-3.5 text-sm text-muted-foreground">{parsedData.description}</div>
                 </>
               )}
@@ -141,7 +143,7 @@ export function JobStep({ onJobCreated }: JobStepProps) {
           </div>
 
           <Button variant="outline" size="sm" onClick={handleReset} className="rounded-[3px] border-[#1B2A49] font-semibold hover:bg-[#E5E9F2]">
-            Andere Stelle verwenden
+            {t('jobStep.success.useOther')}
           </Button>
         </CardContent>
       </Card>
@@ -151,9 +153,9 @@ export function JobStep({ onJobCreated }: JobStepProps) {
   return (
     <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
       <CardHeader className="px-6 pb-0 pt-6">
-        <CardTitle className="font-heading text-[19px] font-bold tracking-[-.01em]">Stelle hinzufügen</CardTitle>
+        <CardTitle className="font-heading text-[19px] font-bold tracking-[-.01em]">{t('jobStep.title')}</CardTitle>
         <CardDescription className="text-[13.5px]">
-          Füge die Stellenanzeige per Link oder durch Einfügen des Textes hinzu.
+          {t('jobStep.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -161,11 +163,11 @@ export function JobStep({ onJobCreated }: JobStepProps) {
           <TabsList className="mb-6 grid w-full grid-cols-2">
             <TabsTrigger value="url" className="gap-2 py-3 text-[13.5px]">
               <LinkIcon className="h-4 w-4" />
-              Link einfügen
+              {t('jobStep.tabs.url')}
             </TabsTrigger>
             <TabsTrigger value="text" className="gap-2 py-3 text-[13.5px]">
               <FileText className="h-4 w-4" />
-              Text einfügen
+              {t('jobStep.tabs.text')}
             </TabsTrigger>
           </TabsList>
 
@@ -176,10 +178,9 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                 role="alert"
                 className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
               >
-                <p className="font-medium">Diese Stellenanzeige konnten wir nicht automatisch lesen.</p>
+                <p className="font-medium">{t('jobStep.urlFallback.title')}</p>
                 <p className="mt-1">
-                  Manche Jobportale blockieren das Auslesen. Bitte kopiere den Text
-                  der Anzeige und füge ihn im Tab &bdquo;Text einfügen&ldquo; ein.
+                  {t('jobStep.urlFallback.descriptionTextTab')}
                 </p>
                 <button
                   type="button"
@@ -189,15 +190,15 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                   }}
                   className="mt-2 inline-flex font-medium text-amber-900 underline underline-offset-2 hover:text-amber-950"
                 >
-                  Zum Text-Tab wechseln →
+                  {t('jobStep.urlFallback.switchToText')}
                 </button>
               </div>
             )}
             <form onSubmit={urlForm.handleSubmit(handleUrlParse)} className="space-y-4">
               <div>
-                <Label htmlFor="url" className="text-[13.5px] font-semibold">Link zur Stellenanzeige</Label>
+                <Label htmlFor="url" className="text-[13.5px] font-semibold">{t('jobStep.urlForm.urlLabel')}</Label>
                 <p className="mb-2.5 mt-1 text-[13px] text-muted-foreground">
-                  Unterstützt LinkedIn, Indeed und weitere Jobportale.
+                  {t('jobStep.urlForm.urlHelp')}
                 </p>
                 <Input
                   id="url"
@@ -222,10 +223,10 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                 {parseJobPosting.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Wird analysiert...
+                    {t('jobStep.urlForm.analyzing')}
                   </>
                 ) : (
-                  'Stellenanzeige analysieren'
+                  t('jobStep.urlForm.submit')
                 )}
               </Button>
             </form>
@@ -237,11 +238,11 @@ export function JobStep({ onJobCreated }: JobStepProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="manual-title">
-                    Stellentitel <span className="text-destructive">*</span>
+                    {t('jobPostingForm.fields.title')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="manual-title"
-                    placeholder="z.B. Marketing Manager, Pflegefachkraft"
+                    placeholder={t('jobStep.manualForm.titlePlaceholder')}
                     {...manualForm.register('title')}
                     className={manualForm.formState.errors.title ? 'border-destructive' : ''}
                   />
@@ -251,11 +252,11 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                 </div>
                 <div>
                   <Label htmlFor="manual-company">
-                    Unternehmen <span className="text-destructive">*</span>
+                    {t('jobPostingForm.fields.company')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="manual-company"
-                    placeholder="z.B. Unternehmen GmbH"
+                    placeholder={t('jobPostingForm.placeholders.company')}
                     {...manualForm.register('company')}
                     className={manualForm.formState.errors.company ? 'border-destructive' : ''}
                   />
@@ -266,24 +267,24 @@ export function JobStep({ onJobCreated }: JobStepProps) {
               </div>
 
               <div>
-                <Label htmlFor="manual-location">Standort</Label>
+                <Label htmlFor="manual-location">{t('jobPostingForm.fields.location')}</Label>
                 <Input
                   id="manual-location"
-                  placeholder="z.B. Berlin, Deutschland"
+                  placeholder={t('jobPostingForm.placeholders.location')}
                   {...manualForm.register('location')}
                 />
               </div>
 
               <div>
                 <Label htmlFor="manual-fullText">
-                  Stellenbeschreibung <span className="text-destructive">*</span>
+                  {t('jobPostingForm.fields.jobDescription')} <span className="text-destructive">*</span>
                 </Label>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Kopiere den gesamten Text der Stellenanzeige und füge ihn hier ein.
+                  {t('jobStep.manualForm.fullTextHelp')}
                 </p>
                 <Textarea
                   id="manual-fullText"
-                  placeholder="Füge hier den vollständigen Text der Stellenanzeige ein..."
+                  placeholder={t('jobStep.manualForm.fullTextPlaceholder')}
                   rows={8}
                   {...manualForm.register('fullText')}
                   className={manualForm.formState.errors.fullText ? 'border-destructive' : ''}
@@ -302,10 +303,10 @@ export function JobStep({ onJobCreated }: JobStepProps) {
                 {createJobPosting.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Wird gespeichert...
+                    {t('jobStep.manualForm.saving')}
                   </>
                 ) : (
-                  'Stelle speichern'
+                  t('jobStep.manualForm.submit')
                 )}
               </Button>
             </form>

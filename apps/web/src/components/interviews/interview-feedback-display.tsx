@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -22,12 +23,13 @@ interface InterviewFeedbackDisplayProps {
 }
 
 export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayProps) {
+  const t = useTranslations('interviews');
   if (session.status !== 'COMPLETED' || !session.feedback) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-40 text-muted-foreground">
           <AlertCircle className="h-5 w-5 mr-2" />
-          Keine Bewertung verfügbar. Schließe zuerst das Interview ab.
+          {t('feedback.noEvaluation')}
         </CardContent>
       </Card>
     );
@@ -55,18 +57,18 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
 
   // Build category scores array
   const categoryScores = [
-    { name: 'Kommunikation', score: feedback.communicationScore, icon: <MessageSquare className="h-4 w-4" /> },
-    { name: 'Präsentation', score: feedback.presentationScore, icon: <Target className="h-4 w-4" /> },
+    { name: t('feedback.categories.communication'), score: feedback.communicationScore, icon: <MessageSquare className="h-4 w-4" /> },
+    { name: t('feedback.categories.presentation'), score: feedback.presentationScore, icon: <Target className="h-4 w-4" /> },
   ];
   
   if (feedback.technicalScore !== undefined && feedback.technicalScore > 0) {
-    categoryScores.push({ name: 'Fachkompetenz', score: feedback.technicalScore, icon: <Lightbulb className="h-4 w-4" /> });
+    categoryScores.push({ name: t('feedback.categories.technical'), score: feedback.technicalScore, icon: <Lightbulb className="h-4 w-4" /> });
   }
   if (feedback.problemSolvingScore !== undefined && feedback.problemSolvingScore > 0) {
-    categoryScores.push({ name: 'Problemlösung', score: feedback.problemSolvingScore, icon: <Target className="h-4 w-4" /> });
+    categoryScores.push({ name: t('feedback.categories.problemSolving'), score: feedback.problemSolvingScore, icon: <Target className="h-4 w-4" /> });
   }
   if (feedback.cultureFitScore !== undefined && feedback.cultureFitScore > 0) {
-    categoryScores.push({ name: 'Kulturfit', score: feedback.cultureFitScore, icon: <Award className="h-4 w-4" /> });
+    categoryScores.push({ name: t('feedback.categories.cultureFit'), score: feedback.cultureFitScore, icon: <Award className="h-4 w-4" /> });
   }
 
   return (
@@ -77,7 +79,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <Award className="h-5 w-5 text-primary" />
-              Gesamtbewertung
+              {t('feedback.overallRating')}
             </CardTitle>
             <Badge
               variant={getScoreBadgeVariant(feedback.overallScore)}
@@ -116,7 +118,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2 text-success">
               <TrendingUp className="h-5 w-5" />
-              Stärken
+              {t('feedback.strengths')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -136,7 +138,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2 text-[#A16207] dark:text-amber-300">
               <TrendingDown className="h-5 w-5" />
-              Verbesserungspotenzial
+              {t('feedback.improvements')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -155,7 +157,7 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
       {/* Question-by-Question Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Frage-für-Frage Analyse</CardTitle>
+          <CardTitle className="text-lg">{t('feedback.questionAnalysis')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {session.questions
@@ -171,6 +173,8 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
                   feedback={question.feedback || ''}
                   getScoreColor={getScoreColor}
                   getScoreBadgeVariant={getScoreBadgeVariant}
+                  questionLabel={t('feedback.questionLabel')}
+                  answerLabel={t('feedback.answerLabel')}
                 />
               </div>
             ))}
@@ -229,6 +233,8 @@ interface QuestionFeedbackItemProps {
   feedback: string;
   getScoreColor: (score: number) => string;
   getScoreBadgeVariant: (score: number) => 'default' | 'secondary' | 'destructive';
+  questionLabel: string;
+  answerLabel: string;
 }
 
 function QuestionFeedbackItem({
@@ -238,17 +244,19 @@ function QuestionFeedbackItem({
   score,
   feedback,
   getScoreBadgeVariant,
+  questionLabel,
+  answerLabel,
 }: QuestionFeedbackItemProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <p className="font-medium text-sm">
-            <span className="text-muted-foreground">Frage {questionNumber}:</span> {question}
+            <span className="text-muted-foreground">{questionLabel} {questionNumber}:</span> {question}
           </p>
           {answer && (
             <p className="text-sm text-muted-foreground mt-1 italic">
-              Deine Antwort: &ldquo;{answer.length > 200 ? `${answer.slice(0, 200)}...` : answer}
+              {answerLabel}: &ldquo;{answer.length > 200 ? `${answer.slice(0, 200)}...` : answer}
               &rdquo;
             </p>
           )}

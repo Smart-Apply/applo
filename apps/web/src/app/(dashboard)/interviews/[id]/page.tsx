@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useInterviewSession } from '@/hooks/use-interviews';
 import { useVoiceInterviewConfig } from '@/hooks/use-voice-interview';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,30 +18,37 @@ import {
 import { cn } from '@/lib/utils';
 import { ArrowLeft, MessageSquare, Mic, Trophy } from 'lucide-react';
 
-const statusConfig = {
-  IN_PROGRESS: { label: 'Laufend', variant: 'default' as const },
-  COMPLETED: { label: 'Abgeschlossen', variant: 'secondary' as const },
-  ABANDONED: { label: 'Abgebrochen', variant: 'destructive' as const },
-};
+const statusVariants = {
+  IN_PROGRESS: 'default',
+  COMPLETED: 'secondary',
+  ABANDONED: 'destructive',
+} as const;
 
-const difficultyLabels = {
-  EASY: 'Einsteiger',
-  MEDIUM: 'Standard',
-  HARD: 'Experte',
-};
+const statusLabelKeys = {
+  IN_PROGRESS: 'inProgress',
+  COMPLETED: 'completed',
+  ABANDONED: 'abandoned',
+} as const;
 
-const typeLabels = {
-  BEHAVIORAL: 'Verhalten',
-  TECHNICAL: 'Technisch',
-  CASE_STUDY: 'Fallstudie',
-  MIXED: 'Gemischt',
-};
+const difficultyLabelKeys = {
+  EASY: 'easy',
+  MEDIUM: 'medium',
+  HARD: 'hard',
+} as const;
+
+const typeLabelKeys = {
+  BEHAVIORAL: 'behavioral',
+  TECHNICAL: 'technical',
+  CASE_STUDY: 'caseStudy',
+  MIXED: 'mixed',
+} as const;
 
 type Mode = 'select' | 'text' | 'voice';
 
 export default function InterviewSessionPage() {
   const params = useParams();
   const router = useRouter();
+  const t = useTranslations('interviews');
   const sessionId = params.id as string;
 
   const { data: session, isLoading, refetch } = useInterviewSession(sessionId);
@@ -82,9 +90,9 @@ export default function InterviewSessionPage() {
       <div className="container max-w-4xl py-6">
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Interview-Session nicht gefunden.</p>
+            <p className="text-muted-foreground">{t('detail.notFound')}</p>
             <Button variant="outline" onClick={() => router.push('/interviews')} className="mt-4">
-              Zurück zur Übersicht
+              {t('detail.backToOverview')}
             </Button>
           </CardContent>
         </Card>
@@ -92,7 +100,6 @@ export default function InterviewSessionPage() {
     );
   }
 
-  const config = statusConfig[session.status];
   const isCompleted = session.status === 'COMPLETED';
   const isInProgress = session.status === 'IN_PROGRESS';
   const voiceAvailable = !!voiceConfig?.available;
@@ -106,22 +113,25 @@ export default function InterviewSessionPage() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="font-heading text-2xl font-extrabold tracking-[-.025em]">{session.jobTitle || 'Allgemeines Interview'}</h1>
-            <Badge variant={config.variant}>{config.label}</Badge>
+            <h1 className="font-heading text-2xl font-extrabold tracking-[-.025em]">{session.jobTitle || t('page.generalInterview')}</h1>
+            <Badge variant={statusVariants[session.status]}>{t(`page.status.${statusLabelKeys[session.status]}`)}</Badge>
           </div>
           {session.company && <p className="text-muted-foreground">{session.company}</p>}
           <div className="flex flex-wrap gap-2 mt-3">
-            <Badge variant="outline">{typeLabels[session.type]}</Badge>
-            <Badge variant="outline">{difficultyLabels[session.difficulty]}</Badge>
+            <Badge variant="outline">{t(`detail.type.${typeLabelKeys[session.type]}`)}</Badge>
+            <Badge variant="outline">{t(`detail.difficulty.${difficultyLabelKeys[session.difficulty]}`)}</Badge>
             {session.industry && <Badge variant="outline">{session.industry}</Badge>}
             <Badge variant="outline" className="gap-1">
               <MessageSquare className="h-3 w-3" />
-              {session.answeredCount}/{session.maxQuestions} Fragen
+              {t('detail.questionsProgress', {
+                answered: session.answeredCount,
+                total: session.maxQuestions,
+              })}
             </Badge>
             {session.overallScore !== undefined && session.overallScore !== null && (
               <Badge variant="outline" className="gap-1">
                 <Trophy className="h-3 w-3 text-[#A16207] dark:text-amber-300" />
-                {session.overallScore}/100 Punkte
+                {t('detail.scorePoints', { score: session.overallScore })}
               </Badge>
             )}
           </div>
@@ -145,8 +155,8 @@ export default function InterviewSessionPage() {
                 <div className="inline-flex gap-1 rounded-[3px] border bg-card p-1.5">
                   {(
                     [
-                      { key: 'text' as const, label: 'Text-Chat', icon: MessageSquare },
-                      { key: 'voice' as const, label: 'Sprach-Interview', icon: Mic },
+                      { key: 'text' as const, label: t('detail.mode.text'), icon: MessageSquare },
+                      { key: 'voice' as const, label: t('detail.mode.voice'), icon: Mic },
                     ]
                   ).map(({ key, label, icon: Icon }) => (
                     <button
@@ -166,7 +176,7 @@ export default function InterviewSessionPage() {
                   ))}
                 </div>
                 <span className="text-[13px] text-muted-foreground">
-                  Du kannst den Modus jederzeit wechseln
+                  {t('detail.modeSwitchHint')}
                 </span>
               </div>
             )}
@@ -193,20 +203,23 @@ export default function InterviewSessionPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Interview beendet</CardTitle>
+            <CardTitle>{t('detail.endedTitle')}</CardTitle>
             <CardDescription>
-              Diese Interview-Session wurde{' '}
-              {session.status === 'ABANDONED' ? 'abgebrochen' : 'beendet'}.
+              {t(
+                session.status === 'ABANDONED'
+                  ? 'detail.endedDescriptionAbandoned'
+                  : 'detail.endedDescriptionEnded',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <p className="text-muted-foreground">
                 {session.status === 'ABANDONED'
-                  ? 'Sie können ein neues Interview starten, um zu üben.'
-                  : 'Sehen Sie sich Ihr Feedback und die Ergebnisse an.'}
+                  ? t('detail.endedAbandonedHint')
+                  : t('detail.endedCompletedHint')}
               </p>
-              <Button onClick={() => router.push('/interviews')}>Zur Übersicht</Button>
+              <Button onClick={() => router.push('/interviews')}>{t('detail.backToOverview')}</Button>
             </div>
           </CardContent>
         </Card>

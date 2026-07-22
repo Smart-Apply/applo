@@ -19,6 +19,7 @@
 
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { X, Plus, Edit3, Pencil, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -193,14 +194,14 @@ type ResumeSection =
   | 'skills'
   | 'languages'
   | 'certs';
-const RESUME_SECTIONS: { key: ResumeSection; label: string }[] = [
-  { key: 'profile', label: 'Profil' },
-  { key: 'experience', label: 'Berufserfahrung' },
-  { key: 'education', label: 'Ausbildung' },
-  { key: 'projects', label: 'Projekte' },
-  { key: 'skills', label: 'Fähigkeiten' },
-  { key: 'languages', label: 'Sprachen' },
-  { key: 'certs', label: 'Zertifikate' },
+const RESUME_SECTIONS: { key: ResumeSection; labelKey: string }[] = [
+  { key: 'profile', labelKey: 'profile' },
+  { key: 'experience', labelKey: 'experience' },
+  { key: 'education', labelKey: 'education' },
+  { key: 'projects', labelKey: 'projects' },
+  { key: 'skills', labelKey: 'skills' },
+  { key: 'languages', labelKey: 'languages' },
+  { key: 'certs', labelKey: 'certs' },
 ];
 /** Default document order — matches the editor's original hardcoded layout. */
 const DEFAULT_SECTION_ORDER: ResumeSection[] = [
@@ -296,6 +297,7 @@ export function EditableResume({
   onGenerateExperience,
   onGenerateProject,
 }: EditableResumeProps) {
+  const t = useTranslations('editor');
   // Frozen snapshot for passthrough of untouched top-level fields.
   const [original] = useState(() => value);
 
@@ -522,8 +524,8 @@ export function EditableResume({
       <button
         type="button"
         className="ed-mv-sec up"
-        title="Nach oben verschieben"
-        aria-label="Nach oben verschieben"
+        title={t('resume.moveUp')}
+        aria-label={t('resume.moveUp')}
         disabled={index === 0}
         onClick={() => moveListItem(key, id, -1)}
       >
@@ -532,8 +534,8 @@ export function EditableResume({
       <button
         type="button"
         className="ed-mv-sec down"
-        title="Nach unten verschieben"
-        aria-label="Nach unten verschieben"
+        title={t('resume.moveDown')}
+        aria-label={t('resume.moveDown')}
         disabled={index === count - 1}
         onClick={() => moveListItem(key, id, 1)}
       >
@@ -547,8 +549,8 @@ export function EditableResume({
       <button
         type="button"
         className="mv"
-        title="Nach links verschieben"
-        aria-label="Nach links verschieben"
+        title={t('resume.moveLeft')}
+        aria-label={t('resume.moveLeft')}
         disabled={index === 0}
         onClick={() => move(-1)}
       >
@@ -557,8 +559,8 @@ export function EditableResume({
       <button
         type="button"
         className="mv"
-        title="Nach rechts verschieben"
-        aria-label="Nach rechts verschieben"
+        title={t('resume.moveRight')}
+        aria-label={t('resume.moveRight')}
         disabled={index === count - 1}
         onClick={() => move(1)}
       >
@@ -738,21 +740,21 @@ export function EditableResume({
   const contactPopover = (
     <Popover open={contactOpen} onOpenChange={setContactOpen}>
       <PopoverTrigger asChild>
-        <button type="button" className="rd-contact-edit" title="Kontaktdaten bearbeiten">
-          <Pencil className="h-3 w-3" /> Kontaktdaten
+        <button type="button" className="rd-contact-edit" title={t('resume.contact.edit')}>
+          <Pencil className="h-3 w-3" /> {t('resume.contact.button')}
         </button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-80 space-y-2.5">
-        <p className="text-sm font-semibold">Kontaktdaten bearbeiten</p>
+        <p className="text-sm font-semibold">{t('resume.contact.edit')}</p>
         {field('E-Mail', meta.email, (v) => commitMeta({ email: v }), 'du@example.com')}
         {field('Telefon', meta.phone, (v) => commitMeta({ phone: v }), '+49 …')}
         {field('LinkedIn (URL)', meta.linkedin, (v) => commitMeta({ linkedin: v }), 'https://linkedin.com/in/…')}
         {field('GitHub (URL)', meta.github, (v) => commitMeta({ github: v }), 'https://github.com/…')}
         <div className="grid grid-cols-2 gap-2">
-          {field('Straße', meta.street, (v) => commitMeta({ street: v }))}
-          {field('PLZ', meta.postalCode, (v) => commitMeta({ postalCode: v }))}
-          {field('Stadt', meta.city, (v) => commitMeta({ city: v }))}
-          {field('Land', meta.country, (v) => commitMeta({ country: v }))}
+          {field(t('resume.contact.street'), meta.street, (v) => commitMeta({ street: v }))}
+          {field(t('resume.contact.postalCode'), meta.postalCode, (v) => commitMeta({ postalCode: v }))}
+          {field(t('resume.contact.city'), meta.city, (v) => commitMeta({ city: v }))}
+          {field(t('resume.contact.country'), meta.country, (v) => commitMeta({ country: v }))}
         </div>
       </PopoverContent>
     </Popover>
@@ -767,8 +769,8 @@ export function EditableResume({
         <button
           type="button"
           className="rd-sec-mv"
-          title={`${label} nach oben verschieben`}
-          aria-label={`${label} nach oben verschieben`}
+          title={t('resume.sectionMoveUp', { label })}
+          aria-label={t('resume.sectionMoveUp', { label })}
           disabled={!canMoveSection(key, -1)}
           onClick={() => moveSection(key, -1)}
         >
@@ -777,8 +779,8 @@ export function EditableResume({
         <button
           type="button"
           className="rd-sec-mv"
-          title={`${label} nach unten verschieben`}
-          aria-label={`${label} nach unten verschieben`}
+          title={t('resume.sectionMoveDown', { label })}
+          aria-label={t('resume.sectionMoveDown', { label })}
           disabled={!canMoveSection(key, 1)}
           onClick={() => moveSection(key, 1)}
         >
@@ -787,8 +789,8 @@ export function EditableResume({
         <button
           type="button"
           className="rd-sec-rm"
-          title={`${label} entfernen`}
-          aria-label={`${label} entfernen`}
+          title={t('resume.sectionRemove', { label })}
+          aria-label={t('resume.sectionRemove', { label })}
           onClick={() => removeSection(key)}
         >
           <X className="h-3.5 w-3.5" strokeWidth={2.4} />
@@ -811,17 +813,17 @@ export function EditableResume({
             onInstructionsChange={setAiInstructions}
             onApply={runSummaryAi}
             isLoading={aiBusy}
-            title="KI: Profil"
-            description="Beschreibe, wie dein Profil angepasst werden soll."
-            placeholder="Z.B.: Betone meine Führungserfahrung stärker..."
-            applyButtonText="Profil anpassen"
+            title={t('resume.ai.profileTitle')}
+            description={t('resume.ai.profileDescription')}
+            placeholder={t('resume.ai.profilePlaceholder')}
+            applyButtonText={t('resume.ai.profileApply')}
             buttonSize="sm"
             buttonVariant="ghost"
             buttonClassName="h-7 px-2 text-xs text-primary hover:bg-primary/10"
           />
         ) : null,
       )}
-      <Editable key={`sum-${summaryNonce}`} className="rd-p" initial={meta.summary} placeholder="Kurzes Profil über dich …" onCommit={(v) => commitMeta({ summary: v })} />
+      <Editable key={`sum-${summaryNonce}`} className="rd-p" initial={meta.summary} placeholder={t('resume.placeholders.summary')} onCommit={(v) => commitMeta({ summary: v })} />
     </div>
   );
 
@@ -831,20 +833,20 @@ export function EditableResume({
       {lists.exp.map((x, index) => (
         <div className="rd-item" key={x.id}>
           {itemMovers('exp', x.id, index, lists.exp.length)}
-          <button className="ed-rm-sec" title="Station entfernen" onClick={() => rmStation(x.id)}>
+          <button className="ed-rm-sec" title={t('resume.remove.station')} onClick={() => rmStation(x.id)}>
             <X className="h-3.5 w-3.5" strokeWidth={2.4} />
           </button>
           <div className="rd-item-top">
-            <Editable className="rd-item-title" oneline initial={x.title} placeholder="Position" onCommit={(v) => setX(x.id, { title: v })} />
-            <Editable className="rd-item-date" oneline initial={x.dateRange} placeholder="Zeitraum" onCommit={(v) => setX(x.id, { dateRange: v })} />
+            <Editable className="rd-item-title" oneline initial={x.title} placeholder={t('resume.placeholders.position')} onCommit={(v) => setX(x.id, { title: v })} />
+            <Editable className="rd-item-date" oneline initial={x.dateRange} placeholder={t('resume.placeholders.dateRange')} onCommit={(v) => setX(x.id, { dateRange: v })} />
           </div>
-          <Editable className="rd-item-org" oneline initial={x.company} placeholder="Unternehmen" onCommit={(v) => setX(x.id, { company: v })} />
+          <Editable className="rd-item-org" oneline initial={x.company} placeholder={t('resume.placeholders.company')} onCommit={(v) => setX(x.id, { company: v })} />
           <ul className="rd-ul">
             {x.bullets.map((b) => (
               <li className="rd-li" key={b.id}>
                 <span className="bullet" style={{ color: accent }}>•</span>
-                <Editable className="rd-li-txt" oneline initial={b.text} placeholder="Was hast du erreicht?" onCommit={(v) => setBullet(x.id, b.id, v)} />
-                <button className="rm" title="Stichpunkt entfernen" onClick={() => rmBullet(x.id, b.id)}>
+                <Editable className="rd-li-txt" oneline initial={b.text} placeholder={t('resume.placeholders.achievement')} onCommit={(v) => setBullet(x.id, b.id, v)} />
+                <button className="rm" title={t('resume.remove.bullet')} onClick={() => rmBullet(x.id, b.id)}>
                   <X className="h-3 w-3" strokeWidth={2.4} />
                 </button>
               </li>
@@ -852,7 +854,7 @@ export function EditableResume({
           </ul>
           <div className="rd-item-actions">
             <button className="ed-add" onClick={() => addBullet(x.id)}>
-              <Plus className="h-3 w-3" strokeWidth={2.6} /> Stichpunkt
+              <Plus className="h-3 w-3" strokeWidth={2.6} /> {t('resume.add.bullet')}
             </button>
             {onGenerateExperience && (
               <AiAssistantPopover
@@ -862,10 +864,10 @@ export function EditableResume({
                 onInstructionsChange={setAiInstructions}
                 onApply={() => runExperienceAi(x, index)}
                 isLoading={aiBusy}
-                title="KI: Beschreibung"
-                description="Beschreibe, wie diese Station angepasst werden soll."
-                placeholder="Z.B.: Mehr messbare Erfolge, kürzer..."
-                applyButtonText="Beschreibung anpassen"
+                title={t('resume.ai.descriptionTitle')}
+                description={t('resume.ai.experienceDescription')}
+                placeholder={t('resume.ai.experiencePlaceholder')}
+                applyButtonText={t('resume.ai.descriptionApply')}
                 buttonSize="sm"
                 buttonVariant="ghost"
                 buttonClassName="h-7 px-2 text-xs text-primary hover:bg-primary/10"
@@ -875,7 +877,7 @@ export function EditableResume({
         </div>
       ))}
       <button className="ed-add big" onClick={addStation}>
-        <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Station hinzufügen
+        <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> {t('resume.add.station')}
       </button>
     </div>
   );
@@ -886,18 +888,18 @@ export function EditableResume({
       {lists.edu.map((e, index) => (
         <div className="rd-item" key={e.id}>
           {itemMovers('edu', e.id, index, lists.edu.length)}
-          <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmEdu(e.id)}>
+          <button className="ed-rm-sec" title={t('resume.remove.entry')} onClick={() => rmEdu(e.id)}>
             <X className="h-3.5 w-3.5" strokeWidth={2.4} />
           </button>
           <div className="rd-item-top">
-            <Editable className="rd-item-title" oneline initial={e.degree} placeholder="Abschluss" onCommit={(v) => setE(e.id, { degree: v })} />
-            <Editable className="rd-item-date" oneline initial={e.year} placeholder="Jahr" onCommit={(v) => setE(e.id, { year: v })} />
+            <Editable className="rd-item-title" oneline initial={e.degree} placeholder={t('resume.placeholders.degree')} onCommit={(v) => setE(e.id, { degree: v })} />
+            <Editable className="rd-item-date" oneline initial={e.year} placeholder={t('resume.placeholders.year')} onCommit={(v) => setE(e.id, { year: v })} />
           </div>
-          <Editable className="rd-item-org" oneline initial={e.institution} placeholder="Institution" onCommit={(v) => setE(e.id, { institution: v })} />
+          <Editable className="rd-item-org" oneline initial={e.institution} placeholder={t('resume.placeholders.institution')} onCommit={(v) => setE(e.id, { institution: v })} />
         </div>
       ))}
       <button className="ed-add big" onClick={addEdu}>
-        <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Eintrag hinzufügen
+        <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> {t('resume.add.entry')}
       </button>
     </div>
   );
@@ -908,19 +910,19 @@ export function EditableResume({
         {lists.projects.map((x, index) => (
           <div className="rd-item" key={x.id}>
             {itemMovers('projects', x.id, index, lists.projects.length)}
-            <button className="ed-rm-sec" title="Projekt entfernen" onClick={() => rmProject(x.id)}>
+            <button className="ed-rm-sec" title={t('resume.remove.project')} onClick={() => rmProject(x.id)}>
               <X className="h-3.5 w-3.5" strokeWidth={2.4} />
             </button>
             <div className="rd-item-top">
-              <Editable className="rd-item-title" oneline initial={x.name} placeholder="Projektname" onCommit={(v) => setP(x.id, { name: v })} />
-              <Editable className="rd-item-date" oneline initial={x.date} placeholder="Zeitraum" onCommit={(v) => setP(x.id, { date: v })} />
+              <Editable className="rd-item-title" oneline initial={x.name} placeholder={t('resume.placeholders.projectName')} onCommit={(v) => setP(x.id, { name: v })} />
+              <Editable className="rd-item-date" oneline initial={x.date} placeholder={t('resume.placeholders.dateRange')} onCommit={(v) => setP(x.id, { date: v })} />
             </div>
             <ul className="rd-ul">
               {x.bullets.map((b) => (
                 <li className="rd-li" key={b.id}>
                   <span className="bullet" style={{ color: accent }}>•</span>
-                  <Editable className="rd-li-txt" oneline initial={b.text} placeholder="Was hast du gemacht?" onCommit={(v) => setProjBullet(x.id, b.id, v)} />
-                  <button className="rm" title="Stichpunkt entfernen" onClick={() => rmProjBullet(x.id, b.id)}>
+                  <Editable className="rd-li-txt" oneline initial={b.text} placeholder={t('resume.placeholders.projectBullet')} onCommit={(v) => setProjBullet(x.id, b.id, v)} />
+                  <button className="rm" title={t('resume.remove.bullet')} onClick={() => rmProjBullet(x.id, b.id)}>
                     <X className="h-3 w-3" strokeWidth={2.4} />
                   </button>
                 </li>
@@ -928,7 +930,7 @@ export function EditableResume({
             </ul>
             <div className="rd-item-actions">
               <button className="ed-add" onClick={() => addProjBullet(x.id)}>
-                <Plus className="h-3 w-3" strokeWidth={2.6} /> Stichpunkt
+                <Plus className="h-3 w-3" strokeWidth={2.6} /> {t('resume.add.bullet')}
               </button>
               {onGenerateProject && (
                 <AiAssistantPopover
@@ -938,10 +940,10 @@ export function EditableResume({
                   onInstructionsChange={setAiInstructions}
                   onApply={() => runProjectAi(x, index)}
                   isLoading={aiBusy}
-                  title="KI: Projekt"
-                  description="Beschreibe, wie dieses Projekt angepasst werden soll."
-                  placeholder="Z.B.: Betone den Impact..."
-                  applyButtonText="Projekt anpassen"
+                  title={t('resume.ai.projectTitle')}
+                  description={t('resume.ai.projectDescription')}
+                  placeholder={t('resume.ai.projectPlaceholder')}
+                  applyButtonText={t('resume.ai.projectApply')}
                   buttonSize="sm"
                   buttonVariant="ghost"
                   buttonClassName="h-7 px-2 text-xs text-primary hover:bg-primary/10"
@@ -951,7 +953,7 @@ export function EditableResume({
           </div>
         ))}
         <button className="ed-add big" onClick={addProject}>
-          <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Projekt hinzufügen
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> {t('resume.add.project')}
         </button>
       </div>
     );
@@ -963,13 +965,13 @@ export function EditableResume({
         <div key={c.id}>
           {multiCat && (
             <div className="rd-cat-row">
-              <Editable className="rd-skill-cat" oneline initial={c.type} placeholder="Kategorie" onCommit={(v) => setCatType(c.id, v)} />
+              <Editable className="rd-skill-cat" oneline initial={c.type} placeholder={t('resume.placeholders.category')} onCommit={(v) => setCatType(c.id, v)} />
               <span className="rd-cat-tools">
                 <button
                   type="button"
                   className="mv"
-                  title="Kategorie nach oben verschieben"
-                  aria-label="Kategorie nach oben verschieben"
+                  title={t('resume.categoryMoveUp')}
+                  aria-label={t('resume.categoryMoveUp')}
                   disabled={catIndex === 0}
                   onClick={() => moveListItem('skillCats', c.id, -1)}
                 >
@@ -978,8 +980,8 @@ export function EditableResume({
                 <button
                   type="button"
                   className="mv"
-                  title="Kategorie nach unten verschieben"
-                  aria-label="Kategorie nach unten verschieben"
+                  title={t('resume.categoryMoveDown')}
+                  aria-label={t('resume.categoryMoveDown')}
                   disabled={catIndex === lists.skillCats.length - 1}
                   onClick={() => moveListItem('skillCats', c.id, 1)}
                 >
@@ -991,9 +993,9 @@ export function EditableResume({
           <div className="rd-skills" style={{ marginBottom: 8 }}>
             {c.skills.map((s, sIndex) => (
               <span className="rd-skill" key={s.id}>
-                <Editable tag="span" oneline initial={s.text} placeholder="Skill" onCommit={(v) => setSkillText(c.id, s.id, v)} />
+                <Editable tag="span" oneline initial={s.text} placeholder={t('resume.placeholders.skill')} onCommit={(v) => setSkillText(c.id, s.id, v)} />
                 {chipMovers(sIndex, c.skills.length, (dir) => moveSkill(c.id, s.id, dir))}
-                <button className="rm" title="Entfernen" onClick={() => rmSkill(c.id, s.id)}>
+                <button className="rm" title={t('resume.remove.generic')} onClick={() => rmSkill(c.id, s.id)}>
                   <X className="h-3 w-3" strokeWidth={2.6} />
                 </button>
               </span>
@@ -1002,12 +1004,12 @@ export function EditableResume({
               <input
                 value={skillDraft[c.id] || ''}
                 onChange={(e) => setSkillDraft((d) => ({ ...d, [c.id]: e.target.value }))}
-                placeholder="Skill hinzufügen…"
+                placeholder={t('resume.placeholders.addSkill')}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') addSkill(c.id);
                 }}
               />
-              <button onClick={() => addSkill(c.id)} title="Hinzufügen">
+              <button onClick={() => addSkill(c.id)} title={t('resume.add.generic')}>
                 <Plus className="h-3.5 w-3.5" strokeWidth={2.6} />
               </button>
             </span>
@@ -1015,7 +1017,7 @@ export function EditableResume({
         </div>
       ))}
       <button className="ed-add" onClick={addCategory}>
-        <Plus className="h-3 w-3" strokeWidth={2.6} /> Kategorie
+        <Plus className="h-3 w-3" strokeWidth={2.6} /> {t('resume.add.category')}
       </button>
     </div>
   );
@@ -1026,16 +1028,16 @@ export function EditableResume({
       <div className="rd-skills">
         {lists.langs.map((l, index) => (
           <span className="rd-skill" key={l.id}>
-            <Editable tag="span" oneline initial={l.name} placeholder="Sprache" onCommit={(v) => setLang(l.id, { name: v })} />
-            <Editable tag="span" oneline initial={l.level} placeholder="Niveau" onCommit={(v) => setLang(l.id, { level: v })} className="text-muted-foreground" />
+            <Editable tag="span" oneline initial={l.name} placeholder={t('resume.placeholders.language')} onCommit={(v) => setLang(l.id, { name: v })} />
+            <Editable tag="span" oneline initial={l.level} placeholder={t('resume.placeholders.level')} onCommit={(v) => setLang(l.id, { level: v })} className="text-muted-foreground" />
             {chipMovers(index, lists.langs.length, (dir) => moveListItem('langs', l.id, dir))}
-            <button className="rm" title="Entfernen" onClick={() => rmLang(l.id)}>
+            <button className="rm" title={t('resume.remove.generic')} onClick={() => rmLang(l.id)}>
               <X className="h-3 w-3" strokeWidth={2.6} />
             </button>
           </span>
         ))}
         <button className="ed-add" onClick={addLang}>
-          <Plus className="h-3 w-3" strokeWidth={2.6} /> Sprache
+          <Plus className="h-3 w-3" strokeWidth={2.6} /> {t('resume.add.language')}
         </button>
       </div>
     </div>
@@ -1047,18 +1049,18 @@ export function EditableResume({
         {lists.certs.map((c, index) => (
           <div className="rd-item" key={c.id}>
             {itemMovers('certs', c.id, index, lists.certs.length)}
-            <button className="ed-rm-sec" title="Eintrag entfernen" onClick={() => rmCert(c.id)}>
+            <button className="ed-rm-sec" title={t('resume.remove.entry')} onClick={() => rmCert(c.id)}>
               <X className="h-3.5 w-3.5" strokeWidth={2.4} />
             </button>
             <div className="rd-item-top">
-              <Editable className="rd-item-title" oneline initial={c.name} placeholder="Zertifikat" onCommit={(v) => setC(c.id, { name: v })} />
-              <Editable className="rd-item-date" oneline initial={c.date} placeholder="Datum" onCommit={(v) => setC(c.id, { date: v })} />
+              <Editable className="rd-item-title" oneline initial={c.name} placeholder={t('resume.placeholders.certificate')} onCommit={(v) => setC(c.id, { name: v })} />
+              <Editable className="rd-item-date" oneline initial={c.date} placeholder={t('resume.placeholders.date')} onCommit={(v) => setC(c.id, { date: v })} />
             </div>
-            <Editable className="rd-item-org" oneline initial={c.issuer} placeholder="Aussteller" onCommit={(v) => setC(c.id, { issuer: v })} />
+            <Editable className="rd-item-org" oneline initial={c.issuer} placeholder={t('resume.placeholders.issuer')} onCommit={(v) => setC(c.id, { issuer: v })} />
           </div>
         ))}
         <button className="ed-add big" onClick={addCert}>
-          <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Zertifikat hinzufügen
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> {t('resume.add.certificate')}
         </button>
       </div>
     );
@@ -1112,18 +1114,18 @@ export function EditableResume({
         {isSidebar ? (
           <>
             <div className="rd-topbar" style={{ background: accent }}>
-              <Editable className="rd-name" oneline initial={meta.name} placeholder="Dein Name" onCommit={(v) => commitMeta({ name: v })} />
-              <Editable className="rd-role" oneline initial={meta.role} placeholder="Angestrebte Position" onCommit={(v) => commitMeta({ role: v })} />
+              <Editable className="rd-name" oneline initial={meta.name} placeholder={t('resume.placeholders.name')} onCommit={(v) => commitMeta({ name: v })} />
+              <Editable className="rd-role" oneline initial={meta.role} placeholder={t('resume.placeholders.role')} onCommit={(v) => commitMeta({ role: v })} />
             </div>
             <div className="rd-row">
               <aside className="rd-aside" style={{ background: sidebarTint }}>
                 {shownPhoto && (
                   // eslint-disable-next-line @next/next/no-img-element -- object URL from an authenticated blob
-                  <img src={shownPhoto} alt="Bewerbungsfoto" className="rd-photo-side" />
+                  <img src={shownPhoto} alt={t('resume.photoAlt')} className="rd-photo-side" />
                 )}
                 <div className="rd-sec">
                   <div className="rd-sec-title" style={{ color: accent }}>
-                    Kontakt
+                    {t('resume.contact.sectionTitle')}
                     <span className="rd-sec-ai">{contactPopover}</span>
                   </div>
                   {displayAddress && <div className="rd-contact-item">{displayAddress}</div>}
@@ -1146,11 +1148,11 @@ export function EditableResume({
             <div className="rd-head">
               {shownPhoto && (
                 // eslint-disable-next-line @next/next/no-img-element -- object URL from an authenticated blob
-                <img src={shownPhoto} alt="Bewerbungsfoto" className="rd-photo" />
+                <img src={shownPhoto} alt={t('resume.photoAlt')} className="rd-photo" />
               )}
-              <Editable className="rd-name" oneline initial={meta.name} placeholder="Dein Name" onCommit={(v) => commitMeta({ name: v })} style={{ color: accent }} />
+              <Editable className="rd-name" oneline initial={meta.name} placeholder={t('resume.placeholders.name')} onCommit={(v) => commitMeta({ name: v })} style={{ color: accent }} />
               {design === 'harvard-classic' && <div className="rd-divider" style={{ borderColor: accent }} />}
-              <Editable className="rd-role" oneline initial={meta.role} placeholder="Angestrebte Position" onCommit={(v) => commitMeta({ role: v })} />
+              <Editable className="rd-role" oneline initial={meta.role} placeholder={t('resume.placeholders.role')} onCommit={(v) => commitMeta({ role: v })} />
               <div className="rd-contact">
                 {contactLine && <span>{contactLine}</span>}
                 {contactPopover}
@@ -1166,11 +1168,11 @@ export function EditableResume({
       {removed.size > 0 && (
         <div className="mx-auto mt-4 flex max-w-[820px] flex-wrap items-center gap-2 text-xs">
           <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-            <Edit3 className="h-3.5 w-3.5" /> Abschnitt hinzufügen:
+            <Edit3 className="h-3.5 w-3.5" /> {t('resume.addSection')}
           </span>
           {RESUME_SECTIONS.filter((s) => removed.has(s.key)).map((s) => (
             <button key={s.key} className="ed-add" onClick={() => restoreSection(s.key)}>
-              <Plus className="h-3 w-3" strokeWidth={2.6} /> {s.label}
+              <Plus className="h-3 w-3" strokeWidth={2.6} /> {t(`resume.sections.${s.labelKey}`)}
             </button>
           ))}
         </div>

@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { api } from '@/lib/api-client';
 import Link from 'next/link';
@@ -32,9 +33,10 @@ import {
 } from 'lucide-react';
 import { EmailVerificationBanner } from '@/components/auth/email-verification-banner';
 import { SettingsNavGroup } from '@/components/settings/settings-nav-group';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 
 interface NavItem {
-  name: string;
+  nameKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   /**
@@ -46,13 +48,13 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Profil', href: '/profile', icon: User },
-  { name: 'Bewerbungen', href: '/applications', icon: FileText },
-  { name: 'Bewerbungs-Check', href: '/validate', icon: ShieldCheck },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3, requiresFeature: 'advancedAnalytics' },
-  { name: 'Interview-Coach', href: '/interviews', icon: MessagesSquare, requiresFeature: 'interviewCoach' },
-  { name: 'Einstellungen', href: '/settings', icon: Settings },
+  { nameKey: 'nav.dashboard', href: '/dashboard', icon: Home },
+  { nameKey: 'nav.profile', href: '/profile', icon: User },
+  { nameKey: 'nav.applications', href: '/applications', icon: FileText },
+  { nameKey: 'nav.applicationCheck', href: '/validate', icon: ShieldCheck },
+  { nameKey: 'nav.analytics', href: '/analytics', icon: BarChart3, requiresFeature: 'advancedAnalytics' },
+  { nameKey: 'nav.interviewCoach', href: '/interviews', icon: MessagesSquare, requiresFeature: 'interviewCoach' },
+  { nameKey: 'nav.settings', href: '/settings', icon: Settings },
 ];
 
 export default function DashboardLayout({
@@ -66,7 +68,7 @@ export default function DashboardLayout({
         <div className="flex min-h-screen items-center justify-center bg-muted/30">
           <div className="text-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-            <p className="mt-2 text-sm text-muted-foreground">Laden...</p>
+            <p className="mt-2 text-sm text-muted-foreground">Loading...</p>
           </div>
         </div>
       }
@@ -82,6 +84,7 @@ function DashboardLayoutInner({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const t = useTranslations('dashboard');
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { isAuthenticated, user, clearAuth, hasHydrated, setAuth } = useAuthStore();
@@ -159,7 +162,7 @@ function DashboardLayoutInner({
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
           <p className="mt-2 text-sm text-muted-foreground">
-            {isLoadingOAuth ? 'Anmeldung wird abgeschlossen...' : 'Laden...'}
+            {isLoadingOAuth ? t('page.oauthFinishing') : t('page.loading')}
           </p>
         </div>
       </div>
@@ -181,14 +184,14 @@ function DashboardLayoutInner({
 
             <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
               <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.45)]">
-                Menu
+                {t('nav.menu')}
               </div>
               {navigation.map((item) =>
                 item.href === '/settings' ? (
-                  <SettingsNavGroup key={item.name} item={item} />
+                  <SettingsNavGroup key={item.nameKey} item={item} />
                 ) : (
                   <NavLink
-                    key={item.name}
+                    key={item.nameKey}
                     item={item}
                     isActive={pathname === item.href}
                   />
@@ -227,6 +230,9 @@ function DashboardLayoutInner({
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>
+              <div className="mt-3 flex justify-end">
+                <LanguageSwitcher className="text-[rgba(229,233,242,.72)] hover:bg-white/10 hover:text-white" />
+              </div>
             </div>
           </div>
         </aside>
@@ -256,7 +262,7 @@ function DashboardLayoutInner({
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Menü öffnen"
+                aria-label={t('nav.openMenu')}
                 // 44x44 minimum hit target — Apple HIG / Material guideline.
                 className="h-11 w-11"
               >
@@ -269,9 +275,9 @@ function DashboardLayoutInner({
                   stays as the visible title. Without these, Radix's a11y
                   guard cascades into a React.Children.only crash that
                   bricks every page that mounts the dashboard layout. */}
-              <SheetTitle className="sr-only">Hauptmenü</SheetTitle>
+              <SheetTitle className="sr-only">{t('nav.mainMenu')}</SheetTitle>
               <SheetDescription className="sr-only">
-                Navigation des Applo Dashboards.
+                {t('nav.sheetDescription')}
               </SheetDescription>
               <div className="flex h-full flex-col">
                 <div className="flex h-16 items-center px-4 border-b border-white/10">
@@ -282,14 +288,14 @@ function DashboardLayoutInner({
 
                 <nav className="flex-1 space-y-0.5 px-4 py-6">
                   <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.45)]">
-                    Menu
+                    {t('nav.menu')}
                   </div>
                   {navigation.map((item) =>
                     item.href === '/settings' ? (
-                      <SettingsNavGroup key={item.name} item={item} />
+                      <SettingsNavGroup key={item.nameKey} item={item} />
                     ) : (
                       <NavLink
-                        key={item.name}
+                        key={item.nameKey}
                         item={item}
                         isActive={pathname === item.href}
                       />
@@ -324,6 +330,9 @@ function DashboardLayoutInner({
                     >
                       <LogOut className="h-4 w-4" />
                     </Button>
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <LanguageSwitcher className="text-[rgba(229,233,242,.72)] hover:bg-white/10 hover:text-white" />
                   </div>
                 </div>
               </div>
@@ -371,6 +380,7 @@ function NavLink({
   isActive: boolean;
 }) {
   const Icon = item.icon;
+  const t = useTranslations('dashboard');
 
   if (item.requiresFeature) {
     return (
@@ -393,7 +403,7 @@ function NavLink({
             isActive ? 'text-white' : 'text-[rgba(229,233,242,.72)] group-hover:text-white'
           }`}
         />
-        {item.name}
+        {t(item.nameKey)}
       </div>
     </Link>
   );
@@ -414,6 +424,7 @@ function NavLinkGated({
   Icon: React.ComponentType<{ className?: string }>;
 }) {
   const { hasAccess, isLoading } = useFeatureGate(item.requiresFeature!);
+  const t = useTranslations('dashboard');
 
   // While the subscription tier is loading, render the item as a normal
   // link — avoids a flash of “locked” state for paying users.
@@ -433,7 +444,7 @@ function NavLinkGated({
               isActive ? 'text-white' : 'text-[rgba(229,233,242,.72)] group-hover:text-white'
             }`}
           />
-          {item.name}
+          {t(item.nameKey)}
         </div>
       </Link>
     );
@@ -451,15 +462,15 @@ function NavLinkGated({
         >
           <div className="flex items-center gap-3">
             <Icon className="h-5 w-5 text-[rgba(229,233,242,.4)]" />
-            {item.name}
+            {t(item.nameKey)}
           </div>
           <Lock className="h-3.5 w-3.5 text-[rgba(229,233,242,.4)]" />
         </span>
       </TooltipTrigger>
       <TooltipContent side="right" className="max-w-xs">
-        <p className="font-medium">Upgrade jetzt zu Premium</p>
+        <p className="font-medium">{t('nav.upgradeTitle')}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {item.name} ist nur für Premium-Mitglieder verfügbar.
+          {t('nav.upgradeDescription', { feature: t(item.nameKey) })}
         </p>
       </TooltipContent>
     </Tooltip>

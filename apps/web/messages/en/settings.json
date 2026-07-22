@@ -1,1 +1,237 @@
-{}
+{
+  "page": {
+    "title": "Settings",
+    "description": "Manage your account, security, and preferences.",
+    "toasts": {
+      "loadError": "Failed to load settings",
+      "preferenceSaved": "Setting saved",
+      "preferenceSaveError": "Failed to save setting"
+    }
+  },
+  "sections": {
+    "account": {
+      "label": "Account",
+      "sub": "Profile & master data",
+      "headerSub": "Manage your personal information and account data."
+    },
+    "security": {
+      "label": "Security",
+      "sub": "Password & 2FA",
+      "headerSub": "Protect your account with additional security measures."
+    },
+    "notifications": {
+      "label": "Notifications",
+      "sub": "Emails & tracking",
+      "headerSub": "Choose what Applo keeps you updated about and when."
+    },
+    "preferences": {
+      "label": "Preferences",
+      "sub": "Language, design, data",
+      "headerSub": "Adjust Applo to your language, design, and privacy preferences."
+    }
+  },
+  "search": {
+    "placeholder": "Search settings…",
+    "ariaLabel": "Search settings",
+    "reset": "Reset search",
+    "noResults": "No setting found for <strong>{query}</strong>.",
+    "items": {
+      "name": "First & last name",
+      "email": "Email address",
+      "photo": "Profile picture",
+      "deleteAccount": "Delete account",
+      "password": "Change password",
+      "twoFactor": "Two-factor authentication (2FA)",
+      "sessions": "Active sessions",
+      "emailNotifications": "Email notifications",
+      "emailTracking": "Automatic application tracking",
+      "language": "Language & region",
+      "theme": "Design / Theme",
+      "privacy": "Privacy & export"
+    },
+    "keywords": {
+      "name": "name profil profile vorname first name nachname last name",
+      "email": "email e-mail mail adresse address login",
+      "photo": "avatar bild image foto photo profilbild profile picture",
+      "deleteAccount": "loeschen löschen delete account entfernen remove dsgvo gdpr",
+      "password": "passwort password aendern ändern change google login",
+      "twoFactor": "2fa zwei faktor two factor authenticator sicherheit security otp",
+      "sessions": "sitzungen sessions geraete geräte devices abmelden sign out logout",
+      "emailNotifications": "email e-mail benachrichtigung notifications newsletter updates",
+      "emailTracking": "tracking postfach inbox outlook gmail automatisch automatic premium",
+      "language": "sprache language region deutsch german english",
+      "theme": "theme design dark mode hell light dunkel dark erscheinungsbild appearance",
+      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public"
+    }
+  },
+  "account": {
+    "profile": {
+      "title": "Profile information",
+      "description": "These details appear on your generated documents.",
+      "uploadPhoto": "Upload photo",
+      "removePhoto": "Remove",
+      "photoHint": "JPG or PNG, max. 2 MB.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email address",
+      "emailLinked": "Linked to your provider — the email address cannot be changed."
+    },
+    "delete": {
+      "title": "Delete account",
+      "description": "Permanently delete your account and all associated data.",
+      "action": "Delete account",
+      "dialogTitle": "Are you sure?",
+      "dialogDescription": "This action cannot be undone. All your data, including profile, applications, and job postings, will be permanently deleted.",
+      "emailConfirmLabel": "Enter your email address to confirm",
+      "oauthHint": "You signed in with an external provider and have not set a password. Please enter your email address instead to confirm deletion.",
+      "passwordLabel": "Password for confirmation",
+      "cancel": "Cancel",
+      "deleting": "Deleting..."
+    },
+    "toasts": {
+      "profileUpdated": "Profile updated successfully",
+      "profileUpdateError": "Failed to update profile",
+      "emailConfirmRequired": "Please enter your email address to confirm",
+      "passwordRequired": "Please enter your password",
+      "deleted": "Account deleted",
+      "deleteError": "Failed to delete account"
+    }
+  },
+  "security": {
+    "password": {
+      "title": "Change password",
+      "description": "Update your password regularly for better security",
+      "oauthDescription": "Your account is linked to an external provider. There is no password set that you could change.",
+      "providerLogin": "Sign-in via <providerSpan>{provider}</providerSpan>",
+      "providerHint": "Manage your password directly with your provider.",
+      "manage": "Manage",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm password",
+      "changing": "Changing...",
+      "action": "Change password"
+    },
+    "toasts": {
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters long",
+      "passwordChanged": "Password changed successfully. Please sign in again.",
+      "passwordChangeError": "Failed to change password"
+    }
+  },
+  "notifications": {
+    "email": {
+      "title": "Email notifications",
+      "description": "Choose which emails you want to receive",
+      "applicationUpdates": {
+        "title": "Application updates",
+        "description": "Status changes and reminders for your applications."
+      },
+      "newJobPostings": {
+        "title": "New job postings",
+        "description": "Matching jobs as soon as they become available."
+      },
+      "marketing": {
+        "title": "Product & newsletter",
+        "description": "New features, tips, and occasional offers."
+      }
+    }
+  },
+  "preferences": {
+    "language": {
+      "title": "Language & region",
+      "description": "Determines the language of the interface and generated documents.",
+      "label": "Language"
+    },
+    "design": {
+      "title": "Design",
+      "description": "Choose how Applo should look. “System” follows your device settings."
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "You stay in control of your data.",
+      "publicProfile": {
+        "title": "Public profile",
+        "description": "Your profile can be seen by others."
+      },
+      "analytics": {
+        "title": "Anonymous usage data",
+        "description": "Help us improve Applo. No personal content."
+      }
+    },
+    "export": {
+      "title": "Export my data",
+      "description": "Download all data we store about you as a JSON file (GDPR Art. 15 / 20).",
+      "success": "Data export downloaded",
+      "error": "Data export failed. Please try again.",
+      "preparing": "Preparing...",
+      "download": "Download"
+    }
+  },
+  "sessions": {
+    "title": "Active sessions",
+    "shortDescription": "Manage your active sessions on different devices.",
+    "cardDescription": "Manage your active sessions on different devices",
+    "manage": "Manage sessions",
+    "currentBadge": "Current",
+    "lastActive": "Last active: {date}",
+    "signOut": "Sign out",
+    "end": "End",
+    "loadErrorTitle": "Failed to load sessions",
+    "loadErrorDescription": "Active sessions could not be loaded",
+    "signOutAll": "Sign out from all devices",
+    "signOutAllTitle": "Sign out from all devices?",
+    "signOutAllDescription": "You will be signed out from all {count, plural, one {# active session} other {# active sessions}}, including this device. You will need to sign in again on all devices.",
+    "cancel": "Cancel",
+    "description": "Manage your active sessions on different devices. You can end access from any device at any time.",
+    "currentSession": "Current session",
+    "otherSessions": "Other sessions ({count})",
+    "emptyTitle": "Only one active session",
+    "emptyDescription": "This is your only active session. Sign in from another device to see more sessions here.",
+    "toasts": {
+      "currentRevoked": "Current session signed out",
+      "revoked": "Session ended successfully",
+      "revokeError": "Session could not be ended",
+      "allRevoked": "Signed out from {count, plural, one {# device} other {# devices}}",
+      "revokeAllError": "Signing out from all devices failed"
+    }
+  },
+  "emailTracking": {
+    "toasts": {
+      "connected": "Mailbox connected — Applo now detects incoming emails.",
+      "connectionFailed": "Connection failed ({reason}). Please try again.",
+      "connectStartFailed": "Could not start connection.",
+      "disconnected": "Mailbox disconnected",
+      "disconnectFailed": "Disconnect failed."
+    },
+    "loadingTitle": "Application tracking",
+    "feature": "Automatic application tracking",
+    "upgradeDescription": "Connect your mailbox and Applo automatically detects company replies — interview invitations, confirmations, and rejections. Your application status updates live.",
+    "title": "Automatic application tracking",
+    "description": "Connect your mailbox. Applo automatically detects company replies (confirmations, invitations, rejections) and updates your application status.",
+    "loadingConnections": "Loading connections…",
+    "notify": {
+      "title": "Email on automatic status change",
+      "description": "Applo only sends you an email when tracking changed the status — not when you change it yourself."
+    },
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "privacyNote": "Applo reads emails only for classification. We store <strong>no email bodies</strong> — only sender, subject, and the classification result (see privacy).",
+    "connection": {
+      "comingSoon": "Coming soon",
+      "active": "Active",
+      "error": "Error",
+      "googleVerification": "We are currently waiting for Google verification.",
+      "notConnected": "No mailbox connected yet.",
+      "disconnect": "Disconnect",
+      "disconnectTitle": "Disconnect mailbox?",
+      "disconnectDescription": "Applo will no longer detect new emails from <strong>{email}</strong>. Existing applications remain, but the status will no longer update automatically.",
+      "cancel": "Cancel",
+      "connect": "Connect"
+    }
+  },
+  "saveBar": {
+    "unsavedChanges": "Unsaved changes",
+    "discard": "Discard",
+    "save": "Save"
+  }
+}

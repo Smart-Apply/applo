@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +21,7 @@ interface TwoFactorDisableDialogProps {
 }
 
 export function TwoFactorDisableDialog({ open, onOpenChange }: TwoFactorDisableDialogProps) {
+  const t = useTranslations('twoFactor');
   const [password, setPassword] = useState('');
   const disableMutation = useDisable2FA();
 
@@ -42,25 +44,25 @@ export function TwoFactorDisableDialog({ open, onOpenChange }: TwoFactorDisableD
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />
-            2FA deaktivieren
+            {t('disable.title')}
           </DialogTitle>
           <DialogDescription>
-            Bist du sicher? Dein Konto wird danach weniger sicher sein.
+            {t('disable.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] p-4 text-sm text-destructive dark:border-red-400/30 dark:bg-red-400/10">
-            <p className="font-medium">Warnung:</p>
+            <p className="font-medium">{t('disable.warningTitle')}</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Alle vertrauenswürdigen Geräte werden entfernt</li>
-              <li>Backup-Codes werden gelöscht</li>
-              <li>Dein Konto ist nur noch durch das Passwort geschützt</li>
+              <li>{t('disable.removeTrustedDevices')}</li>
+              <li>{t('disable.deleteBackupCodes')}</li>
+              <li>{t('disable.passwordOnly')}</li>
             </ul>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Passwort zur Bestätigung</Label>
+            <Label htmlFor="password">{t('disable.passwordLabel')}</Label>
             <Input
               id="password"
               type="password"
@@ -76,7 +78,7 @@ export function TwoFactorDisableDialog({ open, onOpenChange }: TwoFactorDisableD
               onClick={() => handleClose(false)}
               className="flex-1"
             >
-              Abbrechen
+              {t('disable.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -87,10 +89,10 @@ export function TwoFactorDisableDialog({ open, onOpenChange }: TwoFactorDisableD
               {disableMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deaktivieren...
+                  {t('disable.disabling')}
                 </>
               ) : (
-                '2FA deaktivieren'
+                t('disable.submit')
               )}
             </Button>
           </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,6 +38,7 @@ interface JobPostingParserProps {
  * - Error handling and user feedback
  */
 export function JobPostingParser({ onSave }: JobPostingParserProps) {
+  const t = useTranslations('wizard');
   const [parsedData, setParsedData] = useState<JobPosting | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [urlParseFailed, setUrlParseFailed] = useState(false);
@@ -96,7 +98,7 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
 
     setParsedData(updatedJobPosting);
     setIsEditing(false);
-    toast.success('Änderungen gespeichert');
+    toast.success(t('jobPostingParser.toasts.changesSaved'));
     
     if (onSave) {
       onSave(updatedJobPosting);
@@ -120,9 +122,9 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
             <div className="flex items-center gap-2">
               <LinkIcon className="h-5 w-5 text-muted-foreground" />
               <div>
-                <CardTitle>Per Link hinzufügen</CardTitle>
+                <CardTitle>{t('jobPostingParser.input.title')}</CardTitle>
                 <CardDescription>
-                  Füge eine Stellenanzeige per Link hinzu und lasse sie automatisch analysieren
+                  {t('jobPostingParser.input.description')}
                 </CardDescription>
               </div>
             </div>
@@ -137,19 +139,18 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
                   <div className="flex items-start gap-2">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     <div>
-                      <p className="font-medium">Diese Stellenanzeige konnten wir nicht automatisch lesen.</p>
+                      <p className="font-medium">{t('jobPostingParser.urlFallback.title')}</p>
                       <p className="mt-1">
-                        Manche Jobportale blockieren das Auslesen. Bitte wechsle
-                        zum Tab &bdquo;Manuell&ldquo; und kopiere den Text der Anzeige hinein.
+                        {t('jobPostingParser.urlFallback.descriptionManualTab')}
                       </p>
                     </div>
                   </div>
                 </div>
               )}
               <div>
-                <Label htmlFor="url">Link zur Stellenanzeige</Label>
+                <Label htmlFor="url">{t('jobPostingParser.input.urlLabel')}</Label>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Unterstützt werden LinkedIn, Indeed und weitere Jobportale
+                  {t('jobPostingParser.input.urlHelp')}
                 </p>
                 <Input
                   id="url"
@@ -169,7 +170,7 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
                 loading={parseJobPosting.isPending}
                 className="w-full"
               >
-                Stellenanzeige analysieren
+                {t('jobPostingParser.input.submit')}
               </Button>
             </form>
           </CardContent>
@@ -182,39 +183,39 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Analysierte Stellenanzeige</CardTitle>
+                <CardTitle>{t('jobPostingParser.result.title')}</CardTitle>
                 <CardDescription>
-                  Überprüfe die extrahierten Informationen
+                  {t('jobPostingParser.result.description')}
                 </CardDescription>
               </div>
               <Badge variant="default" className="gap-1">
                 <Check className="h-3 w-3" />
-                Erfolgreich analysiert
+                {t('jobPostingParser.result.badge')}
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div>
-                <Label className="text-xs text-muted-foreground">Titel</Label>
+                <Label className="text-xs text-muted-foreground">{t('jobPostingParser.fields.title')}</Label>
                 <p className="text-lg font-semibold">{parsedData.title}</p>
               </div>
 
               <div>
-                <Label className="text-xs text-muted-foreground">Unternehmen</Label>
+                <Label className="text-xs text-muted-foreground">{t('jobPostingParser.fields.company')}</Label>
                 <p className="text-base">{parsedData.company}</p>
               </div>
 
               {parsedData.location && (
                 <div>
-                  <Label className="text-xs text-muted-foreground">Standort</Label>
+                  <Label className="text-xs text-muted-foreground">{t('jobPostingParser.fields.location')}</Label>
                   <p className="text-base">{parsedData.location}</p>
                 </div>
               )}
 
               {parsedData.description && (
                 <div>
-                  <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+                  <Label className="text-xs text-muted-foreground">{t('jobPostingParser.fields.description')}</Label>
                   <p className="text-sm text-foreground whitespace-pre-wrap">
                     {parsedData.description.length > 300
                       ? `${parsedData.description.substring(0, 300)}...`
@@ -225,7 +226,7 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
 
               {parsedData.requirements && parsedData.requirements.length > 0 && (
                 <div>
-                  <Label className="text-xs text-muted-foreground">Anforderungen</Label>
+                  <Label className="text-xs text-muted-foreground">{t('jobPostingParser.fields.requirements')}</Label>
                   <ul className="text-sm text-foreground list-disc list-inside space-y-1">
                     {parsedData.requirements.map((req, index) => (
                       <li key={index}>{req}</li>
@@ -236,7 +237,7 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
 
               {parsedData.sourceUrl && (
                 <div>
-                  <Label className="text-xs text-muted-foreground">Original-URL</Label>
+                  <Label className="text-xs text-muted-foreground">{t('jobPostingParser.fields.originalUrl')}</Label>
                   <a
                     href={parsedData.sourceUrl}
                     target="_blank"
@@ -251,15 +252,15 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
 
             <div className="flex gap-3 pt-4 border-t">
               <Button onClick={() => setIsEditing(true)} variant="outline" className="flex-1">
-                Bearbeiten
+                {t('jobPostingParser.actions.edit')}
               </Button>
               <Button onClick={handleReset} variant="outline" className="flex-1">
-                Neu analysieren
+                {t('jobPostingParser.actions.analyzeAgain')}
               </Button>
               {onSave && (
                 <Button onClick={() => onSave(parsedData)} className="flex-1">
                   <Check className="mr-2 h-4 w-4" />
-                  Speichern
+                  {t('jobPostingParser.actions.save')}
                 </Button>
               )}
             </div>
@@ -271,15 +272,15 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
       {parsedData && isEditing && (
         <Card>
           <CardHeader>
-            <CardTitle>Stellenanzeige bearbeiten</CardTitle>
+            <CardTitle>{t('jobPostingParser.edit.title')}</CardTitle>
             <CardDescription>
-              Passe die Informationen an, falls nötig
+              {t('jobPostingParser.edit.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={editForm.handleSubmit(handleSave)} className="space-y-4">
               <div>
-                <Label htmlFor="edit-title">Titel *</Label>
+                <Label htmlFor="edit-title">{t('jobPostingParser.edit.titleLabel')}</Label>
                 <Input
                   id="edit-title"
                   type="text"
@@ -294,7 +295,7 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
               </div>
 
               <div>
-                <Label htmlFor="edit-company">Unternehmen *</Label>
+                <Label htmlFor="edit-company">{t('jobPostingParser.edit.companyLabel')}</Label>
                 <Input
                   id="edit-company"
                   type="text"
@@ -309,7 +310,7 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
               </div>
 
               <div>
-                <Label htmlFor="edit-location">Standort</Label>
+                <Label htmlFor="edit-location">{t('jobPostingParser.fields.location')}</Label>
                 <Input
                   id="edit-location"
                   type="text"
@@ -318,7 +319,7 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
               </div>
 
               <div>
-                <Label htmlFor="edit-description">Beschreibung</Label>
+                <Label htmlFor="edit-description">{t('jobPostingParser.fields.description')}</Label>
                 <Textarea
                   id="edit-description"
                   rows={6}
@@ -327,7 +328,7 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
               </div>
 
               <div>
-                <Label htmlFor="edit-requirements">Anforderungen</Label>
+                <Label htmlFor="edit-requirements">{t('jobPostingParser.fields.requirements')}</Label>
                 <Textarea
                   id="edit-requirements"
                   rows={6}
@@ -342,11 +343,11 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
                   variant="outline"
                   className="flex-1"
                 >
-                  Abbrechen
+                  {t('jobPostingParser.actions.cancel')}
                 </Button>
                 <Button type="submit" className="flex-1">
                   <Check className="mr-2 h-4 w-4" />
-                  Änderungen speichern
+                  {t('jobPostingParser.actions.saveChanges')}
                 </Button>
               </div>
             </form>
@@ -362,12 +363,10 @@ export function JobPostingParser({ onSave }: JobPostingParserProps) {
               <AlertCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground">
-                  Unterstützte Plattformen
+                  {t('jobPostingParser.help.title')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Du kannst Stellenanzeigen von LinkedIn, Indeed und anderen Jobportalen 
-                  importieren. Falls die Analyse fehlschlägt, kannst du die Informationen 
-                  auch manuell eingeben.
+                  {t('jobPostingParser.help.description')}
                 </p>
               </div>
             </div>

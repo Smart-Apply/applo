@@ -1,4 +1,5 @@
 import type { Profile, User } from '@/types';
+import { pick } from '@/lib/i18n-runtime';
 
 export interface ProfileStrengthResult {
   score: number;
@@ -30,6 +31,28 @@ export function calculateProfileStrength(
   profile: Profile | null | undefined,
   user: User | null | undefined
 ): ProfileStrengthResult {
+  const text = pick({
+    de: {
+      contactComplete: 'Kontaktdaten vollst\u00e4ndig',
+      addPhone: 'Telefonnummer hinzuf\u00fcgen',
+      addAddress: 'Adresse angeben',
+      writeSummary: 'Pro' + 'fil-Zusammenfassung schreiben',
+      addSkills: 'F\u00e4higkeiten hinzuf\u00fcgen',
+      addExperience: 'Berufs' + 'erfahrung hinzuf\u00fcgen',
+      addEducation: 'Aus' + 'bildung hinzuf\u00fcgen',
+      linkLinkedin: 'LinkedIn verkn\u00fcpfen',
+    },
+    en: {
+      contactComplete: 'Contact details complete',
+      addPhone: 'Add phone number',
+      addAddress: 'Add address',
+      writeSummary: 'Write profile summary',
+      addSkills: 'Add skills',
+      addExperience: 'Add work experience',
+      addEducation: 'Add education',
+      linkLinkedin: 'Connect LinkedIn',
+    },
+  });
   let score = 0;
   const suggestions: ProfileSuggestion[] = [];
 
@@ -39,7 +62,7 @@ export function calculateProfileStrength(
     score += 10;
   }
   suggestions.push({
-    text: 'Kontaktdaten vollständig',
+    text: text.contactComplete,
     completed: !!hasBasicInfo,
   });
 
@@ -49,7 +72,7 @@ export function calculateProfileStrength(
     score += 10;
   }
   suggestions.push({
-    text: 'Telefonnummer hinzufügen',
+    text: text.addPhone,
     completed: hasPhone,
   });
 
@@ -59,7 +82,7 @@ export function calculateProfileStrength(
     score += 10;
   }
   suggestions.push({
-    text: 'Adresse angeben',
+    text: text.addAddress,
     completed: hasAddress,
   });
 
@@ -69,7 +92,7 @@ export function calculateProfileStrength(
     score += 15;
   }
   suggestions.push({
-    text: 'Profil-Zusammenfassung schreiben',
+    text: text.writeSummary,
     completed: hasSummary,
   });
 
@@ -79,7 +102,7 @@ export function calculateProfileStrength(
     score += 15;
   }
   suggestions.push({
-    text: 'Fähigkeiten hinzufügen',
+    text: text.addSkills,
     completed: !!hasSkills,
   });
 
@@ -89,7 +112,7 @@ export function calculateProfileStrength(
     score += 15;
   }
   suggestions.push({
-    text: 'Berufserfahrung hinzufügen',
+    text: text.addExperience,
     completed: !!hasExperience,
   });
 
@@ -99,7 +122,7 @@ export function calculateProfileStrength(
     score += 15;
   }
   suggestions.push({
-    text: 'Ausbildung hinzufügen',
+    text: text.addEducation,
     completed: !!hasEducation,
   });
 
@@ -109,7 +132,7 @@ export function calculateProfileStrength(
     score += 10;
   }
   suggestions.push({
-    text: 'LinkedIn verknüpfen',
+    text: text.linkLinkedin,
     completed: hasLinkedIn,
   });
 

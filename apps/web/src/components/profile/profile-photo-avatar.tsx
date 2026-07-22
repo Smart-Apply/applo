@@ -9,6 +9,7 @@ import {
   useUploadProfilePhoto,
 } from '@/hooks/use-profile';
 import { toastError } from '@/lib/toast';
+import { useTranslations } from 'next-intl';
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
@@ -25,6 +26,7 @@ interface ProfilePhotoAvatarProps {
  * via the editor's Design panel; ATS-focused applications stay photo-free.
  */
 export function ProfilePhotoAvatar({ initials, hasPhoto }: ProfilePhotoAvatarProps) {
+  const t = useTranslations('profile');
   const inputRef = useRef<HTMLInputElement>(null);
   const { data: photoUrl } = useProfilePhoto(hasPhoto);
   const uploadPhoto = useUploadProfilePhoto();
@@ -36,11 +38,11 @@ export function ProfilePhotoAvatar({ initials, hasPhoto }: ProfilePhotoAvatarPro
   const handleFile = (file: File | undefined) => {
     if (!file) return;
     if (!/^image\/(jpeg|png)$/.test(file.type)) {
-      toastError(null, 'Bitte lade ein JPEG- oder PNG-Bild hoch.');
+      toastError(null, t('photo.invalidType'));
       return;
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      toastError(null, 'Das Foto ist zu groß (max. 2 MB).');
+      toastError(null, t('photo.tooLarge'));
       return;
     }
     uploadPhoto.mutate(file);
@@ -63,7 +65,7 @@ export function ProfilePhotoAvatar({ initials, hasPhoto }: ProfilePhotoAvatarPro
         // eslint-disable-next-line @next/next/no-img-element -- object URL from an authenticated blob; next/image cannot optimize it
         <img
           src={shownPhoto}
-          alt="Bewerbungsfoto"
+          alt={t('photo.alt')}
           className="h-16 w-16 rounded-full border border-border object-cover"
         />
       ) : (
@@ -79,7 +81,7 @@ export function ProfilePhotoAvatar({ initials, hasPhoto }: ProfilePhotoAvatarPro
             disabled={busy}
             onClick={() => inputRef.current?.click()}
             className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm transition-colors hover:bg-muted"
-            aria-label={shownPhoto ? 'Bewerbungsfoto ersetzen' : 'Bewerbungsfoto hochladen'}
+            aria-label={shownPhoto ? t('photo.replace') : t('photo.upload')}
           >
             {busy ? (
               <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
@@ -90,11 +92,10 @@ export function ProfilePhotoAvatar({ initials, hasPhoto }: ProfilePhotoAvatarPro
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-56">
           <p className="font-medium">
-            {shownPhoto ? 'Bewerbungsfoto ersetzen' : 'Bewerbungsfoto hochladen'}
+            {shownPhoto ? t('photo.replace') : t('photo.upload')}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            JPEG/PNG, max. 2 MB. Erscheint nur in Lebensläufen, bei denen du es im Editor
-            aktivierst.
+            {t('photo.hint')}
           </p>
         </TooltipContent>
       </Tooltip>
@@ -107,12 +108,12 @@ export function ProfilePhotoAvatar({ initials, hasPhoto }: ProfilePhotoAvatarPro
               disabled={busy}
               onClick={() => deletePhoto.mutate()}
               className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background shadow-sm transition-colors hover:bg-destructive hover:text-destructive-foreground"
-              aria-label="Bewerbungsfoto entfernen"
+              aria-label={t('photo.remove')}
             >
               <X className="h-3 w-3" />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="top">Bewerbungsfoto entfernen</TooltipContent>
+          <TooltipContent side="top">{t('photo.remove')}</TooltipContent>
         </Tooltip>
       )}
     </div>

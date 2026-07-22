@@ -1,1 +1,96 @@
-{}
+{
+  "page": {
+    "title": "Application Check",
+    "subtitle": "AI evaluation for quality & ATS compatibility of your own application.",
+    "quotaBadge": "{remaining} / {limit} checks",
+    "newCheck": "New check",
+    "history": "Previous checks",
+    "limitReachedTitle": "You have reached your monthly limit of {limit} checks.",
+    "limitReachedDescription": "you can run unlimited checks.",
+    "historyTitle": "Previous checks",
+    "freeHistoryDescription": "The Free plan includes 5 checks per month.",
+    "savedHistoryDescription": "Your saved checks.",
+    "noHistory": "No checks yet.",
+    "open": "Open",
+    "deleteAria": "Delete check",
+    "createSuccess": "Application checked",
+    "createError": "Check failed",
+    "deleteSuccess": "Check deleted",
+    "deleteError": "Check could not be deleted"
+  },
+  "documentInput": {
+    "fileReadError": "The file could not be read",
+    "detected": "Detected",
+    "fileReadSuccess": "{size} · Text read successfully",
+    "removeFileAria": "Remove file",
+    "chooseFile": "Choose file",
+    "orDragHere": "or drag it here",
+    "fileHint": "PDF or DOCX · max. 10 MB",
+    "toggle": {
+      "upload": "Upload file",
+      "text": "Paste text"
+    },
+    "title": "Your documents",
+    "subtitle": "Only the résumé is required. Add a cover letter for even more precise feedback.",
+    "resumeLabel": "Résumé",
+    "resumePlaceholder": "Paste the text of your résumé here…",
+    "addCoverLetter": "Add cover letter",
+    "coverLetterLabel": "Cover letter",
+    "optional": "(optional)",
+    "remove": "Remove",
+    "coverLetterPlaceholder": "Paste the text of your cover letter here…",
+    "next": "Continue to target role"
+  },
+  "jobContext": {
+    "toggle": {
+      "link": "Analyze link",
+      "text": "Paste text"
+    },
+    "title": "Target role & feedback",
+    "subtitle": "Optional — with job context, the AI also evaluates fit for the role.",
+    "jobPostingLabel": "Job posting",
+    "optional": "(optional)",
+    "analyzed": "Analyzed",
+    "readSuccess": "{host} · Posting read successfully",
+    "removeLinkAria": "Remove link",
+    "analyzing": "Analyzing…",
+    "analyze": "Analyze",
+    "linkError": "The link could not be read.",
+    "pasteAdText": "Paste the posting text →",
+    "textPlaceholder": "e.g. ward manager nursing — or paste the full job posting…",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. application for City Hospital",
+    "feedbackLanguage": "Feedback language",
+    "languageAuto": "Automatic",
+    "languageGerman": "German",
+    "privacyNote": "Your documents are used only for this check and are not stored. Without job context, the AI evaluates only quality and ATS structure.",
+    "back": "Back",
+    "submit": "Check application"
+  },
+  "loading": {
+    "title": "Your application is being checked …",
+    "subtitle": "This usually takes 15–30 seconds.",
+    "checklist": {
+      "documents": "Documents are being read",
+      "quality": "Quality is being evaluated",
+      "ats": "ATS compatibility is being checked",
+      "recommendations": "Recommendations are being created"
+    }
+  },
+  "result": {
+    "verdict": {
+      "strong": "Ready to send",
+      "good": "Solid, minor improvements",
+      "needsWork": "Revision recommended"
+    },
+    "yourResult": "Your result",
+    "overallScore": "Overall score",
+    "atsScore": "ATS score*",
+    "categoryScores": "Evaluation by category",
+    "recommendationsChecklist": "Recommendations · checklist",
+    "markOpen": "Mark as open",
+    "markDone": "Mark as done",
+    "strengthsHeading": "✓ Strengths",
+    "atsDisclaimer": "*The ATS score is an AI estimate, not a real ATS parser run."
+  }
+}

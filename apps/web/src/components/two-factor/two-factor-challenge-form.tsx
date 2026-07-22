@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Loader2, Shield, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ export function TwoFactorChallengeForm({
   onSuccess,
   onCancel,
 }: TwoFactorChallengeFormProps) {
+  const t = useTranslations('twoFactor');
   const [code, setCode] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
   const [tab, setTab] = useState<'totp' | 'backup'>('totp');
@@ -59,9 +61,9 @@ export function TwoFactorChallengeForm({
         <div className="mx-auto w-12 h-12 rounded-[3px] border border-primary-soft bg-primary-soft/60 flex items-center justify-center mb-4 dark:border-slate-600 dark:bg-slate-800">
           <Shield className="h-6 w-6 text-brand" />
         </div>
-        <CardTitle>Zwei-Faktor-Authentifizierung</CardTitle>
+        <CardTitle>{t('challenge.title')}</CardTitle>
         <CardDescription>
-          Gib den Code aus deiner Authenticator-App ein oder verwende einen Backup-Code.
+          {t('challenge.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -70,17 +72,17 @@ export function TwoFactorChallengeForm({
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="totp" className="gap-2">
                 <Shield className="h-4 w-4" />
-                Authenticator
+                {t('challenge.authenticatorTab')}
               </TabsTrigger>
               <TabsTrigger value="backup" className="gap-2">
                 <Key className="h-4 w-4" />
-                Backup-Code
+                {t('challenge.backupTab')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="totp" className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="totp-code">6-stelliger Code</Label>
+                <Label htmlFor="totp-code">{t('challenge.totpLabel')}</Label>
                 <Input
                   id="totp-code"
                   value={code}
@@ -96,7 +98,7 @@ export function TwoFactorChallengeForm({
 
             <TabsContent value="backup" className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="backup-code">8-stelliger Backup-Code</Label>
+                <Label htmlFor="backup-code">{t('challenge.backupLabel')}</Label>
                 <Input
                   id="backup-code"
                   value={code}
@@ -107,7 +109,7 @@ export function TwoFactorChallengeForm({
                   autoFocus
                 />
                 <p className="text-xs text-muted-foreground">
-                  Jeder Backup-Code kann nur einmal verwendet werden.
+                  {t('challenge.backupHint')}
                 </p>
               </div>
             </TabsContent>
@@ -120,7 +122,7 @@ export function TwoFactorChallengeForm({
               onCheckedChange={(checked) => setTrustDevice(checked === true)}
             />
             <Label htmlFor="trust" className="text-sm cursor-pointer">
-              Diesem Gerät für 30 Tage vertrauen
+              {t('challenge.trustDevice')}
             </Label>
           </div>
 
@@ -131,7 +133,7 @@ export function TwoFactorChallengeForm({
               onClick={onCancel}
               className="flex-1"
             >
-              Abbrechen
+              {t('challenge.cancel')}
             </Button>
             <Button
               type="submit"
@@ -141,10 +143,10 @@ export function TwoFactorChallengeForm({
               {verifyMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Prüfen...
+                  {t('challenge.checking')}
                 </>
               ) : (
-                'Bestätigen'
+                t('challenge.confirm')
               )}
             </Button>
           </div>

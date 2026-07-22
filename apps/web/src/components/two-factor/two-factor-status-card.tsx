@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Shield, ShieldCheck, ShieldOff, Key, Smartphone, Loader2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,7 @@ import { BackupCodesDialog } from './backup-codes-dialog';
 import { TrustedDevicesDialog } from './trusted-devices-dialog';
 
 export function TwoFactorStatusCard() {
+  const t = useTranslations('twoFactor');
   const { data: status, isLoading } = useTwoFactorStatus();
   const [showSetupDialog, setShowSetupDialog] = useState(false);
   const [showDisableDialog, setShowDisableDialog] = useState(false);
@@ -25,10 +27,10 @@ export function TwoFactorStatusCard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Zwei-Faktor-Authentifizierung (2FA)
+            {t('statusCard.title')}
           </CardTitle>
           <CardDescription>
-            Erhöhe die Sicherheit deines Kontos durch einen zweiten Verifizierungsschritt
+            {t('statusCard.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center py-8">
@@ -49,14 +51,14 @@ export function TwoFactorStatusCard() {
               ) : (
                 <ShieldOff className="h-5 w-5 text-muted-foreground" />
               )}
-              <CardTitle>Zwei-Faktor-Authentifizierung (2FA)</CardTitle>
+              <CardTitle>{t('statusCard.title')}</CardTitle>
             </div>
             <Badge variant={status?.isEnabled ? 'default' : 'secondary'}>
-              {status?.isEnabled ? 'Aktiviert' : 'Deaktiviert'}
+              {status?.isEnabled ? t('statusCard.enabled') : t('statusCard.disabled')}
             </Badge>
           </div>
           <CardDescription>
-            Erhöhe die Sicherheit deines Kontos durch einen zweiten Verifizierungsschritt
+            {t('statusCard.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -66,11 +68,11 @@ export function TwoFactorStatusCard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm">
                     <Key className="h-4 w-4 text-muted-foreground" />
-                    <span>Backup-Codes</span>
+                    <span>{t('statusCard.backupCodes')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={status.backupCodesRemaining < 3 ? 'destructive' : 'secondary'}>
-                      {status.backupCodesRemaining} verbleibend
+                      {t('statusCard.remaining', { count: status.backupCodesRemaining })}
                     </Badge>
                     <Button
                       variant="ghost"
@@ -83,7 +85,7 @@ export function TwoFactorStatusCard() {
                 </div>
                 {status.backupCodesRemaining < 3 && (
                   <p className="text-xs text-destructive">
-                    Wenige Backup-Codes verbleibend. Generiere neue Codes für den Notfall.
+                    {t('statusCard.lowBackupWarning')}
                   </p>
                 )}
               </div>
@@ -92,11 +94,11 @@ export function TwoFactorStatusCard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm">
                     <Smartphone className="h-4 w-4 text-muted-foreground" />
-                    <span>Vertrauenswürdige Geräte</span>
+                    <span>{t('statusCard.trustedDevices')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">
-                      {status.trustedDevicesCount} Gerät{status.trustedDevicesCount !== 1 ? 'e' : ''}
+                      {t('statusCard.deviceCount', { count: status.trustedDevicesCount })}
                     </Badge>
                     <Button
                       variant="ghost"
@@ -116,24 +118,23 @@ export function TwoFactorStatusCard() {
                 onClick={() => setShowDisableDialog(true)}
                 className="w-full"
               >
-                2FA deaktivieren
+                {t('statusCard.disable')}
               </Button>
             </>
           ) : (
             <>
               <div className="text-sm text-muted-foreground space-y-2">
                 <p>
-                  Mit 2FA aktiviert, benötigst du neben deinem Passwort auch einen Code aus deiner
-                  Authenticator-App, um dich anzumelden.
+                  {t('statusCard.intro')}
                 </p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Funktioniert mit Google Authenticator, Authy, etc.</li>
-                  <li>10 Backup-Codes für Notfälle</li>
-                  <li>Option zum Merken vertrauenswürdiger Geräte</li>
+                  <li>{t('statusCard.appSupport')}</li>
+                  <li>{t('statusCard.backupCodesBenefit')}</li>
+                  <li>{t('statusCard.trustedDevicesBenefit')}</li>
                 </ul>
               </div>
               <Button onClick={() => setShowSetupDialog(true)} className="w-full">
-                2FA aktivieren
+                {t('statusCard.enable')}
               </Button>
             </>
           )}

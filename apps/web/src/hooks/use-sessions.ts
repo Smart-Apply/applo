@@ -4,6 +4,7 @@ import type { SessionsResponse } from '@/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 /**
  * Hook to fetch all active sessions
@@ -25,6 +26,7 @@ export function useRevokeSession() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const t = useTranslations('settings');
 
   return useMutation({
     mutationFn: (sessionId: string) => api.sessions.revoke(sessionId),
@@ -35,19 +37,19 @@ export function useRevokeSession() {
 
       if (isCurrentSession) {
         // User logged out from current session - redirect to login
-        toast.success('Aktuelle Sitzung abgemeldet');
+        toast.success(t('sessions.toasts.currentRevoked'));
         clearAuth();
         router.push('/login');
       } else {
         // Successfully revoked another session
-        toast.success('Sitzung erfolgreich beendet');
+        toast.success(t('sessions.toasts.revoked'));
         
         // Invalidate sessions query to refresh the list
         queryClient.invalidateQueries({ queryKey: ['sessions'] });
       }
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Sitzung konnte nicht beendet werden');
+      toast.error(error.message || t('sessions.toasts.revokeError'));
     },
   });
 }
@@ -59,11 +61,12 @@ export function useRevokeAllSessions() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const t = useTranslations('settings');
 
   return useMutation({
     mutationFn: () => api.sessions.revokeAll(),
     onSuccess: (data: { message: string; revokedCount: number }) => {
-      toast.success(`Von ${data.revokedCount} Gerät${data.revokedCount !== 1 ? 'en' : ''} abgemeldet`);
+      toast.success(t('sessions.toasts.allRevoked', { count: data.revokedCount }));
       
       // Clear all queries and logout
       queryClient.clear();
@@ -71,7 +74,7 @@ export function useRevokeAllSessions() {
       router.push('/login');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Abmeldung von allen Geräten fehlgeschlagen');
+      toast.error(error.message || t('sessions.toasts.revokeAllError'));
     },
   });
 }

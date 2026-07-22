@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,6 +38,7 @@ import {
 
 export default function JobsPage() {
   const router = useRouter();
+  const t = useTranslations('jobs');
   const [showInput, setShowInput] = useState(false);
   const [inputTab, setInputTab] = useState<'parser' | 'manual'>('parser');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -48,13 +50,13 @@ export default function JobsPage() {
   const handleSave = async () => {
     // Close the input section after saving
     setShowInput(false);
-    toastSuccess('Stellenanzeige gespeichert');
+    toastSuccess(t('list.toasts.saved'));
   };
 
   const handleManualSave = () => {
     // Close the input section after manual creation
     setShowInput(false);
-    toastSuccess('Stellenanzeige erstellt');
+    toastSuccess(t('list.toasts.created'));
   };
 
   const handleDeleteClick = (id: string, title: string) => {
@@ -67,7 +69,7 @@ export default function JobsPage() {
     await deleteJobPosting.mutateAsync(jobToDelete.id);
     setDeleteDialogOpen(false);
     setJobToDelete(null);
-    toastSuccess('Stellenanzeige gelöscht');
+    toastSuccess(t('list.toasts.deleted'));
   };
 
   return (
@@ -75,9 +77,9 @@ export default function JobsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Stellenanzeigen</h1>
+          <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">{t('list.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Verwalte deine gespeicherten Stellenanzeigen und erstelle daraus Bewerbungen.
+            {t('list.description')}
           </p>
         </div>
         <Button
@@ -87,12 +89,12 @@ export default function JobsPage() {
           {showInput ? (
             <>
               <X className="mr-2 h-4 w-4" />
-              Schließen
+              {t('list.actions.close')}
             </>
           ) : (
             <>
               <Plus className="mr-2 h-4 w-4" />
-              Neue Stelle hinzufügen
+              {t('list.actions.add')}
             </>
           )}
         </Button>
@@ -102,9 +104,9 @@ export default function JobsPage() {
       {showInput && (
         <div className="animate-in fade-in slide-in-from-top-5 duration-300 border rounded-[4px] bg-card overflow-hidden">
           <div className="p-6 border-b bg-muted/30">
-            <h2 className="font-heading text-lg font-semibold mb-1">Neue Stellenanzeige erfassen</h2>
+            <h2 className="font-heading text-lg font-semibold mb-1">{t('list.input.title')}</h2>
             <p className="text-sm text-muted-foreground">
-              Füge eine URL hinzu oder kopiere den Text, um die Stelle zu speichern.
+              {t('list.input.description')}
             </p>
           </div>
           <div className="p-6">
@@ -112,11 +114,11 @@ export default function JobsPage() {
               <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
                 <TabsTrigger value="parser">
                   <FileText className="mr-2 h-4 w-4" />
-                  Per Link
+                  {t('list.input.tabs.link')}
                 </TabsTrigger>
                 <TabsTrigger value="manual">
                   <Edit className="mr-2 h-4 w-4" />
-                  Manuell
+                  {t('list.input.tabs.manual')}
                 </TabsTrigger>
               </TabsList>
 
@@ -201,7 +203,7 @@ export default function JobsPage() {
                             ))}
                             {job.requirements.length > 5 && (
                               <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
-                                +{job.requirements.length - 5} weitere
+                                {t('list.moreRequirements', { count: job.requirements.length - 5 })}
                               </Badge>
                             )}
                           </div>
@@ -215,7 +217,7 @@ export default function JobsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => window.open(job.sourceUrl, '_blank')}
-                            title="Original öffnen"
+                            title={t('list.actions.openOriginal')}
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>
@@ -224,7 +226,7 @@ export default function JobsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => router.push(`/job-postings/${job.id}`)}
-                          title="Details anzeigen"
+                          title={t('list.actions.showDetails')}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -234,14 +236,14 @@ export default function JobsPage() {
                           onClick={() => router.push(`/applications/new?jobId=${job.id}`)}
                         >
                           <Briefcase className="mr-2 h-3.5 w-3.5" />
-                          Bewerben
+                          {t('list.actions.apply')}
                         </Button>
                         <Button
                           onClick={() => handleDeleteClick(job.id, job.title)}
                           variant="ghost"
                           size="sm"
                           className="text-muted-foreground hover:text-destructive"
-                          title="Löschen"
+                          title={t('list.actions.delete')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -256,10 +258,10 @@ export default function JobsPage() {
           <div className="rounded-[4px] border border-dashed border-border bg-muted/10 animate-in fade-in duration-500">
             <EmptyState
               icon={Briefcase}
-              title="Keine Stellenanzeigen"
-              description="Du hast noch keine Stellenanzeigen gespeichert. Füge deine erste Stelle hinzu, um loszulegen."
+              title={t('list.empty.title')}
+              description={t('list.empty.description')}
               action={{
-                label: 'Erste Stelle hinzufügen',
+                label: t('list.empty.action'),
                 onClick: () => setShowInput(true),
               }}
             />
@@ -277,21 +279,21 @@ export default function JobsPage() {
                   <Loader2 className="h-4 w-4" />
                 </div>
                 <h3 className="font-heading font-semibold text-foreground">
-                  So funktioniert der Applo Workflow
+                  {t('list.workflow.title')}
                 </h3>
               </div>
               <div className="grid sm:grid-cols-3 gap-4 mt-4">
                 <div className="bg-background p-4 rounded-[3px] border">
-                  <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-brand">1 · Stelle speichern</div>
-                  <p className="text-sm text-muted-foreground">Füge eine URL von LinkedIn/Indeed hinzu oder kopiere den Text der Ausschreibung.</p>
+                  <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-brand">{t('list.workflow.step1.title')}</div>
+                  <p className="text-sm text-muted-foreground">{t('list.workflow.step1.description')}</p>
                 </div>
                 <div className="bg-background p-4 rounded-[3px] border">
-                  <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-brand">2 · Analysieren</div>
-                  <p className="text-sm text-muted-foreground">Unsere KI extrahiert automatisch alle wichtigen Anforderungen und Skills.</p>
+                  <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-brand">{t('list.workflow.step2.title')}</div>
+                  <p className="text-sm text-muted-foreground">{t('list.workflow.step2.description')}</p>
                 </div>
                 <div className="bg-background p-4 rounded-[3px] border">
-                  <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-brand">3 · Bewerben</div>
-                  <p className="text-sm text-muted-foreground">Erstelle mit einem Klick eine maßgeschneiderte Bewerbung für diese Stelle.</p>
+                  <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-brand">{t('list.workflow.step3.title')}</div>
+                  <p className="text-sm text-muted-foreground">{t('list.workflow.step3.description')}</p>
                 </div>
               </div>
             </div>
@@ -303,9 +305,12 @@ export default function JobsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Stellenanzeige löschen?</DialogTitle>
+            <DialogTitle>{t('list.deleteDialog.title')}</DialogTitle>
             <DialogDescription>
-              Möchtest du die Stellenanzeige <span className="font-medium text-foreground">&quot;{jobToDelete?.title}&quot;</span> wirklich löschen?
+              {t.rich('list.deleteDialog.description', {
+                title: jobToDelete?.title ?? '',
+                strong: (chunks) => <span className="font-medium text-foreground">&quot;{chunks}&quot;</span>,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -314,14 +319,14 @@ export default function JobsPage() {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteJobPosting.isPending}
             >
-              Abbrechen
+              {t('list.deleteDialog.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeleteConfirm}
               disabled={deleteJobPosting.isPending}
             >
-              {deleteJobPosting.isPending ? 'Wird gelöscht...' : 'Löschen'}
+              {deleteJobPosting.isPending ? t('list.deleteDialog.deleting') : t('list.deleteDialog.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

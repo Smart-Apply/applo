@@ -1,1 +1,363 @@
-{}
+{
+  "page": {
+    "loadingApplication": "Loading application data...",
+    "backToApplications": "Back to applications",
+    "backToOverview": "Back to overview",
+    "unavailableTitle": "Editor unavailable",
+    "unavailableDescription": "The application could not be loaded.",
+    "fallbackTitle": "Application",
+    "readyBadge": "Ready",
+    "tabs": {
+      "ariaLabel": "Editor tabs",
+      "resume": "Résumé",
+      "coverLetter": "Cover letter",
+      "optimize": "Optimize"
+    },
+    "upgrade": {
+      "title": "Upgrade to Premium",
+      "description": "Upgrade to Premium to use this feature."
+    },
+    "created": {
+      "today": "today",
+      "onDate": "on {date}",
+      "label": "created {value}"
+    },
+    "ai": {
+      "title": "AI instructions",
+      "coverLetterPlaceholder": "E.g.: Emphasize my project-management experience more strongly...",
+      "coverLetterDescription": "Describe how the cover letter should be adjusted."
+    },
+    "editHint": {
+      "resume": "Click any text to edit it.",
+      "coverLetter": "Click inside the cover letter to edit text, salutation, or paragraphs."
+    },
+    "saveStatus": {
+      "saving": "Saving…",
+      "dirty": "Unsaved changes",
+      "saved": "Changes saved automatically"
+    },
+    "export": {
+      "button": "Export",
+      "tooltip": "Export PDFs",
+      "translationTitle": "Content will be translated automatically",
+      "translationDescriptionEn": "The export will be translated into English – please review the result.",
+      "translationDescriptionDe": "The export will be translated into German – please review the result.",
+      "disabled": {
+        "generating": "Export is already running. Please wait until it finishes.",
+        "savingChanges": "Changes are being saved …",
+        "missingResume": "Résumé is missing.",
+        "missingCoverLetter": "Cover letter is missing."
+      }
+    },
+    "toasts": {
+      "resumeSaveFailed": "Résumé could not be saved",
+      "coverLetterSaveFailed": "Cover letter could not be saved",
+      "coverLetterGenerateFailed": "Cover letter could not be generated: {message}",
+      "instructionsRequired": "Please enter instructions for the AI",
+      "aiChangesApplied": "AI changes applied",
+      "aiGenerationFailed": "AI generation failed: {message}",
+      "exportStarted": "Export started! You will be redirected to the detail page..."
+    },
+    "errors": {
+      "emptyServerResponse": "No response received from the server"
+    }
+  },
+  "coverLetter": {
+    "cta": {
+      "title": "No cover letter yet",
+      "description": "A tailored cover letter helps your application stand out and improves your response rate. It is created from your profile and this job in about 20 seconds.",
+      "generating": "Generating…",
+      "generate": "Generate cover letter now"
+    },
+    "benefits": {
+      "tailored": "Tailored to the job",
+      "aiWritten": "Written with AI support",
+      "editable": "Fully editable after creation"
+    }
+  },
+  "resume": {
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "moveLeft": "Move left",
+    "moveRight": "Move right",
+    "categoryMoveUp": "Move category up",
+    "categoryMoveDown": "Move category down",
+    "sectionMoveUp": "Move {label} up",
+    "sectionMoveDown": "Move {label} down",
+    "sectionRemove": "Remove {label}",
+    "addSection": "Add section:",
+    "photoAlt": "Application photo",
+    "sections": {
+      "profile": "Profile",
+      "experience": "Experience",
+      "education": "Education",
+      "projects": "Projects",
+      "skills": "Skills",
+      "languages": "Languages",
+      "certs": "Certificates"
+    },
+    "contact": {
+      "button": "Contact details",
+      "edit": "Edit contact details",
+      "street": "Street",
+      "city": "City",
+      "country": "Country",
+      "sectionTitle": "Contact",
+      "postalCode": "Postal code"
+    },
+    "ai": {
+      "profileTitle": "AI: Profile",
+      "profileDescription": "Describe how your profile should be adjusted.",
+      "profilePlaceholder": "E.g.: Emphasize my leadership experience more strongly...",
+      "profileApply": "Adjust profile",
+      "descriptionTitle": "AI: Description",
+      "experienceDescription": "Describe how this role should be adjusted.",
+      "experiencePlaceholder": "E.g.: More measurable results, shorter...",
+      "descriptionApply": "Adjust description",
+      "projectTitle": "AI: Project",
+      "projectDescription": "Describe how this project should be adjusted.",
+      "projectPlaceholder": "E.g.: Emphasize the impact...",
+      "projectApply": "Adjust project"
+    },
+    "placeholders": {
+      "summary": "Brief profile about you …",
+      "position": "Position",
+      "dateRange": "Time period",
+      "company": "Company",
+      "achievement": "What did you achieve?",
+      "degree": "Degree",
+      "year": "Year",
+      "institution": "Institution",
+      "projectName": "Project name",
+      "projectBullet": "What did you do?",
+      "category": "Category",
+      "skill": "Skill",
+      "addSkill": "Add skill…",
+      "language": "Language",
+      "level": "Level",
+      "certificate": "Certificate",
+      "date": "Date",
+      "issuer": "Issuer",
+      "name": "Your name",
+      "role": "Target position"
+    },
+    "remove": {
+      "station": "Remove role",
+      "entry": "Remove entry",
+      "bullet": "Remove bullet",
+      "project": "Remove project",
+      "generic": "Remove"
+    },
+    "add": {
+      "bullet": "Bullet",
+      "station": "Add role",
+      "entry": "Add entry",
+      "project": "Add project",
+      "category": "Category",
+      "language": "Language",
+      "certificate": "Add certificate",
+      "generic": "Add"
+    }
+  },
+  "resumeForm": {
+    "optional": "(optional)",
+    "description": "Description",
+    "sectionSelector": {
+      "label": "Edit section:"
+    },
+    "sections": {
+      "personal": "Personal details",
+      "jobDetails": "Job details",
+      "skills": "Skills",
+      "experience": "Experience",
+      "projects": "Projects",
+      "education": "Education",
+      "certifications": "Certificates"
+    },
+    "personal": {
+      "name": "Name *",
+      "namePlaceholder": "First and last name",
+      "phone": "Phone",
+      "street": "Street and house number",
+      "streetPlaceholder": "123 Sample Street",
+      "postalCode": "Postal code",
+      "city": "City",
+      "country": "Country",
+      "countryPlaceholder": "e.g. Germany",
+      "summary": "Summary",
+      "summaryPlaceholder": "Short summary of your qualifications and most important skills. Use - + space for bullet points."
+    },
+    "jobDetails": {
+      "targetJobTitle": "Target position *",
+      "targetJobTitlePlaceholder": "e.g. Senior Software Engineer",
+      "targetJobTitleHelp": "The job title that appears on your résumé",
+      "company": "Company",
+      "companyHelp": "The company from the job posting (not editable)"
+    },
+    "skills": {
+      "addCategory": "Add category",
+      "categoryPlaceholder": "Category (optional, e.g. programming languages)",
+      "skillsPlaceholder": "Separate skills with commas (e.g. TypeScript, React, Node.js)",
+      "empty": "No skills added yet"
+    },
+    "experience": {
+      "add": "Add experience",
+      "positionPlaceholder": "Position *",
+      "companyPlaceholder": "Company *",
+      "locationPlaceholder": "Location",
+      "dateRangePlaceholder": "Time period (e.g. Jan 2020 - Dec 2023)",
+      "descriptionPlaceholder": "Describe your tasks, responsibilities, and achievements in this position. Use - + space for bullet points.",
+      "empty": "No professional experience added yet"
+    },
+    "projects": {
+      "add": "Add project",
+      "namePlaceholder": "Project name *",
+      "datePlaceholder": "Time period",
+      "descriptionPlaceholder": "Describe the project, your role, and the results achieved. Use - + space for bullet points.",
+      "highlightsPlaceholder": "Highlights (one per line)",
+      "empty": "No projects added yet"
+    },
+    "education": {
+      "add": "Add education",
+      "degreePlaceholder": "Degree *",
+      "institutionPlaceholder": "Institution *",
+      "yearPlaceholder": "Year *",
+      "fieldPlaceholder": "Field of study",
+      "gpaPlaceholder": "Grade/GPA",
+      "descriptionPlaceholder": "Additional details such as focus areas, relevant courses, or awards. Use - + space for bullet points.",
+      "empty": "No education added yet"
+    },
+    "certifications": {
+      "add": "Add certificate",
+      "namePlaceholder": "Certificate *",
+      "issuerPlaceholder": "Issuer *",
+      "datePlaceholder": "Date",
+      "empty": "No certificates added yet"
+    },
+    "ai": {
+      "summaryPlaceholder": "E.g.: Emphasize my project-management experience and leadership skills...",
+      "summaryTitle": "Optimize summary",
+      "summaryDescription": "Describe how the summary should be adjusted (3-5 sentences).",
+      "summaryWarning": "The AI generates a new summary. You then need to save manually.",
+      "experiencePlaceholder": "e.g. Emphasize measurable results and team leadership",
+      "projectPlaceholder": "e.g. Emphasize the methods used and the business impact",
+      "descriptionTitle": "Improve description with AI",
+      "experienceDescription": "The AI generates strong bullet points with action verbs and quantifiable results.",
+      "projectDescription": "The AI generates strong bullet points with focus areas and measurable outcomes.",
+      "descriptionWarning": "Enter instructions to generate the description."
+    }
+  },
+  "designPanel": {
+    "tooltip": "Adjust font size, density, font & accent color",
+    "title": "Adjust design",
+    "description": "Affects the exported PDFs. The editor preview is an approximation.",
+    "fontScale": {
+      "label": "Font size",
+      "sm": {
+        "label": "S",
+        "hint": "Smaller (−8%)"
+      },
+      "md": {
+        "label": "M",
+        "hint": "Original"
+      },
+      "lg": {
+        "label": "L",
+        "hint": "Larger (+8%)"
+      }
+    },
+    "density": {
+      "label": "Density",
+      "compact": {
+        "label": "Compact",
+        "hint": "Tighter spacing — more content per page"
+      },
+      "normal": {
+        "label": "Normal",
+        "hint": "Original spacing of the design"
+      },
+      "relaxed": {
+        "label": "Relaxed",
+        "hint": "More generous spacing"
+      }
+    },
+    "fontFamily": {
+      "label": "Font",
+      "default": "Default (design font)",
+      "lato": "Lato (sans serif)",
+      "sourceSans": "Source Sans 3 (sans serif)",
+      "merriweather": "Merriweather (serif)"
+    },
+    "accent": {
+      "label": "Accent color",
+      "reset": "Reset",
+      "ariaPreset": "Accent color {name}",
+      "customTitle": "Choose custom color",
+      "customAria": "Choose custom accent color",
+      "presets": {
+        "navy": "Navy",
+        "anthracite": "Anthracite",
+        "carmine": "Carmine red",
+        "teal": "Teal",
+        "forestGreen": "Forest green",
+        "brown": "Brown"
+      }
+    },
+    "photo": {
+      "label": "Photo",
+      "uploadPrefix": "First upload a photo in your",
+      "profileLink": "profile",
+      "uploadSuffix": ".",
+      "aria": "Show photo on résumé",
+      "atsWarning": "Recommended for ATS systems and applications outside the DACH region: no photo."
+    }
+  },
+  "fontSize": {
+    "ariaLabel": "Font size",
+    "placeholder": "Size"
+  },
+  "pdfPreview": {
+    "loading": "Loading PDF...",
+    "loadingShort": "Loading...",
+    "errorTitle": "PDF could not be loaded",
+    "errorDescription": "The download link may have expired.",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "pageCount": "Page {page} / {pages}",
+    "download": "Download"
+  },
+  "richText": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "bulletList": "Bullet list",
+    "orderedList": "Numbered list",
+    "quote": "Quote",
+    "defaultPlaceholder": "Start writing..."
+  },
+  "aiAssistant": {
+    "trigger": "AI assistant",
+    "defaultPlaceholder": "E.g.: Emphasize my stakeholder-management experience more strongly...",
+    "title": "AI instructions",
+    "description": "Describe how the content should be adjusted.",
+    "loading": "AI is working...",
+    "warning": "The AI adjusts the content. Changes are saved automatically.",
+    "apply": "Apply"
+  },
+  "description": {
+    "defaultPlaceholder": "Describe your tasks, responsibilities, and achievements..."
+  },
+  "templatePreview": {
+    "loadingTemplate": "Loading template...",
+    "loadFailed": "Template could not be loaded",
+    "templateLabel": "Template:",
+    "defaultBadge": "(Default)",
+    "resumeTitle": "Résumé preview",
+    "coverLetterTitle": "Cover letter preview",
+    "noCoverLetter": "No cover letter yet"
+  },
+  "resumePreview": {
+    "footer": "Preview · The final PDF is created when downloading"
+  }
+}

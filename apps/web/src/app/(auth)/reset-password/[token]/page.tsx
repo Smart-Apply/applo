@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,12 +22,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { PasswordStrength } from '@/components/ui/password-strength';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
 } from '@/lib/validation/schemas';
 
 export default function ResetPasswordPage() {
+  const t = useTranslations('auth');
   const params = useParams();
   const router = useRouter();
   const token = params.token as string;
@@ -46,7 +49,7 @@ export default function ResetPasswordPage() {
     try {
       await api.auth.resetPassword({ token, password: data.password });
       setStatus('success');
-      toast.success('Passwort erfolgreich zurückgesetzt!');
+      toast.success(t('resetPassword.successToast'));
       setTimeout(() => {
         router.push('/login');
       }, 3000);
@@ -55,19 +58,22 @@ export default function ResetPasswordPage() {
       if (ApiError.isApiError(error)) {
         if (error.data?.code === 'INVALID_OR_EXPIRED_TOKEN') {
           setStatus('error');
-          setErrorMessage('Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.');
+          setErrorMessage(t('resetPassword.invalidTokenError'));
         } else {
           toast.error(getErrorMessage(error));
         }
       } else {
-        toast.error('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
+        toast.error(t('resetPassword.genericErrorToast'));
       }
     }
   };
 
   if (status === 'success') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+      <div className="relative flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+        <div className="absolute right-4 top-4 z-10">
+          <LanguageSwitcher variant="labeled" />
+        </div>
         <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
           <div className="mb-6 flex justify-center">
             <AppLogo className="h-12 w-auto" />
@@ -78,14 +84,13 @@ export default function ResetPasswordPage() {
               <CheckCircle className="h-8 w-8 text-success" />
             </div>
             <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
-              Passwort zurückgesetzt
+              {t('resetPassword.successTitle')}
             </h1>
             <p className="mb-6 text-muted-foreground">
-              Dein Passwort wurde erfolgreich geändert. Du wirst in Kürze zur Anmeldeseite
-              weitergeleitet.
+              {t('resetPassword.successDescription')}
             </p>
             <Link href="/login">
-              <Button className="gap-2">Jetzt anmelden</Button>
+              <Button className="gap-2">{t('resetPassword.loginNow')}</Button>
             </Link>
           </div>
         </div>
@@ -95,7 +100,10 @@ export default function ResetPasswordPage() {
 
   if (status === 'error') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+      <div className="relative flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+        <div className="absolute right-4 top-4 z-10">
+          <LanguageSwitcher variant="labeled" />
+        </div>
         <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
           <div className="mb-6 flex justify-center">
             <AppLogo className="h-12 w-auto" />
@@ -106,12 +114,12 @@ export default function ResetPasswordPage() {
               <XCircle className="h-8 w-8 text-destructive" />
             </div>
             <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
-              Link ungültig
+              {t('resetPassword.invalidTitle')}
             </h1>
             <p className="mb-6 text-muted-foreground">{errorMessage}</p>
             <Link href="/forgot-password">
               <Button variant="outline" className="gap-2">
-                Neuen Link anfordern
+                {t('resetPassword.requestNewLink')}
               </Button>
             </Link>
           </div>
@@ -121,7 +129,10 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+    <div className="relative flex min-h-screen items-center justify-center bg-muted px-4 py-8">
+      <div className="absolute right-4 top-4 z-10">
+        <LanguageSwitcher variant="labeled" />
+      </div>
       <div className="w-full max-w-md rounded-[4px] bg-card p-8 border border-border">
         <div className="mb-6 flex justify-center">
           <AppLogo className="h-12 w-auto" />
@@ -132,11 +143,10 @@ export default function ResetPasswordPage() {
             <KeyRound className="h-8 w-8 text-brand" />
           </div>
           <h1 className="mb-2 font-heading text-2xl font-bold tracking-[-.02em] text-foreground">
-            Neues Passwort festlegen
+            {t('resetPassword.title')}
           </h1>
           <p className="text-muted-foreground">
-            Gib dein neues Passwort ein. Wähle ein sicheres Passwort, das du noch nicht verwendet
-            hast.
+            {t('resetPassword.subtitle')}
           </p>
         </div>
 
@@ -148,12 +158,12 @@ export default function ResetPasswordPage() {
               render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel className="text-base font-semibold text-foreground">
-                    Neues Passwort
+                    {t('resetPassword.passwordLabel')}
                   </FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Neues Passwort"
+                      placeholder={t('resetPassword.passwordPlaceholder')}
                       className={`h-10 rounded-[4px] border bg-transparent px-3.5 text-[15px] placeholder:text-muted-foreground focus:border-primary ${
                         fieldState.error
                           ? 'border-destructive focus:border-destructive'
@@ -176,12 +186,12 @@ export default function ResetPasswordPage() {
               render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel className="text-base font-semibold text-foreground">
-                    Passwort wiederholen
+                    {t('resetPassword.confirmPasswordLabel')}
                   </FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Passwort wiederholen"
+                      placeholder={t('resetPassword.confirmPasswordPlaceholder')}
                       className={`h-10 rounded-[4px] border bg-transparent px-3.5 text-[15px] placeholder:text-muted-foreground focus:border-primary ${
                         fieldState.error
                           ? 'border-destructive focus:border-destructive'
@@ -201,9 +211,9 @@ export default function ResetPasswordPage() {
               type="submit"
               className="w-full h-10 rounded-[4px] bg-primary text-base font-semibold text-primary-foreground hover:bg-primary/90"
               isLoading={form.formState.isSubmitting}
-              loadingText="Speichere..."
+              loadingText={t('resetPassword.saving')}
             >
-              Passwort zurücksetzen
+              {t('resetPassword.submit')}
             </SubmitButton>
           </form>
         </Form>
@@ -214,7 +224,7 @@ export default function ResetPasswordPage() {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Zurück zur Anmeldung
+            {t('resetPassword.backToLogin')}
           </Link>
         </div>
       </div>
