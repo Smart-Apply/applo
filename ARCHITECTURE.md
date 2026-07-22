@@ -363,7 +363,7 @@ User 1:1 Subscription
 | Container  | Docker (multi-stage, `infra/Dockerfile`)                                                                                                                              |
 | API host   | **Fly.io** (`smart-apply-api`, region `fra`, shared-cpu-1x / 1 GB)                                                                                                    |
 | Web host   | Cloudflare Workers via `@opennextjs/cloudflare` (`smart-apply-web`)                                                                                                   |
-| CI/CD      | GitHub Actions — `ci.yml` (PR checks) + `deploy-staging.yml` (auto on `main`) + `deploy-prod.yml` (gated on `v*.*.*` tag) + `release-please.yml` (SemVer + CHANGELOG) |
+| CI/CD      | GitHub Actions — `ci.yml` (PR checks) + `deploy-staging.yml` (auto on `main`) + `deploy-prod.yml` (gated on `v*.*.*` tag) + `release-please.yml` (SemVer + CHANGELOG). API image is **built once on the runner** (`type=gha` cache) → `registry.fly.io` → promoted to both envs via `flyctl deploy --image` |
 | Secrets    | Fly Secrets (API) · Cloudflare Worker vars/secrets (Web) · `.env` (dev)                                                                                               |
 | Database   | Neon Postgres (serverless, EU/Frankfurt; `DATABASE_URL` pooled, `DIRECT_URL` for migrations)                                                                          |
 | DNS/CDN    | Cloudflare (proxied for all hostnames; ACME challenge DNS-only)                                                                                                       |
@@ -469,7 +469,9 @@ GitHub Actions
   │     └─ migration-check (per-PR Neon branch + prisma migrate deploy dry-run)
   │
   ├── deploy-staging.yml (push to main)
-  │     ├─ API → Fly (smart-apply-api-staging, fly.staging.toml)
+  │     ├─ API → build image once on runner (type=gha cache) → push
+  │     │        registry.fly.io/smart-apply-api:sha-<gitsha> → flyctl deploy
+  │     │        --image → Fly (smart-apply-api-staging, fly.staging.toml)
   │     └─ Web → Cloudflare Worker (smart-apply-web-staging, env.staging block)
   │
   ├── release-please.yml (push to main)
@@ -477,7 +479,9 @@ GitHub Actions
   │
   └── deploy-prod.yml (tag v*.*.* push)
         ├─ Blocks at `production` GitHub Environment (manual approval)
-        ├─ API → Fly (smart-apply-api, fly.prod.toml)
+        ├─ API → promote SAME sha-<gitsha> image staging built (flyctl deploy
+        │   │    --image; no rebuild; race-guard rebuilds only if missing) →
+        │   │    Fly (smart-apply-api, fly.prod.toml)
         │   ├─ Release command: prisma migrate deploy (Neon DIRECT_URL)
         │   ├─ Secrets via `flyctl secrets set` (CORS_ORIGINS, JWT_*, R2_*, ...)
         │   ├─ HTTPS terminated by Fly (Let's Encrypt for api.applo.ai)

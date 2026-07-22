@@ -132,22 +132,63 @@ jobs:
       - name: Install flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Deploy to Fly.io
+      - uses: docker/setup-buildx-action@v3
+
+      # Promote the EXACT image staging already built for this commit. On a
+      # release tag, github.sha is the release commit that landed on main,
+      # which deploy-staging built + pushed as
+      # registry.fly.io/smart-apply-api:sha-<sha>. Prod just re-deploys it —
+      # no Fly-side rebuild, no cold Depot builder (the old ~11-min prod
+      # build). release_command (prisma migrate deploy) still runs.
+      - name: Authenticate Docker to Fly registry
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        # --remote-only forces the build onto Fly's hosted Depot builder
-        # so we don't ship the entire build context through Docker Buildx
-        # on the runner (saves ~3-5 min and ~2GB of CI bandwidth).
-        # --strategy rolling matches the default fly.prod.toml behaviour
-        # but we set it explicitly so a future toml edit can't surprise CI.
+          FLY_API_TOKEN: ${{ secrets.FLY_REGISTRY_TOKEN }}
+        run: flyctl auth docker
+
+      # Race guard: the release-commit tag can fire this workflow before
+      # deploy-staging finishes pushing the SHA image (and a release commit
+      # touching no api path skips the staging build). If the image is
+      # missing, build it here with the warm type=gha cache. The common
+      # path is a pure promote and this leaves need_build=false.
+      - name: Ensure release image exists
+        id: ensure-image
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_REGISTRY_TOKEN }}
+        run: |
+          IMAGE="registry.fly.io/smart-apply-api:sha-${{ github.sha }}"
+          if docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+            echo "✅ $IMAGE already built by staging — promoting."
+            echo "need_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "⚠️ $IMAGE not found (race or api-unchanged release) — building now."
+            echo "need_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build + push API image (fallback)
+        if: steps.ensure-image.outputs.need_build == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: registry.fly.io/smart-apply-api:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+      - name: Deploy to Fly.io (promote image)
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_REGISTRY_TOKEN }}
         # --config fly.prod.toml — fly.toml was renamed when we added the
-        # staging sister config (fly.staging.toml). flyctl no longer auto-
-        # finds a config file, so the path must be explicit.
+        # staging sister config (fly.staging.toml); the path must be
+        # explicit. --strategy rolling is explicit so a future toml edit
+        # can't surprise CI.
         run: |
           flyctl deploy \
             --app "${{ env.FLY_APP }}" \
             --config fly.prod.toml \
-            --remote-only \
+            --image "registry.fly.io/smart-apply-api:sha-${{ github.sha }}" \
             --strategy rolling \
             --wait-timeout 600
 
@@ -173,7 +214,7 @@ jobs:
       - name: Show recent Fly logs on failure
         if: failure()
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_REGISTRY_TOKEN }}
         run: |
           echo "=== Last 100 log lines ==="
           flyctl logs --app "${{ env.FLY_APP }}" --no-tail 2>&1 | tail -100 || true
