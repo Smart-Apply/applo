@@ -96,6 +96,26 @@ const jobFactsSchema = {
   },
 } as const;
 
+const translateResumeSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['segments'],
+  properties: {
+    segments: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['id', 'text'],
+        properties: {
+          id: { type: 'string' },
+          text: { type: 'string' },
+        },
+      },
+    },
+  },
+} as const;
+
 const applicationValidationSchema = {
   type: 'object',
   additionalProperties: false,
@@ -169,6 +189,7 @@ const SCHEMA_REGISTRY: { match: string; name: string; schema: Record<string, unk
   { match: 'v1/resume-rewrite.md', name: 'resume_rewrite', schema: resumeRewriteSchema },
   { match: 'v1/resume-style-rewrite.md', name: 'resume_style_rewrite', schema: resumeRewriteSchema },
   { match: 'v1/job-facts.md', name: 'job_facts', schema: jobFactsSchema },
+  { match: 'v1/translate-resume.md', name: 'translate_resume', schema: translateResumeSchema },
   {
     match: 'v1/application-validation.md',
     name: 'application_validation',
@@ -204,5 +225,6 @@ export const __testSchemas = {
   atsKeywordsSchema,
   resumeRewriteSchema,
   jobFactsSchema,
+  translateResumeSchema,
   applicationValidationSchema,
 };

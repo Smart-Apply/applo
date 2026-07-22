@@ -387,6 +387,13 @@ export interface Application {
   coverLetterTemplateId?: string;
   resumeTemplateId?: string;
   language?: string;
+  /** Original content language at creation time (ISO 639-1). */
+  sourceLanguage?: string;
+  /**
+   * Set when the last cross-language export could not be translated — the
+   * PDFs were rendered consistently in the source language instead.
+   */
+  exportWarning?: 'TRANSLATION_FALLBACK';
   createdAt: string;
   updatedAt: string;
   jobPosting?: JobPosting;
@@ -532,6 +539,8 @@ export interface ResumeExperience {
   dateRange: string;
   startDate?: string;
   endDate?: string;
+  /** Raw flag backing `dateRange` — lets exports re-derive it per language. */
+  isCurrent?: boolean;
   description?: string;
   achievements?: string[];
 }
@@ -541,6 +550,8 @@ export interface ResumeProject {
   name: string;
   description?: string;
   date?: string;
+  /** Raw ISO date backing `date` — lets exports re-derive it per language. */
+  startDate?: string;
   highlights?: string[];
 }
 
@@ -549,6 +560,9 @@ export interface ResumeEducation {
   degree: string;
   institution: string;
   year: string;
+  /** Raw ISO dates backing `year` — let exports re-derive it per language. */
+  startDate?: string;
+  endDate?: string;
   fieldOfStudy?: string;
   gpa?: string;
   description?: string;

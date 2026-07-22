@@ -101,6 +101,15 @@ export interface Experience {
   location?: string;
   /** e.g., "Jan 2020 - Present". */
   dateRange: string;
+  /**
+   * Raw ISO dates backing `dateRange`. Optional — present on rows stored
+   * since the language-switch export fix so `dateRange` can be re-derived
+   * deterministically in the export language. Absent on legacy rows (the
+   * stored `dateRange` string is then used as-is).
+   */
+  startDate?: string;
+  endDate?: string;
+  isCurrent?: boolean;
   description?: string;
   /** HTML strings. */
   achievements?: string[];
@@ -110,6 +119,8 @@ export interface Project {
   name: string;
   description?: string;
   date?: string;
+  /** Raw ISO date backing `date` (see Experience.startDate). */
+  startDate?: string;
   /** HTML strings. */
   highlights?: string[];
 }
@@ -118,6 +129,9 @@ export interface Education {
   degree: string;
   institution: string;
   year: string;
+  /** Raw ISO dates backing `year` (see Experience.startDate). */
+  startDate?: string;
+  endDate?: string;
   fieldOfStudy?: string;
   gpa?: string;
   description?: string;

@@ -7,6 +7,7 @@ import { LLMModule } from '../llm/llm.module';
 import { PdfModule } from '../pdf/pdf.module';
 import { StorageModule } from '../storage/storage.module';
 import { TemplatesModule } from '../templates/templates.module';
+import { TranslationModule } from '../applications/translation/translation.module';
 import { JobsService } from './jobs.service';
 import { JobsController } from './jobs.controller';
 import { QStashWebhookController } from './qstash-webhook.controller';
@@ -24,7 +25,15 @@ import { ApplicationProcessor } from './processors/application.processor';
  * This keeps the endpoint URL stable across deploys (useful when toggling).
  */
 @Module({
-  imports: [ConfigModule, PrismaModule, LLMModule, PdfModule, StorageModule, TemplatesModule],
+  imports: [
+    ConfigModule,
+    PrismaModule,
+    LLMModule,
+    PdfModule,
+    StorageModule,
+    TemplatesModule,
+    TranslationModule,
+  ],
   controllers: [JobsController, QStashWebhookController],
   providers: [
     JobsService,

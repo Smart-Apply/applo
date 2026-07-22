@@ -43,6 +43,7 @@ import {
   buildResumeTemplateData,
   ProfileWithRelations,
   sanitizeUrl,
+  formatDate,
   formatDateRange,
   normalizeProficiencyLevel,
 } from './resume-template.util';
@@ -436,26 +437,32 @@ export class ApplicationsService {
           skills: (category.skills || []).map((skill) => skill.trim()).filter(Boolean),
         }))
         .filter((category) => category.skills.length),
-      experiences: (resume.experiences || []).map(
-        ({ id: _id, startDate: _startDate, endDate: _endDate, ...experience }) => ({
-          title: experience.title.trim(),
-          company: experience.company.trim(),
-          location: trim(experience.location),
-          dateRange: experience.dateRange.trim(),
-          description: trim(experience.description),
-          achievements: (experience.achievements || []).map((item) => item.trim()).filter(Boolean),
-        }),
-      ),
+      experiences: (resume.experiences || []).map(({ id: _id, ...experience }) => ({
+        title: experience.title.trim(),
+        company: experience.company.trim(),
+        location: trim(experience.location),
+        dateRange: experience.dateRange.trim(),
+        // Preserve the raw ISO dates so exports can re-derive `dateRange`
+        // in the target language (see resume-date-localizer.util.ts).
+        startDate: trim(experience.startDate),
+        endDate: trim(experience.endDate),
+        isCurrent: experience.isCurrent === true ? true : undefined,
+        description: trim(experience.description),
+        achievements: (experience.achievements || []).map((item) => item.trim()).filter(Boolean),
+      })),
       projects: (resume.projects || []).map(({ id: _id, ...project }) => ({
         name: project.name.trim(),
         description: trim(project.description),
         date: trim(project.date),
+        startDate: trim(project.startDate),
         highlights: (project.highlights || []).map((item) => item.trim()).filter(Boolean),
       })),
       education: (resume.education || []).map(({ id: _id, ...edu }) => ({
         degree: edu.degree.trim(),
         institution: edu.institution.trim(),
         year: edu.year.trim(),
+        startDate: trim(edu.startDate),
+        endDate: trim(edu.endDate),
         fieldOfStudy: trim(edu.fieldOfStudy),
         gpa: trim(edu.gpa),
         description: trim(edu.description),
@@ -644,11 +651,12 @@ export class ApplicationsService {
     const skillCategories = hasUserCategories
       ? undefined
       : await this.categorizeSkillsWithLLM(profile);
-    const resumeTemplate = buildResumeTemplateData(profile, skillCategories);
 
-    // 3.2. Detect language from job posting for multilingual templates
+    // 3.2. Detect language from job posting for multilingual templates —
+    // BEFORE building the resume data so date labels are localized correctly
     const detectedLanguage =
       jobPosting.language || this.detectLanguage(jobPosting.fullText) || 'en';
+    const resumeTemplate = buildResumeTemplateData(profile, skillCategories, detectedLanguage);
     resumeTemplate.language = detectedLanguage;
 
     // 3.3. Translate summary if job language differs from profile language (assume profile is in German)
@@ -785,6 +793,9 @@ export class ApplicationsService {
         coverLetterTemplateId: resolvedCoverLetterTemplateId,
         resumeTemplateId: resolvedResumeTemplateId,
         language: detectedLanguage,
+        // Original content language — the export path uses it to decide
+        // whether a cross-language translation is needed.
+        sourceLanguage: detectedLanguage,
       };
 
       if (existingApplication) {
@@ -943,6 +954,7 @@ export class ApplicationsService {
         profile,
         tailoredProfile,
         styledRewrittenProfile,
+        detectedLanguage,
       );
 
       // Debug: Log the first experience achievements to verify German content is saved
@@ -1784,6 +1796,7 @@ export class ApplicationsService {
     profile: ProfileWithRelations,
     tailoredProfile: any,
     rewrittenProfile?: RewrittenProfileDto | null,
+    language?: string,
   ): any {
     const candidateName =
       `${profile.user.firstName || ''} ${profile.user.lastName || ''}`.trim() || profile.user.email;
@@ -1942,9 +1955,10 @@ export class ApplicationsService {
           id: exp.id,
           title: exp.title,
           company: exp.company,
-          dateRange: formatDateRange(exp.startDate, exp.endDate, exp.isCurrent),
+          dateRange: formatDateRange(exp.startDate, exp.endDate, exp.isCurrent, language),
           startDate: exp.startDate?.toISOString() || undefined,
           endDate: exp.endDate?.toISOString() || undefined,
+          isCurrent: exp.isCurrent || undefined,
           location: exp.location || undefined,
           description,
           // Use rewritten achievements if available, fallback to original
@@ -1982,7 +1996,8 @@ export class ApplicationsService {
         id: proj.id,
         name: proj.name,
         description,
-        date: proj.startDate?.toISOString() || undefined,
+        date: proj.startDate ? formatDate(proj.startDate, language) : undefined,
+        startDate: proj.startDate?.toISOString() || undefined,
         highlights: hasRewrittenHighlights
           ? rewritten.rewritten_highlights
           : proj.technologies || [],
@@ -2069,7 +2084,7 @@ export class ApplicationsService {
               id: matchedCert.id,
               name: matchedCert.name,
               issuer: matchedCert.issuer,
-              date: matchedCert.issueDate?.toISOString() || undefined,
+              date: matchedCert.issueDate ? formatDate(matchedCert.issueDate, language) : undefined,
             };
           }
           // Fallback: use string as name with unknown issuer
@@ -2087,7 +2102,10 @@ export class ApplicationsService {
           id: cert.profileCertificateId || 'cert-' + Date.now(),
           name: originalCert?.name || cert.name,
           issuer: originalCert?.issuer || cert.issuer || 'Unknown',
-          date: originalCert?.issueDate?.toISOString() || cert.issueDate || undefined,
+          date:
+            (originalCert?.issueDate ? formatDate(originalCert.issueDate, language) : undefined) ||
+            cert.issueDate ||
+            undefined,
         };
       })
       .filter(Boolean);
@@ -2098,7 +2116,7 @@ export class ApplicationsService {
         id: cert.id,
         name: cert.name,
         issuer: cert.issuer,
-        date: cert.issueDate?.toISOString() || undefined,
+        date: cert.issueDate ? formatDate(cert.issueDate, language) : undefined,
       }));
     }
 
@@ -2476,7 +2494,7 @@ export class ApplicationsService {
   async requestExport(
     userId: string,
     applicationId: string,
-    language?: 'de' | 'en' | 'fr' | 'es' | 'it',
+    language?: 'de' | 'en',
   ): Promise<ApplicationResponseDto> {
     this.logger.log(
       `Export requested for application ${applicationId} with language: ${language || 'default'}`,
@@ -2507,6 +2525,9 @@ export class ApplicationsService {
         coverLetterFileKey: null,
         resumeFileKey: null,
         errorMessage: null,
+        // Persist the requested language so the editor badge and subsequent
+        // exports/retries stay consistent with the last exported PDFs.
+        ...(language ? { language } : {}),
       },
       include: {
         jobPosting: true,
@@ -2989,6 +3010,27 @@ export class ApplicationsService {
   /**
    * Map Prisma model to DTO
    */
+  /**
+   * Derive the user-facing export warning from the translation cache: when
+   * the last export's target language has a failed translation attempt (and
+   * no successful one), the PDFs were rendered in the source language as a
+   * consistent fallback — the client should tell the user.
+   */
+  private deriveExportWarning(application: {
+    translations?: unknown;
+    language?: string | null;
+  }): string | undefined {
+    const { translations, language } = application;
+    if (!translations || typeof translations !== 'object' || !language) return undefined;
+    const entry = (translations as Record<string, { resume?: unknown; failedAt?: string }>)[
+      language
+    ];
+    if (entry && entry.failedAt && !entry.resume) {
+      return 'TRANSLATION_FALLBACK';
+    }
+    return undefined;
+  }
+
   private mapToResponseDto(application: any): ApplicationResponseDto {
     return {
       id: application.id,
@@ -3008,6 +3050,8 @@ export class ApplicationsService {
       coverLetterTemplateId: application.coverLetterTemplateId,
       resumeTemplateId: application.resumeTemplateId,
       language: application.language,
+      sourceLanguage: application.sourceLanguage,
+      exportWarning: this.deriveExportWarning(application),
       errorMessage: application.errorMessage,
       createdAt: application.createdAt,
       updatedAt: application.updatedAt,

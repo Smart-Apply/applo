@@ -188,6 +188,27 @@ User → Frontend (Next.js)
 > prompts and their `generate*ATS` methods were retired (#2), so there is one
 > cover-letter generation path.
 
+> **Cross-language export (translation-on-export).** `POST /applications/:id/export`
+> accepts `language: 'de' | 'en'` (fr/es/it were removed — the prompt chain never
+> fully supported them). When the target differs from the content's source language
+> (`Application.sourceLanguage`, LLM-detected on legacy rows), the export job
+> translates the stored content instead of shipping a mixed-language PDF:
+> the résumé's display strings are extracted as flat `{ id, text }` segments
+> (`applications/translation/translation-segments.util.ts`), translated in one
+> strict-`json_schema` call (`v1/translate-resume.md`) and merged back
+> deterministically — ids, dates, URLs and contact data never pass through the
+> LLM; the cover letter goes through `v1/translate-cover-letter.md` (HTML→HTML).
+> Both passes are guarded (segment-complete check / not-gutted + structure
+> checks) with all-or-nothing acceptance; on failure the PDFs render fully in
+> the **source** language (labels included) and the API surfaces
+> `exportWarning: 'TRANSLATION_FALLBACK'`. Successful translations are cached
+> per language in `Application.translations` (Json), invalidated by an xxhash
+> of the source content (`utils/translation.util.ts`). Date labels are never
+> LLM-translated: `resume-date-localizer.util.ts` re-derives `dateRange`/`year`/
+> `date` from raw ISO dates stored in the résumé JSON (token-mapping month names
+> on legacy rows), which also fixes natively-English exports that used to ship
+> German date strings ("Okt. 2023 – Heute").
+
 > **Section order (edit mode).** The résumé JSON (`ResumeTemplateData` /
 > shared `ResumeData`) carries an optional `sectionOrder?: string[]`
 > (keys: `profile`, `experience`, `education`, `projects`, `skills`,
@@ -227,7 +248,7 @@ recorded baselines live in
 | **Project**        | Portfolio projects                             |
 | **Language**       | Language proficiency                           |
 | **JobPosting**     | Parsed job listings                            |
-| **Application**    | Generated applications + PDFs                  |
+| **Application**    | Generated applications + PDFs (+ per-language translation cache in `translations` Json) |
 | **Validation**     | Standalone AI check of an external application |
 | **ResumeTemplate** | PDF templates (50 variants)                    |
 | **Interview**      | AI-generated interview Q&A                     |

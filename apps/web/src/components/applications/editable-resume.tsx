@@ -357,14 +357,26 @@ export function EditableResume({
       title: x.title,
       company: x.company,
       dateRange: x.dateRange,
+      // A manually edited date range wins over the raw dates — drop them so
+      // the export can't re-derive (and overwrite) the user's text.
+      ...(x.dateRange !== (x.src.dateRange || '')
+        ? { startDate: undefined, endDate: undefined, isCurrent: undefined }
+        : {}),
       description: bulletsToDesc(x.bullets),
       achievements: [],
     })),
-    education: l.edu.map((e) => ({ ...e.src, degree: e.degree, institution: e.institution, year: e.year })),
+    education: l.edu.map((e) => ({
+      ...e.src,
+      degree: e.degree,
+      institution: e.institution,
+      year: e.year,
+      ...(e.year !== (e.src.year || '') ? { startDate: undefined, endDate: undefined } : {}),
+    })),
     projects: l.projects.map((p) => ({
       ...p.src,
       name: p.name,
       date: p.date || undefined,
+      ...(p.date !== (p.src.date || '') ? { startDate: undefined } : {}),
       description: bulletsToDesc(p.bullets),
       highlights: [],
     })),

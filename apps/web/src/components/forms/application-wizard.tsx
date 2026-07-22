@@ -27,7 +27,9 @@ const steps: StepConfig[] = [
   { id: 'generate', title: 'Fertig', icon: Sparkles },
 ];
 
-export type ApplicationLanguage = 'de' | 'en' | 'fr' | 'es' | 'it';
+// Only de/en — the generation prompts never fully supported fr/es/it
+// (see docs/bug_fixes/LANGUAGE_SWITCH_EXPORT.md).
+export type ApplicationLanguage = 'de' | 'en';
 
 interface ApplicationWizardProps {
   initialJobPosting?: JobPosting | null;

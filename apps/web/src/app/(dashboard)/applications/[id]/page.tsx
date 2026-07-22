@@ -179,6 +179,15 @@ export default function ApplicationDetailPage() {
           description: `${jobTitle} ist bereit zum Download.`,
           duration: 5000,
         });
+        // Cross-language export whose translation failed: the PDFs were
+        // rendered konsistent in der Originalsprache — tell the user.
+        if (application.exportWarning === 'TRANSLATION_FALLBACK') {
+          toast.warning('Übersetzung nicht möglich', {
+            description:
+              'Die PDFs wurden in der Originalsprache erstellt. Bitte versuche den Export später erneut.',
+            duration: 8000,
+          });
+        }
       } else if (currentStatus === 'FAILED') {
         toast.error('Generierung fehlgeschlagen', {
           description: `${jobTitle} konnte nicht erstellt werden.`,

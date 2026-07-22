@@ -111,10 +111,26 @@ export class ApplicationResponseDto {
 
   @ApiPropertyOptional({
     example: 'de',
-    description: 'Language for generated content (ISO 639-1 code)',
+    description: 'Language of the last export / generated content (ISO 639-1 code)',
     enum: ['de', 'en', 'fr', 'es', 'it'],
   })
   language?: string;
+
+  @ApiPropertyOptional({
+    example: 'de',
+    description: 'Original content language at creation time (ISO 639-1 code)',
+    enum: ['de', 'en'],
+  })
+  sourceLanguage?: string;
+
+  @ApiPropertyOptional({
+    example: 'TRANSLATION_FALLBACK',
+    description:
+      'Set when the last cross-language export could not be translated — the PDFs were ' +
+      'rendered consistently in the source language instead.',
+    enum: ['TRANSLATION_FALLBACK'],
+  })
+  exportWarning?: string;
 
   @ApiProperty({ example: '2024-01-15T10:30:00Z' })
   createdAt: Date;

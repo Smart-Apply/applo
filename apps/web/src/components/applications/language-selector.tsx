@@ -1,47 +1,71 @@
 'use client';
 
 import { Globe } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+export type ExportLanguage = 'de' | 'en';
 
 interface LanguageOption {
-  value: string;
+  value: ExportLanguage;
   label: string;
   flag: string;
 }
 
 const LANGUAGES: LanguageOption[] = [
-  { value: 'en', label: 'English', flag: '🇬🇧' },
   { value: 'de', label: 'Deutsch', flag: '🇩🇪' },
-  { value: 'fr', label: 'Français', flag: '🇫🇷' },
-  { value: 'es', label: 'Español', flag: '🇪🇸' },
-  { value: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { value: 'en', label: 'English', flag: '🇬🇧' },
 ];
 
+/** Narrow any stored language code to a supported export language. */
+export function toExportLanguage(value?: string | null): ExportLanguage {
+  return value === 'en' ? 'en' : 'de';
+}
+
 interface LanguageSelectorProps {
-  /** Current language code (e.g., 'de', 'en') */
-  value: string;
-  /** Optional: Application ID (not used anymore, kept for API compatibility) */
-  applicationId?: string;
+  /** Current export language ('de' | 'en'). */
+  value: ExportLanguage;
+  /** Called when the user picks a different export language. */
+  onChange: (value: ExportLanguage) => void;
+  /** Disable while an export is running. */
+  disabled?: boolean;
 }
 
 /**
- * Language Display Badge (Read-only)
+ * Export Language Selector
  *
- * Shows the language the application was created in.
- * Language is set at creation time and cannot be changed afterwards.
- * To get a different language, create a new application.
+ * Picks the language the PDFs are exported in. Content generated in the
+ * other language is translated automatically at export time (dates and
+ * section headers deterministically, prose via the guarded translation
+ * pass) — the editor content itself always stays in its source language.
  */
-export function LanguageSelector({ value }: LanguageSelectorProps) {
-  const language = LANGUAGES.find((l) => l.value === value);
-
+export function LanguageSelector({ value, onChange, disabled }: LanguageSelectorProps) {
   return (
-    <Badge
-      variant="outline"
-      className="h-8 px-3 text-xs border-border/50 bg-muted/30 gap-1.5"
+    <Select
+      value={value}
+      onValueChange={(next) => onChange(toExportLanguage(next))}
+      disabled={disabled}
     >
-      <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-      <span>{language?.flag}</span>
-      <span className="uppercase font-medium">{value}</span>
-    </Badge>
+      <SelectTrigger
+        aria-label="Exportsprache"
+        className="h-8 w-auto gap-1.5 rounded-none border-border/50 bg-muted/30 px-3 text-xs"
+      >
+        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {LANGUAGES.map((language) => (
+          <SelectItem key={language.value} value={language.value} className="text-xs">
+            <span className="mr-1.5">{language.flag}</span>
+            {language.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

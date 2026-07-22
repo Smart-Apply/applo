@@ -169,11 +169,21 @@ export function sanitizeUrl(url: string | null | undefined): string | undefined 
   return result || undefined;
 }
 
-function formatDate(date: Date | null | undefined): string {
-  if (!date) {
+/** Map an ISO 639-1 code onto the Intl locale used for date labels. */
+function dateLocale(language?: string): string {
+  return language === 'de' || !language ? 'de-DE' : 'en-US';
+}
+
+/** Localized "ongoing" label for open-ended date ranges. */
+export function presentLabel(language?: string): string {
+  return language === 'de' || !language ? 'Heute' : 'Present';
+}
+
+export function formatDate(date: Date | null | undefined, language?: string): string {
+  if (!date || isNaN(date.getTime())) {
     return '';
   }
-  return date.toLocaleDateString('de-DE', {
+  return date.toLocaleDateString(dateLocale(language), {
     month: 'short',
     year: 'numeric',
   });
@@ -183,9 +193,12 @@ export function formatDateRange(
   start?: Date | null,
   end?: Date | null,
   isCurrent?: boolean,
+  language?: string,
 ): string {
-  const startLabel = formatDate(start) || 'Start';
-  const endLabel = isCurrent ? 'Aktuell' : formatDate(end) || 'Heute';
+  const startLabel = formatDate(start, language) || 'Start';
+  const endLabel = isCurrent
+    ? presentLabel(language)
+    : formatDate(end, language) || presentLabel(language);
   return `${startLabel} – ${endLabel}`;
 }
 
@@ -235,6 +248,7 @@ export function buildSkillCategoriesWithCustom(
 export function buildResumeTemplateData(
   profile: ProfileWithRelations,
   customSkillCategories?: ResumeSkillCategory[],
+  language?: string,
 ): ResumeTemplateData {
   const candidateName =
     [profile.user.firstName, profile.user.lastName].filter(Boolean).join(' ').trim() ||
@@ -266,14 +280,18 @@ export function buildResumeTemplateData(
         title: exp.title,
         company: exp.company,
         location: exp.location ?? undefined,
-        dateRange: formatDateRange(exp.startDate, exp.endDate, exp.isCurrent),
+        dateRange: formatDateRange(exp.startDate, exp.endDate, exp.isCurrent, language),
+        startDate: exp.startDate?.toISOString() || undefined,
+        endDate: exp.endDate?.toISOString() || undefined,
+        isCurrent: exp.isCurrent || undefined,
         description: exp.description ?? undefined,
         achievements: exp.achievements?.length ? exp.achievements : undefined,
       })),
     projects: profile.projects.map((project) => ({
       name: project.name,
       description: project.description ?? undefined,
-      date: project.startDate ? formatDate(project.startDate) : undefined,
+      date: project.startDate ? formatDate(project.startDate, language) : undefined,
+      startDate: project.startDate?.toISOString() || undefined,
       highlights: project.highlights?.length ? project.highlights : undefined,
     })),
     education: profile.education.map((edu) => ({
@@ -282,12 +300,14 @@ export function buildResumeTemplateData(
       fieldOfStudy: edu.fieldOfStudy ?? undefined,
       gpa: edu.gpa ?? undefined,
       description: edu.description ?? undefined,
-      year: formatDateRange(edu.startYear, edu.endYear),
+      year: formatDateRange(edu.startYear, edu.endYear, false, language),
+      startDate: edu.startYear?.toISOString() || undefined,
+      endDate: edu.endYear?.toISOString() || undefined,
     })),
     certifications: profile.certificates.map((cert) => ({
       name: cert.name,
       issuer: cert.issuer,
-      date: cert.issueDate ? formatDate(cert.issueDate) : undefined,
+      date: cert.issueDate ? formatDate(cert.issueDate, language) : undefined,
     })),
     languages:
       profile.languages?.map((lang) => ({
