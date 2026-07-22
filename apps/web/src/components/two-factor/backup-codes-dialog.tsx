@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Loader2, Copy, Check, Download, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRegenerateBackupCodes, useTwoFactorStatus } from '@/hooks/use-two-factor';
 import { toastSuccess } from '@/lib/toast';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 
 interface BackupCodesDialogProps {
   open: boolean;
@@ -21,6 +23,7 @@ interface BackupCodesDialogProps {
 }
 
 export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps) {
+  const t = useTranslations('twoFactor');
   const [showRegenerate, setShowRegenerate] = useState(false);
   const [password, setPassword] = useState('');
   const [newCodes, setNewCodes] = useState<string[] | null>(null);
@@ -43,14 +46,15 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
       const codesText = newCodes.join('\n');
       navigator.clipboard.writeText(codesText);
       setCopied(true);
-      toastSuccess('Backup-Codes kopiert');
+      toastSuccess(t('backupCodes.copiedToast'));
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const handleDownloadBackupCodes = () => {
     if (newCodes) {
-      const codesText = `Applo - Backup-Codes für 2FA\n${'='.repeat(40)}\n\nDiese Codes können jeweils einmal verwendet werden.\nBewahre sie an einem sicheren Ort auf.\n\n${newCodes.map((code, i) => `${i + 1}. ${code}`).join('\n')}\n\nGeneriert am: ${new Date().toLocaleString('de-DE')}`;
+      const generatedAt = new Date().toLocaleString(getIntlLocale());
+      const codesText = `${t('backupCodes.downloadTitle')}\n${'='.repeat(40)}\n\n${t('backupCodes.downloadDescription')}\n${t('backupCodes.downloadStorageHint')}\n\n${newCodes.map((code, i) => `${i + 1}. ${code}`).join('\n')}\n\n${t('backupCodes.downloadGeneratedAt', { date: generatedAt })}`;
       const blob = new Blob([codesText], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -60,7 +64,7 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toastSuccess('Backup-Codes heruntergeladen');
+      toastSuccess(t('backupCodes.downloadedToast'));
     }
   };
 
@@ -78,11 +82,11 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Backup-Codes</DialogTitle>
+          <DialogTitle>{t('backupCodes.title')}</DialogTitle>
           <DialogDescription>
             {newCodes
-              ? 'Deine neuen Backup-Codes wurden generiert. Speichere sie sicher!'
-              : `Du hast noch ${status?.backupCodesRemaining || 0} unbenutzte Backup-Codes.`}
+              ? t('backupCodes.newCodesDescription')
+              : t('backupCodes.remainingDescription', { count: status?.backupCodesRemaining || 0 })}
           </DialogDescription>
         </DialogHeader>
 
@@ -106,7 +110,7 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
                   className="flex-1"
                 >
                   {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                  Kopieren
+                  {t('backupCodes.copy')}
                 </Button>
                 <Button
                   variant="outline"
@@ -114,25 +118,25 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
                   className="flex-1"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Herunterladen
+                  {t('backupCodes.download')}
                 </Button>
               </div>
 
               <p className="text-xs text-destructive font-medium">
-                Diese Codes werden nur einmal angezeigt!
+                {t('backupCodes.shownOnce')}
               </p>
             </>
           ) : showRegenerate ? (
             <>
               <div className="rounded-[4px] border border-[#F3E3B3] bg-[#FDF6E7] p-4 text-sm text-[#854D0E] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
-                <p className="font-medium">Achtung:</p>
+                <p className="font-medium">{t('backupCodes.warningTitle')}</p>
                 <p className="mt-1">
-                  Alle bestehenden Backup-Codes werden ungültig. Speichere die neuen Codes sicher.
+                  {t('backupCodes.regenerateWarning')}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Passwort zur Bestätigung</Label>
+                <Label htmlFor="password">{t('backupCodes.passwordLabel')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -148,7 +152,7 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
                   onClick={() => setShowRegenerate(false)}
                   className="flex-1"
                 >
-                  Abbrechen
+                  {t('backupCodes.cancel')}
                 </Button>
                 <Button
                   onClick={handleRegenerate}
@@ -158,10 +162,10 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
                   {regenerateMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generieren...
+                      {t('backupCodes.generating')}
                     </>
                   ) : (
-                    'Neue Codes generieren'
+                    t('backupCodes.generate')
                   )}
                 </Button>
               </div>
@@ -170,14 +174,13 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
             <>
               <div className="text-sm text-muted-foreground">
                 <p>
-                  Backup-Codes können verwendet werden, wenn du keinen Zugriff auf deine
-                  Authenticator-App hast. Jeder Code kann nur einmal verwendet werden.
+                  {t('backupCodes.description')}
                 </p>
               </div>
 
               {status && status.backupCodesRemaining < 3 && (
                 <div className="rounded-[4px] border border-[#F3E3B3] bg-[#FDF6E7] p-4 text-sm text-[#854D0E] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
-                  Du hast nur noch wenige Backup-Codes. Generiere neue Codes für den Notfall.
+                  {t('backupCodes.lowWarning')}
                 </div>
               )}
 
@@ -187,7 +190,7 @@ export function BackupCodesDialog({ open, onOpenChange }: BackupCodesDialogProps
                 className="w-full"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Neue Backup-Codes generieren
+                {t('backupCodes.regenerate')}
               </Button>
             </>
           )}

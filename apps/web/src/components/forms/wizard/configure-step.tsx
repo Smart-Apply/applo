@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,25 +56,25 @@ const FINISH_ANIMATION_MS = 1600;
  */
 const MONOCHROME_TEMPLATES = new Set(['classic-ats-resume', 'harvard-classic-resume']);
 
-const LANGUAGE_OPTIONS: { value: ApplicationLanguage; label: string }[] = [
-  { value: 'de', label: 'Deutsch' },
-  { value: 'en', label: 'English' },
+const LANGUAGE_OPTIONS: { value: ApplicationLanguage; labelKey: 'configureStep.language.de' | 'configureStep.language.en' }[] = [
+  { value: 'de', labelKey: 'configureStep.language.de' },
+  { value: 'en', labelKey: 'configureStep.language.en' },
 ];
 
 const COVER_LETTER_LENGTH_OPTIONS: {
   value: 'kurz' | 'standard';
-  label: string;
-  hint: string;
+  labelKey: 'configureStep.coverLetterLength.kurz.label' | 'configureStep.coverLetterLength.standard.label';
+  hintKey: 'configureStep.coverLetterLength.kurz.hint' | 'configureStep.coverLetterLength.standard.hint';
 }[] = [
   {
     value: 'kurz',
-    label: 'Kompakt (~250 Wörter)',
-    hint: 'Auf den Punkt — ideal, wenn die Stelle wenig Anforderungen nennt.',
+    labelKey: 'configureStep.coverLetterLength.kurz.label',
+    hintKey: 'configureStep.coverLetterLength.kurz.hint',
   },
   {
     value: 'standard',
-    label: 'Standard (~350 Wörter)',
-    hint: 'Die klassische Länge für eine Seite.',
+    labelKey: 'configureStep.coverLetterLength.standard.label',
+    hintKey: 'configureStep.coverLetterLength.standard.hint',
   },
 ];
 
@@ -138,6 +139,7 @@ export function ConfigureStep({
   onGenerationStateChange,
 }: ConfigureStepProps) {
   const router = useRouter();
+  const t = useTranslations('wizard');
   const queryClient = useQueryClient();
   const createApplication = useCreateApplicationWithGeneration();
   const { data: coverLetterTemplates, isLoading: clLoading } = useCoverLetterTemplates();
@@ -221,7 +223,7 @@ export function ConfigureStep({
       await new Promise(resolve => setTimeout(resolve, FINISH_ANIMATION_MS));
       router.push(`/applications/${application.id}/edit`);
     } catch (error: unknown) {
-      let message = 'Ein unbekannter Fehler ist aufgetreten';
+      let message = t('configureStep.errors.unknown');
       let applicationId: string | null = null;
       let errorCode: string | undefined;
       if (error && typeof error === 'object') {
@@ -238,7 +240,7 @@ export function ConfigureStep({
         toast.error(message, {
           duration: 10000,
           action: {
-            label: 'E-Mail erneut senden',
+            label: t('configureStep.errors.resendEmail'),
             onClick: () => router.push('/settings?verify=resend'),
           },
         });
@@ -249,7 +251,7 @@ export function ConfigureStep({
         toast.error(message, {
           duration: 8000,
           action: {
-            label: 'Zur Bewerbung',
+            label: t('configureStep.errors.goToApplication'),
             onClick: () => router.push(`/applications/${applicationId}`),
           },
         });
@@ -279,16 +281,16 @@ export function ConfigureStep({
     : null;
 
   if (clLoading || rtLoading) {
-    return <CenteredLoader message="Vorlagen werden geladen..." />;
+    return <CenteredLoader message={t('configureStep.loadingTemplates')} />;
   }
 
   // ── Loading screen with circular progress ring ──
   if (isGenerating) {
     const STEPS = [
-      { key: 'analyze', label: 'Profil und Stellenanzeige werden analysiert', icon: Target, doneAt: 6 },
-      { key: 'cover', label: 'Anschreiben wird mit KI generiert', icon: FileText, doneAt: 28 },
-      { key: 'resume', label: 'Lebenslauf wird auf die Stelle zugeschnitten', icon: User, doneAt: 50 },
-      { key: 'save', label: 'Dokumente werden gespeichert', icon: Download, doneAt: 60 },
+      { key: 'analyze', label: t('configureStep.progress.steps.analyze'), icon: Target, doneAt: 6 },
+      { key: 'cover', label: t('configureStep.progress.steps.cover'), icon: FileText, doneAt: 28 },
+      { key: 'resume', label: t('configureStep.progress.steps.resume'), icon: User, doneAt: 50 },
+      { key: 'save', label: t('configureStep.progress.steps.save'), icon: Download, doneAt: 60 },
     ];
 
     const filteredSteps = generateCoverLetter ? STEPS : STEPS.filter(s => s.key !== 'cover');
@@ -327,30 +329,30 @@ export function ConfigureStep({
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="font-mono text-[28px] font-semibold leading-none tracking-[-.02em]">{Math.round(pct)}%</span>
-                  <span className="mt-1 font-mono text-[9.5px] font-medium uppercase tracking-[.14em] text-[#A0A0A0]">erstellt</span>
+                  <span className="mt-1 font-mono text-[9.5px] font-medium uppercase tracking-[.14em] text-[#A0A0A0]">{t('configureStep.progress.created')}</span>
                 </div>
               </div>
 
               <div className="min-w-0">
                 <h2 className="font-heading text-[21px] font-bold tracking-[-.01em]">
-                  {isRedirecting ? 'Fertig!' : filteredSteps[activeIdx].label}
+                  {isRedirecting ? t('configureStep.progress.doneTitle') : filteredSteps[activeIdx].label}
                 </h2>
                 <div className="mt-2.5 inline-flex items-center gap-2 border border-[#E0E0E0] bg-[#F5F6F8] px-3 py-1.5 text-[13px] font-medium text-muted-foreground">
                   {isRedirecting ? (
                     <>
                       <Check className="h-4 w-4 text-[#16A34A]" strokeWidth={2.8} />
-                      Bewerbung erstellt – du wirst weitergeleitet …
+                      {t('configureStep.progress.redirecting')}
                     </>
                   ) : (
                     <>
                       <Clock className="h-4 w-4" />
-                      {etaSec > 0 ? `Geschätzte Restzeit: ~${etaSec} Sek.` : 'Gleich geschafft …'}
+                      {etaSec > 0 ? t('configureStep.progress.eta', { seconds: etaSec }) : t('configureStep.progress.almostDone')}
                     </>
                   )}
                 </div>
                 {!isRedirecting && (
                   <p className="mt-2 text-sm font-semibold text-muted-foreground">
-                    Bitte schließe dieses Fenster nicht.
+                    {t('configureStep.progress.doNotClose')}
                   </p>
                 )}
               </div>
@@ -395,7 +397,7 @@ export function ConfigureStep({
                     </span>
                     {isDone && (
                       <span className="font-mono text-[10px] font-semibold uppercase tracking-[.08em] text-[#16A34A]">
-                        Fertig
+                        {t('configureStep.progress.stepDone')}
                       </span>
                     )}
                   </div>
@@ -405,7 +407,7 @@ export function ConfigureStep({
           </CardContent>
         </Card>
         <p className="text-center text-xs text-[#A0A0A0]">
-          Fertige Schritte werden nach Abschluss automatisch als erledigt markiert.
+          {t('configureStep.progress.footnote')}
         </p>
       </div>
     );
@@ -420,7 +422,7 @@ export function ConfigureStep({
       <div>
         <Card className="gap-0 rounded-[4px] border-[#E0E0E0] bg-white py-0 shadow-none">
           <CardHeader className="border-b border-[#E0E0E0] px-5 py-4">
-            <CardTitle className="font-heading text-base font-bold">Konfigurieren</CardTitle>
+            <CardTitle className="font-heading text-base font-bold">{t('configureStep.title')}</CardTitle>
           </CardHeader>
           <CardContent className="p-5">
             <div className="grid gap-4 sm:grid-cols-2 lg:items-start">
@@ -439,10 +441,10 @@ export function ConfigureStep({
                   />
                   <div className="grid w-full gap-1 leading-none">
                     <Label htmlFor="generateCoverLetter" className="cursor-pointer text-sm font-semibold">
-                      Anschreiben generieren
+                      {t('configureStep.options.generateCoverLetter')}
                     </Label>
                     <p className="text-xs leading-relaxed text-muted-foreground">
-                      Erstellt ein auf die Stelle zugeschnittenes Anschreiben.
+                      {t('configureStep.options.generateCoverLetterHelp')}
                     </p>
                     {generateCoverLetter && (
                       <div
@@ -454,7 +456,7 @@ export function ConfigureStep({
                             key={option.value}
                             type="button"
                             onClick={() => setCoverLetterLength(option.value)}
-                            title={option.hint}
+                            title={t(option.hintKey)}
                             className={cn(
                               'inline-flex items-center border px-2.5 py-1.5 font-mono text-[11px] font-semibold tracking-[.04em] transition-colors',
                               coverLetterLength === option.value
@@ -462,7 +464,7 @@ export function ConfigureStep({
                                 : 'border-[#E0E0E0] bg-white text-[#6B6969] hover:bg-[#F5F6F8]',
                             )}
                           >
-                            {option.label}
+                            {t(option.labelKey)}
                           </button>
                         ))}
                       </div>
@@ -471,15 +473,15 @@ export function ConfigureStep({
                 </div>
 
                 <div className="flex items-center gap-3 border border-[#E0E0E0] p-3.5">
-                  <Label className="shrink-0 text-sm font-semibold">Sprache</Label>
+                  <Label className="shrink-0 text-sm font-semibold">{t('configureStep.options.language')}</Label>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {LANGUAGE_OPTIONS.map(option => (
                       <button
                         key={option.value}
                         type="button"
                         onClick={() => setSelectedLanguage(option.value)}
-                        title={option.label}
-                        aria-label={option.label}
+                        title={t(option.labelKey)}
+                        aria-label={t(option.labelKey)}
                         className={cn(
                           'inline-flex items-center border px-2.5 py-1.5 font-mono text-[11px] font-semibold tracking-[.04em] transition-colors',
                           selectedLanguage === option.value
@@ -529,7 +531,7 @@ export function ConfigureStep({
                       <div className="relative h-[70px] w-[52px] shrink-0 overflow-hidden border border-[#E0E0E0] bg-white">
                         <Image
                           src={templatePreviewUrl(group.baseTemplate.id)}
-                          alt={`${group.baseTemplate.name} Miniatur`}
+                          alt={t('configureStep.templates.thumbnailAlt', { name: group.baseTemplate.name })}
                           fill
                           unoptimized
                           className="object-cover object-top"
@@ -564,7 +566,7 @@ export function ConfigureStep({
                             className="mt-2 flex items-center gap-1.5"
                             onClick={e => e.stopPropagation()}
                           >
-                            <span className="font-mono text-[10px] uppercase tracking-[.06em] text-[#A0A0A0]">Farbe</span>
+                            <span className="font-mono text-[10px] uppercase tracking-[.06em] text-[#A0A0A0]">{t('configureStep.templates.color')}</span>
                             {group.colorVariants.map(variant => {
                               const variantSelected = variant.id === effectiveResumeTemplateId;
                               return (
@@ -605,14 +607,14 @@ export function ConfigureStep({
               <div className="flex flex-col border border-[#E0E0E0] bg-[#FAFAFA] p-4">
                 <div className="mb-3 flex items-center justify-between px-1">
                   <p className="text-[13px] text-muted-foreground">
-                    Vorschau:{' '}
+                    {t('configureStep.preview.label')}{' '}
                     <span className="font-semibold text-foreground">
                       {shownGroup?.baseTemplate.name.replace(/\s*\([^)]*\)\s*$/, '')}
                     </span>
                   </p>
                   <span className="inline-flex items-center gap-1.5 border border-[#E0E0E0] bg-white px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[.08em] text-[#6B6969]">
                     <span className="h-1.5 w-1.5 animate-pulse bg-[#16A34A]" />
-                    Live
+                    {t('configureStep.preview.live')}
                   </span>
                 </div>
                 {shownTemplateId && (
@@ -620,19 +622,19 @@ export function ConfigureStep({
                     <button
                       type="button"
                       onClick={() => setZoomOpen(true)}
-                      title="Zum Vergrößern klicken"
+                      title={t('configureStep.preview.zoomTitle')}
                       className="group relative aspect-[8.5/11] h-[560px] max-h-[calc(100vh-540px)] cursor-zoom-in overflow-hidden border border-[#B0B0B0] bg-white shadow-[8px_8px_0_#E5E9F2] transition-shadow hover:shadow-[8px_8px_0_#D8E0EF]"
                     >
                       <Image
                         key={shownTemplateId}
                         src={templatePreviewUrl(shownTemplateId)}
-                        alt="Template Vorschau"
+                        alt={t('configureStep.preview.alt')}
                         fill
                         unoptimized
                         className="object-cover animate-in fade-in duration-300"
                       />
                       <span className="pointer-events-none absolute right-2 top-2 inline-flex items-center gap-1 bg-[#1B2A49]/80 px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[.06em] text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                        <Maximize2 className="h-3 w-3" /> Vergrößern
+                        <Maximize2 className="h-3 w-3" /> {t('configureStep.preview.zoom')}
                       </span>
                     </button>
                   </div>
@@ -643,14 +645,14 @@ export function ConfigureStep({
               <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
                 <DialogContent className="w-fit max-w-[96vw] border-none bg-transparent p-0 shadow-none sm:max-w-[96vw]">
                   <DialogTitle className="sr-only">
-                    Vorschau: {shownGroup?.baseTemplate.name.replace(/\s*\([^)]*\)\s*$/, '')}
+                    {t('configureStep.preview.dialogTitle', { name: shownGroup?.baseTemplate.name.replace(/\s*\([^)]*\)\s*$/, '') ?? '' })}
                   </DialogTitle>
                   {shownTemplateId && (
                     <div className="relative aspect-[8.5/11] h-[88vh] max-h-[88vh] overflow-hidden rounded-lg border border-border/50 bg-white shadow-2xl">
                       <Image
                         key={shownTemplateId}
                         src={templatePreviewUrl(shownTemplateId)}
-                        alt="Template Vorschau groß"
+                        alt={t('configureStep.preview.largeAlt')}
                         fill
                         unoptimized
                         className="object-contain"
@@ -669,7 +671,7 @@ export function ConfigureStep({
       <div className="flex items-center justify-between gap-4 border-t border-[#E0E0E0] pt-5">
         <Button variant="outline" onClick={() => onStepChange('job')} className="rounded-[3px] border-[#1B2A49] font-semibold hover:bg-[#E5E9F2]">
           <ChevronLeft className="mr-1 h-4 w-4" />
-          Zurück
+          {t('configureStep.actions.back')}
         </Button>
         <div className="flex items-center gap-4">
           {!dailyUsage.isUnlimited && !dailyUsage.isLoading && (
@@ -684,19 +686,19 @@ export function ConfigureStep({
               )}
             >
               {dailyUsage.isExhausted
-                ? `Tageslimit erreicht (${dailyUsage.used}/${dailyUsage.limit}). Bitte komm in 24 Stunden wieder.`
-                : `Heute noch ${dailyUsage.remaining} von ${dailyUsage.limit} Bewerbungen möglich`}
+                ? t('configureStep.usage.exhausted', { used: dailyUsage.used, limit: dailyUsage.limit })
+                : t('configureStep.usage.remaining', { remaining: dailyUsage.remaining, limit: dailyUsage.limit })}
             </p>
           )}
           <SubmitButton
             onClick={handleSubmit}
             isLoading={createApplication.isPending}
-            loadingText="Erstelle Bewerbung..."
+            loadingText={t('configureStep.actions.creating')}
             size="lg"
             disabled={dailyUsage.isExhausted}
             className="rounded-[3px] px-6 font-semibold"
           >
-            Bewerbung erstellen
+            {t('configureStep.actions.create')}
             <Sparkles className="ml-1 h-4 w-4" />
           </SubmitButton>
         </div>

@@ -8,6 +8,7 @@ import { SubmitButton } from '@/components/ui/submit-button';
 import { PromptUsageMeter } from '@/components/ui/prompt-usage-meter';
 import { usePromptUsage } from '@/hooks/use-prompt-usage';
 import { useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 export interface AiAssistantPopoverProps {
   /** Whether the popover is open */
@@ -53,16 +54,23 @@ export function AiAssistantPopover({
   onInstructionsChange,
   onApply,
   isLoading,
-  placeholder = 'Z.B.: Betone meine React-Erfahrung stärker...',
-  title = 'AI-Anweisungen',
-  description = 'Beschreibe, wie der Inhalt angepasst werden soll.',
-  loadingText = 'AI arbeitet...',
-  warningMessage = 'Die AI passt den Inhalt an. Die Änderungen werden automatisch gespeichert.',
-  applyButtonText = 'Anwenden',
+  placeholder,
+  title,
+  description,
+  loadingText,
+  warningMessage,
+  applyButtonText,
   buttonVariant = 'outline',
   buttonSize = 'sm',
   buttonClassName = 'h-8 px-3 text-xs border-primary/30 hover:border-primary/50 hover:bg-primary/5',
 }: AiAssistantPopoverProps) {
+  const t = useTranslations('editor');
+  const resolvedPlaceholder = placeholder ?? t('aiAssistant.defaultPlaceholder');
+  const resolvedTitle = title ?? t('aiAssistant.title');
+  const resolvedDescription = description ?? t('aiAssistant.description');
+  const resolvedLoadingText = loadingText ?? t('aiAssistant.loading');
+  const resolvedWarningMessage = warningMessage ?? t('aiAssistant.warning');
+  const resolvedApplyButtonText = applyButtonText ?? t('aiAssistant.apply');
   // Live character/token guardrail for the instructions field (issue #520).
   const usage = usePromptUsage(instructions, 'editModeAssistant');
 
@@ -84,7 +92,7 @@ export function AiAssistantPopover({
       <PopoverTrigger asChild>
         <Button variant={buttonVariant} size={buttonSize} className={buttonClassName}>
           <Sparkles className="h-3.5 w-3.5 mr-1.5 text-primary" />
-          AI-Assistent
+          {t('aiAssistant.trigger')}
         </Button>
       </PopoverTrigger>
       <PopoverContent side="bottom" align="end" className="w-80">
@@ -92,15 +100,15 @@ export function AiAssistantPopover({
           <div className="space-y-1">
             <h4 className="font-medium text-sm flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              {title}
+              {resolvedTitle}
             </h4>
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <p className="text-xs text-muted-foreground">{resolvedDescription}</p>
           </div>
           <Textarea
             value={instructions}
             onChange={(event) => onInstructionsChange(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             rows={3}
             disabled={isLoading}
             aria-invalid={usage.isOverLimit}
@@ -109,19 +117,19 @@ export function AiAssistantPopover({
           <PromptUsageMeter usage={usage} />
           <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
             <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-            <span>{warningMessage}</span>
+            <span>{resolvedWarningMessage}</span>
           </div>
           <SubmitButton
             variant="default"
             size="sm"
             onClick={onApply}
             isLoading={isLoading}
-            loadingText={loadingText}
+            loadingText={resolvedLoadingText}
             disabled={isLoading || !instructions.trim() || usage.isOverLimit}
             className="w-full"
           >
             <Sparkles className="h-3.5 w-3.5 mr-2" />
-            {applyButtonText}
+            {resolvedApplyButtonText}
           </SubmitButton>
         </div>
       </PopoverContent>

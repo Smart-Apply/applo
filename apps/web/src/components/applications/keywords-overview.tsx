@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ATSKeywords, KeywordMatch, KeywordCategory } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -30,16 +31,16 @@ interface KeywordsOverviewProps {
 
 const categoryConfig: Record<
   KeywordCategory,
-  { label: string; icon: React.ElementType; color: string }
+  { labelKey: string; icon: React.ElementType; color: string }
 > = {
-  core: { label: 'Kernkompetenzen', icon: Code2, color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
-  soft: { label: 'Soft Skills', icon: Heart, color: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200' },
-  responsibility: { label: 'Aufgaben', icon: Target, color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
-  requirement: { label: 'Anforderungen', icon: Award, color: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' },
-  methodology: { label: 'Methoden & Tools', icon: Wrench, color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200' },
-  industry: { label: 'Branche', icon: Building2, color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' },
-  seniority: { label: 'Level', icon: Award, color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' },
-  misc: { label: 'Sonstiges', icon: Tag, color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' },
+  core: { labelKey: 'keywords.categories.core', icon: Code2, color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+  soft: { labelKey: 'keywords.categories.soft', icon: Heart, color: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200' },
+  responsibility: { labelKey: 'keywords.categories.responsibility', icon: Target, color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
+  requirement: { labelKey: 'keywords.categories.requirement', icon: Award, color: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' },
+  methodology: { labelKey: 'keywords.categories.methodology', icon: Wrench, color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200' },
+  industry: { labelKey: 'keywords.categories.industry', icon: Building2, color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' },
+  seniority: { labelKey: 'keywords.categories.seniority', icon: Award, color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' },
+  misc: { labelKey: 'keywords.categories.misc', icon: Tag, color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' },
 };
 
 interface KeywordBadgeProps {
@@ -48,6 +49,7 @@ interface KeywordBadgeProps {
 }
 
 function KeywordBadge({ keyword, showUsedIn = false }: KeywordBadgeProps) {
+  const t = useTranslations('applications');
   const config = categoryConfig[keyword.category] ?? categoryConfig.misc;
   const Icon = config.icon;
 
@@ -74,7 +76,7 @@ function KeywordBadge({ keyword, showUsedIn = false }: KeywordBadgeProps) {
       {showUsedIn && keyword.usedIn && keyword.usedIn.length > 0 && (
         <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block z-10">
           <div className="bg-popover text-popover-foreground text-xs rounded-md shadow-lg p-2 border">
-            <p className="font-medium mb-1">Gefunden in:</p>
+            <p className="font-medium mb-1">{t('keywords.foundIn')}</p>
             <ul className="space-y-0.5">
               {keyword.usedIn.map((location, idx) => (
                 <li key={idx} className="text-muted-foreground">{location}</li>
@@ -92,6 +94,7 @@ export function KeywordsOverview({
   missingKeywords,
   className,
 }: KeywordsOverviewProps) {
+  const t = useTranslations('applications');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showAllMissing, setShowAllMissing] = useState(false);
 
@@ -113,7 +116,7 @@ export function KeywordsOverview({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Tag className="h-5 w-5" />
-            Schlüsselbegriffe
+            {t('keywords.title')}
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="flex items-center gap-1">
@@ -131,12 +134,12 @@ export function KeywordsOverview({
       <CardContent className="space-y-4">
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">Alle ({allKeywords.length})</TabsTrigger>
+            <TabsTrigger value="all">{t('keywords.tabs.all', { count: allKeywords.length })}</TabsTrigger>
             <TabsTrigger value="matched" className="text-success">
-              Gefunden ({matchedKeywords.length})
+              {t('keywords.tabs.matched', { count: matchedKeywords.length })}
             </TabsTrigger>
             <TabsTrigger value="missing" className="text-destructive">
-              Fehlend ({missingKeywords.length})
+              {t('keywords.tabs.missing', { count: missingKeywords.length })}
             </TabsTrigger>
           </TabsList>
 
@@ -154,7 +157,7 @@ export function KeywordsOverview({
                     <div className="flex items-center gap-2">
                       <Badge className={config.color}>
                         <Icon className="h-3 w-3 mr-1" />
-                        {config.label}
+                        {t(config.labelKey)}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
                         {keywords.filter((k) => k.found).length}/{keywords.length}
@@ -168,11 +171,11 @@ export function KeywordsOverview({
                       >
                         {isExpanded ? (
                           <>
-                            Weniger <ChevronUp className="h-3 w-3 ml-1" />
+                            {t('keywords.showLess')} <ChevronUp className="h-3 w-3 ml-1" />
                           </>
                         ) : (
                           <>
-                            +{keywords.length - 6} mehr <ChevronDown className="h-3 w-3 ml-1" />
+                            {t('keywords.more', { count: keywords.length - 6 })} <ChevronDown className="h-3 w-3 ml-1" />
                           </>
                         )}
                       </Button>
@@ -195,7 +198,7 @@ export function KeywordsOverview({
               ))}
               {matchedKeywords.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Keine übereinstimmenden Keywords gefunden.
+                  {t('keywords.noMatched')}
                 </p>
               )}
             </div>
@@ -215,12 +218,12 @@ export function KeywordsOverview({
                   onClick={() => setShowAllMissing(true)}
                   className="w-full"
                 >
-                  Alle {missingKeywords.length} fehlenden Keywords anzeigen
+                  {t('keywords.showAllMissing', { count: missingKeywords.length })}
                 </Button>
               )}
               {missingKeywords.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Alle relevanten Keywords sind in deinem Profil vorhanden! 🎉
+                  {t('keywords.noMissing')}
                 </p>
               )}
             </div>

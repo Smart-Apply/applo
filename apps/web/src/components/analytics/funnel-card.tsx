@@ -7,6 +7,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { TrendingUp, ChevronRight, ArrowDown, Lightbulb, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MetricTip } from '@/components/analytics/metric-tip';
@@ -25,10 +26,12 @@ interface Props {
 }
 
 export function FunnelCard({ funnel, onStageClick }: Props) {
+  const t = useTranslations('analytics');
   const [selected, setSelected] = useState<FunnelStage['key'] | null>(null);
   const max  = Math.max(...funnel.map(s => s.count), 1);
   const leak = leakiestStep(funnel);
   const sel  = selected ? funnel.find(f => f.key === selected) : null;
+  const stageLabel = (key: FunnelStage['key']) => t(`stages.${key}`);
 
   const handleClick = (key: FunnelStage['key']) => {
     setSelected(prev => (prev === key ? null : key));
@@ -40,11 +43,11 @@ export function FunnelCard({ funnel, onStageClick }: Props) {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <TrendingUp size={17} strokeWidth={2} />
-          Konversions-Funnel
-          <MetricTip content="Jede Stufe zeigt, wie viele Bewerbungen es bis hierher geschafft haben. Die Prozentzahl ist die <b>Weitergabe-Quote</b> von der vorigen Stufe. Stufe anklicken, um gefilterte Bewerbungen zu öffnen." />
+          {t('funnel.title')}
+          <MetricTip content={t('funnel.tipHtml')} />
         </CardTitle>
         <CardDescription>
-          Wie viele Bewerbungen es bis zum Job-Angebot schaffen.
+          {t('funnel.description')}
         </CardDescription>
       </CardHeader>
 
@@ -70,7 +73,7 @@ export function FunnelCard({ funnel, onStageClick }: Props) {
                   <div className="flex items-baseline justify-between mb-2.5 gap-3">
                     <span className="flex items-center gap-2 text-[13.5px] font-semibold text-foreground">
                       <span className="w-2 h-2 rounded-[3px] flex-none" style={{ background: color }} />
-                      {stage.label}
+                      {stageLabel(stage.key)}
                     </span>
                     <span className="flex items-center gap-2 text-[13px]">
                       <span className="font-bold tabular-nums">{stage.count}</span>
@@ -106,9 +109,12 @@ export function FunnelCard({ funnel, onStageClick }: Props) {
                 {i < funnel.length - 1 && (
                   <div className="flex items-center gap-1.5 px-4 py-1 text-[11.5px] text-muted-foreground">
                     <ArrowDown size={12} className="text-muted-foreground/50" />
-                    {funnel[i + 1].conv != null && (
-                      <span>{funnel[i + 1].conv}% gehen weiter</span>
-                    )}
+                    {(() => {
+                      const nextConversion = funnel[i + 1].conv;
+                      return nextConversion == null ? null : (
+                        <span>{t('funnel.continue', { value: nextConversion })}</span>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -122,26 +128,28 @@ export function FunnelCard({ funnel, onStageClick }: Props) {
             <>
               <ArrowRight size={14} className="text-accent mt-0.5 flex-none" />
               <span>
-                Öffnet{' '}
-                <strong className="font-semibold text-foreground">{sel.count}</strong>{' '}
-                {sel.count === 1 ? 'Bewerbung' : 'Bewerbungen'} im Status „{sel.label}&quot;.
+                {t.rich('funnel.opensStatus', {
+                  count: sel.count,
+                  status: stageLabel(sel.key),
+                  strong: (chunks) => <strong className="font-semibold text-foreground">{chunks}</strong>,
+                })}
               </span>
             </>
           ) : leak ? (
             <>
               <Lightbulb size={14} className="mt-0.5 flex-none" />
               <span>
-                Größter Abbruch bei{' '}
+                {t('funnel.biggestDropAt')}{' '}
                 <strong className="font-semibold text-foreground">
-                  {leak.from} → {leak.to}
+                  {stageLabel(funnel.find((stage) => stage.label === leak.from)?.key ?? 'CREATED')} → {stageLabel(funnel.find((stage) => stage.label === leak.to)?.key ?? 'CREATED')}
                 </strong>
-                : nur {leak.conv}% schaffen den Schritt.
+                {t('funnel.biggestDropValue', { value: leak.conv })}
               </span>
             </>
           ) : (
             <>
               <ChevronRight size={14} className="mt-0.5 flex-none" />
-              <span>Stufe anklicken, um die zugehörigen Bewerbungen zu öffnen.</span>
+              <span>{t('funnel.clickStage')}</span>
             </>
           )}
         </div>

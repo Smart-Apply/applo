@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Analytics",
+    "description": "How is your application search going? Trends, conversion rates, and template performance at a glance.",
+    "updatedNow": "Updated just now",
+    "errorTitle": "Analytics could not be loaded",
+    "unknownError": "Unknown error",
+    "kpis": {
+      "applied": {
+        "label": "Applied",
+        "tipHtml": "How many of your created applications you actually <b>sent</b>. More applications = more chances."
+      },
+      "interviewRate": {
+        "label": "Interview rate",
+        "tipHtml": "Share of your sent applications that led to an <b>interview invitation</b>. Typical average: 15–25%."
+      },
+      "accepted": {
+        "label": "Accepted",
+        "tipHtml": "Applications that ended with a <b>job offer</b>."
+      },
+      "ats": {
+        "label": "Ø ATS score",
+        "tipHtml": "How well applicant tracking systems (<b>ATS</b>) can read your resumes — 0 to 100. Goal: 80+."
+      }
+    }
+  },
+  "upgrade": {
+    "title": "Advanced Analytics & Trends",
+    "description": "Success rates, conversion funnel, ATS score trends, and template performance — exclusive to Premium members.",
+    "unlock": "Unlock with Premium",
+    "back": "Back to dashboard"
+  },
+  "stages": {
+    "CREATED": "Created",
+    "APPLIED": "Applied",
+    "INTERVIEW": "Interview",
+    "ACCEPTED": "Accepted"
+  },
+  "activity": {
+    "title": "Activity",
+    "tipHtml": "Daily application activity. Toggle metrics via chips; hover over the chart for exact values.",
+    "description": "Created and sent applications per day · last {count} days",
+    "series": {
+      "created": "Created",
+      "applied": "Applied",
+      "interview": "Interview",
+      "accepted": "Accepted"
+    }
+  },
+  "range": {
+    "ariaLabel": "Select time range",
+    "days7": "7 d",
+    "days30": "30 d",
+    "days90": "90 d"
+  },
+  "funnel": {
+    "title": "Conversion funnel",
+    "tipHtml": "Each stage shows how many applications made it this far. The percentage is the <b>pass-through rate</b> from the previous stage. Click a stage to open filtered applications.",
+    "description": "How many applications make it to a job offer.",
+    "continue": "{value}% continue",
+    "opensStatus": "Opens <strong>{count}</strong> {count, plural, one {application} other {applications}} with status “{status}”.",
+    "biggestDropAt": "Biggest drop at",
+    "biggestDropValue": ": only {value}% make this step.",
+    "clickStage": "Click a stage to open the related applications."
+  },
+  "insight": {
+    "new": "Good start — <strong>{applications} applications</strong> created, <strong>{applied} sent</strong>. <muted>Create a few more so meaningful trends can emerge.</muted>",
+    "established": "Your interview rate is <strong>{rate}%</strong>.",
+    "establishedAboveAverage": "Your interview rate is <strong>{rate}%</strong> — above average.",
+    "biggestHurdle": "The biggest hurdle is",
+    "continue": "({value}% continue).",
+    "tip": "Tip: A higher ATS score noticeably lowers drop-off."
+  },
+  "scoreBuckets": {
+    "title": "ATS score & interviews",
+    "tipHtml": "We group your sent applications by <b>ATS score</b> and show the interview rate per group. Goal: as many applications as possible in the green range (80+).",
+    "description": "Which score ranges most often lead to interviews.",
+    "empty": "Once you create applications with an ATS score, we will show which score ranges bring the most interviews here.",
+    "bucketTitle": "{bucket} pts · {count} applications · {rate}% interview rate",
+    "applicationsShort": "{count} app.",
+    "best": "Applications with <strong>{bucket} points</strong> achieve the highest interview rate ({rate}%)."
+  },
+  "topTemplates": {
+    "title": "Top templates",
+    "description": "Which resume templates you use most often — and how they perform.",
+    "empty": "No template data available yet. Create applications with different templates to compare their performance.",
+    "usage": "{count, plural, one {# application} other {# applications}}",
+    "interview": "Interview"
+  }
+}

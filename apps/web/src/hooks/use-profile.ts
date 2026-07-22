@@ -4,6 +4,7 @@ import { api } from '@/lib/api-client';
 import { toastSuccess, toastError } from '@/lib/toast';
 import type { Profile, UpdateProfileDto } from '@/types';
 import { useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 function deferRevokeObjectUrl(url: string) {
   setTimeout(() => {
@@ -33,6 +34,7 @@ export function useProfile() {
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
   const updateUser = useAuthStore((state) => state.updateUser);
+  const t = useTranslations('profile');
 
   return useMutation({
     mutationFn: (data: UpdateProfileDto) => api.profile.update(data),
@@ -70,7 +72,7 @@ export function useUpdateProfile() {
       if (context?.previousProfile) {
         queryClient.setQueryData(['profile'], context.previousProfile);
       }
-      toastError(error, 'Fehler beim Aktualisieren des Profils');
+      toastError(error, t('hooks.updateError'));
     },
     
     // Replace optimistic data with server response on success
@@ -86,7 +88,7 @@ export function useUpdateProfile() {
         });
       }
       
-      toastSuccess('Profil erfolgreich aktualisiert');
+      toastSuccess(t('hooks.updateSuccess'));
     },
   });
 }
@@ -133,16 +135,17 @@ export function useProfilePhoto(enabled = true) {
  */
 export function useUploadProfilePhoto() {
   const queryClient = useQueryClient();
+  const t = useTranslations('profile');
 
   return useMutation({
     mutationFn: (file: File) => api.profile.uploadPhoto(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'photo'] });
-      toastSuccess('Bewerbungsfoto gespeichert');
+      toastSuccess(t('photo.saved'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Foto konnte nicht hochgeladen werden');
+      toastError(error, t('photo.uploadError'));
     },
   });
 }
@@ -152,6 +155,7 @@ export function useUploadProfilePhoto() {
  */
 export function useDeleteProfilePhoto() {
   const queryClient = useQueryClient();
+  const t = useTranslations('profile');
 
   return useMutation({
     mutationFn: () => api.profile.deletePhoto(),
@@ -162,10 +166,10 @@ export function useDeleteProfilePhoto() {
         deferRevokeObjectUrl(previousPhotoUrl);
       }
       queryClient.setQueryData(['profile', 'photo'], null);
-      toastSuccess('Bewerbungsfoto entfernt');
+      toastSuccess(t('photo.removed'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Foto konnte nicht entfernt werden');
+      toastError(error, t('photo.removeError'));
     },
   });
 }

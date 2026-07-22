@@ -1,0 +1,26 @@
+{
+  "upgradePrompt": {
+    "defaultCta": "Upgrade to {tier}",
+    "upgradeNow": "Upgrade now",
+    "inlineNeeds": "{feature} requires {tier}.",
+    "onlyWithTier": "Only available with {tier}",
+    "onlyWithTierPrefix": "This feature is only available with",
+    "onlyWithTierSuffix": "."
+  },
+  "limit": {
+    "title": "Monthly limit reached",
+    "description": "You used {used} of {limit} {action} this month. Upgrade for more capacity.",
+    "actions": {
+      "applications": "applications",
+      "interviews": "interview sessions"
+    }
+  },
+  "premiumSupport": {
+    "activeTitle": "Premium Support active",
+    "activeDescription": "Your requests receive priority handling — response within 24h guaranteed.",
+    "contact": "Contact support",
+    "title": "Premium Support",
+    "description": "With Premium you get priority support with a guaranteed response within 24h.",
+    "unlock": "Unlock with Premium"
+  }
+}

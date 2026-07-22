@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Loader2, Monitor, Smartphone, Tablet, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 import {
   useTrustedDevices,
   useRevokeTrustedDevice,
@@ -46,7 +48,7 @@ function DeviceIcon({ os, className }: { os: string | null; className?: string }
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('de-DE', {
+  return new Date(dateStr).toLocaleDateString(getIntlLocale(), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -68,6 +70,7 @@ function DeviceItem({
   onRevoke: (id: string) => void;
   isRevoking: boolean;
 }) {
+  const t = useTranslations('twoFactor');
   const expired = isExpired(device.expiresAt);
 
   return (
@@ -79,23 +82,23 @@ function DeviceItem({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm">
-              {device.deviceName || 'Unbekanntes Gerät'}
+              {device.deviceName || t('trustedDevices.unknownDevice')}
             </span>
             {expired && (
               <Badge variant="secondary" className="text-xs">
-                Abgelaufen
+                {t('trustedDevices.expired')}
               </Badge>
             )}
           </div>
           <div className="text-xs text-muted-foreground space-y-0.5">
             {device.browser && device.os && (
-              <p>{device.browser} auf {device.os}</p>
+              <p>{t('trustedDevices.browserOnOs', { browser: device.browser, os: device.os })}</p>
             )}
             {device.ipAddress && (
               <p>IP: {device.ipAddress}</p>
             )}
-            <p>Zuletzt aktiv: {formatDate(device.lastUsedAt)}</p>
-            <p>Läuft ab: {formatDate(device.expiresAt)}</p>
+            <p>{t('trustedDevices.lastActive', { date: formatDate(device.lastUsedAt) })}</p>
+            <p>{t('trustedDevices.expires', { date: formatDate(device.expiresAt) })}</p>
           </div>
         </div>
       </div>
@@ -117,6 +120,7 @@ function DeviceItem({
 }
 
 export function TrustedDevicesDialog({ open, onOpenChange }: TrustedDevicesDialogProps) {
+  const t = useTranslations('twoFactor');
   const { data: devices, isLoading } = useTrustedDevices();
   const revokeMutation = useRevokeTrustedDevice();
   const revokeAllMutation = useRevokeAllTrustedDevices();
@@ -133,9 +137,9 @@ export function TrustedDevicesDialog({ open, onOpenChange }: TrustedDevicesDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Vertrauenswürdige Geräte</DialogTitle>
+          <DialogTitle>{t('trustedDevices.title')}</DialogTitle>
           <DialogDescription>
-            Auf diesen Geräten wird kein 2FA-Code verlangt.
+            {t('trustedDevices.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -146,7 +150,7 @@ export function TrustedDevicesDialog({ open, onOpenChange }: TrustedDevicesDialo
             </div>
           ) : !devices || devices.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">
-              Keine vertrauenswürdigen Geräte vorhanden.
+              {t('trustedDevices.empty')}
             </div>
           ) : (
             <>
@@ -174,25 +178,24 @@ export function TrustedDevicesDialog({ open, onOpenChange }: TrustedDevicesDialo
                         {revokeAllMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Entfernen...
+                            {t('trustedDevices.removing')}
                           </>
                         ) : (
-                          'Alle Geräte entfernen'
+                          t('trustedDevices.removeAll')
                         )}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Alle Geräte entfernen?</AlertDialogTitle>
+                        <AlertDialogTitle>{t('trustedDevices.confirmRemoveAllTitle')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Du musst auf allen Geräten erneut 2FA bestätigen.
-                          Diese Aktion kann nicht rückgängig gemacht werden.
+                          {t('trustedDevices.confirmRemoveAllDescription')}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                        <AlertDialogCancel>{t('trustedDevices.cancel')}</AlertDialogCancel>
                         <AlertDialogAction onClick={handleRevokeAll}>
-                          Alle entfernen
+                          {t('trustedDevices.confirmRemoveAll')}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>

@@ -5,6 +5,7 @@
  * Place at: apps/web/src/components/analytics/score-buckets-chart.tsx
  */
 import { BarChart2, Lightbulb } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MetricTip } from '@/components/analytics/metric-tip';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function ScoreBucketsChart({ buckets }: Props) {
+  const t = useTranslations('analytics');
   const isEmpty  = !buckets || buckets.length === 0;
   const maxRate  = isEmpty ? 1 : Math.max(...buckets.map(b => b.interviewRate), 1);
   const bestIdx  = isEmpty ? -1
@@ -26,14 +28,14 @@ export function ScoreBucketsChart({ buckets }: Props) {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <BarChart2 size={17} strokeWidth={2} />
-          ATS-Score &amp; Interviews
+          {t('scoreBuckets.title')}
           <MetricTip
-            content="Wir gruppieren deine abgeschickten Bewerbungen nach <b>ATS-Score</b> und zeigen je Gruppe die Interview-Quote. Ziel: möglichst viele Bewerbungen im grünen Bereich (80+)."
+            content={t('scoreBuckets.tipHtml')}
             align="right"
           />
         </CardTitle>
         <CardDescription>
-          Welche Score-Bereiche am häufigsten zum Interview führen.
+          {t('scoreBuckets.description')}
         </CardDescription>
       </CardHeader>
 
@@ -41,8 +43,7 @@ export function ScoreBucketsChart({ buckets }: Props) {
         {isEmpty ? (
           <div className="flex items-center gap-3 py-6 text-sm text-muted-foreground">
             <BarChart2 size={20} className="text-muted-foreground/40 flex-none" />
-            Sobald du Bewerbungen mit ATS-Score erstellst, zeigen wir hier,
-            welche Score-Bereiche die meisten Interviews bringen.
+            {t('scoreBuckets.empty')}
           </div>
         ) : (
           <>
@@ -55,7 +56,7 @@ export function ScoreBucketsChart({ buckets }: Props) {
                   <div
                     key={b.bucket}
                     className="flex-1 flex flex-col items-center justify-end h-full gap-2 cursor-default"
-                    title={`${b.bucket} Pkt. · ${b.applications} Bewerbungen · ${b.interviewRate}% Interview-Quote`}
+                    title={t('scoreBuckets.bucketTitle', { bucket: b.bucket, count: b.applications, rate: b.interviewRate })}
                   >
                     <span className={cn(
                       'text-[13px] font-bold tabular-nums',
@@ -73,7 +74,7 @@ export function ScoreBucketsChart({ buckets }: Props) {
                       />
                     </div>
                     <span className="text-[11.5px] font-semibold text-muted-foreground tabular-nums">{b.bucket}</span>
-                    <span className="text-[10.5px] text-muted-foreground/70 tabular-nums">{b.applications} Bew.</span>
+                    <span className="text-[10.5px] text-muted-foreground/70 tabular-nums">{t('scoreBuckets.applicationsShort', { count: b.applications })}</span>
                   </div>
                 );
               })}
@@ -84,11 +85,11 @@ export function ScoreBucketsChart({ buckets }: Props) {
               <div className="mt-4 flex items-start gap-2 pt-3 border-t border-border text-xs text-muted-foreground leading-relaxed">
                 <Lightbulb size={14} className="mt-0.5 flex-none" />
                 <span>
-                  Bewerbungen mit{' '}
-                  <strong className="font-semibold text-foreground">
-                    {best.bucket} Punkten
-                  </strong>{' '}
-                  erreichen die höchste Interview-Quote ({best.interviewRate}%).
+                  {t.rich('scoreBuckets.best', {
+                    bucket: best.bucket,
+                    rate: best.interviewRate,
+                    strong: (chunks) => <strong className="font-semibold text-foreground">{chunks}</strong>,
+                  })}
                 </span>
               </div>
             )}

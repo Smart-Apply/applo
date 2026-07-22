@@ -1,0 +1,66 @@
+{
+  "card": {
+    "defaultBadge": "Standard",
+    "noDescription": "Keine Beschreibung verfügbar",
+    "previewAlt": "{name} Vorschau",
+    "colorLabel": "Farbe:",
+    "selected": "Ausgewählt",
+    "select": "Auswählen"
+  },
+  "demoLoading": {
+    "title": "Loading Components Demo",
+    "subtitle": "Showcase of all loading states and skeleton components",
+    "spinner": {
+      "title": "Spinner Component",
+      "description": "Available in multiple sizes",
+      "small": "Small",
+      "default": "Default",
+      "large": "Large",
+      "extraLarge": "Extra Large"
+    },
+    "wrappers": {
+      "title": "Loading Wrappers",
+      "description": "Pre-built loading states for common patterns",
+      "centered": "Centered Loader",
+      "loadingData": "Loading data...",
+      "inline": "Inline Loader",
+      "processing": "Processing...",
+      "loadingContent": "Loading content...",
+      "generatingReport": "Generating report...",
+      "fullPage": "Full Page Loader",
+      "showFullPage": "Show Full Page Loader",
+      "loadingApplication": "Loading application...",
+      "hide": "Hide"
+    },
+    "buttons": {
+      "title": "Button Loading States",
+      "description": "Buttons with integrated loading spinners",
+      "default": "Default Button",
+      "outline": "Outline Button",
+      "destructive": "Destructive Button"
+    },
+    "basicSkeleton": {
+      "title": "Basic Skeleton",
+      "description": "Simple skeleton shapes with pulse animation"
+    },
+    "specialized": {
+      "title": "Specialized Skeletons",
+      "description": "Pre-built skeletons for common content types",
+      "applicationCard": "Application Card Skeleton",
+      "jobPostingCard": "Job Posting Card Skeleton",
+      "profileCard": "Profile Card Skeleton",
+      "formField": "Form Field Skeleton",
+      "text": "Text Skeleton",
+      "table": "Table Skeleton",
+      "avatarButtons": "Avatar & Button Skeletons",
+      "image": "Image Skeleton",
+      "square": "Square",
+      "video": "Video (16:9)",
+      "portrait": "Portrait (3:4)"
+    },
+    "completeProfile": {
+      "title": "Complete Profile Skeleton",
+      "description": "Full profile page loading state"
+    }
+  }
+}

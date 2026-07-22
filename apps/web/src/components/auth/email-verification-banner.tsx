@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { Mail, X, Loader2 } from 'lucide-react';
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/auth-store';
 
 export function EmailVerificationBanner() {
+  const t = useTranslations('auth');
   const { user, setAuth } = useAuthStore();
   const [isDismissed, setIsDismissed] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -46,20 +48,20 @@ export function EmailVerificationBanner() {
     setIsSending(true);
     try {
       await api.auth.sendVerificationEmail();
-      toast.success('Verifizierungs-E-Mail wurde gesendet! Bitte überprüfe dein Postfach.');
+      toast.success(t('emailVerificationBanner.successToast'));
     } catch (error) {
       const { ApiError, getErrorMessage } = await import('@/lib/errors');
       if (ApiError.isApiError(error)) {
         if (error.status === 429) {
-          toast.error('Bitte warte einen Moment, bevor du eine weitere E-Mail anforderst.');
+          toast.error(t('emailVerificationBanner.rateLimitToast'));
         } else if (error.data?.code === 'EMAIL_ALREADY_VERIFIED') {
-          toast.info('Deine E-Mail-Adresse wurde bereits verifiziert.');
+          toast.info(t('emailVerificationBanner.alreadyVerifiedToast'));
           setIsDismissed(true);
         } else {
           toast.error(getErrorMessage(error));
         }
       } else {
-        toast.error('Ein Fehler ist aufgetreten. Bitte versuche es später erneut.');
+        toast.error(t('emailVerificationBanner.genericErrorToast'));
       }
     } finally {
       setIsSending(false);
@@ -75,10 +77,10 @@ export function EmailVerificationBanner() {
           </div>
           <div className="text-sm">
             <span className="font-medium text-[#854D0E] dark:text-amber-200">
-              Bitte verifiziere deine E-Mail-Adresse.
+              {t('emailVerificationBanner.title')}
             </span>
             <span className="text-[#854D0E]/80 dark:text-amber-300/80 ml-1">
-              Wir haben dir eine E-Mail an <strong>{user.email}</strong> gesendet.
+              {t('emailVerificationBanner.description', { email: user.email })}
             </span>
           </div>
         </div>
@@ -93,16 +95,16 @@ export function EmailVerificationBanner() {
             {isSending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                Sende...
+                {t('emailVerificationBanner.sending')}
               </>
             ) : (
-              'Erneut senden'
+              t('emailVerificationBanner.resend')
             )}
           </Button>
           <button
             onClick={() => setIsDismissed(true)}
             className="text-[#A16207] hover:text-[#854D0E] dark:text-amber-400 dark:hover:text-amber-200 p-1"
-            aria-label="Banner schließen"
+            aria-label={t('emailVerificationBanner.closeLabel')}
           >
             <X className="h-4 w-4" />
           </button>

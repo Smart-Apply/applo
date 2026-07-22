@@ -16,10 +16,12 @@ import {
   AlertTriangle,
   Info,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { MatchScoreCard } from './match-score-card';
 import { KeywordsOverview } from './keywords-overview';
 import { SuggestionsCard } from './suggestions-card';
 import { useKeywordsAnalysis, useAnalyzeKeywords } from '@/hooks/use-applications';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 import { cn } from '@/lib/utils';
 
 interface ATSAnalysisPanelProps {
@@ -37,6 +39,7 @@ export function ATSAnalysisPanel({
   className,
   onAnalysisComplete,
 }: ATSAnalysisPanelProps) {
+  const t = useTranslations('applications');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   const {
@@ -89,10 +92,9 @@ export function ATSAnalysisPanel({
           <div className="mb-4 inline-flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <Sparkles className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 className="font-semibold mb-2">ATS-Analyse starten</h3>
+          <h3 className="font-semibold mb-2">{t('atsPanel.startTitle')}</h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-            Lass die KI deine Bewerbung analysieren und erhalte personalisierte
-            Verbesserungsvorschläge basierend auf der Stellenausschreibung.
+            {t('atsPanel.startDescription')}
           </p>
           <Button
             onClick={handleRefreshAnalysis}
@@ -101,12 +103,12 @@ export function ATSAnalysisPanel({
             {isAnalyzing || analyzeKeywords.isPending ? (
               <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Analysiere...
+                {t('atsPanel.analyzing')}
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4 mr-2" />
-                Jetzt analysieren
+                {t('atsPanel.analyzeNow')}
               </>
             )}
           </Button>
@@ -122,7 +124,7 @@ export function ATSAnalysisPanel({
         <div>
           <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-brand" />
-            ATS-Analyse
+            {t('atsPanel.title')}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -130,20 +132,21 @@ export function ATSAnalysisPanel({
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-xs">
-                    ATS (Applicant Tracking System) = Bewerbermanagementsystem.
-                    Viele Unternehmen filtern Bewerbungen automatisch nach Schlüsselbegriffen.
+                    {t('atsPanel.tooltip')}
                   </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Analysiert am {new Date(analysis.analyzedAt).toLocaleDateString('de-DE', {
+            {t('atsPanel.analyzedAt', {
+              date: new Date(analysis.analyzedAt).toLocaleDateString(getIntlLocale(), {
               day: '2-digit',
               month: '2-digit',
               year: 'numeric',
               hour: '2-digit',
               minute: '2-digit',
+              }),
             })}
           </p>
         </div>
@@ -154,7 +157,7 @@ export function ATSAnalysisPanel({
           disabled={isAnalyzing || analyzeKeywords.isPending}
         >
           <RefreshCw className={cn('h-4 w-4 mr-2', (isAnalyzing || analyzeKeywords.isPending) && 'animate-spin')} />
-          Neu analysieren
+          {t('atsPanel.reanalyze')}
         </Button>
       </div>
 
@@ -187,12 +190,10 @@ export function ATSAnalysisPanel({
               <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-[#A16207] dark:text-amber-300" />
               <div>
                 <h4 className="font-medium text-[#A16207] dark:text-amber-200">
-                  Niedrige Übereinstimmung
+                  {t('atsPanel.lowScoreTitle')}
                 </h4>
                 <p className="text-sm text-[#854D0E] dark:text-amber-300/80 mt-1">
-                  Dein Profil passt möglicherweise nicht optimal zu dieser Stelle. 
-                  Überprüfe die fehlenden Keywords und aktualisiere dein Profil, 
-                  um deine Chancen zu verbessern.
+                  {t('atsPanel.lowScoreDescription')}
                 </p>
               </div>
             </div>

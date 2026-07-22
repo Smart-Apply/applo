@@ -13,6 +13,7 @@ import {
   Award,
   Code2,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { KeywordMatch, KeywordCategory } from '@/types';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -25,15 +26,15 @@ interface SuggestionsCardProps {
 }
 
 // Map keyword categories to profile sections
-const categoryToSection: Record<KeywordCategory, { section: string; label: string; icon: React.ElementType }> = {
-  core: { section: 'skills', label: 'Kernkompetenzen hinzufügen', icon: Code2 },
-  methodology: { section: 'skills', label: 'Methoden & Tools hinzufügen', icon: Code2 },
-  soft: { section: 'skills', label: 'Soft Skills hinzufügen', icon: Code2 },
-  responsibility: { section: 'experiences', label: 'Aufgaben ergänzen', icon: Briefcase },
-  seniority: { section: 'experiences', label: 'Erfahrung aktualisieren', icon: Briefcase },
-  industry: { section: 'experiences', label: 'Branchenerfahrung', icon: Briefcase },
-  requirement: { section: 'education', label: 'Qualifikation ergänzen', icon: GraduationCap },
-  misc: { section: 'skills', label: 'Profil ergänzen', icon: Award },
+const categoryToSection: Record<KeywordCategory, { section: string; labelKey: string; icon: React.ElementType }> = {
+  core: { section: 'skills', labelKey: 'suggestions.actions.addCore', icon: Code2 },
+  methodology: { section: 'skills', labelKey: 'suggestions.actions.addMethodology', icon: Code2 },
+  soft: { section: 'skills', labelKey: 'suggestions.actions.addSoft', icon: Code2 },
+  responsibility: { section: 'experiences', labelKey: 'suggestions.actions.addResponsibility', icon: Briefcase },
+  seniority: { section: 'experiences', labelKey: 'suggestions.actions.updateExperience', icon: Briefcase },
+  industry: { section: 'experiences', labelKey: 'suggestions.actions.industryExperience', icon: Briefcase },
+  requirement: { section: 'education', labelKey: 'suggestions.actions.addRequirement', icon: GraduationCap },
+  misc: { section: 'skills', labelKey: 'suggestions.actions.addProfile', icon: Award },
 };
 
 interface SuggestionItemProps {
@@ -44,6 +45,7 @@ interface SuggestionItemProps {
 }
 
 function SuggestionItem({ suggestion, category, keywords }: SuggestionItemProps) {
+  const t = useTranslations('applications');
   const config = category ? categoryToSection[category] : null;
   const Icon = config?.icon || Lightbulb;
 
@@ -73,7 +75,7 @@ function SuggestionItem({ suggestion, category, keywords }: SuggestionItemProps)
         <Link href={`/profile?section=${config.section}`}>
           <Button variant="ghost" size="sm" className="shrink-0">
             <Pencil className="h-3 w-3 mr-1" />
-            {config.label}
+            {t(config.labelKey)}
           </Button>
         </Link>
       )}
@@ -86,6 +88,7 @@ export function SuggestionsCard({
   missingKeywords,
   className,
 }: SuggestionsCardProps) {
+  const t = useTranslations('applications');
   // Group missing keywords by category for actionable suggestions
   const groupedMissing = missingKeywords.reduce<Record<string, string[]>>((acc, kw) => {
     if (!acc[kw.category]) acc[kw.category] = [];
@@ -101,23 +104,23 @@ export function SuggestionsCard({
     switch (category) {
       case 'technical':
       case 'tool':
-        suggestion = `Füge diese technischen Skills zu deinem Profil hinzu`;
+        suggestion = t('suggestions.generated.addTechnical');
         break;
       case 'experience':
       case 'responsibility':
-        suggestion = `Beschreibe diese Aufgaben in deinen Berufserfahrungen`;
+        suggestion = t('suggestions.generated.describeResponsibilities');
         break;
       case 'seniority':
-        suggestion = `Zeige dein Erfahrungsniveau deutlicher`;
+        suggestion = t('suggestions.generated.showSeniority');
         break;
       case 'industry':
-        suggestion = `Hebe deine Branchenerfahrung hervor`;
+        suggestion = t('suggestions.generated.highlightIndustry');
         break;
       case 'requirement':
-        suggestion = `Prüfe, ob du diese Anforderungen erfüllst`;
+        suggestion = t('suggestions.generated.checkRequirements');
         break;
       default:
-        suggestion = `Berücksichtige diese Keywords in deinem Profil`;
+        suggestion = t('suggestions.generated.considerKeywords');
     }
 
     return {
@@ -141,7 +144,7 @@ export function SuggestionsCard({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Lightbulb className="h-5 w-5 text-warning" />
-          Verbesserungsvorschläge
+          {t('suggestions.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -150,9 +153,9 @@ export function SuggestionsCard({
             <div className="mb-3 inline-flex h-12 w-12 items-center justify-center border border-[#BFE9CC] bg-[#ECFAF0] dark:border-green-400/30 dark:bg-green-400/10">
               <Award className="h-6 w-6 text-success" />
             </div>
-            <h4 className="font-medium text-success">Perfekt!</h4>
+            <h4 className="font-medium text-success">{t('suggestions.perfectTitle')}</h4>
             <p className="text-sm text-muted-foreground mt-1">
-              Dein Profil passt hervorragend zu dieser Stelle.
+              {t('suggestions.perfectDescription')}
             </p>
           </div>
         ) : (
@@ -161,7 +164,7 @@ export function SuggestionsCard({
             {suggestions.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-                  KI-Empfehlungen
+                  {t('suggestions.aiRecommendations')}
                 </h4>
                 {suggestions.map((suggestion, idx) => (
                   <SuggestionItem
@@ -177,7 +180,7 @@ export function SuggestionsCard({
             {sortedActions.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-                  Fehlende Keywords ergänzen
+                  {t('suggestions.addMissingKeywords')}
                 </h4>
                 {sortedActions.slice(0, 4).map((action, idx) => (
                   <SuggestionItem
@@ -196,7 +199,7 @@ export function SuggestionsCard({
               <Link href="/profile">
                 <Button variant="outline" className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
-                  Profil bearbeiten
+                  {t('suggestions.editProfile')}
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Loader2, Palette, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -25,33 +26,14 @@ import type {
   TemplateSettings,
 } from '@/types';
 
-const FONT_SCALE_OPTIONS: { value: TemplateFontScale; label: string; hint: string }[] = [
-  { value: 'sm', label: 'S', hint: 'Kleiner (−8 %)' },
-  { value: 'md', label: 'M', hint: 'Original' },
-  { value: 'lg', label: 'L', hint: 'Größer (+8 %)' },
-];
-
-const DENSITY_OPTIONS: { value: TemplateDensity; label: string; hint: string }[] = [
-  { value: 'compact', label: 'Kompakt', hint: 'Engere Abstände — mehr Inhalt pro Seite' },
-  { value: 'normal', label: 'Normal', hint: 'Original-Abstände des Designs' },
-  { value: 'relaxed', label: 'Locker', hint: 'Großzügigere Abstände' },
-];
-
-const FONT_FAMILY_OPTIONS: { value: TemplateFontFamily; label: string }[] = [
-  { value: 'default', label: 'Standard (Design-Schrift)' },
-  { value: 'lato', label: 'Lato (serifenlos)' },
-  { value: 'source-sans', label: 'Source Sans 3 (serifenlos)' },
-  { value: 'merriweather', label: 'Merriweather (Serifen)' },
-];
-
 /** Curated accent presets — the same hues the template color variants use. */
 const ACCENT_PRESETS = [
-  { hex: '#1B2A49', name: 'Navy' },
-  { hex: '#374151', name: 'Anthrazit' },
-  { hex: '#A51C30', name: 'Karminrot' },
-  { hex: '#0d9488', name: 'Petrol' },
-  { hex: '#16a34a', name: 'Waldgrün' },
-  { hex: '#8B5E3C', name: 'Braun' },
+  { hex: '#1B2A49', key: 'navy' },
+  { hex: '#374151', key: 'anthracite' },
+  { hex: '#A51C30', key: 'carmine' },
+  { hex: '#0d9488', key: 'teal' },
+  { hex: '#16a34a', key: 'forestGreen' },
+  { hex: '#8B5E3C', key: 'brown' },
 ];
 
 interface DesignSettingsPanelProps {
@@ -74,6 +56,7 @@ export function DesignSettingsPanel({
   templateAccent,
   disabled,
 }: DesignSettingsPanelProps) {
+  const t = useTranslations('editor');
   const [open, setOpen] = useState(false);
   // Native color inputs fire change continuously while dragging — buffer the
   // value locally and PATCH once on blur (picker closed).
@@ -89,6 +72,22 @@ export function DesignSettingsPanel({
   const showPhoto = Boolean(settings?.showPhoto);
 
   const isBusy = updateSettings.isPending;
+  const fontScaleOptions: { value: TemplateFontScale; label: string; hint: string }[] = [
+    { value: 'sm', label: t('designPanel.fontScale.sm.label'), hint: t('designPanel.fontScale.sm.hint') },
+    { value: 'md', label: t('designPanel.fontScale.md.label'), hint: t('designPanel.fontScale.md.hint') },
+    { value: 'lg', label: t('designPanel.fontScale.lg.label'), hint: t('designPanel.fontScale.lg.hint') },
+  ];
+  const densityOptions: { value: TemplateDensity; label: string; hint: string }[] = [
+    { value: 'compact', label: t('designPanel.density.compact.label'), hint: t('designPanel.density.compact.hint') },
+    { value: 'normal', label: t('designPanel.density.normal.label'), hint: t('designPanel.density.normal.hint') },
+    { value: 'relaxed', label: t('designPanel.density.relaxed.label'), hint: t('designPanel.density.relaxed.hint') },
+  ];
+  const fontFamilyOptions: { value: TemplateFontFamily; label: string }[] = [
+    { value: 'default', label: t('designPanel.fontFamily.default') },
+    { value: 'lato', label: t('designPanel.fontFamily.lato') },
+    { value: 'source-sans', label: t('designPanel.fontFamily.sourceSans') },
+    { value: 'merriweather', label: t('designPanel.fontFamily.merriweather') },
+  ];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -110,23 +109,23 @@ export function DesignSettingsPanel({
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent>Schriftgröße, Dichte, Schrift &amp; Akzentfarbe anpassen</TooltipContent>
+        <TooltipContent>{t('designPanel.tooltip')}</TooltipContent>
       </Tooltip>
       <PopoverContent align="end" className="w-80 rounded-none border-[#e0e0e0] p-4">
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-semibold text-[#1b2a49]">Design anpassen</p>
+            <p className="text-sm font-semibold text-[#1b2a49]">{t('designPanel.title')}</p>
             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-              Wirkt auf die exportierten PDFs. Die Vorschau im Editor ist eine Näherung.
+              {t('designPanel.description')}
             </p>
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold uppercase tracking-[.05em] text-[#6b6969]">
-              Schriftgröße
+              {t('designPanel.fontScale.label')}
             </Label>
             <div className="flex items-center gap-1.5">
-              {FONT_SCALE_OPTIONS.map((option) => (
+              {fontScaleOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
@@ -148,10 +147,10 @@ export function DesignSettingsPanel({
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold uppercase tracking-[.05em] text-[#6b6969]">
-              Dichte
+              {t('designPanel.density.label')}
             </Label>
             <div className="flex flex-wrap items-center gap-1.5">
-              {DENSITY_OPTIONS.map((option) => (
+              {densityOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
@@ -173,7 +172,7 @@ export function DesignSettingsPanel({
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold uppercase tracking-[.05em] text-[#6b6969]">
-              Schrift
+              {t('designPanel.fontFamily.label')}
             </Label>
             <Select
               value={fontFamily}
@@ -186,7 +185,7 @@ export function DesignSettingsPanel({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-none">
-                {FONT_FAMILY_OPTIONS.map((option) => (
+                {fontFamilyOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -198,7 +197,7 @@ export function DesignSettingsPanel({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold uppercase tracking-[.05em] text-[#6b6969]">
-                Akzentfarbe
+                {t('designPanel.accent.label')}
               </Label>
               {accentOverride && (
                 <button
@@ -207,7 +206,7 @@ export function DesignSettingsPanel({
                   onClick={() => updateSettings.mutate({ accentColor: null })}
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5581c7] hover:underline"
                 >
-                  <RotateCcw className="h-3 w-3" /> Zurücksetzen
+                  <RotateCcw className="h-3 w-3" /> {t('designPanel.accent.reset')}
                 </button>
               )}
             </div>
@@ -216,8 +215,8 @@ export function DesignSettingsPanel({
                 <button
                   key={preset.hex}
                   type="button"
-                  title={preset.name}
-                  aria-label={`Akzentfarbe ${preset.name}`}
+                  title={t(`designPanel.accent.presets.${preset.key}`)}
+                  aria-label={t('designPanel.accent.ariaPreset', { name: t(`designPanel.accent.presets.${preset.key}`) })}
                   disabled={isBusy}
                   onClick={() => updateSettings.mutate({ accentColor: preset.hex })}
                   className={cn(
@@ -231,7 +230,7 @@ export function DesignSettingsPanel({
               ))}
               <label
                 className="relative inline-flex h-7 w-7 cursor-pointer items-center justify-center overflow-hidden border-2 border-dashed border-[#B0B0B0] bg-white text-[10px] font-bold text-[#6B6969] hover:bg-[#F5F6F8]"
-                title="Eigene Farbe wählen"
+                title={t('designPanel.accent.customTitle')}
               >
                 +
                 <input
@@ -246,7 +245,7 @@ export function DesignSettingsPanel({
                     setDraftColor(null);
                   }}
                   className="absolute inset-0 cursor-pointer opacity-0"
-                  aria-label="Eigene Akzentfarbe wählen"
+                  aria-label={t('designPanel.accent.customAria')}
                 />
               </label>
             </div>
@@ -256,15 +255,15 @@ export function DesignSettingsPanel({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-[.05em] text-[#6b6969]">
-                  Bewerbungsfoto
+                  {t('designPanel.photo.label')}
                 </Label>
                 {!hasProfilePhoto && (
                   <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                    Lade zuerst ein Foto in deinem{' '}
+                    {t('designPanel.photo.uploadPrefix')}{' '}
                     <Link href="/profile" className="font-semibold text-[#5581c7] hover:underline">
-                      Profil
+                      {t('designPanel.photo.profileLink')}
                     </Link>{' '}
-                    hoch.
+                    {t('designPanel.photo.uploadSuffix')}
                   </p>
                 )}
               </div>
@@ -272,12 +271,12 @@ export function DesignSettingsPanel({
                 checked={showPhoto}
                 disabled={isBusy || (!hasProfilePhoto && !showPhoto)}
                 onCheckedChange={(checked: boolean) => updateSettings.mutate({ showPhoto: checked })}
-                aria-label="Bewerbungsfoto im Lebenslauf anzeigen"
+                aria-label={t('designPanel.photo.aria')}
               />
             </div>
             {showPhoto && (
               <p className="border-l-[3px] border-l-[#92400e] bg-[#fef3c7] px-2.5 py-1.5 text-xs leading-relaxed text-[#92400e]">
-                Für ATS-Systeme und Bewerbungen außerhalb der DACH-Region empfohlen: ohne Foto.
+                {t('designPanel.photo.atsWarning')}
               </p>
             )}
           </div>

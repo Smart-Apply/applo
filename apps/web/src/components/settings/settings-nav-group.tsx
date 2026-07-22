@@ -13,6 +13,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { ChevronDown } from 'lucide-react';
 import {
   SETTINGS_SECTIONS,
@@ -21,7 +22,7 @@ import {
 } from '@/lib/settings-sections';
 
 interface NavItemLike {
-  name: string;
+  nameKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
 }
@@ -29,6 +30,8 @@ interface NavItemLike {
 export function SettingsNavGroup({ item }: { item: NavItemLike }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useTranslations('settings');
+  const tDashboard = useTranslations('dashboard');
   const Icon = item.icon;
 
   const onSettings = pathname?.startsWith('/settings') ?? false;
@@ -51,7 +54,7 @@ export function SettingsNavGroup({ item }: { item: NavItemLike }) {
               onSettings ? 'text-white' : 'text-[rgba(229,233,242,.72)] group-hover:text-white'
             }`}
           />
-          {item.name}
+          {tDashboard(item.nameKey)}
         </div>
         <ChevronDown
           className={`h-4 w-4 transition-transform duration-200 ${
@@ -81,7 +84,7 @@ export function SettingsNavGroup({ item }: { item: NavItemLike }) {
                     isActive ? 'text-white' : 'text-[rgba(229,233,242,.6)] group-hover:text-white'
                   }`}
                 />
-                {section.label}
+                {t(section.labelKey)}
               </Link>
             );
           })}

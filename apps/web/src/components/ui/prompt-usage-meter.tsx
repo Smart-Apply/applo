@@ -1,17 +1,19 @@
+'use client';
+
 import { cn } from '@/lib/utils';
 import type { PromptUsage } from '@/types';
+import { useTranslations } from 'next-intl';
 
 interface PromptUsageMeterProps {
   usage: PromptUsage;
   className?: string;
 }
 
-/** Format the over-limit overage as "N Zeichen bzw. M Tokens" (only the parts over). */
-function formatOverage(usage: PromptUsage): string {
+function formatOverage(usage: PromptUsage, t: ReturnType<typeof useTranslations>): string {
   const parts: string[] = [];
-  if (usage.overChars > 0) parts.push(`${usage.overChars} Zeichen`);
-  if (usage.overTokens > 0) parts.push(`${usage.overTokens} Tokens`);
-  return parts.join(' bzw. ');
+  if (usage.overChars > 0) parts.push(t('promptUsage.charsOver', { count: usage.overChars }));
+  if (usage.overTokens > 0) parts.push(t('promptUsage.tokensOver', { count: usage.overTokens }));
+  return parts.join(t('promptUsage.joiner'));
 }
 
 /**
@@ -23,6 +25,7 @@ function formatOverage(usage: PromptUsage): string {
  * `usage.isOverLimit` flag on the caller side.
  */
 export function PromptUsageMeter({ usage, className }: PromptUsageMeterProps) {
+  const t = useTranslations('dashboard');
   const toneClass = usage.isOverLimit
     ? 'text-destructive'
     : usage.isWarning
@@ -33,14 +36,14 @@ export function PromptUsageMeter({ usage, className }: PromptUsageMeterProps) {
     <div className={cn('space-y-1 text-xs', className)} aria-live="polite">
       <div className={cn('flex items-center justify-between gap-3 tabular-nums', toneClass)}>
         <span aria-invalid={usage.overChars > 0}>
-          Zeichen: {usage.chars} / {usage.maxChars}
+          {t('promptUsage.chars', { count: usage.chars, max: usage.maxChars })}
         </span>
         <span aria-invalid={usage.overTokens > 0}>
-          Tokens: {usage.tokens} / {usage.maxTokens}
+          {t('promptUsage.tokens', { count: usage.tokens, max: usage.maxTokens })}
         </span>
       </div>
       {usage.isOverLimit && (
-        <p className="text-destructive">Eingabe zu lang. Bitte kürze um {formatOverage(usage)}.</p>
+        <p className="text-destructive">{t('promptUsage.tooLong', { overage: formatOverage(usage, t) })}</p>
       )}
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/hooks/use-profile';
 import { CenteredLoader } from '@/components/shared/loading';
@@ -17,14 +18,14 @@ type WizardStep = 'job' | 'configure' | 'generate';
 
 interface StepConfig {
   id: WizardStep;
-  title: string;
+  titleKey: 'steps.job.shortTitle' | 'steps.configure.shortTitle' | 'steps.generate.shortTitle';
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const steps: StepConfig[] = [
-  { id: 'job', title: 'Stelle', icon: Briefcase },
-  { id: 'configure', title: 'Konfigurieren', icon: Settings },
-  { id: 'generate', title: 'Fertig', icon: Sparkles },
+  { id: 'job', titleKey: 'steps.job.shortTitle', icon: Briefcase },
+  { id: 'configure', titleKey: 'steps.configure.shortTitle', icon: Settings },
+  { id: 'generate', titleKey: 'steps.generate.shortTitle', icon: Sparkles },
 ];
 
 // Only de/en — the generation prompts never fully supported fr/es/it
@@ -37,6 +38,7 @@ interface ApplicationWizardProps {
 
 export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps = {}) {
   const router = useRouter();
+  const t = useTranslations('wizard');
   const [currentStep, setCurrentStep] = useState<WizardStep>(
     initialJobPosting ? 'configure' : 'job',
   );
@@ -84,7 +86,7 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
   };
 
   if (profileLoading) {
-    return <CenteredLoader message="Lädt..." />;
+    return <CenteredLoader message={t('page.loading')} />;
   }
 
   return (
@@ -131,7 +133,7 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
                       isTodo && 'text-[#A0A0A0]',
                     )}
                   >
-                    {step.title}
+                    {t(step.titleKey)}
                   </p>
                 </div>
                 {index < steps.length - 1 && (
@@ -167,14 +169,14 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
       {currentStep === 'job' && (
         <div className="mx-auto flex max-w-[680px] items-center justify-between border-t border-[#E0E0E0] pt-5">
           <Button variant="ghost" onClick={handleCancel} className="rounded-[3px] font-semibold text-muted-foreground hover:text-foreground">
-            Abbrechen
+            {t('page.cancel')}
           </Button>
           <Button
             onClick={handleNext}
             disabled={!selectedJob}
             className="rounded-[3px] px-5 font-semibold disabled:bg-[#E5E9F2] disabled:text-[#A0A0A0] disabled:opacity-100"
           >
-            Weiter
+            {t('page.next')}
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
@@ -183,4 +185,3 @@ export function ApplicationWizard({ initialJobPosting }: ApplicationWizardProps 
     </div>
   );
 }
-

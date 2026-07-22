@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useEffect } from 'react';
 import type { Editor } from '@tiptap/react';
+import { useTranslations } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -28,6 +29,7 @@ interface FontSizeDropdownProps {
  * <FontSizeDropdown editor={editor} disabled={false} />
  */
 export function FontSizeDropdown({ editor, disabled, className }: FontSizeDropdownProps) {
+  const t = useTranslations('editor');
   const [currentFontSize, setCurrentFontSize] = useState('');
 
   // Update font size when selection changes
@@ -74,9 +76,9 @@ export function FontSizeDropdown({ editor, disabled, className }: FontSizeDropdo
           'h-8 w-[80px] text-xs',
           className,
         )}
-        aria-label="Schriftgröße"
+        aria-label={t('fontSize.ariaLabel')}
       >
-        <SelectValue placeholder="Größe" />
+        <SelectValue placeholder={t('fontSize.placeholder')} />
       </SelectTrigger>
       <SelectContent>
         {FONT_SIZES.map((size) => (

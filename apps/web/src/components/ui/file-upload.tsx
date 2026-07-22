@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useDropzone, type Accept, type FileRejection } from 'react-dropzone';
 import { Upload, File, X, AlertCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -59,8 +60,9 @@ export function FileUpload({
   error = null,
   disabled = false,
   className,
-  hint = 'PDF oder DOCX, max. 10 MB',
+  hint,
 }: FileUploadProps) {
+  const t = useTranslations('common.fileUpload');
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [localError, setLocalError] = React.useState<string | null>(null);
 
@@ -74,11 +76,11 @@ export function FileUpload({
         const errorCode = rejection.errors[0]?.code;
 
         if (errorCode === 'file-too-large') {
-          setLocalError('Die Datei ist zu groß. Maximal 10 MB sind erlaubt.');
+          setLocalError(t('errorTooLarge'));
         } else if (errorCode === 'file-invalid-type') {
-          setLocalError('Ungültiger Dateityp. Nur PDF- und DOCX-Dateien sind erlaubt.');
+          setLocalError(t('errorInvalidType'));
         } else {
-          setLocalError('Die Datei konnte nicht hochgeladen werden.');
+          setLocalError(t('errorGeneric'));
         }
         return;
       }
@@ -90,7 +92,7 @@ export function FileUpload({
         onFileSelect(file);
       }
     },
-    [onFileSelect]
+    [onFileSelect, t]
   );
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
@@ -152,7 +154,7 @@ export function FileUpload({
                 className="shrink-0"
               >
                 <X className="h-4 w-4" />
-                <span className="sr-only">Datei entfernen</span>
+                <span className="sr-only">{t('removeFile')}</span>
               </Button>
             )}
           </div>
@@ -164,12 +166,10 @@ export function FileUpload({
             <div className="mt-4 text-center">
               <p className="text-sm font-medium">
                 {isDragActive
-                  ? 'Datei hier ablegen...'
-                  : 'Datei hierher ziehen oder klicken'}
+                  ? t('dropActive')
+                  : t('dropPrompt')}
               </p>
-              {hint && (
-                <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-              )}
+              <p className="mt-1 text-xs text-muted-foreground">{hint ?? t('defaultHint')}</p>
             </div>
           </>
         )}

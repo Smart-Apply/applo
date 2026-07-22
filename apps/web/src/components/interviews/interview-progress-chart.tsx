@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import type { InterviewStats } from '@/types';
 
 interface InterviewProgressChartProps {
@@ -8,17 +9,18 @@ interface InterviewProgressChartProps {
 }
 
 export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
+  const t = useTranslations('interviews');
   // Category scores data for the bar chart
   const categoryData = useMemo(() => {
     const { averageCategoryScores } = stats;
     const categories = [
-      { name: 'Kommunikation', score: averageCategoryScores.communication, color: 'bg-brand' },
-      { name: 'Präsentation', score: averageCategoryScores.presentation, color: 'bg-success' },
+      { name: t('feedback.categories.communication'), score: averageCategoryScores.communication, color: 'bg-brand' },
+      { name: t('feedback.categories.presentation'), score: averageCategoryScores.presentation, color: 'bg-success' },
     ];
 
     if (averageCategoryScores.technical !== undefined && averageCategoryScores.technical > 0) {
       categories.push({
-        name: 'Fachkompetenz',
+        name: t('feedback.categories.technical'),
         score: averageCategoryScores.technical,
         color: 'bg-primary',
       });
@@ -29,7 +31,7 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
       averageCategoryScores.problemSolving > 0
     ) {
       categories.push({
-        name: 'Problemlösung',
+        name: t('feedback.categories.problemSolving'),
         score: averageCategoryScores.problemSolving,
         color: 'bg-warning',
       });
@@ -37,23 +39,23 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
 
     if (averageCategoryScores.cultureFit !== undefined && averageCategoryScores.cultureFit > 0) {
       categories.push({
-        name: 'Kulturfit',
+        name: t('feedback.categories.cultureFit'),
         score: averageCategoryScores.cultureFit,
         color: 'bg-destructive',
       });
     }
 
     return categories;
-  }, [stats]);
+  }, [stats, t]);
 
   // Session type distribution
   const typeDistribution = useMemo(() => {
     const { sessionsByType } = stats;
     const types = [
-      { name: 'Verhalten', count: sessionsByType.BEHAVIORAL, color: 'bg-brand' },
-      { name: 'Technisch', count: sessionsByType.TECHNICAL, color: 'bg-primary' },
-      { name: 'Fallstudie', count: sessionsByType.CASE_STUDY, color: 'bg-warning' },
-      { name: 'Gemischt', count: sessionsByType.MIXED, color: 'bg-success' },
+      { name: t('detail.type.behavioral'), count: sessionsByType.BEHAVIORAL, color: 'bg-brand' },
+      { name: t('detail.type.technical'), count: sessionsByType.TECHNICAL, color: 'bg-primary' },
+      { name: t('detail.type.caseStudy'), count: sessionsByType.CASE_STUDY, color: 'bg-warning' },
+      { name: t('detail.type.mixed'), count: sessionsByType.MIXED, color: 'bg-success' },
     ].filter((t) => t.count > 0);
 
     const total = types.reduce((sum, t) => sum + t.count, 0);
@@ -61,12 +63,12 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
       ...t,
       percentage: total > 0 ? Math.round((t.count / total) * 100) : 0,
     }));
-  }, [stats]);
+  }, [stats, t]);
 
   if (stats.completedSessions === 0) {
     return (
       <div className="flex items-center justify-center h-40 text-muted-foreground">
-        Schließen Sie mindestens ein Interview ab, um Statistiken zu sehen.
+        {t('progress.noStats')}
       </div>
     );
   }
@@ -76,7 +78,7 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
       {/* Category Scores */}
       <div className="space-y-4">
         <h4 className="text-sm font-medium text-muted-foreground">
-          Durchschnittliche Kategorie-Scores
+          {t('progress.averageCategoryScores')}
         </h4>
         <div className="space-y-3">
           {categoryData.map((category) => (
@@ -98,7 +100,7 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
 
       {/* Interview Type Distribution */}
       <div className="space-y-4">
-        <h4 className="text-sm font-medium text-muted-foreground">Interview-Typen</h4>
+        <h4 className="text-sm font-medium text-muted-foreground">{t('progress.interviewTypes')}</h4>
         <div className="space-y-3">
           {typeDistribution.map((type) => (
             <div key={type.name} className="space-y-1">
@@ -121,12 +123,12 @@ export function InterviewProgressChart({ stats }: InterviewProgressChartProps) {
         {/* Summary */}
         <div className="pt-4 border-t">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Meist geübter Typ:</span>
+            <span className="text-muted-foreground">{t('progress.mostPracticedType')}</span>
             <span className="font-medium">
-              {stats.mostPracticedType === 'BEHAVIORAL' && 'Verhaltensbezogen'}
-              {stats.mostPracticedType === 'TECHNICAL' && 'Technisch'}
-              {stats.mostPracticedType === 'CASE_STUDY' && 'Fallstudie'}
-              {stats.mostPracticedType === 'MIXED' && 'Gemischt'}
+              {stats.mostPracticedType === 'BEHAVIORAL' && t('detail.type.behavioralLong')}
+              {stats.mostPracticedType === 'TECHNICAL' && t('detail.type.technical')}
+              {stats.mostPracticedType === 'CASE_STUDY' && t('detail.type.caseStudy')}
+              {stats.mostPracticedType === 'MIXED' && t('detail.type.mixed')}
             </span>
           </div>
         </div>

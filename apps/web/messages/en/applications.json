@@ -1,0 +1,355 @@
+{
+  "status": {
+    "all": "All",
+    "created": "Created",
+    "draft": "Draft",
+    "applied": "Applied",
+    "interview": "Interview",
+    "accepted": "Accepted",
+    "rejected": "Rejected"
+  },
+  "list": {
+    "title": "Applications",
+    "description": "Manage and track the status of your applications.",
+    "refresh": "Refresh",
+    "newApplication": "New application",
+    "searchPlaceholder": "Search applications...",
+    "clearSearch": "Clear search",
+    "tableView": "Table view",
+    "tableViewShort": "Table",
+    "cardView": "Card view",
+    "cardViewShort": "Cards",
+    "fallbackTitle": "Application",
+    "numberedFallbackTitle": "Application #{id}",
+    "results": "{count, plural, =0 {no applications} one {# application} other {# applications}}",
+    "resultsWithStatus": "{count, plural, =0 {no applications} one {# application} other {# applications}} with status \"{status}\"",
+    "pageInfo": "Page {current} of {total}",
+    "selectedCount": "{count} selected",
+    "clearSelection": "Clear selection",
+    "setStatus": "Set status…",
+    "delete": "Delete",
+    "actions": "Actions",
+    "showDetails": "Show details",
+    "edit": "Edit",
+    "openCoverLetter": "Open cover letter",
+    "openResume": "Open résumé",
+    "selectApplication": "Select application",
+    "selectAllPage": "Select all on this page",
+    "open": "Open",
+    "emptyFilteredTitle": "No applications found",
+    "emptyFilteredDescription": "There are no applications with status \"{status}\".",
+    "showAll": "Show all",
+    "createFirst": "Create first application",
+    "paginationOf": "of {total}",
+    "firstPage": "First page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "lastPage": "Last page",
+    "emptyTitle": "No applications yet",
+    "emptyDescription": "Create your first AI-assisted application and keep track of your application process.",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "sort": {
+      "label": "Sort",
+      "placeholder": "Sort",
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "titleAsc": "Job title A–Z",
+      "companyAsc": "Company A–Z"
+    },
+    "table": {
+      "jobAndCompany": "Job & company",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "deleteDialog": {
+      "title": "Delete application?",
+      "description": "Do you really want to delete the application for <titleText>{title}</titleText>? This action cannot be undone."
+    },
+    "bulkDeleteDialog": {
+      "title": "Delete {count} applications?",
+      "description": "Do you really want to delete <countText>{count, plural, one {# application} other {# applications}}</countText>? This action cannot be undone."
+    },
+    "toasts": {
+      "readyTitle": "Application ready! 🎉",
+      "readyDescription": "{title} is ready to download.",
+      "failedTitle": "Generation failed",
+      "failedDescription": "{title} could not be created.",
+      "generatingTitle": "Generation started",
+      "generatingDescription": "{title} is now being created...",
+      "deleted": "Application deleted",
+      "bulkDeleteSuccess": "{count, plural, one {# application deleted} other {# applications deleted}}",
+      "bulkDeletePartial": "{succeeded} deleted, {failed} failed",
+      "bulkStatusSuccess": "Status updated for {count, plural, one {# application} other {# applications}}",
+      "bulkStatusPartial": "{succeeded} updated, {failed} failed"
+    }
+  },
+  "detail": {
+    "fallbackTitle": "Application",
+    "loading": "Loading application...",
+    "notFoundTitle": "Application not found",
+    "notFoundDescription": "The requested application does not exist, or you do not have permission.",
+    "toApplications": "To applications",
+    "autoTrackingTitle": "Status was updated by automatic email tracking",
+    "noStatus": "No status (please reload the page)",
+    "backToApplications": "Back to applications",
+    "toasts": {
+      "readyTitle": "Application ready! 🎉",
+      "readyDescription": "{title} is ready to download.",
+      "translationFallbackTitle": "Translation unavailable",
+      "translationFallbackDescription": "The PDFs were created in the original language. Please try exporting again later.",
+      "failedTitle": "Generation failed",
+      "failedDescription": "{title} could not be created.",
+      "generatingTitle": "Generation started",
+      "generatingDescription": "{title} is now being created...",
+      "markedAppliedTitle": "Marked as “Applied”",
+      "markedAppliedDescription": "Good luck! 🤞",
+      "updateError": "Error while updating: {message}",
+      "previewError": "Error loading the preview",
+      "invalidJobUrl": "Invalid job posting URL"
+    },
+    "celebration": {
+      "readyToSend": "Ready to send",
+      "title": "Done!",
+      "titleWithName": "Done, {firstName}!",
+      "description": "Your <coverLetter>cover letter</coverLetter> and <resume>résumé</resume> are ready — download them and apply.",
+      "descriptionWithCompany": "Your <coverLetter>cover letter</coverLetter> and <resume>résumé</resume> are ready — download them and apply at {company}."
+    },
+    "documents": {
+      "title": "Application documents",
+      "bothAsZip": "Both as ZIP",
+      "edit": "Edit",
+      "editResume": "Edit résumé",
+      "coverLetter": "Cover letter",
+      "resume": "Résumé",
+      "noCoverLetter": "No cover letter was generated for this application",
+      "downloadLinksLimited": "Download links are valid for a limited time for security reasons",
+      "expiresAt": " (until {time})",
+      "pdfDocument": "PDF document",
+      "preview": "Preview",
+      "download": "Download",
+      "missing": "Not available"
+    },
+    "nextStep": {
+      "appliedBadge": "Applied ✓",
+      "appliedTitle": "Great — application submitted!",
+      "appliedDescription": "Good luck. Prepare for the interview with the interview coach.",
+      "appliedDescriptionWithCompany": "Good luck at {company}. Prepare for the interview with the interview coach.",
+      "toInterviewCoach": "To the interview coach",
+      "title": "Next step",
+      "applyAtCompany": "Apply at {company}",
+      "applyNow": "Apply now",
+      "description": "Submit your documents on the careers page — then mark the application as \"Applied\" so Applo can track the status for you.",
+      "markApplied": "Mark as applied",
+      "toJobPosting": "To job posting"
+    },
+    "ats": {
+      "title": "ATS analysis",
+      "description": "How well your documents match the role — keywords & optimizations.",
+      "upgradeDescription": "Upgrade to Premium now to use this feature."
+    },
+    "jobPosting": {
+      "title": "Job posting",
+      "description": "Description",
+      "requirements": "Requirements"
+    },
+    "meta": {
+      "created": "Created <b>{date}</b>",
+      "updated": "Updated <b>{date}</b>"
+    },
+    "generating": {
+      "title": "Your application is being created …",
+      "description": "The AI is writing your cover letter and résumé and tailoring everything to the role. This usually takes less than a minute.",
+      "preparing": "Preparing …"
+    },
+    "pending": {
+      "title": "Your application has been created",
+      "description": "Review the résumé and cover letter, adjust them if needed — then start the export.",
+      "startExport": "Adjust documents & start export"
+    },
+    "failed": {
+      "status": "Failed",
+      "title": "Something went wrong",
+      "description": "An error occurred while creating your documents. Try again — it usually works on the second attempt.",
+      "retry": "Try again"
+    }
+  },
+  "atsPanel": {
+    "startTitle": "Start ATS analysis",
+    "startDescription": "Let the AI analyze your application and get personalized improvement suggestions based on the job posting.",
+    "analyzing": "Analyzing...",
+    "analyzeNow": "Analyze now",
+    "title": "ATS analysis",
+    "tooltip": "ATS (Applicant Tracking System) = recruiting management system. Many companies automatically filter applications by keywords.",
+    "analyzedAt": "Analyzed on {date}",
+    "reanalyze": "Analyze again",
+    "lowScoreTitle": "Low match",
+    "lowScoreDescription": "Your profile may not be an ideal match for this role. Review the missing keywords and update your profile to improve your chances."
+  },
+  "matchScore": {
+    "title": "Profile match analysis",
+    "profileMatch": "Profile match"
+  },
+  "atsScoreBadge": {
+    "excellent": "Excellent",
+    "good": "Good",
+    "needsWork": "Needs work",
+    "low": "Low"
+  },
+  "atsScoreCell": {
+    "unavailable": "Application check unavailable",
+    "categoryScores": "Category scores:",
+    "coreScore": "Core (hard skills): {score}%",
+    "experienceScore": "Experience: {score}%",
+    "industryScore": "Industry: {score}%"
+  },
+  "atsScoreSidebar": {
+    "startTitle": "Start ATS analysis",
+    "startDescription": "Find out which keywords are missing",
+    "analyzing": "Analyzing...",
+    "analyze": "Analyze",
+    "title": "ATS score",
+    "jobMatch": "Match with role",
+    "core": "Core (hard skills)",
+    "matchedKeywords": "Found keywords ({count})",
+    "missingKeywords": "Missing keywords ({count})",
+    "missingHint": "Add these keywords to your résumé to improve your score",
+    "matchedLabel": "Found keywords",
+    "lowScore": "Score needs work. Add the missing keywords to your profile.",
+    "goodScore": "Excellent match! Your profile fits very well."
+  },
+  "keywords": {
+    "title": "Keywords",
+    "foundIn": "Found in:",
+    "tabs": {
+      "all": "All ({count})",
+      "matched": "Found ({count})",
+      "missing": "Missing ({count})"
+    },
+    "categories": {
+      "core": "Core competencies",
+      "soft": "Soft skills",
+      "responsibility": "Responsibilities",
+      "requirement": "Requirements",
+      "methodology": "Methods & tools",
+      "industry": "Industry",
+      "seniority": "Level",
+      "misc": "Other"
+    },
+    "showLess": "Less",
+    "more": "+{count} more",
+    "noMatched": "No matching keywords found.",
+    "showAllMissing": "Show all {count} missing keywords",
+    "noMissing": "All relevant keywords are already in your profile! 🎉"
+  },
+  "suggestions": {
+    "title": "Improvement suggestions",
+    "perfectTitle": "Perfect!",
+    "perfectDescription": "Your profile is an excellent match for this role.",
+    "aiRecommendations": "AI recommendations",
+    "addMissingKeywords": "Add missing keywords",
+    "editProfile": "Edit profile",
+    "actions": {
+      "addCore": "Add core competencies",
+      "addMethodology": "Add methods & tools",
+      "addSoft": "Add soft skills",
+      "addResponsibility": "Add responsibilities",
+      "updateExperience": "Update experience",
+      "industryExperience": "Industry experience",
+      "addRequirement": "Add qualification",
+      "addProfile": "Add to profile"
+    },
+    "generated": {
+      "addTechnical": "Add these skills to your profile",
+      "describeResponsibilities": "Describe these responsibilities in your work experience",
+      "showSeniority": "Make your experience level clearer",
+      "highlightIndustry": "Highlight your industry experience",
+      "checkRequirements": "Check whether you meet these requirements",
+      "considerKeywords": "Consider these keywords in your profile"
+    }
+  },
+  "highlightedText": {
+    "tooltipFound": "✓ Found in profile",
+    "tooltipMissing": "⚠ Not in profile",
+    "legendFound": "Present in profile",
+    "legendMissing": "Missing from profile"
+  },
+  "atsOptimizer": {
+    "match": "Match",
+    "categoryLabels": {
+      "core": "Core competency",
+      "soft": "Soft skill",
+      "responsibility": "Responsibility",
+      "requirement": "Requirement",
+      "methodology": "Method / tool",
+      "industry": "Industry",
+      "seniority": "Level",
+      "misc": "Other"
+    },
+    "preview": {
+      "profile": "Profile",
+      "experience": "Work experience",
+      "education": "Education",
+      "projects": "Projects",
+      "skills": "Skills",
+      "new": "NEW",
+      "languages": "Languages",
+      "certificates": "Certificates",
+      "contact": "Contact"
+    },
+    "startTitle": "Start ATS analysis",
+    "startDescription": "Find out which terms from the role are missing in your résumé.",
+    "analyzing": "Analyzing…",
+    "analyze": "Analyze",
+    "resumeTitle": "Your résumé",
+    "legend": "blue = terms detected from the role",
+    "livePreview": "Live preview",
+    "title": "ATS optimization",
+    "subtitle": "How your résumé passes applicant filters",
+    "reanalyze": "Analyze again",
+    "coach": {
+      "done": "Perfect! Your résumé now includes <b>all important terms</b> — you are ATS-ready. 🎉",
+      "pending": "Great! You have added all terms. Click <b>Analyze again</b> to update your score.",
+      "remaining": "Keep going! <b>{count, plural, one {# term} other {# terms}}</b> left, then you will have added them all.",
+      "initial": "Your résumé matches this role by <b>{score}%</b>. Add the <b>{count} missing terms</b> to get through filters more easily."
+    },
+    "explanation": "<b>What is this?</b> Companies use software (ATS) to filter applications by terms from the job posting. The more matching terms your résumé contains, the more likely you are to land an interview.",
+    "coverageLabel": "Keywords covered",
+    "missingTerms": "Missing terms ({count})",
+    "addAll": "Add all",
+    "addedToSkillsHint": "will be added to your skills",
+    "add": "Add",
+    "allTermsAddedTitle": "All terms added",
+    "allTermsAddedDescription": "They are now in your résumé. Click “Analyze again” to see the updated score.",
+    "allTermsCoveredTitle": "All terms covered",
+    "allTermsCoveredDescription": "Your résumé is optimally tailored to this role. You can export it now.",
+    "alreadyIncluded": "Already included ({count})",
+    "atsReady": "ATS-ready",
+    "openTerms": "<b>{count}</b> terms open",
+    "exportResume": "Export résumé"
+  },
+  "hooks": {
+    "createError": "Error creating the application",
+    "createSuccess": "Application is being created...",
+    "generateError": "Error generating the application",
+    "deleteError": "Error deleting the application",
+    "deleteSuccess": "Application was deleted",
+    "resumeSaved": "Résumé saved",
+    "resumeSaveError": "Résumé could not be saved",
+    "coverLetterUpdated": "Cover letter updated",
+    "coverLetterUpdateError": "Cover letter could not be updated",
+    "summaryGenerateError": "Summary could not be generated",
+    "descriptionGenerateError": "Description could not be generated",
+    "exportStarted": "PDF export started",
+    "exportStartError": "Export could not be started",
+    "designSettingsError": "Design settings could not be saved",
+    "keywordsAnalyzed": "Keywords were analyzed",
+    "keywordsAnalyzeError": "Keywords could not be analyzed",
+    "retryStarted": "Generation was restarted",
+    "retryError": "Error while generating again",
+    "streamStatusParseError": "Status could not be processed",
+    "streamConnectionClosed": "Connection closed",
+    "streamConnectionRetrying": "Connection error, retrying..."
+  }
+}

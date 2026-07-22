@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useTranslations } from 'next-intl';
 import { Check } from 'lucide-react';
 import Image from 'next/image';
 import type { Template } from '@/types';
@@ -28,6 +29,7 @@ export function TemplateCard({
   colorVariants = [],
   selectedVariantId,
 }: TemplateCardProps) {
+  const t = useTranslations('templates');
   // Determine which template ID to use for preview (selected variant or base template)
   const displayTemplateId = selectedVariantId || template.id;
 
@@ -51,12 +53,12 @@ export function TemplateCard({
           <CardTitle className="text-lg">{template.name}</CardTitle>
           {template.isDefault && (
             <Badge variant="secondary" className="shrink-0">
-              Standard
+              {t('card.defaultBadge')}
             </Badge>
           )}
         </div>
         <CardDescription className="line-clamp-2">
-          {template.description || 'Keine Beschreibung verfügbar'}
+          {template.description || t('card.noDescription')}
         </CardDescription>
       </CardHeader>
 
@@ -71,7 +73,7 @@ export function TemplateCard({
           <Image
             key={displayTemplateId}
             src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3000'}/api/v1/templates/${displayTemplateId}/preview?t=${displayTemplateId}`}
-            alt={`${template.name} Preview`}
+            alt={t('card.previewAlt', { name: template.name })}
             fill
             className="object-cover"
             unoptimized
@@ -88,7 +90,7 @@ export function TemplateCard({
         {/* Color Swatches */}
         {colorVariants.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Farbe:</span>
+            <span className="text-xs text-muted-foreground">{t('card.colorLabel')}</span>
             <div className="flex gap-1.5">
               {colorVariants.map((variant) => {
                 const isVariantSelected = variant.id === selectedVariantId || 
@@ -128,10 +130,10 @@ export function TemplateCard({
           {isSelected ? (
             <>
               <Check className="mr-2 h-4 w-4" />
-              Ausgewählt
+              {t('card.selected')}
             </>
           ) : (
-            'Auswählen'
+            t('card.select')
           )}
         </Button>
       </CardFooter>

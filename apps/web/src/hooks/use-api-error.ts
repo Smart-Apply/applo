@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { ApiError, ErrorType } from '@/lib/errors';
+import { getErrorMessage as getErrorMessageForCode } from '@/lib/error-messages';
 import { toastError } from '@/lib/toast';
 
 interface UseApiErrorOptions {
@@ -32,7 +33,7 @@ export function useApiError(options: UseApiErrorOptions) {
     // Handle 401 Unauthorized - logout and redirect to login
     if (ApiError.isApiError(error) && error.status === ErrorType.UNAUTHORIZED && autoRedirect) {
       clearAuth();
-      toastError(error, 'Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.');
+      toastError(error, getErrorMessageForCode('SESSION_EXPIRED'));
       router.push('/login');
       return;
     }
@@ -66,7 +67,7 @@ export function useErrorHandler(options?: {
     // Handle 401 Unauthorized
     if (ApiError.isApiError(error) && error.status === ErrorType.UNAUTHORIZED && autoRedirect) {
       clearAuth();
-      toastError(error, 'Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.');
+      toastError(error, getErrorMessageForCode('SESSION_EXPIRED'));
       router.push('/login');
       return;
     }

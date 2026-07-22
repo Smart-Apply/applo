@@ -14,16 +14,16 @@ export type SettingsSectionId = 'account' | 'security' | 'notifications' | 'pref
 
 export interface SettingsSection {
   id: SettingsSectionId;
-  label: string;
-  sub: string;
+  labelKey: string;
+  subKey: string;
   icon: LucideIcon;
 }
 
 export const SETTINGS_SECTIONS: SettingsSection[] = [
-  { id: 'account', label: 'Account', sub: 'Profil & Stammdaten', icon: User },
-  { id: 'security', label: 'Sicherheit', sub: 'Passwort & 2FA', icon: Shield },
-  { id: 'notifications', label: 'Benachrichtigungen', sub: 'E-Mails & Tracking', icon: Bell },
-  { id: 'preferences', label: 'Präferenzen', sub: 'Sprache, Design, Daten', icon: Palette },
+  { id: 'account', labelKey: 'sections.account.label', subKey: 'sections.account.sub', icon: User },
+  { id: 'security', labelKey: 'sections.security.label', subKey: 'sections.security.sub', icon: Shield },
+  { id: 'notifications', labelKey: 'sections.notifications.label', subKey: 'sections.notifications.sub', icon: Bell },
+  { id: 'preferences', labelKey: 'sections.preferences.label', subKey: 'sections.preferences.sub', icon: Palette },
 ];
 
 export const DEFAULT_SECTION: SettingsSectionId = 'account';
@@ -38,8 +38,8 @@ export function resolveSection(pathname: string | null, sectionParam: string | n
 /** Flat, searchable index of individual settings — drives SettingsSearch. */
 export interface SettingsSearchEntry {
   section: SettingsSectionId;
-  title: string;
-  keywords: string;
+  titleKey: string;
+  keywordsKey: string;
   icon: LucideIcon;
 }
 
@@ -48,18 +48,18 @@ import {
 } from 'lucide-react';
 
 export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
-  { section: 'account', title: 'Vor- & Nachname', keywords: 'name profil vorname nachname', icon: User },
-  { section: 'account', title: 'E-Mail-Adresse', keywords: 'email mail adresse login', icon: Mail },
-  { section: 'account', title: 'Profilbild', keywords: 'avatar bild foto profilbild', icon: Camera },
-  { section: 'account', title: 'Account löschen', keywords: 'löschen delete account entfernen dsgvo', icon: Trash2 },
-  { section: 'security', title: 'Passwort ändern', keywords: 'passwort password ändern google login', icon: Key },
-  { section: 'security', title: 'Zwei-Faktor-Authentifizierung (2FA)', keywords: '2fa zwei faktor authenticator sicherheit otp', icon: Shield },
-  { section: 'security', title: 'Aktive Sitzungen', keywords: 'sitzungen sessions geräte abmelden devices', icon: Monitor },
-  { section: 'notifications', title: 'E-Mail-Benachrichtigungen', keywords: 'email benachrichtigung newsletter updates', icon: Mail },
-  { section: 'notifications', title: 'Automatisches Bewerbungs-Tracking', keywords: 'tracking postfach outlook gmail automatisch premium', icon: RefreshCw },
-  { section: 'preferences', title: 'Sprache & Region', keywords: 'sprache language region deutsch english', icon: Globe },
-  { section: 'preferences', title: 'Design / Theme', keywords: 'theme design dark mode hell dunkel erscheinungsbild', icon: Palette },
-  { section: 'preferences', title: 'Datenschutz & Export', keywords: 'datenschutz privacy daten export download dsgvo öffentlich', icon: Lock },
+  { section: 'account', titleKey: 'search.items.name', keywordsKey: 'search.keywords.name', icon: User },
+  { section: 'account', titleKey: 'search.items.email', keywordsKey: 'search.keywords.email', icon: Mail },
+  { section: 'account', titleKey: 'search.items.photo', keywordsKey: 'search.keywords.photo', icon: Camera },
+  { section: 'account', titleKey: 'search.items.deleteAccount', keywordsKey: 'search.keywords.deleteAccount', icon: Trash2 },
+  { section: 'security', titleKey: 'search.items.password', keywordsKey: 'search.keywords.password', icon: Key },
+  { section: 'security', titleKey: 'search.items.twoFactor', keywordsKey: 'search.keywords.twoFactor', icon: Shield },
+  { section: 'security', titleKey: 'search.items.sessions', keywordsKey: 'search.keywords.sessions', icon: Monitor },
+  { section: 'notifications', titleKey: 'search.items.emailNotifications', keywordsKey: 'search.keywords.emailNotifications', icon: Mail },
+  { section: 'notifications', titleKey: 'search.items.emailTracking', keywordsKey: 'search.keywords.emailTracking', icon: RefreshCw },
+  { section: 'preferences', titleKey: 'search.items.language', keywordsKey: 'search.keywords.language', icon: Globe },
+  { section: 'preferences', titleKey: 'search.items.theme', keywordsKey: 'search.keywords.theme', icon: Palette },
+  { section: 'preferences', titleKey: 'search.items.privacy', keywordsKey: 'search.keywords.privacy', icon: Lock },
 ];
 
 export const SETTINGS_SEARCH_ICON = Search;

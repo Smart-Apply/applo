@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "applications": "Applications",
+    "applicationCheck": "Application Check",
+    "analytics": "Analytics",
+    "interviewCoach": "Interview Coach",
+    "settings": "Settings",
+    "start": "Home",
+    "menu": "Menu",
+    "mainNavigation": "Main navigation",
+    "openMore": "Open more menu items",
+    "more": "More",
+    "openMenu": "Open menu",
+    "mainMenu": "Main menu",
+    "sheetDescription": "Applo dashboard navigation.",
+    "upgradeTitle": "Upgrade to Premium",
+    "upgradeDescription": "{feature} is only available for Premium members."
+  },
+  "page": {
+    "loading": "Loading...",
+    "oauthFinishing": "Completing sign-in...",
+    "greeting": {
+      "morning": "Good morning",
+      "day": "Hello",
+      "evening": "Good evening"
+    },
+    "heroReplayTitle": "Click for Applo's fly-in",
+    "eyebrow": "Dashboard · {month}",
+    "welcome": "{greeting}, {name}!",
+    "fallbackUser": "User",
+    "summary": "Overview of your current applications. You have <strong>{count}</strong> active applications in progress.",
+    "actions": {
+      "newApplication": "New application",
+      "findJobs": "Find jobs"
+    },
+    "stats": {
+      "total": "Total",
+      "active": "Active",
+      "interviews": "Interviews",
+      "offers": "Offers"
+    },
+    "recent": {
+      "title": "Recent applications",
+      "description": "Your recently edited applications",
+      "showAll": "Show all",
+      "emptyTitle": "No applications",
+      "emptyDescription": "You have not created any applications yet. Create your first application in just 2 steps!",
+      "emptyAction": "Create first application",
+      "positionCompany": "Position / Company",
+      "untitledApplication": "Untitled application",
+      "noDetails": "No details",
+      "updated": "Updated"
+    },
+    "profile": {
+      "title": "Profile status",
+      "description": "Complete your profile",
+      "perfect": "Perfect!",
+      "almostDone": "Almost there",
+      "edit": "Edit profile"
+    },
+    "usage": {
+      "title": "Quota",
+      "description": "Your monthly quota"
+    },
+    "trends": {
+      "title": "Market trends",
+      "tipLabel": "Tip",
+      "tip": "Nurses and project managers are currently in high demand. Update your skills!"
+    }
+  },
+  "guide": {
+    "steps": {
+      "add": {
+        "eyebrow": "Step 1 of 3",
+        "message": "Hi, I'm <b>Applo</b>! Add a job posting by link or text – I'll handle the rest."
+      },
+      "config": {
+        "eyebrow": "Step 2 of 3",
+        "message": "Great! Now we set <b>language, cover letter & design</b>. Hover over a template for the preview."
+      },
+      "loading": {
+        "eyebrow": "Step 3 of 3",
+        "message": "I'm <b>analyzing the job</b> and writing your documents. This only takes a moment …"
+      },
+      "finishing": {
+        "eyebrow": "Step 3 of 3",
+        "message": "Done! Your application is <b>ready</b> – continuing in a moment …"
+      },
+      "done": {
+        "eyebrow": "Done",
+        "message": "Your application is <b>ready</b>! Review it and download it right away."
+      }
+    }
+  },
+  "promptUsage": {
+    "chars": "Characters: {count} / {max}",
+    "tokens": "Tokens: {count} / {max}",
+    "charsOver": "{count} characters",
+    "tokensOver": "{count} tokens",
+    "joiner": " and ",
+    "tooLong": "Input too long. Please shorten by {overage}."
+  }
+}

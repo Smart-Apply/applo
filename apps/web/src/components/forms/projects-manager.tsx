@@ -15,6 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Calendar, FolderGit2, ExternalLink, X, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Project } from '@/types';
+import { getIntlLocale } from '@/lib/i18n-runtime';
+import { useTranslations } from 'next-intl';
 
 interface ProjectsManagerProps {
   projects: Project[];
@@ -30,6 +32,7 @@ function TechTagInput({
   tags: string[];
   onChange: (tags: string[]) => void;
 }) {
+  const t = useTranslations('profile');
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -37,14 +40,14 @@ function TechTagInput({
     (value: string) => {
       const trimmed = value.trim();
       if (!trimmed) return;
-      if (tags.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
-        toast.error('Bereits vorhanden');
+      if (tags.some((tag) => tag.toLowerCase() === trimmed.toLowerCase())) {
+        toast.error(t('projects.errors.duplicate'));
         return;
       }
       onChange([...tags, trimmed]);
       setInput('');
     },
-    [tags, onChange],
+    [tags, onChange, t],
   );
 
   const removeTag = (index: number) => {
@@ -89,7 +92,7 @@ function TechTagInput({
         onBlur={() => {
           if (input.trim()) addTag(input);
         }}
-        placeholder={tags.length === 0 ? 'z.B. React, Python, Scrum …' : ''}
+        placeholder={tags.length === 0 ? t('projects.tagPlaceholder') : ''}
         className="min-w-[120px] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
       />
     </div>
@@ -102,6 +105,7 @@ export function ProjectsManager({
   onProjectsChange,
   disabled = false,
 }: ProjectsManagerProps) {
+  const t = useTranslations('profile');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
@@ -164,7 +168,7 @@ export function ProjectsManager({
 
   const validate = (): boolean => {
     if (!name.trim()) {
-      toast.error('Bitte gib einen Projektnamen ein');
+      toast.error(t('projects.errors.name'));
       nameRef.current?.focus();
       return false;
     }
@@ -172,12 +176,12 @@ export function ProjectsManager({
       try {
         new URL(url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`);
       } catch {
-        setUrlError('Bitte gib eine gültige URL ein');
+        setUrlError(t('projects.errors.url'));
         return false;
       }
     }
     if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
-      toast.error('Enddatum muss nach dem Startdatum liegen');
+      toast.error(t('projects.errors.dateOrder'));
       return false;
     }
     return true;
@@ -209,10 +213,10 @@ export function ProjectsManager({
         ...newProject,
         ...(existing.id && { id: existing.id }),
       };
-      toast.success('Projekt aktualisiert');
+      toast.success(t('projects.toasts.updated'));
     } else {
       updatedProjects = [...projects, newProject];
-      toast.success('Projekt hinzugefügt');
+      toast.success(t('projects.toasts.added'));
     }
 
     onProjectsChange(updatedProjects);
@@ -223,24 +227,24 @@ export function ProjectsManager({
   const handleDelete = (index: number) => {
     onProjectsChange(projects.filter((_, i) => i !== index));
     setDeleteConfirmIndex(null);
-    toast.success('Projekt entfernt');
+    toast.success(t('projects.toasts.removed'));
   };
 
   const fmtDate = (d: string) =>
-    new Date(d).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
+    new Date(d).toLocaleDateString(getIntlLocale(), { month: 'short', year: 'numeric' });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Projekte</h3>
+          <h3 className="text-lg font-medium">{t('projects.title')}</h3>
           <p className="text-sm text-muted-foreground">
-            Deine persönlichen und beruflichen Projekte
+            {t('projects.description')}
           </p>
         </div>
         <Button type="button" onClick={openAddDialog} disabled={disabled} size="sm">
           <Plus className="mr-2 h-4 w-4" />
-          Hinzufügen
+          {t('actions.add')}
         </Button>
       </div>
 
@@ -304,7 +308,7 @@ export function ProjectsManager({
                               <Calendar className="h-3 w-3" />
                               <span>
                                 {project.startDate ? fmtDate(project.startDate) : '?'} –{' '}
-                                {project.endDate ? fmtDate(project.endDate) : 'Heute'}
+                                {project.endDate ? fmtDate(project.endDate) : t('labels.today')}
                               </span>
                             </div>
                           )}
@@ -345,9 +349,9 @@ export function ProjectsManager({
           <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <FolderGit2 className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 className="font-medium text-foreground">Keine Projekte</h3>
+          <h3 className="font-medium text-foreground">{t('projects.emptyTitle')}</h3>
           <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-            Zeige deine persönlichen und beruflichen Projekte, um dein Profil zu stärken.
+            {t('projects.emptyDescription')}
           </p>
           <Button
             type="button"
@@ -357,7 +361,7 @@ export function ProjectsManager({
             className="mt-4"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Erstes Projekt hinzufügen
+            {t('projects.addFirst')}
           </Button>
         </div>
       )}
@@ -367,7 +371,7 @@ export function ProjectsManager({
         <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
           <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>
-              {editingIndex !== null ? 'Projekt bearbeiten' : 'Neues Projekt'}
+              {editingIndex !== null ? t('projects.editTitle') : t('projects.newTitle')}
             </DialogTitle>
           </DialogHeader>
 
@@ -375,13 +379,13 @@ export function ProjectsManager({
             {/* Name */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Projektname <span className="text-destructive">*</span>
+                {t('projects.name')} <span className="text-destructive">*</span>
               </label>
               <Input
                 ref={nameRef}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="z.B. E-Commerce Platform"
+                placeholder={t('projects.namePlaceholder')}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') e.preventDefault();
                 }}
@@ -391,13 +395,13 @@ export function ProjectsManager({
             {/* Description */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Beschreibung{' '}
-                <span className="font-normal text-muted-foreground">– optional</span>
+                {t('labels.description')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
               </label>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Was hast du gemacht? Was war deine Rolle?"
+                placeholder={t('projects.descriptionPlaceholder')}
                 rows={3}
                 className="resize-none"
               />
@@ -406,20 +410,20 @@ export function ProjectsManager({
             {/* Technologies */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Technologien & Methoden{' '}
-                <span className="font-normal text-muted-foreground">– optional</span>
+                {t('projects.methods')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
               </label>
               <TechTagInput tags={technologies} onChange={setTechnologies} />
               <p className="text-xs text-muted-foreground">
-                Eingabe mit Enter bestätigen
+                {t('projects.confirmWithEnter')}
               </p>
             </div>
 
             {/* URL */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Link{' '}
-                <span className="font-normal text-muted-foreground">– optional</span>
+                {t('labels.link')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
               </label>
               <div className="relative">
                 <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -443,8 +447,8 @@ export function ProjectsManager({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">
-                  Von{' '}
-                  <span className="font-normal text-muted-foreground">– optional</span>
+                  {t('labels.from')}{' '}
+                  <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
                 </label>
                 <Input
                   type="date"
@@ -454,15 +458,15 @@ export function ProjectsManager({
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">
-                  Bis{' '}
-                  <span className="font-normal text-muted-foreground">– optional</span>
+                  {t('labels.to')}{' '}
+                  <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
                 </label>
                 <Input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">Leer = noch laufend</p>
+                <p className="text-xs text-muted-foreground">{t('education.ongoingHelp')}</p>
               </div>
             </div>
 
@@ -473,10 +477,10 @@ export function ProjectsManager({
                 variant="ghost"
                 onClick={() => setIsDialogOpen(false)}
               >
-                Abbrechen
+                {t('actions.cancel')}
               </Button>
               <Button type="button" onClick={handleSubmit} disabled={!name.trim()}>
-                {editingIndex !== null ? 'Speichern' : 'Hinzufügen'}
+                {editingIndex !== null ? t('actions.save') : t('actions.add')}
               </Button>
             </div>
           </div>
@@ -490,21 +494,20 @@ export function ProjectsManager({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Projekt löschen</DialogTitle>
+            <DialogTitle>{t('projects.deleteTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Möchtest du dieses Projekt wirklich löschen? Das kann nicht rückgängig gemacht
-            werden.
+            {t('projects.deleteConfirm')}
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setDeleteConfirmIndex(null)}>
-              Abbrechen
+              {t('actions.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteConfirmIndex !== null && handleDelete(deleteConfirmIndex)}
             >
-              Löschen
+              {t('actions.delete')}
             </Button>
           </div>
         </DialogContent>

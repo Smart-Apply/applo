@@ -1,0 +1,239 @@
+{
+  "page": {
+    "loading": "Lädt...",
+    "cancel": "Abbrechen",
+    "next": "Weiter"
+  },
+  "steps": {
+    "job": {
+      "shortTitle": "Stelle"
+    },
+    "configure": {
+      "shortTitle": "Konfigurieren"
+    },
+    "generate": {
+      "shortTitle": "Fertig"
+    }
+  },
+  "jobStep": {
+    "title": "Stelle hinzufügen",
+    "description": "Füge die Stellenanzeige per Link oder durch Einfügen des Textes hinzu.",
+    "tabs": {
+      "url": "Link einfügen",
+      "text": "Text einfügen"
+    },
+    "success": {
+      "title": "Stelle erfasst",
+      "description": "Die Stellenanzeige wurde erfolgreich gespeichert.",
+      "badge": "Gespeichert",
+      "useOther": "Andere Stelle verwenden"
+    },
+    "summary": {
+      "title": "Titel",
+      "company": "Firma",
+      "location": "Standort",
+      "info": "Info"
+    },
+    "urlFallback": {
+      "title": "Diese Stellenanzeige konnten wir nicht automatisch lesen.",
+      "descriptionTextTab": "Manche Jobportale blockieren das Auslesen. Bitte kopiere den Text der Anzeige und füge ihn im Tab „Text einfügen“ ein.",
+      "switchToText": "Zum Text-Tab wechseln →"
+    },
+    "urlForm": {
+      "urlLabel": "Link zur Stellenanzeige",
+      "urlHelp": "Unterstützt LinkedIn, Indeed und weitere Jobportale.",
+      "analyzing": "Wird analysiert...",
+      "submit": "Stellenanzeige analysieren"
+    },
+    "manualForm": {
+      "titlePlaceholder": "z.B. Marketing Manager, Pflegefachkraft",
+      "fullTextHelp": "Kopiere den gesamten Text der Stellenanzeige und füge ihn hier ein.",
+      "fullTextPlaceholder": "Füge hier den vollständigen Text der Stellenanzeige ein...",
+      "saving": "Wird gespeichert...",
+      "submit": "Stelle speichern"
+    }
+  },
+  "configureStep": {
+    "title": "Konfigurieren",
+    "loadingTemplates": "Vorlagen werden geladen...",
+    "language": {
+      "de": "Deutsch",
+      "en": "English"
+    },
+    "coverLetterLength": {
+      "kurz": {
+        "label": "Kompakt (~250 Wörter)",
+        "hint": "Auf den Punkt — ideal, wenn die Stelle wenig Anforderungen nennt."
+      },
+      "standard": {
+        "label": "Standard (~350 Wörter)",
+        "hint": "Die klassische Länge für eine Seite."
+      }
+    },
+    "options": {
+      "generateCoverLetter": "Anschreiben generieren",
+      "generateCoverLetterHelp": "Erstellt ein auf die Stelle zugeschnittenes Anschreiben.",
+      "language": "Sprache"
+    },
+    "errors": {
+      "unknown": "Ein unbekannter Fehler ist aufgetreten",
+      "resendEmail": "E-Mail erneut senden",
+      "goToApplication": "Zur Bewerbung"
+    },
+    "progress": {
+      "created": "erstellt",
+      "doneTitle": "Fertig!",
+      "redirecting": "Bewerbung erstellt – du wirst weitergeleitet …",
+      "eta": "Geschätzte Restzeit: ~{seconds} Sek.",
+      "almostDone": "Gleich geschafft …",
+      "doNotClose": "Bitte schließe dieses Fenster nicht.",
+      "stepDone": "Fertig",
+      "footnote": "Fertige Schritte werden nach Abschluss automatisch als erledigt markiert.",
+      "steps": {
+        "analyze": "Profil und Stellenanzeige werden analysiert",
+        "cover": "Anschreiben wird mit KI generiert",
+        "resume": "Lebenslauf wird auf die Stelle zugeschnitten",
+        "save": "Dokumente werden gespeichert"
+      }
+    },
+    "templates": {
+      "thumbnailAlt": "{name} Miniatur",
+      "color": "Farbe"
+    },
+    "preview": {
+      "label": "Vorschau:",
+      "live": "Live",
+      "zoomTitle": "Zum Vergrößern klicken",
+      "alt": "Template Vorschau",
+      "zoom": "Vergrößern",
+      "dialogTitle": "Vorschau: {name}",
+      "largeAlt": "Template Vorschau groß"
+    },
+    "usage": {
+      "exhausted": "Tageslimit erreicht ({used}/{limit}). Bitte komm in 24 Stunden wieder.",
+      "remaining": "Heute noch {remaining} von {limit} Bewerbungen möglich"
+    },
+    "actions": {
+      "back": "Zurück",
+      "creating": "Erstelle Bewerbung...",
+      "create": "Bewerbung erstellen"
+    }
+  },
+  "generateStep": {
+    "toasts": {
+      "existingApplication": "Für diese Stelle besteht bereits eine Bewerbung. Wir öffnen sie für dich."
+    },
+    "progress": {
+      "title": "Bewerbung wird erstellt...",
+      "overdue": "Dauert länger als gewöhnlich, einen Moment noch …",
+      "estimate": "Das dauert üblicherweise {seconds} Sekunden. Bitte schließ dieses Fenster nicht.",
+      "creating": "Deine Bewerbung wird mit KI erstellt...",
+      "steps": {
+        "analyze": "Profil und Stellenanzeige werden analysiert",
+        "cover": "Anschreiben wird mit KI generiert",
+        "resume": "Lebenslauf wird auf die Stelle zugeschnitten",
+        "refineCover": "Anschreiben wird geprüft und verfeinert",
+        "save": "Dokumente werden gespeichert"
+      }
+    },
+    "summary": {
+      "title": "Zusammenfassung",
+      "profile": "Dein Profil",
+      "skills": "{count, plural, one {# Skill} other {# Skills}}",
+      "experiences": "{count, plural, one {# Erfahrung} other {# Erfahrungen}}",
+      "education": "{count} Bildung",
+      "job": "Diese Stelle"
+    },
+    "options": {
+      "title": "Optionen",
+      "languageTitle": "Sprache der Bewerbung",
+      "languageHelp": "Wird automatisch erkannt. Hier kannst du sie anpassen."
+    },
+    "templates": {
+      "title": "Design auswählen",
+      "description": "Wähle eine Vorlage für deinen Lebenslauf.",
+      "coverLetterNote": "Das Anschreiben wird automatisch im passenden Design erstellt.",
+      "showLess": "Weniger",
+      "showAll": "Alle anzeigen"
+    }
+  },
+  "jobPostingForm": {
+    "title": "Stellenanzeige manuell erstellen",
+    "description": "Fülle alle relevanten Felder aus, um eine neue Stellenanzeige zu erstellen",
+    "sections": {
+      "basicInfo": "Grundinformationen",
+      "jobDescription": "Stellenbeschreibung"
+    },
+    "fields": {
+      "title": "Stellentitel",
+      "company": "Unternehmen",
+      "location": "Standort",
+      "url": "URL zur Stellenanzeige",
+      "salary": "Gehalt",
+      "employmentType": "Beschäftigungsart",
+      "description": "Beschreibung",
+      "jobDescription": "Stellenbeschreibung"
+    },
+    "placeholders": {
+      "title": "z.B. Marketing Manager, Pflegefachkraft, Vertriebsmitarbeiter",
+      "company": "z.B. Unternehmen GmbH",
+      "location": "z.B. Berlin, Deutschland",
+      "salary": "z.B. 60,000 - 80,000 EUR",
+      "employmentType": "z.B. Vollzeit, Teilzeit, Freelance",
+      "description": "Beschreibe die Stelle, das Team und was das Unternehmen ausmacht..."
+    },
+    "help": {
+      "description": "Allgemeine Beschreibung der Stelle und des Unternehmens"
+    },
+    "actions": {
+      "cancel": "Abbrechen",
+      "create": "Stellenanzeige erstellen"
+    }
+  },
+  "jobPostingParser": {
+    "toasts": {
+      "changesSaved": "Änderungen gespeichert"
+    },
+    "input": {
+      "title": "Per Link hinzufügen",
+      "description": "Füge eine Stellenanzeige per Link hinzu und lasse sie automatisch analysieren",
+      "urlLabel": "Link zur Stellenanzeige",
+      "urlHelp": "Unterstützt werden LinkedIn, Indeed und weitere Jobportale",
+      "submit": "Stellenanzeige analysieren"
+    },
+    "urlFallback": {
+      "title": "Diese Stellenanzeige konnten wir nicht automatisch lesen.",
+      "descriptionManualTab": "Manche Jobportale blockieren das Auslesen. Bitte wechsle zum Tab „Manuell“ und kopiere den Text der Anzeige hinein."
+    },
+    "result": {
+      "title": "Analysierte Stellenanzeige",
+      "description": "Überprüfe die extrahierten Informationen",
+      "badge": "Erfolgreich analysiert"
+    },
+    "fields": {
+      "title": "Titel",
+      "company": "Unternehmen",
+      "location": "Standort",
+      "description": "Beschreibung",
+      "requirements": "Anforderungen",
+      "originalUrl": "Original-URL"
+    },
+    "actions": {
+      "edit": "Bearbeiten",
+      "analyzeAgain": "Neu analysieren",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "saveChanges": "Änderungen speichern"
+    },
+    "edit": {
+      "title": "Stellenanzeige bearbeiten",
+      "description": "Passe die Informationen an, falls nötig",
+      "titleLabel": "Titel *",
+      "companyLabel": "Unternehmen *"
+    },
+    "help": {
+      "title": "Unterstützte Plattformen",
+      "description": "Du kannst Stellenanzeigen von LinkedIn, Indeed und anderen Jobportalen importieren. Falls die Analyse fehlschlägt, kannst du die Informationen auch manuell eingeben."
+    }
+  }
+}

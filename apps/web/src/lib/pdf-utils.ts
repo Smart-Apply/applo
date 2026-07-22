@@ -4,6 +4,7 @@
 
 import { toast } from 'sonner';
 import { authenticatedFetch } from './api-client';
+import { pick } from '@/lib/i18n-runtime';
 
 /**
  * Download a file from a URL with a custom filename
@@ -98,7 +99,7 @@ export interface FilenameOptions {
   firstName?: string;
   company?: string;
   position?: string;
-  documentType: 'Anschreiben' | 'Lebenslauf';
+  documentType: string;
   maxLength?: number;
 }
 
@@ -259,7 +260,7 @@ export function generatePdfFilename(options: FilenameOptions): string {
   }
   
   // Final fallback: Generic name
-  return `Bewerbung_${documentType}${pdfExtension}`;
+  return `${pick({ de: 'Bewerbung', en: 'Application' })}_${documentType}${pdfExtension}`;
 }
 
 /**
@@ -274,8 +275,9 @@ export function generateFilename(
   lastName?: string,
   firstName?: string
 ): string {
-  // Map legacy type to German document type
-  const documentType = type === 'cover-letter' ? 'Anschreiben' : 'Lebenslauf';
+  const documentType = type === 'cover-letter'
+    ? pick({ de: 'Anschreiben', en: 'Cover-Letter' })
+    : pick({ de: 'Lebenslauf', en: 'Resume' });
   
   // Use new intelligent filename generator
   return generatePdfFilename({
@@ -295,20 +297,20 @@ export async function handleDownload(
   filename: string,
   onExpired?: () => void
 ): Promise<void> {
-  const loadingToast = toast.loading('Download wird vorbereitet...');
+  const loadingToast = toast.loading(pick({ de: 'Download wird vorbereitet...', en: 'Preparing download...' }));
   
   try {
     await downloadFile(url, filename);
-    toast.success('Download erfolgreich!', { id: loadingToast });
+    toast.success(pick({ de: 'Download erfolgreich!', en: 'Download successful!' }), { id: loadingToast });
   } catch (error) {
     toast.dismiss(loadingToast);
     
     // Check if it might be an expired URL error
     if (error instanceof Error && error.message.includes('403')) {
-      toast.error('Download-Link ist abgelaufen. Wird neu geladen...');
+      toast.error(pick({ de: 'Download-Link ist abgelaufen. Wird neu geladen...', en: 'Download link expired. Reloading...' }));
       onExpired?.();
     } else {
-      toast.error('Download fehlgeschlagen. Bitte versuche es erneut.');
+      toast.error(pick({ de: 'Download fehlgeschlagen. Bitte versuche es erneut.', en: 'Download failed. Please try again.' }));
     }
     
     throw error;
@@ -323,19 +325,19 @@ export async function handleZipDownload(
   zipFilename: string,
   onExpired?: () => void
 ): Promise<void> {
-  const loadingToast = toast.loading('ZIP-Archiv wird erstellt...');
+  const loadingToast = toast.loading(pick({ de: 'ZIP-Archiv wird erstellt...', en: 'Creating ZIP archive...' }));
   
   try {
     await downloadAsZip(files, zipFilename);
-    toast.success('ZIP-Download erfolgreich!', { id: loadingToast });
+    toast.success(pick({ de: 'ZIP-Download erfolgreich!', en: 'ZIP download successful!' }), { id: loadingToast });
   } catch (error) {
     toast.dismiss(loadingToast);
     
     if (error instanceof Error && error.message.includes('403')) {
-      toast.error('Download-Links sind abgelaufen. Wird neu geladen...');
+      toast.error(pick({ de: 'Download-Links sind abgelaufen. Wird neu geladen...', en: 'Download links expired. Reloading...' }));
       onExpired?.();
     } else {
-      toast.error('ZIP-Download fehlgeschlagen. Bitte versuche es erneut.');
+      toast.error(pick({ de: 'ZIP-Download fehlgeschlagen. Bitte versuche es erneut.', en: 'ZIP download failed. Please try again.' }));
     }
     
     throw error;

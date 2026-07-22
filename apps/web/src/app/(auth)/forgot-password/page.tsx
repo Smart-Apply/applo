@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { AppLogo } from '@/components/ui/app-logo';
 import { api } from '@/lib/api-client';
 import { AuthApplo, type AuthApploState } from '@/components/auth/auth-applo';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { forgotPasswordSchema, type ForgotPasswordFormValues } from '@/lib/validation/schemas';
 import '@/components/auth/auth.css';
 
@@ -21,6 +23,7 @@ function IcAlert() {
 }
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations('auth');
   const router = useRouter();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -48,13 +51,16 @@ export default function ForgotPasswordPage() {
   else if (focused) applo = 'look';
 
   const speech = isSubmitted
-    ? 'Schau in dein Postfach!'
+    ? t('forgotPassword.speechSubmitted')
     : focused
-      ? 'Kein Problem — ich helf dir rein.'
-      : 'Passwort vergessen? Passiert jedem.';
+      ? t('forgotPassword.speechFocused')
+      : t('forgotPassword.speechIdle');
 
   return (
     <div className="applo-auth">
+      <div className="absolute right-4 top-4 z-10">
+        <LanguageSwitcher variant="labeled" />
+      </div>
       <div className="auth">
         {/* ---------- brand pane ---------- */}
         <aside className="brand-pane">
@@ -66,7 +72,7 @@ export default function ForgotPasswordPage() {
           <div className="brand-stage">
             <AuthApplo state={applo} size={260} className="brand-applo" />
             <div className="brand-speech">{speech}</div>
-            <div className="brand-tagline">Kein Problem — wir bringen dich gleich wieder rein.</div>
+            <div className="brand-tagline">{t('forgotPassword.tagline')}</div>
           </div>
         </aside>
 
@@ -82,21 +88,20 @@ export default function ForgotPasswordPage() {
             <div className="form-anim" key={isSubmitted ? 'sent' : 'form'}>
               {isSubmitted ? (
                 <div className="success">
-                  <h2>E-Mail gesendet</h2>
+                  <h2>{t('forgotPassword.successTitle')}</h2>
                   <p>
-                    Falls ein Konto mit dieser E-Mail-Adresse existiert, erhältst du in Kürze einen Link zum
-                    Zurücksetzen deines Passworts. Bitte überprüfe auch deinen Spam-Ordner.
+                    {t('forgotPassword.successDescription')}
                   </p>
                   <button type="button" className="btn-submit" onClick={() => router.push('/login')}>
-                    Zurück zur Anmeldung
+                    {t('forgotPassword.backToLogin')}
                   </button>
                 </div>
               ) : (
                 <>
                   <div className="form-head">
-                    <h1 className="form-title">Passwort zurücksetzen</h1>
+                    <h1 className="form-title">{t('forgotPassword.title')}</h1>
                     <p className="form-sub">
-                      Gib deine E-Mail ein und wir senden dir einen Link zum Zurücksetzen.
+                      {t('forgotPassword.subtitle')}
                     </p>
                   </div>
                   <form className="form" onSubmit={form.handleSubmit(onSubmit)} noValidate>
@@ -106,12 +111,12 @@ export default function ForgotPasswordPage() {
                       render={({ field, fieldState }) => (
                         <div className="field">
                           <div className="field-label-row">
-                            <label>E-Mail</label>
+                            <label>{t('forgotPassword.emailLabel')}</label>
                           </div>
                           <input
                             className={`input${fieldState.error ? ' invalid' : ''}`}
                             type="email"
-                            placeholder="deine@mail.de"
+                            placeholder={t('forgotPassword.emailPlaceholder')}
                             autoComplete="email"
                             {...field}
                             onFocus={() => setFocused(true)}
@@ -134,16 +139,16 @@ export default function ForgotPasswordPage() {
                       {submitting ? (
                         <>
                           <span className="spinner" />
-                          Wird gesendet …
+                          {t('forgotPassword.submitting')}
                         </>
                       ) : (
-                        'Link senden'
+                        t('forgotPassword.submit')
                       )}
                     </button>
 
                     <p className="form-foot">
                       <button type="button" className="link" onClick={() => router.push('/login')}>
-                        ← Zurück zum Login
+                        {t('forgotPassword.backToLoginShort')}
                       </button>
                     </p>
                   </form>

@@ -1,27 +1,28 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, Loader2, ShieldCheck } from 'lucide-react';
-
-const CHECKLIST = [
-  'Dokumente werden gelesen',
-  'Qualität wird bewertet',
-  'ATS-Tauglichkeit wird geprüft',
-  'Empfehlungen werden erstellt',
-] as const;
 
 const STEP_DELAY_MS = 700;
 
 export function LoadingScreen() {
+  const t = useTranslations('validation');
   const [currentStep, setCurrentStep] = useState(0);
+  const checklist = [
+    t('loading.checklist.documents'),
+    t('loading.checklist.quality'),
+    t('loading.checklist.ats'),
+    t('loading.checklist.recommendations'),
+  ] as const;
 
   useEffect(() => {
-    if (currentStep >= CHECKLIST.length - 1) return;
+    if (currentStep >= checklist.length - 1) return;
     const timer = setTimeout(() => {
       setCurrentStep((s) => s + 1);
     }, STEP_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [currentStep]);
+  }, [currentStep, checklist.length]);
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-8 rounded-[4px] border bg-card px-8 py-12 text-center">
@@ -52,16 +53,16 @@ export function LoadingScreen() {
 
       <div>
         <p className="text-[17px] font-semibold text-foreground">
-          Deine Bewerbung wird geprüft …
+          {t('loading.title')}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Das dauert meist 15–30 Sekunden.
+          {t('loading.subtitle')}
         </p>
       </div>
 
       {/* Checklist */}
       <ul className="w-full space-y-3">
-        {CHECKLIST.map((label, i) => {
+        {checklist.map((label, i) => {
           const done = i < currentStep;
           const active = i === currentStep;
           return (

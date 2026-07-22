@@ -1,5 +1,8 @@
+'use client';
+
 import { useAuthStore } from '@/stores/auth-store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api-client';
 import { toastError } from '@/lib/toast';
 import type {
@@ -27,17 +30,19 @@ export function useVoiceInterviewConfig(options?: { enabled?: boolean }) {
 
 /** Mint an ephemeral realtime session for a spoken interview. */
 export function useStartVoiceSession(sessionId: string) {
+  const t = useTranslations('interviews');
   return useMutation({
     mutationFn: (data?: StartVoiceSessionPayload) =>
       api.interviews.startVoiceSession(sessionId, data ?? {}),
     onError: (error: unknown) => {
-      toastError(error, 'Sprach-Interview konnte nicht gestartet werden');
+      toastError(error, t('hooks.voiceStartError'));
     },
   });
 }
 
 /** Submit the spoken transcript and complete the session with AI feedback. */
 export function useSubmitVoiceTranscript(sessionId: string) {
+  const t = useTranslations('interviews');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -50,7 +55,7 @@ export function useSubmitVoiceTranscript(sessionId: string) {
       queryClient.invalidateQueries({ queryKey: ['interviews', 'list'] });
     },
     onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Abschließen des Sprach-Interviews');
+      toastError(error, t('hooks.voiceCompleteError'));
     },
   });
 }

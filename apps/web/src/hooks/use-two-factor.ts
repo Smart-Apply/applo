@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api-client';
 import type {
   TwoFactorStatus,
@@ -31,10 +32,11 @@ export function useTwoFactorStatus() {
  * Hook to start 2FA setup (generates secret and QR code)
  */
 export function useSetup2FA() {
+  const t = useTranslations('twoFactor');
   return useMutation<Setup2FAResponse, Error, void>({
     mutationFn: () => api.twoFactor.startSetup(),
     onError: (error: Error) => {
-      toast.error(error.message || '2FA-Setup konnte nicht gestartet werden');
+      toast.error(error.message || t('hooks.setupError'));
     },
   });
 }
@@ -43,16 +45,17 @@ export function useSetup2FA() {
  * Hook to verify 2FA setup and enable 2FA
  */
 export function useVerify2FASetup() {
+  const t = useTranslations('twoFactor');
   const queryClient = useQueryClient();
 
   return useMutation<Verify2FASetupResponse, Error, Verify2FASetupDto>({
     mutationFn: (data) => api.twoFactor.verifySetup(data),
     onSuccess: () => {
-      toast.success('Zwei-Faktor-Authentifizierung aktiviert');
+      toast.success(t('hooks.setupEnabled'));
       queryClient.invalidateQueries({ queryKey: ['twoFactorStatus'] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Code ungültig. Bitte versuche es erneut.');
+      toast.error(error.message || t('hooks.invalidCode'));
     },
   });
 }
@@ -61,17 +64,18 @@ export function useVerify2FASetup() {
  * Hook to disable 2FA
  */
 export function useDisable2FA() {
+  const t = useTranslations('twoFactor');
   const queryClient = useQueryClient();
 
   return useMutation<{ message: string }, Error, Disable2FADto>({
     mutationFn: (data) => api.twoFactor.disable(data),
     onSuccess: () => {
-      toast.success('Zwei-Faktor-Authentifizierung deaktiviert');
+      toast.success(t('hooks.disabled'));
       queryClient.invalidateQueries({ queryKey: ['twoFactorStatus'] });
       queryClient.invalidateQueries({ queryKey: ['trustedDevices'] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || '2FA konnte nicht deaktiviert werden');
+      toast.error(error.message || t('hooks.disableError'));
     },
   });
 }
@@ -80,16 +84,17 @@ export function useDisable2FA() {
  * Hook to regenerate backup codes
  */
 export function useRegenerateBackupCodes() {
+  const t = useTranslations('twoFactor');
   const queryClient = useQueryClient();
 
   return useMutation<{ backupCodes: string[] }, Error, RegenerateBackupCodesDto>({
     mutationFn: (data) => api.twoFactor.regenerateBackupCodes(data),
     onSuccess: () => {
-      toast.success('Neue Backup-Codes generiert');
+      toast.success(t('hooks.backupGenerated'));
       queryClient.invalidateQueries({ queryKey: ['twoFactorStatus'] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Backup-Codes konnten nicht generiert werden');
+      toast.error(error.message || t('hooks.backupGenerateError'));
     },
   });
 }
@@ -111,17 +116,18 @@ export function useTrustedDevices() {
  * Hook to revoke a trusted device
  */
 export function useRevokeTrustedDevice() {
+  const t = useTranslations('twoFactor');
   const queryClient = useQueryClient();
 
   return useMutation<{ message: string }, Error, string>({
     mutationFn: (deviceId) => api.twoFactor.revokeTrustedDevice(deviceId),
     onSuccess: () => {
-      toast.success('Gerät entfernt');
+      toast.success(t('hooks.deviceRemoved'));
       queryClient.invalidateQueries({ queryKey: ['trustedDevices'] });
       queryClient.invalidateQueries({ queryKey: ['twoFactorStatus'] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Gerät konnte nicht entfernt werden');
+      toast.error(error.message || t('hooks.deviceRemoveError'));
     },
   });
 }
@@ -130,17 +136,18 @@ export function useRevokeTrustedDevice() {
  * Hook to revoke all trusted devices
  */
 export function useRevokeAllTrustedDevices() {
+  const t = useTranslations('twoFactor');
   const queryClient = useQueryClient();
 
   return useMutation<{ message: string }, Error, void>({
     mutationFn: () => api.twoFactor.revokeAllTrustedDevices(),
     onSuccess: () => {
-      toast.success('Alle vertrauenswürdigen Geräte entfernt');
+      toast.success(t('hooks.allDevicesRemoved'));
       queryClient.invalidateQueries({ queryKey: ['trustedDevices'] });
       queryClient.invalidateQueries({ queryKey: ['twoFactorStatus'] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Geräte konnten nicht entfernt werden');
+      toast.error(error.message || t('hooks.allDevicesRemoveError'));
     },
   });
 }
@@ -149,16 +156,17 @@ export function useRevokeAllTrustedDevices() {
  * Hook to verify 2FA code during login
  */
 export function useVerify2FALogin() {
+  const t = useTranslations('twoFactor');
   const setAuth = useAuthStore((state) => state.setAuth);
 
   return useMutation<{ user: User }, Error, Verify2FALoginDto>({
     mutationFn: (data) => api.twoFactor.verify2FALogin(data),
     onSuccess: (data) => {
       setAuth(data.user);
-      toast.success('Erfolgreich angemeldet');
+      toast.success(t('hooks.loginSuccess'));
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Code ungültig. Bitte versuche es erneut.');
+      toast.error(error.message || t('hooks.invalidCode'));
     },
   });
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,16 +52,16 @@ type ChatMessage = {
   score?: number;
 };
 
-const questionTypeLabel = (type: InterviewQuestion['questionType']) =>
-  ({
-    BEHAVIORAL: 'Verhalten',
-    TECHNICAL: 'Technisch',
-    SITUATIONAL: 'Situativ',
-    OPEN: 'Offen',
-    FOLLOW_UP: 'Nachfrage',
-  })[type] ?? 'Frage';
-
 export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatProps) {
+  const t = useTranslations('interviews');
+  const questionTypeLabel = (type: InterviewQuestion['questionType']) =>
+    ({
+      BEHAVIORAL: t('chat.questionType.behavioral'),
+      TECHNICAL: t('chat.questionType.technical'),
+      SITUATIONAL: t('chat.questionType.situational'),
+      OPEN: t('chat.questionType.open'),
+      FOLLOW_UP: t('chat.questionType.followUp'),
+    })[type] ?? t('chat.questionType.question');
   // Find first unanswered question for initialization
   const initialQuestion = session.questions.find((q) => !q.answeredAt) || null;
 
@@ -71,7 +72,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
       {
         id: 'welcome',
         type: 'system',
-        content: `Willkommen zum Interview! Du beantwortest ${session.maxQuestions} Fragen. Nimm dir Zeit für durchdachte Antworten.`,
+        content: t('chat.welcome', { count: session.maxQuestions }),
         timestamp: new Date(),
       },
       {
@@ -158,7 +159,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
           {
             id: `feedback-${currentQuestion.id}`,
             type: 'feedback',
-            content: response.question.feedback || 'Feedback wird generiert...',
+            content: response.question.feedback || t('chat.feedbackGenerating'),
             timestamp: new Date(),
             score: response.question.score,
           },
@@ -174,8 +175,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
           {
             id: 'complete',
             type: 'system',
-            content:
-              'Alle Fragen beantwortet! Klicke auf "Interview abschließen", um deine Gesamtbewertung zu sehen.',
+            content: t('chat.allQuestionsAnsweredSystem'),
             timestamp: new Date(),
           },
         ]);
@@ -197,7 +197,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
         }
       }
     } catch {
-      toast.error('Fehler beim Senden der Antwort');
+      toast.error(t('chat.errors.sendAnswer'));
       // Restore the answer
       setAnswer(answerContent);
     }
@@ -209,25 +209,26 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
     usage.isOverLimit,
     submitAnswerMutation,
     getNextQuestionMutation,
+    t,
   ]);
 
   const handleComplete = async () => {
     try {
       await completeMutation.mutateAsync();
-      toast.success('Interview abgeschlossen!');
+      toast.success(t('chat.toasts.completed'));
       onComplete();
     } catch {
-      toast.error('Fehler beim Abschließen des Interviews');
+      toast.error(t('chat.errors.complete'));
     }
   };
 
   const handleAbandon = async () => {
     try {
       await abandonMutation.mutateAsync();
-      toast.success('Interview abgebrochen');
+      toast.success(t('chat.toasts.abandoned'));
       onAbandon();
     } catch {
-      toast.error('Fehler beim Abbrechen des Interviews');
+      toast.error(t('chat.errors.abandon'));
     }
   };
 
@@ -251,7 +252,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
               <span className="flex h-7 w-7 items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
                 <Bot className="h-[18px] w-[18px]" />
               </span>
-              Interview-Simulation
+              {t('chat.title')}
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex h-8 items-center gap-1.5 rounded-[2px] bg-muted px-3 font-mono text-sm tabular-nums">
@@ -265,7 +266,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
                 <XCircle className="mr-1 h-4 w-4" />
-                Abbrechen
+                {t('chat.cancel')}
               </Button>
             </div>
           </div>
@@ -273,10 +274,10 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
           {/* Progress */}
           <div className="mb-2 flex items-center justify-between text-[13px]">
             <span className="font-semibold">
-              Frage {Math.min(currentIndex, totalQuestions)} von {totalQuestions}
+              {t('chat.progressQuestion', { current: Math.min(currentIndex, totalQuestions), total: totalQuestions })}
             </span>
             <span className="font-medium text-muted-foreground">
-              {Math.round(progress)}&nbsp;% abgeschlossen
+              {t('chat.progressComplete', { percent: Math.round(progress) })}
             </span>
           </div>
           <div className="relative h-2.5 overflow-hidden bg-muted">
@@ -327,7 +328,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
                     <p className="whitespace-pre-wrap">{message.content}</p>
                     {message.score !== undefined && (
                       <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
-                        <span>Score:</span>
+                        <span>{t('chat.scoreLabel')}</span>
                         <span
                           className={cn(
                             'rounded-[2px] border px-2.5 py-1 font-mono text-[11px] font-semibold tabular-nums tracking-[.05em]',
@@ -387,12 +388,11 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
           {allQuestionsAnswered ? (
             <div className="flex w-full flex-col items-center gap-4 py-1">
               <p className="text-center text-sm text-muted-foreground">
-                Du hast alle Fragen beantwortet. Schließe das Interview ab, um deine Gesamtbewertung
-                zu erhalten.
+                {t('chat.allQuestionsAnsweredComposer')}
               </p>
               <Button size="lg" onClick={handleComplete} loading={completeMutation.isPending}>
                 {!completeMutation.isPending && <CheckCircle2 className="h-4 w-4" />}
-                Interview abschließen
+                {t('chat.completeInterview')}
               </Button>
             </div>
           ) : (
@@ -402,7 +402,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Deine Antwort eingeben…  (Enter zum Senden · Shift+Enter für Zeilenumbruch)"
+                  placeholder={t('chat.answerPlaceholder')}
                   className="max-h-[200px] min-h-[84px] w-full resize-none rounded-[3px] text-[15px]"
                   disabled={isLoading || !currentQuestion}
                   aria-invalid={usage.isOverLimit}
@@ -420,7 +420,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
                 ) : (
                   <>
                     <Send className="h-4 w-4" />
-                    Senden
+                    {t('chat.send')}
                   </>
                 )}
               </Button>
@@ -433,20 +433,19 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
       <AlertDialog open={showAbandonDialog} onOpenChange={setShowAbandonDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Interview abbrechen?</AlertDialogTitle>
+            <AlertDialogTitle>{t('chat.abandonTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bist du sicher, dass du das Interview abbrechen möchtest? Dein Fortschritt geht
-              verloren und du erhältst keine Gesamtbewertung.
+              {t('chat.abandonDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Weiter machen</AlertDialogCancel>
+            <AlertDialogCancel>{t('chat.continue')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleAbandon}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {abandonMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Abbrechen
+              {t('chat.cancel')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

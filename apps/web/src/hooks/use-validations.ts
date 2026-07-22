@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api-client';
 import { toastSuccess, toastError } from '@/lib/toast';
 import { useAuthStore } from '@/stores/auth-store';
@@ -33,6 +34,7 @@ export function useValidation(id: string | null) {
 }
 
 export function useCreateValidation() {
+  const t = useTranslations('validation');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -42,15 +44,16 @@ export function useCreateValidation() {
       queryClient.invalidateQueries({ queryKey: ['validations'] });
       // Refresh the remaining-quota badge for free-tier users.
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      toastSuccess('Bewerbung geprüft');
+      toastSuccess(t('page.createSuccess'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Prüfung fehlgeschlagen');
+      toastError(error, t('page.createError'));
     },
   });
 }
 
 export function useDeleteValidation() {
+  const t = useTranslations('validation');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -58,10 +61,10 @@ export function useDeleteValidation() {
     onSuccess: (_data, id) => {
       queryClient.removeQueries({ queryKey: ['validations', id] });
       queryClient.invalidateQueries({ queryKey: ['validations'] });
-      toastSuccess('Prüfung gelöscht');
+      toastSuccess(t('page.deleteSuccess'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Prüfung konnte nicht gelöscht werden');
+      toastError(error, t('page.deleteError'));
     },
   });
 }

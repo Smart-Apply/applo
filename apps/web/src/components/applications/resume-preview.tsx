@@ -1,4 +1,5 @@
 import type { ResumeData } from '@/types';
+import { useTranslations } from 'next-intl';
 import { sanitizeHtml } from '@/lib/sanitize';
 import styles from './resume-preview.module.css';
 
@@ -9,6 +10,7 @@ interface ResumePreviewProps {
 const Divider = () => <div className="h-px w-full bg-slate-200 my-6" />;
 
 export function ResumePreview({ resume }: ResumePreviewProps) {
+  const t = useTranslations('editor');
   const contactItems = [
     resume.fullAddress,
     resume.email,
@@ -161,7 +163,7 @@ export function ResumePreview({ resume }: ResumePreviewProps) {
           )}
 
           <Divider />
-          <p className="text-center text-xs text-slate-400">Vorschau · Das finale PDF wird beim Herunterladen erstellt</p>
+          <p className="text-center text-xs text-slate-400">{t('resumePreview.footer')}</p>
         </article>
       </div>
     </div>

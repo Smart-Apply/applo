@@ -3,6 +3,7 @@
 import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { useTranslations } from 'next-intl';
 import {
   ArrowLeft,
   FileText,
@@ -44,6 +45,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { stripHtml } from '@/lib/sanitize';
 import { toTiptapHtml } from '@/lib/markdown';
 import { cn } from '@/lib/utils';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 
 // Heavy Tiptap-based cover-letter document — load only on the Anschreiben tab.
 const EditableCoverLetter = dynamic(
@@ -89,6 +91,7 @@ const AUTOSAVE_MS = 800;
 type Tab = 'resume' | 'cover-letter' | 'ats';
 
 export default function ApplicationResumeEditorPage() {
+  const t = useTranslations('editor');
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -212,12 +215,12 @@ export default function ApplicationResumeEditorPage() {
       setParsedResume((current) => (JSON.stringify(current) === snapshot ? normalized : current));
       setLastSavedResume(normalized);
     } catch (err) {
-      toast.error('Lebenslauf konnte nicht gespeichert werden', {
+      toast.error(t('page.toasts.resumeSaveFailed'), {
         id: 'resume-autosave-error',
         description: (err as Error).message,
       });
     }
-  }, [parsedResume, updateResume]);
+  }, [parsedResume, updateResume, t]);
 
   useEffect(() => {
     if (!resumeInitialized || !hasResumeChanges || updateResume.isPending) return;
@@ -235,9 +238,9 @@ export default function ApplicationResumeEditorPage() {
       await upsertCoverLetter.mutateAsync({ content: coverLetterValue });
       setLastSavedCoverLetter(coverLetterValue);
     } catch {
-      toast.error('Anschreiben konnte nicht gespeichert werden', { id: 'cover-autosave-error' });
+      toast.error(t('page.toasts.coverLetterSaveFailed'), { id: 'cover-autosave-error' });
     }
-  }, [coverHasContent, coverLetterValue, upsertCoverLetter]);
+  }, [coverHasContent, coverLetterValue, upsertCoverLetter, t]);
 
   useEffect(() => {
     if (!coverInitialized || !hasCoverChanges || upsertCoverLetter.isPending) return;
@@ -272,7 +275,7 @@ export default function ApplicationResumeEditorPage() {
       });
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId] });
     } catch (err) {
-      toast.error('Anschreiben konnte nicht generiert werden: ' + (err as Error).message);
+      toast.error(t('page.toasts.coverLetterGenerateFailed', { message: (err as Error).message }));
     } finally {
       setGenLoading(false);
     }
@@ -281,7 +284,7 @@ export default function ApplicationResumeEditorPage() {
   // ── cover-letter AI assistant (instructions → regenerate) ──
   const handleApplyAIChanges = async () => {
     if (!instructions.trim()) {
-      toast.error('Bitte gib Anweisungen für die AI ein');
+      toast.error(t('page.toasts.instructionsRequired'));
       return;
     }
     try {
@@ -291,7 +294,7 @@ export default function ApplicationResumeEditorPage() {
         content: currentContent,
         regenerate: true,
       });
-      if (!updated.coverLetterText) throw new Error('Keine Antwort vom Server erhalten');
+      if (!updated.coverLetterText) throw new Error(t('page.errors.emptyServerResponse'));
       const html = toTiptapHtml(updated.coverLetterText);
       setInstructions('');
       startTransition(() => {
@@ -301,9 +304,9 @@ export default function ApplicationResumeEditorPage() {
         setCoverInitialized(true);
       });
       setAiPopoverOpen(false);
-      toast.success('AI-Änderungen übernommen');
+      toast.success(t('page.toasts.aiChangesApplied'));
     } catch (err) {
-      toast.error('AI-Generierung fehlgeschlagen: ' + (err as Error).message);
+      toast.error(t('page.toasts.aiGenerationFailed', { message: (err as Error).message }));
     }
   };
 
@@ -373,18 +376,18 @@ export default function ApplicationResumeEditorPage() {
     [generateProjectDescription],
   );
 
-  if (isLoading) return <CenteredLoader message="Lädt Bewerbungsdaten..." />;
+  if (isLoading) return <CenteredLoader message={t('page.loadingApplication')} />;
 
   if (error || !application) {
     return (
       <div className="space-y-6">
         <Button variant="ghost" onClick={() => router.push('/applications')}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Zurück zu Bewerbungen
+          <ArrowLeft className="mr-2 h-4 w-4" /> {t('page.backToApplications')}
         </Button>
         <Card className="shadow-soft border-border/50">
           <CardHeader>
-            <CardTitle>Editor nicht verfügbar</CardTitle>
-            <CardDescription>Die Bewerbung konnte nicht geladen werden.</CardDescription>
+            <CardTitle>{t('page.unavailableTitle')}</CardTitle>
+            <CardDescription>{t('page.unavailableDescription')}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -398,11 +401,11 @@ export default function ApplicationResumeEditorPage() {
   const hasSavedCoverLetter = !!application.coverLetterText && stripHtml(application.coverLetterText).trim().length > 0;
 
   const exportDisabledReason = (() => {
-    if (application.status === 'GENERATING') return 'Export läuft bereits. Bitte warte auf den Abschluss.';
-    if (hasResumeChanges || updateResume.isPending) return 'Änderungen werden gespeichert …';
-    if (coverLetterWasGenerated && (hasCoverChanges || upsertCoverLetter.isPending)) return 'Änderungen werden gespeichert …';
-    if (!hasSavedResume) return 'Lebenslauf fehlt.';
-    if (coverLetterWasGenerated && !hasSavedCoverLetter) return 'Anschreiben fehlt.';
+    if (application.status === 'GENERATING') return t('page.export.disabled.generating');
+    if (hasResumeChanges || updateResume.isPending) return t('page.export.disabled.savingChanges');
+    if (coverLetterWasGenerated && (hasCoverChanges || upsertCoverLetter.isPending)) return t('page.export.disabled.savingChanges');
+    if (!hasSavedResume) return t('page.export.disabled.missingResume');
+    if (coverLetterWasGenerated && !hasSavedCoverLetter) return t('page.export.disabled.missingCoverLetter');
     return null;
   })();
   const canExport = !exportDisabledReason && !exportApplication.isPending;
@@ -414,16 +417,16 @@ export default function ApplicationResumeEditorPage() {
       // set the expectation and ask the user to double-check the result.
       const contentLanguage = toExportLanguage(application.sourceLanguage ?? application.language);
       if (selectedLanguage !== contentLanguage) {
-        toast.info('Inhalte werden automatisch übersetzt', {
+        toast.info(t('page.export.translationTitle'), {
           id: 'export-translation-hint',
           description:
             selectedLanguage === 'en'
-              ? 'Der Export wird ins Englische übersetzt – bitte prüfe das Ergebnis.'
-              : 'Der Export wird ins Deutsche übersetzt – bitte prüfe das Ergebnis.',
+              ? t('page.export.translationDescriptionEn')
+              : t('page.export.translationDescriptionDe'),
         });
       }
       await exportApplication.mutateAsync(selectedLanguage);
-      toast.success('Export gestartet! Du wirst zur Detailseite weitergeleitet...');
+      toast.success(t('page.toasts.exportStarted'));
       setTimeout(() => router.push(`/applications/${applicationId}`), 1500);
     } catch (err) {
       console.error('Export konnte nicht gestartet werden', err);
@@ -441,16 +444,19 @@ export default function ApplicationResumeEditorPage() {
     application.targetJobTitle ||
     application.jobPosting?.title ||
     application.title ||
-    'Bewerbung';
+    t('page.fallbackTitle');
   const createdAt = application.createdAt ? new Date(application.createdAt) : new Date();
   const isToday = new Date().toDateString() === createdAt.toDateString();
   const createdLabel = isToday
-    ? 'heute'
-    : 'am ' + new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }).format(createdAt);
-  const subtitle = [application.jobPosting?.company, application.jobPosting?.location, `erstellt ${createdLabel}`]
+    ? t('page.created.today')
+    : t('page.created.onDate', {
+        date: new Intl.DateTimeFormat(getIntlLocale(), { day: 'numeric', month: 'long', year: 'numeric' }).format(createdAt),
+      });
+  const subtitle = [application.jobPosting?.company, application.jobPosting?.location, t('page.created.label', { value: createdLabel })]
     .filter(Boolean)
     .join(' · ');
-  const letterDate = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }).format(createdAt);
+  const documentIntlLocale = toExportLanguage(application.language) === 'en' ? 'en-US' : 'de-DE';
+  const letterDate = new Intl.DateTimeFormat(documentIntlLocale, { day: 'numeric', month: 'long', year: 'numeric' }).format(createdAt);
   const letterLocation = [parsedResume?.city, parsedResume?.country].filter(Boolean).join(', ') || parsedResume?.fullAddress;
 
   // Auto-save status for the current document tab.
@@ -459,9 +465,9 @@ export default function ApplicationResumeEditorPage() {
   const saveStatus = tabSaving ? 'saving' : tabDirty ? 'dirty' : 'saved';
 
   const tabs: { id: Tab; label: string; icon: typeof FileText; locked?: boolean }[] = [
-    { id: 'resume', label: 'Lebenslauf', icon: FileText },
-    { id: 'cover-letter', label: 'Anschreiben', icon: Mail },
-    { id: 'ats', label: 'Optimieren', icon: Target, locked: isAtsLocked },
+    { id: 'resume', label: t('page.tabs.resume'), icon: FileText },
+    { id: 'cover-letter', label: t('page.tabs.coverLetter'), icon: Mail },
+    { id: 'ats', label: t('page.tabs.optimize'), icon: Target, locked: isAtsLocked },
   ];
 
   return (
@@ -485,10 +491,10 @@ export default function ApplicationResumeEditorPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Zurück zur Übersicht</TooltipContent>
+            <TooltipContent>{t('page.backToOverview')}</TooltipContent>
           </Tooltip>
           <span className="inline-flex items-center gap-1.5 bg-[#16a34a] px-3 py-1 font-['IBM_Plex_Mono'] text-[11px] font-semibold tracking-[0.06em] text-white uppercase">
-            <Check className="h-3.5 w-3.5" strokeWidth={3} /> Fertig
+            <Check className="h-3.5 w-3.5" strokeWidth={3} /> {t('page.readyBadge')}
           </span>
         </div>
         <h1 className="font-['Archivo'] text-[26px] font-extrabold tracking-[-0.025em] text-[#1b2a49]">{title}</h1>
@@ -496,17 +502,17 @@ export default function ApplicationResumeEditorPage() {
 
         {/* Tab bar */}
         <div className="mt-5 mb-5 flex flex-wrap items-center justify-between gap-3 border border-[#e0e0e0] bg-white p-2">
-          <div role="tablist" aria-label="Editor Tabs" className="flex items-center border border-[#e0e0e0] bg-[#e0e0e0]">
-            {tabs.map((t) => {
-              const Icon = t.icon;
-              const active = activeTab === t.id;
-              if (t.locked) {
+          <div role="tablist" aria-label={t('page.tabs.ariaLabel')} className="flex items-center border border-[#e0e0e0] bg-[#e0e0e0]">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              if (tab.locked) {
                 return (
-                  <Tooltip key={t.id}>
+                  <Tooltip key={tab.id}>
                     <TooltipTrigger asChild>
                       <span>
                         <button
-                          id={`tab-${t.id}`}
+                          id={`tab-${tab.id}`}
                           type="button"
                           role="tab"
                           aria-disabled="true"
@@ -515,14 +521,14 @@ export default function ApplicationResumeEditorPage() {
                           disabled
                           className="inline-flex cursor-not-allowed items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-[#94a3b8]"
                         >
-                          <Icon className="h-4 w-4" /> {t.label} <Lock className="h-3 w-3" />
+                          <Icon className="h-4 w-4" /> {tab.label} <Lock className="h-3 w-3" />
                         </button>
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
-                      <p className="font-medium">Upgrade jetzt zu Premium</p>
+                      <p className="font-medium">{t('page.upgrade.title')}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        Upgrade jetzt zu Premium um dieses Feature zu benutzen.
+                        {t('page.upgrade.description')}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -530,14 +536,14 @@ export default function ApplicationResumeEditorPage() {
               }
               return (
                 <button
-                  key={t.id}
-                  id={`tab-${t.id}`}
+                  key={tab.id}
+                  id={`tab-${tab.id}`}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  aria-controls={`tabpanel-${t.id}`}
+                  aria-controls={`tabpanel-${tab.id}`}
                   tabIndex={active ? 0 : -1}
-                  onClick={() => handleTabChange(t.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors",
                     active
@@ -545,7 +551,7 @@ export default function ApplicationResumeEditorPage() {
                       : 'bg-white text-[#6b6969] hover:bg-[#f5f6f8] hover:text-[#1b2a49]',
                   )}
                 >
-                  <Icon className="h-4 w-4" /> {t.label}
+                  <Icon className="h-4 w-4" /> {tab.label}
                 </button>
               );
             })}
@@ -560,9 +566,9 @@ export default function ApplicationResumeEditorPage() {
                 onInstructionsChange={setInstructions}
                 onApply={handleApplyAIChanges}
                 isLoading={upsertCoverLetter.isPending}
-                placeholder="Z.B.: Betone meine Projektmanagement-Erfahrung stärker..."
-                title="AI-Anweisungen"
-                description="Beschreibe, wie das Anschreiben angepasst werden soll."
+                placeholder={t('page.ai.coverLetterPlaceholder')}
+                title={t('page.ai.title')}
+                description={t('page.ai.coverLetterDescription')}
               />
             )}
             <DesignSettingsPanel
@@ -587,11 +593,11 @@ export default function ApplicationResumeEditorPage() {
                     size="sm"
                     className="h-8 rounded-none bg-[#1b2a49] px-3 text-xs text-white hover:bg-[#22345a]"
                   >
-                    <Download className="mr-1.5 h-3.5 w-3.5" /> Export
+                    <Download className="mr-1.5 h-3.5 w-3.5" /> {t('page.export.button')}
                   </SubmitButton>
                 </span>
               </TooltipTrigger>
-              <TooltipContent>{exportDisabledReason || 'PDFs exportieren'}</TooltipContent>
+              <TooltipContent>{exportDisabledReason || t('page.export.tooltip')}</TooltipContent>
             </Tooltip>
           </div>
         </div>
@@ -602,8 +608,8 @@ export default function ApplicationResumeEditorPage() {
             <span className="inline-flex items-center gap-2 font-medium text-[#33425c]">
               <Pencil className="h-4 w-4 text-[#5581c7]" />
               {activeTab === 'resume'
-                ? 'Klicke einen beliebigen Text an, um ihn zu bearbeiten.'
-                : 'Klicke in das Anschreiben, um Text, Anrede oder Absätze zu bearbeiten.'}
+                ? t('page.editHint.resume')
+                : t('page.editHint.coverLetter')}
             </span>
             <span
               className={cn(
@@ -615,13 +621,13 @@ export default function ApplicationResumeEditorPage() {
             >
               {saveStatus === 'saving' ? (
                 <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Speichert…
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('page.saveStatus.saving')}
                 </>
               ) : saveStatus === 'dirty' ? (
-                'Nicht gespeicherte Änderungen'
+                t('page.saveStatus.dirty')
               ) : (
                 <>
-                  <span className="livedot" /> Änderungen automatisch gespeichert
+                  <span className="livedot" /> {t('page.saveStatus.saved')}
                 </>
               )}
             </span>

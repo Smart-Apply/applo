@@ -7,6 +7,7 @@ import { Plus, X, Code, Pencil, Trash2, FolderPlus, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeSkillCategory } from '@applo/shared';
 import type { Skill } from '@/types';
+import { useTranslations } from 'next-intl';
 
 interface SkillsManagerProps {
   skills: Skill[];
@@ -14,13 +15,13 @@ interface SkillsManagerProps {
   disabled?: boolean;
 }
 
-const UNCATEGORIZED_LABEL = 'Weitere Kenntnisse';
-
 function categoryOf(skill: Skill): string | null {
   return normalizeSkillCategory(skill.category);
 }
 
 export function SkillsManager({ skills, onSkillsChange, disabled = false }: SkillsManagerProps) {
+  const t = useTranslations('profile');
+  const uncategorizedLabel = t('skills.uncategorized');
   // Categories that exist but hold no skills yet (freshly added or emptied)
   const [emptyCategories, setEmptyCategories] = useState<string[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -56,14 +57,14 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
     const name = newCategoryName.trim();
     if (!name) return;
     if (categories.some((c) => c.toLowerCase() === name.toLowerCase())) {
-      toast.error('Diese Kategorie existiert bereits');
+      toast.error(t('skills.duplicateCategory'));
       return;
     }
     setEmptyCategories([...emptyCategories, name]);
     setNewCategoryName('');
     setShowCategoryInput(false);
     openSkillInput(name);
-    toast.success(`Kategorie "${name}" hinzugefügt`);
+    toast.success(t('skills.categoryAdded', { name }));
   };
 
   const renameCategory = () => {
@@ -72,7 +73,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
     setRenamingCategory(null);
     if (!from || !to || to === from) return;
     if (categories.some((c) => c !== from && c.toLowerCase() === to.toLowerCase())) {
-      toast.error('Diese Kategorie existiert bereits');
+      toast.error(t('skills.duplicateCategory'));
       return;
     }
     onSkillsChange(skills.map((s) => (categoryOf(s) === from ? { ...s, category: to } : s)));
@@ -87,14 +88,14 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
     );
     setEmptyCategories(emptyCategories.filter((c) => c !== category));
     if (activeCategory === category) setActiveCategory(undefined);
-    toast.success(`Kategorie "${category}" entfernt`);
+    toast.success(t('skills.categoryRemoved', { name: category }));
   };
 
   const addSkill = () => {
     const name = skillInput.trim();
     if (!name || activeCategory === undefined) return;
     if (skills.some((s) => s.name.toLowerCase() === name.toLowerCase())) {
-      toast.error('Dieser Skill existiert bereits');
+      toast.error(t('skills.duplicateSkill'));
       return;
     }
     onSkillsChange([...skills, { name, category: activeCategory }]);
@@ -103,7 +104,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
     }
     setSkillInput('');
     skillInputRef.current?.focus();
-    toast.success(`Skill "${name}" hinzugefügt`);
+    toast.success(t('skills.skillAdded', { name }));
   };
 
   const removeSkill = (skillName: string) => {
@@ -115,7 +116,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
       setEmptyCategories((prev) => (prev.includes(category) ? prev : [...prev, category]));
     }
     onSkillsChange(next);
-    toast.success(`Skill "${skillName}" entfernt`);
+    toast.success(t('skills.skillRemoved', { name: skillName }));
   };
 
   const handleSkillKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -151,7 +152,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
             onClick={() => removeSkill(skill.name)}
             disabled={disabled}
             className="absolute right-1.5 shrink-0 rounded-[2px] p-0.5 opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label={`${skill.name} entfernen`}
+            aria-label={t('languages.removeAria', { name: skill.name })}
           >
             <X className="h-3 w-3" />
           </button>
@@ -169,12 +170,12 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
           onChange={(e) => setSkillInput(e.target.value)}
           onKeyDown={handleSkillKeyDown}
           disabled={disabled}
-          placeholder="z.B. Projektmanagement, Grundpflege, SAP …"
+          placeholder={t('skills.skillPlaceholder')}
           className="flex-1"
         />
         <Button type="button" onClick={addSkill} disabled={disabled || !skillInput.trim()} size="sm">
           <Plus className="mr-1.5 h-3.5 w-3.5" />
-          Hinzufügen
+          {t('actions.add')}
         </Button>
         <Button
           type="button"
@@ -185,7 +186,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
             setSkillInput('');
           }}
         >
-          Fertig
+          {t('actions.done')}
         </Button>
       </div>
     );
@@ -196,9 +197,9 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Fähigkeiten</h3>
+          <h3 className="text-lg font-medium">{t('skills.title')}</h3>
           <p className="text-sm text-muted-foreground">
-            Gruppiere deine Kompetenzen in Kategorien – sie erscheinen so im Lebenslauf
+            {t('skills.description')}
           </p>
         </div>
         {!showCategoryInput && (
@@ -213,7 +214,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
             size="sm"
           >
             <FolderPlus className="mr-2 h-4 w-4" />
-            Kategorie hinzufügen
+            {t('skills.addCategory')}
           </Button>
         )}
       </div>
@@ -226,7 +227,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
             onChange={(e) => setNewCategoryName(e.target.value)}
             onKeyDown={handleCategoryKeyDown}
             disabled={disabled}
-            placeholder="z.B. Fachkenntnisse, Software, Methoden …"
+            placeholder={t('skills.categoryPlaceholder')}
             className="flex-1"
           />
           <Button
@@ -236,7 +237,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
             size="sm"
           >
             <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Anlegen
+            {t('actions.create')}
           </Button>
           <Button
             type="button"
@@ -247,7 +248,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
               setNewCategoryName('');
             }}
           >
-            Abbrechen
+            {t('actions.cancel')}
           </Button>
         </div>
       )}
@@ -281,7 +282,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
                         size="sm"
                         variant="ghost"
                         onClick={renameCategory}
-                        aria-label="Umbenennen bestätigen"
+                        aria-label={t('skills.confirmRename')}
                       >
                         <Check className="h-4 w-4" />
                       </Button>
@@ -299,7 +300,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
                       size="sm"
                       onClick={() => openSkillInput(category)}
                       disabled={disabled}
-                      aria-label={`Skill zu ${category} hinzufügen`}
+                      aria-label={t('skills.addSkillTo', { category })}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -312,7 +313,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
                         setRenameValue(category);
                       }}
                       disabled={disabled}
-                      aria-label={`Kategorie ${category} umbenennen`}
+                      aria-label={t('skills.renameCategory', { category })}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -322,7 +323,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
                       size="sm"
                       onClick={() => removeCategory(category)}
                       disabled={disabled}
-                      aria-label={`Kategorie ${category} entfernen`}
+                      aria-label={t('skills.removeCategory', { category })}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -331,7 +332,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
                 {items.length > 0 ? (
                   renderSkillChips(items)
                 ) : (
-                  <p className="text-xs text-muted-foreground">Noch keine Skills in dieser Kategorie.</p>
+                  <p className="text-xs text-muted-foreground">{t('skills.noSkillsInCategory')}</p>
                 )}
                 {renderSkillInput(category)}
               </div>
@@ -341,7 +342,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
           <div className="rounded-[3px] border border-dashed border-border p-4">
             <div className="mb-3 flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-foreground">
-                {UNCATEGORIZED_LABEL}{' '}
+                {uncategorizedLabel}{' '}
                 <span className="font-normal text-muted-foreground">({uncategorized.length})</span>
               </p>
               <Button
@@ -350,7 +351,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
                 size="sm"
                 onClick={() => openSkillInput(null)}
                 disabled={disabled}
-                aria-label={`Skill zu ${UNCATEGORIZED_LABEL} hinzufügen`}
+                aria-label={t('skills.addSkillTo', { category: uncategorizedLabel })}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -359,7 +360,7 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
               renderSkillChips(uncategorized)
             ) : (
               <p className="text-xs text-muted-foreground">
-                Skills ohne Kategorie erscheinen im Lebenslauf ohne Überschrift.
+                {t('skills.uncategorizedHelp')}
               </p>
             )}
             {renderSkillInput(null)}
@@ -370,10 +371,9 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
           <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <Code className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 className="font-medium text-foreground">Keine Fähigkeiten</h3>
+          <h3 className="font-medium text-foreground">{t('skills.emptyTitle')}</h3>
           <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-            Lege Kategorien wie „Fachkenntnisse“ oder „Software“ an und füge deine Fähigkeiten
-            hinzu.
+            {t('skills.emptyDescription')}
           </p>
           <div className="mt-4 flex gap-2">
             <Button
@@ -386,11 +386,11 @@ export function SkillsManager({ skills, onSkillsChange, disabled = false }: Skil
               disabled={disabled}
             >
               <FolderPlus className="mr-2 h-4 w-4" />
-              Kategorie anlegen
+              {t('skills.createCategory')}
             </Button>
             <Button type="button" onClick={() => openSkillInput(null)} disabled={disabled}>
               <Plus className="mr-2 h-4 w-4" />
-              Ersten Skill hinzufügen
+              {t('actions.addFirst')}
             </Button>
           </div>
           {activeCategory === null && !hasContent && renderSkillInput(null)}

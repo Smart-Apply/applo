@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
@@ -16,6 +17,8 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations('common.errorPage');
+
   useEffect(() => {
     // Log error in development
     if (process.env.NODE_ENV === 'development') {
@@ -31,16 +34,16 @@ export default function Error({
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            <CardTitle>Ein Fehler ist aufgetreten</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
           </div>
           <CardDescription>
-            Beim Laden dieser Seite ist ein Fehler aufgetreten.
+            {t('description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {process.env.NODE_ENV === 'development' && (
             <div className="rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] p-4 dark:border-red-400/30 dark:bg-red-400/10">
-              <p className="text-sm font-medium text-destructive">Fehlermeldung:</p>
+              <p className="text-sm font-medium text-destructive">{t('errorMessageLabel')}</p>
               <p className="mt-1 text-sm text-destructive/90">{error.message}</p>
               {error.digest && (
                 <p className="mt-1 font-mono text-xs text-destructive/80">Digest: {error.digest}</p>
@@ -53,14 +56,14 @@ export default function Error({
               onClick={reset}
               className="flex-1"
             >
-              Erneut versuchen
+              {t('retry')}
             </Button>
             <Button
               variant="outline"
               onClick={() => window.location.href = '/dashboard'}
               className="flex-1"
             >
-              Zum Dashboard
+              {t('toDashboard')}
             </Button>
           </div>
         </CardContent>

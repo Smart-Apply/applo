@@ -4,6 +4,7 @@ import { useKeywordsAnalysis } from '@/hooks/use-applications';
 import { ATSScoreBadge } from './ats-score-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   Tooltip,
   TooltipContent,
@@ -21,6 +22,7 @@ interface ATSScoreCellProps {
  * Shows loading skeleton while fetching, error state if analysis unavailable
  */
 export function ATSScoreCell({ applicationId, status }: ATSScoreCellProps) {
+  const t = useTranslations('applications');
   const { data: analysis, isLoading, error } = useKeywordsAnalysis(applicationId);
 
   // Only show ATS score if application is READY (PDFs generated)
@@ -46,7 +48,7 @@ export function ATSScoreCell({ applicationId, status }: ATSScoreCellProps) {
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Bewerbungscheck nicht verfügbar</p>
+            <p className="text-xs">{t('atsScoreCell.unavailable')}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -65,10 +67,10 @@ export function ATSScoreCell({ applicationId, status }: ATSScoreCellProps) {
         </TooltipTrigger>
         <TooltipContent>
           <div className="text-xs space-y-1">
-            <div className="font-medium mb-1">Kategorie-Scores:</div>
-            <div>Kern (Hard Skills): {Math.round(analysis.matchAnalysis.categoryScores.core)}%</div>
-            <div>Erfahrung: {Math.round(analysis.matchAnalysis.categoryScores.experience)}%</div>
-            <div>Branche: {Math.round(analysis.matchAnalysis.categoryScores.industry)}%</div>
+            <div className="font-medium mb-1">{t('atsScoreCell.categoryScores')}</div>
+            <div>{t('atsScoreCell.coreScore', { score: Math.round(analysis.matchAnalysis.categoryScores.core) })}</div>
+            <div>{t('atsScoreCell.experienceScore', { score: Math.round(analysis.matchAnalysis.categoryScores.experience) })}</div>
+            <div>{t('atsScoreCell.industryScore', { score: Math.round(analysis.matchAnalysis.categoryScores.industry) })}</div>
           </div>
         </TooltipContent>
       </Tooltip>

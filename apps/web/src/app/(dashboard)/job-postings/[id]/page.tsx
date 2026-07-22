@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +26,7 @@ import { formatDate } from '@/lib/format-date';
 export default function JobPostingDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const t = useTranslations('jobs');
   const jobPostingId = params.id as string;
 
   const { data: jobPosting, isLoading, error } = useQuery({
@@ -34,7 +36,7 @@ export default function JobPostingDetailPage() {
   });
 
   if (isLoading) {
-    return <CenteredLoader message="Lädt Stellenanzeige..." />;
+    return <CenteredLoader message={t('detail.loading')} />;
   }
 
   if (error || !jobPosting) {
@@ -42,20 +44,20 @@ export default function JobPostingDetailPage() {
       <div className="space-y-6">
         <Button variant="ghost" onClick={() => router.push('/applications')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Zurück
+          {t('detail.back')}
         </Button>
         <Card>
           <CardContent className="py-12">
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
-                Stellenanzeige nicht gefunden
+                {t('detail.notFound.title')}
               </h3>
               <p className="text-muted-foreground mb-6">
-                Die angeforderte Stellenanzeige existiert nicht oder du hast keine Berechtigung.
+                {t('detail.notFound.description')}
               </p>
               <Button onClick={() => router.push('/applications')}>
-                Zu Bewerbungen
+                {t('detail.notFound.toApplications')}
               </Button>
             </div>
           </CardContent>
@@ -70,7 +72,7 @@ export default function JobPostingDetailPage() {
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Zurück
+          {t('detail.back')}
         </Button>
       </div>
 
@@ -106,7 +108,7 @@ export default function JobPostingDetailPage() {
                 onClick={() => window.open(jobPosting.sourceUrl, '_blank', 'noopener,noreferrer')}
               >
                 <ExternalLink className="mr-2 h-4 w-4" />
-                Quelle
+                {t('detail.source')}
               </Button>
             )}
           </div>
@@ -119,7 +121,7 @@ export default function JobPostingDetailPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-brand" />
-              <CardTitle>Stellenbeschreibung</CardTitle>
+              <CardTitle>{t('detail.sections.description')}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
@@ -136,7 +138,7 @@ export default function JobPostingDetailPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-brand" />
-              <CardTitle>Anforderungen</CardTitle>
+              <CardTitle>{t('detail.sections.requirements')}</CardTitle>
               <Badge variant="secondary" className="ml-2 font-mono">
                 {jobPosting.requirements.length}
               </Badge>
@@ -161,7 +163,7 @@ export default function JobPostingDetailPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-brand" />
-              <CardTitle>Aufgaben &amp; Verantwortlichkeiten</CardTitle>
+              <CardTitle>{t('detail.sections.responsibilities')}</CardTitle>
               <Badge variant="secondary" className="ml-2 font-mono">
                 {jobPosting.responsibilities.length}
               </Badge>
@@ -186,7 +188,7 @@ export default function JobPostingDetailPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Star className="h-5 w-5 text-brand" />
-              <CardTitle>Wünschenswert</CardTitle>
+              <CardTitle>{t('detail.sections.niceToHave')}</CardTitle>
               <Badge variant="secondary" className="ml-2 font-mono">
                 {jobPosting.niceToHave.length}
               </Badge>
@@ -210,13 +212,13 @@ export default function JobPostingDetailPage() {
         <Card>
           <CardHeader>
             <CardTitle className="font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-              Original-Text
+              {t('detail.sections.rawText')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <details className="group">
               <summary className="cursor-pointer text-sm text-brand hover:underline">
-                Vollständigen Text anzeigen
+                {t('detail.showFullText')}
               </summary>
               <Separator className="my-4" />
               <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">

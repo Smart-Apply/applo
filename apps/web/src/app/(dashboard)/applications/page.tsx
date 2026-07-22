@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { useApplications, useDeleteApplication } from '@/hooks/use-applications';
 import { useDebounce } from '@/hooks/use-debounce';
 import { api } from '@/lib/api-client';
@@ -67,6 +68,7 @@ import { toast } from 'sonner';
 import type { Application, ApplicationGenerationStatus, ApplicationTrackingStatus } from '@/types';
 import { APPLICATION_ID_DISPLAY_LENGTH } from '@/lib/constants';
 import { formatDateSmart, formatTooltipTimestamp } from '@/lib/format-date';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,32 +88,32 @@ type ViewMode = 'table' | 'cards';
 // Tab configuration for application tracking status
 const TRACKING_STATUS_TABS: {
   value: ApplicationTrackingStatus | 'all';
-  label: string;
+  labelKey: string;
   icon: typeof Briefcase;
 }[] = [
-    { value: 'all', label: 'Alle', icon: Briefcase },
-    { value: 'CREATED', label: 'Entwurf', icon: FileText },
-    { value: 'APPLIED', label: 'Beworben', icon: Send },
-    { value: 'INTERVIEW', label: 'Interview', icon: Users },
-    { value: 'ACCEPTED', label: 'Angenommen', icon: ThumbsUp },
-    { value: 'REJECTED', label: 'Abgelehnt', icon: ThumbsDown },
+    { value: 'all', labelKey: 'status.all', icon: Briefcase },
+    { value: 'CREATED', labelKey: 'status.draft', icon: FileText },
+    { value: 'APPLIED', labelKey: 'status.applied', icon: Send },
+    { value: 'INTERVIEW', labelKey: 'status.interview', icon: Users },
+    { value: 'ACCEPTED', labelKey: 'status.accepted', icon: ThumbsUp },
+    { value: 'REJECTED', labelKey: 'status.rejected', icon: ThumbsDown },
   ];
 
 // Sort options for the applications list.
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'newest', label: 'Neueste zuerst' },
-  { value: 'oldest', label: 'Älteste zuerst' },
-  { value: 'title-asc', label: 'Jobtitel A–Z' },
-  { value: 'company-asc', label: 'Unternehmen A–Z' },
+const SORT_OPTIONS: { value: SortOption; labelKey: string }[] = [
+  { value: 'newest', labelKey: 'list.sort.newest' },
+  { value: 'oldest', labelKey: 'list.sort.oldest' },
+  { value: 'title-asc', labelKey: 'list.sort.titleAsc' },
+  { value: 'company-asc', labelKey: 'list.sort.companyAsc' },
 ];
 
 // Status options offered in the bulk action bar.
-const BULK_STATUS_OPTIONS: { value: ApplicationTrackingStatus; label: string }[] = [
-  { value: 'CREATED', label: 'Entwurf' },
-  { value: 'APPLIED', label: 'Beworben' },
-  { value: 'INTERVIEW', label: 'Interview' },
-  { value: 'ACCEPTED', label: 'Angenommen' },
-  { value: 'REJECTED', label: 'Abgelehnt' },
+const BULK_STATUS_OPTIONS: { value: ApplicationTrackingStatus; labelKey: string }[] = [
+  { value: 'CREATED', labelKey: 'status.draft' },
+  { value: 'APPLIED', labelKey: 'status.applied' },
+  { value: 'INTERVIEW', labelKey: 'status.interview' },
+  { value: 'ACCEPTED', labelKey: 'status.accepted' },
+  { value: 'REJECTED', labelKey: 'status.rejected' },
 ];
 
 // ============================================================================
@@ -129,11 +131,11 @@ function sortApplications(applications: Application[], sortBy: SortOption): Appl
       case 'title-asc':
         const titleA = (a.jobPosting?.title || a.title || '').toLowerCase();
         const titleB = (b.jobPosting?.title || b.title || '').toLowerCase();
-        return titleA.localeCompare(titleB, 'de');
+        return titleA.localeCompare(titleB, getIntlLocale());
       case 'company-asc':
         const companyA = (a.jobPosting?.company || '').toLowerCase();
         const companyB = (b.jobPosting?.company || '').toLowerCase();
-        return companyA.localeCompare(companyB, 'de');
+        return companyA.localeCompare(companyB, getIntlLocale());
       default:
         return 0;
     }
@@ -160,6 +162,7 @@ function getPageItems(current: number, total: number): (number | 'ellipsis')[] {
 // ============================================================================
 
 export default function ApplicationsPage() {
+  const t = useTranslations('applications');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -200,6 +203,19 @@ export default function ApplicationsPage() {
   const deleteApplication = useDeleteApplication();
   const queryClient = useQueryClient();
 
+  const trackingStatusTabs = useMemo(
+    () => TRACKING_STATUS_TABS.map((tab) => ({ ...tab, label: t(tab.labelKey) })),
+    [t],
+  );
+  const sortOptions = useMemo(
+    () => SORT_OPTIONS.map((option) => ({ ...option, label: t(option.labelKey) })),
+    [t],
+  );
+  const bulkStatusOptions = useMemo(
+    () => BULK_STATUS_OPTIONS.map((option) => ({ ...option, label: t(option.labelKey) })),
+    [t],
+  );
+
   // Fetch applications
   const { data: applications, isLoading, refetch } = useApplications();
 
@@ -227,21 +243,21 @@ export default function ApplicationsPage() {
 
       // Only show toast if status actually changed
       if (prevStatus && prevStatus !== app.status) {
-        const jobTitle = app.jobPosting?.title || 'Bewerbung';
+        const jobTitle = app.jobPosting?.title || t('list.fallbackTitle');
 
         if (app.status === 'READY') {
-          toast.success('Bewerbung fertig! 🎉', {
-            description: `${jobTitle} ist bereit zum Download.`,
+          toast.success(t('list.toasts.readyTitle'), {
+            description: t('list.toasts.readyDescription', { title: jobTitle }),
             duration: 5000,
           });
         } else if (app.status === 'FAILED') {
-          toast.error('Generierung fehlgeschlagen', {
-            description: `${jobTitle} konnte nicht erstellt werden.`,
+          toast.error(t('list.toasts.failedTitle'), {
+            description: t('list.toasts.failedDescription', { title: jobTitle }),
             duration: 6000,
           });
         } else if (app.status === 'GENERATING') {
-          toast.info('Generierung gestartet', {
-            description: `${jobTitle} wird jetzt erstellt...`,
+          toast.info(t('list.toasts.generatingTitle'), {
+            description: t('list.toasts.generatingDescription', { title: jobTitle }),
             duration: 4000,
           });
         }
@@ -250,7 +266,7 @@ export default function ApplicationsPage() {
       // Update tracking
       prevStatusesRef.current.set(app.id, app.status);
     });
-  }, [applications]);
+  }, [applications, t]);
 
   // Filter applications by tracking status and search term
   const filteredApplications = useMemo(() => {
@@ -360,7 +376,7 @@ export default function ApplicationsPage() {
     await deleteApplication.mutateAsync(applicationToDelete.id);
     setDeleteDialogOpen(false);
     setApplicationToDelete(null);
-    toast.success('Bewerbung gelöscht');
+    toast.success(t('list.toasts.deleted'));
   };
 
   const handleDeleteCancel = () => {
@@ -411,9 +427,9 @@ export default function ApplicationsPage() {
     clearSelection();
 
     if (failed === 0) {
-      toast.success(`${succeeded} ${succeeded === 1 ? 'Bewerbung' : 'Bewerbungen'} gelöscht`);
+      toast.success(t('list.toasts.bulkDeleteSuccess', { count: succeeded }));
     } else {
-      toast.error(`${succeeded} gelöscht, ${failed} fehlgeschlagen`);
+      toast.error(t('list.toasts.bulkDeletePartial', { succeeded, failed }));
     }
   };
 
@@ -435,9 +451,9 @@ export default function ApplicationsPage() {
     clearSelection();
 
     if (failed === 0) {
-      toast.success(`Status für ${succeeded} ${succeeded === 1 ? 'Bewerbung' : 'Bewerbungen'} aktualisiert`);
+      toast.success(t('list.toasts.bulkStatusSuccess', { count: succeeded }));
     } else {
-      toast.error(`${succeeded} aktualisiert, ${failed} fehlgeschlagen`);
+      toast.error(t('list.toasts.bulkStatusPartial', { succeeded, failed }));
     }
   };
 
@@ -447,10 +463,10 @@ export default function ApplicationsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">
-            Bewerbungen
+            {t('list.title')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Verwalte und verfolge den Status deiner Bewerbungen.
+            {t('list.description')}
           </p>
         </div>
         <div className="flex gap-2.5">
@@ -461,14 +477,14 @@ export default function ApplicationsPage() {
             className="h-10 rounded-[3px]"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Aktualisieren
+            {t('list.refresh')}
           </Button>
           <Button
             onClick={() => router.push('/applications/new')}
             className="h-10 rounded-[3px]"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Neue Bewerbung
+            {t('list.newApplication')}
           </Button>
         </div>
       </div>
@@ -489,7 +505,7 @@ export default function ApplicationsPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Bewerbungen durchsuchen..."
+              placeholder={t('list.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-10 h-11 bg-background"
@@ -498,7 +514,7 @@ export default function ApplicationsPage() {
               <button
                 onClick={() => setSearchTerm('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Suche löschen"
+                aria-label={t('list.clearSearch')}
               >
                 <XCircle className="h-4 w-4" />
               </button>
@@ -513,7 +529,7 @@ export default function ApplicationsPage() {
           
           {/* Status filter — boxed segmented control with mono counts */}
           <div className="inline-flex flex-wrap items-center gap-px overflow-hidden rounded-[4px] border border-border bg-border">
-            {TRACKING_STATUS_TABS.map((tab) => {
+            {trackingStatusTabs.map((tab) => {
               const isActive = selectedTab === tab.value;
               return (
                 <button
@@ -544,14 +560,14 @@ export default function ApplicationsPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2.5">
               <span className="hidden whitespace-nowrap font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground sm:inline-block">
-                Sortieren
+                {t('list.sort.label')}
               </span>
               <Select value={sortBy} onValueChange={handleSortChange}>
                 <SelectTrigger className="w-full sm:w-[200px] bg-background">
-                  <SelectValue placeholder="Sortieren" />
+                  <SelectValue placeholder={t('list.sort.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {SORT_OPTIONS.map((option) => (
+                  {sortOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -571,10 +587,10 @@ export default function ApplicationsPage() {
                     : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
                 aria-pressed={viewMode === 'table'}
-                aria-label="Tabellenansicht"
+                aria-label={t('list.tableView')}
               >
                 <List className="h-4 w-4" />
-                Tabelle
+                {t('list.tableViewShort')}
               </button>
               <button
                 type="button"
@@ -585,10 +601,10 @@ export default function ApplicationsPage() {
                     : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
                 aria-pressed={viewMode === 'cards'}
-                aria-label="Kartenansicht"
+                aria-label={t('list.cardView')}
               >
                 <LayoutGrid className="h-4 w-4" />
-                Karten
+                {t('list.cardViewShort')}
               </button>
             </div>
           </div>
@@ -596,12 +612,16 @@ export default function ApplicationsPage() {
           {/* Results Info */}
           <div className="flex items-center justify-between text-sm text-muted-foreground px-1">
             <span>
-              {filteredApplications.length} {filteredApplications.length === 1 ? 'Bewerbung' : 'Bewerbungen'}
-              {selectedTab !== 'all' && ` mit Status "${TRACKING_STATUS_TABS.find(t => t.value === selectedTab)?.label}"`}
+              {selectedTab !== 'all'
+                ? t('list.resultsWithStatus', {
+                    count: filteredApplications.length,
+                    status: trackingStatusTabs.find((tab) => tab.value === selectedTab)?.label ?? t('status.draft'),
+                  })
+                : t('list.results', { count: filteredApplications.length })}
             </span>
             {totalPages > 1 && (
               <span>
-                Seite {currentPage} von {totalPages}
+                {t('list.pageInfo', { current: currentPage, total: totalPages })}
               </span>
             )}
           </div>
@@ -611,7 +631,7 @@ export default function ApplicationsPage() {
             <div className="sticky top-2 z-20 flex flex-col gap-3 rounded-[4px] border border-primary/40 bg-primary-soft/80 p-3 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-foreground">
-                  {selectedCount} ausgewählt
+                  {t('list.selectedCount', { count: selectedCount })}
                 </span>
                 <Button
                   variant="ghost"
@@ -620,7 +640,7 @@ export default function ApplicationsPage() {
                   className="h-8 px-2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="mr-1 h-4 w-4" />
-                  Auswahl aufheben
+                  {t('list.clearSelection')}
                 </Button>
               </div>
               <div className="flex items-center gap-2">
@@ -629,10 +649,10 @@ export default function ApplicationsPage() {
                   disabled={isBulkProcessing}
                 >
                   <SelectTrigger className="h-9 w-[190px] bg-background">
-                    <SelectValue placeholder="Status setzen…" />
+                    <SelectValue placeholder={t('list.setStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {BULK_STATUS_OPTIONS.map((opt) => (
+                    {bulkStatusOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -647,7 +667,7 @@ export default function ApplicationsPage() {
                   className="h-9"
                 >
                   <Trash2 className="mr-1.5 h-4 w-4" />
-                  Löschen
+                  {t('list.delete')}
                 </Button>
               </div>
             </div>
@@ -666,13 +686,13 @@ export default function ApplicationsPage() {
                 const jobTitle =
                   application.title ||
                   application.jobPosting?.title ||
-                  `Bewerbung #${application.id.substring(0, APPLICATION_ID_DISPLAY_LENGTH)}`;
+                  t('list.numberedFallbackTitle', { id: application.id.substring(0, APPLICATION_ID_DISPLAY_LENGTH) });
                 const company = application.jobPosting?.company;
                 const location = application.jobPosting?.location;
                 const timeAgo = formatDateSmart(application.createdAt);
                 const isSelected = selectedIds.has(application.id);
                 const cardChip = TRACKING_STATUS_CHIP[application.applicationStatus] ?? TRACKING_STATUS_CHIP.CREATED;
-                const cardTrackLabel = TRACKING_STATUS_TABS.find(t => t.value === application.applicationStatus)?.label || 'Entwurf';
+                const cardTrackLabel = trackingStatusTabs.find((tab) => tab.value === application.applicationStatus)?.label || t('status.draft');
 
                 return (
                   <div
@@ -696,7 +716,7 @@ export default function ApplicationsPage() {
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleSelect(application.id)}
-                            aria-label="Bewerbung auswählen"
+                            aria-label={t('list.selectApplication')}
                           />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -725,7 +745,7 @@ export default function ApplicationsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              aria-label="Aktionen"
+                              aria-label={t('list.actions')}
                               className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
                             >
                               <MoreHorizontal className="h-4 w-4" />
@@ -733,26 +753,26 @@ export default function ApplicationsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => router.push(`/applications/${application.id}`)}>
-                              Details anzeigen
+                              {t('list.showDetails')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => router.push(`/applications/${application.id}/edit`)}>
-                              Bearbeiten
+                              {t('list.edit')}
                             </DropdownMenuItem>
                             {application.status === 'READY' && application.coverLetterUrl && (
                               <DropdownMenuItem onClick={() => window.open(application.coverLetterUrl, '_blank')}>
-                                Anschreiben öffnen
+                                {t('list.openCoverLetter')}
                               </DropdownMenuItem>
                             )}
                             {application.status === 'READY' && application.resumeUrl && (
                               <DropdownMenuItem onClick={() => window.open(application.resumeUrl, '_blank')}>
-                                Lebenslauf öffnen
+                                {t('list.openResume')}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
                               onClick={() => handleDeleteClick(application.id, jobTitle)}
                             >
-                              Löschen
+                              {t('list.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -792,19 +812,19 @@ export default function ApplicationsPage() {
                       <Checkbox
                         checked={allPageSelected ? true : somePageSelected ? 'indeterminate' : false}
                         onCheckedChange={toggleSelectAllOnPage}
-                        aria-label="Alle auf dieser Seite auswählen"
+                        aria-label={t('list.selectAllPage')}
                       />
                     </TableHead>
-                    <TableHead className="w-[32%]">Job & Unternehmen</TableHead>
-                    <TableHead className="w-[14%]">Status</TableHead>
+                    <TableHead className="w-[32%]">{t('list.table.jobAndCompany')}</TableHead>
+                    <TableHead className="w-[14%]">{t('list.table.status')}</TableHead>
                     <TableHead className="w-[11%] text-center">ATS Score</TableHead>
-                    <TableHead className="w-[14%]">Erstellt</TableHead>
-                    <TableHead className="w-[16%] text-right">Aktionen</TableHead>
+                    <TableHead className="w-[14%]">{t('list.table.created')}</TableHead>
+                    <TableHead className="w-[16%] text-right">{t('list.table.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedApplications.map((application) => {
-                    const jobTitle = application.title || application.jobPosting?.title || `Bewerbung #${application.id.substring(0, APPLICATION_ID_DISPLAY_LENGTH)}`;
+                    const jobTitle = application.title || application.jobPosting?.title || t('list.numberedFallbackTitle', { id: application.id.substring(0, APPLICATION_ID_DISPLAY_LENGTH) });
                     const company = application.jobPosting?.company;
                     const location = application.jobPosting?.location;
                     const timeAgo = formatDateSmart(application.createdAt);
@@ -822,7 +842,7 @@ export default function ApplicationsPage() {
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleSelect(application.id)}
-                            aria-label="Bewerbung auswählen"
+                            aria-label={t('list.selectApplication')}
                           />
                         </TableCell>
                         <TableCell>
@@ -850,7 +870,7 @@ export default function ApplicationsPage() {
                         <TableCell>
                           {(() => {
                             const tChip = TRACKING_STATUS_CHIP[application.applicationStatus] ?? TRACKING_STATUS_CHIP.CREATED;
-                            const tLabel = TRACKING_STATUS_TABS.find(t => t.value === application.applicationStatus)?.label || 'Entwurf';
+                            const tLabel = trackingStatusTabs.find((tab) => tab.value === application.applicationStatus)?.label || t('status.draft');
                             return (
                               <div className="flex items-center gap-2">
                                 <StatusChip tone={tChip.tone}>{tLabel}</StatusChip>
@@ -881,7 +901,7 @@ export default function ApplicationsPage() {
                               onClick={() => router.push(`/applications/${application.id}`)}
                             >
                               <ExternalLink className="mr-1 h-3 w-3" />
-                              Öffnen
+                              {t('list.open')}
                             </Button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -891,23 +911,23 @@ export default function ApplicationsPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => router.push(`/applications/${application.id}/edit`)}>
-                                  Bearbeiten
+                                  {t('list.edit')}
                                 </DropdownMenuItem>
                                 {application.status === 'READY' && application.coverLetterUrl && (
                                   <DropdownMenuItem onClick={() => window.open(application.coverLetterUrl, '_blank')}>
-                                    Anschreiben öffnen
+                                    {t('list.openCoverLetter')}
                                   </DropdownMenuItem>
                                 )}
                                 {application.status === 'READY' && application.resumeUrl && (
                                   <DropdownMenuItem onClick={() => window.open(application.resumeUrl, '_blank')}>
-                                    Lebenslauf öffnen
+                                    {t('list.openResume')}
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
                                   onClick={() => handleDeleteClick(application.id, jobTitle)}
                                 >
-                                  Löschen
+                                  {t('list.delete')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -926,16 +946,18 @@ export default function ApplicationsPage() {
             <div className="rounded-[4px] border border-dashed border-border bg-muted/10 animate-in fade-in duration-500">
               <EmptyState
                 icon={FileText}
-                title="Keine Bewerbungen gefunden"
-                description={`Es gibt keine Bewerbungen mit dem Status "${TRACKING_STATUS_TABS.find((t) => t.value === selectedTab)?.label}".`}
+                title={t('list.emptyFilteredTitle')}
+                description={t('list.emptyFilteredDescription', {
+                  status: trackingStatusTabs.find((tab) => tab.value === selectedTab)?.label ?? t('status.draft'),
+                })}
                 action={
                   selectedTab !== 'all'
                     ? {
-                        label: 'Alle anzeigen',
+                        label: t('list.showAll'),
                         onClick: () => setSelectedTab('all'),
                       }
                     : {
-                        label: 'Erste Bewerbung erstellen',
+                        label: t('list.createFirst'),
                         onClick: () => router.push('/applications/new'),
                       }
                 }
@@ -951,7 +973,7 @@ export default function ApplicationsPage() {
                   {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
                   {Math.min(currentPage * ITEMS_PER_PAGE, sortedApplications.length)}
                 </span>{' '}
-                von {sortedApplications.length}
+                {t('list.paginationOf', { total: sortedApplications.length })}
               </p>
               <div className="flex items-center gap-1">
                 <Button
@@ -960,7 +982,7 @@ export default function ApplicationsPage() {
                   onClick={() => setCurrentPage(1)}
                   disabled={currentPage === 1}
                   className="h-8 w-8 p-0"
-                  aria-label="Erste Seite"
+                  aria-label={t('list.firstPage')}
                 >
                   <ChevronsLeft className="h-4 w-4" />
                 </Button>
@@ -970,7 +992,7 @@ export default function ApplicationsPage() {
                   onClick={handlePrevPage}
                   disabled={currentPage === 1}
                   className="h-8 w-8 p-0"
-                  aria-label="Vorherige Seite"
+                  aria-label={t('list.previousPage')}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -1002,7 +1024,7 @@ export default function ApplicationsPage() {
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
                   className="h-8 w-8 p-0"
-                  aria-label="Nächste Seite"
+                  aria-label={t('list.nextPage')}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -1012,7 +1034,7 @@ export default function ApplicationsPage() {
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
                   className="h-8 w-8 p-0"
-                  aria-label="Letzte Seite"
+                  aria-label={t('list.lastPage')}
                 >
                   <ChevronsRight className="h-4 w-4" />
                 </Button>
@@ -1025,13 +1047,13 @@ export default function ApplicationsPage() {
           <div className="mb-6 grid h-20 w-20 place-items-center rounded-[4px] border border-border bg-muted">
             <FileText className="h-10 w-10 text-primary" />
           </div>
-          <h3 className="font-heading text-xl font-bold text-foreground mb-2">Noch keine Bewerbungen</h3>
+          <h3 className="font-heading text-xl font-bold text-foreground mb-2">{t('list.emptyTitle')}</h3>
           <p className="text-muted-foreground mb-8 max-w-md">
-            Erstelle deine erste Bewerbung mit KI-Unterstützung und behalte den Überblick über deinen Bewerbungsprozess.
+            {t('list.emptyDescription')}
           </p>
           <Button size="lg" onClick={() => router.push('/applications/new')}>
             <Plus className="mr-2 h-5 w-5" />
-            Erste Bewerbung erstellen
+            {t('list.createFirst')}
           </Button>
         </div>
       )
@@ -1041,10 +1063,12 @@ export default function ApplicationsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bewerbung löschen?</DialogTitle>
+            <DialogTitle>{t('list.deleteDialog.title')}</DialogTitle>
             <DialogDescription>
-              Möchtest du die Bewerbung für <span className="font-medium text-foreground">&quot;{applicationToDelete?.title}&quot;</span> wirklich löschen?
-              Diese Aktion kann nicht rückgängig gemacht werden.
+              {t.rich('list.deleteDialog.description', {
+                title: applicationToDelete?.title ?? '',
+                titleText: (chunks) => <span className="font-medium text-foreground">&quot;{chunks}&quot;</span>,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1053,15 +1077,15 @@ export default function ApplicationsPage() {
               onClick={handleDeleteCancel}
               disabled={deleteApplication.isPending}
             >
-              Abbrechen
+              {t('list.cancel')}
             </Button>
             <SubmitButton
               variant="destructive"
               onClick={handleDeleteConfirm}
               isLoading={deleteApplication.isPending}
-              loadingText="Wird gelöscht..."
+              loadingText={t('list.deleting')}
             >
-              Löschen
+              {t('list.delete')}
             </SubmitButton>
           </DialogFooter>
         </DialogContent>
@@ -1071,13 +1095,12 @@ export default function ApplicationsPage() {
       <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedCount} Bewerbungen löschen?</DialogTitle>
+            <DialogTitle>{t('list.bulkDeleteDialog.title', { count: selectedCount })}</DialogTitle>
             <DialogDescription>
-              Möchtest du wirklich{' '}
-              <span className="font-medium text-foreground">
-                {selectedCount} {selectedCount === 1 ? 'Bewerbung' : 'Bewerbungen'}
-              </span>{' '}
-              löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+              {t.rich('list.bulkDeleteDialog.description', {
+                count: selectedCount,
+                countText: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1086,15 +1109,15 @@ export default function ApplicationsPage() {
               onClick={() => setBulkDeleteOpen(false)}
               disabled={isBulkProcessing}
             >
-              Abbrechen
+              {t('list.cancel')}
             </Button>
             <SubmitButton
               variant="destructive"
               onClick={handleBulkDeleteConfirm}
               isLoading={isBulkProcessing}
-              loadingText="Wird gelöscht..."
+              loadingText={t('list.deleting')}
             >
-              Löschen
+              {t('list.delete')}
             </SubmitButton>
           </DialogFooter>
         </DialogContent>

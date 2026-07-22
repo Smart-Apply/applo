@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "title": "FAQ – Applo",
+    "description": "Frequently asked questions about Applo: closed beta, invite codes, applications, résumés, cover letters, privacy, and pricing."
+  },
+  "title": "Frequently asked questions (FAQ)",
+  "intro": "Answers to the most common questions about Applo. Can’t find yours? Message us through the contact form on the <home>home page</home>.",
+  "betaNotice": {
+    "ariaLabel": "Closed beta notice",
+    "strong": "Applo is currently in closed beta.",
+    "text": "Registration works by invite code only, all features are free during the beta, and you actively help us find rough edges — thank you!"
+  },
+  "sections": {
+    "beta": "During the closed beta",
+    "general": "General"
+  },
+  "items": {
+    "inviteCode": {
+      "q": "How does the invite code work?",
+      "a": "During the closed beta, registration is only possible with a personal invite code (format <code>BETA-XXXX-XXXX-XXXX</code>). You received the code by email — enter it at the bottom of the registration page. Each code can be redeemed only once."
+    },
+    "oauth": {
+      "q": "Can I sign in with Google or Microsoft?",
+      "a": "Not yet during the beta: “Sign in with Google” only works for accounts that have already registered by email. First create your account with invite code + email — after that, you can link Google or Microsoft in settings and use it to sign in."
+    },
+    "betaCost": {
+      "q": "What does Applo cost during the beta?",
+      "a": "Applo is free for all beta testers — including all Pro and Premium features (email tracking, interview coach, unlimited applications). If you actively tested during the beta, you will keep Premium free for a while after the public launch too — we will let you know in good time if anything changes."
+    },
+    "betaIssues": {
+      "q": "What can still go wrong?",
+      "a": "Applo is an early version. Expected rough edges:<list><item>Some job-posting URLs may need a second try</item><item>The PDF preview can load slowly on older iPhones</item><item>Résumé upload (PDF/DOCX) is not perfect with very unusual layouts — in that case, fill the fields manually</item><item>When a new version goes live while you are filling out a form, you will see a “New version available” notice in the top right — click “Update now” once you are done.</item></list>"
+    },
+    "feedback": {
+      "q": "How do I report bugs or feedback?",
+      "a": "Email us at <email>support@applo.ai</email>. For beta testers, we usually reply within a few hours. Helpful details are: browser + device, what you did, and what happened (screenshots welcome). Frontend errors land in our monitoring automatically — no need to copy console logs."
+    },
+    "betaData": {
+      "q": "What happens to my data when the beta ends?",
+      "a": "Nothing — your account and all created applications remain available and move 1:1 into the public launch. We do not reset the database. If you want to delete your account before then, you can do that anytime under Settings → Delete account, and you can export everything as JSON beforehand (Settings → Export data)."
+    },
+    "what": {
+      "q": "What exactly does Applo do?",
+      "a": "Applo creates a matching cover letter and an optimized résumé PDF from your profile and a job posting in seconds — both tailored to the specific role. You can edit the text directly in the editor before downloading it."
+    },
+    "industries": {
+      "q": "Does Applo work outside IT roles too?",
+      "a": "Yes. Applo is intentionally industry-neutral. The templates and prompts work with roles from healthcare, sales, marketing, trades, administration, education, and logistics — not just tech."
+    },
+    "languages": {
+      "q": "Which language will my applications be written in?",
+      "a": "We automatically detect the job posting language (currently German and English) and create the cover letter and résumé in the same language. Domain terms (for example tool names) keep their usual spelling."
+    },
+    "data": {
+      "q": "What happens to my data?",
+      "a": "Your profile and application data is encrypted in an EU database (Microsoft Azure, Sweden). We do not sell or use your data for advertising or model training. Details are in our <privacy>Datenschutzerklärung</privacy>. You can download your data anytime under “Settings → Export data” or delete your account completely."
+    },
+    "pricing": {
+      "q": "What does Applo cost?",
+      "a": "Getting started is free and does not require a credit card. In the Free plan, you can try Applo calmly with 3 applications per month. Pro (€9.99 / month) helps you optimize every application with AI. Premium (€19.99 / month) adds email tracking and the interview coach. All prices are transparent, cancellable monthly, and have no hidden fees — details are on our <pricing>pricing page</pricing>."
+    },
+    "editing": {
+      "q": "How can I adjust my application after generation?",
+      "a": "After generation, an editor opens automatically where you can edit the cover letter and résumé directly in the browser and export them again as PDFs — without another generation and without using tokens."
+    },
+    "ats": {
+      "q": "Are the generated résumés ATS-compatible?",
+      "a": "Yes. All PDF templates are built so common applicant tracking systems (ATS) can read them correctly: single-column layout, simple HTML structure, no tables or graphics in critical areas, clear section headers, and standard fonts."
+    },
+    "contact": {
+      "q": "I found a bug or have an idea — where do I reach you?",
+      "a": "Message us through the contact form on the <home>home page</home> or directly at <email>support@applo.ai</email>. We usually reply within 1–2 business days."
+    }
+  },
+  "legalLayout": {
+    "backHome": "← Back to the home page",
+    "home": "Home",
+    "copyright": "© {year} Applo. All rights reserved."
+  }
+}

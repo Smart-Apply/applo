@@ -14,6 +14,7 @@ import { Plus, X, Languages } from 'lucide-react';
 import { toast } from 'sonner';
 import { getLanguageLevelLabel } from '@/lib/translations';
 import type { Language } from '@/types';
+import { useTranslations } from 'next-intl';
 
 interface LanguagesManagerProps {
   languages: Language[];
@@ -22,18 +23,19 @@ interface LanguagesManagerProps {
 }
 
 const LANGUAGE_LEVELS = [
-  { value: 'NATIVE', label: 'Muttersprache' },
-  { value: 'FLUENT', label: 'Fließend (C2)' },
-  { value: 'ADVANCED', label: 'Fortgeschritten (B2/C1)' },
-  { value: 'INTERMEDIATE', label: 'Gute Kenntnisse (B1)' },
-  { value: 'BASIC', label: 'Grundkenntnisse (A1/A2)' },
-];
+  'NATIVE',
+  'FLUENT',
+  'ADVANCED',
+  'INTERMEDIATE',
+  'BASIC',
+] as const;
 
 export function LanguagesManager({
   languages,
   onLanguagesChange,
   disabled = false,
 }: LanguagesManagerProps) {
+  const t = useTranslations('profile');
   const [showInput, setShowInput] = useState(false);
   const [languageName, setLanguageName] = useState('');
   const [languageLevel, setLanguageLevel] = useState('FLUENT');
@@ -44,7 +46,7 @@ export function LanguagesManager({
     if (!name) return;
 
     if (languages.some((l) => l.name.toLowerCase() === name.toLowerCase())) {
-      toast.error('Diese Sprache existiert bereits');
+      toast.error(t('languages.duplicate'));
       return;
     }
 
@@ -54,12 +56,12 @@ export function LanguagesManager({
     onLanguagesChange(updated);
     setLanguageName('');
     inputRef.current?.focus();
-    toast.success(`Sprache "${name}" hinzugefügt`);
+    toast.success(t('languages.added', { name }));
   };
 
   const removeLanguage = (langName: string) => {
     onLanguagesChange(languages.filter((l) => l.name !== langName));
-    toast.success(`Sprache "${langName}" entfernt`);
+    toast.success(t('languages.removed', { name: langName }));
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -76,8 +78,8 @@ export function LanguagesManager({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Sprachen</h3>
-          <p className="text-sm text-muted-foreground">Deine Sprachkenntnisse</p>
+          <h3 className="text-lg font-medium">{t('languages.title')}</h3>
+          <p className="text-sm text-muted-foreground">{t('languages.description')}</p>
         </div>
         {!showInput && (
           <Button
@@ -90,7 +92,7 @@ export function LanguagesManager({
             size="sm"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Hinzufügen
+            {t('actions.add')}
           </Button>
         )}
       </div>
@@ -104,17 +106,17 @@ export function LanguagesManager({
             onChange={(e) => setLanguageName(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={disabled}
-            placeholder="z.B. Deutsch, Englisch …"
+            placeholder={t('languages.placeholder')}
             className="flex-1"
           />
           <Select value={languageLevel} onValueChange={setLanguageLevel} disabled={disabled}>
             <SelectTrigger className="w-[170px]">
-              <SelectValue placeholder="Niveau" />
+              <SelectValue placeholder={t('languages.levelPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              {LANGUAGE_LEVELS.map((l) => (
-                <SelectItem key={l.value} value={l.value}>
-                  {l.label}
+              {LANGUAGE_LEVELS.map((level) => (
+                <SelectItem key={level} value={level}>
+                  {getLanguageLevelLabel(level)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -126,7 +128,7 @@ export function LanguagesManager({
             size="sm"
           >
             <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Hinzufügen
+            {t('actions.add')}
           </Button>
           <Button
             type="button"
@@ -137,7 +139,7 @@ export function LanguagesManager({
               setLanguageName('');
             }}
           >
-            Fertig
+            {t('actions.done')}
           </Button>
         </div>
       )}
@@ -146,7 +148,7 @@ export function LanguagesManager({
       {languages.length > 0 ? (
         <div>
           <p className="mb-3 text-sm font-medium text-foreground">
-            Deine Sprachen ({languages.length})
+            {t('languages.yourLanguages', { count: languages.length })}
           </p>
           <div className="flex flex-wrap gap-2">
             {languages.map((lang, index) => (
@@ -165,7 +167,7 @@ export function LanguagesManager({
                   onClick={() => removeLanguage(lang.name)}
                   disabled={disabled}
                   className="absolute right-1.5 shrink-0 rounded-[2px] p-0.5 opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label={`${lang.name} entfernen`}
+                  aria-label={t('languages.removeAria', { name: lang.name })}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -178,9 +180,9 @@ export function LanguagesManager({
           <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-muted">
             <Languages className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 className="font-medium text-foreground">Keine Sprachen</h3>
+          <h3 className="font-medium text-foreground">{t('languages.emptyTitle')}</h3>
           <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-            Füge deine Sprachkenntnisse hinzu, um dein Profil zu vervollständigen.
+            {t('languages.emptyDescription')}
           </p>
           {!showInput && (
             <Button
@@ -194,7 +196,7 @@ export function LanguagesManager({
               className="mt-4"
             >
               <Plus className="mr-2 h-4 w-4" />
-              Erste Sprache hinzufügen
+              {t('languages.addFirst')}
             </Button>
           )}
         </div>

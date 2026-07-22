@@ -17,6 +17,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { api, authenticatedFetch } from '@/lib/api-client';
 import { useRetryApplication } from '@/hooks/use-applications';
@@ -82,14 +83,15 @@ const PDFPreviewModal = dynamic(
 type ApplicationStatus = ApplicationGenerationStatus;
 
 /* Linear tracking path shown in the status tracker (REJECTED handled inline). */
-const TRACK_STEPS: { key: ApplicationTrackingStatus; label: string }[] = [
-  { key: 'CREATED', label: 'Erstellt' },
-  { key: 'APPLIED', label: 'Beworben' },
-  { key: 'INTERVIEW', label: 'Interview' },
-  { key: 'ACCEPTED', label: 'Angenommen' },
+const TRACK_STEPS: { key: ApplicationTrackingStatus; labelKey: string }[] = [
+  { key: 'CREATED', labelKey: 'status.created' },
+  { key: 'APPLIED', labelKey: 'status.applied' },
+  { key: 'INTERVIEW', labelKey: 'status.interview' },
+  { key: 'ACCEPTED', labelKey: 'status.accepted' },
 ];
 
 export default function ApplicationDetailPage() {
+  const t = useTranslations('applications');
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -173,35 +175,35 @@ export default function ApplicationDetailPage() {
     const currentStatus = application.status;
 
     if (prevStatus && prevStatus !== currentStatus) {
-      const jobTitle = application.jobPosting?.title || 'Bewerbung';
+      const jobTitle = application.jobPosting?.title || t('detail.fallbackTitle');
       if (currentStatus === 'READY') {
-        toast.success('Bewerbung fertig! 🎉', {
-          description: `${jobTitle} ist bereit zum Download.`,
+        toast.success(t('detail.toasts.readyTitle'), {
+          description: t('detail.toasts.readyDescription', { title: jobTitle }),
           duration: 5000,
         });
         // Cross-language export whose translation failed: the PDFs were
         // rendered konsistent in der Originalsprache — tell the user.
         if (application.exportWarning === 'TRANSLATION_FALLBACK') {
-          toast.warning('Übersetzung nicht möglich', {
+          toast.warning(t('detail.toasts.translationFallbackTitle'), {
             description:
-              'Die PDFs wurden in der Originalsprache erstellt. Bitte versuche den Export später erneut.',
+              t('detail.toasts.translationFallbackDescription'),
             duration: 8000,
           });
         }
       } else if (currentStatus === 'FAILED') {
-        toast.error('Generierung fehlgeschlagen', {
-          description: `${jobTitle} konnte nicht erstellt werden.`,
+        toast.error(t('detail.toasts.failedTitle'), {
+          description: t('detail.toasts.failedDescription', { title: jobTitle }),
           duration: 6000,
         });
       } else if (currentStatus === 'GENERATING') {
-        toast.info('Generierung gestartet', {
-          description: `${jobTitle} wird jetzt erstellt...`,
+        toast.info(t('detail.toasts.generatingTitle'), {
+          description: t('detail.toasts.generatingDescription', { title: jobTitle }),
           duration: 4000,
         });
       }
     }
     prevStatusRef.current = currentStatus;
-  }, [application]);
+  }, [application, t]);
 
   const { data: files, refetch: refetchFiles } = useQuery({
     queryKey: ['applications', applicationId, 'files'],
@@ -215,9 +217,9 @@ export default function ApplicationDetailPage() {
     onSuccess: (updatedApp) => {
       queryClient.setQueryData(['applications', applicationId], updatedApp);
       queryClient.invalidateQueries({ queryKey: ['applications'] });
-      toast.success('Als „Beworben“ markiert', { description: 'Viel Erfolg! 🤞' });
+      toast.success(t('detail.toasts.markedAppliedTitle'), { description: t('detail.toasts.markedAppliedDescription') });
     },
-    onError: (err: Error) => toast.error(`Fehler beim Aktualisieren: ${err.message}`),
+    onError: (err: Error) => toast.error(t('detail.toasts.updateError', { message: err.message })),
   });
 
   const handleExpiredUrl = () => {
@@ -323,12 +325,12 @@ export default function ApplicationDetailPage() {
       });
     } catch (err) {
       console.error('Preview error:', err);
-      toast.error('Fehler beim Laden der Vorschau');
+      toast.error(t('detail.toasts.previewError'));
     }
   };
 
   if (isLoading) {
-    return <CenteredLoader message="Lädt Bewerbung..." />;
+    return <CenteredLoader message={t('detail.loading')} />;
   }
 
   if (error || !application) {
@@ -339,11 +341,11 @@ export default function ApplicationDetailPage() {
           <CardContent className="py-12">
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">Bewerbung nicht gefunden</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">{t('detail.notFoundTitle')}</h3>
               <p className="text-muted-foreground mb-6">
-                Die angeforderte Bewerbung existiert nicht oder du hast keine Berechtigung.
+                {t('detail.notFoundDescription')}
               </p>
-              <Button onClick={() => router.push('/applications')}>Zu Bewerbungen</Button>
+              <Button onClick={() => router.push('/applications')}>{t('detail.toApplications')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -401,7 +403,7 @@ export default function ApplicationDetailPage() {
               <StatusChip
                 tone="info"
                 withDot={false}
-                title="Status wurde durch automatisches E-Mail-Tracking aktualisiert"
+                title={t('detail.autoTrackingTitle')}
               >
                 Auto-Tracking
               </StatusChip>
@@ -409,7 +411,7 @@ export default function ApplicationDetailPage() {
           </div>
         ) : (
           <div className="rounded-[3px] bg-destructive-soft px-2 py-1 text-xs text-destructive">
-            Kein Status (bitte Seite neu laden)
+            {t('detail.noStatus')}
           </div>
         )}
       </div>
@@ -442,12 +444,12 @@ export default function ApplicationDetailPage() {
                     try {
                       const url = new URL(sourceUrl);
                       if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-                        toast.error('Ungültige URL der Stellenanzeige');
+                        toast.error(t('detail.toasts.invalidJobUrl'));
                         return;
                       }
                       window.open(url.toString(), '_blank', 'noopener,noreferrer');
                     } catch {
-                      toast.error('Ungültige URL der Stellenanzeige');
+                      toast.error(t('detail.toasts.invalidJobUrl'));
                     }
                   }
                 : undefined
@@ -509,13 +511,15 @@ export default function ApplicationDetailPage() {
 /* ============================== sub-components ============================== */
 
 function BackLink({ onClick }: { onClick: () => void }) {
+  const t = useTranslations('applications');
+
   return (
     <button
       onClick={onClick}
       className="inline-flex items-center gap-2 rounded-[3px] px-2.5 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
       <ArrowLeft className="h-4 w-4" />
-      Zurück zu Bewerbungen
+      {t('detail.backToApplications')}
     </button>
   );
 }
@@ -528,6 +532,8 @@ function CelebrationHero({
   firstName?: string | null;
   company?: string | null;
 }) {
+  const t = useTranslations('applications');
+
   return (
     <div className="relative grid grid-cols-[auto_1fr] items-center gap-5 overflow-hidden rounded-[4px] border border-[#BFE9CC] bg-[#ECFAF0] p-6 dark:border-green-400/30 dark:bg-green-400/10 sm:gap-7 sm:p-8">
       <div className="hidden self-end sm:block" style={{ marginBottom: -6 }}>
@@ -538,16 +544,17 @@ function CelebrationHero({
       </div>
       <div>
         <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-[#15803D] dark:text-green-300">
-          Bereit zum Absenden
+          {t('detail.celebration.readyToSend')}
         </p>
         <h2 className="font-heading text-[24px] font-bold leading-tight tracking-[-.02em] text-foreground sm:text-[26px]">
-          {firstName ? `Geschafft, ${firstName}!` : 'Geschafft!'} 🎉
+          {firstName ? t('detail.celebration.titleWithName', { firstName }) : t('detail.celebration.title')} 🎉
         </h2>
         <p className="mt-2 max-w-[48ch] text-[15px] leading-relaxed text-muted-foreground text-pretty">
-          Dein <b className="font-semibold text-foreground">Anschreiben</b> und dein{' '}
-          <b className="font-semibold text-foreground">Lebenslauf</b> sind fertig — lade sie herunter
-          und bewirb dich
-          {company ? ` bei ${company}` : ''}.
+          {t.rich(company ? 'detail.celebration.descriptionWithCompany' : 'detail.celebration.description', {
+            company: company ?? '',
+            coverLetter: (chunks) => <b className="font-semibold text-foreground">{chunks}</b>,
+            resume: (chunks) => <b className="font-semibold text-foreground">{chunks}</b>,
+          })}
         </p>
       </div>
     </div>
@@ -579,11 +586,13 @@ function DocumentsCard({
   onDownloadBoth: () => void;
   onEdit: () => void;
 }) {
+  const t = useTranslations('applications');
+
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-3 px-0.5">
         <h3 className="font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-          Bewerbungsunterlagen
+          {t('detail.documents.title')}
         </h3>
         {files?.resume && (
           <div className="flex flex-wrap gap-2">
@@ -595,12 +604,12 @@ function DocumentsCard({
                 loading={isDownloading.both}
               >
                 <Package className="h-4 w-4" />
-                Beide als ZIP
+                {t('detail.documents.bothAsZip')}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={onEdit}>
               <Pencil className="h-4 w-4" />
-              {files?.coverLetter ? 'Bearbeiten' : 'Lebenslauf bearbeiten'}
+              {files?.coverLetter ? t('detail.documents.edit') : t('detail.documents.editResume')}
             </Button>
           </div>
         )}
@@ -609,22 +618,22 @@ function DocumentsCard({
       <div className="grid gap-4 sm:grid-cols-2">
         {files?.coverLetter ? (
           <DocCard
-            name="Anschreiben"
-            onPreview={() => onPreview('cover-letter', 'Anschreiben')}
+            name={t('detail.documents.coverLetter')}
+            onPreview={() => onPreview('cover-letter', t('detail.documents.coverLetter'))}
             onDownload={onDownloadCoverLetter}
             downloading={isDownloading.coverLetter}
           />
         ) : (
           <DocCardEmpty
-            name="Anschreiben"
-            note="Bei dieser Bewerbung wurde kein Anschreiben generiert"
+            name={t('detail.documents.coverLetter')}
+            note={t('detail.documents.noCoverLetter')}
           />
         )}
 
         {files?.resume && (
           <DocCard
-            name="Lebenslauf"
-            onPreview={() => onPreview('resume', 'Lebenslauf')}
+            name={t('detail.documents.resume')}
+            onPreview={() => onPreview('resume', t('detail.documents.resume'))}
             onDownload={onDownloadResume}
             downloading={isDownloading.resume}
           />
@@ -634,11 +643,11 @@ function DocumentsCard({
       {(files?.coverLetter || files?.resume) && (
         <p className="mt-3.5 flex items-center gap-2 text-[12.5px] text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />
-          Download-Links sind aus Sicherheitsgründen begrenzt gültig
+          {t('detail.documents.downloadLinksLimited')}
           {files?.coverLetter
-            ? ` (bis ${formatDate(files.coverLetter.expiresAt, 'HH:mm')} Uhr)`
+            ? t('detail.documents.expiresAt', { time: formatDate(files.coverLetter.expiresAt, 'HH:mm') })
             : files?.resume
-              ? ` (bis ${formatDate(files.resume.expiresAt, 'HH:mm')} Uhr)`
+              ? t('detail.documents.expiresAt', { time: formatDate(files.resume.expiresAt, 'HH:mm') })
               : ''}
           .
         </p>
@@ -658,6 +667,8 @@ function DocCard({
   onDownload: () => void;
   downloading?: boolean;
 }) {
+  const t = useTranslations('applications');
+
   return (
     <div className="flex flex-col rounded-[4px] border bg-card p-5 transition-colors hover:bg-muted/40">
       <div className="mb-4 flex items-center gap-3.5">
@@ -669,17 +680,17 @@ function DocCard({
         </div>
         <div className="min-w-0">
           <p className="font-heading text-[16.5px] font-bold tracking-tight text-foreground">{name}</p>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">PDF-Dokument</p>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">{t('detail.documents.pdfDocument')}</p>
         </div>
       </div>
       <div className="mt-auto grid grid-cols-[auto_1fr] gap-2.5">
         <Button variant="outline" onClick={onPreview} className="h-11">
           <Eye className="h-4 w-4" />
-          Vorschau
+          {t('detail.documents.preview')}
         </Button>
         <Button onClick={onDownload} loading={downloading} className="h-11">
           <Download className="h-4 w-4" />
-          Download
+          {t('detail.documents.download')}
         </Button>
       </div>
     </div>
@@ -687,6 +698,8 @@ function DocCard({
 }
 
 function DocCardEmpty({ name, note }: { name: string; note: string }) {
+  const t = useTranslations('applications');
+
   return (
     <div className="flex items-start gap-3.5 rounded-[4px] border border-dashed bg-muted/40 p-5">
       <div className="grid h-[60px] w-[50px] shrink-0 place-items-center border border-border bg-muted text-muted-foreground">
@@ -694,7 +707,7 @@ function DocCardEmpty({ name, note }: { name: string; note: string }) {
       </div>
       <div className="min-w-0">
         <p className="font-heading text-[16.5px] font-bold tracking-tight text-muted-foreground">{name}</p>
-        <p className="mt-0.5 text-[13px] text-muted-foreground/80">Nicht vorhanden</p>
+        <p className="mt-0.5 text-[13px] text-muted-foreground/80">{t('detail.documents.missing')}</p>
         <p className="mt-1 text-[12px] text-muted-foreground/70">{note}</p>
       </div>
     </div>
@@ -717,6 +730,8 @@ function NextStepCard({
   onOpenJobUrl?: () => void;
   onInterviewCoach: () => void;
 }) {
+  const t = useTranslations('applications');
+
   if (applied) {
     return (
       <div className="relative grid grid-cols-[46px_1fr] gap-4 overflow-hidden rounded-[4px] border border-[#BFE9CC] bg-[#ECFAF0] p-5 dark:border-green-400/30 dark:bg-green-400/10 sm:p-6">
@@ -725,19 +740,20 @@ function NextStepCard({
         </span>
         <div>
           <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-success">
-            Beworben ✓
+            {t('detail.nextStep.appliedBadge')}
           </p>
           <h3 className="font-heading text-[19px] font-bold tracking-tight text-[#15803D] dark:text-green-300">
-            Stark — Bewerbung eingereicht!
+            {t('detail.nextStep.appliedTitle')}
           </h3>
           <p className="mt-1.5 max-w-[54ch] text-[14px] leading-relaxed text-pretty text-[#3D7A55] dark:text-green-200/80">
-            Viel Erfolg{company ? ` bei ${company}` : ''}. Bereite dich jetzt gezielt mit dem
-            Interview-Coach auf das Gespräch vor.
+            {company
+              ? t('detail.nextStep.appliedDescriptionWithCompany', { company })
+              : t('detail.nextStep.appliedDescription')}
           </p>
           <div className="mt-4 flex flex-wrap gap-2.5">
             <Button onClick={onInterviewCoach}>
               <MessagesSquare className="h-4 w-4" />
-              Zum Interview-Coach
+              {t('detail.nextStep.toInterviewCoach')}
             </Button>
           </div>
         </div>
@@ -752,14 +768,13 @@ function NextStepCard({
       </span>
       <div className="relative">
         <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-brand">
-          Nächster Schritt
+          {t('detail.nextStep.title')}
         </p>
         <h3 className="font-heading text-[19px] font-bold tracking-tight">
-          {company ? `Bei ${company} bewerben` : 'Jetzt bewerben'}
+          {company ? t('detail.nextStep.applyAtCompany', { company }) : t('detail.nextStep.applyNow')}
         </h3>
         <p className="mt-1.5 max-w-[54ch] text-[14px] leading-relaxed text-pretty text-[rgba(229,233,242,.75)]">
-          Reiche deine Unterlagen auf der Karriereseite ein — und markiere die Bewerbung danach als
-          &quot;Beworben&quot;, damit Applo den Status für dich verfolgt.
+          {t('detail.nextStep.description')}
         </p>
         <div className="mt-4 flex flex-wrap gap-2.5">
           <Button
@@ -768,7 +783,7 @@ function NextStepCard({
             className="rounded-[3px] bg-white text-[#1B2A49] hover:bg-[#E5E9F2]"
           >
             <Check className="h-4 w-4" />
-            Als beworben markieren
+            {t('detail.nextStep.markApplied')}
           </Button>
           {onOpenJobUrl && (
             <Button
@@ -777,7 +792,7 @@ function NextStepCard({
               className="rounded-[3px] border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
             >
               <ExternalLink className="h-4 w-4" />
-              Zur Stellenanzeige
+              {t('detail.nextStep.toJobPosting')}
             </Button>
           )}
         </div>
@@ -788,6 +803,7 @@ function NextStepCard({
 
 /* ---- Status tracker ---- */
 function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
+  const t = useTranslations('applications');
   const rejected = status === 'REJECTED';
   let curIdx = TRACK_STEPS.findIndex((s) => s.key === status);
   if (curIdx < 0) curIdx = rejected ? 1 : 0;
@@ -818,7 +834,7 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
                   !done && !current && 'text-muted-foreground',
                 )}
               >
-                {s.label}
+                {t(s.labelKey)}
               </span>
             </div>
             {i < TRACK_STEPS.length - 1 && (
@@ -834,7 +850,7 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
       })}
       {rejected && (
         <StatusChip tone="destructive" withDot={false} className="ml-3">
-          Abgelehnt
+          {t('status.rejected')}
         </StatusChip>
       )}
     </div>
@@ -843,6 +859,7 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
 
 /* ---- ATS disclosure (collapsed by default) ---- */
 function AtsDisclosure({ applicationId }: { applicationId: string }) {
+  const t = useTranslations('applications');
   const [open, setOpen] = useState(false);
   return (
     <div className="overflow-hidden rounded-[4px] border bg-card">
@@ -856,9 +873,9 @@ function AtsDisclosure({ applicationId }: { applicationId: string }) {
           <Sparkles className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold text-foreground">ATS-Analyse</p>
+          <p className="text-[15px] font-semibold text-foreground">{t('detail.ats.title')}</p>
           <p className="mt-0.5 text-[12.5px] text-muted-foreground">
-            Wie gut deine Unterlagen zur Stelle passen — Keywords &amp; Optimierungen.
+            {t('detail.ats.description')}
           </p>
         </div>
         <ChevronDown
@@ -895,6 +912,7 @@ type JobPostingData = {
 };
 
 function JobPostingDisclosure({ jobPosting }: { jobPosting: JobPostingData }) {
+  const t = useTranslations('applications');
   const [open, setOpen] = useState(false);
   return (
     <div className="overflow-hidden rounded-[4px] border bg-card">
@@ -908,7 +926,7 @@ function JobPostingDisclosure({ jobPosting }: { jobPosting: JobPostingData }) {
           <Briefcase className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold text-foreground">Stellenanzeige</p>
+          <p className="text-[15px] font-semibold text-foreground">{t('detail.jobPosting.title')}</p>
           <p className="mt-0.5 truncate text-[12.5px] text-muted-foreground">
             {jobPosting.company}
             {jobPosting.location ? ` · ${jobPosting.location}` : ''}
@@ -932,7 +950,7 @@ function JobPostingDisclosure({ jobPosting }: { jobPosting: JobPostingData }) {
             {jobPosting.description && (
               <div className="border-t pt-4">
                 <h4 className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-                  Beschreibung
+                  {t('detail.jobPosting.description')}
                 </h4>
                 <p className="whitespace-pre-line text-[14px] leading-relaxed text-muted-foreground text-pretty">
                   {jobPosting.description}
@@ -942,7 +960,7 @@ function JobPostingDisclosure({ jobPosting }: { jobPosting: JobPostingData }) {
             {jobPosting.requirements && jobPosting.requirements.length > 0 && (
               <div className="border-t pt-4">
                 <h4 className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground">
-                  Anforderungen
+                  {t('detail.jobPosting.requirements')}
                 </h4>
                 <ul className="space-y-2">
                   {jobPosting.requirements.map((req, i) => (
@@ -974,17 +992,24 @@ function MetaFooter({
   updatedAt: string;
   id: string;
 }) {
+  const t = useTranslations('applications');
+
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-1.5 pt-1.5 text-[12.5px] text-muted-foreground">
       <span className="flex items-center gap-1.5">
         <Calendar className="h-3.5 w-3.5" />
-        Erstellt <b className="font-semibold text-foreground/70">{formatFullTimestamp(createdAt)}</b>
+        {t.rich('detail.meta.created', {
+          date: formatFullTimestamp(createdAt),
+          b: (chunks) => <b className="font-semibold text-foreground/70">{chunks}</b>,
+        })}
       </span>
       <span className="h-1 w-1 bg-border" />
       <span className="flex items-center gap-1.5">
         <RefreshCw className="h-3.5 w-3.5" />
-        Aktualisiert{' '}
-        <b className="font-semibold text-foreground/70">{formatFullTimestamp(updatedAt)}</b>
+        {t.rich('detail.meta.updated', {
+          date: formatFullTimestamp(updatedAt),
+          b: (chunks) => <b className="font-semibold text-foreground/70">{chunks}</b>,
+        })}
       </span>
       <span className="h-1 w-1 bg-border" />
       <span className="flex items-center gap-1.5">
@@ -999,20 +1024,21 @@ function MetaFooter({
 
 /* ---- GENERATING ---- */
 function GeneratingView({ progress, message }: { progress: number; message: string }) {
+  const t = useTranslations('applications');
+
   return (
     <div className="flex flex-col items-center rounded-[4px] border bg-card px-6 py-9 text-center">
       <ApploRig state="process" size={140} aria-hidden />
       <h2 className="font-heading mt-2 text-[23px] font-bold tracking-[-.02em] text-foreground">
-        Deine Bewerbung wird erstellt …
+        {t('detail.generating.title')}
       </h2>
       <p className="mx-auto mt-2 max-w-[44ch] text-[15px] leading-relaxed text-muted-foreground text-pretty">
-        Die KI schreibt dein Anschreiben und deinen Lebenslauf und passt alles an die Stelle an. Das
-        dauert meist unter einer Minute.
+        {t('detail.generating.description')}
       </p>
       <div className="mt-6 w-full max-w-[440px]">
         <Progress value={progress} className="h-2.5" />
         <div className="mt-3 flex items-center justify-between text-[13.5px]">
-          <span className="font-semibold text-foreground">{message || 'Wird vorbereitet …'}</span>
+          <span className="font-semibold text-foreground">{message || t('detail.generating.preparing')}</span>
           {progress > 0 && (
             <span className="font-mono font-semibold tabular-nums text-muted-foreground">{progress}%</span>
           )}
@@ -1024,18 +1050,19 @@ function GeneratingView({ progress, message }: { progress: number; message: stri
 
 /* ---- PENDING ---- */
 function PendingView({ onStart }: { onStart: () => void }) {
+  const t = useTranslations('applications');
+
   return (
     <div className="flex flex-col items-center rounded-[4px] border bg-card px-6 py-9 text-center">
       <ApploRig state="wave" size={140} aria-hidden />
       <h2 className="font-heading mt-2 text-[23px] font-bold tracking-[-.02em] text-foreground">
-        Deine Bewerbung ist angelegt
+        {t('detail.pending.title')}
       </h2>
       <p className="mx-auto mt-2 max-w-[44ch] text-[15px] leading-relaxed text-muted-foreground text-pretty">
-        Wirf einen Blick auf Lebenslauf und Anschreiben, passe sie bei Bedarf an — und starte dann
-        den Export.
+        {t('detail.pending.description')}
       </p>
       <Button size="lg" className="mt-6" onClick={onStart}>
-        Unterlagen anpassen &amp; Export starten
+        {t('detail.pending.startExport')}
         <ArrowRight className="h-4 w-4" />
       </Button>
     </div>
@@ -1052,19 +1079,20 @@ function FailedView({
   retrying: boolean;
   onRetry: () => void;
 }) {
+  const t = useTranslations('applications');
+
   return (
     <div className="flex flex-col items-center rounded-[4px] border bg-card px-6 py-9 text-center">
       <StatusChip tone="destructive" withDot={false} className="mb-3.5">
         <AlertCircle className="h-3.5 w-3.5" />
-        Fehlgeschlagen
+        {t('detail.failed.status')}
       </StatusChip>
       <ApploRig state="idle" size={128} aria-hidden />
       <h2 className="font-heading mt-2 text-[23px] font-bold tracking-[-.02em] text-foreground">
-        Da ist leider etwas schiefgelaufen
+        {t('detail.failed.title')}
       </h2>
       <p className="mx-auto mt-2 max-w-[44ch] text-[15px] leading-relaxed text-muted-foreground text-pretty">
-        Bei der Erstellung deiner Unterlagen ist ein Fehler aufgetreten. Versuch es noch einmal —
-        meist klappt es beim zweiten Anlauf.
+        {t('detail.failed.description')}
       </p>
       {errorMessage && (
         <p className="mx-auto mt-4 max-w-[480px] rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] px-4 py-3 text-left font-mono text-[12.5px] leading-relaxed text-destructive dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300">
@@ -1074,7 +1102,7 @@ function FailedView({
       <div className="mt-6 flex flex-wrap justify-center gap-2.5">
         <Button onClick={onRetry} loading={retrying}>
           <RefreshCw className={cn('h-4 w-4', retrying && 'animate-spin')} />
-          Erneut versuchen
+          {t('detail.failed.retry')}
         </Button>
       </div>
     </div>
@@ -1083,14 +1111,15 @@ function FailedView({
 
 /* ---- Feature-gated ATS section (unchanged behaviour) ---- */
 function AtsAnalysisSection({ applicationId }: { applicationId: string }) {
+  const t = useTranslations('applications');
   const { hasAccess, isLoading } = useFeatureGate('atsOptimization');
   if (isLoading) return <Skeleton className="h-48 w-full" />;
   if (!hasAccess) {
     return (
       <UpgradePrompt
-        feature="ATS-Analyse"
+        feature={t('detail.ats.title')}
         requiredTier="PREMIUM"
-        description="Upgrade jetzt zu Premium um dieses Feature zu benutzen."
+        description={t('detail.ats.upgradeDescription')}
       />
     );
   }

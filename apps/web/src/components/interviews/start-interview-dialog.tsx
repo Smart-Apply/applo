@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Dialog,
   DialogContent,
@@ -33,38 +34,13 @@ interface StartInterviewDialogProps {
   isLoading?: boolean;
 }
 
-const interviewTypes: { value: InterviewType; label: string; description: string }[] = [
-  { value: 'MIXED', label: 'Gemischt', description: 'Kombination aller Fragetypen' },
-  { value: 'BEHAVIORAL', label: 'Verhaltensbezogen', description: 'STAR-Methode, Situationsfragen' },
-  { value: 'TECHNICAL', label: 'Technisch', description: 'Fachliche & technische Fragen' },
-  { value: 'CASE_STUDY', label: 'Fallstudie', description: 'Problemlösung & Analyse' },
-];
-
-const difficultyLevels: { value: InterviewDifficulty; label: string; description: string }[] = [
-  { value: 'EASY', label: 'Einsteiger', description: 'Grundlegende Fragen' },
-  { value: 'MEDIUM', label: 'Standard', description: 'Mittlerer Schwierigkeitsgrad' },
-  { value: 'HARD', label: 'Experte', description: 'Komplexe & herausfordernde Fragen' },
-];
-
-const industries = [
-  'IT / Software',
-  'Finanzen / Banking',
-  'Gesundheitswesen',
-  'Vertrieb / Sales',
-  'Marketing',
-  'Beratung / Consulting',
-  'Produktion / Fertigung',
-  'Logistik',
-  'Personalwesen / HR',
-  'Sonstiges',
-];
-
 export function StartInterviewDialog({
   open,
   onOpenChange,
   onStart,
   isLoading,
 }: StartInterviewDialogProps) {
+  const t = useTranslations('interviews');
   const [mode, setMode] = useState<'application' | 'custom'>('custom');
   const [formData, setFormData] = useState<StartInterviewDto>({
     type: 'MIXED',
@@ -75,6 +51,29 @@ export function StartInterviewDialog({
 
   const { data: applications = [] } = useApplications({ includeJobPosting: true });
   const readyApplications = applications.filter((app: Application) => app.status === 'READY');
+  const interviewTypes: { value: InterviewType; label: string; description: string }[] = [
+    { value: 'MIXED', label: t('startDialog.types.mixed.label'), description: t('startDialog.types.mixed.description') },
+    { value: 'BEHAVIORAL', label: t('startDialog.types.behavioral.label'), description: t('startDialog.types.behavioral.description') },
+    { value: 'TECHNICAL', label: t('startDialog.types.technical.label'), description: t('startDialog.types.technical.description') },
+    { value: 'CASE_STUDY', label: t('startDialog.types.caseStudy.label'), description: t('startDialog.types.caseStudy.description') },
+  ];
+  const difficultyLevels: { value: InterviewDifficulty; label: string; description: string }[] = [
+    { value: 'EASY', label: t('startDialog.difficulty.easy.label'), description: t('startDialog.difficulty.easy.description') },
+    { value: 'MEDIUM', label: t('startDialog.difficulty.medium.label'), description: t('startDialog.difficulty.medium.description') },
+    { value: 'HARD', label: t('startDialog.difficulty.hard.label'), description: t('startDialog.difficulty.hard.description') },
+  ];
+  const industries = [
+    t('startDialog.industries.it'),
+    t('startDialog.industries.finance'),
+    t('startDialog.industries.healthcare'),
+    t('startDialog.industries.sales'),
+    t('startDialog.industries.marketing'),
+    t('startDialog.industries.consulting'),
+    t('startDialog.industries.manufacturing'),
+    t('startDialog.industries.logistics'),
+    t('startDialog.industries.hr'),
+    t('startDialog.industries.other'),
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,48 +108,47 @@ export function StartInterviewDialog({
       <DialogContent className="sm:max-w-[600px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Neues Interview starten</DialogTitle>
+            <DialogTitle>{t('startDialog.title')}</DialogTitle>
             <DialogDescription>
-              Konfigurieren Sie Ihre Interview-Übung. Die KI passt die Fragen an Ihre Einstellungen an.
+              {t('startDialog.description')}
             </DialogDescription>
           </DialogHeader>
 
           <Tabs value={mode} onValueChange={(v) => setMode(v as 'application' | 'custom')} className="mt-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="custom">Freies Interview</TabsTrigger>
+              <TabsTrigger value="custom">{t('startDialog.tabs.custom')}</TabsTrigger>
               <TabsTrigger value="application">
-                Basierend auf Bewerbung
+                {t('startDialog.tabs.application')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="application" className="space-y-4 mt-4">
               {readyApplications.length > 0 ? (
                 <div className="space-y-2">
-                  <Label>Bewerbung auswählen</Label>
+                  <Label>{t('startDialog.application.selectLabel')}</Label>
                   <Select
                     value={formData.applicationId || ''}
                     onValueChange={(v) => updateField('applicationId', v)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Wählen Sie eine Bewerbung" />
+                      <SelectValue placeholder={t('startDialog.application.selectPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {readyApplications.map((app: Application) => (
                         <SelectItem key={app.id} value={app.id}>
-                          {app.title || app.jobPosting?.title || 'Unbenannte Bewerbung'}
+                          {app.title || app.jobPosting?.title || t('startDialog.application.unnamed')}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Die Fragen werden basierend auf der Stellenbeschreibung generiert.
+                    {t('startDialog.application.helper')}
                   </p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-3 rounded-[3px] border border-dashed py-8 text-center">
                   <p className="max-w-sm text-sm text-muted-foreground">
-                    Du hast noch keine fertige Bewerbung. Erstelle zuerst eine
-                    Bewerbung, um daraus passende Interview-Fragen zu generieren.
+                    {t('startDialog.application.empty')}
                   </p>
                   <Button
                     asChild
@@ -160,7 +158,7 @@ export function StartInterviewDialog({
                   >
                     <Link href="/applications/new">
                       <Plus className="mr-1 h-4 w-4" />
-                      Bewerbung erstellen
+                      {t('startDialog.application.createApplication')}
                     </Link>
                   </Button>
                 </div>
@@ -170,19 +168,19 @@ export function StartInterviewDialog({
             <TabsContent value="custom" className="space-y-4 mt-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="jobTitle">Position</Label>
+                  <Label htmlFor="jobTitle">{t('startDialog.custom.position')}</Label>
                   <Input
                     id="jobTitle"
-                    placeholder="z.B. Software Engineer"
+                    placeholder={t('startDialog.custom.positionPlaceholder')}
                     value={formData.jobTitle || ''}
                     onChange={(e) => updateField('jobTitle', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="company">Unternehmen</Label>
+                  <Label htmlFor="company">{t('startDialog.custom.company')}</Label>
                   <Input
                     id="company"
-                    placeholder="z.B. Google"
+                    placeholder={t('startDialog.custom.companyPlaceholder')}
                     value={formData.company || ''}
                     onChange={(e) => updateField('company', e.target.value)}
                   />
@@ -190,13 +188,13 @@ export function StartInterviewDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="industry">Branche</Label>
+                <Label htmlFor="industry">{t('startDialog.custom.industry')}</Label>
                 <Select
                   value={formData.industry || ''}
                   onValueChange={(v) => updateField('industry', v)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Optional: Branche wählen" />
+                    <SelectValue placeholder={t('startDialog.custom.industryPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {industries.map((ind) => (
@@ -209,10 +207,10 @@ export function StartInterviewDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="jobDescription">Stellenbeschreibung (optional)</Label>
+                <Label htmlFor="jobDescription">{t('startDialog.custom.jobDescription')}</Label>
                 <Textarea
                   id="jobDescription"
-                  placeholder="Fügen Sie die Stellenbeschreibung ein, um spezifischere Fragen zu erhalten..."
+                  placeholder={t('startDialog.custom.jobDescriptionPlaceholder')}
                   value={formData.jobDescription || ''}
                   onChange={(e) => updateField('jobDescription', e.target.value)}
                   rows={3}
@@ -225,7 +223,7 @@ export function StartInterviewDialog({
           <div className="space-y-4 mt-6 pt-4 border-t">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Interview-Typ</Label>
+                <Label>{t('startDialog.typeLabel')}</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(v) => updateField('type', v as InterviewType)}
@@ -249,7 +247,7 @@ export function StartInterviewDialog({
               </div>
 
               <div className="space-y-2">
-                <Label>Schwierigkeit</Label>
+                <Label>{t('startDialog.difficultyLabel')}</Label>
                 <Select
                   value={formData.difficulty}
                   onValueChange={(v) => updateField('difficulty', v as InterviewDifficulty)}
@@ -270,7 +268,7 @@ export function StartInterviewDialog({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Anzahl Fragen</Label>
+                <Label>{t('startDialog.questionCountLabel')}</Label>
                 <Select
                   value={String(formData.maxQuestions || 10)}
                   onValueChange={(v) => updateField('maxQuestions', parseInt(v))}
@@ -279,16 +277,16 @@ export function StartInterviewDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="5">5 Fragen</SelectItem>
-                    <SelectItem value="10">10 Fragen</SelectItem>
-                    <SelectItem value="15">15 Fragen</SelectItem>
-                    <SelectItem value="20">20 Fragen</SelectItem>
+                    <SelectItem value="5">{t('startDialog.questionCount', { count: 5 })}</SelectItem>
+                    <SelectItem value="10">{t('startDialog.questionCount', { count: 10 })}</SelectItem>
+                    <SelectItem value="15">{t('startDialog.questionCount', { count: 15 })}</SelectItem>
+                    <SelectItem value="20">{t('startDialog.questionCount', { count: 20 })}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Sprache</Label>
+                <Label>{t('startDialog.languageLabel')}</Label>
                 <Select
                   value={formData.language || 'de'}
                   onValueChange={(v) => updateField('language', v)}
@@ -297,7 +295,7 @@ export function StartInterviewDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="de">Deutsch</SelectItem>
+                    <SelectItem value="de">{t('startDialog.languageGerman')}</SelectItem>
                     <SelectItem value="en">English</SelectItem>
                   </SelectContent>
                 </Select>
@@ -312,14 +310,14 @@ export function StartInterviewDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Abbrechen
+              {t('startDialog.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isLoading || (mode === 'application' && !formData.applicationId)}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Interview starten
+              {t('startDialog.start')}
             </Button>
           </DialogFooter>
         </form>

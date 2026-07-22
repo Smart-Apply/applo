@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +57,7 @@ export function InterviewVoice({
   onComplete,
   onSwitchToText,
 }: InterviewVoiceProps) {
+  const t = useTranslations('interviews');
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<VoiceError>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -215,7 +217,7 @@ export function InterviewVoice({
     const hasAnswer = turns.some((turn) => turn.role === 'candidate');
     if (!hasAnswer) {
       setPhase('ended');
-      toast.info('Es wurde keine Antwort aufgezeichnet.');
+      toast.info(t('voice.toasts.noAnswerRecorded'));
       onComplete();
       return;
     }
@@ -227,7 +229,7 @@ export function InterviewVoice({
       setPhase('ended');
       onComplete();
     }
-  }, [cleanupConnection, submitMutation, onComplete]);
+  }, [cleanupConnection, submitMutation, onComplete, t]);
 
   const allowedMaxMinutes =
     remainingMinutes >= 0 ? Math.min(maxSessionMinutes, remainingMinutes) : maxSessionMinutes;
@@ -403,19 +405,19 @@ export function InterviewVoice({
           setWrapUpHint(true);
           sendTimeCue(
             cueIsGerman
-              ? 'Zeithinweis: Es verbleibt noch etwa eine Minute. Schließe das aktuelle Thema ab und stelle höchstens EINE letzte Frage.'
-              : 'Time note: About one minute remains. Finish the current topic and ask at most ONE final question.',
+              ? t('voice.cues.de.wrapUp')
+              : t('voice.cues.en.wrapUp'),
           );
         }, totalMs - WARN_LEAD_SECONDS * 1000);
       }
       closeTimerRef.current = setTimeout(() => {
         if (closingSentRef.current) return;
         closingSentRef.current = true;
-        toast.info('Die Zeit ist um – Applo verabschiedet sich.');
+        toast.info(t('voice.toasts.timeUp'));
         const sent = sendTimeCue(
           cueIsGerman
-            ? 'Die Zeit ist um. Bedanke dich jetzt kurz und warm, verabschiede dich und beende das Gespräch – stelle keine weiteren Fragen.'
-            : 'Time is up. Give brief, warm thanks, say goodbye, and end the interview now – ask no further questions.',
+            ? t('voice.cues.de.timeUp')
+            : t('voice.cues.en.timeUp'),
         );
         if (!sent) {
           void stop();
@@ -436,7 +438,7 @@ export function InterviewVoice({
       setError(denied ? 'mic' : 'connect');
       setPhase('idle');
     }
-  }, [startMutation, handleRealtimeEvent, stop, cleanupConnection, effectiveMinutes, cueIsGerman, sendTimeCue]);
+  }, [startMutation, handleRealtimeEvent, stop, cleanupConnection, effectiveMinutes, cueIsGerman, sendTimeCue, t]);
 
   const toggleMute = useCallback(() => {
     const tracks = micStreamRef.current?.getAudioTracks() ?? [];
@@ -513,11 +515,10 @@ export function InterviewVoice({
           {/* Content */}
           <div className="flex flex-col p-8 md:p-10">
             <h2 className="text-[23px] font-bold tracking-tight">
-              Bereit für dein Sprach-Interview?
+              {t('voice.preCall.title')}
             </h2>
             <p className="mt-2.5 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-              Du führst ein realistisches Gespräch mit Applo, deinem KI-Interviewer. Sprich frei und
-              natürlich — am Ende erhältst du eine vollständige Auswertung.
+              {t('voice.preCall.description')}
             </p>
 
             {error !== null && (
@@ -525,11 +526,11 @@ export function InterviewVoice({
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <div>
                   {error === 'mic' &&
-                    'Kein Mikrofonzugriff. Bitte erlaube den Mikrofonzugriff in deinem Browser und versuche es erneut – oder wechsle zum Text-Chat.'}
+                    t('voice.errors.mic')}
                   {error === 'unsupported' &&
-                    'Dein Browser unterstützt keine Sprach-Interviews. Bitte nutze einen aktuellen Browser oder wechsle zum Text-Chat.'}
+                    t('voice.errors.unsupported')}
                   {error === 'connect' &&
-                    'Die Sprachverbindung konnte nicht aufgebaut werden. Bitte versuche es erneut oder wechsle zum Text-Chat.'}
+                    t('voice.errors.connect')}
                 </div>
               </div>
             )}
@@ -539,13 +540,13 @@ export function InterviewVoice({
               {[
                 {
                   icon: <Mic className="h-[18px] w-[18px] text-primary" />,
-                  title: 'Mikrofon bereit',
-                  sub: 'Zugriff wird beim Start abgefragt',
+                  title: t('voice.checklist.micReady.title'),
+                  sub: t('voice.checklist.micReady.description'),
                 },
                 {
                   icon: <Headphones className="h-[18px] w-[18px] text-primary" />,
-                  title: 'Ruhige Umgebung',
-                  sub: 'Kopfhörer empfohlen, um Echo zu vermeiden',
+                  title: t('voice.checklist.quietEnvironment.title'),
+                  sub: t('voice.checklist.quietEnvironment.description'),
                 },
               ].map((item) => (
                 <div
@@ -568,7 +569,7 @@ export function InterviewVoice({
 
             {/* Duration selector */}
             <div className="mt-6">
-              <div className="mb-2.5 text-sm font-semibold">Gesprächsdauer</div>
+              <div className="mb-2.5 text-sm font-semibold">{t('voice.durationLabel')}</div>
               <div className="flex gap-2.5">
                 {DURATION_OPTIONS.map((minutes) => {
                   const disabled = !enabledOptions.includes(minutes);
@@ -587,14 +588,14 @@ export function InterviewVoice({
                         disabled && 'pointer-events-none opacity-40',
                       )}
                     >
-                      {minutes} Min.
+                      {t('voice.minutesShort', { count: minutes })}
                     </button>
                   );
                 })}
               </div>
               {enabledOptions.length < DURATION_OPTIONS.length && (
                 <p className="mt-2 text-[12.5px] text-muted-foreground">
-                  Optionen über deinem verbleibenden Zeitkontingent sind deaktiviert.
+                  {t('voice.durationDisabledHint')}
                 </p>
               )}
             </div>
@@ -608,13 +609,13 @@ export function InterviewVoice({
                 loading={startMutation.isPending || phase === 'connecting'}
               >
                 {!(startMutation.isPending || phase === 'connecting') && <Mic className="h-5 w-5" />}
-                {phase === 'connecting' ? 'Verbindung wird hergestellt …' : 'Gespräch starten'}
+                {phase === 'connecting' ? t('voice.connecting') : t('voice.startCall')}
               </Button>
 
               {remainingMinutes >= 0 && (
                 <span className="inline-flex h-[38px] items-center gap-2 rounded-[2px] border border-[#BFE9CC] bg-[#ECFAF0] px-3.5 text-[13.5px] font-semibold text-success dark:border-green-400/30 dark:bg-green-400/10">
                   <Clock className="h-4 w-4" />
-                  {remainingMinutes} Min. verbleibend
+                  {t('voice.minutesRemaining', { count: remainingMinutes })}
                 </span>
               )}
 
@@ -624,7 +625,7 @@ export function InterviewVoice({
                 className="ml-auto gap-2 text-secondary hover:text-primary"
               >
                 <Keyboard className="h-[17px] w-[17px]" />
-                Lieber tippen? Zum Text-Chat
+                {t('voice.switchToText')}
               </Button>
             </div>
           </div>
@@ -642,12 +643,12 @@ export function InterviewVoice({
           <span className="flex h-7 w-7 items-center justify-center rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
             <Mic className="h-[18px] w-[18px]" />
           </span>
-          {session.jobTitle ? `Sprach-Interview · ${session.jobTitle}` : 'Sprach-Interview'}
+          {session.jobTitle ? t('voice.liveTitleWithJob', { jobTitle: session.jobTitle }) : t('voice.liveTitle')}
         </div>
         {phase === 'live' && (
           <Badge className="gap-1.5 bg-primary text-primary-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            Verbunden
+            {t('voice.connected')}
           </Badge>
         )}
       </div>
@@ -671,7 +672,7 @@ export function InterviewVoice({
           {phase === 'ending' ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Auswertung wird erstellt …
+              {t('voice.evaluationCreating')}
             </>
           ) : interviewerSpeaking ? (
             <>
@@ -688,12 +689,12 @@ export function InterviewVoice({
                   />
                 ))}
               </span>
-              Applo spricht …
+              {t('voice.apploSpeaking')}
             </>
           ) : candidateSpeaking ? (
-            'Du sprichst …'
+            t('voice.youSpeaking')
           ) : (
-            'Sprich, wenn du bereit bist.'
+            t('voice.speakWhenReady')
           )}
         </div>
 
@@ -710,7 +711,7 @@ export function InterviewVoice({
         {phase === 'live' && wrapUpHint && (
           <div className="mt-3 inline-flex h-[32px] items-center gap-2 rounded-[2px] border border-[#F3E3B3] bg-[#FDF6E7] px-3.5 text-[13px] font-semibold text-[#854D0E] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
             <Clock className="h-3.5 w-3.5" />
-            Noch etwa 1 Minute
+            {t('voice.oneMinuteRemaining')}
           </div>
         )}
 
@@ -719,14 +720,14 @@ export function InterviewVoice({
           <div className="mt-6 w-full max-w-[520px]">
             <div className="mb-2 flex items-center gap-2 text-[13px] text-muted-foreground">
               <Mic className="h-4 w-4" />
-              <span>Dein Mikrofon</span>
+              <span>{t('voice.yourMicrophone')}</span>
               {heardSpeech ? (
                 <span className="ml-auto inline-flex items-center gap-1 font-semibold text-success">
                   <Check className="h-[15px] w-[15px]" strokeWidth={3} />
-                  Stimme erkannt
+                  {t('voice.voiceDetected')}
                 </span>
               ) : (
-                <span className="ml-auto">Sprich, damit der Interviewer reagiert …</span>
+                <span className="ml-auto">{t('voice.speakPrompt')}</span>
               )}
             </div>
             <div className="h-2.5 w-full overflow-hidden bg-muted">
@@ -749,7 +750,7 @@ export function InterviewVoice({
                     turn.role === 'interviewer' ? 'text-accent' : 'text-primary',
                   )}
                 >
-                  {turn.role === 'interviewer' ? 'Applo' : 'Du'}:
+                  {turn.role === 'interviewer' ? 'Applo' : t('voice.youLabel')}:
                 </span>{' '}
                 <span className="text-secondary">{turn.text}</span>
               </div>
@@ -771,7 +772,7 @@ export function InterviewVoice({
               )}
             >
               {isMuted ? <MicOff className="h-[19px] w-[19px]" /> : <Mic className="h-[19px] w-[19px]" />}
-              {isMuted ? 'Stumm' : 'Mikrofon an'}
+              {isMuted ? t('voice.muted') : t('voice.microphoneOn')}
             </Button>
             <Button
               variant="destructive"
@@ -780,7 +781,7 @@ export function InterviewVoice({
               className="h-[52px] rounded-[3px] px-6"
             >
               <PhoneOff className="h-[19px] w-[19px]" />
-              Gespräch beenden
+              {t('voice.endCall')}
             </Button>
           </div>
         )}

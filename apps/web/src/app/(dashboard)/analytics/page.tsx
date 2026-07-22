@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Send, Sparkles, Trophy, Target } from 'lucide-react';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,15 +24,6 @@ import { ScoreBucketsChart } from '@/components/analytics/score-buckets-chart';
 import { TopTemplatesCard } from '@/components/analytics/top-templates-card';
 import { RangeToggle } from '@/components/analytics/range-toggle';
 
-// ─── KPI tooltip copy ─────────────────────────────────────────────────
-
-const TIPS = {
-  applied:       'Wie viele deiner erstellten Bewerbungen du tatsächlich <b>abgeschickt</b> hast. Mehr Bewerbungen = mehr Chancen.',
-  interviewRate: 'Anteil deiner abgeschickten Bewerbungen, die zu einer <b>Interview-Einladung</b> geführt haben. Üblicher Schnitt: 15–25 %.',
-  accepted:      'Bewerbungen, die mit einem <b>Job-Angebot</b> endeten.',
-  ats:           'Wie gut deine Lebensläufe von Bewerber-Management-Systemen (<b>ATS</b>) gelesen werden — 0 bis 100. Ziel: 80+.',
-};
-
 /**
  * Premium analytics dashboard.
  *
@@ -43,6 +35,7 @@ const TIPS = {
  */
 export default function AnalyticsPage() {
   const router = useRouter();
+  const t = useTranslations('analytics');
   const { hasAccess, isLoading: gateLoading } = useFeatureGate('advancedAnalytics');
   const [range, setRange] = useState<AnalyticsRange>(30);
 
@@ -81,9 +74,9 @@ export default function AnalyticsPage() {
       <div className="container max-w-7xl py-6">
         <Card>
           <CardHeader>
-            <CardTitle>Analytics konnte nicht geladen werden</CardTitle>
+            <CardTitle>{t('page.errorTitle')}</CardTitle>
             <CardDescription>
-              {error instanceof Error ? error.message : 'Unbekannter Fehler'}
+              {error instanceof Error ? error.message : t('page.unknownError')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -103,10 +96,10 @@ export default function AnalyticsPage() {
             <span className="grid place-items-center w-9 h-9 rounded-[3px] border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
               <BarChart3 size={20} strokeWidth={2} />
             </span>
-            Analytics
+            {t('page.title')}
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Wie läuft deine Bewerbungssuche? Trends, Konversionsraten und Template-Performance auf einen Blick.
+            {t('page.description')}
           </p>
         </div>
         {!isEmpty && (
@@ -117,7 +110,7 @@ export default function AnalyticsPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full bg-success opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 bg-success" />
               </span>
-              Aktualisiert gerade eben
+              {t('page.updatedNow')}
             </span>
           </div>
         )}
@@ -134,8 +127,8 @@ export default function AnalyticsPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               icon={Send}
-              label="Beworben"
-              tipHtml={TIPS.applied}
+              label={t('page.kpis.applied.label')}
+              tipHtml={t('page.kpis.applied.tipHtml')}
               value={data.totals.applied}
               delta={kpis.applied.delta}
               since={kpis.sinceLabel}
@@ -144,8 +137,8 @@ export default function AnalyticsPage() {
             />
             <KpiCard
               icon={Sparkles}
-              label="Interview-Quote"
-              tipHtml={TIPS.interviewRate}
+              label={t('page.kpis.interviewRate.label')}
+              tipHtml={t('page.kpis.interviewRate.tipHtml')}
               value={`${data.interviewRate}%`}
               delta={kpis.interviewRate.delta}
               since={kpis.sinceLabel}
@@ -154,8 +147,8 @@ export default function AnalyticsPage() {
             />
             <KpiCard
               icon={Trophy}
-              label="Angenommen"
-              tipHtml={TIPS.accepted}
+              label={t('page.kpis.accepted.label')}
+              tipHtml={t('page.kpis.accepted.tipHtml')}
               value={data.totals.accepted}
               delta={kpis.accepted.delta}
               since={kpis.sinceLabel}
@@ -164,8 +157,8 @@ export default function AnalyticsPage() {
             />
             <KpiCard
               icon={Target}
-              label="Ø ATS-Score"
-              tipHtml={TIPS.ats}
+              label={t('page.kpis.ats.label')}
+              tipHtml={t('page.kpis.ats.tipHtml')}
               value={data.averageAtsScore ?? '—'}
               unit="/100"
             />

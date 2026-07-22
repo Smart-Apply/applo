@@ -179,6 +179,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Files:** react-dropzone, jszip
 - **Markdown:** marked, turndown
 - **Toast:** sonner
+- **i18n:** next-intl 4 — cookie-based (`NEXT_LOCALE`, `Accept-Language` fallback, default `de`), **no URL locale prefixes**. Namespaced messages under `apps/web/messages/{de,en}/*.json` (statically imported by `src/i18n/messages.ts`); per-request config in `src/i18n/request.ts`; `LanguageSwitcher`/`useLocaleSwitch` in `components/i18n/`. Non-React modules (error messages, Zod schemas, date/enum-label formatting) read the locale via `lib/i18n-runtime.ts` (`getActiveLocale`/`pick`) with small in-code bilingual dicts — NOT the JSON messages. Legal pages (Impressum/Datenschutz/AGB) stay German-only; the FAQ and everything else is bilingual. Document language (generated PDFs, template mimic) remains driven by `Application.language`, independent of the UI locale.
 - **Deployment:** **Cloudflare Workers** via `@opennextjs/cloudflare` 1.19 + `wrangler` 4.85
 
 ## Backend Modules (`apps/api/src/`)
@@ -211,6 +212,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Applo. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 5/month, Pro+ unlimited); usage recorded only after success. Each check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
 
 ## Frontend Structure
+- `messages/` - next-intl message catalogs (`de/*.json` + `en/*.json`, one file per namespace: common, auth, twoFactor, applications, editor, wizard, profile, dashboard, settings, analytics, subscription, jobs, interviews, validation, templates, landing, faq). de/en key trees must stay identical.
 - `app/` (App Router with route groups)
   - `(auth)/` - Login, Register pages
   - `(dashboard)/` - Profile, Job Postings, Applications, PDF Preview
@@ -219,9 +221,15 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - `ui/` - shadcn/ui components
   - `forms/` - Custom form components
   - `pdf/` - PDF preview & editing components
+  - `i18n/` - LanguageSwitcher + useLocaleSwitch + LocaleRuntimeSync
+- `i18n/`
+  - `config.ts` - locales (de/en), cookie name, Accept-Language picker
+  - `request.ts` - next-intl per-request config (cookie → header → de)
+  - `messages.ts` - static loader for the namespace JSONs
 - `lib/`
   - `api-client.ts` - Typed fetch wrapper for backend API
   - `providers.tsx` - React Query & Toaster providers
+  - `i18n-runtime.ts` - active-locale access for non-React modules (getActiveLocale, pick, setLocaleCookie, getIntlLocale)
   - `utils.ts` - Helper functions (cn, formatDate, truncate)
 - `stores/`
   - `auth-store.ts` - Zustand store (user, token, isAuthenticated)

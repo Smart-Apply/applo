@@ -1,0 +1,84 @@
+{
+  "list": {
+    "title": "Job postings",
+    "description": "Manage your saved job postings and create applications from them.",
+    "toasts": {
+      "saved": "Job posting saved",
+      "created": "Job posting created",
+      "deleted": "Job posting deleted"
+    },
+    "actions": {
+      "close": "Close",
+      "add": "Add new job",
+      "openOriginal": "Open original",
+      "showDetails": "Show details",
+      "apply": "Apply",
+      "delete": "Delete"
+    },
+    "input": {
+      "title": "Add new job posting",
+      "description": "Add a URL or copy the text to save the job.",
+      "tabs": {
+        "link": "By link",
+        "manual": "Manual"
+      }
+    },
+    "moreRequirements": "+{count} more",
+    "empty": {
+      "title": "No job postings",
+      "description": "You have not saved any job postings yet. Add your first job to get started.",
+      "action": "Add first job"
+    },
+    "workflow": {
+      "title": "How the Applo workflow works",
+      "step1": {
+        "title": "1 · Save job",
+        "description": "Add a URL from LinkedIn/Indeed or copy the posting text."
+      },
+      "step2": {
+        "title": "2 · Analyze",
+        "description": "Our AI automatically extracts all important requirements and skills."
+      },
+      "step3": {
+        "title": "3 · Apply",
+        "description": "Create a tailored application for this job with one click."
+      }
+    },
+    "deleteDialog": {
+      "title": "Delete job posting?",
+      "description": "Do you really want to delete the job posting <strong>{title}</strong>?",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    }
+  },
+  "detail": {
+    "loading": "Loading job posting...",
+    "back": "Back",
+    "notFound": {
+      "title": "Job posting not found",
+      "description": "The requested job posting does not exist or you do not have permission.",
+      "toApplications": "To applications"
+    },
+    "source": "Source",
+    "sections": {
+      "description": "Job description",
+      "requirements": "Requirements",
+      "responsibilities": "Tasks & responsibilities",
+      "niceToHave": "Nice to have",
+      "rawText": "Original text"
+    },
+    "showFullText": "Show full text"
+  },
+  "hooks": {
+    "createError": "Failed to create job posting",
+    "createSuccess": "Job posting created successfully",
+    "loadingTitle": "Loading...",
+    "analyzingTitle": "Analyzing...",
+    "unknownCompany": "Unknown",
+    "parseError": "Failed to analyze job posting",
+    "parseSuccess": "Job posting analyzed successfully",
+    "deleteError": "Failed to delete job posting",
+    "deleteSuccess": "Job posting deleted successfully"
+  }
+}

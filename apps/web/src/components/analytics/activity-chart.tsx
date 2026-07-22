@@ -7,6 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   ResponsiveContainer, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -25,10 +26,10 @@ import type { AnalyticsOverview } from '@/types';
 // ─── Series config (ordered largest → smallest for painter's order) ────
 
 const SERIES = [
-  { key: 'created',   label: 'Erstellt',   color: CHART_COLORS.created   },
-  { key: 'applied',   label: 'Beworben',   color: CHART_COLORS.applied   },
-  { key: 'interview', label: 'Interview',  color: CHART_COLORS.interview },
-  { key: 'accepted',  label: 'Angenommen', color: CHART_COLORS.accepted  },
+  { key: 'created',   labelKey: 'activity.series.created',   color: CHART_COLORS.created   },
+  { key: 'applied',   labelKey: 'activity.series.applied',   color: CHART_COLORS.applied   },
+  { key: 'interview', labelKey: 'activity.series.interview',  color: CHART_COLORS.interview },
+  { key: 'accepted',  labelKey: 'activity.series.accepted', color: CHART_COLORS.accepted  },
 ] as const;
 
 type SeriesKey = typeof SERIES[number]['key'];
@@ -44,6 +45,7 @@ function getVal(d: AnalyticsOverview['timeseries30d'][number], key: SeriesKey): 
 // ─── Custom tooltip ────────────────────────────────────────────────────
 
 function ChartTip({ active, payload, label }: TooltipContentProps<ValueType, NameType>) {
+  const t = useTranslations('analytics');
   if (!active || !payload?.length) return null;
   return (
     <div
@@ -58,7 +60,7 @@ function ChartTip({ active, payload, label }: TooltipContentProps<ValueType, Nam
         return (
           <div key={String(entry.dataKey)} className="flex items-center gap-2 leading-[1.7]">
             <span className="w-2 h-2 rounded-[3px] flex-none" style={{ background: s?.color }} />
-            <span className="flex-1" style={{ color: '#C8D0E0' }}>{s?.label}</span>
+            <span className="flex-1" style={{ color: '#C8D0E0' }}>{s ? t(s.labelKey) : ''}</span>
             <span className="font-bold tabular-nums">{entry.value}</span>
           </div>
         );
@@ -77,6 +79,7 @@ interface Props {
 }
 
 export function ActivityChart({ timeseries, range, onRangeChange }: Props) {
+  const t = useTranslations('analytics');
   const [active, setActive] = useState<Set<SeriesKey>>(
     new Set<SeriesKey>(['created', 'applied']),
   );
@@ -108,11 +111,11 @@ export function ActivityChart({ timeseries, range, onRangeChange }: Props) {
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
               <Activity size={17} strokeWidth={2} />
-              Aktivität
-              <MetricTip content="Tagesverlauf deiner Bewerbungsaktivität. Schalte Kennzahlen per Chip an/ab; fahre mit der Maus über den Verlauf für genaue Werte." />
+              {t('activity.title')}
+              <MetricTip content={t('activity.tipHtml')} />
             </CardTitle>
             <CardDescription className="mt-1">
-              Erstellte und abgeschickte Bewerbungen pro Tag · letzte {Math.min(range, timeseries.length)} Tage
+              {t('activity.description', { count: Math.min(range, timeseries.length) })}
             </CardDescription>
           </div>
           <RangeToggle value={range} onChange={onRangeChange} />
@@ -135,7 +138,7 @@ export function ActivityChart({ timeseries, range, onRangeChange }: Props) {
                 )}
               >
                 <span className="w-2.5 h-2.5 rounded-[3px] flex-none" style={{ background: s.color, opacity: on ? 1 : 0.3 }} />
-                <span className={on ? 'text-foreground' : 'text-muted-foreground'}>{s.label}</span>
+                <span className={on ? 'text-foreground' : 'text-muted-foreground'}>{t(s.labelKey)}</span>
                 <span className={cn('font-bold tabular-nums', on ? 'text-foreground' : 'text-muted-foreground/50')}>
                   {totals[s.key]}
                 </span>

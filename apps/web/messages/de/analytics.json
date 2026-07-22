@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Analytics",
+    "description": "Wie läuft deine Bewerbungssuche? Trends, Konversionsraten und Template-Performance auf einen Blick.",
+    "updatedNow": "Aktualisiert gerade eben",
+    "errorTitle": "Analytics konnte nicht geladen werden",
+    "unknownError": "Unbekannter Fehler",
+    "kpis": {
+      "applied": {
+        "label": "Beworben",
+        "tipHtml": "Wie viele deiner erstellten Bewerbungen du tatsächlich <b>abgeschickt</b> hast. Mehr Bewerbungen = mehr Chancen."
+      },
+      "interviewRate": {
+        "label": "Interview-Quote",
+        "tipHtml": "Anteil deiner abgeschickten Bewerbungen, die zu einer <b>Interview-Einladung</b> geführt haben. Üblicher Schnitt: 15–25 %."
+      },
+      "accepted": {
+        "label": "Angenommen",
+        "tipHtml": "Bewerbungen, die mit einem <b>Job-Angebot</b> endeten."
+      },
+      "ats": {
+        "label": "Ø ATS-Score",
+        "tipHtml": "Wie gut deine Lebensläufe von Bewerber-Management-Systemen (<b>ATS</b>) gelesen werden — 0 bis 100. Ziel: 80+."
+      }
+    }
+  },
+  "upgrade": {
+    "title": "Advanced Analytics & Trends",
+    "description": "Erfolgsquoten, Konversions-Funnel, ATS-Score-Trends und Template-Performance — exklusiv für Premium-Mitglieder.",
+    "unlock": "Mit Premium freischalten",
+    "back": "Zurück zum Dashboard"
+  },
+  "stages": {
+    "CREATED": "Erstellt",
+    "APPLIED": "Beworben",
+    "INTERVIEW": "Interview",
+    "ACCEPTED": "Angenommen"
+  },
+  "activity": {
+    "title": "Aktivität",
+    "tipHtml": "Tagesverlauf deiner Bewerbungsaktivität. Schalte Kennzahlen per Chip an/ab; fahre mit der Maus über den Verlauf für genaue Werte.",
+    "description": "Erstellte und abgeschickte Bewerbungen pro Tag · letzte {count} Tage",
+    "series": {
+      "created": "Erstellt",
+      "applied": "Beworben",
+      "interview": "Interview",
+      "accepted": "Angenommen"
+    }
+  },
+  "range": {
+    "ariaLabel": "Zeitraum auswählen",
+    "days7": "7 T.",
+    "days30": "30 T.",
+    "days90": "90 T."
+  },
+  "funnel": {
+    "title": "Konversions-Funnel",
+    "tipHtml": "Jede Stufe zeigt, wie viele Bewerbungen es bis hierher geschafft haben. Die Prozentzahl ist die <b>Weitergabe-Quote</b> von der vorigen Stufe. Stufe anklicken, um gefilterte Bewerbungen zu öffnen.",
+    "description": "Wie viele Bewerbungen es bis zum Job-Angebot schaffen.",
+    "continue": "{value}% gehen weiter",
+    "opensStatus": "Öffnet <strong>{count}</strong> {count, plural, one {Bewerbung} other {Bewerbungen}} im Status „{status}“.",
+    "biggestDropAt": "Größter Abbruch bei",
+    "biggestDropValue": ": nur {value}% schaffen den Schritt.",
+    "clickStage": "Stufe anklicken, um die zugehörigen Bewerbungen zu öffnen."
+  },
+  "insight": {
+    "new": "Guter Start — <strong>{applications} Bewerbungen</strong> erstellt, davon <strong>{applied} abgeschickt</strong>. <muted>Erstelle ein paar mehr, damit aussagekräftige Trends entstehen.</muted>",
+    "established": "Deine Interview-Quote liegt bei <strong>{rate}%</strong>.",
+    "establishedAboveAverage": "Deine Interview-Quote liegt bei <strong>{rate}%</strong> — über dem Durchschnitt.",
+    "biggestHurdle": "Die größte Hürde ist",
+    "continue": "({value}% gehen weiter).",
+    "tip": "Tipp: Ein höherer ATS-Score senkt die Abbruchrate spürbar."
+  },
+  "scoreBuckets": {
+    "title": "ATS-Score & Interviews",
+    "tipHtml": "Wir gruppieren deine abgeschickten Bewerbungen nach <b>ATS-Score</b> und zeigen je Gruppe die Interview-Quote. Ziel: möglichst viele Bewerbungen im grünen Bereich (80+).",
+    "description": "Welche Score-Bereiche am häufigsten zum Interview führen.",
+    "empty": "Sobald du Bewerbungen mit ATS-Score erstellst, zeigen wir hier, welche Score-Bereiche die meisten Interviews bringen.",
+    "bucketTitle": "{bucket} Pkt. · {count} Bewerbungen · {rate}% Interview-Quote",
+    "applicationsShort": "{count} Bew.",
+    "best": "Bewerbungen mit <strong>{bucket} Punkten</strong> erreichen die höchste Interview-Quote ({rate}%)."
+  },
+  "topTemplates": {
+    "title": "Top-Templates",
+    "description": "Welche Lebenslauf-Vorlagen du am häufigsten nutzt — und wie sie performen.",
+    "empty": "Noch keine Template-Daten verfügbar. Erstelle Bewerbungen mit verschiedenen Vorlagen, um ihre Performance zu vergleichen.",
+    "usage": "{count, plural, one {# Bewerbung} other {# Bewerbungen}}",
+    "interview": "Interview"
+  }
+}

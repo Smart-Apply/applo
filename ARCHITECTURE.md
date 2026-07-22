@@ -89,11 +89,13 @@ applo/
 │   │   └── test/                  # Unit / integration / e2e
 │   │
 │   └── web/                  # @applo/web (Next.js 16)
+│       ├── messages/              # next-intl catalogs (de/ + en/, one JSON per namespace)
 │       ├── src/
 │       │   ├── app/               # App Router (route groups)
-│       │   ├── components/        # UI + shadcn/ui + pdf + analytics (recharts)
+│       │   ├── components/        # UI + shadcn/ui + pdf + analytics (recharts) + i18n
 │       │   ├── hooks/             # Custom React hooks
-│       │   ├── lib/               # api-client, providers, utils
+│       │   ├── i18n/              # next-intl config (cookie-based de/en, no URL prefixes)
+│       │   ├── lib/               # api-client, providers, i18n-runtime, utils
 │       │   ├── stores/            # Zustand
 │       │   └── types/             # Shared TS types
 │       └── public/                # Static assets
@@ -341,6 +343,7 @@ User 1:1 Subscription
 | ---------- | ------------------------------------------------------- |
 | Framework  | Next.js 16.1 (App Router, React Compiler enabled)       |
 | Language   | TypeScript (strict)                                     |
+| i18n       | next-intl 4 (cookie-based de/en, no URL routing)        |
 | UI         | React 19.2 · shadcn/ui (Radix) · Tailwind v4            |
 | State      | Zustand 5 · TanStack Query 5                            |
 | Forms      | react-hook-form 7 · Zod (`@hookform/resolvers`)         |

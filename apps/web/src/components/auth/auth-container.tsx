@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +13,7 @@ import { toast } from '@/lib/toast';
 import { TwoFactorChallengeForm } from '@/components/two-factor';
 import { TurnstileWidget, resetTurnstile } from '@/components/auth/turnstile-widget';
 import { AuthApplo, type AuthApploState } from '@/components/auth/auth-applo';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import {
   loginSchema,
   registerSchema,
@@ -37,13 +39,7 @@ function scorePw(pw: string): number {
   if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) s++;
   return Math.min(4, s);
 }
-const STRENGTH = [
-  { label: '', color: 'var(--aa-border)' },
-  { label: 'Schwach', color: '#DC2626' },
-  { label: 'Okay', color: '#E0951A' },
-  { label: 'Gut', color: '#40639C' },
-  { label: 'Stark', color: '#16A34A' },
-];
+const STRENGTH_COLORS = ['var(--aa-border)', '#DC2626', '#E0951A', '#40639C', '#16A34A'];
 const COVER_BY_SCORE = [0, 0.32, 0.58, 0.82, 1];
 
 /* ---------- inline icons ---------- */
@@ -124,6 +120,7 @@ function Field({
 }
 
 export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
+  const t = useTranslations('auth');
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [show2FAChallenge, setShow2FAChallenge] = useState(false);
   const [challengeToken, setChallengeToken] = useState<string | null>(null);
@@ -149,17 +146,17 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
     const message = searchParams.get('message');
     if (message === 'invite_required') {
       toast.error(
-        'Applo ist gerade in der geschlossenen Beta. Bitte registriere dich zuerst mit deinem Einladungscode — danach kannst du Google / Microsoft in den Einstellungen verknüpfen.',
+        t('login.oauthInviteRequiredToast'),
         { duration: 12000 },
       );
     } else if (message === 'authentication_failed') {
-      toast.error('Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
+      toast.error(t('login.oauthFailedToast'));
     } else {
-      toast.error('Bei der Anmeldung ist ein Fehler aufgetreten.');
+      toast.error(t('login.oauthGenericToast'));
     }
     router.replace(pathname);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   // Redirect to dashboard if already authenticated.
   useEffect(() => {
@@ -232,7 +229,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       if (response.user) {
         resetAuthRedirectFlag();
         setAuth(response.user);
-        toast.success('Erfolgreich angemeldet!');
+        toast.success(t('login.successToast'));
         router.push('/dashboard');
       }
     } catch (error: unknown) {
@@ -240,9 +237,9 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       const { ApiError, getErrorMessage } = await import('@/lib/errors');
       if (ApiError.isApiError(error)) {
         if (error.status === 401) {
-          toast.error('Ungültige E-Mail oder Passwort.');
+          toast.error(t('login.invalidCredentialsToast'));
         } else if (error.status === 429) {
-          toast.error('Zu viele Login-Versuche. Bitte warte 15 Minuten.', { duration: 8000 });
+          toast.error(t('login.rateLimitToast'), { duration: 8000 });
         } else {
           toast.error(getErrorMessage(error));
         }
@@ -254,7 +251,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
   const handle2FASuccess = () => {
     resetAuthRedirectFlag();
-    toast.success('Erfolgreich angemeldet!');
+    toast.success(t('login.successToast'));
     router.push('/dashboard');
   };
 
@@ -270,16 +267,13 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
     const turnstileConfigured = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
     if (turnstileConfigured && !turnstileToken) {
       pulseError();
-      toast.error(
-        'Bitte löse zuerst das CAPTCHA unten. Falls es nicht erscheint, deaktiviere kurz den Tracking-Schutz / Adblocker für diese Seite.',
-        { duration: 8000 },
-      );
+      toast.error(t('register.captchaRequiredToast'), { duration: 8000 });
       return;
     }
 
     // Client-side guard for the invite-code gate (server is authoritative).
     if (requireInviteCode && !data.inviteCode?.trim()) {
-      registerForm.setError('inviteCode', { type: 'manual', message: 'Bitte gib deinen Einladungscode ein.' });
+      registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeRequiredError') });
       pulseError();
       return;
     }
@@ -296,7 +290,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       });
       resetAuthRedirectFlag();
       setAuth(response.user);
-      toast.success('Account erfolgreich erstellt!');
+      toast.success(t('register.successToast'));
       router.push('/onboarding');
     } catch (error: unknown) {
       pulseError();
@@ -307,33 +301,28 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
       if (ApiError.isApiError(error)) {
         if (error.data?.code === 'CAPTCHA_FAILED') {
-          toast.error(
-            'Bot-Schutz fehlgeschlagen. Bitte löse das CAPTCHA erneut. Wenn es nicht erscheint, deaktiviere kurz den Tracking-Schutz oder Adblocker für diese Seite.',
-            { duration: 10000 },
-          );
+          toast.error(t('register.captchaFailedToast'), { duration: 10000 });
         } else if (error.data?.code === 'INVITE_CODE_REQUIRED') {
-          registerForm.setError('inviteCode', { type: 'manual', message: 'Bitte gib deinen Einladungscode ein.' });
-          toast.error('Applo ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.', {
-            duration: 8000,
-          });
+          registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeRequiredError') });
+          toast.error(t('register.inviteCodeRequiredToast'), { duration: 8000 });
         } else if (error.data?.code === 'INVITE_CODE_INVALID') {
-          registerForm.setError('inviteCode', { type: 'manual', message: 'Code ist ungültig.' });
-          toast.error('Dieser Einladungscode ist ungültig. Bitte überprüfe die Schreibweise.');
+          registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeInvalidError') });
+          toast.error(t('register.inviteCodeInvalidToast'));
         } else if (error.data?.code === 'INVITE_CODE_ALREADY_USED') {
-          registerForm.setError('inviteCode', { type: 'manual', message: 'Code wurde bereits verwendet.' });
-          toast.error('Dieser Einladungscode wurde bereits eingelöst.');
+          registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeUsedError') });
+          toast.error(t('register.inviteCodeUsedToast'));
         } else if (error.data?.code === 'INVITE_CODE_EXPIRED') {
-          registerForm.setError('inviteCode', { type: 'manual', message: 'Code ist abgelaufen.' });
-          toast.error('Dieser Einladungscode ist abgelaufen.');
+          registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeExpiredError') });
+          toast.error(t('register.inviteCodeExpiredToast'));
         } else if (error.status === 400 || error.status === 409) {
-          toast.error('Diese E-Mail-Adresse ist bereits registriert.');
+          toast.error(t('register.emailExistsToast'));
         } else if (error.status === 429) {
-          toast.error('Zu viele Registrierungsversuche. Bitte warte 15 Minuten.', { duration: 8000 });
+          toast.error(t('register.rateLimitToast'), { duration: 8000 });
         } else {
           toast.error(getErrorMessage(error));
         }
       } else {
-        toast.error('Registrierung fehlgeschlagen. Bitte versuche es erneut.');
+        toast.error(t('register.genericFailureToast'));
       }
     }
   };
@@ -357,31 +346,40 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
   }
 
   const squintSpeech = [
-    'Ich halt mich noch zurück …',
-    'Ich heb schon mal die Hände …',
-    'Hände hoch — ich guck weg …',
-    'Fast ganz zugehalten …',
-    'Augen fest zugehalten, versprochen!',
+    t('mascot.squint0'),
+    t('mascot.squint1'),
+    t('mascot.squint2'),
+    t('mascot.squint3'),
+    t('mascot.squint4'),
   ][pwScore];
+  const passwordStrengthLabel = [
+    '',
+    t('passwordStrength.weak'),
+    t('passwordStrength.okay'),
+    t('passwordStrength.good'),
+    t('passwordStrength.strong'),
+  ][pwScore];
+
   const speech = {
-    idle: 'Schön, dass du da bist!',
-    look: 'Ich schau schon mal mit …',
-    cover: 'Keine Sorge — ich guck weg!',
-    peek: 'Na gut, ein kleiner Blick …',
+    idle: t('mascot.idle'),
+    look: t('mascot.look'),
+    cover: t('mascot.cover'),
+    peek: t('mascot.peek'),
     squint: squintSpeech,
-    load: 'Einen Moment …',
-    success: isLogin ? 'Schön, dich zu sehen!' : 'Willkommen an Bord!',
-    error: 'Hoppla, schau nochmal drüber.',
+    load: t('mascot.load'),
+    success: isLogin ? t('mascot.successLogin') : t('mascot.successRegister'),
+    error: t('mascot.error'),
   }[applo];
 
-  const tagline = isLogin
-    ? 'Deine Bewerbungen, organisiert wie ein System statt wie ein Chaos.'
-    : 'Tritt der geschlossenen Beta bei und mach Bewerben planbar.';
+  const tagline = isLogin ? t('mascot.loginTagline') : t('mascot.registerTagline');
 
   // 2FA challenge takes over the whole screen.
   if (show2FAChallenge && challengeToken) {
     return (
       <div className="applo-auth">
+        <div className="absolute right-4 top-4 z-10">
+          <LanguageSwitcher variant="labeled" />
+        </div>
         <div style={{ width: '100%', maxWidth: 420 }}>
           <TwoFactorChallengeForm
             challengeToken={challengeToken}
@@ -395,6 +393,9 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
   return (
     <div className="applo-auth">
+      <div className="absolute right-4 top-4 z-10">
+        <LanguageSwitcher variant="labeled" />
+      </div>
       <div className={`auth${isLogin ? '' : ' swapped'}`}>
         {/* ---------- brand pane ---------- */}
         <aside className="brand-pane">
@@ -413,7 +414,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
             />
             <div className="brand-speech">{speech}</div>
             <div className="brand-tagline">{tagline}</div>
-            <div className="brand-hint">Fokussiere das Passwortfeld — Applo schaut weg</div>
+            <div className="brand-hint">{t('mascot.passwordHint')}</div>
           </div>
         </aside>
 
@@ -431,20 +432,20 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                 /* ===================== LOGIN ===================== */
                 <>
                   <div className="form-head">
-                    <p className="form-eyebrow">Anmelden</p>
-                    <h1 className="form-title">Willkommen zurück</h1>
-                    <p className="form-sub">Melde dich an, um deine Bewerbungen weiterzuführen.</p>
+                    <p className="form-eyebrow">{t('login.eyebrow')}</p>
+                    <h1 className="form-title">{t('login.title')}</h1>
+                    <p className="form-sub">{t('login.subtitle')}</p>
                   </div>
                   <form className="form" onSubmit={loginForm.handleSubmit(onLoginSubmit, pulseError)} noValidate>
                     <Controller
                       control={loginForm.control}
                       name="email"
                       render={({ field, fieldState }) => (
-                        <Field label="E-Mail" error={fieldState.error?.message}>
+                        <Field label={t('login.emailLabel')} error={fieldState.error?.message}>
                           <input
                             className={`input${fieldState.error ? ' invalid' : ''}`}
                             type="email"
-                            placeholder="deine@mail.de"
+                            placeholder={t('login.emailPlaceholder')}
                             autoComplete="email"
                             {...field}
                             onFocus={() => setFocused('email')}
@@ -461,7 +462,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                       name="password"
                       render={({ field, fieldState }) => (
                         <Field
-                          label="Passwort"
+                          label={t('login.passwordLabel')}
                           error={fieldState.error?.message}
                           action={
                             <button
@@ -470,7 +471,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                               style={{ fontSize: 12.5 }}
                               onClick={() => router.push('/forgot-password')}
                             >
-                              Passwort vergessen?
+                              {t('login.forgotPassword')}
                             </button>
                           }
                         >
@@ -478,7 +479,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                             <input
                               className={`input has-icon${fieldState.error ? ' invalid' : ''}`}
                               type={show.pw ? 'text' : 'password'}
-                              placeholder="Dein Passwort"
+                              placeholder={t('login.passwordPlaceholder')}
                               autoComplete="current-password"
                               {...field}
                               onFocus={() => setFocused('password')}
@@ -492,8 +493,8 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                               className="reveal"
                               onClick={() => setShow((s) => ({ ...s, pw: !s.pw }))}
                               onMouseDown={(e) => e.preventDefault()}
-                              aria-label={show.pw ? 'Passwort verbergen' : 'Passwort anzeigen'}
-                              title={show.pw ? 'Verbergen — Applo schaut weg' : 'Anzeigen — Applo linst'}
+                              aria-label={show.pw ? t('login.hidePassword') : t('login.showPassword')}
+                              title={show.pw ? t('login.hidePasswordTitle') : t('login.showPasswordTitle')}
                             >
                               {show.pw ? <IcEyeOff /> : <IcEye />}
                             </button>
@@ -506,14 +507,14 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                       {busy ? (
                         <>
                           <span className="spinner" />
-                          Wird angemeldet …
+                          {t('login.submitting')}
                         </>
                       ) : (
-                        'Anmelden'
+                        t('login.submit')
                       )}
                     </button>
 
-                    <div className="divider">Oder anmelden mit</div>
+                    <div className="divider">{t('login.socialDivider')}</div>
                     <div className="social">
                       <button type="button" onClick={() => (window.location.href = api.auth.googleLoginUrl())}>
                         <IcGoogle />
@@ -526,9 +527,9 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                     </div>
 
                     <p className="form-foot">
-                      Noch kein Konto?{' '}
+                      {t('login.noAccount')}{' '}
                       <button type="button" className="link" onClick={() => switchMode(false)}>
-                        Registrieren
+                        {t('login.registerLink')}
                       </button>
                     </p>
                   </form>
@@ -537,9 +538,9 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                 /* ===================== REGISTER ===================== */
                 <>
                   <div className="form-head">
-                    <p className="form-eyebrow">Konto erstellen</p>
-                    <h1 className="form-title">Konto erstellen</h1>
-                    <p className="form-sub">Starte mit Applo und behalte jede Bewerbung im Griff.</p>
+                    <p className="form-eyebrow">{t('register.eyebrow')}</p>
+                    <h1 className="form-title">{t('register.title')}</h1>
+                    <p className="form-sub">{t('register.subtitle')}</p>
                   </div>
                   <form className="form" onSubmit={registerForm.handleSubmit(onRegisterSubmit, pulseError)} noValidate>
                     <div className="row2">
@@ -547,10 +548,10 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                         control={registerForm.control}
                         name="firstName"
                         render={({ field, fieldState }) => (
-                          <Field label="Vorname" error={fieldState.error?.message}>
+                          <Field label={t('register.firstNameLabel')} error={fieldState.error?.message}>
                             <input
                               className={`input${fieldState.error ? ' invalid' : ''}`}
-                              placeholder="Dein Vorname"
+                              placeholder={t('register.firstNamePlaceholder')}
                               autoComplete="given-name"
                               {...field}
                               onFocus={() => setFocused('firstName')}
@@ -566,10 +567,10 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                         control={registerForm.control}
                         name="lastName"
                         render={({ field, fieldState }) => (
-                          <Field label="Nachname" error={fieldState.error?.message}>
+                          <Field label={t('register.lastNameLabel')} error={fieldState.error?.message}>
                             <input
                               className={`input${fieldState.error ? ' invalid' : ''}`}
-                              placeholder="Dein Nachname"
+                              placeholder={t('register.lastNamePlaceholder')}
                               autoComplete="family-name"
                               {...field}
                               onFocus={() => setFocused('lastName')}
@@ -587,11 +588,11 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                       control={registerForm.control}
                       name="email"
                       render={({ field, fieldState }) => (
-                        <Field label="E-Mail" error={fieldState.error?.message}>
+                        <Field label={t('register.emailLabel')} error={fieldState.error?.message}>
                           <input
                             className={`input${fieldState.error ? ' invalid' : ''}`}
                             type="email"
-                            placeholder="deine@mail.de"
+                            placeholder={t('register.emailPlaceholder')}
                             autoComplete="email"
                             {...field}
                             onFocus={() => setFocused('email')}
@@ -608,12 +609,12 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                       control={registerForm.control}
                       name="password"
                       render={({ field, fieldState }) => (
-                        <Field label="Passwort" error={fieldState.error?.message}>
+                        <Field label={t('register.passwordLabel')} error={fieldState.error?.message}>
                           <div className="input-wrap">
                             <input
                               className={`input has-icon${fieldState.error ? ' invalid' : ''}`}
                               type={show.pw ? 'text' : 'password'}
-                              placeholder="Mindestens 8 Zeichen"
+                              placeholder={t('register.passwordPlaceholder')}
                               autoComplete="new-password"
                               {...field}
                               onFocus={() => setFocused('password')}
@@ -627,8 +628,8 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                               className="reveal"
                               onClick={() => setShow((s) => ({ ...s, pw: !s.pw }))}
                               onMouseDown={(e) => e.preventDefault()}
-                              aria-label={show.pw ? 'Passwort verbergen' : 'Passwort anzeigen'}
-                              title={show.pw ? 'Verbergen — Applo schaut weg' : 'Anzeigen — Applo linst'}
+                              aria-label={show.pw ? t('login.hidePassword') : t('login.showPassword')}
+                              title={show.pw ? t('login.hidePasswordTitle') : t('login.showPasswordTitle')}
                             >
                               {show.pw ? <IcEyeOff /> : <IcEye />}
                             </button>
@@ -639,16 +640,16 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                                 {[1, 2, 3, 4].map((i) => (
                                   <i
                                     key={i}
-                                    style={{ background: i <= pwScore ? STRENGTH[pwScore].color : 'var(--aa-border)' }}
+                                    style={{ background: i <= pwScore ? STRENGTH_COLORS[pwScore] : 'var(--aa-border)' }}
                                   />
                                 ))}
                               </div>
                               <div className="strength-row">
-                                <span className="strength-label" style={{ color: STRENGTH[pwScore].color }}>
-                                  {STRENGTH[pwScore].label}
+                                <span className="strength-label" style={{ color: STRENGTH_COLORS[pwScore] }}>
+                                  {passwordStrengthLabel}
                                 </span>
                                 <span style={{ color: 'var(--aa-muted)' }}>
-                                  Groß-/Kleinbuchstaben, Zahl &amp; Symbol
+                                  {t('register.passwordRequirements')}
                                 </span>
                               </div>
                             </div>
@@ -661,12 +662,12 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                       control={registerForm.control}
                       name="confirmPassword"
                       render={({ field, fieldState }) => (
-                        <Field label="Passwort wiederholen" error={fieldState.error?.message}>
+                        <Field label={t('register.confirmPasswordLabel')} error={fieldState.error?.message}>
                           <div className="input-wrap">
                             <input
                               className={`input has-icon${fieldState.error ? ' invalid' : ''}`}
                               type={show.pw2 ? 'text' : 'password'}
-                              placeholder="Passwort erneut eingeben"
+                              placeholder={t('register.confirmPasswordPlaceholder')}
                               autoComplete="new-password"
                               {...field}
                               onFocus={() => setFocused('confirmPassword')}
@@ -680,8 +681,8 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                               className="reveal"
                               onClick={() => setShow((s) => ({ ...s, pw2: !s.pw2 }))}
                               onMouseDown={(e) => e.preventDefault()}
-                              aria-label={show.pw2 ? 'Passwort verbergen' : 'Passwort anzeigen'}
-                              title={show.pw2 ? 'Verbergen — Applo schaut weg' : 'Anzeigen — Applo linst'}
+                              aria-label={show.pw2 ? t('login.hidePassword') : t('login.showPassword')}
+                              title={show.pw2 ? t('login.hidePasswordTitle') : t('login.showPasswordTitle')}
                             >
                               {show.pw2 ? <IcEyeOff /> : <IcEye />}
                             </button>
@@ -695,7 +696,7 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                         control={registerForm.control}
                         name="inviteCode"
                         render={({ field, fieldState }) => (
-                          <Field label="Einladungscode" error={fieldState.error?.message}>
+                          <Field label={t('register.inviteCodeLabel')} error={fieldState.error?.message}>
                             <input
                               className={`input input-mono${fieldState.error ? ' invalid' : ''}`}
                               placeholder="BETA-XXXX-XXXX-XXXX"
@@ -718,9 +719,8 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
 
                     {requireInviteCode && (
                       <div className="beta-note">
-                        <span className="beta-tag">Beta</span>
-                        Applo ist gerade in der geschlossenen Beta. Du brauchst einen Einladungscode, um dich zu
-                        registrieren.
+                        <span className="beta-tag">{t('register.betaTag')}</span>
+                        {t('register.betaNote')}
                       </div>
                     )}
 
@@ -731,14 +731,14 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                       {busy ? (
                         <>
                           <span className="spinner" />
-                          Konto wird erstellt …
+                          {t('register.submitting')}
                         </>
                       ) : (
-                        'Registrieren'
+                        t('register.submit')
                       )}
                     </button>
 
-                    <div className="divider">Oder registrieren mit</div>
+                    <div className="divider">{t('register.socialDivider')}</div>
                     <div className="social">
                       <button type="button" onClick={() => (window.location.href = api.auth.googleLoginUrl())}>
                         <IcGoogle />
@@ -751,9 +751,9 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                     </div>
 
                     <p className="form-foot">
-                      Bereits ein Konto?{' '}
+                      {t('register.hasAccount')}{' '}
                       <button type="button" className="link" onClick={() => switchMode(true)}>
-                        Anmelden
+                        {t('register.loginLink')}
                       </button>
                     </p>
                   </form>

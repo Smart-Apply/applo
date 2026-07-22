@@ -5,7 +5,22 @@
 
 import { toast as sonnerToast } from 'sonner';
 import { getErrorMessage } from './errors';
+import { pick } from './i18n-runtime';
+
 export const toast = sonnerToast;
+
+const TOAST_MESSAGES = {
+  retryLabel: { de: 'Wiederholen', en: 'Retry' },
+  networkError: {
+    de: 'Netzwerkfehler. Bitte überprüfe deine Internetverbindung.',
+    en: 'Network error. Please check your internet connection.',
+  },
+  validationTitle: { de: 'Validierungsfehler', en: 'Validation error' },
+  validationDescription: {
+    de: 'Bitte überprüfe deine Eingaben.',
+    en: 'Please check your input.',
+  },
+};
 
 /**
  * Toast options for customization
@@ -112,14 +127,14 @@ export function toastErrorWithRetry(
   error: unknown,
   onRetry: () => void,
   fallbackMessage?: string,
-  retryLabel: string = 'Wiederholen'
+  retryLabel?: string
 ) {
   const message = fallbackMessage || getErrorMessage(error);
   
   sonnerToast.error(message, {
     duration: 6000,
     action: {
-      label: retryLabel,
+      label: retryLabel ?? pick(TOAST_MESSAGES.retryLabel),
       onClick: onRetry,
     },
   });
@@ -132,7 +147,7 @@ export function toastNetworkError(onRetry: () => void, retryLabel?: string) {
   toastErrorWithRetry(
     new Error('Network error'),
     onRetry,
-    'Netzwerkfehler. Bitte überprüfe deine Internetverbindung.',
+    pick(TOAST_MESSAGES.networkError),
     retryLabel
   );
 }
@@ -145,9 +160,9 @@ export function toastValidationError(errors: Record<string, string[]>) {
   if (firstError) {
     toastError(
       new Error(firstError),
-      'Validierungsfehler',
+      pick(TOAST_MESSAGES.validationTitle),
       {
-        description: 'Bitte überprüfe deine Eingaben.',
+        description: pick(TOAST_MESSAGES.validationDescription),
       }
     );
   }

@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface PasswordStrengthProps {
   password: string;
 }
@@ -11,17 +13,20 @@ interface PasswordRequirement {
 }
 
 const REQUIREMENTS_CONFIG = [
-  { regex: /.{8,}/, text: 'Mindestens 8 Zeichen' },
-  { regex: /[A-Z]/, text: 'Ein Großbuchstabe' },
-  { regex: /[a-z]/, text: 'Ein Kleinbuchstabe' },
-  { regex: /\d/, text: 'Eine Zahl' },
-  { regex: /[@$!%*?&#]/, text: 'Ein Sonderzeichen (@$!%*?&#)' },
-];
+  { regex: /.{8,}/, key: 'requirementMinLength' },
+  { regex: /[A-Z]/, key: 'requirementUppercase' },
+  { regex: /[a-z]/, key: 'requirementLowercase' },
+  { regex: /\d/, key: 'requirementNumber' },
+  { regex: /[@$!%*?&#]/, key: 'requirementSpecial' },
+] as const;
 
 export function PasswordStrength({ password }: PasswordStrengthProps) {
+  const t = useTranslations('common.passwordStrength');
+
   // Compute requirements based on password value
   const requirements: PasswordRequirement[] = REQUIREMENTS_CONFIG.map((config) => ({
-    ...config,
+    regex: config.regex,
+    text: t(config.key),
     met: config.regex.test(password),
   }));
 
@@ -37,9 +42,9 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
 
   const getStrengthText = () => {
     if (strengthPercentage === 0) return '';
-    if (strengthPercentage < 40) return 'Schwach';
-    if (strengthPercentage < 80) return 'Mittel';
-    return 'Stark';
+    if (strengthPercentage < 40) return t('weak');
+    if (strengthPercentage < 80) return t('medium');
+    return t('strong');
   };
 
   if (!password) return null;
@@ -49,7 +54,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
       {/* Strength bar */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Passwortstärke</span>
+          <span className="text-muted-foreground">{t('label')}</span>
           {strengthPercentage > 0 && (
             <span
               className={`font-medium ${

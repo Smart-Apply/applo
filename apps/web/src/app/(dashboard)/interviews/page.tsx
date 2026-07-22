@@ -3,8 +3,10 @@
 import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useInterviewSessions, useInterviewStats, useStartInterview } from '@/hooks/use-interviews';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
+import { getIntlLocale } from '@/lib/i18n-runtime';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,13 +33,6 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import type { InterviewSession, InterviewSessionStatus } from '@/types';
-
-const SESSION_FILTERS: [string, string][] = [
-  ['all', 'Alle'],
-  ['IN_PROGRESS', 'Laufend'],
-  ['COMPLETED', 'Abgeschlossen'],
-  ['ABANDONED', 'Abgebrochen'],
-];
 
 /** Score → badge colour, matching the design's green/amber/red tiers. */
 function scoreTone(score: number): string {
@@ -76,12 +71,13 @@ function StatCell({
 
 function SessionRow({ session }: { session: InterviewSession }) {
   const router = useRouter();
+  const t = useTranslations('interviews');
   const running = session.status === 'IN_PROGRESS';
   const score = session.overallScore;
   const meta = [
     session.company,
-    `${session.maxQuestions} Fragen`,
-    new Date(session.startedAt).toLocaleDateString('de-DE'),
+    t('page.sessionQuestions', { count: session.maxQuestions }),
+    new Date(session.startedAt).toLocaleDateString(getIntlLocale()),
   ]
     .filter(Boolean)
     .join(' · ');
@@ -106,16 +102,16 @@ function SessionRow({ session }: { session: InterviewSession }) {
       </span>
       <div className="min-w-0 flex-1">
         <div className="truncate text-[15px] font-semibold">
-          {session.jobTitle || 'Allgemeines Interview'}
+          {session.jobTitle || t('page.generalInterview')}
         </div>
         <div className="mt-0.5 truncate text-sm text-muted-foreground">{meta}</div>
       </div>
       {running ? (
         <span className="flex flex-none items-center gap-1.5 rounded-[2px] border border-primary-soft bg-primary-soft/40 px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[.05em] text-foreground dark:border-slate-600 dark:bg-slate-800/60">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" /> Laufend
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" /> {t('page.status.inProgress')}
         </span>
       ) : session.status === 'ABANDONED' ? (
-        <span className="flex-none text-sm text-muted-foreground">Abgebrochen</span>
+        <span className="flex-none text-sm text-muted-foreground">{t('page.status.abandoned')}</span>
       ) : score != null && score > 0 ? (
         <span
           className={cn(
@@ -184,8 +180,15 @@ function DashboardSkeleton() {
 
 export default function InterviewsPage() {
   const router = useRouter();
+  const t = useTranslations('interviews');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('all');
+  const sessionFilters: [string, string][] = [
+    ['all', t('page.filters.all')],
+    ['IN_PROGRESS', t('page.filters.inProgress')],
+    ['COMPLETED', t('page.filters.completed')],
+    ['ABANDONED', t('page.filters.abandoned')],
+  ];
 
   // Premium gate. We render the full page UI even for FREE users so they
   // can see what they would unlock, but:
@@ -229,21 +232,21 @@ export default function InterviewsPage() {
         <div>
           <h1 className="font-heading text-3xl font-extrabold tracking-[-.025em]">Interview Coach</h1>
           <p className="mt-1 text-muted-foreground">
-            Üben Sie Vorstellungsgespräche mit KI-gestütztem Feedback
+            {t('page.subtitle')}
           </p>
         </div>
         {isLocked ? (
           <Button asChild size="lg" className="gap-2">
             <Link href="/#pricing">
               <Lock className="h-4 w-4" />
-              Premium freischalten
+              {t('page.unlockPremium')}
             </Link>
           </Button>
         ) : (
           !showIntro && (
             <Button onClick={() => setDialogOpen(true)} size="lg" className="gap-2">
               <Play className="h-4 w-4" />
-              Neues Interview starten
+              {t('page.startNew')}
             </Button>
           )
         )}
@@ -276,17 +279,19 @@ export default function InterviewsPage() {
                   <StatCell
                     icon={<MessageSquare className="h-5 w-5" />}
                     value={stats.completedSessions}
-                    label="Abgeschlossene Sessions"
+                    label={t('stats.completedSessions')}
                   />
                   <StatCell
                     icon={<Target className="h-5 w-5" />}
                     value={stats.averageScore > 0 ? `${stats.averageScore}%` : '—'}
-                    label={`Ø Score · ${stats.totalQuestionsAnswered} Fragen`}
+                    label={t('stats.averageScoreWithQuestions', {
+                      count: stats.totalQuestionsAnswered,
+                    })}
                   />
                   <StatCell
                     icon={<Trophy className="h-5 w-5" />}
                     value={stats.bestScore > 0 ? `${stats.bestScore}%` : '—'}
-                    label="Bester Score"
+                    label={t('stats.bestScore')}
                     good
                   />
                   <StatCell
@@ -296,7 +301,11 @@ export default function InterviewsPage() {
                         ? `${stats.scoreImprovement > 0 ? '+' : ''}${stats.scoreImprovement}`
                         : '—'
                     }
-                    label={stats.scoredSessions >= 4 ? 'Verbesserung' : 'Mind. 4 Sessions'}
+                    label={
+                      stats.scoredSessions >= 4
+                        ? t('stats.improvement')
+                        : t('stats.minimumSessions')
+                    }
                     good={stats.scoredSessions >= 4 && stats.scoreImprovement >= 0}
                   />
                 </div>
@@ -306,9 +315,9 @@ export default function InterviewsPage() {
                   <Card>
                     <CardContent className="p-6">
                       <div className="flex flex-wrap items-center justify-between gap-3">
-                        <h3 className="text-lg font-semibold">Letzte Sessions</h3>
+                        <h3 className="text-lg font-semibold">{t('page.recentSessions')}</h3>
                         <div className="flex flex-wrap gap-1.5">
-                          {SESSION_FILTERS.map(([id, label]) => (
+                          {sessionFilters.map(([id, label]) => (
                             <button
                               key={id}
                               onClick={() => setActiveTab(id)}
@@ -334,7 +343,7 @@ export default function InterviewsPage() {
                           ))
                         ) : (
                           <p className="py-12 text-center text-sm text-muted-foreground">
-                            Keine Sessions mit diesem Status.
+                            {t('page.noSessionsForStatus')}
                           </p>
                         )}
                       </div>
@@ -347,10 +356,10 @@ export default function InterviewsPage() {
                         <Applo state="success" size={116} aria-hidden />
                       </div>
                       <h3 className="mt-3 text-center text-xl font-semibold">
-                        Bereit für die nächste Runde?
+                        {t('page.nextRoundTitle')}
                       </h3>
                       <p className="mb-5 mt-1.5 text-center text-sm text-muted-foreground">
-                        Übe gezielt weiter — mit jeder Runde wirst du besser.
+                        {t('page.nextRoundDescription')}
                       </p>
 
                       <button
@@ -361,9 +370,9 @@ export default function InterviewsPage() {
                           <MessageSquare className="h-5 w-5" />
                         </span>
                         <span>
-                          <span className="block text-[15px] font-semibold">Freies Interview</span>
+                          <span className="block text-[15px] font-semibold">{t('page.freeInterview')}</span>
                           <span className="block text-xs text-muted-foreground">
-                            Für eine beliebige Position üben
+                            {t('page.freeInterviewDescription')}
                           </span>
                         </span>
                       </button>
@@ -376,10 +385,10 @@ export default function InterviewsPage() {
                         </span>
                         <span>
                           <span className="block text-[15px] font-semibold">
-                            Basierend auf Bewerbung
+                            {t('page.applicationBased')}
                           </span>
                           <span className="block text-xs text-muted-foreground">
-                            Fragen aus einer echten Stelle
+                            {t('page.applicationBasedDescription')}
                           </span>
                         </span>
                       </button>
@@ -390,7 +399,7 @@ export default function InterviewsPage() {
                         size="lg"
                       >
                         <Play className="h-4 w-4" />
-                        Neues Interview starten
+                        {t('page.startNew')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -408,17 +417,17 @@ export default function InterviewsPage() {
               <TooltipTrigger asChild>
                 <Link
                   href="/#pricing"
-                  aria-label="Nur in Premium verfügbar – jetzt upgraden"
+                  aria-label={t('page.lockedAria')}
                   className="absolute inset-0 z-10 flex cursor-not-allowed items-start justify-center rounded-[3px] pt-12"
                 >
                   <span className="rounded-[2px] border border-[#F3E3B3] bg-[#FDF6E7]/95 px-4 py-2 text-sm font-medium text-[#854D0E] shadow-sm backdrop-blur dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
                     <Lock className="mr-1 inline h-4 w-4" />
-                    Nur in Premium verfügbar
+                    {t('page.premiumOnly')}
                   </span>
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-xs text-center">
-                Nur in Premium verfügbar. Klicke, um zu upgraden.
+                {t('page.premiumTooltip')}
               </TooltipContent>
             </Tooltip>
           )}

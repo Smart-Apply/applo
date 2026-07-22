@@ -1,5 +1,8 @@
+'use client';
+
 import { useAuthStore } from '@/stores/auth-store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api-client';
 import { toastSuccess, toastError } from '@/lib/toast';
 import type {
@@ -74,6 +77,7 @@ export function useInterviewStats(options?: {
  * Hook to start a new interview session
  */
 export function useStartInterview() {
+  const t = useTranslations('interviews');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -89,10 +93,10 @@ export function useStartInterview() {
       );
       queryClient.invalidateQueries({ queryKey: ['interviews', 'stats'] });
       queryClient.setQueryData(['interviews', 'detail', session.id], session);
-      toastSuccess('Interview-Session gestartet');
+      toastSuccess(t('hooks.startSuccess'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Starten der Interview-Session');
+      toastError(error, t('hooks.startError'));
     },
   });
 }
@@ -101,6 +105,7 @@ export function useStartInterview() {
  * Hook to submit an answer to a question
  */
 export function useSubmitAnswer(sessionId: string) {
+  const t = useTranslations('interviews');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -128,7 +133,7 @@ export function useSubmitAnswer(sessionId: string) {
       );
     },
     onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Absenden der Antwort');
+      toastError(error, t('hooks.submitAnswerError'));
     },
   });
 }
@@ -137,6 +142,7 @@ export function useSubmitAnswer(sessionId: string) {
  * Hook to get the next question in a session
  */
 export function useGetNextQuestion(sessionId: string) {
+  const t = useTranslations('interviews');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -159,7 +165,7 @@ export function useGetNextQuestion(sessionId: string) {
       );
     },
     onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Laden der nächsten Frage');
+      toastError(error, t('hooks.nextQuestionError'));
     },
   });
 }
@@ -168,6 +174,7 @@ export function useGetNextQuestion(sessionId: string) {
  * Hook to complete an interview session
  */
 export function useCompleteInterview(sessionId: string) {
+  const t = useTranslations('interviews');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -176,10 +183,10 @@ export function useCompleteInterview(sessionId: string) {
       queryClient.setQueryData(['interviews', 'detail', sessionId], session);
       queryClient.invalidateQueries({ queryKey: ['interviews', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['interviews', 'stats'] });
-      toastSuccess('Interview abgeschlossen! Feedback wird generiert...');
+      toastSuccess(t('hooks.completeSuccess'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Abschließen des Interviews');
+      toastError(error, t('hooks.completeError'));
     },
   });
 }
@@ -188,6 +195,7 @@ export function useCompleteInterview(sessionId: string) {
  * Hook to abandon an interview session
  */
 export function useAbandonInterview(sessionId: string) {
+  const t = useTranslations('interviews');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -199,10 +207,10 @@ export function useAbandonInterview(sessionId: string) {
       // (with the abandoned session in history) instead of the first-run
       // tutorial after cancelling.
       queryClient.invalidateQueries({ queryKey: ['interviews', 'stats'] });
-      toastSuccess('Interview-Session abgebrochen');
+      toastSuccess(t('hooks.abandonSuccess'));
     },
     onError: (error: unknown) => {
-      toastError(error, 'Fehler beim Abbrechen der Session');
+      toastError(error, t('hooks.abandonError'));
     },
   });
 }

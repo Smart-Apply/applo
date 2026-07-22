@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
 import { ApiError, ErrorType, shouldRetry } from './errors';
+import { getErrorMessage as getErrorMessageForCode } from './error-messages';
 import { toastError } from './toast';
 import { useAuthStore } from '@/stores/auth-store';
 import { fetchCsrfToken } from './csrf';
@@ -22,7 +23,7 @@ function useQueryErrorHandler() {
     // Handle 401 Unauthorized - logout and redirect
     if (ApiError.isApiError(error) && error.status === ErrorType.UNAUTHORIZED) {
       clearAuth();
-      toastError(error, 'Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.');
+      toastError(error, getErrorMessageForCode('SESSION_EXPIRED'));
       router.push('/login');
       return;
     }

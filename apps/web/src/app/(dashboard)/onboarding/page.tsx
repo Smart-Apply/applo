@@ -18,6 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { CenteredLoader } from '@/components/shared/loading';
 import { toast } from 'sonner';
 import type { UpdateProfileDto } from '@/types';
+import { useTranslations } from 'next-intl';
 
 const ALL_SECTIONS: ImportableSection[] = [
   'personal', 'summary', 'skills', 'experiences', 'education', 'certificates', 'projects', 'languages',
@@ -26,6 +27,7 @@ const ALL_SECTIONS: ImportableSection[] = [
 type OnboardingStep = 'upload' | 'preview' | 'manual';
 
 export default function OnboardingPage() {
+  const t = useTranslations('profile');
   const router = useRouter();
   const { user } = useAuthStore();
   const { data: profile, isLoading: profileLoading } = useProfile();
@@ -67,7 +69,7 @@ export default function OnboardingPage() {
       setStep('preview');
     } catch {
       // On parse failure, switch to manual with friendly message
-      toast.error('Wir konnten deinen Lebenslauf nicht vollständig lesen. Bitte fülle die wichtigsten Felder manuell aus.');
+      toast.error(t('onboarding.parseFallback'));
       setStep('manual');
     }
   };
@@ -111,16 +113,16 @@ export default function OnboardingPage() {
 
     try {
       await updateProfile.mutateAsync(updateData);
-      toast.success('Profil erfolgreich erstellt!');
+      toast.success(t('onboarding.profileCreated'));
       router.push('/applications/new');
     } catch {
-      toast.error('Fehler beim Speichern des Profils.');
+      toast.error(t('onboarding.saveError'));
     }
   };
 
   const handleManualSave = async () => {
     if (!manualFirstName.trim() && !manualLastName.trim()) {
-      toast.error('Bitte gib mindestens deinen Namen ein.');
+      toast.error(t('onboarding.nameRequired'));
       return;
     }
 
@@ -139,15 +141,15 @@ export default function OnboardingPage() {
 
     try {
       await updateProfile.mutateAsync(updateData);
-      toast.success('Profil erfolgreich erstellt!');
+      toast.success(t('onboarding.profileCreated'));
       router.push('/applications/new');
     } catch {
-      toast.error('Fehler beim Speichern des Profils.');
+      toast.error(t('onboarding.saveError'));
     }
   };
 
   if (profileLoading) {
-    return <CenteredLoader message="Lädt..." />;
+    return <CenteredLoader message={t('onboarding.loading')} />;
   }
 
   return (
@@ -155,10 +157,10 @@ export default function OnboardingPage() {
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="font-heading text-3xl font-extrabold tracking-[-.025em] text-foreground">
-          Willkommen bei Applo{user?.firstName ? `, ${user.firstName}` : ''}!
+          {t('onboarding.welcome', { name: user?.firstName ? `, ${user.firstName}` : '' })}
         </h1>
         <p className="text-muted-foreground max-w-lg mx-auto">
-          Lade deinen Lebenslauf hoch, um dein Profil automatisch auszufüllen — oder fülle die wichtigsten Daten manuell aus.
+          {t('onboarding.description')}
         </p>
       </div>
 
@@ -171,9 +173,9 @@ export default function OnboardingPage() {
                 <Upload className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle>Lebenslauf hochladen</CardTitle>
+                <CardTitle>{t('onboarding.uploadTitle')}</CardTitle>
                 <CardDescription>
-                  Wir analysieren deinen Lebenslauf und füllen dein Profil automatisch aus.
+                  {t('onboarding.uploadDescription')}
                 </CardDescription>
               </div>
             </div>
@@ -184,15 +186,15 @@ export default function OnboardingPage() {
               onFileRemove={handleFileRemove}
               isUploading={parseResume.isPending}
               error={(parseResume.error as Error | null)?.message}
-              hint="PDF oder DOCX, max. 10 MB"
+              hint={t('onboarding.fileHint')}
             />
 
             {parseResume.isPending && (
               <div className="flex items-center gap-3 rounded-[3px] bg-muted/50 p-4">
                 <Loader2 className="h-5 w-5 animate-spin text-brand" />
                 <div>
-                  <p className="text-sm font-medium">Lebenslauf wird analysiert...</p>
-                  <p className="text-xs text-muted-foreground">Dies kann einige Sekunden dauern.</p>
+                  <p className="text-sm font-medium">{t('onboarding.analyzingTitle')}</p>
+                  <p className="text-xs text-muted-foreground">{t('onboarding.analyzingDescription')}</p>
                 </div>
               </div>
             )}
@@ -206,12 +208,12 @@ export default function OnboardingPage() {
               {parseResume.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Wird analysiert...
+                  {t('onboarding.analyzingButton')}
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Lebenslauf analysieren
+                  {t('onboarding.analyzeButton')}
                 </>
               )}
             </Button>
@@ -222,7 +224,7 @@ export default function OnboardingPage() {
               onClick={() => setStep('manual')}
               className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors py-2"
             >
-              Kein Lebenslauf? <span className="underline font-medium">Manuell ausfüllen</span>
+              {t('onboarding.noResume')} <span className="underline font-medium">{t('onboarding.manualLink')}</span>
             </button>
           </CardContent>
         </Card>
@@ -238,13 +240,13 @@ export default function OnboardingPage() {
                   <Check className="h-5 w-5" />
                 </div>
                 <div>
-                  <CardTitle>Lebenslauf analysiert</CardTitle>
-                  <CardDescription>Wir haben folgende Daten erkannt:</CardDescription>
+                  <CardTitle>{t('onboarding.analyzedTitle')}</CardTitle>
+                  <CardDescription>{t('onboarding.recognizedData')}</CardDescription>
                 </div>
               </div>
               <StatusChip tone="success" withDot={false}>
                 <Check className="h-3 w-3" />
-                Erfolgreich
+                {t('onboarding.success')}
               </StatusChip>
             </div>
           </CardHeader>
@@ -267,7 +269,7 @@ export default function OnboardingPage() {
                     </div>
                     {count !== null && count > 0 && (
                       <Badge variant="secondary" className="font-mono text-xs">
-                        {count} {count === 1 ? 'Eintrag' : 'Einträge'}
+                        {t('units.entry', { count })}
                       </Badge>
                     )}
                   </div>
@@ -278,13 +280,13 @@ export default function OnboardingPage() {
             {/* Skills preview */}
             {parseResume.data.skills && parseResume.data.skills.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">Erkannte Skills</h4>
+                <h4 className="font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground">{t('onboarding.recognizedSkills')}</h4>
                 <div className="flex flex-wrap gap-2">
                   {parseResume.data.skills.slice(0, 10).map((skill, i) => (
                     <Badge key={i} variant="secondary">{skill.name}</Badge>
                   ))}
                   {parseResume.data.skills.length > 10 && (
-                    <Badge variant="outline">+{parseResume.data.skills.length - 10} weitere</Badge>
+                    <Badge variant="outline">{t('onboarding.more', { count: parseResume.data.skills.length - 10 })}</Badge>
                   )}
                 </div>
               </div>
@@ -294,12 +296,12 @@ export default function OnboardingPage() {
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Button variant="outline" onClick={() => { setStep('upload'); parseResume.reset(); setSelectedFile(null); }}>
-                Zurück
+                {t('actions.back')}
               </Button>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep('manual')}>
                   <Pencil className="mr-2 h-4 w-4" />
-                  Anpassen
+                  {t('onboarding.adjust')}
                 </Button>
                 <Button
                   onClick={handleImportAndSave}
@@ -311,7 +313,7 @@ export default function OnboardingPage() {
                   ) : (
                     <Check className="mr-2 h-4 w-4" />
                   )}
-                  Sieht gut aus!
+                  {t('onboarding.looksGood')}
                 </Button>
               </div>
             </div>
@@ -328,9 +330,9 @@ export default function OnboardingPage() {
                 <Pencil className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle>Kurzprofil erstellen</CardTitle>
+                <CardTitle>{t('onboarding.manualTitle')}</CardTitle>
                 <CardDescription>
-                  Fülle nur die wichtigsten Felder aus. Du kannst später jederzeit mehr ergänzen.
+                  {t('onboarding.manualDescription')}
                 </CardDescription>
               </div>
             </div>
@@ -338,52 +340,52 @@ export default function OnboardingPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">Vorname <span className="text-destructive">*</span></Label>
+                <Label htmlFor="firstName">{t('labels.firstName')} <span className="text-destructive">*</span></Label>
                 <Input
                   id="firstName"
                   value={manualFirstName}
                   onChange={e => setManualFirstName(e.target.value)}
-                  placeholder="z.B. Anna"
+                  placeholder={t('onboarding.firstNamePlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Nachname <span className="text-destructive">*</span></Label>
+                <Label htmlFor="lastName">{t('labels.lastName')} <span className="text-destructive">*</span></Label>
                 <Input
                   id="lastName"
                   value={manualLastName}
                   onChange={e => setManualLastName(e.target.value)}
-                  placeholder="z.B. Müller"
+                  placeholder={t('onboarding.lastNamePlaceholder')}
                 />
               </div>
             </div>
 
             <div>
               <Label htmlFor="skills">
-                Top-Skills
-                <span className="text-muted-foreground font-normal ml-1">(kommagetrennt)</span>
+                {t('onboarding.topSkills')}
+                <span className="text-muted-foreground font-normal ml-1">{t('onboarding.commaSeparated')}</span>
               </Label>
               <Input
                 id="skills"
                 value={manualSkills}
                 onChange={e => setManualSkills(e.target.value)}
-                placeholder="z.B. Projektmanagement, Kommunikation, Excel"
+                placeholder={t('onboarding.skillsPlaceholder')}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Deine wichtigsten Fähigkeiten, getrennt durch Kommas.
+                {t('onboarding.skillsHelp')}
               </p>
             </div>
 
             <div>
-              <Label htmlFor="summary">Kurze Zusammenfassung</Label>
+              <Label htmlFor="summary">{t('onboarding.summaryLabel')}</Label>
               <Textarea
                 id="summary"
                 value={manualSummary}
                 onChange={e => setManualSummary(e.target.value)}
-                placeholder="z.B. Erfahrene Projektmanagerin mit 5 Jahren Erfahrung in der Organisationsentwicklung..."
+                placeholder={t('onboarding.summaryPlaceholder')}
                 rows={3}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                2-3 Sätze über deine Berufserfahrung.
+                {t('onboarding.summaryHelp')}
               </p>
             </div>
 
@@ -392,7 +394,7 @@ export default function OnboardingPage() {
               <div className="flex items-start gap-3 rounded-[3px] border border-[#F3E3B3] bg-[#FDF6E7] p-3 dark:border-amber-400/30 dark:bg-amber-400/10">
                 <AlertCircle className="mt-0.5 h-4 w-4 text-[#A16207] dark:text-amber-300" />
                 <p className="text-sm text-[#854D0E] dark:text-amber-300/90">
-                  Zusammenfassung und Skills verbessern die Qualität deiner Bewerbungen deutlich.
+                  {t('onboarding.recommendation')}
                 </p>
               </div>
             )}
@@ -401,7 +403,7 @@ export default function OnboardingPage() {
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Button variant="outline" onClick={() => setStep('upload')}>
-                Zurück
+                {t('actions.back')}
               </Button>
               <Button
                 onClick={handleManualSave}
@@ -413,7 +415,7 @@ export default function OnboardingPage() {
                 ) : (
                   <ArrowRight className="mr-2 h-4 w-4" />
                 )}
-                Profil erstellen
+                {t('onboarding.createProfile')}
               </Button>
             </div>
           </CardContent>
@@ -426,13 +428,13 @@ export default function OnboardingPage() {
           onClick={() => router.push('/profile/edit')}
           className="text-brand hover:underline transition-colors"
         >
-          Profil vollständig bearbeiten →
+          {t('onboarding.editFull')}
         </button>
         <button
           onClick={() => router.push('/dashboard')}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
-          Später ausfüllen
+          {t('onboarding.later')}
         </button>
       </div>
     </div>

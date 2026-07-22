@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { useTranslations } from 'next-intl';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CenteredLoader } from '@/components/shared/loading';
@@ -40,6 +41,7 @@ export function PDFPreviewModal({
   title,
   onExpired,
 }: PDFPreviewModalProps) {
+  const t = useTranslations('editor');
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   // `zoom` is the user's explicit multiplier (1.0 = 100%). The pixel
@@ -170,12 +172,12 @@ export function PDFPreviewModal({
             file={file}
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
-            loading={<CenteredLoader message="Lädt PDF..." />}
+            loading={<CenteredLoader message={t('pdfPreview.loading')} />}
             error={
               <div className="text-center p-8">
-                <p className="text-destructive mb-2">PDF konnte nicht geladen werden</p>
+                <p className="text-destructive mb-2">{t('pdfPreview.errorTitle')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Der Download-Link ist möglicherweise abgelaufen.
+                  {t('pdfPreview.errorDescription')}
                 </p>
               </div>
             }
@@ -208,20 +210,20 @@ export function PDFPreviewModal({
               size="sm"
               onClick={goToPreviousPage}
               disabled={pageNumber <= 1 || isLoading}
-              aria-label="Vorherige Seite"
+              aria-label={t('pdfPreview.previousPage')}
               className="h-10 w-10 p-0 sm:h-9 sm:w-auto sm:px-3"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="min-w-[88px] text-center text-xs text-muted-foreground sm:min-w-[100px] sm:text-sm">
-              {isLoading ? 'Lädt...' : `Seite ${pageNumber} / ${numPages}`}
+              {isLoading ? t('pdfPreview.loadingShort') : t('pdfPreview.pageCount', { page: pageNumber, pages: numPages })}
             </span>
             <Button
               variant="outline"
               size="sm"
               onClick={goToNextPage}
               disabled={pageNumber >= numPages || isLoading}
-              aria-label="Nächste Seite"
+              aria-label={t('pdfPreview.nextPage')}
               className="h-10 w-10 p-0 sm:h-9 sm:w-auto sm:px-3"
             >
               <ChevronRight className="h-4 w-4" />
@@ -234,7 +236,7 @@ export function PDFPreviewModal({
               size="sm"
               onClick={zoomOut}
               disabled={isLoading || zoom <= 0.5}
-              aria-label="Verkleinern"
+              aria-label={t('pdfPreview.zoomOut')}
               className="h-10 w-10 p-0 sm:h-9 sm:w-auto sm:px-3"
             >
               <ZoomOut className="h-4 w-4" />
@@ -247,7 +249,7 @@ export function PDFPreviewModal({
               size="sm"
               onClick={zoomIn}
               disabled={isLoading || zoom >= 2.0}
-              aria-label="Vergrößern"
+              aria-label={t('pdfPreview.zoomIn')}
               className="h-10 w-10 p-0 sm:h-9 sm:w-auto sm:px-3"
             >
               <ZoomIn className="h-4 w-4" />
@@ -260,7 +262,7 @@ export function PDFPreviewModal({
             className="h-10 w-full sm:h-9 sm:w-auto"
           >
             <Download className="mr-2 h-4 w-4" />
-            Download
+            {t('pdfPreview.download')}
           </Button>
         </div>
       </DialogContent>

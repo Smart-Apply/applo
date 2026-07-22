@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -61,6 +62,7 @@ export function EmailTrackingSection({
   onTogglePreference,
   isLoadingPreferences,
 }: EmailTrackingSectionProps) {
+  const t = useTranslations('settings');
   const { hasAccess, isLoading: gateLoading } = useFeatureGate('emailParsing');
   const queryClient = useQueryClient();
 
@@ -80,10 +82,10 @@ export function EmailTrackingSection({
     if (!status) return;
 
     if (status === 'connected') {
-      toast.success('Postfach verbunden — Applo erkennt jetzt eingehende E-Mails.');
+      toast.success(t('emailTracking.toasts.connected'));
     } else if (status === 'error') {
       const reason = params.get('reason') || 'unknown';
-      toast.error(`Verbindung fehlgeschlagen (${reason}). Bitte erneut versuchen.`);
+      toast.error(t('emailTracking.toasts.connectionFailed', { reason }));
     }
 
     // Strip the query params from the URL without reloading.
@@ -91,7 +93,7 @@ export function EmailTrackingSection({
     url.searchParams.delete('email_tracking');
     url.searchParams.delete('reason');
     window.history.replaceState({}, '', url.toString());
-  }, []);
+  }, [t]);
 
   const connectMutation = useMutation({
     mutationFn: () => api.mailboxSync.initiateMicrosoft(),
@@ -100,7 +102,7 @@ export function EmailTrackingSection({
     },
     onError: (error: Error) => {
       const msg =
-        error instanceof ApiError ? error.message : 'Konnte Verbindung nicht starten.';
+        error instanceof ApiError ? error.message : t('emailTracking.toasts.connectStartFailed');
       toast.error(msg);
     },
   });
@@ -108,11 +110,11 @@ export function EmailTrackingSection({
   const disconnectMutation = useMutation({
     mutationFn: (id: string) => api.mailboxSync.disconnect(id),
     onSuccess: () => {
-      toast.success('Postfach getrennt');
+      toast.success(t('emailTracking.toasts.disconnected'));
       queryClient.invalidateQueries({ queryKey: ['mailbox-sync', 'connections'] });
     },
     onError: (error: Error) => {
-      const msg = error instanceof ApiError ? error.message : 'Trennung fehlgeschlagen.';
+      const msg = error instanceof ApiError ? error.message : t('emailTracking.toasts.disconnectFailed');
       toast.error(msg);
     },
   });
@@ -127,7 +129,7 @@ export function EmailTrackingSection({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Bewerbungs-Tracking</CardTitle>
+          <CardTitle>{t('emailTracking.loadingTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -139,9 +141,9 @@ export function EmailTrackingSection({
   if (!hasAccess) {
     return (
       <UpgradePrompt
-        feature="Automatisches Bewerbungs-Tracking"
+        feature={t('emailTracking.feature')}
         requiredTier="PREMIUM"
-        description="Verbinde dein Postfach und Applo erkennt Antworten von Unternehmen automatisch — Einladungen zum Gespräch, Bestätigungen und Absagen. Der Status deiner Bewerbung wird live aktualisiert."
+        description={t('emailTracking.upgradeDescription')}
         variant="default"
       />
     );
@@ -152,15 +154,13 @@ export function EmailTrackingSection({
       <CardHeader>
         <div className="flex items-center gap-2">
           <Mail className="h-5 w-5 text-muted-foreground" />
-          <CardTitle>Automatisches Bewerbungs-Tracking</CardTitle>
+          <CardTitle>{t('emailTracking.title')}</CardTitle>
           <Badge variant="secondary" className="ml-2">
             Premium
           </Badge>
         </div>
         <CardDescription>
-          Verbinde dein Postfach. Applo erkennt Antworten von Unternehmen
-          automatisch (Bestätigungen, Einladungen, Absagen) und aktualisiert
-          den Status deiner Bewerbungen.
+          {t('emailTracking.description')}
         </CardDescription>
       </CardHeader>
 
@@ -168,7 +168,7 @@ export function EmailTrackingSection({
         {connectionsQuery.isLoading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Verbindungen werden geladen…
+            {t('emailTracking.loadingConnections')}
           </div>
         )}
 
@@ -201,11 +201,10 @@ export function EmailTrackingSection({
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-0.5">
             <p className="text-sm font-medium leading-none">
-              E-Mail bei automatischer Status-Änderung
+              {t('emailTracking.notify.title')}
             </p>
             <p className="text-sm text-muted-foreground">
-              Applo schickt dir nur eine Mail, wenn das Tracking den Status
-              geändert hat — nicht, wenn du ihn selbst änderst.
+              {t('emailTracking.notify.description')}
             </p>
           </div>
           <Button
@@ -216,14 +215,14 @@ export function EmailTrackingSection({
               onTogglePreference('emailTrackingNotify', !preferences?.emailTrackingNotify)
             }
           >
-            {preferences?.emailTrackingNotify ? 'Aktiviert' : 'Deaktiviert'}
+            {preferences?.emailTrackingNotify ? t('emailTracking.enabled') : t('emailTracking.disabled')}
           </Button>
         </div>
 
         <p className="text-xs text-muted-foreground pt-2">
-          Applo liest E-Mails ausschließlich zur Klassifikation. Wir
-          speichern <strong>keine E-Mail-Texte</strong> — nur Absender, Betreff
-          und das Klassifikations-Ergebnis (siehe Datenschutz).
+          {t.rich('emailTracking.privacyNote', {
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </p>
       </CardContent>
     </Card>
@@ -249,6 +248,7 @@ function ConnectionRow({
   isDisconnecting,
   comingSoon,
 }: ConnectionRowProps) {
+  const t = useTranslations('settings');
   return (
     <div className="flex items-start justify-between gap-4 rounded-[4px] border p-4">
       <div className="space-y-1 min-w-0">
@@ -256,19 +256,19 @@ function ConnectionRow({
           <p className="text-sm font-medium leading-none">{providerLabel}</p>
           {comingSoon && (
             <Badge variant="outline" className="text-xs">
-              Bald verfügbar
+              {t('emailTracking.connection.comingSoon')}
             </Badge>
           )}
           {connection?.status === 'ACTIVE' && (
             <Badge className="border-[#BFE9CC] bg-[#ECFAF0] text-success hover:bg-[#ECFAF0] dark:border-green-400/30 dark:bg-green-400/10 text-xs">
               <CheckCircle2 className="h-3 w-3 mr-1" />
-              Aktiv
+              {t('emailTracking.connection.active')}
             </Badge>
           )}
           {connection?.status === 'ERROR' && (
             <Badge className="border-[#F3C9C9] bg-[#FDEEEE] text-destructive hover:bg-[#FDEEEE] dark:border-red-400/30 dark:bg-red-400/10 text-xs">
               <AlertTriangle className="h-3 w-3 mr-1" />
-              Fehler
+              {t('emailTracking.connection.error')}
             </Badge>
           )}
         </div>
@@ -287,8 +287,8 @@ function ConnectionRow({
         ) : (
           <p className="text-sm text-muted-foreground">
             {comingSoon
-              ? 'Wir warten gerade auf die Google-Verifizierung.'
-              : 'Noch kein Postfach verbunden.'}
+              ? t('emailTracking.connection.googleVerification')
+              : t('emailTracking.connection.notConnected')}
           </p>
         )}
       </div>
@@ -303,25 +303,25 @@ function ConnectionRow({
                 ) : (
                   <>
                     <Trash2 className="h-4 w-4 mr-1" />
-                    Trennen
+                    {t('emailTracking.connection.disconnect')}
                   </>
                 )}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Postfach trennen?</AlertDialogTitle>
+                <AlertDialogTitle>{t('emailTracking.connection.disconnectTitle')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Applo wird keine neuen E-Mails von{' '}
-                  <strong>{connection.emailAddress}</strong> mehr erkennen.
-                  Bestehende Bewerbungen bleiben erhalten, aber der Status
-                  aktualisiert sich nicht mehr automatisch.
+                  {t.rich('emailTracking.connection.disconnectDescription', {
+                    email: connection.emailAddress,
+                    strong: (chunks) => <strong>{chunks}</strong>,
+                  })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                <AlertDialogCancel>{t('emailTracking.connection.cancel')}</AlertDialogCancel>
                 <AlertDialogAction onClick={() => onDisconnect(connection.id)}>
-                  Trennen
+                  {t('emailTracking.connection.disconnect')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -337,7 +337,7 @@ function ConnectionRow({
             ) : (
               <>
                 <Plug className="h-4 w-4 mr-1" />
-                Verbinden
+                {t('emailTracking.connection.connect')}
               </>
             )}
           </Button>

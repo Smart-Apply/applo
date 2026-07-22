@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
+import { useTranslations } from 'next-intl';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Bold, Italic, List, ListOrdered, Quote } from 'lucide-react';
@@ -48,6 +49,7 @@ function ToolbarButton({ onClick, active, icon, label, disabled }: ToolbarButton
 }
 
 export function CoverLetterEditor({ value, onChange, disabled, inline }: CoverLetterEditorProps) {
+  const t = useTranslations('editor');
   const editor = useEditor(
     {
       extensions: [
@@ -127,35 +129,35 @@ export function CoverLetterEditor({ value, onChange, disabled, inline }: CoverLe
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')}
           icon={<Bold className="h-4 w-4" />}
-          label="Fett"
+          label={t('richText.bold')}
           disabled={disabled}
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive('italic')}
           icon={<Italic className="h-4 w-4" />}
-          label="Kursiv"
+          label={t('richText.italic')}
           disabled={disabled}
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive('bulletList')}
           icon={<List className="h-4 w-4" />}
-          label="Aufzählung"
+          label={t('richText.bulletList')}
           disabled={disabled}
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive('orderedList')}
           icon={<ListOrdered className="h-4 w-4" />}
-          label="Nummerierte Liste"
+          label={t('richText.orderedList')}
           disabled={disabled}
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive('blockquote')}
           icon={<Quote className="h-4 w-4" />}
-          label="Zitat"
+          label={t('richText.quote')}
           disabled={disabled}
         />
       </div>

@@ -93,3 +93,6 @@ allowBuilds:
   # (SENTRY_AUTH_TOKEN is unset), so the binary is dead weight. Flip to
   # `true` if/when source-map upload gets wired into the deploy pipeline.
   '@sentry/cli': false
+  # Transitive optional dep of next-intl's message extractor. Native FS
+  # watching is only used by its dev tooling, which we don't run.
+  '@parcel/watcher': false

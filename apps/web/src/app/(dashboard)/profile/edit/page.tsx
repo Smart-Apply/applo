@@ -25,6 +25,7 @@ import { toastSuccess } from '@/lib/toast';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslations } from 'next-intl';
 
 // Dynamic imports for form managers that use Tiptap editor (saves ~200KB)
 // Only loaded when user navigates to profile edit page
@@ -60,6 +61,7 @@ function isValidTab(tab: string | null): tab is ValidTab {
 }
 
 export default function ProfileEditPage() {
+  const t = useTranslations('profile');
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -235,9 +237,9 @@ export default function ProfileEditPage() {
     });
 
     toastSuccess(
-      `${sections.length} Abschnitte mit insgesamt ${importedCount} Feldern importiert`,
+      t('units.fieldsImported', { sections: sections.length, count: importedCount }),
     );
-  }, [form]);
+  }, [form, t]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
@@ -326,8 +328,8 @@ export default function ProfileEditPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">Profil bearbeiten</h1>
-            <p className="text-sm text-muted-foreground">Aktualisiere deine Informationen</p>
+            <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">{t('edit.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('edit.subtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -336,30 +338,30 @@ export default function ProfileEditPage() {
             trigger={
               <Button variant="outline" className="gap-2">
                 <Upload className="h-4 w-4" />
-                <span className="hidden sm:inline">Lebenslauf importieren</span>
-                <span className="sm:hidden">Import</span>
+                <span className="hidden sm:inline">{t('edit.importResume')}</span>
+                <span className="sm:hidden">{t('edit.importShort')}</span>
               </Button>
             }
           />
           <SubmitButton 
             onClick={form.handleSubmit(onSubmit)} 
             isLoading={updateProfile.isPending}
-            loadingText="Speichere..."
+            loadingText={t('edit.saving')}
           >
             <Save className="mr-2 h-4 w-4" />
-            Speichern
+            {t('actions.save')}
           </SubmitButton>
         </div>
       </div>
 
       <Tabs defaultValue={initialTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 lg:w-auto">
-          <TabsTrigger value="basic" className="py-2">Basis</TabsTrigger>
-          <TabsTrigger value="experience" className="py-2">Erfahrung</TabsTrigger>
-          <TabsTrigger value="education" className="py-2">Bildung</TabsTrigger>
-          <TabsTrigger value="skills" className="py-2">Skills</TabsTrigger>
-          <TabsTrigger value="projects" className="py-2">Projekte</TabsTrigger>
-          <TabsTrigger value="certificates" className="py-2">Zertifikate</TabsTrigger>
+          <TabsTrigger value="basic" className="py-2">{t('edit.tabs.basic')}</TabsTrigger>
+          <TabsTrigger value="experience" className="py-2">{t('edit.tabs.experience')}</TabsTrigger>
+          <TabsTrigger value="education" className="py-2">{t('edit.tabs.education')}</TabsTrigger>
+          <TabsTrigger value="skills" className="py-2">{t('edit.tabs.skills')}</TabsTrigger>
+          <TabsTrigger value="projects" className="py-2">{t('edit.tabs.projects')}</TabsTrigger>
+          <TabsTrigger value="certificates" className="py-2">{t('edit.tabs.certificates')}</TabsTrigger>
         </TabsList>
 
         <Form {...form}>
@@ -370,9 +372,9 @@ export default function ProfileEditPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 text-primary" />
-                    Grundinformationen
+                    {t('edit.basic.title')}
                   </CardTitle>
-                  <CardDescription>Persönliche Daten und Kontaktinformationen</CardDescription>
+                  <CardDescription>{t('edit.basic.description')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid gap-6 md:grid-cols-2">
@@ -381,9 +383,9 @@ export default function ProfileEditPage() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Vorname *</FormLabel>
+                          <FormLabel>{t('labels.firstName')} *</FormLabel>
                           <FormControl>
-                            <Input placeholder="Max" {...field} />
+                            <Input placeholder={t('edit.basic.firstNamePlaceholder')} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -394,9 +396,9 @@ export default function ProfileEditPage() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nachname *</FormLabel>
+                          <FormLabel>{t('labels.lastName')} *</FormLabel>
                           <FormControl>
-                            <Input placeholder="Mustermann" {...field} />
+                            <Input placeholder={t('edit.basic.lastNamePlaceholder')} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -407,11 +409,11 @@ export default function ProfileEditPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>E-Mail</FormLabel>
+                          <FormLabel>{t('labels.email')}</FormLabel>
                           <FormControl>
                             <Input {...field} disabled className="bg-muted" />
                           </FormControl>
-                          <FormDescription>E-Mail kann nicht geändert werden</FormDescription>
+                          <FormDescription>{t('edit.basic.emailImmutable')}</FormDescription>
                         </FormItem>
                       )}
                     />
@@ -420,7 +422,7 @@ export default function ProfileEditPage() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Telefon</FormLabel>
+                          <FormLabel>{t('labels.phone')}</FormLabel>
                           <FormControl>
                             <Input 
                               type="tel"
@@ -446,9 +448,9 @@ export default function ProfileEditPage() {
                       name="street"
                       render={({ field }) => (
                         <FormItem className="col-span-2">
-                          <FormLabel>Straße und Hausnummer</FormLabel>
+                          <FormLabel>{t('labels.street')}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Musterstraße 123" {...field} />
+                            <Input placeholder={t('edit.basic.streetPlaceholder')} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -459,7 +461,7 @@ export default function ProfileEditPage() {
                       name="postalCode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Postleitzahl</FormLabel>
+                          <FormLabel>{t('labels.postalCode')}</FormLabel>
                           <FormControl>
                             <Input placeholder="47057" maxLength={5} {...field} />
                           </FormControl>
@@ -472,7 +474,7 @@ export default function ProfileEditPage() {
                       name="city"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Stadt</FormLabel>
+                          <FormLabel>{t('labels.city')}</FormLabel>
                           <FormControl>
                             <Input placeholder="Duisburg" {...field} />
                           </FormControl>
@@ -485,9 +487,9 @@ export default function ProfileEditPage() {
                       name="country"
                       render={({ field }) => (
                         <FormItem className="col-span-2">
-                          <FormLabel>Land <span className="text-muted-foreground text-xs font-normal">(optional)</span></FormLabel>
+                          <FormLabel>{t('labels.country')} <span className="text-muted-foreground text-xs font-normal">({t('labels.optional')})</span></FormLabel>
                           <FormControl>
-                            <Input placeholder="z.B. Deutschland" {...field} />
+                            <Input placeholder={t('edit.basic.countryPlaceholder')} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -524,7 +526,7 @@ export default function ProfileEditPage() {
                       name="portfolioUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Website / Portfolio</FormLabel>
+                          <FormLabel>{t('labels.website')}</FormLabel>
                           <FormControl>
                             <Input placeholder="https://example.com" {...field} />
                           </FormControl>
@@ -538,15 +540,15 @@ export default function ProfileEditPage() {
                     name="summary"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Über mich</FormLabel>
+                        <FormLabel>{t('labels.aboutMe')}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Erzähle kurz etwas über dich..."
+                            placeholder={t('edit.basic.summaryPlaceholder')}
                             className="min-h-[150px] resize-none"
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>Eine kurze Zusammenfassung für dein Profil.</FormDescription>
+                        <FormDescription>{t('edit.basic.summaryDescription')}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -560,9 +562,9 @@ export default function ProfileEditPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Briefcase className="h-5 w-5 text-primary" />
-                    Berufserfahrung
+                    {t('experience.title')}
                   </CardTitle>
-                  <CardDescription>Füge deine bisherigen Arbeitsstellen hinzu</CardDescription>
+                  <CardDescription>{t('edit.cards.experienceDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ExperienceManager
@@ -579,9 +581,9 @@ export default function ProfileEditPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-primary" />
-                    Ausbildung
+                    {t('education.title')}
                   </CardTitle>
-                  <CardDescription>Deine schulische und akademische Laufbahn</CardDescription>
+                  <CardDescription>{t('edit.cards.educationDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <EducationManager
@@ -598,9 +600,9 @@ export default function ProfileEditPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Code className="h-5 w-5 text-primary" />
-                    Fähigkeiten & Sprachen
+                    {t('edit.cards.skillsTitle')}
                   </CardTitle>
-                  <CardDescription>Was kannst du besonders gut?</CardDescription>
+                  <CardDescription>{t('edit.cards.skillsDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
                   <SkillsManager
@@ -622,9 +624,9 @@ export default function ProfileEditPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Code className="h-5 w-5 text-primary" />
-                    Projekte
+                    {t('projects.title')}
                   </CardTitle>
-                  <CardDescription>Zeige deine besten Arbeiten</CardDescription>
+                  <CardDescription>{t('edit.cards.projectsDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ProjectsManager
@@ -641,9 +643,9 @@ export default function ProfileEditPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Award className="h-5 w-5 text-primary" />
-                    Zertifikate
+                    {t('certificates.title')}
                   </CardTitle>
-                  <CardDescription>Deine Qualifikationen und Urkunden</CardDescription>
+                  <CardDescription>{t('edit.cards.certificatesDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <CertificatesManager

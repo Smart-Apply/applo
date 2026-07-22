@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "title": "Applo - AI-powered job applications",
+    "description": "Create personalized job applications with AI assistance"
+  },
+  "language": {
+    "label": "Language",
+    "switchLabel": "Switch language",
+    "de": "Deutsch",
+    "en": "English"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "retry": "Try again",
+    "loading": "Loading...",
+    "understood": "Got it"
+  },
+  "loadingMessages": {
+    "pdfPreview": "Loading PDF preview...",
+    "editor": "Loading editor...",
+    "form": "Loading form..."
+  },
+  "cookieBanner": {
+    "ariaLabel": "Cookie notice",
+    "text": "We only use strictly necessary cookies to keep you signed in and to submit forms securely. No tracking takes place. Learn more in our <privacyLink>privacy policy</privacyLink>.",
+    "dismiss": "Got it"
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "description": "An error occurred while loading this page.",
+    "errorMessageLabel": "Error message:",
+    "retry": "Try again",
+    "toDashboard": "Go to dashboard"
+  },
+  "serviceWorker": {
+    "updateTitle": "New version available",
+    "updateDescription": "Reload the page to get the latest version of Applo. Unsaved input in open forms will be lost.",
+    "updateAction": "Update now"
+  },
+  "fileUpload": {
+    "dropActive": "Drop the file here...",
+    "dropPrompt": "Drag a file here or click to browse",
+    "defaultHint": "PDF or DOCX, max. 10 MB",
+    "removeFile": "Remove file",
+    "errorTooLarge": "The file is too large. The maximum size is 10 MB.",
+    "errorInvalidType": "Invalid file type. Only PDF and DOCX files are allowed.",
+    "errorGeneric": "The file could not be uploaded."
+  },
+  "passwordStrength": {
+    "label": "Password strength",
+    "weak": "Weak",
+    "medium": "Medium",
+    "strong": "Strong",
+    "requirementMinLength": "At least 8 characters",
+    "requirementUppercase": "One uppercase letter",
+    "requirementLowercase": "One lowercase letter",
+    "requirementNumber": "One number",
+    "requirementSpecial": "One special character (@$!%*?&#)"
+  }
+}

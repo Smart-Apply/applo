@@ -3,6 +3,16 @@
 import { useEffect } from 'react';
 import { toast } from '@/lib/toast';
 import { hardReloadWithCacheBust } from '@/lib/hard-reload';
+import { pick } from '@/lib/i18n-runtime';
+
+const SW_UPDATE_MESSAGES = {
+  title: { de: 'Neue Version verfügbar', en: 'New version available' },
+  description: {
+    de: 'Lade die Seite neu, um die aktuelle Version von Applo zu sehen. Deine Eingaben in offenen Formularen gehen dabei verloren.',
+    en: 'Reload the page to get the latest version of Applo. Unsaved input in open forms will be lost.',
+  },
+  action: { de: 'Jetzt aktualisieren', en: 'Update now' },
+};
 
 /**
  * Stable sonner toast id used for both chunk-error and SW-update
@@ -41,16 +51,15 @@ let swForceReloadHandled = false;
  */
 export function showUpdateAvailableToast(): void {
   toast(
-    'Neue Version verfügbar',
+    pick(SW_UPDATE_MESSAGES.title),
     {
       id: UPDATE_TOAST_ID,
-      description:
-        'Lade die Seite neu, um die aktuelle Version von Applo zu sehen. Deine Eingaben in offenen Formularen gehen dabei verloren.',
+      description: pick(SW_UPDATE_MESSAGES.description),
       // Stay until the user acts — surprise auto-reloads cost more than
       // a visible banner.
       duration: Infinity,
       action: {
-        label: 'Jetzt aktualisieren',
+        label: pick(SW_UPDATE_MESSAGES.action),
         onClick: () => {
           void hardReloadWithCacheBust();
         },

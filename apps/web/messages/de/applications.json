@@ -1,0 +1,355 @@
+{
+  "status": {
+    "all": "Alle",
+    "created": "Erstellt",
+    "draft": "Entwurf",
+    "applied": "Beworben",
+    "interview": "Interview",
+    "accepted": "Angenommen",
+    "rejected": "Abgelehnt"
+  },
+  "list": {
+    "title": "Bewerbungen",
+    "description": "Verwalte und verfolge den Status deiner Bewerbungen.",
+    "refresh": "Aktualisieren",
+    "newApplication": "Neue Bewerbung",
+    "searchPlaceholder": "Bewerbungen durchsuchen...",
+    "clearSearch": "Suche löschen",
+    "tableView": "Tabellenansicht",
+    "tableViewShort": "Tabelle",
+    "cardView": "Kartenansicht",
+    "cardViewShort": "Karten",
+    "fallbackTitle": "Bewerbung",
+    "numberedFallbackTitle": "Bewerbung #{id}",
+    "results": "{count, plural, =0 {keine Bewerbungen} one {# Bewerbung} other {# Bewerbungen}}",
+    "resultsWithStatus": "{count, plural, =0 {keine Bewerbungen} one {# Bewerbung} other {# Bewerbungen}} mit Status \"{status}\"",
+    "pageInfo": "Seite {current} von {total}",
+    "selectedCount": "{count} ausgewählt",
+    "clearSelection": "Auswahl aufheben",
+    "setStatus": "Status setzen…",
+    "delete": "Löschen",
+    "actions": "Aktionen",
+    "showDetails": "Details anzeigen",
+    "edit": "Bearbeiten",
+    "openCoverLetter": "Anschreiben öffnen",
+    "openResume": "Lebenslauf öffnen",
+    "selectApplication": "Bewerbung auswählen",
+    "selectAllPage": "Alle auf dieser Seite auswählen",
+    "open": "Öffnen",
+    "emptyFilteredTitle": "Keine Bewerbungen gefunden",
+    "emptyFilteredDescription": "Es gibt keine Bewerbungen mit dem Status \"{status}\".",
+    "showAll": "Alle anzeigen",
+    "createFirst": "Erste Bewerbung erstellen",
+    "paginationOf": "von {total}",
+    "firstPage": "Erste Seite",
+    "previousPage": "Vorherige Seite",
+    "nextPage": "Nächste Seite",
+    "lastPage": "Letzte Seite",
+    "emptyTitle": "Noch keine Bewerbungen",
+    "emptyDescription": "Erstelle deine erste Bewerbung mit KI-Unterstützung und behalte den Überblick über deinen Bewerbungsprozess.",
+    "cancel": "Abbrechen",
+    "deleting": "Wird gelöscht...",
+    "sort": {
+      "label": "Sortieren",
+      "placeholder": "Sortieren",
+      "newest": "Neueste zuerst",
+      "oldest": "Älteste zuerst",
+      "titleAsc": "Jobtitel A–Z",
+      "companyAsc": "Unternehmen A–Z"
+    },
+    "table": {
+      "jobAndCompany": "Job & Unternehmen",
+      "status": "Status",
+      "created": "Erstellt",
+      "actions": "Aktionen"
+    },
+    "deleteDialog": {
+      "title": "Bewerbung löschen?",
+      "description": "Möchtest du die Bewerbung für <titleText>{title}</titleText> wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    },
+    "bulkDeleteDialog": {
+      "title": "{count} Bewerbungen löschen?",
+      "description": "Möchtest du wirklich <countText>{count, plural, one {# Bewerbung} other {# Bewerbungen}}</countText> löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    },
+    "toasts": {
+      "readyTitle": "Bewerbung fertig! 🎉",
+      "readyDescription": "{title} ist bereit zum Download.",
+      "failedTitle": "Generierung fehlgeschlagen",
+      "failedDescription": "{title} konnte nicht erstellt werden.",
+      "generatingTitle": "Generierung gestartet",
+      "generatingDescription": "{title} wird jetzt erstellt...",
+      "deleted": "Bewerbung gelöscht",
+      "bulkDeleteSuccess": "{count, plural, one {# Bewerbung gelöscht} other {# Bewerbungen gelöscht}}",
+      "bulkDeletePartial": "{succeeded} gelöscht, {failed} fehlgeschlagen",
+      "bulkStatusSuccess": "Status für {count, plural, one {# Bewerbung} other {# Bewerbungen}} aktualisiert",
+      "bulkStatusPartial": "{succeeded} aktualisiert, {failed} fehlgeschlagen"
+    }
+  },
+  "detail": {
+    "fallbackTitle": "Bewerbung",
+    "loading": "Lädt Bewerbung...",
+    "notFoundTitle": "Bewerbung nicht gefunden",
+    "notFoundDescription": "Die angeforderte Bewerbung existiert nicht oder du hast keine Berechtigung.",
+    "toApplications": "Zu Bewerbungen",
+    "autoTrackingTitle": "Status wurde durch automatisches E-Mail-Tracking aktualisiert",
+    "noStatus": "Kein Status (bitte Seite neu laden)",
+    "backToApplications": "Zurück zu Bewerbungen",
+    "toasts": {
+      "readyTitle": "Bewerbung fertig! 🎉",
+      "readyDescription": "{title} ist bereit zum Download.",
+      "translationFallbackTitle": "Übersetzung nicht möglich",
+      "translationFallbackDescription": "Die PDFs wurden in der Originalsprache erstellt. Bitte versuche den Export später erneut.",
+      "failedTitle": "Generierung fehlgeschlagen",
+      "failedDescription": "{title} konnte nicht erstellt werden.",
+      "generatingTitle": "Generierung gestartet",
+      "generatingDescription": "{title} wird jetzt erstellt...",
+      "markedAppliedTitle": "Als „Beworben“ markiert",
+      "markedAppliedDescription": "Viel Erfolg! 🤞",
+      "updateError": "Fehler beim Aktualisieren: {message}",
+      "previewError": "Fehler beim Laden der Vorschau",
+      "invalidJobUrl": "Ungültige URL der Stellenanzeige"
+    },
+    "celebration": {
+      "readyToSend": "Bereit zum Absenden",
+      "title": "Geschafft!",
+      "titleWithName": "Geschafft, {firstName}!",
+      "description": "Dein <coverLetter>Anschreiben</coverLetter> und dein <resume>Lebenslauf</resume> sind fertig — lade sie herunter und bewirb dich.",
+      "descriptionWithCompany": "Dein <coverLetter>Anschreiben</coverLetter> und dein <resume>Lebenslauf</resume> sind fertig — lade sie herunter und bewirb dich bei {company}."
+    },
+    "documents": {
+      "title": "Bewerbungsunterlagen",
+      "bothAsZip": "Beide als ZIP",
+      "edit": "Bearbeiten",
+      "editResume": "Lebenslauf bearbeiten",
+      "coverLetter": "Anschreiben",
+      "resume": "Lebenslauf",
+      "noCoverLetter": "Bei dieser Bewerbung wurde kein Anschreiben generiert",
+      "downloadLinksLimited": "Download-Links sind aus Sicherheitsgründen begrenzt gültig",
+      "expiresAt": " (bis {time} Uhr)",
+      "pdfDocument": "PDF-Dokument",
+      "preview": "Vorschau",
+      "download": "Download",
+      "missing": "Nicht vorhanden"
+    },
+    "nextStep": {
+      "appliedBadge": "Beworben ✓",
+      "appliedTitle": "Stark — Bewerbung eingereicht!",
+      "appliedDescription": "Viel Erfolg. Bereite dich jetzt gezielt mit dem Interview-Coach auf das Gespräch vor.",
+      "appliedDescriptionWithCompany": "Viel Erfolg bei {company}. Bereite dich jetzt gezielt mit dem Interview-Coach auf das Gespräch vor.",
+      "toInterviewCoach": "Zum Interview-Coach",
+      "title": "Nächster Schritt",
+      "applyAtCompany": "Bei {company} bewerben",
+      "applyNow": "Jetzt bewerben",
+      "description": "Reiche deine Unterlagen auf der Karriereseite ein — und markiere die Bewerbung danach als \"Beworben\", damit Applo den Status für dich verfolgt.",
+      "markApplied": "Als beworben markieren",
+      "toJobPosting": "Zur Stellenanzeige"
+    },
+    "ats": {
+      "title": "ATS-Analyse",
+      "description": "Wie gut deine Unterlagen zur Stelle passen — Keywords & Optimierungen.",
+      "upgradeDescription": "Upgrade jetzt zu Premium um dieses Feature zu benutzen."
+    },
+    "jobPosting": {
+      "title": "Stellenanzeige",
+      "description": "Beschreibung",
+      "requirements": "Anforderungen"
+    },
+    "meta": {
+      "created": "Erstellt <b>{date}</b>",
+      "updated": "Aktualisiert <b>{date}</b>"
+    },
+    "generating": {
+      "title": "Deine Bewerbung wird erstellt …",
+      "description": "Die KI schreibt dein Anschreiben und deinen Lebenslauf und passt alles an die Stelle an. Das dauert meist unter einer Minute.",
+      "preparing": "Wird vorbereitet …"
+    },
+    "pending": {
+      "title": "Deine Bewerbung ist angelegt",
+      "description": "Wirf einen Blick auf Lebenslauf und Anschreiben, passe sie bei Bedarf an — und starte dann den Export.",
+      "startExport": "Unterlagen anpassen & Export starten"
+    },
+    "failed": {
+      "status": "Fehlgeschlagen",
+      "title": "Da ist leider etwas schiefgelaufen",
+      "description": "Bei der Erstellung deiner Unterlagen ist ein Fehler aufgetreten. Versuch es noch einmal — meist klappt es beim zweiten Anlauf.",
+      "retry": "Erneut versuchen"
+    }
+  },
+  "atsPanel": {
+    "startTitle": "ATS-Analyse starten",
+    "startDescription": "Lass die KI deine Bewerbung analysieren und erhalte personalisierte Verbesserungsvorschläge basierend auf der Stellenausschreibung.",
+    "analyzing": "Analysiere...",
+    "analyzeNow": "Jetzt analysieren",
+    "title": "ATS-Analyse",
+    "tooltip": "ATS (Applicant Tracking System) = Bewerbermanagementsystem. Viele Unternehmen filtern Bewerbungen automatisch nach Schlüsselbegriffen.",
+    "analyzedAt": "Analysiert am {date}",
+    "reanalyze": "Neu analysieren",
+    "lowScoreTitle": "Niedrige Übereinstimmung",
+    "lowScoreDescription": "Dein Profil passt möglicherweise nicht optimal zu dieser Stelle. Überprüfe die fehlenden Keywords und aktualisiere dein Profil, um deine Chancen zu verbessern."
+  },
+  "matchScore": {
+    "title": "Profil-Match-Analyse",
+    "profileMatch": "Profil-Übereinstimmung"
+  },
+  "atsScoreBadge": {
+    "excellent": "Ausgezeichnet",
+    "good": "Gut",
+    "needsWork": "Ausbaufähig",
+    "low": "Niedrig"
+  },
+  "atsScoreCell": {
+    "unavailable": "Bewerbungscheck nicht verfügbar",
+    "categoryScores": "Kategorie-Scores:",
+    "coreScore": "Kern (Hard Skills): {score}%",
+    "experienceScore": "Erfahrung: {score}%",
+    "industryScore": "Branche: {score}%"
+  },
+  "atsScoreSidebar": {
+    "startTitle": "ATS-Analyse starten",
+    "startDescription": "Finde heraus, welche Keywords fehlen",
+    "analyzing": "Analysiere...",
+    "analyze": "Analysieren",
+    "title": "ATS-Score",
+    "jobMatch": "Übereinstimmung mit Stelle",
+    "core": "Kern (Hard Skills)",
+    "matchedKeywords": "Gefundene Keywords ({count})",
+    "missingKeywords": "Fehlende Keywords ({count})",
+    "missingHint": "Füge diese Schlüsselbegriffe in deinen Lebenslauf ein, um deine Bewertung zu verbessern",
+    "matchedLabel": "Gefundene Keywords",
+    "lowScore": "Ausbaufähiger Score. Ergänze die fehlenden Keywords in deinem Profil.",
+    "goodScore": "Ausgezeichnete Übereinstimmung! Dein Profil passt sehr gut."
+  },
+  "keywords": {
+    "title": "Schlüsselbegriffe",
+    "foundIn": "Gefunden in:",
+    "tabs": {
+      "all": "Alle ({count})",
+      "matched": "Gefunden ({count})",
+      "missing": "Fehlend ({count})"
+    },
+    "categories": {
+      "core": "Kernkompetenzen",
+      "soft": "Soft Skills",
+      "responsibility": "Aufgaben",
+      "requirement": "Anforderungen",
+      "methodology": "Methoden & Tools",
+      "industry": "Branche",
+      "seniority": "Level",
+      "misc": "Sonstiges"
+    },
+    "showLess": "Weniger",
+    "more": "+{count} mehr",
+    "noMatched": "Keine übereinstimmenden Keywords gefunden.",
+    "showAllMissing": "Alle {count} fehlenden Keywords anzeigen",
+    "noMissing": "Alle relevanten Keywords sind in deinem Profil vorhanden! 🎉"
+  },
+  "suggestions": {
+    "title": "Verbesserungsvorschläge",
+    "perfectTitle": "Perfekt!",
+    "perfectDescription": "Dein Profil passt hervorragend zu dieser Stelle.",
+    "aiRecommendations": "KI-Empfehlungen",
+    "addMissingKeywords": "Fehlende Keywords ergänzen",
+    "editProfile": "Profil bearbeiten",
+    "actions": {
+      "addCore": "Kernkompetenzen hinzufügen",
+      "addMethodology": "Methoden & Tools hinzufügen",
+      "addSoft": "Soft Skills hinzufügen",
+      "addResponsibility": "Aufgaben ergänzen",
+      "updateExperience": "Erfahrung aktualisieren",
+      "industryExperience": "Branchenerfahrung",
+      "addRequirement": "Qualifikation ergänzen",
+      "addProfile": "Profil ergänzen"
+    },
+    "generated": {
+      "addTechnical": "Füge diese technischen Skills zu deinem Profil hinzu",
+      "describeResponsibilities": "Beschreibe diese Aufgaben in deinen Berufserfahrungen",
+      "showSeniority": "Zeige dein Erfahrungsniveau deutlicher",
+      "highlightIndustry": "Hebe deine Branchenerfahrung hervor",
+      "checkRequirements": "Prüfe, ob du diese Anforderungen erfüllst",
+      "considerKeywords": "Berücksichtige diese Keywords in deinem Profil"
+    }
+  },
+  "highlightedText": {
+    "tooltipFound": "✓ In Profil gefunden",
+    "tooltipMissing": "⚠ Nicht in Profil",
+    "legendFound": "In Profil vorhanden",
+    "legendMissing": "Fehlt im Profil"
+  },
+  "atsOptimizer": {
+    "match": "Match",
+    "categoryLabels": {
+      "core": "Kernkompetenz",
+      "soft": "Soft Skill",
+      "responsibility": "Aufgabe",
+      "requirement": "Anforderung",
+      "methodology": "Methodik / Tool",
+      "industry": "Branche",
+      "seniority": "Level",
+      "misc": "Sonstiges"
+    },
+    "preview": {
+      "profile": "Profil",
+      "experience": "Berufserfahrung",
+      "education": "Ausbildung",
+      "projects": "Projekte",
+      "skills": "Fähigkeiten",
+      "new": "NEU",
+      "languages": "Sprachen",
+      "certificates": "Zertifikate",
+      "contact": "Kontakt"
+    },
+    "startTitle": "ATS-Analyse starten",
+    "startDescription": "Finde heraus, welche Begriffe aus der Stelle in deinem Lebenslauf fehlen.",
+    "analyzing": "Analysiere…",
+    "analyze": "Analysieren",
+    "resumeTitle": "Dein Lebenslauf",
+    "legend": "blau = von der Stelle erkannte Begriffe",
+    "livePreview": "Live-Vorschau",
+    "title": "ATS-Optimierung",
+    "subtitle": "So kommt dein Lebenslauf durch die Bewerber-Filter",
+    "reanalyze": "Neu analysieren",
+    "coach": {
+      "done": "Perfekt! Dein Lebenslauf enthält jetzt <b>alle wichtigen Begriffe</b> – du bist ATS-bereit. 🎉",
+      "pending": "Stark! Du hast alle Begriffe ergänzt. Klicke <b>Neu analysieren</b>, um deinen Score zu aktualisieren.",
+      "remaining": "Weiter so! Noch <b>{count, plural, one {# Begriff} other {# Begriffe}}</b>, dann hast du alle übernommen.",
+      "initial": "Dein Lebenslauf passt zu <b>{score}%</b> auf diese Stelle. Übernimm die <b>{count} fehlenden Begriffe</b>, um besser durch die Filter zu kommen."
+    },
+    "explanation": "<b>Was ist das?</b> Firmen filtern Bewerbungen mit einer Software (ATS) nach Begriffen aus der Stelle. Je mehr passende Begriffe dein Lebenslauf enthält, desto eher landest du im Interview.",
+    "coverageLabel": "Schlüsselbegriffe abgedeckt",
+    "missingTerms": "Fehlende Begriffe ({count})",
+    "addAll": "Alle übernehmen",
+    "addedToSkillsHint": "wird zu deinen Fähigkeiten hinzugefügt",
+    "add": "Hinzufügen",
+    "allTermsAddedTitle": "Alle Begriffe ergänzt",
+    "allTermsAddedDescription": "Sie stehen jetzt in deinem Lebenslauf. Klicke „Neu analysieren“, um den aktualisierten Score zu sehen.",
+    "allTermsCoveredTitle": "Alle Begriffe übernommen",
+    "allTermsCoveredDescription": "Dein Lebenslauf ist optimal auf diese Stelle abgestimmt. Du kannst ihn jetzt exportieren.",
+    "alreadyIncluded": "Bereits enthalten ({count})",
+    "atsReady": "ATS-bereit",
+    "openTerms": "<b>{count}</b> Begriffe offen",
+    "exportResume": "Lebenslauf exportieren"
+  },
+  "hooks": {
+    "createError": "Fehler beim Erstellen der Bewerbung",
+    "createSuccess": "Bewerbung wird erstellt...",
+    "generateError": "Fehler beim Generieren der Bewerbung",
+    "deleteError": "Fehler beim Löschen der Bewerbung",
+    "deleteSuccess": "Bewerbung wurde gelöscht",
+    "resumeSaved": "Lebenslauf gespeichert",
+    "resumeSaveError": "Lebenslauf konnte nicht gespeichert werden",
+    "coverLetterUpdated": "Anschreiben aktualisiert",
+    "coverLetterUpdateError": "Anschreiben konnte nicht aktualisiert werden",
+    "summaryGenerateError": "Zusammenfassung konnte nicht generiert werden",
+    "descriptionGenerateError": "Beschreibung konnte nicht generiert werden",
+    "exportStarted": "PDF-Export gestartet",
+    "exportStartError": "Export konnte nicht gestartet werden",
+    "designSettingsError": "Design-Einstellungen konnten nicht gespeichert werden",
+    "keywordsAnalyzed": "Keywords wurden analysiert",
+    "keywordsAnalyzeError": "Keywords konnten nicht analysiert werden",
+    "retryStarted": "Generierung wurde erneut gestartet",
+    "retryError": "Fehler beim erneuten Generieren",
+    "streamStatusParseError": "Status konnte nicht verarbeitet werden",
+    "streamConnectionClosed": "Verbindung geschlossen",
+    "streamConnectionRetrying": "Verbindungsfehler, neuer Versuch..."
+  }
+}

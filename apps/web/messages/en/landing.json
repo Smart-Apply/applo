@@ -1,0 +1,268 @@
+{
+  "mascot": {
+    "wave": {
+      "title": "Hi, I’m Applo!",
+      "text": "I help you create honest applications."
+    },
+    "search": {
+      "text": "I’m reading your CV."
+    },
+    "process": {
+      "text": "I’m writing …"
+    },
+    "success": {
+      "text": "Nicely done!"
+    },
+    "idle": {
+      "text": "Honest & calm."
+    },
+    "love": {
+      "text": "Built for you."
+    },
+    "auto": {
+      "text": "Jobs in no time."
+    },
+    "coach": {
+      "text": "Practice with me."
+    },
+    "think": {
+      "text": "Let’s see …"
+    },
+    "done": {
+      "text": "Done!"
+    }
+  },
+  "nav": {
+    "ariaLabel": "Main navigation",
+    "features": "Features",
+    "values": "Values",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "login": "Log in",
+    "start": "Start free"
+  },
+  "hero": {
+    "eyebrow": "Job applications, made honest",
+    "title": "Applications that fit <highlight>you</highlight>, not an invented version of you.",
+    "lead": "Applo writes cover letters and résumés from your <strong>real profile</strong>: AI-powered, ATS-optimized, and transparent. You stay in control; the AI does not make things up.",
+    "primaryCta": "Start free",
+    "secondaryCta": "How it works",
+    "trust": {
+      "hosting": "EU hosting",
+      "gdpr": "GDPR",
+      "grounded": "No invented data"
+    }
+  },
+  "receipt": {
+    "file": "application_sales_lead.pdf",
+    "language": "EN",
+    "profileLabel": "PROFILE",
+    "profileValue": "Lena Weber · Sales Lead",
+    "jobLabel": "JOB",
+    "jobValue": "Sales Lead · Nordwind GmbH",
+    "generationLabel": "AI GENERATION",
+    "note": "Grounding check active: no invented metrics.",
+    "scoreLabel": "ATS SCORE",
+    "keywords": "KEYWORDS 21/24",
+    "scoreWord": "STRONG",
+    "export": "Export as PDF",
+    "hint": "50 TEMPLATES · DE/EN"
+  },
+  "how": {
+    "eyebrow": "01 · How it works",
+    "title": "Your finished application in three steps",
+    "lead": "From résumé to sent, ATS-optimized application — without copy-paste chaos.",
+    "steps": {
+      "one": {
+        "title": "Upload profile & CV",
+        "desc": "Upload your résumé. The resume parser reads it and fills your profile automatically. You review and correct it."
+      },
+      "two": {
+        "title": "Add the job posting",
+        "desc": "Paste a job as text, URL, or PDF. The AI writes a cover letter and résumé tailored to the posting and optimized for ATS."
+      },
+      "three": {
+        "title": "Export as PDF",
+        "desc": "Choose from 50 ATS templates, export as PDF (DE/EN), and apply. Done."
+      }
+    }
+  },
+  "features": {
+    "eyebrow": "02 · Features",
+    "title": "Everything an honest application needs",
+    "lead": "Concrete tools instead of empty promises. Built so your application is strong <emphasis>and</emphasis> true.",
+    "items": {
+      "generation": {
+        "title": "AI generation",
+        "desc": "Self-review and an ATS keyword loop refine your cover letter and CV automatically, based on your real data."
+      },
+      "ingestion": {
+        "title": "Smart job ingestion",
+        "desc": "Import jobs from Indeed, LinkedIn, and Glassdoor as text, URL, or PDF."
+      },
+      "validation": {
+        "title": "Application check",
+        "desc": "ATS score plus traffic-light feedback shows what can be improved before you send it."
+      },
+      "templates": {
+        "title": "50 ATS PDF templates",
+        "desc": "Cleanly structured templates in German and English, optimized for applicant tracking systems."
+      },
+      "interviews": {
+        "title": "Mock interviews",
+        "desc": "Practice interviews by text or voice and get concrete feedback.<tag>Premium</tag>"
+      },
+      "tracking": {
+        "title": "Email tracking",
+        "desc": "Connect Outlook/M365. Your application status updates automatically.<tag>Premium</tag>"
+      },
+      "languages": {
+        "title": "Multilingual DE/EN",
+        "desc": "Create and export applications in German or English."
+      },
+      "pipeline": {
+        "title": "Live pipeline status",
+        "desc": "Keep every application and its current status in one place."
+      }
+    }
+  },
+  "values": {
+    "eyebrow": "03 · Values & transparency",
+    "title": "Honest. Verifiable. On your side.",
+    "lead": "Transparency is not a feature checkbox — it is the foundation. We say clearly what happens and what does not.",
+    "items": {
+      "grounded": {
+        "title": "No invented data",
+        "desc": "The AI uses only what your profile supports. A grounding check flags invented metrics before they enter your application."
+      },
+      "eu": {
+        "title": "Your data stays in the EU",
+        "desc": "Hosting and storage happen in the EU, under GDPR."
+      },
+      "audio": {
+        "title": "Interviews: no audio stored",
+        "desc": "Mock interviews keep only the transcript and feedback, never the audio recording."
+      },
+      "email": {
+        "title": "Email tracking without content",
+        "desc": "We read the status, not your messages. Email contents are not stored."
+      },
+      "security": {
+        "title": "Security built in",
+        "desc": "HttpOnly JWTs, 2FA, CSRF protection, rate limiting, and audit logs are active by default."
+      },
+      "candidate": {
+        "title": "For you, not recruiters",
+        "desc": "Your profile is the basis of <strong>your</strong> applications, not a searchable showcase for companies."
+      }
+    },
+    "not": {
+      "title": "What Applo does <underline>not</underline> do",
+      "items": {
+        "spam": "No mass-spam applications in your name.",
+        "fake": "No fake achievements and no invented metrics.",
+        "sale": "No selling your data, to anyone."
+      }
+    }
+  },
+  "pricing": {
+    "eyebrow": "04 · Pricing",
+    "title": "Fair and without surprises",
+    "lead": "Start free. Upgrade only when you need more. Cancel anytime.",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "currency": "€",
+        "amount": "0",
+        "period": "/ month",
+        "tagline": "For trying it out",
+        "features": {
+          "0": "5 application checks / month",
+          "1": "AI generation & ATS score",
+          "2": "50 ATS PDF templates",
+          "3": "DE/EN"
+        },
+        "cta": "Start free"
+      },
+      "pro": {
+        "badge": "Popular",
+        "name": "Pro",
+        "currency": "€",
+        "amount": "TBD",
+        "period": "/ month",
+        "tagline": "Price coming soon",
+        "features": {
+          "0": "Unlimited application checks",
+          "1": "Smart job ingestion",
+          "2": "Live pipeline status",
+          "3": "Everything in Free"
+        },
+        "cta": "Choose Pro"
+      },
+      "premium": {
+        "name": "Premium",
+        "currency": "€",
+        "amount": "TBD",
+        "period": "/ month",
+        "tagline": "Price coming soon",
+        "features": {
+          "0": "Mock interviews (text & voice)",
+          "1": "Email tracking (Outlook/M365)",
+          "2": "Everything in Pro"
+        },
+        "cta": "Choose Premium"
+      }
+    },
+    "stats": {
+      "templates": "ATS templates",
+      "languagesSuffix": " languages",
+      "languages": "German & English",
+      "hosting": "EU hosting & GDPR"
+    }
+  },
+  "faq": {
+    "eyebrow": "05 · FAQ",
+    "title": "Clear answers",
+    "items": {
+      "data": {
+        "q": "What happens to my data?",
+        "a": "Your data is hosted and stored in the EU under GDPR. We do not sell your data. Mock interviews store no audio, and email tracking stores no email content."
+      },
+      "fabrication": {
+        "q": "Does the AI invent things about me?",
+        "a": "No. The AI uses only what your profile supports. A grounding check flags invented metrics so nothing untrue enters your application."
+      },
+      "recruiters": {
+        "q": "Can recruiters see or find my profile?",
+        "a": "No. Your profile is the private basis for your own applications, not a searchable showcase. Companies cannot use it to search for you."
+      },
+      "languages": {
+        "q": "Which languages can I apply in?",
+        "a": "You can create applications in German and English and export them as PDFs."
+      },
+      "cancel": {
+        "q": "Can I cancel Applo?",
+        "a": "Yes, anytime. Free stays free; paid plans have no long-term lock-in."
+      },
+      "ownership": {
+        "q": "Who owns my data?",
+        "a": "You do. Your profile and content belong to you. Applo uses them only to create your applications."
+      }
+    }
+  },
+  "final": {
+    "title": "Ready for honest applications?",
+    "lead": "Start free: no invented data, no mass-spam applications.",
+    "cta": "Start free",
+    "trust": {
+      "hosting": "EU hosting",
+      "gdpr": "GDPR",
+      "cancel": "cancel anytime"
+    }
+  },
+  "footer": {
+    "tagline": "Applications from your real profile: honest, ATS-optimized, hosted in the EU.",
+    "compliance": "EU · GDPR",
+    "license": "Source-available · BSL 1.1"
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "page": {
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "next": "Next"
+  },
+  "steps": {
+    "job": {
+      "shortTitle": "Job"
+    },
+    "configure": {
+      "shortTitle": "Configure"
+    },
+    "generate": {
+      "shortTitle": "Done"
+    }
+  },
+  "jobStep": {
+    "title": "Add job",
+    "description": "Add the job posting by link or by pasting the text.",
+    "tabs": {
+      "url": "Paste link",
+      "text": "Paste text"
+    },
+    "success": {
+      "title": "Job captured",
+      "description": "The job posting was saved successfully.",
+      "badge": "Saved",
+      "useOther": "Use another job"
+    },
+    "summary": {
+      "title": "Title",
+      "company": "Company",
+      "location": "Location",
+      "info": "Info"
+    },
+    "urlFallback": {
+      "title": "We could not read this job posting automatically.",
+      "descriptionTextTab": "Some job portals block extraction. Please copy the text of the posting and paste it in the “Paste text” tab.",
+      "switchToText": "Switch to text tab →"
+    },
+    "urlForm": {
+      "urlLabel": "Link to job posting",
+      "urlHelp": "Supports LinkedIn, Indeed, and other job portals.",
+      "analyzing": "Analyzing...",
+      "submit": "Analyze job posting"
+    },
+    "manualForm": {
+      "titlePlaceholder": "e.g. Marketing Manager, Nurse",
+      "fullTextHelp": "Copy the full text of the job posting and paste it here.",
+      "fullTextPlaceholder": "Paste the full text of the job posting here...",
+      "saving": "Saving...",
+      "submit": "Save job"
+    }
+  },
+  "configureStep": {
+    "title": "Configure",
+    "loadingTemplates": "Loading templates...",
+    "language": {
+      "de": "German",
+      "en": "English"
+    },
+    "coverLetterLength": {
+      "kurz": {
+        "label": "Compact (~250 words)",
+        "hint": "Straight to the point — ideal when the job posting lists only a few requirements."
+      },
+      "standard": {
+        "label": "Standard (~350 words)",
+        "hint": "The classic length for one page."
+      }
+    },
+    "options": {
+      "generateCoverLetter": "Generate cover letter",
+      "generateCoverLetterHelp": "Creates a cover letter tailored to the job.",
+      "language": "Language"
+    },
+    "errors": {
+      "unknown": "An unknown error occurred",
+      "resendEmail": "Resend email",
+      "goToApplication": "Go to application"
+    },
+    "progress": {
+      "created": "created",
+      "doneTitle": "Done!",
+      "redirecting": "Application created – redirecting you …",
+      "eta": "Estimated time remaining: ~{seconds}s",
+      "almostDone": "Almost there …",
+      "doNotClose": "Please do not close this window.",
+      "stepDone": "Done",
+      "footnote": "Completed steps are marked as done automatically after completion.",
+      "steps": {
+        "analyze": "Analyzing profile and job posting",
+        "cover": "Generating cover letter with AI",
+        "resume": "Tailoring résumé to the job",
+        "save": "Saving documents"
+      }
+    },
+    "templates": {
+      "thumbnailAlt": "{name} thumbnail",
+      "color": "Color"
+    },
+    "preview": {
+      "label": "Preview:",
+      "live": "Live",
+      "zoomTitle": "Click to enlarge",
+      "alt": "Template preview",
+      "zoom": "Enlarge",
+      "dialogTitle": "Preview: {name}",
+      "largeAlt": "Large template preview"
+    },
+    "usage": {
+      "exhausted": "Daily limit reached ({used}/{limit}). Please come back in 24 hours.",
+      "remaining": "{remaining} of {limit} applications still possible today"
+    },
+    "actions": {
+      "back": "Back",
+      "creating": "Creating application...",
+      "create": "Create application"
+    }
+  },
+  "generateStep": {
+    "toasts": {
+      "existingApplication": "An application already exists for this job. We’ll open it for you."
+    },
+    "progress": {
+      "title": "Creating application...",
+      "overdue": "Taking longer than usual, just a moment …",
+      "estimate": "This usually takes {seconds} seconds. Please do not close this window.",
+      "creating": "Your application is being created with AI...",
+      "steps": {
+        "analyze": "Analyzing profile and job posting",
+        "cover": "Generating cover letter with AI",
+        "resume": "Tailoring résumé to the job",
+        "refineCover": "Reviewing and refining cover letter",
+        "save": "Saving documents"
+      }
+    },
+    "summary": {
+      "title": "Summary",
+      "profile": "Your profile",
+      "skills": "{count, plural, one {# skill} other {# skills}}",
+      "experiences": "{count, plural, one {# experience} other {# experiences}}",
+      "education": "{count} education entries",
+      "job": "This job"
+    },
+    "options": {
+      "title": "Options",
+      "languageTitle": "Application language",
+      "languageHelp": "Detected automatically. You can adjust it here."
+    },
+    "templates": {
+      "title": "Choose design",
+      "description": "Choose a template for your résumé.",
+      "coverLetterNote": "The cover letter is automatically created in the matching design.",
+      "showLess": "Less",
+      "showAll": "Show all"
+    }
+  },
+  "jobPostingForm": {
+    "title": "Create job posting manually",
+    "description": "Fill in all relevant fields to create a new job posting",
+    "sections": {
+      "basicInfo": "Basic information",
+      "jobDescription": "Job description"
+    },
+    "fields": {
+      "title": "Job title",
+      "company": "Company",
+      "location": "Location",
+      "url": "Job posting URL",
+      "salary": "Salary",
+      "employmentType": "Employment type",
+      "description": "Description",
+      "jobDescription": "Job description"
+    },
+    "placeholders": {
+      "title": "e.g. Marketing Manager, Nurse, Sales Representative",
+      "company": "e.g. Example GmbH",
+      "location": "e.g. Berlin, Germany",
+      "salary": "e.g. 60,000 - 80,000 EUR",
+      "employmentType": "e.g. Full-time, part-time, freelance",
+      "description": "Describe the role, the team, and what makes the company special..."
+    },
+    "help": {
+      "description": "General description of the role and the company"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "create": "Create job posting"
+    }
+  },
+  "jobPostingParser": {
+    "toasts": {
+      "changesSaved": "Changes saved"
+    },
+    "input": {
+      "title": "Add by link",
+      "description": "Add a job posting by link and have it analyzed automatically",
+      "urlLabel": "Link to job posting",
+      "urlHelp": "LinkedIn, Indeed, and other job portals are supported",
+      "submit": "Analyze job posting"
+    },
+    "urlFallback": {
+      "title": "We could not read this job posting automatically.",
+      "descriptionManualTab": "Some job portals block extraction. Please switch to the “Manual” tab and copy the text of the posting there."
+    },
+    "result": {
+      "title": "Analyzed job posting",
+      "description": "Review the extracted information",
+      "badge": "Analyzed successfully"
+    },
+    "fields": {
+      "title": "Title",
+      "company": "Company",
+      "location": "Location",
+      "description": "Description",
+      "requirements": "Requirements",
+      "originalUrl": "Original URL"
+    },
+    "actions": {
+      "edit": "Edit",
+      "analyzeAgain": "Analyze again",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes"
+    },
+    "edit": {
+      "title": "Edit job posting",
+      "description": "Adjust the information if needed",
+      "titleLabel": "Title *",
+      "companyLabel": "Company *"
+    },
+    "help": {
+      "title": "Supported platforms",
+      "description": "You can import job postings from LinkedIn, Indeed, and other job portals. If analysis fails, you can also enter the information manually."
+    }
+  }
+}
