@@ -61,7 +61,7 @@ export default function Home() {
   const [ctaRevealed, setCtaRevealed] = useState(false);
 
   // Companion driver: pose per section, dock position, scroll-reveal and
-  // animated stat counters — a React port of the design's vanilla script.
+  // animated stat counters, a React port of the design's vanilla script.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -260,11 +260,11 @@ export default function Home() {
                 Bewerben, ehrlich gemacht
               </p>
               <h1 className="reveal" style={d('.05s')}>
-                Bewerbungen, die zu <span className="hl">dir</span> passen — nicht zu einer erfundenen
+                Bewerbungen, die zu <span className="hl">dir</span> passen, nicht zu einer erfundenen
                 Version von dir.
               </h1>
               <p className="lead reveal" style={d('.12s')}>
-                Applo schreibt Anschreiben und Lebenslauf aus deinem <b>echten Profil</b> — KI-gestützt, ATS-optimiert und
+                Applo schreibt Anschreiben und Lebenslauf aus deinem <b>echten Profil</b>: KI-gestützt, ATS-optimiert und
                 transparent. Du behältst die Kontrolle, die KI erfindet nichts dazu.
               </p>
               <div className="hero-cta reveal" style={d('.18s')}>
@@ -282,7 +282,7 @@ export default function Home() {
               </div>
             </div>
             <div className="hero-stage reveal" style={d('.1s')} aria-hidden="true">
-              {/* “Receipt” product card — the mascot dock peeks out behind it */}
+              {/* “Receipt” product card, the mascot dock peeks out behind it */}
               <div className="receipt">
                 <div className="r-top">
                   <span className="r-file">bewerbung_vertriebsleitung.pdf</span>
@@ -291,7 +291,7 @@ export default function Home() {
                 <div className="r-row">
                   <div className="r-field">
                     <span className="r-label">PROFIL</span>
-                    <span className="r-val">Lena Weber — Vertriebsleiterin</span>
+                    <span className="r-val">Lena Weber · Vertriebsleiterin</span>
                   </div>
                   <svg width="16" height="16" viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" fill="#16A34A" /><path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" /></svg>
                 </div>
@@ -307,7 +307,7 @@ export default function Home() {
                     <span className="r-label">KI-GENERIERUNG</span>
                     <svg width="26" height="10" viewBox="0 0 26 10" aria-hidden="true"><circle className="fv-t1" cx="4" cy="5" r="2.4" fill="#5581C7" /><circle className="fv-t2" cx="13" cy="5" r="2.4" fill="#5581C7" /><circle className="fv-t3" cx="22" cy="5" r="2.4" fill="#5581C7" /></svg>
                   </div>
-                  <p className="r-note">Grounding-Check aktiv — keine erfundenen Kennzahlen.</p>
+                  <p className="r-note">Grounding-Check aktiv: keine erfundenen Kennzahlen.</p>
                 </div>
                 <div className="r-score">
                   <div className="r-field">
@@ -333,21 +333,21 @@ export default function Home() {
           <div className="wrap">
             <div className="sec-row reveal">
               <div>
-                <p className="eyebrow">01 — So funktioniert’s</p>
+                <p className="eyebrow">01 · So funktioniert’s</p>
                 <h2 className="h2">In drei Schritten zur fertigen Bewerbung</h2>
               </div>
-              <p className="lead">Vom Lebenslauf zur abgeschickten, ATS-optimierten Bewerbung — ohne Copy-Paste-Chaos.</p>
+              <p className="lead">Vom Lebenslauf zur abgeschickten, ATS-optimierten Bewerbung, ohne Copy-Paste-Chaos.</p>
             </div>
             <div className="grid steps">
               <article className="card reveal" style={d('0s')}>
                 <div className="step-n">01</div>
                 <h3 className="h3">Profil &amp; CV hochladen</h3>
-                <p>Lade deinen Lebenslauf hoch. Der Resume-Parser liest ihn aus und füllt dein Profil automatisch — du prüfst und korrigierst.</p>
+                <p>Lade deinen Lebenslauf hoch. Der Resume-Parser liest ihn aus und füllt dein Profil automatisch. Du prüfst und korrigierst.</p>
               </article>
               <article className="card reveal" style={d('.1s')}>
                 <div className="step-n">02</div>
                 <h3 className="h3">Stelle einfügen</h3>
-                <p>Füge eine Stelle als Text, URL oder PDF ein. Die KI schreibt Anschreiben und Lebenslauf passend zur Ausschreibung — ATS-optimiert.</p>
+                <p>Füge eine Stelle als Text, URL oder PDF ein. Die KI schreibt Anschreiben und Lebenslauf passend zur Ausschreibung, ATS-optimiert.</p>
               </article>
               <article className="card reveal" style={d('.2s')}>
                 <div className="step-n">03</div>
@@ -363,10 +363,10 @@ export default function Home() {
           <div className="wrap">
             <div className="sec-row reveal">
               <div>
-                <p className="eyebrow">02 — Features</p>
+                <p className="eyebrow">02 · Features</p>
                 <h2 className="h2">Alles, was eine ehrliche Bewerbung braucht</h2>
               </div>
-              <p className="lead">Konkrete Werkzeuge statt leerer Versprechen — gebaut, damit deine Bewerbung stark <i>und</i> wahr ist.</p>
+              <p className="lead">Konkrete Werkzeuge statt leerer Versprechen. Gebaut, damit deine Bewerbung stark <i>und</i> wahr ist.</p>
             </div>
             <div className="grid feat-grid">
               <article className="card feat reveal">
@@ -384,7 +384,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <h3 className="h3">KI-Generierung</h3>
-                <p>Self-Review &amp; ATS-Keyword-Loop verfeinern Anschreiben und CV automatisch — auf Basis deiner echten Daten.</p>
+                <p>Self-Review &amp; ATS-Keyword-Loop verfeinern Anschreiben und CV automatisch, auf Basis deiner echten Daten.</p>
               </article>
 
               <article className="card feat reveal" style={d('.06s')}>
@@ -400,7 +400,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <h3 className="h3">Smart Job-Ingestion</h3>
-                <p>Stellen aus Indeed, LinkedIn und Glassdoor einlesen — als Text, URL oder PDF.</p>
+                <p>Stellen aus Indeed, LinkedIn und Glassdoor einlesen: als Text, URL oder PDF.</p>
               </article>
 
               <article className="card feat reveal" style={d('.12s')}>
@@ -469,7 +469,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <h3 className="h3">E-Mail-Tracking</h3>
-                <p>Verbinde Outlook/M365 — der Status deiner Bewerbungen aktualisiert sich automatisch.<span className="tag">Premium</span></p>
+                <p>Verbinde Outlook/M365. Der Status deiner Bewerbungen aktualisiert sich automatisch.<span className="tag">Premium</span></p>
               </article>
 
               <article className="card feat reveal" style={d('.12s')}>
@@ -511,10 +511,10 @@ export default function Home() {
           <div className="wrap">
             <div className="sec-row reveal">
               <div>
-                <p className="eyebrow">03 — Werte &amp; Transparenz</p>
+                <p className="eyebrow">03 · Werte &amp; Transparenz</p>
                 <h2 className="h2">Ehrlich. Nachprüfbar. Auf deiner Seite.</h2>
               </div>
-              <p className="lead">Transparenz ist kein Feature-Häkchen, sondern das Fundament. Wir sagen klar, was passiert — und was nicht.</p>
+              <p className="lead">Transparenz ist kein Feature-Häkchen, sondern das Fundament. Wir sagen klar, was passiert und was nicht.</p>
             </div>
             <div className="grid val-grid">
               <article className="card val reveal">
@@ -530,7 +530,7 @@ export default function Home() {
               <article className="card val reveal" style={d('.12s')}>
                 <div className="chk"><Check /></div>
                 <h3 className="h3">Interviews: kein Audio gespeichert</h3>
-                <p>Von Mock-Interviews bleiben nur Transcript und Feedback — keine Audioaufnahme.</p>
+                <p>Von Mock-Interviews bleiben nur Transcript und Feedback, keine Audioaufnahme.</p>
               </article>
               <article className="card val reveal">
                 <div className="chk"><Check /></div>
@@ -540,12 +540,12 @@ export default function Home() {
               <article className="card val reveal" style={d('.06s')}>
                 <div className="chk"><Check /></div>
                 <h3 className="h3">Sicherheit eingebaut</h3>
-                <p>HttpOnly-JWT, 2FA, CSRF-Schutz, Rate-Limiting und Audit-Logs — standardmäßig aktiv.</p>
+                <p>HttpOnly-JWT, 2FA, CSRF-Schutz, Rate-Limiting und Audit-Logs sind standardmäßig aktiv.</p>
               </article>
               <article className="card val reveal" style={d('.12s')}>
                 <div className="chk"><Check /></div>
                 <h3 className="h3">Für dich, nicht für Recruiter</h3>
-                <p>Dein Profil ist die Basis <b>deiner</b> Bewerbungen — kein durchsuchbares Schaufenster für Firmen.</p>
+                <p>Dein Profil ist die Basis <b>deiner</b> Bewerbungen, kein durchsuchbares Schaufenster für Firmen.</p>
               </article>
             </div>
 
@@ -556,7 +556,7 @@ export default function Home() {
               <ul>
                 <li><span className="x">×</span><span>Keine Massen-Spam-Bewerbungen in deinem Namen.</span></li>
                 <li><span className="x">×</span><span>Keine Fake-Erfolge und keine erfundenen Kennzahlen.</span></li>
-                <li><span className="x">×</span><span>Kein Verkauf deiner Daten — an niemanden.</span></li>
+                <li><span className="x">×</span><span>Kein Verkauf deiner Daten, an niemanden.</span></li>
               </ul>
             </div>
           </div>
@@ -567,10 +567,10 @@ export default function Home() {
           <div className="wrap">
             <div className="sec-row reveal">
               <div>
-                <p className="eyebrow">04 — Preise</p>
+                <p className="eyebrow">04 · Preise</p>
                 <h2 className="h2">Fair und ohne Überraschungen</h2>
               </div>
-              <p className="lead">Starte kostenlos. Upgrade nur, wenn du mehr brauchst — jederzeit kündbar.</p>
+              <p className="lead">Starte kostenlos. Upgrade nur, wenn du mehr brauchst. Jederzeit kündbar.</p>
             </div>
             <div className="grid price-grid">
               <article className="card price reveal">
@@ -622,16 +622,16 @@ export default function Home() {
         <section className="section faq-sec" id="faq" data-pose="think">
           <div className="wrap faq-grid">
             <div className="reveal">
-              <p className="eyebrow">05 — FAQ</p>
+              <p className="eyebrow">05 · FAQ</p>
               <h2 className="h2" style={{ marginTop: 12 }}>Klare Antworten</h2>
             </div>
             <div className="faq-list">
               <details className="faq reveal"><summary>Was passiert mit meinen Daten?<span className="pls" /></summary><div className="ans">Deine Daten werden in der EU gehostet und gespeichert, nach DSGVO. Wir verkaufen deine Daten nicht. Bei Mock-Interviews wird kein Audio gespeichert, beim E-Mail-Tracking keine Mail-Inhalte.</div></details>
               <details className="faq reveal"><summary>Erfindet die KI Dinge über mich?<span className="pls" /></summary><div className="ans">Nein. Die KI nutzt nur, was dein Profil belegt. Ein Grounding-Check markiert erfundene Kennzahlen, damit nichts Unwahres in deine Bewerbung gerät.</div></details>
-              <details className="faq reveal"><summary>Können Recruiter mein Profil sehen oder finden?<span className="pls" /></summary><div className="ans">Nein. Dein Profil ist die private Basis deiner eigenen Bewerbungen — kein durchsuchbares Schaufenster. Es wird Firmen nicht zur Suche angeboten.</div></details>
+              <details className="faq reveal"><summary>Können Recruiter mein Profil sehen oder finden?<span className="pls" /></summary><div className="ans">Nein. Dein Profil ist die private Basis deiner eigenen Bewerbungen, kein durchsuchbares Schaufenster. Es wird Firmen nicht zur Suche angeboten.</div></details>
               <details className="faq reveal"><summary>In welchen Sprachen kann ich bewerben?<span className="pls" /></summary><div className="ans">Du kannst Bewerbungen auf Deutsch und Englisch erstellen und als PDF exportieren.</div></details>
               <details className="faq reveal"><summary>Ist Applo kündbar?<span className="pls" /></summary><div className="ans">Ja, jederzeit. Free bleibt kostenlos; bezahlte Tarife sind ohne lange Bindung kündbar.</div></details>
-              <details className="faq reveal"><summary>Wem gehören meine Daten?<span className="pls" /></summary><div className="ans">Dir. Dein Profil und deine Inhalte gehören dir — Applo nutzt sie nur, um deine Bewerbungen zu erstellen.</div></details>
+              <details className="faq reveal"><summary>Wem gehören meine Daten?<span className="pls" /></summary><div className="ans">Dir. Dein Profil und deine Inhalte gehören dir. Applo nutzt sie nur, um deine Bewerbungen zu erstellen.</div></details>
             </div>
           </div>
         </section>
@@ -643,7 +643,7 @@ export default function Home() {
               <ApploRig state={ctaState} className="cta-applo" aria-hidden />
             </div>
             <h2 className="h2 reveal" style={d('.05s')}>Bereit für ehrliche Bewerbungen?</h2>
-            <p className="lead reveal" style={d('.1s')}>Starte kostenlos — keine erfundenen Daten, keine Massen-Spam-Bewerbungen.</p>
+            <p className="lead reveal" style={d('.1s')}>Starte kostenlos: keine erfundenen Daten, keine Massen-Spam-Bewerbungen.</p>
             <div className="hero-cta reveal" style={{ ...d('.16s'), justifyContent: 'center' }}>
               <Link className="btn btn-primary" href="/register">Kostenlos starten<span className="m">→</span></Link>
             </div>
@@ -663,7 +663,7 @@ export default function Home() {
               <span>Applo</span>
             </a>
             <p style={{ maxWidth: 240, lineHeight: 1.6, marginTop: 4 }}>
-              Bewerbungen aus deinem echten Profil — ehrlich, ATS-optimiert, in der EU gehostet.
+              Bewerbungen aus deinem echten Profil: ehrlich, ATS-optimiert, in der EU gehostet.
             </p>
           </div>
           <div className="fcol">
