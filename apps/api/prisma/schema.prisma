@@ -119,6 +119,12 @@ model Profile {
   githubUrl    String?
   portfolioUrl String?
 
+  // Bewerbungsfoto (optional, DACH convention) — STORAGE KEY (R2/disk), not a
+  // URL. Rendered into the CV only when the application's
+  // templateSettings.showPhoto is true. Separate from User.avatarUrl (account
+  // avatar ≠ application photo).
+  photoKey String?
+
   // Skills
   skills Skill[]
 

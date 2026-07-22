@@ -16,6 +16,7 @@ import { CloudflareTurnstileService } from './services/cloudflare-turnstile.serv
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '../config/config.service';
 import { ConfigModule } from '../config/config.module';
+import { StorageModule } from '../storage/storage.module';
 
 /**
  * OAuth strategies (Google, Microsoft) crash on instantiation when their
@@ -65,6 +66,7 @@ const microsoftStrategyProvider: Provider = {
     }),
     ScheduleModule.forRoot(),
     ConfigModule,
+    StorageModule,
   ],
   controllers: [AuthController, SessionsController, TwoFactorController],
   providers: [

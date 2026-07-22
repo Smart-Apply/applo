@@ -31,6 +31,7 @@ import {
 } from '../common/exceptions/coded-http.exception';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { InviteCodeService } from '../invite-codes/invite-code.service';
+import { StorageService } from '../storage/storage.service';
 
 interface TokenPair {
   accessToken: string;
@@ -69,6 +70,7 @@ export class AuthService {
     private twoFactorService: TwoFactorService,
     private emailService: EmailService,
     private inviteCodeService: InviteCodeService,
+    private storageService: StorageService,
   ) {}
 
   async register(dto: RegisterDto, userAgent?: string, ipAddress?: string, req?: Request) {
@@ -675,6 +677,14 @@ export class AuthService {
       if (app.resumeFileKey) fileKeysToDelete.push(app.resumeFileKey);
     }
 
+    // The Bewerbungsfoto is personal data (GDPR) — its storage object MUST go
+    // with the account, not just the DB reference.
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { photoKey: true },
+    });
+    if (profile?.photoKey) fileKeysToDelete.push(profile.photoKey);
+
     // Log account deletion event before deleting
     if (req) {
       this.auditLogger.logSecurityEvent('ACCOUNT_DELETED', user.email, req, user.id, {
@@ -688,8 +698,16 @@ export class AuthService {
       where: { id: userId },
     });
 
-    // Note: Storage cleanup would need StorageService injection to delete actual files
-    // For now, we rely on database cascade delete. File cleanup can be done via a cleanup job.
+    // Best-effort storage cleanup (photo + generated PDFs). Failures are
+    // logged, never surfaced — the account is already gone; an orphaned
+    // object must not break the deletion flow.
+    await Promise.all(
+      fileKeysToDelete.map((key) =>
+        this.storageService.delete(key).catch((err) => {
+          this.logger.warn(`Account cleanup: failed to delete storage object ${key}: ${err.message}`);
+        }),
+      ),
+    );
   }
 
   // ==========================================

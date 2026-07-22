@@ -123,7 +123,17 @@ const buildStyles = (
     },
 
     // ── Resume header (CSS: .resume-header text-align center, margin-bottom var(--spacing-lg)) ──
-    resumeHeader: { textAlign: 'center', marginBottom: SP.lg },
+    resumeHeader: { textAlign: 'center', marginBottom: SP.lg, position: 'relative' },
+
+    // ── Bewerbungsfoto (optional, meta.photoUrl) — 3:4 portrait, top-right ──
+    headerPhoto: {
+      position: 'absolute',
+      right: 0,
+      top: 0,
+      width: 63,
+      height: 84,
+      objectFit: 'cover',
+    },
 
     // ── Cover-letter header (CSS: text-align center, margin-bottom xl, padding-bottom lg, border-bottom 1px) ──
     coverLetterHeader: {
@@ -396,7 +406,7 @@ function buildCoverLetterContactParts(data: ReactPdfCoverLetterProps['data']): C
 
 export const ClassicAtsFactory: ReactPdfTemplateFactory = {
   resume: (rp) => {
-    const { Document, Page, View, Text } = rp;
+    const { Document, Page, View, Text, Image } = rp;
     const ContactInfo = ContactInfoFactory(rp);
 
     return function ClassicAtsResume({ data, meta }: ReactPdfResumeProps): ReactElement {
@@ -648,6 +658,9 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
           createElement(
             View,
             { style: styles.resumeHeader },
+            meta.photoUrl
+              ? createElement(Image, { src: meta.photoUrl, style: styles.headerPhoto })
+              : null,
             createElement(Text, { style: styles.candidateName }, data.candidateName),
             data.targetJobTitle &&
               createElement(Text, { style: styles.jobTitle }, data.targetJobTitle),

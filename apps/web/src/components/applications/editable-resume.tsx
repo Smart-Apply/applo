@@ -256,6 +256,11 @@ interface EditableResumeProps {
    * overrides). The exported PDF stays the authoritative rendering.
    */
   designSettings?: TemplateSettings | null;
+  /**
+   * Object URL of the Bewerbungsfoto — shown in the header mimic when the
+   * application enabled `designSettings.showPhoto`.
+   */
+  photoUrl?: string | null;
   /** AI assists (P5) — return the generated text, or null when the request failed. */
   onGenerateSummary?: (args: GenerateSummaryArgs) => Promise<string | null>;
   onGenerateExperience?: (args: GenerateExperienceArgs) => Promise<string | null>;
@@ -282,6 +287,7 @@ export function EditableResume({
   accent,
   design = 'classic-ats',
   designSettings,
+  photoUrl,
   onGenerateSummary,
   onGenerateExperience,
   onGenerateProject,
@@ -1093,6 +1099,8 @@ export function EditableResume({
     ...(previewZoom !== 1 ? { zoom: previewZoom } : {}),
     ...(previewFamily ? { fontFamily: previewFamily } : {}),
   };
+  // Photo mimic — mirrors the PDF gating: only with showPhoto AND a photo.
+  const shownPhoto = designSettings?.showPhoto && photoUrl ? photoUrl : null;
 
   return (
     <div className="animate-in fade-in duration-300">
@@ -1105,6 +1113,10 @@ export function EditableResume({
             </div>
             <div className="rd-row">
               <aside className="rd-aside" style={{ background: sidebarTint }}>
+                {shownPhoto && (
+                  // eslint-disable-next-line @next/next/no-img-element -- object URL from an authenticated blob
+                  <img src={shownPhoto} alt="Bewerbungsfoto" className="rd-photo-side" />
+                )}
                 <div className="rd-sec">
                   <div className="rd-sec-title" style={{ color: accent }}>
                     Kontakt
@@ -1128,6 +1140,10 @@ export function EditableResume({
         ) : (
           <>
             <div className="rd-head">
+              {shownPhoto && (
+                // eslint-disable-next-line @next/next/no-img-element -- object URL from an authenticated blob
+                <img src={shownPhoto} alt="Bewerbungsfoto" className="rd-photo" />
+              )}
               <Editable className="rd-name" oneline initial={meta.name} placeholder="Dein Name" onCommit={(v) => commitMeta({ name: v })} style={{ color: accent }} />
               {design === 'harvard-classic' && <div className="rd-divider" style={{ borderColor: accent }} />}
               <Editable className="rd-role" oneline initial={meta.role} placeholder="Angestrebte Position" onCommit={(v) => commitMeta({ role: v })} />

@@ -11,6 +11,7 @@ import { TwoFactorService } from '../../two-factor.service';
 import { EmailService } from '@/email/email.service';
 import { SubscriptionService } from '@/subscription/subscription.service';
 import { InviteCodeService } from '@/invite-codes/invite-code.service';
+import { StorageService } from '@/storage/storage.service';
 import { UnauthorizedWithCode } from '@/common/exceptions/coded-http.exception';
 import { MockHelper } from '../../../../test/helpers/mock.helper';
 
@@ -65,6 +66,11 @@ describe('AuthService.login (Unit)', () => {
           // requires the binding.
           provide: InviteCodeService,
           useValue: { redeemInTransaction: vi.fn() },
+        },
+        {
+          // login() never touches storage; only deleteAccount does.
+          provide: StorageService,
+          useValue: { delete: vi.fn() },
         },
       ],
     }).compile();

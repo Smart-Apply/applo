@@ -236,6 +236,8 @@ export interface Profile {
   portfolioUrl?: string;
   linkedinUrl?: string;
   githubUrl?: string;
+  /** Whether a Bewerbungsfoto is stored (the image itself streams via GET /profile/photo). */
+  hasPhoto?: boolean;
   skills?: Skill[];
   experiences?: Experience[];
   education?: Education[];
@@ -388,7 +390,7 @@ export interface TemplateSettings {
   density?: TemplateDensity;
   /** Free hex accent (#rrggbb) — overrides the template variant's color. */
   accentColor?: string | null;
-  /** Render the profile photo (arrives with the photo feature; default false). */
+  /** Render the profile's Bewerbungsfoto in the CV (DACH convention; default false). */
   showPhoto?: boolean;
 }
 

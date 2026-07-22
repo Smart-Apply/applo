@@ -329,6 +329,7 @@ export function useUpdateTemplateSettings(applicationId: string) {
       fontScale?: TemplateFontScale;
       density?: TemplateDensity;
       accentColor?: string | null;
+      showPhoto?: boolean;
     }) => api.applications.updateTemplateSettings(applicationId, settings),
     onMutate: async (settings) => {
       await queryClient.cancelQueries({ queryKey: ['applications', applicationId] });

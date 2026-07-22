@@ -162,6 +162,16 @@ const buildResumeStyles = (
     sidebarSection: {
       marginBottom: px(10),
     },
+    // ── Bewerbungsfoto (optional, meta.photoUrl) — centered atop the sidebar ──
+    sidebarPhotoWrap: {
+      alignItems: 'center',
+      marginBottom: px(14),
+    },
+    sidebarPhoto: {
+      width: px(110),
+      height: px(147), // 3:4 portrait
+      objectFit: 'cover',
+    },
     sidebarSectionTitle: {
       fontSize: FS.base,
       ...F.bold,
@@ -459,7 +469,7 @@ function buildCoverLetterContactParts(data: ReactPdfCoverLetterProps['data']): C
 
 export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
   resume: (rp) => {
-    const { Document, Page, View, Text, Link } = rp;
+    const { Document, Page, View, Text, Link, Image } = rp;
 
     return function ElegantSidebarResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const palette = deriveElegantSidebarPalette(meta.accentColor);
@@ -755,6 +765,14 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
             createElement(
               View,
               { style: styles.sidebar },
+              // Bewerbungsfoto (only when the application enabled showPhoto)
+              meta.photoUrl
+                ? createElement(
+                    View,
+                    { style: styles.sidebarPhotoWrap, wrap: false },
+                    createElement(Image, { src: meta.photoUrl, style: styles.sidebarPhoto }),
+                  )
+                : null,
               // Contact
               createElement(
                 View,

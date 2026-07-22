@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { getLanguageLevelLabel } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { StatusChip } from '@/components/ui/status-chip';
+import { ProfilePhotoAvatar } from '@/components/profile/profile-photo-avatar';
 import { ProfileSkeleton } from '@/components/shared/skeletons';
 import { ApploRig } from '@/components/ui/applo-rig';
 import type { ApploState } from '@/components/ui/applo-rig';
@@ -1024,17 +1025,7 @@ export default function ProfilePage() {
           {/* Identity */}
           <div ref={setRef('identity')} className={sectionCard('identity')}>
             <div className="mb-6 flex items-start gap-4">
-              <div className="relative shrink-0">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
-                  {initials}
-                </div>
-                <button
-                  onClick={() => router.push('/profile/edit')}
-                  className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm transition-colors hover:bg-muted"
-                >
-                  <Pencil className="h-3 w-3 text-muted-foreground" />
-                </button>
-              </div>
+              <ProfilePhotoAvatar initials={initials} hasPhoto={Boolean(profile?.hasPhoto)} />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h1 className="font-heading text-xl font-bold text-foreground">{fullName}</h1>

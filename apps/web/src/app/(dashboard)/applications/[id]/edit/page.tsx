@@ -35,6 +35,7 @@ import {
   useGenerateProjectDescription,
 } from '@/hooks/use-applications';
 import { useResumeTemplates } from '@/hooks/use-templates';
+import { useProfilePhoto } from '@/hooks/use-profile';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
 import { parseResumeDraft, normalizeResumeForSave } from '@/lib/resume';
 import type { ResumeData } from '@/types';
@@ -142,6 +143,11 @@ export default function ApplicationResumeEditorPage() {
 
   // Which export template the click-to-edit surface should mimic (P1).
   const resumeDesign = resolveResumeDesign(application?.resumeTemplateId);
+
+  // Bewerbungsfoto for the mimic — fetched only when the application shows it.
+  const { data: profilePhotoUrl } = useProfilePhoto(
+    Boolean(application?.templateSettings?.showPhoto),
+  );
 
   // ── init language ──
   useEffect(() => {
@@ -626,6 +632,7 @@ export default function ApplicationResumeEditorPage() {
               accent={accent}
               design={resumeDesign}
               designSettings={application.templateSettings}
+              photoUrl={profilePhotoUrl}
               onGenerateSummary={handleGenerateSummary}
               onGenerateExperience={handleGenerateExperience}
               onGenerateProject={handleGenerateProject}

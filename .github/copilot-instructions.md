@@ -233,7 +233,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 
 ## Data Model (Prisma 6)
 16 models in `apps/api/prisma/schema.prisma`:
-- **User**, **Profile**, **Skill**, **Experience**, **Education**, **Certificate**, **Project**, **Language**
+- **User**, **Profile** (incl. `photoKey` — storage key of the optional Bewerbungsfoto; uploaded via `POST /profile/photo`, rendered only when an application enables `templateSettings.showPhoto`, storage object deleted with the account), **Skill**, **Experience**, **Education**, **Certificate**, **Project**, **Language**
 - **JobPosting**, **Application** (incl. `translations` Json — per-language translation cache for cross-language exports, invalidated by content xxhash — `coverLetterLength` — the persisted length preference `kurz` ~250 / `standard` ~350 body words that all cover-letter generation/regeneration paths resolve to a word budget — and `templateSettings` Json — per-application design tuning: `fontScale` sm/md/lg (±8 %), `density` compact/normal/relaxed, free `accentColor` hex override, curated `fontFamily`; see the shared `TemplateSettings` type), **ResumeTemplate**, **Interview**
 - **Validation** (Bewerbungs-Check — standalone AI check of an external application; inputs + cached result, scoped to user)
 - **RefreshToken**, **Session** (auth/security)
@@ -385,6 +385,11 @@ All endpoints under `/api/v1/mailbox-sync/*` are gated by `@RequiresFeature('ema
 **IMPORTANT:** Profile uses differential update pattern. No separate POST/DELETE endpoints for nested entities.
 Example: To add a skill, include it in `skills` array without `id`. To update, include `id`. To delete, omit from array.
 
+**POST /api/v1/profile/photo** / **GET /api/v1/profile/photo** / **DELETE /api/v1/profile/photo**
+- Bewerbungsfoto (optional, DACH convention): multipart upload (JPEG/PNG, ≤ 2 MB, magic-byte-validated), authenticated stream (`Cache-Control: private, no-store`), idempotent delete.
+- Stored as `profiles/<profileId>/photo.<ext>` in R2/disk; `Profile.photoKey` holds the storage KEY (never a URL). `GET /profile` exposes `hasPhoto: boolean`.
+- The photo reaches a CV only when that application enables `templateSettings.showPhoto` (editor Design panel; the export processor resolves the key to a data URI for react-pdf). Deleted best-effort with the account (GDPR).
+
 ### Job Postings Endpoints (Protected)
 
 **POST /api/v1/job-postings/parse**
@@ -447,9 +452,9 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
 
 **PATCH /api/v1/applications/:id/template-settings**
 - Partial update of the per-application design tuning (`Application.templateSettings`)
-- Body: `{ fontFamily?: 'default'|'lato'|'source-sans'|'merriweather', fontScale?: 'sm'|'md'|'lg', density?: 'compact'|'normal'|'relaxed', accentColor?: '#rrggbb' | null }`
+- Body: `{ fontFamily?: 'default'|'lato'|'source-sans'|'merriweather', fontScale?: 'sm'|'md'|'lg', density?: 'compact'|'normal'|'relaxed', accentColor?: '#rrggbb' | null, showPhoto?: boolean }`
 - Absent fields keep their stored value; `accentColor: null` removes the override (the template variant's color applies again). The named font families are bundled OFL fonts (Lato, Source Sans 3, Merriweather) registered at renderer load — if a family fails to register (missing assets), rendering degrades to the design's built-in faces.
-- Surfaced in the editor toolbar's **"Design" panel** (`apps/web/src/components/applications/design-settings-panel.tsx`): optimistic PATCH per change; the edit mimic approximates the settings immediately (accent via the existing accent prop, font scale via CSS zoom, family via web-safe stacks, density via `rd--density-*` overrides) while the exported PDF stays authoritative.
+- Surfaced in the editor toolbar's **"Design" panel** (`apps/web/src/components/applications/design-settings-panel.tsx`): optimistic PATCH per change; the edit mimic approximates the settings immediately (accent via the existing accent prop, font scale via CSS zoom, family via web-safe stacks, density via `rd--density-*` overrides, Bewerbungsfoto via the profile photo object URL) while the exported PDF stays authoritative. The photo toggle shows an ATS warning and links to the profile when no photo is uploaded.
 - Settings take effect on the next PDF export (`buildMeta` merges them into the react-pdf meta; `settings.accentColor` beats the template row's variant color); read-side values are defensively normalized (`pdf-v2/design-tokens.ts#normalizeTemplateSettings`)
 - Returns the updated application (incl. `templateSettings`)
 

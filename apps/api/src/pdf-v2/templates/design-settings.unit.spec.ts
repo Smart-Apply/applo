@@ -99,3 +99,27 @@ describe('react-pdf templates — design settings (fontScale × density × accen
     }, 30_000);
   }
 });
+
+describe('react-pdf templates — Bewerbungsfoto (meta.photoUrl)', () => {
+  // Generate a real portrait JPEG at runtime (no fixture file needed).
+  async function makePhotoDataUri(): Promise<string> {
+    const { createCanvas } = await import('@napi-rs/canvas');
+    const canvas = createCanvas(90, 120);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#8899aa';
+    ctx.fillRect(0, 0, 90, 120);
+    return `data:image/jpeg;base64,${canvas.toBuffer('image/jpeg').toString('base64')}`;
+  }
+
+  for (const [key, factory] of FACTORIES) {
+    it(`${key} renders with a photo and stays text-extractable`, async () => {
+      const photoUrl = await makePhotoDataUri();
+      const withPhoto = await render(factory, { language: 'de', photoUrl });
+      const withoutPhoto = await render(factory, { language: 'de' });
+      expect(withPhoto.text).toContain('anna beispiel');
+      expect(withPhoto.text).toContain('stationsleitung');
+      // The embedded image makes the PDF measurably larger.
+      expect(withPhoto.size).toBeGreaterThan(withoutPhoto.size + 500);
+    }, 30_000);
+  }
+});

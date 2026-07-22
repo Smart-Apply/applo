@@ -11,6 +11,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
 import { AuditLoggerService } from '../common/audit-logger';
 import { KeywordsService } from '../keywords/keywords.service';
+import { StorageService } from '../storage/storage.service';
 import { ErrorCode } from '../common/constants/error-codes';
 import {
   NotFoundWithCode,
@@ -25,6 +26,7 @@ export class ProfileService {
     private readonly prisma: PrismaService,
     private readonly auditLogger: AuditLoggerService,
     private readonly keywordsService: KeywordsService,
+    private readonly storageService: StorageService,
   ) {}
 
   async getProfile(userId: string): Promise<ProfileResponseDto> {
@@ -432,6 +434,84 @@ export class ProfileService {
     }
   }
 
+  /**
+   * Upload (or replace) the profile's Bewerbungsfoto. Stored as a storage
+   * object under `profiles/<profileId>/photo.<ext>`; only the KEY is
+   * persisted. The photo reaches a CV only when an application explicitly
+   * enables `templateSettings.showPhoto`.
+   */
+  async uploadPhoto(
+    userId: string,
+    file: { buffer: Buffer; mimetype: string; size: number },
+  ): Promise<{ hasPhoto: boolean }> {
+    // Ensure a profile row exists (photo may be the first thing a user sets).
+    const profile = await this.prisma.profile.upsert({
+      where: { userId },
+      create: { userId },
+      update: {},
+      select: { id: true, photoKey: true },
+    });
+
+    const ext = file.mimetype === 'image/png' ? 'png' : 'jpg';
+    const key = `profiles/${profile.id}/photo.${ext}`;
+
+    await this.storageService.upload(key, file.buffer, file.mimetype);
+
+    // Replacing jpg with png (or vice versa) leaves the old object behind —
+    // clean it up best-effort.
+    if (profile.photoKey && profile.photoKey !== key) {
+      await this.storageService.delete(profile.photoKey).catch((err) => {
+        this.logger.warn(`Failed to delete replaced profile photo ${profile.photoKey}: ${err.message}`);
+      });
+    }
+
+    await this.prisma.profile.update({
+      where: { id: profile.id },
+      data: { photoKey: key },
+    });
+
+    this.logger.log(`Profile photo uploaded for user ${userId} (${file.size} bytes, ${ext})`);
+    return { hasPhoto: true };
+  }
+
+  /** Stream the profile photo (ownership-scoped via the caller's userId). */
+  async getPhoto(userId: string): Promise<{ buffer: Buffer; mimeType: string }> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { photoKey: true },
+    });
+    if (!profile?.photoKey) {
+      throw new NotFoundWithCode(ErrorCode.PROFILE_NOT_FOUND, 'Kein Bewerbungsfoto vorhanden');
+    }
+    const buffer = await this.storageService.getFile(profile.photoKey);
+    const mimeType = profile.photoKey.endsWith('.png') ? 'image/png' : 'image/jpeg';
+    return { buffer, mimeType };
+  }
+
+  /** Remove the profile photo (storage object + key). Idempotent. */
+  async deletePhoto(userId: string): Promise<{ hasPhoto: boolean }> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { id: true, photoKey: true },
+    });
+    if (!profile?.photoKey) {
+      return { hasPhoto: false };
+    }
+
+    await this.storageService.delete(profile.photoKey).catch((err) => {
+      // The row update below still clears the reference; an orphaned object
+      // is preferable to a photo the user believes deleted but still linked.
+      this.logger.warn(`Failed to delete profile photo object ${profile.photoKey}: ${err.message}`);
+    });
+    await this.prisma.profile.update({
+      where: { id: profile.id },
+      data: { photoKey: null },
+    });
+
+    this.logger.log(`Profile photo removed for user ${userId}`);
+    return { hasPhoto: false };
+  }
+
   private mapToResponseDto(profile: any): ProfileResponseDto {
     return {
       id: profile.id,
@@ -447,6 +527,7 @@ export class ProfileService {
       githubUrl: profile.githubUrl,
       portfolioUrl: profile.portfolioUrl,
       summary: profile.summary,
+      hasPhoto: Boolean(profile.photoKey),
       skills:
         profile.skills?.map((s: any) => ({
           id: s.id,
