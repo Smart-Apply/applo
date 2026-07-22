@@ -2,7 +2,13 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { toastSuccess, toastError } from '@/lib/toast';
-import type { Application, ResumeData } from '@/types';
+import type {
+  Application,
+  ResumeData,
+  TemplateFontFamily,
+  TemplateFontScale,
+  TemplateDensity,
+} from '@/types';
 /**
  * Hook to fetch all applications
  */
@@ -304,6 +310,55 @@ export function useExportApplication(applicationId: string) {
     },
     onError: (error: unknown) => {
       toastError(error, 'Export konnte nicht gestartet werden');
+    },
+  });
+}
+
+/**
+ * Hook to update the per-application design settings (font scale, density,
+ * accent override, font family). Optimistic: the merged settings land in the
+ * detail cache immediately so the editor preview reacts without waiting for
+ * the roundtrip; rolled back on error.
+ */
+export function useUpdateTemplateSettings(applicationId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (settings: {
+      fontFamily?: TemplateFontFamily;
+      fontScale?: TemplateFontScale;
+      density?: TemplateDensity;
+      accentColor?: string | null;
+    }) => api.applications.updateTemplateSettings(applicationId, settings),
+    onMutate: async (settings) => {
+      await queryClient.cancelQueries({ queryKey: ['applications', applicationId] });
+      const previous = queryClient.getQueryData<Application>(['applications', applicationId]);
+      if (previous) {
+        const merged = { ...(previous.templateSettings ?? {}) } as Record<string, unknown>;
+        for (const [key, value] of Object.entries(settings)) {
+          if (value === undefined) continue;
+          if (key === 'accentColor' && value === null) {
+            delete merged[key];
+          } else {
+            merged[key] = value;
+          }
+        }
+        queryClient.setQueryData<Application>(['applications', applicationId], {
+          ...previous,
+          templateSettings: Object.keys(merged).length > 0 ? merged : null,
+        });
+      }
+      return { previous };
+    },
+    onError: (error: unknown, _settings, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['applications', applicationId], context.previous);
+      }
+      toastError(error, 'Design-Einstellungen konnten nicht gespeichert werden');
+    },
+    onSuccess: (application) => {
+      queryClient.setQueryData(['applications', applicationId], application);
+      queryClient.invalidateQueries({ queryKey: ['applications'], exact: true });
     },
   });
 }

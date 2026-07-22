@@ -16,6 +16,9 @@ import type {
   SessionsResponse,
   Template,
   TemplateWithContent,
+  TemplateFontFamily,
+  TemplateFontScale,
+  TemplateDensity,
   ApplicationKeywordsResponse,
   Validation,
   ValidationSummary,
@@ -954,6 +957,21 @@ export const api = {
       apiRequest<Application>(`/applications/${id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
+      }),
+
+    updateTemplateSettings: (
+      id: string,
+      settings: {
+        fontFamily?: TemplateFontFamily;
+        fontScale?: TemplateFontScale;
+        density?: TemplateDensity;
+        /** null removes the override (template variant color applies again). */
+        accentColor?: string | null;
+      },
+    ) =>
+      apiRequest<Application>(`/applications/${id}/template-settings`, {
+        method: 'PATCH',
+        body: JSON.stringify(settings),
       }),
 
     updateTitle: (id: string, title: string) =>

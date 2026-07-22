@@ -449,6 +449,7 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
 - Partial update of the per-application design tuning (`Application.templateSettings`)
 - Body: `{ fontFamily?: 'default'|'lato'|'source-sans'|'merriweather', fontScale?: 'sm'|'md'|'lg', density?: 'compact'|'normal'|'relaxed', accentColor?: '#rrggbb' | null }`
 - Absent fields keep their stored value; `accentColor: null` removes the override (the template variant's color applies again). The named font families are bundled OFL fonts (Lato, Source Sans 3, Merriweather) registered at renderer load — if a family fails to register (missing assets), rendering degrades to the design's built-in faces.
+- Surfaced in the editor toolbar's **"Design" panel** (`apps/web/src/components/applications/design-settings-panel.tsx`): optimistic PATCH per change; the edit mimic approximates the settings immediately (accent via the existing accent prop, font scale via CSS zoom, family via web-safe stacks, density via `rd--density-*` overrides) while the exported PDF stays authoritative.
 - Settings take effect on the next PDF export (`buildMeta` merges them into the react-pdf meta; `settings.accentColor` beats the template row's variant color); read-side values are defensively normalized (`pdf-v2/design-tokens.ts#normalizeTemplateSettings`)
 - Returns the updated application (incl. `templateSettings`)
 

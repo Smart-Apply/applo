@@ -545,6 +545,22 @@ h1, h2, h3, .font-heading {
   .rd-contact-edit { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: var(--blue); background: none; border: none; cursor: pointer; padding: 2px 5px; border-radius: 6px; }
   .rd-contact-edit:hover { background: #eef3fb; }
 
+  /* ---- density approximation (templateSettings.density) ----
+     Mirrors the PDF design tokens' compact/relaxed rhythm on the edit mimic;
+     the exported PDF (pdf-v2/design-tokens.ts) is the authoritative result. */
+  .rd--density-compact .rd-sec { margin-top: 15px; }
+  .rd--density-compact .rd-sec-title { margin-bottom: 7px; }
+  .rd--density-compact .rd-item { margin-bottom: 10px; }
+  .rd--density-compact .rd-ul { margin-top: 6px; }
+  .rd--density-compact .rd-li { margin-bottom: 3px; line-height: 1.45; }
+  .rd--density-compact .rd-p { line-height: 1.5; }
+  .rd--density-relaxed .rd-sec { margin-top: 26px; }
+  .rd--density-relaxed .rd-sec-title { margin-bottom: 13px; }
+  .rd--density-relaxed .rd-item { margin-bottom: 19px; }
+  .rd--density-relaxed .rd-ul { margin-top: 10px; }
+  .rd--density-relaxed .rd-li { margin-bottom: 7px; line-height: 1.65; }
+  .rd--density-relaxed .rd-p { line-height: 1.8; }
+
   /* classic-ats — centered sans header, accent name, ruled section titles */
   .rd--classic { padding: 40px 48px 44px; }
   .rd--classic .rd-head { text-align: center; margin-bottom: 18px; }
