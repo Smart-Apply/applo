@@ -113,14 +113,13 @@ export function useProfilePhoto(enabled = true) {
     queryKey: ['profile', 'photo'],
     queryFn: async () => {
       const blob = await api.profile.getPhotoBlob();
-      return blob ? URL.createObjectURL(blob) : null;
-    },
-    onSuccess: (nextUrl) => {
+      const nextUrl = blob ? URL.createObjectURL(blob) : null;
       const previousUrl = currentPhotoUrlRef.current;
       if (previousUrl && previousUrl !== nextUrl) {
         deferRevokeObjectUrl(previousUrl);
       }
       currentPhotoUrlRef.current = nextUrl;
+      return nextUrl;
     },
     enabled: isAuthenticated && enabled,
     staleTime: Infinity,
