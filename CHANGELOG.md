@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.7.1](https://github.com/Smart-Apply/applo/compare/v4.7.0...v4.7.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* **web:** restore query type inference in useProfilePhoto ([#673](https://github.com/Smart-Apply/applo/issues/673)) ([a4d6417](https://github.com/Smart-Apply/applo/commit/a4d641798a97d1256e6ca0dec7a0b47b56b719bc))
+
 ## [4.7.0](https://github.com/Smart-Apply/applo/compare/v4.6.1...v4.7.0) (2026-07-22)
 
 
