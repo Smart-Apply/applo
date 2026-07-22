@@ -260,7 +260,7 @@ recorded baselines live in
 | **JobPosting**     | Parsed job listings                            |
 | **Application**    | Generated applications + PDFs (+ per-language translation cache in `translations` Json) |
 | **Validation**     | Standalone AI check of an external application |
-| **ResumeTemplate** | PDF templates (3 designs × colors × 2 types)   |
+| **ResumeTemplate** | PDF templates (6 designs × colors × 2 types)   |
 | **Interview**      | AI-generated interview Q&A                     |
 | **RefreshToken**   | Rotated refresh tokens                         |
 | **Session**        | Device/IP/UA tracking                          |

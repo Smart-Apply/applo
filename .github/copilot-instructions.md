@@ -4,7 +4,7 @@
 Deliver a production-grade, multi-provider application with:
 1) **Frontend (Next.js 16 + React 19)**: Auth (email/password + OAuth + 2FA), profile management, job-posting ingestion, application dashboard with PDF preview/editing, deployed to **Cloudflare Workers** via OpenNext.
 2) **Backend API (NestJS 11)**: Candidate profile (skills, experiences, education, certificates, projects, languages), ingests job postings (text/URL/file → normalized), generates tailored cover letter + resume on Azure OpenAI / mock.
-3) **PDF Generation**: `@react-pdf/renderer` (TSX templates — 3 registered designs × color variants, ATS-optimized), stored via pluggable storage (Cloudflare R2 / disk) and retrieved via signed URLs.
+3) **PDF Generation**: `@react-pdf/renderer` (TSX templates — 6 registered designs × color variants, ATS-optimized), stored via pluggable storage (Cloudflare R2 / disk) and retrieved via signed URLs.
 
 ## Agent Instructions
 For specific tasks, refer to these specialized instruction files:
@@ -154,7 +154,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
   - Resume parsing intake: `pdf-parse` (PDF text) + `mammoth` (DOCX text).
-  - Currently registered TSX designs: `classic-ats`, `harvard-classic`, `elegant-sidebar` (all 5 color variants resolve via single factory + DB `accentColor`). Templates without a registered factory cause `PdfService` to throw — there is no fallback path; as defense in depth, `TemplatesService` filters such rows out of the catalog + language resolution at read time, and the canonical seed (`prisma/seed-react-pdf-templates.ts`, `pnpm prisma:seed:templates`, also run by `prisma db seed` via `seed-all`) upserts the registered rows and **deactivates** any active row without a factory (legacy HBS-era seeds were deleted). New designs must be added to BOTH `template-registry.ts` and the seed's `DESIGNS` array.
+  - Currently registered TSX designs: `classic-ats`, `harvard-classic`, `elegant-sidebar`, `modern-two-column`, `minimal-single-column`, `executive-serif` (all color variants resolve via single factory + DB `accentColor`). Templates without a registered factory cause `PdfService` to throw — there is no fallback path; as defense in depth, `TemplatesService` filters such rows out of the catalog + language resolution at read time, and the canonical seed (`prisma/seed-react-pdf-templates.ts`, `pnpm prisma:seed:templates`, also run by `prisma db seed` via `seed-all`) upserts the registered rows and **deactivates** any active row without a factory (legacy HBS-era seeds were deleted). New designs must be added to BOTH `template-registry.ts` and the seed's `DESIGNS` array.
 - **Email:** Resend (`resend`) for transactional mail
 - **Logging:** Pino (request logs) + Winston with daily rotation (audit, 90-day retention)
 - **Monitoring:** Sentry (`@sentry/node` + `@sentry/profiling-node`)
