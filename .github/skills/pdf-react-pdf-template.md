@@ -23,7 +23,15 @@ Do **not** use this for:
 
 - Pure styling tweaks to an already-ported design (just edit the `.tsx` file directly)
 - New Handlebars (`.hbs`) templates — use [`PDF-Template-Agent`](../agents/pdf-template-agent.md) for the legacy pipeline
-- Adding fonts (font registration is its own follow-up; defer for now and use Helvetica/Times-Roman)
+
+**Fonts:** three OFL families are bundled under `apps/api/assets/fonts/` (Lato, Source Sans 3,
+Merriweather) and registered by `react-pdf-loader.ts`; templates consume them through
+`resolveFontStack(meta.fontFamily, FALLBACK_FONTS)` — always define built-in fallback faces
+(Helvetica/Times) so a missing assets folder degrades instead of crashing. To add a family:
+drop Regular/Bold/Italic TTFs + the OFL.txt into a new `assets/fonts/<slug>/` folder, add an
+entry to `BUNDLED_FONT_FAMILIES` in the loader and to `REGISTERED_FONT_FAMILIES` in
+`design-tokens.ts`, extend the `TemplateFontFamily` union in `@applo/shared` + the PATCH DTO
+enum, and re-run the validate script (it renders every design with every family).
 
 ---
 

@@ -92,7 +92,10 @@ function parseHtml(html: string): Node[] {
   return tokens;
 }
 
-export function createRichTextRenderer(rp: ReactPdfNamespace) {
+export function createRichTextRenderer(
+  rp: ReactPdfNamespace,
+  defaults: { strong?: ReactPdfStyle; em?: ReactPdfStyle } = {},
+) {
   const { Text, View, Link } = rp;
 
   function renderInline(nodes: Node[], styles: RichTextStyles, keyPrefix: string): ReactNode[] {
@@ -109,7 +112,7 @@ export function createRichTextRenderer(rp: ReactPdfNamespace) {
           out.push(
             createElement(
               Text,
-              { key, style: styles.strong ?? { fontFamily: 'Helvetica-Bold' } },
+              { key, style: styles.strong ?? defaults.strong ?? { fontFamily: 'Helvetica-Bold' } },
               renderInline(node.children ?? [], styles, key),
             ),
           );
@@ -119,7 +122,7 @@ export function createRichTextRenderer(rp: ReactPdfNamespace) {
           out.push(
             createElement(
               Text,
-              { key, style: styles.em ?? { fontStyle: 'italic' } },
+              { key, style: styles.em ?? defaults.em ?? { fontStyle: 'italic' } },
               renderInline(node.children ?? [], styles, key),
             ),
           );

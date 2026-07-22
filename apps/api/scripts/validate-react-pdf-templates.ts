@@ -217,6 +217,27 @@ async function main() {
           console.error(`  ✗ ${name} FAILED:`, err instanceof Error ? err.message : err);
         }
       }
+
+      // Bundled font families (registered by react-pdf-loader). 'unknown'
+      // must fall back to the design's built-in faces, never crash.
+      for (const fontFamily of ['lato', 'source-sans', 'merriweather', 'unknown']) {
+        const name = `resume.font-${fontFamily}.pdf`;
+        try {
+          const Component = target.factory.resume(rp);
+          const element = createElement(Component, {
+            data: SAMPLE_RESUME,
+            meta: { ...target.meta, fontFamily },
+          });
+          const buf = await rp.renderToBuffer(element);
+          await fs.writeFile(path.join(dir, name), buf);
+          // eslint-disable-next-line no-console
+          console.log(`  ✓ ${name}  ${buf.length} bytes`);
+        } catch (err) {
+          failures++;
+          // eslint-disable-next-line no-console
+          console.error(`  ✗ ${name} FAILED:`, err instanceof Error ? err.message : err);
+        }
+      }
     }
   }
 

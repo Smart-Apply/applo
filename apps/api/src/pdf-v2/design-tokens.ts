@@ -8,11 +8,13 @@
  * factor — no free-form values, every combination testable and ATS-safe.
  *
  * Fonts note: the curated families (`lato`, `source-sans`, `merriweather`)
- * resolve to `undefined` (= keep the design's built-in family) until their
- * OFL TTFs are bundled and registered in `react-pdf-loader.ts` — the
- * font-bundling follow-up of the TEMPLATE_CUSTOMIZATION plan.
+ * are OFL fonts bundled under apps/api/assets/fonts/ and registered by
+ * `react-pdf-loader.ts` when the renderer loads. `resolveFontFamily` returns
+ * a family only when its registration succeeded, so a missing assets folder
+ * degrades to the design's built-in faces instead of crashing the render.
  */
 import type { TemplateSettings } from '@applo/shared';
+import { isFontFamilyRegistered } from './react-pdf-loader';
 
 /** ±8% — bounded so `wrap={false}` page-break behavior stays scale-safe. */
 const FONT_SCALE_FACTORS: Record<string, number> = {
@@ -116,12 +118,57 @@ export function resolveDesignTokens<
   };
 }
 
+/** Curated choice → react-pdf family name (registered in react-pdf-loader.ts). */
+const REGISTERED_FONT_FAMILIES: Record<string, string> = {
+  lato: 'Lato',
+  'source-sans': 'Source Sans 3',
+  merriweather: 'Merriweather',
+};
+
 /**
- * Map a curated font-family choice to a react-pdf family name. Returns
- * `undefined` (keep the design default) until the font-bundling follow-up
- * registers the OFL families in `react-pdf-loader.ts` — kept here so the
- * templates gain exactly one call site to flip when fonts land.
+ * Map a curated font-family choice to a registered react-pdf family name.
+ * Returns `undefined` (keep the design default) for `default`, unknown
+ * values, and families whose bundled TTFs failed to register — referencing
+ * an unregistered family would make react-pdf throw at render time.
  */
-export function resolveFontFamily(_fontFamily?: string): string | undefined {
-  return undefined;
+export function resolveFontFamily(fontFamily?: string): string | undefined {
+  if (!fontFamily || fontFamily === 'default') return undefined;
+  const family = REGISTERED_FONT_FAMILIES[fontFamily];
+  return family && isFontFamilyRegistered(family) ? family : undefined;
+}
+
+/**
+ * Style fragments for the three text cuts a template needs. Built-in faces
+ * are separate one-cut families (Helvetica vs Helvetica-Bold); bundled
+ * families carry their cuts as weights/styles under ONE name — this stack
+ * abstracts the difference so template styles just spread `...F.bold`.
+ */
+export interface FontStack {
+  regular: { fontFamily: string };
+  bold: { fontFamily: string; fontWeight?: number };
+  italic: { fontFamily: string; fontStyle?: 'italic' };
+}
+
+/**
+ * Resolve the per-application font choice against a template's built-in
+ * fallback faces. `meta.fontFamily` absent/`default`/unregistered → the
+ * design's original faces, byte-identical output.
+ */
+export function resolveFontStack(
+  fontFamily: string | undefined,
+  fallback: { regular: string; bold: string; italic: string },
+): FontStack {
+  const family = resolveFontFamily(fontFamily);
+  if (!family) {
+    return {
+      regular: { fontFamily: fallback.regular },
+      bold: { fontFamily: fallback.bold },
+      italic: { fontFamily: fallback.italic },
+    };
+  }
+  return {
+    regular: { fontFamily: family },
+    bold: { fontFamily: family, fontWeight: 700 },
+    italic: { fontFamily: family, fontStyle: 'italic' },
+  };
 }

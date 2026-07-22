@@ -15,16 +15,17 @@
  *
  * Fonts
  * -----
- * Falls back to react-pdf's built-in Helvetica family. The HTML version uses
- * Lato/Source Sans 3 — registering those via Font.register() is deferred to
- * the font-bundling follow-up (font-size cascade is matched here regardless).
+ * Defaults to react-pdf's built-in Helvetica family (the original look). Per
+ * application, `meta.fontFamily` can swap in a bundled OFL family (Lato,
+ * Source Sans 3, Merriweather — registered by react-pdf-loader.ts); the
+ * font-size cascade is matched here regardless of family.
  *
  * Factory pattern: receives the lazily-loaded @react-pdf/renderer namespace.
  * See react-pdf-loader.ts for why we don't import the package statically.
  */
 
 import { createElement, type ReactElement, type ReactNode } from 'react';
-import { resolveDesignTokens } from '../design-tokens';
+import { resolveDesignTokens, resolveFontStack, type FontStack } from '../design-tokens';
 import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import { resolveSectionOrder } from '../template-data';
@@ -36,6 +37,13 @@ import type {
 } from '../types';
 
 const ACCENT_FALLBACK = '#1a1a1a';
+
+/** Built-in faces used when no bundled family is selected (the original look). */
+const FALLBACK_FONTS = {
+  regular: 'Helvetica',
+  bold: 'Helvetica-Bold',
+  italic: 'Helvetica-Oblique',
+};
 
 /** Default section order — matches the template's original hardcoded layout. */
 const DEFAULT_SECTION_ORDER = [
@@ -88,6 +96,7 @@ const buildStyles = (
   FS: typeof FS_BASE,
   SP: typeof SP_BASE,
   lh: (base: number) => number,
+  F: FontStack,
 ) =>
   rp.StyleSheet.create({
     // ── Resume page (CSS: .resume padding 0.5in 0.5in 0.4in 0.5in) ──
@@ -96,7 +105,7 @@ const buildStyles = (
       paddingRight: inch(0.5),
       paddingBottom: inch(0.4),
       paddingLeft: inch(0.5),
-      fontFamily: 'Helvetica',
+      ...F.regular,
       fontSize: FS.base,
       color: COLORS.text,
       lineHeight: lh(1.5),
@@ -107,7 +116,7 @@ const buildStyles = (
       paddingRight: inch(0.6),
       paddingBottom: inch(0.5),
       paddingLeft: inch(0.6),
-      fontFamily: 'Helvetica',
+      ...F.regular,
       fontSize: FS.md,
       color: COLORS.text,
       lineHeight: lh(1.7),
@@ -132,7 +141,7 @@ const buildStyles = (
     // line box collapses and the next sibling overlaps the descenders.
     candidateName: {
       fontSize: FS.xxxl,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       letterSpacing: px(0.5),
       textTransform: 'uppercase',
       color: accent,
@@ -141,7 +150,7 @@ const buildStyles = (
     },
     candidateNameCoverLetter: {
       fontSize: FS.xxl,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       letterSpacing: px(0.5),
       textTransform: 'uppercase',
       color: accent,
@@ -177,7 +186,7 @@ const buildStyles = (
     section: { marginBottom: SP.lg },
     sectionTitle: {
       fontSize: FS.lg,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       textTransform: 'uppercase',
       letterSpacing: px(0.8),
       color: accent,
@@ -200,7 +209,7 @@ const buildStyles = (
     },
     itemTitle: {
       fontSize: FS.md,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       color: COLORS.text,
     },
     itemDate: {
@@ -261,7 +270,7 @@ const buildStyles = (
       lineHeight: lh(1.5),
     },
     skillCategoryLabel: {
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
       color: COLORS.text,
       marginRight: SP.sm,
     },
@@ -318,7 +327,7 @@ const buildStyles = (
     },
     coverLetterSignature: {
       marginTop: SP.xl,
-      fontFamily: 'Helvetica-Bold',
+      ...F.bold,
     },
   });
 
@@ -388,13 +397,14 @@ function buildCoverLetterContactParts(data: ReactPdfCoverLetterProps['data']): C
 export const ClassicAtsFactory: ReactPdfTemplateFactory = {
   resume: (rp) => {
     const { Document, Page, View, Text } = rp;
-    const renderRichText = createRichTextRenderer(rp);
     const ContactInfo = ContactInfoFactory(rp);
 
     return function ClassicAtsResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const accent = meta.accentColor || ACCENT_FALLBACK;
       const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
-      const styles = buildStyles(rp, accent, FS, SP, lineHeight);
+      const F = resolveFontStack(meta.fontFamily, FALLBACK_FONTS);
+      const renderRichText = createRichTextRenderer(rp, { strong: F.bold, em: F.italic });
+      const styles = buildStyles(rp, accent, FS, SP, lineHeight, F);
       // Prefer the explicit export-request language (data.language) over the
       // DB template row's language (meta.language). See issue #536.
       const lang = data.language || meta.language || 'en';
@@ -656,7 +666,6 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
 
   coverLetter: (rp) => {
     const { Document, Page, View, Text } = rp;
-    const renderRichText = createRichTextRenderer(rp);
     const ContactInfo = ContactInfoFactory(rp);
 
     return function ClassicAtsCoverLetter({
@@ -665,7 +674,9 @@ export const ClassicAtsFactory: ReactPdfTemplateFactory = {
     }: ReactPdfCoverLetterProps): ReactElement {
       const accent = meta.accentColor || ACCENT_FALLBACK;
       const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
-      const styles = buildStyles(rp, accent, FS, SP, lineHeight);
+      const F = resolveFontStack(meta.fontFamily, FALLBACK_FONTS);
+      const renderRichText = createRichTextRenderer(rp, { strong: F.bold, em: F.italic });
+      const styles = buildStyles(rp, accent, FS, SP, lineHeight, F);
       const contactParts = buildCoverLetterContactParts(data);
 
       return createElement(

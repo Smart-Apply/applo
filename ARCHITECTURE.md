@@ -168,7 +168,8 @@ User → Frontend (Next.js)
 │    pdf-v2/template-registry.ts       │
 │ 2. Apply per-application design      │
 │    settings (font scale, density,    │
-│    accent override) via              │
+│    accent override, bundled OFL      │
+│    font families) via                │
 │    pdf-v2/design-tokens.ts           │
 │ 3. Render TSX → PDF buffer           │
 │ 4. Page-count backstop: warn when a  │
@@ -324,7 +325,7 @@ User 1:1 Subscription
 | Cache         | Upstash Redis · node-cache                                                                                                          |
 | Storage       | Cloudflare R2 (S3-compatible) · local disk                                                                                          |
 | LLM           | Azure AI Foundry · Azure OpenAI · mock                                                                                              |
-| PDF           | `@react-pdf/renderer` 4.5 (TSX templates) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake) |
+| PDF           | `@react-pdf/renderer` 4.5 (TSX templates, bundled OFL fonts: Lato · Source Sans 3 · Merriweather) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake) |
 | Email         | Resend                                                                                                                              |
 | Logging       | Pino (req logs) + Winston (audit, daily rotation)                                                                                   |
 | Monitoring    | Sentry (`@sentry/node` + profiling)                                                                                                 |

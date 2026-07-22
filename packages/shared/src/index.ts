@@ -371,9 +371,8 @@ export type TemplateFontScale = 'sm' | 'md' | 'lg';
 export type TemplateDensity = 'compact' | 'normal' | 'relaxed';
 /**
  * Curated font choice for PDF templates. `default` keeps the design's own
- * family. The named families take effect once their OFL fonts are bundled
- * with the API (font-bundling follow-up); until then they resolve to the
- * design default.
+ * family; the named families are OFL fonts bundled with the API (Lato,
+ * Source Sans 3, Merriweather) and registered at renderer load.
  */
 export type TemplateFontFamily = 'default' | 'lato' | 'source-sans' | 'merriweather';
 

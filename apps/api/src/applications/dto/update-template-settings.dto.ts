@@ -11,8 +11,8 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 export class UpdateTemplateSettingsDto {
   @ApiPropertyOptional({
     description:
-      'Kuratierte Schriftfamilie. "default" behält die Schrift des Designs; die benannten ' +
-      'Familien greifen, sobald ihre Fonts gebündelt sind (Font-Bundling-Follow-up).',
+      'Kuratierte Schriftfamilie. "default" behält die Schrift des Designs; ' +
+      '"lato", "source-sans" und "merriweather" sind gebündelte OFL-Familien.',
     enum: ['default', 'lato', 'source-sans', 'merriweather'],
     example: 'default',
   })
