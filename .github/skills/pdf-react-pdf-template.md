@@ -114,6 +114,7 @@ Skeleton:
 
 ```tsx
 import { createElement, type ReactElement } from 'react';
+import { resolveDesignTokens } from '../design-tokens';
 import { tLabel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import type { ReactPdfNamespace } from '../react-pdf-loader';
@@ -128,13 +129,26 @@ const inch = (n: number) => n * 72;
 
 const ACCENT_FALLBACK = '#1a1a1a';
 
-const buildResumeStyles = (rp: ReactPdfNamespace, accent: string) =>
+// Base (unscaled) font-size + spacing tables. Render functions resolve them
+// against the per-application design settings (fontScale/density) via
+// resolveDesignTokens — REQUIRED for every new template so templateSettings
+// work uniformly. buildStyles takes the scaled tables as params.
+const FS_BASE = { base: px(11) /* ... */ };
+const SP_BASE = { md: px(8) /* ... */ };
+
+const buildResumeStyles = (
+  rp: ReactPdfNamespace,
+  accent: string,
+  FS: typeof FS_BASE,
+  SP: typeof SP_BASE,
+  lh: (base: number) => number, // wrap body lineHeights: lineHeight: lh(1.5)
+) =>
   rp.StyleSheet.create({
     page: {
       paddingTop: inch(0.5),
       // ...
       fontFamily: 'Helvetica',
-      fontSize: px(11),
+      fontSize: FS.base,
       color: '#1a1a1a',
     },
     // ...
@@ -144,7 +158,8 @@ function ResumeFactory(rp: ReactPdfNamespace) {
   const renderRichText = createRichTextRenderer(rp);
   return ({ data, meta }: ReactPdfResumeProps): ReactElement => {
     const accent = meta.accentColor ?? ACCENT_FALLBACK;
-    const styles = buildResumeStyles(rp, accent);
+    const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+    const styles = buildResumeStyles(rp, accent, FS, SP, lineHeight);
     const t = (k: string) => tLabel(k, meta.language);
     return createElement(
       rp.Document,

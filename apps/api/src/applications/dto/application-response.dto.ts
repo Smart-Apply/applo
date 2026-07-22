@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { TemplateSettings } from '@applo/shared';
 
 // PDF Generation Status (system-facing)
 export enum ApplicationStatus {
@@ -129,6 +130,15 @@ export class ApplicationResponseDto {
     enum: ['kurz', 'standard'],
   })
   coverLetterLength?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Per-application design tuning (font scale, density, accent override, font family). ' +
+      'Null when the design runs with its original look.',
+    example: { fontScale: 'md', density: 'normal', accentColor: '#1B2A49' },
+    nullable: true,
+  })
+  templateSettings?: TemplateSettings | null;
 
   @ApiPropertyOptional({
     example: 'TRANSLATION_FALLBACK',

@@ -19,6 +19,12 @@ export interface ReactPdfTemplateMeta {
   colorVariantName?: string;
   /** True when the template should suppress decorative chrome for ATS parsers. */
   atsOptimized?: boolean;
+  /** Per-application font scale ('sm' | 'md' | 'lg'); absent = 'md'. */
+  fontScale?: string;
+  /** Per-application vertical density ('compact' | 'normal' | 'relaxed'); absent = 'normal'. */
+  density?: string;
+  /** Curated font family ('default' | 'lato' | …); honored once fonts are bundled. */
+  fontFamily?: string;
 }
 
 export interface ReactPdfResumeProps {

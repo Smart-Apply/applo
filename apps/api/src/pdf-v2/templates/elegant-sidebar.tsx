@@ -36,6 +36,7 @@
  */
 
 import { createElement, type ReactElement, type ReactNode } from 'react';
+import { resolveDesignTokens } from '../design-tokens';
 import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import { deriveElegantSidebarPalette } from '../color-utils';
@@ -59,7 +60,7 @@ const MAIN_SECTION_ORDER = ['profile', 'experience', 'projects', 'certs'] as con
 /** CSS px → PDF pt at 96 DPI. */
 const px = (n: number) => n * 0.75;
 
-const FS = {
+const FS_BASE = {
   xxs: px(9),
   xs: px(10),
   sm: px(11),
@@ -72,18 +73,28 @@ const FS = {
   xxxxl: px(26),
 };
 
+/** No spacing table — this design spaces via inline px() values, so density
+ * tuning affects line height only (see resolveDesignTokens). */
+const SP_BASE = {};
+
 const SIDEBAR_WIDTH_PCT = '32%';
 /** Header bar height in pt. CSS: `padding: 18px 25px` + ~ name+sub line height. */
 const HEADER_HEIGHT_PT = px(85);
 
-const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof deriveElegantSidebarPalette>) =>
+const buildResumeStyles = (
+  rp: ReactPdfNamespace,
+  palette: ReturnType<typeof deriveElegantSidebarPalette>,
+  FS: typeof FS_BASE,
+  lh: (base: number) => number,
+  fontScaled: (value: number) => number,
+) =>
   rp.StyleSheet.create({
     // ── Page (no padding — header/sidebar bleed to edges) ──
     page: {
       fontFamily: 'Helvetica',
       fontSize: FS.xs,
       color: palette.textPrimary,
-      lineHeight: 1.6,
+      lineHeight: lh(1.6),
     },
 
     // ── Sidebar background — fixed so it repeats on every page. ──
@@ -108,7 +119,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      minHeight: HEADER_HEIGHT_PT,
+      minHeight: fontScaled(HEADER_HEIGHT_PT),
     },
     profileName: {
       fontSize: FS.xxxxl,
@@ -156,7 +167,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       fontSize: FS.sm,
       color: palette.textPrimary,
       marginBottom: px(6),
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
     contactItemLink: {
       color: palette.textPrimary,
@@ -264,7 +275,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       fontSize: FS.xxs,
       color: palette.textSecondary,
       textAlign: 'justify',
-      lineHeight: 1.7,
+      lineHeight: lh(1.7),
     },
 
     item: {
@@ -304,7 +315,7 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
     itemDescription: {
       fontSize: FS.xxs,
       color: palette.textSecondary,
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
       marginBottom: px(4),
     },
     achievementsList: {
@@ -324,13 +335,15 @@ const buildResumeStyles = (rp: ReactPdfNamespace, palette: ReturnType<typeof der
       flex: 1,
       fontSize: FS.xxs,
       color: palette.textSecondary,
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
     },
   });
 
 const buildCoverLetterStyles = (
   rp: ReactPdfNamespace,
   palette: ReturnType<typeof deriveElegantSidebarPalette>,
+  FS: typeof FS_BASE,
+  lh: (base: number) => number,
 ) =>
   rp.StyleSheet.create({
     page: {
@@ -389,7 +402,7 @@ const buildCoverLetterStyles = (
     body: {
       fontSize: FS.sm,
       color: palette.textSecondary,
-      lineHeight: 1.8,
+      lineHeight: lh(1.8),
       textAlign: 'justify',
     },
     paragraph: {
@@ -442,7 +455,8 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
 
     return function ElegantSidebarResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const palette = deriveElegantSidebarPalette(meta.accentColor);
-      const styles = buildResumeStyles(rp, palette);
+      const { fs: FS, lineHeight, fontScaled } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const styles = buildResumeStyles(rp, palette, FS, lineHeight, fontScaled);
       // Prefer the explicit export-request language (data.language) over the
       // DB template row's language (meta.language). See issue #536.
       const lang = data.language || meta.language || 'en';
@@ -761,7 +775,8 @@ export const ElegantSidebarFactory: ReactPdfTemplateFactory = {
       meta,
     }: ReactPdfCoverLetterProps): ReactElement {
       const palette = deriveElegantSidebarPalette(meta.accentColor);
-      const styles = buildCoverLetterStyles(rp, palette);
+      const { fs: FS, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const styles = buildCoverLetterStyles(rp, palette, FS, lineHeight);
       const contactParts = buildCoverLetterContactParts(data);
 
       const renderContactItem = (part: ContactPart, idx: number): ReactElement => {

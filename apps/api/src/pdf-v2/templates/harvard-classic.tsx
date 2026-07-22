@@ -22,6 +22,7 @@
  */
 
 import { createElement, type ReactElement, type ReactNode } from 'react';
+import { resolveDesignTokens } from '../design-tokens';
 import { tLabel, tLevel } from '../i18n';
 import { createRichTextRenderer } from '../rich-text';
 import { resolveSectionOrder } from '../template-data';
@@ -43,15 +44,17 @@ const DEFAULT_SECTION_ORDER = [
   'languages',
 ] as const;
 
-/** Source CSS uses pt directly — no conversion needed. */
-const FS = {
+/** Source CSS uses pt directly — no conversion needed. Base (unscaled)
+ * tables — the render functions resolve them against the per-application
+ * font-scale/density via `resolveDesignTokens`. */
+const FS_BASE = {
   contact: 10,
   base: 11,
   section: 11,
   name: 14,
 };
 
-const SP = {
+const SP_BASE = {
   xxs: 2,
   xs: 4,
   sm: 6,
@@ -72,7 +75,13 @@ const ACCENT_FALLBACK = COLORS.text;
 /** CSS inches → PDF pt. */
 const inch = (n: number) => n * 72;
 
-const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
+const buildStyles = (
+  rp: ReactPdfNamespace,
+  accent: string,
+  FS: typeof FS_BASE,
+  SP: typeof SP_BASE,
+  lh: (base: number) => number,
+) =>
   rp.StyleSheet.create({
     // ── Page (CSS: padding 0.5in) ──
     page: {
@@ -83,7 +92,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       fontFamily: 'Times-Roman',
       fontSize: FS.base,
       color: COLORS.text,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
 
     // ── Header (CSS: text-align center, margin-bottom 4pt) ──
@@ -113,7 +122,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       textAlign: 'center',
       fontSize: FS.contact,
       marginBottom: SP.lg,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
     contactSeparator: {
       color: COLORS.textMuted,
@@ -175,7 +184,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       marginTop: SP.xxs,
       fontSize: FS.base,
       color: COLORS.textMuted,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
 
     // ── Bullets (CSS: margin-left 0.2in, list-style disc, margin-top 4pt) ──
@@ -196,7 +205,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     bulletText: {
       flex: 1,
       fontSize: FS.base,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
       textAlign: 'justify',
     },
 
@@ -205,7 +214,7 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
       flexDirection: 'row',
       marginBottom: SP.xs,
       fontSize: FS.base,
-      lineHeight: 1.4,
+      lineHeight: lh(1.4),
     },
     skillType: {
       fontFamily: 'Times-Bold',
@@ -219,14 +228,14 @@ const buildStyles = (rp: ReactPdfNamespace, accent: string) =>
     summaryText: {
       fontSize: FS.base,
       textAlign: 'justify',
-      lineHeight: 1.5,
+      lineHeight: lh(1.5),
     },
 
     // ── Cover letter ──
     coverLetterBody: {
       fontSize: FS.base,
       textAlign: 'justify',
-      lineHeight: 1.6,
+      lineHeight: lh(1.6),
     },
     coverLetterParagraph: {
       marginBottom: SP.lg,
@@ -320,7 +329,8 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
 
     return function HarvardClassicResume({ data, meta }: ReactPdfResumeProps): ReactElement {
       const accent = meta.accentColor || ACCENT_FALLBACK;
-      const styles = buildStyles(rp, accent);
+      const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const styles = buildStyles(rp, accent, FS, SP, lineHeight);
       // Prefer the explicit export-request language (data.language) over the
       // DB template row's language (meta.language). The DB row may be the
       // English fallback when no DE/FR/ES/IT variant has been seeded for
@@ -656,13 +666,15 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
 
     return function HarvardClassicCoverLetter({
       data,
+      meta,
     }: ReactPdfCoverLetterProps): ReactElement {
       // Harvard Classic cover letters are intentionally monochrome — the name
       // and header divider use the same charcoal as the body text rather than
       // the DB template's accent colour (which renders red/maroon on some
       // variants). The résumé still honours meta.accentColor.
       const accent = ACCENT_FALLBACK;
-      const styles = buildStyles(rp, accent);
+      const { fs: FS, sp: SP, lineHeight } = resolveDesignTokens(meta, FS_BASE, SP_BASE);
+      const styles = buildStyles(rp, accent, FS, SP, lineHeight);
       const contactParts = buildCoverLetterContactParts(data);
 
       return createElement(

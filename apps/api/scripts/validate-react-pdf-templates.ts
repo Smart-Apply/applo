@@ -140,6 +140,19 @@ const TARGETS: Target[] = [
   },
 ];
 
+/**
+ * Per-application design-settings matrix (TemplateSettings knobs). Every base
+ * design must render at every font-scale × density combination — bounded
+ * enums keep this exhaustive check cheap (extremes + default per axis).
+ */
+const SETTINGS_MATRIX: { fontScale: string; density: string }[] = [];
+for (const fontScale of ['sm', 'md', 'lg']) {
+  for (const density of ['compact', 'normal', 'relaxed']) {
+    if (fontScale === 'md' && density === 'normal') continue; // baseline covered above
+    SETTINGS_MATRIX.push({ fontScale, density });
+  }
+}
+
 async function main() {
   const rp = await loadReactPdf();
   const outRoot = path.join('/tmp', 'applo-pdf-validate');
@@ -180,6 +193,29 @@ async function main() {
         failures++;
         // eslint-disable-next-line no-console
         console.error(`  ✗ cover-letter FAILED:`, err instanceof Error ? err.message : err);
+      }
+    }
+
+    // Design-settings matrix — résumé only (the long document where scale ×
+    // density interacts with page breaks). Errors count as failures.
+    if (target.factory.resume) {
+      for (const settings of SETTINGS_MATRIX) {
+        const name = `resume.${settings.fontScale}-${settings.density}.pdf`;
+        try {
+          const Component = target.factory.resume(rp);
+          const element = createElement(Component, {
+            data: SAMPLE_RESUME,
+            meta: { ...target.meta, ...settings },
+          });
+          const buf = await rp.renderToBuffer(element);
+          await fs.writeFile(path.join(dir, name), buf);
+          // eslint-disable-next-line no-console
+          console.log(`  ✓ ${name}  ${buf.length} bytes`);
+        } catch (err) {
+          failures++;
+          // eslint-disable-next-line no-console
+          console.error(`  ✗ ${name} FAILED:`, err instanceof Error ? err.message : err);
+        }
       }
     }
   }

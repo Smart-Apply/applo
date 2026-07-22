@@ -365,6 +365,34 @@ export type ApplicationStatus = ApplicationGenerationStatus;
 // small "📧" pill when the change came from inbox tracking.
 export type ApplicationStatusSource = 'SYSTEM' | 'USER' | 'EMAIL_TRACKING';
 
+/** Bounded font-size scale for PDF templates. `md` = the design's original sizes. */
+export type TemplateFontScale = 'sm' | 'md' | 'lg';
+/** Bounded vertical-density scale for PDF templates. `normal` = original spacing. */
+export type TemplateDensity = 'compact' | 'normal' | 'relaxed';
+/**
+ * Curated font choice for PDF templates. `default` keeps the design's own
+ * family. The named families take effect once their OFL fonts are bundled
+ * with the API (font-bundling follow-up); until then they resolve to the
+ * design default.
+ */
+export type TemplateFontFamily = 'default' | 'lato' | 'source-sans' | 'merriweather';
+
+/**
+ * Per-application design tuning stored on `Application.templateSettings`.
+ * The DB Template row defines the design; these settings tune it. All knobs
+ * are bounded enums (plus a validated hex) so every combination stays
+ * testable and ATS-safe.
+ */
+export interface TemplateSettings {
+  fontFamily?: TemplateFontFamily;
+  fontScale?: TemplateFontScale;
+  density?: TemplateDensity;
+  /** Free hex accent (#rrggbb) — overrides the template variant's color. */
+  accentColor?: string | null;
+  /** Render the profile photo (arrives with the photo feature; default false). */
+  showPhoto?: boolean;
+}
+
 export interface Application {
   id: string;
   userId: string;
@@ -389,6 +417,8 @@ export interface Application {
   language?: string;
   /** Original content language at creation time (ISO 639-1). */
   sourceLanguage?: string;
+  /** Per-application design tuning (font scale, density, accent override). */
+  templateSettings?: TemplateSettings | null;
   /** Cover-letter length preference ('kurz' ~250 words | 'standard' ~350). */
   coverLetterLength?: 'kurz' | 'standard';
   /**

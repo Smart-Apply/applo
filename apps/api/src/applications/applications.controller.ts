@@ -39,6 +39,7 @@ import { UpdateApplicationTitleDto } from './dto/update-application-title.dto';
 import { UpdateTargetJobTitleDto } from './dto/update-target-job-title.dto';
 import { UseThrottler } from '../common/decorators/throttle.decorator';
 import { UpdateResumeDto } from './dto/update-resume.dto';
+import { UpdateTemplateSettingsDto } from './dto/update-template-settings.dto';
 import { CoverLetterDto } from './dto/cover-letter.dto';
 import { SummaryDto } from './dto/summary.dto';
 import { ExperienceDescriptionDto } from './dto/experience-description.dto';
@@ -268,6 +269,30 @@ export class ApplicationsController {
     @Body() dto: ExportApplicationDto = {},
   ): Promise<ApplicationResponseDto> {
     return this.applicationsService.requestExport(user.id, id, dto.language);
+  }
+
+  @Patch(':id/template-settings')
+  @ApiOperation({
+    summary: 'Design-Einstellungen der Bewerbung anpassen',
+    description:
+      'Partielles Update der Design-Feinjustierung (Schriftgröße, Dichte, Akzentfarbe, ' +
+      'Schriftfamilie). Nicht gesendete Felder bleiben unverändert; accentColor=null ' +
+      'entfernt die Farbüberschreibung. Wirkt beim nächsten PDF-Export.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Design-Einstellungen aktualisiert',
+    type: ApplicationResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Ungültige Einstellungswerte' })
+  @ApiResponse({ status: 401, description: 'Nicht autorisiert' })
+  @ApiResponse({ status: 404, description: 'Bewerbung nicht gefunden' })
+  async updateTemplateSettings(
+    @CurrentUser() user: { id: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateTemplateSettingsDto,
+  ): Promise<ApplicationResponseDto> {
+    return this.applicationsService.updateTemplateSettings(user.id, id, dto);
   }
 
   @Patch(':id/status')
