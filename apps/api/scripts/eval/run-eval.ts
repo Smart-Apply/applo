@@ -52,6 +52,7 @@ interface CliArgs {
   applyWeave: boolean;
   applyAnchor: boolean;
   applyStyleRewrite: boolean;
+  applyLengthGovernor: boolean;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -64,6 +65,7 @@ function parseArgs(argv: string[]): CliArgs {
     applyWeave: true,
     applyAnchor: true,
     applyStyleRewrite: true,
+    applyLengthGovernor: true,
   };
   for (const arg of argv) {
     const [key, value] = arg.replace(/^--/, '').split('=');
@@ -78,6 +80,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (key === 'no-weave') args.applyWeave = false;
     else if (key === 'no-anchor') args.applyAnchor = false;
     else if (key === 'no-style-rewrite') args.applyStyleRewrite = false;
+    else if (key === 'no-length-governor') args.applyLengthGovernor = false;
   }
   return args;
 }
@@ -137,9 +140,12 @@ async function runOne(
   llm: LLMService,
   fixture: EvalFixture,
   retries: number,
-  applyWeave: boolean,
-  applyAnchor: boolean,
-  applyStyleRewrite: boolean,
+  options: {
+    applyWeave: boolean;
+    applyAnchor: boolean;
+    applyStyleRewrite: boolean;
+    applyLengthGovernor: boolean;
+  },
 ): Promise<FixtureResult> {
   const base = {
     id: fixture.id,
@@ -147,10 +153,7 @@ async function runOne(
     language: fixture.language,
   };
   try {
-    const docs = await withRetry(
-      () => generateForFixture(llm, fixture, { applyWeave, applyAnchor, applyStyleRewrite }),
-      retries,
-    );
+    const docs = await withRetry(() => generateForFixture(llm, fixture, options), retries);
     const grounding = groundDocuments(fixture, docs);
     const style = styleCheckDocuments(fixture, docs);
     const judge = await withRetry(() => judgeDocuments(llm, fixture, docs), retries);
@@ -177,6 +180,16 @@ async function runOne(
         hedging: style.hedging,
         verbFirstBullets: style.verbFirstBullets,
       },
+      length: docs.lengthLint
+        ? {
+            words: docs.lengthLint.words,
+            budget: docs.lengthLint.budget,
+            overrun: docs.lengthLint.overrun,
+            severity: docs.lengthLint.severity,
+            governorApplied: docs.lengthGovernorApplied,
+            wordsBefore: docs.wordsBeforeGovernor,
+          }
+        : undefined,
       styleRewriteApplied: docs.styleRewriteApplied,
       styleViolationsBefore: docs.styleViolationsBefore,
       styleViolationsAfter: docs.styleViolationsAfter,
@@ -215,7 +228,12 @@ async function runPool(
       if (index >= fixtures.length) return;
       const fixture = fixtures[index];
       process.stdout.write(`  → [${index + 1}/${fixtures.length}] ${fixture.id} ... `);
-      const result = await runOne(llm, fixture, args.retries, args.applyWeave, args.applyAnchor, args.applyStyleRewrite);
+      const result = await runOne(llm, fixture, args.retries, {
+        applyWeave: args.applyWeave,
+        applyAnchor: args.applyAnchor,
+        applyStyleRewrite: args.applyStyleRewrite,
+        applyLengthGovernor: args.applyLengthGovernor,
+      });
       process.stdout.write(result.error ? `ERROR\n` : `overall ${result.judge?.overall}\n`);
       results[index] = result;
       if (args.delayMs > 0 && index + 1 < fixtures.length) await sleep(args.delayMs);

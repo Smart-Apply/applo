@@ -152,10 +152,13 @@ User → Frontend (Next.js)
 │    profile-supported ATS keywords    │
 │ 5. Style rewrite: fix flagged AI     │
 │    clichés/hedging (guarded, teeth)  │
-│ 6. Grounding check: flag fabricated  │
+│ 6. Length governor: shorten pass     │
+│    when over word budget (guarded)   │
+│ 7. Grounding check: flag fabricated  │
 │    impact numbers vs. the profile    │
-│ 7. Style check: flag AI clichés +    │
-│    hedging (Konjunktiv); log-only    │
+│ 8. Style + length check: flag AI     │
+│    clichés, hedging, word-budget     │
+│    overruns; log-only                │
 └──────────────────────────────────────┘
         │
         ▼
@@ -164,6 +167,8 @@ User → Frontend (Next.js)
 │ 1. Resolve template via              │
 │    pdf-v2/template-registry.ts       │
 │ 2. Render TSX → PDF buffer           │
+│ 3. Page-count backstop: warn when a  │
+│    cover letter renders > 1 page     │
 │ Throws if no react-pdf factory is    │
 │ registered for the template (no      │
 │ fallback path — puppeteer removed    │

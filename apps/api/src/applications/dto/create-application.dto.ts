@@ -50,6 +50,19 @@ export class CreateApplicationDto {
   language?: string = 'de';
 
   @ApiPropertyOptional({
+    description:
+      'Länge des Anschreibens: "kurz" (~250 Wörter, kompakt) oder "standard" (~350 Wörter). ' +
+      'Wird gespeichert und auch bei späterer Neugenerierung im Editor berücksichtigt.',
+    example: 'standard',
+    enum: ['kurz', 'standard'],
+    default: 'standard',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['kurz', 'standard'])
+  coverLetterLength?: string = 'standard';
+
+  @ApiPropertyOptional({
     description: 'Optionale Notizen zur Bewerbung',
     example: 'Kontakt über Networking Event',
   })

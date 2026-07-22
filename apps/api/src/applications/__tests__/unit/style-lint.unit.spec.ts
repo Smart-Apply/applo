@@ -1,6 +1,10 @@
 import {
+  countCoverLetterBodyWords,
   detectGermanVerbFirstBullets,
+  evaluateShortenRewrite,
   evaluateStyleRewrite,
+  extractSalutationLine,
+  lintCoverLetterLength,
   lintGeneratedStyle,
 } from '../../style-lint.util';
 
@@ -156,5 +160,189 @@ describe('detectGermanVerbFirstBullets', () => {
       'de',
     );
     expect(hits).toEqual([]);
+  });
+});
+
+/** Build a letter with an exact body word count around the standard contract. */
+function makeLetter(
+  bodyWords: number,
+  {
+    salutation = 'Sehr geehrte Damen und Herren,',
+    closing = 'Mit freundlichen Grüßen,\nMax Mustermann',
+    lead = '',
+  }: { salutation?: string; closing?: string | null; lead?: string } = {},
+): string {
+  const leadTokens = lead ? lead.split(/\s+/).length : 0;
+  const filler = Array(Math.max(0, bodyWords - leadTokens))
+    .fill('Wort')
+    .join(' ');
+  const body = [lead, filler].filter(Boolean).join(' ');
+  return [salutation, '', body, '', closing ?? ''].join('\n').trim();
+}
+
+describe('countCoverLetterBodyWords', () => {
+  it('returns 0 for empty input', () => {
+    expect(countCoverLetterBodyWords('')).toBe(0);
+    expect(countCoverLetterBodyWords(null)).toBe(0);
+    expect(countCoverLetterBodyWords(undefined)).toBe(0);
+    expect(countCoverLetterBodyWords('   \n ')).toBe(0);
+  });
+
+  it('excludes the German salutation line and closing block', () => {
+    const letter = makeLetter(100);
+    expect(countCoverLetterBodyWords(letter)).toBe(100);
+  });
+
+  it('excludes the English salutation line and closing block', () => {
+    const letter = makeLetter(80, {
+      salutation: 'Dear Hiring Manager,',
+      closing: 'Sincerely,\nJane Doe',
+    });
+    expect(countCoverLetterBodyWords(letter)).toBe(80);
+  });
+
+  it('counts a letter without closing (editor-pass output ends on the last paragraph)', () => {
+    const letter = makeLetter(60, { closing: null });
+    expect(countCoverLetterBodyWords(letter)).toBe(60);
+  });
+
+  it('counts stored HTML the same as Markdown', () => {
+    const html =
+      '<p>Sehr geehrte Frau Schmidt,</p>' +
+      '<p>Als Pflegefachkraft betreue ich achtzehn Personen pro Schicht.</p>' +
+      '<p>Mit freundlichen Grüßen,<br>Max Mustermann</p>';
+    // 8 body words: the salutation and closing paragraphs are stripped.
+    expect(countCoverLetterBodyWords(html)).toBe(8);
+  });
+
+  it('handles umlaut words as single tokens and skips bare punctuation', () => {
+    const letter = makeLetter(0, {
+      lead: 'Führungskräfte — übernehmen Verantwortung für Qualitätssicherung',
+      closing: null,
+    });
+    // "—" is not a word; the 5 German words are.
+    expect(countCoverLetterBodyWords(letter)).toBe(5);
+  });
+});
+
+describe('extractSalutationLine', () => {
+  it('returns the salutation when the first line matches the contract', () => {
+    expect(extractSalutationLine('Sehr geehrte Damen und Herren,\n\nText.')).toBe(
+      'Sehr geehrte Damen und Herren,',
+    );
+    expect(extractSalutationLine('<p>Dear Ms. Smith,</p><p>Body.</p>')).toBe('Dear Ms. Smith,');
+  });
+
+  it('returns null when the letter does not open with a salutation', () => {
+    expect(extractSalutationLine('Als Vertriebsleiter überzeuge ich täglich.')).toBeNull();
+    expect(extractSalutationLine(null)).toBeNull();
+  });
+});
+
+describe('lintCoverLetterLength', () => {
+  it('reports ok when within budget', () => {
+    const result = lintCoverLetterLength(makeLetter(300), 350, 'de');
+    expect(result).toMatchObject({ words: 300, budget: 350, overrun: false, severity: 'ok' });
+  });
+
+  it('tolerates a borderline overrun (within tolerance)', () => {
+    // DE tolerance: 350 × 0.2 = 70 → overrun only above 420 words.
+    const result = lintCoverLetterLength(makeLetter(410), 350, 'de');
+    expect(result.overrun).toBe(false);
+    expect(result.severity).toBe('ok');
+  });
+
+  it('applies the tighter English tolerance', () => {
+    // EN tolerance: 350 × 0.15 = 53 → 410 words IS an overrun in English.
+    const result = lintCoverLetterLength(
+      makeLetter(410, { salutation: 'Dear Hiring Manager,', closing: 'Sincerely,\nJane Doe' }),
+      350,
+      'en',
+    );
+    expect(result.overrun).toBe(true);
+    expect(result.severity).toBe('warn');
+  });
+
+  it('flags a clear overrun as warn', () => {
+    const result = lintCoverLetterLength(makeLetter(460), 350, 'de');
+    expect(result).toMatchObject({ overrun: true, severity: 'warn' });
+  });
+
+  it('classifies the "2-page" class (≥ 1.5× budget) as critical', () => {
+    const result = lintCoverLetterLength(makeLetter(525), 350, 'de');
+    expect(result).toMatchObject({ overrun: true, severity: 'critical' });
+  });
+
+  it('respects the kurz budget', () => {
+    const result = lintCoverLetterLength(makeLetter(340), 250, 'de');
+    // 250 × 0.2 = 50 → limit 300 → 340 overruns.
+    expect(result.overrun).toBe(true);
+  });
+});
+
+describe('evaluateShortenRewrite', () => {
+  const budget = 350;
+  const overrunDraft = makeLetter(500, { lead: 'Wundversorgung' });
+
+  it('accepts a genuinely shorter, clean rewrite', () => {
+    const shortened = makeLetter(340, { lead: 'Wundversorgung' });
+    const decision = evaluateShortenRewrite(overrunDraft, shortened, budget, 'de', [
+      'Wundversorgung',
+    ]);
+    expect(decision.accept).toBe(true);
+    expect(decision.reason).toBe('shortened');
+    expect(decision.wordsBefore).toBe(500);
+    expect(decision.wordsAfter).toBe(340);
+  });
+
+  it('rejects empty output', () => {
+    expect(evaluateShortenRewrite(overrunDraft, '', budget, 'de').reason).toBe('empty');
+    expect(evaluateShortenRewrite(overrunDraft, null, budget, 'de').reason).toBe('empty');
+  });
+
+  it('rejects a gutted letter (below half the draft length)', () => {
+    const gutted = makeLetter(60);
+    expect(evaluateShortenRewrite(overrunDraft, gutted, budget, 'de').reason).toBe('gutted');
+  });
+
+  it('rejects when the salutation line changed', () => {
+    const shortened = makeLetter(340, {
+      salutation: 'Sehr geehrte Frau Schmidt,',
+      lead: 'Wundversorgung',
+    });
+    expect(evaluateShortenRewrite(overrunDraft, shortened, budget, 'de').reason).toBe(
+      'salutation-changed',
+    );
+  });
+
+  it('rejects when still over budget', () => {
+    const shortened = makeLetter(450, { lead: 'Wundversorgung' });
+    expect(evaluateShortenRewrite(overrunDraft, shortened, budget, 'de').reason).toBe(
+      'still-over-budget',
+    );
+  });
+
+  it('rejects when the style-violation count increased', () => {
+    const shortened = makeLetter(340, {
+      lead: 'Ich bin begeistert von der Möglichkeit und biete Wundversorgung',
+    });
+    expect(evaluateShortenRewrite(overrunDraft, shortened, budget, 'de').reason).toBe(
+      'style-regressed',
+    );
+  });
+
+  it('rejects when a woven keyword was dropped', () => {
+    const shortened = makeLetter(340);
+    const decision = evaluateShortenRewrite(overrunDraft, shortened, budget, 'de', [
+      'Wundversorgung',
+    ]);
+    expect(decision.reason).toBe('keyword-dropped');
+  });
+
+  it('skips the salutation check when the draft has no salutation-style opener', () => {
+    const draft = Array(500).fill('Wort').join(' ');
+    const shortened = Array(340).fill('Wort').join(' ');
+    const decision = evaluateShortenRewrite(draft, shortened, budget, 'de');
+    expect(decision.accept).toBe(true);
   });
 });

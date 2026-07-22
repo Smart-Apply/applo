@@ -389,6 +389,8 @@ export interface Application {
   language?: string;
   /** Original content language at creation time (ISO 639-1). */
   sourceLanguage?: string;
+  /** Cover-letter length preference ('kurz' ~250 words | 'standard' ~350). */
+  coverLetterLength?: 'kurz' | 'standard';
   /**
    * Set when the last cross-language export could not be translated — the
    * PDFs were rendered consistently in the source language instead.

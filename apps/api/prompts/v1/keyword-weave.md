@@ -45,12 +45,15 @@ already there so a keyword fits where the candidate's real experience already im
 4. **Preserve everything else.** Keep the structure, paragraph count, salutation, tone,
    length (±1 sentence) and every existing fact and number. Do not delete content. Do not
    re-cliché the letter.
-5. **Same language as the draft / `{{language}}`.** Never switch languages.
-6. **No new numbers or metrics.** Do not introduce figures that are not already in the
+5. **Never exceed {{lengthBudget}} words** (body, excluding greeting/closing). Weaving is
+   NOT an excuse to grow the letter — prefer enriching or replacing filler in an existing
+   sentence over adding a new one.
+6. **Same language as the draft / `{{language}}`.** Never switch languages.
+7. **No new numbers or metrics.** Do not introduce figures that are not already in the
    draft or `tailoredProfile`.
-7. **No closing phrase and NO name.** End with the last content paragraph — the template
+8. **No closing phrase and NO name.** End with the last content paragraph — the template
    appends the sign-off and name automatically.
-8. **Output ONLY the finished letter** as Markdown (salutation → body → final paragraph).
+9. **Output ONLY the finished letter** as Markdown (salutation → body → final paragraph).
    No commentary, no list of what you changed, no JSON.
 
 ---

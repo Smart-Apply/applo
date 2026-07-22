@@ -841,6 +841,7 @@ export const api = {
       coverLetterTemplateId?: string;
       resumeTemplateId?: string;
       generateCoverLetter?: boolean;
+      coverLetterLength?: 'kurz' | 'standard';
     }) =>
       // Non-idempotent: the backend guards against duplicate (user, job)
       // applications with a 409. Never auto-retry on a network blip, or a
@@ -858,6 +859,7 @@ export const api = {
       resumeTemplateId?: string;
       generateCoverLetter?: boolean;
       language?: string;
+      coverLetterLength?: 'kurz' | 'standard';
     }) =>
       // Non-idempotent AND slow (blocks until the LLM pipeline finishes).
       // Auto-retrying on a dropped connection would fire a second POST while

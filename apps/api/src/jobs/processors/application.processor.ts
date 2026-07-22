@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { PDFParse } from 'pdf-parse';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PdfService } from '../../pdf/pdf.service';
 import { StorageService } from '../../storage/storage.service';
@@ -166,6 +167,11 @@ export class ApplicationProcessor {
           coverLetterTemplateId || undefined,
           { atsOptimized: false }, // Use DB template instead of filesystem template
         );
+
+        // Deterministic page-count backstop: a cover letter must fit ONE page.
+        // Word counts can miss template/font interactions — this catches the
+        // visual "2 Seiten" failure directly on the rendered PDF. Log-only.
+        await this.warnIfCoverLetterMultiPage(applicationId, coverLetterPdf);
 
         // Upload cover letter to storage
         coverLetterKey = await this.storageService.upload(
@@ -380,6 +386,36 @@ export class ApplicationProcessor {
     } catch (error) {
       this.logger.error(`Failed to resolve template: ${error.message}`);
       return templateId; // Fallback to original
+    }
+  }
+
+  /**
+   * Deterministic page-count backstop for the rendered cover-letter PDF.
+   * The word-based length lint runs at generation time; this catches the
+   * visual failure mode ("2 Seiten, das liest kein Mensch") that template or
+   * font interactions can still produce. Non-blocking: logs a structured
+   * warning and never fails the export.
+   */
+  private async warnIfCoverLetterMultiPage(applicationId: string, pdf: Buffer): Promise<void> {
+    let parser: PDFParse | null = null;
+    try {
+      parser = new PDFParse({ data: pdf });
+      const info = await parser.getInfo();
+      const pages = info.total;
+      if (pages > 1) {
+        this.logger.warn(
+          `Page-count check (application ${applicationId}): cover letter rendered ${pages} pages — expected 1`,
+        );
+      } else {
+        this.logger.debug(`Page-count check (application ${applicationId}): cover letter fits 1 page`);
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Page-count check failed for application ${applicationId}: ${error.message}`,
+      );
+    } finally {
+      // Release the pdfjs-dist document handles (safe on early failures).
+      await parser?.destroy().catch(() => undefined);
     }
   }
 }

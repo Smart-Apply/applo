@@ -56,6 +56,7 @@ With `LLM_PROVIDER=mock` (or unset) the harness **skips gracefully** (exit 0).
 | `--no-weave` | off | Skip the #6 keyword weave pass. Use for an A/B run: compare coverage with vs. without the loop. |
 | `--no-anchor` | off | Omit the shared `GENERATION_SYSTEM_ANCHOR` system message from the cover-letter + resume-rewrite calls. Use for a clean A/B of the system/user split. |
 | `--no-style-rewrite` | off | Skip BOTH style-rewrite "teeth" passes (cover letter + résumé). Use for an A/B of the deterministic-linter enforcement step. |
+| `--no-length-governor` | off | Skip the guarded length-governor shorten pass. Use to measure the raw overrun rate the base prompts produce. |
 | `--out=PATH` | `results/eval-<tag>-<ts>.json` | Override the output path. |
 
 ## What it measures
@@ -70,7 +71,9 @@ For each fixture the runner mirrors `ApplicationsService.createWithGeneration`:
    or when there is no profile-supported priority-1 gap)
 5. `v1/style-rewrite.md` (temp 0.3) — the style-rewrite "teeth" pass (skipped with
    `--no-style-rewrite`, or when the post-weave letter is already clean)
-6. `v1/resume-style-rewrite.md` (temp 0.3) — the résumé style-rewrite "teeth" pass (JSON→JSON,
+6. `v1/shorten-cover-letter.md` (temp 0.3) — the guarded length-governor pass (skipped with
+   `--no-length-governor`, or when the letter is within its word budget)
+7. `v1/resume-style-rewrite.md` (temp 0.3) — the résumé style-rewrite "teeth" pass (JSON→JSON,
    ID-preserving; skipped with `--no-style-rewrite`, or when the résumé prose is already clean)
 
 It then scores the output four ways:
@@ -92,6 +95,12 @@ It then scores the output four ways:
   fixtures the **style-rewrite "teeth" passes** improved — separately for the cover
   letter and the résumé (with per-fixture before→after violation counts in the JSON)
   — a within-run, controlled measure of the enforcement step.
+- **Cover-letter length** (`lintCoverLetterLength`, deterministic) — mean body
+  word count and the overrun rate of the finished letters against the standard
+  word budget (`COVER_LETTER_BUDGETS`), plus how many fixtures the guarded
+  **length-governor pass** shortened (per-fixture before→after word counts in
+  the JSON). Makes the "grundsätzlich immer viel zu lang" complaint a measured,
+  falsifiable number.
 
 > The runner omits only PDF rendering + persistence (irrelevant to output
 > quality). The keyword weave shares `keyword-coverage.util.ts` with the live

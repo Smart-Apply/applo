@@ -49,7 +49,7 @@ import {
 } from './resume-template.util';
 import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.util';
 import { buildMatchInsights } from './match-insights.util';
-import { matchAtsKeywordsToProfile, selectKeywordsToWeave } from './keyword-coverage.util';
+import { matchAtsKeywordsToProfile, selectKeywordsToWeave, isKeywordPresent } from './keyword-coverage.util';
 import {
   countResumeStyleViolations,
   evaluateResumeStyleRewrite,
@@ -62,8 +62,17 @@ import {
   normalizeJobFacts,
   type JobFactsDto,
 } from './job-facts.util';
-import { evaluateStyleRewrite, lintGeneratedStyle } from './style-lint.util';
-import { GENERATION_SYSTEM_ANCHOR } from './constants';
+import {
+  evaluateShortenRewrite,
+  evaluateStyleRewrite,
+  lintCoverLetterLength,
+  lintGeneratedStyle,
+} from './style-lint.util';
+import {
+  DEFAULT_COVER_LETTER_LENGTH,
+  GENERATION_SYSTEM_ANCHOR,
+  resolveCoverLetterBudget,
+} from './constants';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
 // Type for progress callback function
@@ -686,6 +695,7 @@ export class ApplicationsService {
           applicationStatus: ApplicationTrackingStatus.CREATED,
           status: ApplicationStatus.PENDING,
           notes: dto.notes,
+          coverLetterLength: dto.coverLetterLength || DEFAULT_COVER_LETTER_LENGTH,
           resumeText: JSON.stringify(resumeTemplate),
         },
         include: {
@@ -713,6 +723,8 @@ export class ApplicationsService {
     this.logger.log(`Creating application with single-LLM pipeline for user ${userId}`);
 
     const shouldGenerateCoverLetter = dto.generateCoverLetter !== false;
+    const coverLetterLength = dto.coverLetterLength || DEFAULT_COVER_LETTER_LENGTH;
+    const coverLetterBudget = resolveCoverLetterBudget(coverLetterLength);
 
     // 1. Verify job posting exists
     const jobPosting = await this.prisma.jobPosting.findUnique({
@@ -796,6 +808,8 @@ export class ApplicationsService {
         // Original content language — the export path uses it to decide
         // whether a cross-language translation is needed.
         sourceLanguage: detectedLanguage,
+        // Length preference — regeneration paths honor the same budget.
+        coverLetterLength,
       };
 
       if (existingApplication) {
@@ -875,6 +889,7 @@ export class ApplicationsService {
               jobFacts: normalizeJobFacts(jobFacts),
               salutation: buildSalutation(jobFacts, detectedLanguage),
               language: detectedLanguage,
+              lengthBudget: coverLetterBudget,
               userId,
               jobPostingId: jobPosting.id,
             },
@@ -977,6 +992,7 @@ export class ApplicationsService {
             jobPosting,
             tailoredProfile,
             detectedLanguage,
+            coverLetterBudget,
             userId,
           )
         : coverLetterMarkdown;
@@ -989,6 +1005,7 @@ export class ApplicationsService {
             jobPosting,
             tailoredProfile,
             detectedLanguage,
+            coverLetterBudget,
             userId,
           )
         : editedCoverLetterMarkdown;
@@ -1007,22 +1024,39 @@ export class ApplicationsService {
           )
         : wovenCoverLetterMarkdown;
 
+      // Length governor: if the letter still overruns its word budget after the
+      // last content-modifying pass, one guarded shorten pass cuts redundancy
+      // and filler. Fires only on a measured overrun; falls back to the
+      // pre-shorten draft on any guard failure (see runLengthGovernorPass).
+      const governedCoverLetterMarkdown = shouldGenerateCoverLetter
+        ? await this.runLengthGovernorPass(
+            polishedCoverLetterMarkdown,
+            atsKeywords,
+            tailoredProfile,
+            detectedLanguage,
+            coverLetterBudget,
+            userId,
+            jobPosting.id,
+          )
+        : polishedCoverLetterMarkdown;
+
       // Grounding check (#7): flag any fabricated impact numbers (non-destructive).
       this.runGroundingCheck(
         application.id,
-        { resume: JSON.stringify(resumeJson), coverLetter: polishedCoverLetterMarkdown },
+        { resume: JSON.stringify(resumeJson), coverLetter: governedCoverLetterMarkdown },
         profile,
       );
 
       // Style check: flag forbidden AI clichés + German hedging (non-destructive).
       this.runStyleCheck(
         application.id,
-        { resume: JSON.stringify(resumeJson), coverLetter: polishedCoverLetterMarkdown },
+        { resume: JSON.stringify(resumeJson), coverLetter: governedCoverLetterMarkdown },
         detectedLanguage,
+        coverLetterBudget,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = this.convertCoverLetterToHtml(polishedCoverLetterMarkdown);
+      const coverLetterHtml = this.convertCoverLetterToHtml(governedCoverLetterMarkdown);
 
       const updatedApplication = await this.prisma.application.update({
         where: { id: application.id },
@@ -1107,6 +1141,7 @@ export class ApplicationsService {
 
     const jobPosting = application.jobPosting;
     const shouldGenerateCoverLetter = application.coverLetterText !== null; // Infer from initial state
+    const coverLetterBudget = resolveCoverLetterBudget(application.coverLetterLength);
 
     // 2. Detect language
     const language = jobPosting.language || this.detectLanguage(jobPosting.fullText) || 'en';
@@ -1155,6 +1190,7 @@ export class ApplicationsService {
           jobFacts: normalizeJobFacts(jobFacts),
           salutation: buildSalutation(jobFacts, language),
           language,
+          lengthBudget: coverLetterBudget,
           userId,
           jobPostingId: jobPosting.id,
         });
@@ -1227,6 +1263,7 @@ export class ApplicationsService {
             jobPosting,
             tailoredProfile,
             language,
+            coverLetterBudget,
             userId,
           )
         : coverLetterMarkdown;
@@ -1240,19 +1277,34 @@ export class ApplicationsService {
             jobPosting,
             tailoredProfile,
             language,
+            coverLetterBudget,
             userId,
           )
         : editedCoverLetter;
 
+      // Length governor: one guarded shorten pass when the letter overruns its
+      // word budget after the last content-modifying pass (graceful fallback).
+      const governedCoverLetter = shouldGenerateCoverLetter
+        ? await this.runLengthGovernorPass(
+            wovenCoverLetter,
+            atsKeywords,
+            tailoredProfile,
+            language,
+            coverLetterBudget,
+            userId,
+            jobPosting.id,
+          )
+        : wovenCoverLetter;
+
       // Grounding check (#7): flag fabricated impact numbers (non-destructive).
       this.runGroundingCheck(
         applicationId,
-        { resume: resumeMarkdown, coverLetter: wovenCoverLetter },
+        { resume: resumeMarkdown, coverLetter: governedCoverLetter },
         profile,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = this.convertCoverLetterToHtml(wovenCoverLetter);
+      const coverLetterHtml = this.convertCoverLetterToHtml(governedCoverLetter);
 
       emitProgress(95, 'Speichere Ergebnisse...');
       const updated = await this.prisma.application.update({
@@ -1516,6 +1568,7 @@ export class ApplicationsService {
     jobPosting: JobPosting,
     tailoredProfile: TailoredProfileDto,
     language: string,
+    lengthBudget: number,
     userId: string,
   ): Promise<string | null> {
     if (!draft || draft.trim() === '') return draft;
@@ -1528,6 +1581,7 @@ export class ApplicationsService {
           job: this.serializeJobPosting(jobPosting),
           tailoredProfile,
           language,
+          lengthBudget,
           userId,
           jobPostingId: jobPosting.id,
         },
@@ -1570,6 +1624,7 @@ export class ApplicationsService {
     jobPosting: JobPosting,
     tailoredProfile: TailoredProfileDto,
     language: string,
+    lengthBudget: number,
     userId: string,
   ): Promise<string | null> {
     if (!draft || draft.trim() === '') return draft;
@@ -1590,6 +1645,7 @@ export class ApplicationsService {
           keywords,
           tailoredProfile,
           language,
+          lengthBudget,
           userId,
           jobPostingId: jobPosting.id,
         },
@@ -1663,6 +1719,102 @@ export class ApplicationsService {
       return rewritten;
     } catch (error) {
       this.logger.warn(`Style rewrite failed; keeping pre-rewrite draft: ${error.message}`);
+      return draft;
+    }
+  }
+
+  /**
+   * Length governor — one guarded shorten pass that fires ONLY when the
+   * deterministic length lint reports the finished cover letter over its word
+   * budget (beyond tolerance). It runs after the last content-modifying pass so
+   * nothing can re-inflate the letter afterwards, mirroring the style-rewrite
+   * "teeth" pattern: detect deterministically → surgical LLM fix → deterministic
+   * acceptance guard → graceful fallback.
+   *
+   * Never truncates mechanically and can never ship a worse letter:
+   * - Skips the LLM call entirely when the letter is within budget.
+   * - Carries the `GENERATION_SYSTEM_ANCHOR` so the shorten can't fabricate.
+   * - Accepts the rewrite ONLY when `evaluateShortenRewrite` confirms it lands
+   *   within budget, isn't gutted, keeps the salutation line verbatim, doesn't
+   *   regress the style-violation count, and retains every priority-1
+   *   profile-supported keyword present in the draft (the weave pass's work);
+   *   otherwise keeps the pre-shorten draft. Never throws.
+   */
+  private async runLengthGovernorPass(
+    draft: string | null,
+    atsKeywords: unknown,
+    tailoredProfile: TailoredProfileDto,
+    language: string,
+    lengthBudget: number,
+    userId: string,
+    jobPostingId: string,
+  ): Promise<string | null> {
+    if (!draft || draft.trim() === '') return draft;
+
+    const lint = lintCoverLetterLength(draft, lengthBudget, language);
+    if (!lint.overrun) {
+      this.logger.debug(
+        `Length governor: cover letter within budget (${lint.words}/${lint.budget} words); skipping`,
+      );
+      return draft;
+    }
+
+    // The priority-1 profile-supported keywords already present in the draft
+    // must survive the shortening — never undo the keyword weave (#6).
+    // `atsKeywords` may arrive as a typed matcher result or a Prisma Json
+    // value, so narrow structurally instead of trusting the shape.
+    const hardSkillsRaw =
+      atsKeywords && typeof atsKeywords === 'object'
+        ? (atsKeywords as { hard_skills?: unknown }).hard_skills
+        : undefined;
+    const mustKeepKeywords: string[] = (Array.isArray(hardSkillsRaw) ? hardSkillsRaw : [])
+      .filter((kw): kw is { keyword: string; priority?: unknown; source?: unknown } => {
+        if (!kw || typeof kw !== 'object') return false;
+        const candidate = kw as { keyword?: unknown; priority?: unknown; source?: unknown };
+        return (
+          candidate.priority === 1 &&
+          candidate.source === 'both' &&
+          typeof candidate.keyword === 'string' &&
+          isKeywordPresent(draft, candidate.keyword)
+        );
+      })
+      .map((kw) => kw.keyword);
+
+    try {
+      const shortened = await this.llmService.callText(
+        'v1/shorten-cover-letter.md',
+        {
+          draft,
+          lengthBudget,
+          currentWords: lint.words,
+          tailoredProfile,
+          language,
+          userId,
+          jobPostingId,
+        },
+        { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
+      );
+
+      const decision = evaluateShortenRewrite(
+        draft,
+        shortened,
+        lengthBudget,
+        language,
+        mustKeepKeywords,
+      );
+      if (!decision.accept) {
+        this.logger.warn(
+          `Length governor rejected (${decision.reason}, ${decision.wordsBefore}→${decision.wordsAfter} words, budget ${lengthBudget}); keeping pre-shorten draft`,
+        );
+        return draft;
+      }
+
+      this.logger.log(
+        `Length governor applied (${decision.wordsBefore}→${decision.wordsAfter} words, budget ${lengthBudget})`,
+      );
+      return shortened;
+    } catch (error) {
+      this.logger.warn(`Length governor failed; keeping pre-shorten draft: ${error.message}`);
       return draft;
     }
   }
@@ -1758,13 +1910,15 @@ export class ApplicationsService {
   /**
    * Style check — deterministic, non-destructive. Logs a warning when the
    * generated documents contain forbidden AI-style clichés or (for German)
-   * Konjunktiv/hedging that the prompts explicitly ban. Detection only; the
-   * text is never altered here. Never throws. See `style-lint.util.ts`.
+   * Konjunktiv/hedging that the prompts explicitly ban, and — when a word
+   * budget is provided — when the cover letter overruns it. Detection only;
+   * the text is never altered here. Never throws. See `style-lint.util.ts`.
    */
   private runStyleCheck(
     applicationId: string,
     generated: { resume?: string | null; coverLetter?: string | null },
     language: string,
+    coverLetterBudget?: number,
   ): void {
     try {
       const cover = lintGeneratedStyle(generated.coverLetter, language);
@@ -1779,6 +1933,20 @@ export class ApplicationsService {
         );
       } else {
         this.logger.debug(`Style check (application ${applicationId}): clean`);
+      }
+
+      if (coverLetterBudget && generated.coverLetter) {
+        const length = lintCoverLetterLength(generated.coverLetter, coverLetterBudget, language);
+        if (length.overrun) {
+          const overrunPct = Math.round(((length.words - length.budget) / length.budget) * 100);
+          this.logger.warn(
+            `Length check (application ${applicationId}): ${length.words} words vs budget ${length.budget} (+${overrunPct}%) — severity: ${length.severity}`,
+          );
+        } else {
+          this.logger.debug(
+            `Length check (application ${applicationId}): ${length.words}/${length.budget} words — ok`,
+          );
+        }
       }
     } catch (error) {
       this.logger.warn(`Style check failed for application ${applicationId}: ${error.message}`);
@@ -2288,6 +2456,7 @@ export class ApplicationsService {
     else if (!content || dto.regenerate) {
       this.logger.log('Regenerating cover letter via v1 pipeline prompt');
       const language = jobPosting.language || this.detectLanguage(jobPosting.fullText) || 'en';
+      const lengthBudget = resolveCoverLetterBudget(application.coverLetterLength);
       const tailoredProfile = mapStoredResumeToTailoredProfile(resume, jobPosting);
       const jobFacts = await this.extractJobFacts(jobPosting, language, userId);
       const markdown = await this.llmService.callText('v1/cover-letter.md', {
@@ -2296,10 +2465,22 @@ export class ApplicationsService {
         jobFacts: normalizeJobFacts(jobFacts),
         salutation: buildSalutation(jobFacts, language),
         language,
+        lengthBudget,
         userId,
         jobPostingId: jobPosting.id,
       });
-      content = this.convertCoverLetterToHtml(markdown) ?? markdown;
+      // Length governor: same guarded shorten pass as the generation pipelines,
+      // so edit-mode regeneration honors the stored length preference too.
+      const governed = await this.runLengthGovernorPass(
+        markdown,
+        application.atsKeywords,
+        tailoredProfile,
+        language,
+        lengthBudget,
+        userId,
+        jobPosting.id,
+      );
+      content = this.convertCoverLetterToHtml(governed) ?? governed ?? markdown;
     }
 
     const sanitizedContent = this.sanitizeCoverLetter(content);
@@ -3051,6 +3232,7 @@ export class ApplicationsService {
       resumeTemplateId: application.resumeTemplateId,
       language: application.language,
       sourceLanguage: application.sourceLanguage,
+      coverLetterLength: application.coverLetterLength,
       exportWarning: this.deriveExportWarning(application),
       errorMessage: application.errorMessage,
       createdAt: application.createdAt,

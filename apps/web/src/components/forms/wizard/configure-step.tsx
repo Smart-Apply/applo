@@ -60,6 +60,23 @@ const LANGUAGE_OPTIONS: { value: ApplicationLanguage; label: string }[] = [
   { value: 'en', label: 'English' },
 ];
 
+const COVER_LETTER_LENGTH_OPTIONS: {
+  value: 'kurz' | 'standard';
+  label: string;
+  hint: string;
+}[] = [
+  {
+    value: 'kurz',
+    label: 'Kompakt (~250 Wörter)',
+    hint: 'Auf den Punkt — ideal, wenn die Stelle wenig Anforderungen nennt.',
+  },
+  {
+    value: 'standard',
+    label: 'Standard (~350 Wörter)',
+    hint: 'Die klassische Länge für eine Seite.',
+  },
+];
+
 interface TemplateGroup {
   baseTemplate: Template;
   colorVariants: { id: string; accentColor: string; colorVariantName: string }[];
@@ -129,6 +146,7 @@ export function ConfigureStep({
 
   const [selectedResumeTemplateId, setSelectedResumeTemplateId] = useState<string | null>(null);
   const [generateCoverLetter, setGenerateCoverLetter] = useState(true);
+  const [coverLetterLength, setCoverLetterLength] = useState<'kurz' | 'standard'>('standard');
   const [selectedLanguage, setSelectedLanguage] = useState<ApplicationLanguage>('de');
   const [hoverGroupKey, setHoverGroupKey] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -190,6 +208,7 @@ export function ConfigureStep({
         coverLetterTemplateId: generateCoverLetter ? (effectiveCoverLetterTemplateId || undefined) : undefined,
         resumeTemplateId: effectiveResumeTemplateId || undefined,
         generateCoverLetter,
+        coverLetterLength,
         language: selectedLanguage,
       });
 
@@ -418,13 +437,36 @@ export function ConfigureStep({
                     onCheckedChange={checked => setGenerateCoverLetter(checked === true)}
                     className="mt-0.5 rounded-none border-[#B0B0B0] data-[state=checked]:border-[#1B2A49] data-[state=checked]:bg-[#1B2A49]"
                   />
-                  <div className="grid gap-1 leading-none">
+                  <div className="grid w-full gap-1 leading-none">
                     <Label htmlFor="generateCoverLetter" className="cursor-pointer text-sm font-semibold">
                       Anschreiben generieren
                     </Label>
                     <p className="text-xs leading-relaxed text-muted-foreground">
                       Erstellt ein auf die Stelle zugeschnittenes Anschreiben.
                     </p>
+                    {generateCoverLetter && (
+                      <div
+                        className="mt-2 flex flex-wrap items-center gap-1.5"
+                        onClick={event => event.stopPropagation()}
+                      >
+                        {COVER_LETTER_LENGTH_OPTIONS.map(option => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setCoverLetterLength(option.value)}
+                            title={option.hint}
+                            className={cn(
+                              'inline-flex items-center border px-2.5 py-1.5 font-mono text-[11px] font-semibold tracking-[.04em] transition-colors',
+                              coverLetterLength === option.value
+                                ? 'border-[#1B2A49] bg-[#1B2A49] text-white'
+                                : 'border-[#E0E0E0] bg-white text-[#6B6969] hover:bg-[#F5F6F8]',
+                            )}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
