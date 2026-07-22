@@ -3,6 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { toastSuccess, toastError } from '@/lib/toast';
 import type { Profile, UpdateProfileDto } from '@/types';
+import { useEffect, useRef } from 'react';
+
+function deferRevokeObjectUrl(url: string) {
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 0);
+}
 
 /**
  * Hook to fetch user profile
@@ -91,20 +98,29 @@ export function useUpdateProfile() {
  */
 export function useProfilePhoto(enabled = true) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const queryClient = useQueryClient();
+  const currentPhotoUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (currentPhotoUrlRef.current) {
+        deferRevokeObjectUrl(currentPhotoUrlRef.current);
+        currentPhotoUrlRef.current = null;
+      }
+    };
+  }, []);
 
   return useQuery<string | null>({
     queryKey: ['profile', 'photo'],
     queryFn: async () => {
       const blob = await api.profile.getPhotoBlob();
-      const nextUrl = blob ? URL.createObjectURL(blob) : null;
-
-      const previousUrl = queryClient.getQueryData<string | null>(['profile', 'photo']);
+      return blob ? URL.createObjectURL(blob) : null;
+    },
+    onSuccess: (nextUrl) => {
+      const previousUrl = currentPhotoUrlRef.current;
       if (previousUrl && previousUrl !== nextUrl) {
-        URL.revokeObjectURL(previousUrl);
+        deferRevokeObjectUrl(previousUrl);
       }
-
-      return nextUrl;
+      currentPhotoUrlRef.current = nextUrl;
     },
     enabled: isAuthenticated && enabled,
     staleTime: Infinity,
@@ -142,6 +158,10 @@ export function useDeleteProfilePhoto() {
     mutationFn: () => api.profile.deletePhoto(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      const previousPhotoUrl = queryClient.getQueryData<string | null>(['profile', 'photo']);
+      if (previousPhotoUrl) {
+        deferRevokeObjectUrl(previousPhotoUrl);
+      }
       queryClient.setQueryData(['profile', 'photo'], null);
       toastSuccess('Bewerbungsfoto entfernt');
     },
