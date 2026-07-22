@@ -13,6 +13,7 @@ import {
 } from '../../applications/translation/translation.service';
 import { localizeStoredResumeDates } from '../../applications/resume-date-localizer.util';
 import { calculateContentHash } from '../../applications/utils/translation.util';
+import { normalizeTemplateSettings } from '../../pdf-v2/design-tokens';
 import { Job } from '../interfaces/queue.interface';
 import type { ResumeTemplateData } from '../../pdf-v2/template-data';
 
@@ -206,8 +207,11 @@ export class ApplicationProcessor {
       const resumePdf = await this.pdfService.generateResumePDF(
         resumeDataWithLanguage,
         resumeTemplateId || undefined,
-        // atsOptimized false: use DB template; settings: per-application design tuning
-        { atsOptimized: false, settings: application.templateSettings },
+        {
+          atsOptimized: false, // Use DB template instead of filesystem template
+          settings: application.templateSettings,
+          photoDataUri: await this.resolveProfilePhoto(application),
+        },
       );
 
       // 5. Upload resume to Storage
@@ -388,6 +392,40 @@ export class ApplicationProcessor {
     } catch (error) {
       this.logger.error(`Failed to resolve template: ${error.message}`);
       return templateId; // Fallback to original
+    }
+  }
+
+  /**
+   * Resolve the Bewerbungsfoto for the résumé render: only when the
+   * application explicitly enabled `templateSettings.showPhoto` AND the
+   * profile has a stored photo. Returned as a data URI so react-pdf's
+   * `<Image>` needs no network/filesystem access at render time.
+   * Best-effort — a missing/broken photo never fails the export.
+   */
+  private async resolveProfilePhoto(application: {
+    userId: string;
+    templateSettings: unknown;
+  }): Promise<string | undefined> {
+    const settings = normalizeTemplateSettings(application.templateSettings);
+    if (!settings?.showPhoto) return undefined;
+
+    try {
+      const profile = await this.prisma.profile.findUnique({
+        where: { userId: application.userId },
+        select: { photoKey: true },
+      });
+      if (!profile?.photoKey) {
+        this.logger.warn(
+          `showPhoto enabled but no profile photo uploaded (user ${application.userId}) — rendering without photo`,
+        );
+        return undefined;
+      }
+      const buffer = await this.storageService.getFile(profile.photoKey);
+      const mime = profile.photoKey.endsWith('.png') ? 'image/png' : 'image/jpeg';
+      return `data:${mime};base64,${buffer.toString('base64')}`;
+    } catch (error) {
+      this.logger.warn(`Failed to load profile photo: ${error.message} — rendering without photo`);
+      return undefined;
     }
   }
 

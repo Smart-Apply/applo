@@ -561,6 +561,11 @@ h1, h2, h3, .font-heading {
   .rd--density-relaxed .rd-li { margin-bottom: 7px; line-height: 1.65; }
   .rd--density-relaxed .rd-p { line-height: 1.8; }
 
+  /* ---- Bewerbungsfoto mimic (templateSettings.showPhoto) ---- */
+  .rd .rd-head { position: relative; }
+  .rd .rd-photo { position: absolute; right: 0; top: 0; width: 84px; height: 112px; object-fit: cover; border: 1px solid #e0e0e0; }
+  .rd .rd-photo-side { display: block; width: 110px; height: 147px; object-fit: cover; margin: 0 auto 14px; border: 1px solid rgba(0, 0, 0, 0.08); }
+
   /* classic-ats — centered sans header, accent name, ruled section titles */
   .rd--classic { padding: 40px 48px 44px; }
   .rd--classic .rd-head { text-align: center; margin-bottom: 18px; }

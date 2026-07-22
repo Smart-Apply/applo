@@ -3130,6 +3130,7 @@ export class ApplicationsService {
     if (dto.fontFamily !== undefined) merged.fontFamily = dto.fontFamily;
     if (dto.fontScale !== undefined) merged.fontScale = dto.fontScale;
     if (dto.density !== undefined) merged.density = dto.density;
+    if (dto.showPhoto !== undefined) merged.showPhoto = dto.showPhoto;
     if (dto.accentColor !== undefined) {
       if (dto.accentColor === null) {
         delete merged.accentColor;

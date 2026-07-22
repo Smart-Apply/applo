@@ -25,6 +25,12 @@ export interface ReactPdfTemplateMeta {
   density?: string;
   /** Curated font family ('default' | 'lato' | …); honored once fonts are bundled. */
   fontFamily?: string;
+  /**
+   * Bewerbungsfoto as a data URI (resolved server-side from the profile's
+   * stored photo, only when the application enabled `showPhoto`). Rendered
+   * by the résumé templates via react-pdf `<Image>`.
+   */
+  photoUrl?: string;
 }
 
 export interface ReactPdfResumeProps {

@@ -57,7 +57,7 @@ export class ReactPdfRendererService {
   async renderResume(
     data: ResumeTemplateData,
     templateId: string | undefined,
-    options: { atsOptimized?: boolean; settings?: unknown } = {},
+    options: { atsOptimized?: boolean; settings?: unknown; photoDataUri?: string } = {},
   ): Promise<Buffer | undefined> {
     const meta = await this.loadTemplateMeta(templateId);
     if (!meta) return undefined;
@@ -110,7 +110,7 @@ export class ReactPdfRendererService {
 
   private buildMeta(
     meta: DbTemplateMeta,
-    options: { atsOptimized?: boolean; settings?: unknown },
+    options: { atsOptimized?: boolean; settings?: unknown; photoDataUri?: string },
   ): ReactPdfTemplateMeta {
     // Per-application design settings tune the DB row's design. Stored as
     // Prisma Json — normalize defensively so out-of-enum values can never
@@ -125,6 +125,9 @@ export class ReactPdfRendererService {
       fontScale: settings?.fontScale,
       density: settings?.density,
       fontFamily: settings?.fontFamily,
+      // The caller resolves the photo only when the application enabled
+      // showPhoto — double-gate here so a stray photo can never render.
+      photoUrl: settings?.showPhoto ? options.photoDataUri : undefined,
     };
   }
 

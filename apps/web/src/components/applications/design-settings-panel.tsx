@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Loader2, Palette, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -12,8 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useUpdateTemplateSettings } from '@/hooks/use-applications';
+import { useProfile } from '@/hooks/use-profile';
 import { cn } from '@/lib/utils';
 import type {
   TemplateDensity,
@@ -76,11 +79,14 @@ export function DesignSettingsPanel({
   // value locally and PATCH once on blur (picker closed).
   const [draftColor, setDraftColor] = useState<string | null>(null);
   const updateSettings = useUpdateTemplateSettings(applicationId);
+  const { data: profile } = useProfile();
+  const hasProfilePhoto = Boolean(profile?.hasPhoto);
 
   const fontScale = settings?.fontScale ?? 'md';
   const density = settings?.density ?? 'normal';
   const fontFamily = settings?.fontFamily ?? 'default';
   const accentOverride = settings?.accentColor ?? null;
+  const showPhoto = Boolean(settings?.showPhoto);
 
   const isBusy = updateSettings.isPending;
 
@@ -244,6 +250,36 @@ export function DesignSettingsPanel({
                 />
               </label>
             </div>
+          </div>
+
+          <div className="space-y-1.5 border-t border-[#E0E0E0] pt-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-[.05em] text-[#6b6969]">
+                  Bewerbungsfoto
+                </Label>
+                {!hasProfilePhoto && (
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    Lade zuerst ein Foto in deinem{' '}
+                    <Link href="/profile" className="font-semibold text-[#5581c7] hover:underline">
+                      Profil
+                    </Link>{' '}
+                    hoch.
+                  </p>
+                )}
+              </div>
+              <Switch
+                checked={showPhoto}
+                disabled={isBusy || (!hasProfilePhoto && !showPhoto)}
+                onCheckedChange={(checked: boolean) => updateSettings.mutate({ showPhoto: checked })}
+                aria-label="Bewerbungsfoto im Lebenslauf anzeigen"
+              />
+            </div>
+            {showPhoto && (
+              <p className="border-l-[3px] border-l-[#92400e] bg-[#fef3c7] px-2.5 py-1.5 text-xs leading-relaxed text-[#92400e]">
+                Für ATS-Systeme und Bewerbungen außerhalb der DACH-Region empfohlen: ohne Foto.
+              </p>
+            )}
           </div>
         </div>
       </PopoverContent>

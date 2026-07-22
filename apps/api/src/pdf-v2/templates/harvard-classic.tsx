@@ -108,6 +108,16 @@ const buildStyles = (
     header: {
       textAlign: 'center',
       marginBottom: SP.xs,
+      position: 'relative',
+    },
+    // ── Bewerbungsfoto (optional, meta.photoUrl) — 3:4 portrait, top-right ──
+    headerPhoto: {
+      position: 'absolute',
+      right: 0,
+      top: 0,
+      width: 60,
+      height: 80,
+      objectFit: 'cover',
     },
     candidateName: {
       fontSize: FS.name,
@@ -332,7 +342,7 @@ function buildCoverLetterContactParts(data: ReactPdfCoverLetterProps['data']): C
 
 export const HarvardClassicFactory: ReactPdfTemplateFactory = {
   resume: (rp) => {
-    const { Document, Page, View, Text } = rp;
+    const { Document, Page, View, Text, Image } = rp;
     const ContactInfo = ContactInfoFactory(rp);
 
     return function HarvardClassicResume({ data, meta }: ReactPdfResumeProps): ReactElement {
@@ -653,6 +663,9 @@ export const HarvardClassicFactory: ReactPdfTemplateFactory = {
           createElement(
             View,
             { style: styles.header },
+            meta.photoUrl
+              ? createElement(Image, { src: meta.photoUrl, style: styles.headerPhoto })
+              : null,
             createElement(Text, { style: styles.candidateName }, data.candidateName),
             createElement(View, { style: styles.headerDivider }),
           ),

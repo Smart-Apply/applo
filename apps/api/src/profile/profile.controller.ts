@@ -3,14 +3,17 @@ import {
   Get,
   Put,
   Post,
+  Delete,
   Body,
   UseGuards,
   Req,
+  Res,
   UseInterceptors,
   UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -21,7 +24,7 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -125,5 +128,81 @@ export class ProfileController {
     file: Express.Multer.File,
   ): Promise<ExtractedProfileDto> {
     return this.resumeParserService.parseResume(file.buffer, file.mimetype);
+  }
+
+  @Post('photo')
+  @UseInterceptors(FileInterceptor('file', { storage: undefined })) // Memory storage only
+  @ApiOperation({
+    summary: 'Bewerbungsfoto hochladen',
+    description:
+      'Lädt das optionale Bewerbungsfoto hoch (JPEG/PNG, max. 2 MB) bzw. ersetzt das vorhandene. ' +
+      'Das Foto erscheint nur in Lebensläufen, bei denen es explizit aktiviert wurde ' +
+      '(templateSettings.showPhoto).',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Bewerbungsfoto (JPEG oder PNG, max. 2 MB)',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Foto gespeichert' })
+  @ApiResponse({ status: 400, description: 'Ungültiger Dateityp oder Datei zu groß' })
+  async uploadPhoto(
+    @CurrentUser('id') userId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 2 * 1024 * 1024, // 2MB
+            message: 'Das Foto ist zu groß. Bitte lade ein Bild mit maximal 2 MB hoch.',
+          }),
+          new FileTypeValidator({ fileType: /^image\/(jpeg|png)$/ }),
+        ],
+        fileIsRequired: true,
+        errorHttpStatusCode: 400,
+      }),
+    )
+    file: Express.Multer.File,
+  ): Promise<{ hasPhoto: boolean }> {
+    return this.profileService.uploadPhoto(userId, file);
+  }
+
+  @Get('photo')
+  @ApiOperation({
+    summary: 'Bewerbungsfoto abrufen',
+    description: 'Streamt das eigene Bewerbungsfoto (ownership-scoped).',
+  })
+  @ApiResponse({ status: 200, description: 'Bilddaten' })
+  @ApiResponse({ status: 404, description: 'Kein Foto vorhanden' })
+  async getPhoto(
+    @CurrentUser('id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const photo = await this.profileService.getPhoto(userId);
+    res.set({
+      'Content-Type': photo.mimeType,
+      'Content-Length': photo.buffer.length.toString(),
+      // Always revalidate: a replaced photo must show up immediately.
+      'Cache-Control': 'private, no-store',
+    });
+    return new StreamableFile(photo.buffer);
+  }
+
+  @Delete('photo')
+  @ApiOperation({
+    summary: 'Bewerbungsfoto entfernen',
+    description: 'Löscht das Bewerbungsfoto (Storage-Objekt + Referenz). Idempotent.',
+  })
+  @ApiResponse({ status: 200, description: 'Foto entfernt' })
+  async deletePhoto(@CurrentUser('id') userId: string): Promise<{ hasPhoto: boolean }> {
+    return this.profileService.deletePhoto(userId);
   }
 }

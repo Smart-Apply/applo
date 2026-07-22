@@ -83,3 +83,62 @@ export function useUpdateProfile() {
     },
   });
 }
+
+/**
+ * Hook to fetch the Bewerbungsfoto as an object URL for <img> display.
+ * Returns `null` when no photo is uploaded. The object URL is revoked when
+ * a newer photo replaces it (query refetch after upload/delete).
+ */
+export function useProfilePhoto(enabled = true) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  return useQuery<string | null>({
+    queryKey: ['profile', 'photo'],
+    queryFn: async () => {
+      const blob = await api.profile.getPhotoBlob();
+      return blob ? URL.createObjectURL(blob) : null;
+    },
+    enabled: isAuthenticated && enabled,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+}
+
+/**
+ * Hook to upload/replace the Bewerbungsfoto (JPEG/PNG, max. 2 MB).
+ */
+export function useUploadProfilePhoto() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => api.profile.uploadPhoto(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'photo'] });
+      toastSuccess('Bewerbungsfoto gespeichert');
+    },
+    onError: (error: unknown) => {
+      toastError(error, 'Foto konnte nicht hochgeladen werden');
+    },
+  });
+}
+
+/**
+ * Hook to remove the Bewerbungsfoto.
+ */
+export function useDeleteProfilePhoto() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => api.profile.deletePhoto(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.setQueryData(['profile', 'photo'], null);
+      toastSuccess('Bewerbungsfoto entfernt');
+    },
+    onError: (error: unknown) => {
+      toastError(error, 'Foto konnte nicht entfernt werden');
+    },
+  });
+}

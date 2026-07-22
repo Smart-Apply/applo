@@ -250,7 +250,7 @@ recorded baselines live in
 | Model              | Description                                    |
 | ------------------ | ---------------------------------------------- |
 | **User**           | Auth, OAuth identities, 2FA secrets            |
-| **Profile**        | Personal info, contact, summary                |
+| **Profile**        | Personal info, contact, summary, Bewerbungsfoto (storage key) |
 | **Skill**          | Skills with level & user-defined category (categories group the skills section of the generated CV; uncategorized skills render last without a header — the legacy `'General'` default counts as uncategorized) |
 | **Experience**     | Work history                                   |
 | **Education**      | Education history                              |
@@ -393,6 +393,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | POST     | `/auth/2fa/setup`                  | TOTP enrollment                                                             |
 | POST     | `/auth/2fa/verify`                 | TOTP verification                                                           |
 | GET/PUT  | `/profile`                         | Profile (differential)                                                      |
+| POST/GET/DELETE | `/profile/photo`            | Bewerbungsfoto (JPEG/PNG ≤ 2 MB; only rendered when `showPhoto` is enabled) |
 | POST     | `/resume-parser/parse`             | Resume → profile                                                            |
 | GET/POST | `/job-postings`                    | Job CRUD                                                                    |
 | POST     | `/job-postings/parse`              | Parse text/URL/file                                                         |

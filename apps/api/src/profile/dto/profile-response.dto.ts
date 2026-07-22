@@ -146,6 +146,9 @@ export class ProfileResponseDto {
   @ApiProperty({ required: false })
   summary?: string;
 
+  @ApiProperty({ description: 'Ob ein Bewerbungsfoto hinterlegt ist' })
+  hasPhoto: boolean;
+
   @ApiProperty({ type: [SkillResponseDto] })
   skills: SkillResponseDto[];
 

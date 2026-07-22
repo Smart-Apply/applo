@@ -26,6 +26,12 @@ export interface PdfGenerationOptions {
    */
   settings?: unknown;
   /**
+   * Bewerbungsfoto as a data URI. Resolved by the caller from the profile's
+   * stored photo; the renderer only applies it when the settings enable
+   * `showPhoto`. Résumé rendering only.
+   */
+  photoDataUri?: string;
+  /**
    * Optional metadata. Currently informational only — react-pdf sets
    * basic title/author internally and we no longer post-process with
    * pdf-lib. Kept on the type for API stability.
@@ -74,6 +80,7 @@ export class PdfService {
     const buf = await this.reactPdfRenderer.renderResume(data, templateId, {
       atsOptimized: options.atsOptimized,
       settings: options.settings,
+      photoDataUri: options.photoDataUri,
     });
     if (!buf) {
       throw new Error(

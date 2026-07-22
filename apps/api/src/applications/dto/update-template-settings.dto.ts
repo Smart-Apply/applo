@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString, Matches, ValidateIf } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, Matches, ValidateIf } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -55,4 +55,15 @@ export class UpdateTemplateSettingsDto {
     message: 'accentColor muss ein Hex-Farbwert im Format #rrggbb sein',
   })
   accentColor?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Bewerbungsfoto im Lebenslauf anzeigen (DACH-Konvention). Erfordert ein hochgeladenes ' +
+      'Profil-Foto; für ATS-Systeme und Bewerbungen außerhalb der DACH-Region wird "ohne Foto" ' +
+      'empfohlen.',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  showPhoto?: boolean;
 }

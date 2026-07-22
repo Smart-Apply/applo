@@ -792,6 +792,27 @@ export const api = {
         body: formData,
       });
     },
+
+    uploadPhoto: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return apiRequestFormData<{ hasPhoto: boolean }>('/profile/photo', {
+        method: 'POST',
+        body: formData,
+      });
+    },
+
+    /** Fetch the Bewerbungsfoto as a Blob (object-URL it for <img> display). */
+    getPhotoBlob: async (): Promise<Blob | null> => {
+      const baseUrl = await getApiBaseUrl();
+      const res = await authenticatedFetch(`${baseUrl}/profile/photo`, { method: 'GET' });
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error('Foto konnte nicht geladen werden');
+      return res.blob();
+    },
+
+    deletePhoto: () =>
+      apiRequest<{ hasPhoto: boolean }>('/profile/photo', { method: 'DELETE' }),
   },
 
   // Job Postings
@@ -967,6 +988,7 @@ export const api = {
         density?: TemplateDensity;
         /** null removes the override (template variant color applies again). */
         accentColor?: string | null;
+        showPhoto?: boolean;
       },
     ) =>
       apiRequest<Application>(`/applications/${id}/template-settings`, {

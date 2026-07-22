@@ -3,6 +3,7 @@ import { ProfileService } from '../../profile.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { AuditLoggerService } from '@/common/audit-logger';
 import { KeywordsService } from '@/keywords/keywords.service';
+import { StorageService } from '@/storage/storage.service';
 import { NotFoundWithCode } from '@/common/exceptions/coded-http.exception';
 import { MockHelper } from '../../../../test/helpers/mock.helper';
 
@@ -19,6 +20,11 @@ describe('ProfileService.getProfile (Unit)', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: AuditLoggerService, useValue: { logProfileUpdate: vi.fn() } },
         { provide: KeywordsService, useValue: { extractAndCacheProfileKeywords: vi.fn() } },
+        {
+          // getProfile() never touches storage; only the photo endpoints do.
+          provide: StorageService,
+          useValue: { upload: vi.fn(), getFile: vi.fn(), delete: vi.fn() },
+        },
       ],
     }).compile();
 
