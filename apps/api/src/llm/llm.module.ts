@@ -3,6 +3,7 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 import { LLMService } from './llm.service';
 import { AzureOpenAIProvider } from './providers/azure-openai.provider';
 import { AzureAIFoundryProvider } from './providers/azure-ai-foundry.provider';
+import { MistralProvider } from './providers/mistral.provider';
 import { MockLLMProvider } from './providers/mock.provider';
 import { ConfigService } from '../config/config.service';
 
@@ -18,6 +19,9 @@ import { ConfigService } from '../config/config.service';
         }
         if (provider === 'azure-ai-foundry') {
           return new AzureAIFoundryProvider(httpService, configService);
+        }
+        if (provider === 'mistral') {
+          return new MistralProvider(httpService, configService);
         }
         return new MockLLMProvider();
       },

@@ -19,6 +19,12 @@ export interface GenerateOptions {
   maxTokens?: number;
   systemMessage?: string;
   /**
+   * Per-call model override for per-task routing. Provider-agnostic: a Mistral
+   * model name on La Plateforme, or an Azure deployment name. When unset, the
+   * provider uses its configured default model. See LLMService.resolveTaskModel.
+   */
+  model?: string;
+  /**
    * Azure OpenAI `response_format` for structured outputs (#8).
    * - `{ type: 'json_object' }` — JSON mode: the model must emit syntactically
    *   valid JSON (no code fences, no prose). Requires the word "json" somewhere

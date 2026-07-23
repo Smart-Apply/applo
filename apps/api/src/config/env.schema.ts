@@ -81,7 +81,7 @@ const envSchema = z.object({
   // or 'v1' (latest GA). Legacy dated values (e.g. 2025-01-01-preview) are
   // auto-mapped to 'preview' at call time (see llm/providers/azure-v1-url.util.ts).
   AZURE_OPENAI_API_VERSION: z.string().default('preview'),
-  LLM_PROVIDER: z.enum(['azure-openai', 'azure-ai-foundry', 'mock']).default('mock'),
+  LLM_PROVIDER: z.enum(['azure-openai', 'azure-ai-foundry', 'mistral', 'mock']).default('mock'),
 
   // Voice Interview (Azure OpenAI Realtime API via WebRTC)
   VOICE_PROVIDER: z.enum(['azure-realtime', 'mock']).default('mock'),
@@ -101,6 +101,20 @@ const envSchema = z.object({
   LLM_TEMPERATURE_DEFAULT: z.string().optional(),
   LLM_MAX_TOKENS_DEFAULT: z.string().optional(),
   LOG_LLM_CALLS: z.string().optional(),
+  // Optional cheaper model for the mechanical extraction/classification steps
+  // (per-task routing). Provider-agnostic value passed straight through as the
+  // request `model` (a Mistral model name on La Plateforme, or an Azure
+  // deployment name). Unset = every task uses the default model. Gate a switch
+  // on the json_schema/German-prose A/B eval — see docs/guides/LLM_MODEL_SELECTION.md.
+  LLM_FAST_MODEL: z.string().optional(),
+
+  // Mistral (used when LLM_PROVIDER=mistral) — La Plateforme or Azure Foundry.
+  MISTRAL_ENDPOINT: z.string().default('https://api.mistral.ai/v1'),
+  MISTRAL_API_KEY: z.string().optional(),
+  MISTRAL_MODEL: z.string().default('mistral-large-latest'),
+  // Set ONLY for Azure AI Foundry (Mistral sold by Azure) — La Plateforme
+  // rejects the ?api-version= query param, so leave it unset for direct API use.
+  MISTRAL_API_VERSION: z.string().optional(),
 
   // Azure AI Foundry Agents
   AZURE_AI_FOUNDRY_CV_WRITER_ENDPOINT: z.string().optional(),

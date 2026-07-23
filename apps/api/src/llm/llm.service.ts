@@ -383,6 +383,32 @@ Translated text in ${targetLangName}:`;
   }
 
   /**
+   * Fast-model-eligible templates (per-task routing). These are the mechanical
+   * extraction/classification steps — no candidate-facing prose — so they can
+   * run on a cheaper model without quality risk. Candidate-facing writing
+   * (cover letter, résumé rewrite, editor/style/translation passes) always uses
+   * the default flagship model. Matched with `includes()`, so the `v1/` prefix
+   * and `.md` suffix don't matter (this also covers `ats-keywords-extract`).
+   */
+  private static readonly FAST_MODEL_TEMPLATES = ['ats-keywords', 'job-facts', 'skill-selector'];
+
+  /**
+   * Resolve the model for a task. Returns the configured fast model for the
+   * mechanical extraction steps when LLM_FAST_MODEL is set, otherwise undefined
+   * (the provider then uses its own default model). Provider-agnostic — the value
+   * is passed straight through as the request `model`. Gate a switch on the
+   * json_schema/German-prose A/B eval (docs/guides/LLM_MODEL_SELECTION.md).
+   */
+  private resolveTaskModel(templatePath: string): string | undefined {
+    const fastModel = this.configService.llmFastModel;
+    if (!fastModel) return undefined;
+    const isFastTask = LLMService.FAST_MODEL_TEMPLATES.some((t) => templatePath.includes(t));
+    if (!isFastTask) return undefined;
+    this.logger.debug(`Per-task routing: ${templatePath} → fast model (${fastModel})`);
+    return fastModel;
+  }
+
+  /**
    * Call LLM with template and return raw text response
    * Loads template from prompts/ folder, renders variables, and calls LLM
    *
@@ -422,9 +448,13 @@ Translated text in ${targetLangName}:`;
     // is on. See docs/implementation/PROMPT_CACHING.md.
     const promptCacheKey = this.derivePromptCacheKey(variables);
     const capturing = this.usageContext.getStore() !== undefined;
+    // Per-task model routing: mechanical extraction steps run on the cheaper
+    // LLM_FAST_MODEL when it's set (no-op otherwise).
+    const taskModel = this.resolveTaskModel(templatePath);
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(promptCacheKey ? { promptCacheKey } : {}),
+      ...(taskModel ? { model: taskModel } : {}),
       ...(shouldLog || capturing
         ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
         : {}),
@@ -492,10 +522,14 @@ Translated text in ${targetLangName}:`;
     // LOG_LLM_CALLS is on. See docs/implementation/PROMPT_CACHING.md.
     const promptCacheKey = this.derivePromptCacheKey(variables);
     const capturing = this.usageContext.getStore() !== undefined;
+    // Per-task model routing: mechanical extraction steps run on the cheaper
+    // LLM_FAST_MODEL when it's set (no-op otherwise).
+    const taskModel = this.resolveTaskModel(templatePath);
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(responseFormat ? { responseFormat } : {}),
       ...(promptCacheKey ? { promptCacheKey } : {}),
+      ...(taskModel ? { model: taskModel } : {}),
       ...(shouldLog || capturing
         ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
         : {}),
