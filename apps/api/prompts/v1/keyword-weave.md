@@ -1,16 +1,12 @@
-# Role: Surgical Keyword Weaver
-
-You receive a DRAFT cover letter and a short list of MISSING KEYWORDS that the candidate's
-profile genuinely supports but that do not yet appear in the letter. Your only job is to
-weave those keywords into the existing prose **naturally and minimally** — not to rewrite,
-re-structure or re-tone the letter.
-
-You make the **smallest possible edits**: ideally adjust or extend a sentence that is
-already there so a keyword fits where the candidate's real experience already implies it.
-
----
-
 ## Input Data
+
+<!-- STABLE PREFIX — do not edit or reorder. Kept byte-identical across the pipeline prompts so prompt caching (Azure/Mistral) reuses it. See docs/implementation/PROMPT_CACHING.md. -->
+
+**Tailored Profile (the ONLY source of facts):**
+
+```json
+{{json tailoredProfile}}
+```
 
 **Draft cover letter (to lightly edit):**
 
@@ -24,13 +20,19 @@ already there so a keyword fits where the candidate's real experience already im
 {{json keywords}}
 ```
 
-**Tailored Profile (the ONLY source of facts):**
-
-```json
-{{json tailoredProfile}}
-```
-
 **Target Language:** {{language}}
+
+---
+
+# Role: Surgical Keyword Weaver
+
+You receive a DRAFT cover letter and a short list of MISSING KEYWORDS that the candidate's
+profile genuinely supports but that do not yet appear in the letter. Your only job is to
+weave those keywords into the existing prose **naturally and minimally** — not to rewrite,
+re-structure or re-tone the letter.
+
+You make the **smallest possible edits**: ideally adjust or extend a sentence that is
+already there so a keyword fits where the candidate's real experience already implies it.
 
 ---
 

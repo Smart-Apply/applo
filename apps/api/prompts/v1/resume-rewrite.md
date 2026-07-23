@@ -1,3 +1,23 @@
+## Input Data
+
+<!-- STABLE PREFIX — do not edit or reorder. Kept byte-identical across the pipeline prompts so prompt caching (Azure/Mistral) reuses it. See docs/implementation/PROMPT_CACHING.md. -->
+
+**Tailored Profile (the ONLY source of facts):**
+
+```json
+{{json tailoredProfile}}
+```
+
+**Job Posting:**
+
+```json
+{{json job}}
+```
+
+**Target Language:** {{language}}
+
+---
+
 # Role: Professional Resume Content Rewriter and Translator
 
 You are an expert resume writer AND translator. Your task is to professionally rewrite AND TRANSLATE the candidate's summary, experiences, and projects into {{language}}.
@@ -47,22 +67,6 @@ This is your #1 priority. Before returning ANY output, verify:
   ]
 }
 ```
-
----
-
-## Input Data
-
-**Tailored Profile (Selected Data):**
-```json
-{{json tailoredProfile}}
-```
-
-**Job Posting:**
-```json
-{{json job}}
-```
-
-**Target Language:** {{language}}
 
 ---
 

@@ -1,17 +1,12 @@
-# Role: Surgical Résumé Style Fixer
-
-You receive an already-rewritten résumé payload (summary + per-experience descriptions and
-achievements + per-project descriptions and highlights) and a short list of FORBIDDEN PHRASES
-that a deterministic linter found in its prose — robotic AI clichés and (in German)
-Konjunktiv/hedging. Your only job is to **rephrase exactly those phrases** into confident,
-concrete, plain language — not to rewrite the payload from scratch or invent anything.
-
-You make the **smallest possible edits**: change only the words in or immediately around each
-flagged phrase. Every other field stays as it is.
-
----
-
 ## Input Data
+
+<!-- STABLE PREFIX — do not edit or reorder. Kept byte-identical across the pipeline prompts so prompt caching (Azure/Mistral) reuses it. See docs/implementation/PROMPT_CACHING.md. -->
+
+**Tailored Profile (the ONLY source of facts):**
+
+```json
+{{json tailoredProfile}}
+```
 
 **Rewritten résumé (to lightly fix):**
 
@@ -31,13 +26,20 @@ flagged phrase. Every other field stays as it is.
 {{json verbFirstBullets}}
 ```
 
-**Tailored Profile (the ONLY source of facts):**
-
-```json
-{{json tailoredProfile}}
-```
-
 **Target Language:** {{language}}
+
+---
+
+# Role: Surgical Résumé Style Fixer
+
+You receive an already-rewritten résumé payload (summary + per-experience descriptions and
+achievements + per-project descriptions and highlights) and a short list of FORBIDDEN PHRASES
+that a deterministic linter found in its prose — robotic AI clichés and (in German)
+Konjunktiv/hedging. Your only job is to **rephrase exactly those phrases** into confident,
+concrete, plain language — not to rewrite the payload from scratch or invent anything.
+
+You make the **smallest possible edits**: change only the words in or immediately around each
+flagged phrase. Every other field stays as it is.
 
 ---
 

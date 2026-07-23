@@ -134,7 +134,7 @@ You cannot optimize what you cannot see. Ship token accounting first.
 - [x] `LOG_LLM_CALLS=true` prints a per-application token summary (total in / out / cached).
 - [ ] Baseline captured in the [Changelog](#changelog) (cached ≈ 0 confirmed).
 
-### Phase 1 — Restructure the prompts (the big lever) `[ Status: ⬜ Not started ]`
+### Phase 1 — Restructure the prompts (the big lever) `[ Status: 🚧 In progress — Strategy-B cluster done (8 prompts, byte-identical prefix verified); Strategy-A trio + live cached-token measurement pending ]`
 
 Reorder each live-pipeline prompt to the chosen ordering (Strategy B preamble, or A where
 B does not apply) so the leading ≥1,024 tokens are identical across reuses. Keep the
@@ -148,10 +148,19 @@ semantic content unchanged — only **position** moves.
 - Do **not** change wording, constraints, examples, or output schema.
 
 **Acceptance criteria**
-- [ ] All P1 prompts (live pipeline) reordered; variable `{{...}}` blocks are last.
-- [ ] Serialized profile/job preamble is byte-identical across a run (spot-checked).
-- [ ] `cached_tokens > 0` on calls 2–9 of a single generation.
-- [ ] ≥ 50% of input tokens cached on the hot calls once warm.
+- [x] Strategy-B cluster reordered — the shared `[tailoredProfile(+job)]` block now leads
+  all 8 downstream prompts (`cover-letter`, `resume-rewrite`, `editor-cover-letter`,
+  `editor-resume`, `resume-style-rewrite`, `keyword-weave`, `style-rewrite`,
+  `shorten-cover-letter`); per-call `{{...}}` vars follow the prefix.
+- [ ] Strategy-A trio (`skill-selector`, `job-facts`, `ats-keywords`) reordered — **deferred**:
+  first/parallel calls with only a speculative cross-user win; `job-facts` is likely below the
+  1,024-token floor, and `skill-selector` feeds the whole pipeline (hold for the Phase 3 eval).
+- [x] Preamble is byte-identical across the cluster — verified with `shasum`: `head -9` (through
+  the `tailoredProfile` fence) matches across all 8, and `head -15` (through the `job` block)
+  matches across the 3 cluster-1 prompts. `resume.md` left untouched (not on the live
+  `createWithGeneration` path).
+- [ ] `cached_tokens > 0` on calls 2–9 of a single generation. *(needs a live Azure run)*
+- [ ] ≥ 50% of input tokens cached on the hot calls once warm. *(needs a live Azure run)*
 
 ### Phase 2 — Provider request shape `[ Status: ⬜ Not started ]`
 
@@ -253,6 +262,30 @@ branch. No migration, no state.
 
 _Newest first. Add an entry per PR/branch with the files touched and the measured effect._
 
+- **2026-07-23** — `feat/prompt-caching-phase1-reorder`: **Phase 1 Strategy-B reorder (pure
+  reorder — no semantic change).** Hoisted a byte-identical `## Input Data` prefix —
+  `[tailoredProfile]` (+ `[job]` where the call already carries it) — to the very top of the 8
+  post-skill-selector pipeline prompts, ahead of the `# Role:` header, so Azure/Mistral prompt
+  caching reuses it across the back-to-back generation burst. Per-call volatile vars (`draft`,
+  `jobFacts`, `salutation`, `keywords`, `violations`, `verbFirstBullets`, `rewrittenProfile`,
+  `currentWords`, `lengthBudget`) now follow the shared prefix. Files: cluster-1 `[TP+job]` —
+  [`cover-letter.md`](../../apps/api/prompts/v1/cover-letter.md),
+  [`resume-rewrite.md`](../../apps/api/prompts/v1/resume-rewrite.md),
+  [`editor-cover-letter.md`](../../apps/api/prompts/v1/editor-cover-letter.md); cluster-2 `[TP]`
+  — [`editor-resume.md`](../../apps/api/prompts/v1/editor-resume.md),
+  [`resume-style-rewrite.md`](../../apps/api/prompts/v1/resume-style-rewrite.md),
+  [`keyword-weave.md`](../../apps/api/prompts/v1/keyword-weave.md),
+  [`style-rewrite.md`](../../apps/api/prompts/v1/style-rewrite.md),
+  [`shorten-cover-letter.md`](../../apps/api/prompts/v1/shorten-cover-letter.md). Normalized two
+  labels to the canonical `**Tailored Profile (the ONLY source of facts):**` (was "Selected
+  Data" in cover-letter/resume-rewrite; dropped the redundant "for context, never for
+  additions" note in shorten-cover-letter — its constraint #4 already forbids additions). No
+  TS/pipeline changes (vars already passed; `renderTemplate` is dumb `{{}}` substitution).
+  **Verified** byte-identical prefixes via `shasum` (head-9 across all 8; head-15 across
+  cluster-1) and all `{{...}}` placeholders retained. **Deferred:** the Strategy-A trio (see
+  Phase 1 acceptance) and the live `cached_tokens` measurement — run one real generation with
+  `LOG_LLM_CALLS=true` and paste the `LLM usage summary [...]` line into Phase 0 (no Azure
+  creds were exercised in this change).
 - **2026-07-23** — `chore/llm-token-accounting`: **Phase 0 token accounting shipped**
   (measurement only, no behaviour change). Added `LlmCallUsage` + an optional
   `onUsage` hook to `GenerateOptions`
