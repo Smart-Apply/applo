@@ -29,6 +29,7 @@ import { CheckUsage, RequiresFeature } from '../common/decorators/tier.decorator
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PaginationQueryDto } from '../common/dto';
 import { ApplicationsService } from './applications.service';
+import { LLMService } from '../llm/llm.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ExportApplicationDto } from './dto/export-application.dto';
 import { ApplicationResponseDto } from './dto/application-response.dto';
@@ -52,7 +53,10 @@ import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
 @SkipThrottle() // Applications are called frequently, skip rate limiting
 @Controller('applications')
 export class ApplicationsController {
-  constructor(private readonly applicationsService: ApplicationsService) {}
+  constructor(
+    private readonly applicationsService: ApplicationsService,
+    private readonly llmService: LLMService,
+  ) {}
 
   @Post()
   @UseGuards(EmailVerifiedGuard, UsageLimitGuard)
@@ -110,7 +114,10 @@ export class ApplicationsController {
     @CurrentUser() user: any,
     @Body() dto: CreateApplicationDto,
   ): Promise<ApplicationResponseDto> {
-    return this.applicationsService.createWithGeneration(user.id, dto);
+    // Wrapped for prompt-caching token measurement (no-op unless LOG_LLM_CALLS).
+    return this.llmService.runWithUsageTracking('create-with-generation', () =>
+      this.applicationsService.createWithGeneration(user.id, dto),
+    );
   }
 
   @Post(':id/regenerate-single-pipeline')
@@ -130,7 +137,10 @@ export class ApplicationsController {
     @CurrentUser() user: any,
     @Param('id') id: string,
   ): Promise<ApplicationResponseDto> {
-    return this.applicationsService.generateWithSinglePipeline(id, user.id);
+    // Wrapped for prompt-caching token measurement (no-op unless LOG_LLM_CALLS).
+    return this.llmService.runWithUsageTracking(`regenerate-single-pipeline:${id}`, () =>
+      this.applicationsService.generateWithSinglePipeline(id, user.id),
+    );
   }
 
   @Post(':id/regenerate')

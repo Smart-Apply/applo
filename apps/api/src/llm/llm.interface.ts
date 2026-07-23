@@ -29,6 +29,13 @@ export interface GenerateOptions {
    * Providers that don't support it (mock) ignore this field.
    */
   responseFormat?: ResponseFormat;
+  /**
+   * Optional usage sink invoked after a successful call with normalized token
+   * usage (incl. cached input tokens). Used only by the prompt-caching
+   * measurement (LOG_LLM_CALLS) — no-op in the hot path when unset. See
+   * docs/implementation/PROMPT_CACHING.md (Phase 0).
+   */
+  onUsage?: (usage: LlmCallUsage) => void;
 }
 
 export type ResponseFormat =
@@ -41,3 +48,15 @@ export type ResponseFormat =
         schema: Record<string, unknown>;
       };
     };
+
+/**
+ * Normalized per-call token usage, provider-agnostic. `cachedTokens` is the
+ * portion of `promptTokens` served from the provider's automatic prompt cache
+ * (Azure: `usage.prompt_tokens_details.cached_tokens`). Consumed by the
+ * prompt-caching measurement — see docs/implementation/PROMPT_CACHING.md.
+ */
+export interface LlmCallUsage {
+  promptTokens: number;
+  completionTokens: number;
+  cachedTokens: number;
+}

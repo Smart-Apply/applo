@@ -2,8 +2,22 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '../../config/config.service';
-import { LLMProvider, GenerateOptions } from '../llm.interface';
+import { LLMProvider, GenerateOptions, LlmCallUsage } from '../llm.interface';
 import { buildV1ChatCompletionsUrl } from './azure-v1-url.util';
+
+/**
+ * Minimal shape of the Azure `chat/completions` response we consume. Typing it
+ * (vs `any`) lets us read `usage.prompt_tokens_details.cached_tokens` for the
+ * prompt-caching measurement without unsafe-any access.
+ */
+interface ChatCompletionResponse {
+  choices?: Array<{ message?: { content?: string } }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    prompt_tokens_details?: { cached_tokens?: number };
+  };
+}
 
 @Injectable()
 export class AzureOpenAIProvider implements LLMProvider {
@@ -64,7 +78,7 @@ export class AzureOpenAIProvider implements LLMProvider {
 
     try {
       const response = await firstValueFrom(
-        this.httpService.post(url, requestBody, {
+        this.httpService.post<ChatCompletionResponse>(url, requestBody, {
           headers: {
             'api-key': this.apiKey,
             'Content-Type': 'application/json',
@@ -72,10 +86,24 @@ export class AzureOpenAIProvider implements LLMProvider {
         }),
       );
 
-      const content = response.data.choices[0]?.message?.content;
+      const content = response.data.choices?.[0]?.message?.content;
 
       if (!content) {
         throw new Error('No content in OpenAI response');
+      }
+
+      // Report normalized token usage (incl. cached input tokens from Azure's
+      // automatic prompt cache) for the prompt-caching measurement. Best-effort:
+      // usage accounting must never break generation. See
+      // docs/implementation/PROMPT_CACHING.md (Phase 0).
+      if (options?.onUsage && response.data.usage) {
+        const usage = response.data.usage;
+        const normalized: LlmCallUsage = {
+          promptTokens: usage.prompt_tokens ?? 0,
+          completionTokens: usage.completion_tokens ?? 0,
+          cachedTokens: usage.prompt_tokens_details?.cached_tokens ?? 0,
+        };
+        options.onUsage(normalized);
       }
 
       this.logger.log('Successfully generated text with Azure OpenAI');

@@ -1,16 +1,30 @@
 import { Injectable, Inject, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { AsyncLocalStorage } from 'async_hooks';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import CircuitBreaker from 'opossum';
-import { LLMProvider } from './llm.interface';
+import { LLMProvider, GenerateOptions, LlmCallUsage } from './llm.interface';
 import { ConfigService } from '../config/config.service';
 import { stripClosingPhrase } from '../common/services/html-sanitizer';
 import { resolveResponseFormat } from './schemas/v1-schemas';
+
+/**
+ * Per-request token-usage accumulator, populated across all LLM calls made
+ * within a runWithUsageTracking scope (via AsyncLocalStorage). Measurement
+ * scaffolding for prompt caching — see docs/implementation/PROMPT_CACHING.md.
+ */
+interface UsageAccumulator {
+  calls: number;
+  promptTokens: number;
+  completionTokens: number;
+  cachedTokens: number;
+}
 
 @Injectable()
 export class LLMService {
   private readonly logger = new Logger(LLMService.name);
   private readonly circuitBreaker: CircuitBreaker<[string, any?], string>;
+  private readonly usageContext = new AsyncLocalStorage<UsageAccumulator>();
 
   constructor(
     @Inject('LLM_PROVIDER')
@@ -241,6 +255,61 @@ Translated text in ${targetLangName}:`;
   }
 
   /**
+   * Run `fn` inside a token-usage accounting scope. Every callText/callJson made
+   * within it (including across awaited sub-services) is aggregated via
+   * AsyncLocalStorage, and a single summary line is logged when it completes.
+   * No-op passthrough unless LOG_LLM_CALLS is on, so the hot path is untouched
+   * in normal operation. Baseline-measurement scaffolding for prompt caching —
+   * see docs/implementation/PROMPT_CACHING.md (Phase 0).
+   */
+  runWithUsageTracking<T>(label: string, fn: () => Promise<T>): Promise<T> {
+    if (process.env.LOG_LLM_CALLS !== 'true') {
+      return fn();
+    }
+
+    const acc: UsageAccumulator = {
+      calls: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      cachedTokens: 0,
+    };
+
+    return this.usageContext.run(acc, async () => {
+      try {
+        return await fn();
+      } finally {
+        const cachedPct =
+          acc.promptTokens > 0 ? Math.round((acc.cachedTokens / acc.promptTokens) * 100) : 0;
+        this.logger.log(
+          `LLM usage summary [${label}]: calls=${acc.calls} in=${acc.promptTokens} out=${acc.completionTokens} cached=${acc.cachedTokens} (${cachedPct}%)`,
+        );
+      }
+    });
+  }
+
+  /**
+   * Record token usage for a single LLM call: log a per-call line (incl. cached
+   * input tokens) and, when inside a runWithUsageTracking scope, add it to the
+   * per-request accumulator. Wired only when LOG_LLM_CALLS is on (via the
+   * callText/callJson onUsage hook). See docs/implementation/PROMPT_CACHING.md.
+   */
+  private reportUsage(templatePath: string, usage: LlmCallUsage): void {
+    const cachedPct =
+      usage.promptTokens > 0 ? Math.round((usage.cachedTokens / usage.promptTokens) * 100) : 0;
+    this.logger.log(
+      `LLM usage: ${templatePath} in=${usage.promptTokens} out=${usage.completionTokens} cached=${usage.cachedTokens} (${cachedPct}%)`,
+    );
+
+    const acc = this.usageContext.getStore();
+    if (acc) {
+      acc.calls += 1;
+      acc.promptTokens += usage.promptTokens;
+      acc.completionTokens += usage.completionTokens;
+      acc.cachedTokens += usage.cachedTokens;
+    }
+  }
+
+  /**
    * Call LLM with template and return raw text response
    * Loads template from prompts/ folder, renders variables, and calls LLM
    *
@@ -273,8 +342,17 @@ Translated text in ${targetLangName}:`;
       ...options,
     };
 
+    // Token-usage measurement (Phase 0): only wired when LOG_LLM_CALLS is on, so
+    // there's zero overhead otherwise. See docs/implementation/PROMPT_CACHING.md.
+    const providerOptions: GenerateOptions = shouldLog
+      ? {
+          ...defaultOptions,
+          onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage),
+        }
+      : defaultOptions;
+
     try {
-      let response = await this.callProvider(prompt, defaultOptions);
+      let response = await this.callProvider(prompt, providerOptions);
       const duration = Date.now() - startTime;
 
       // Post-process to remove LLM placeholder patterns (e.g., "[Your Name]")
@@ -330,9 +408,15 @@ Translated text in ${targetLangName}:`;
     // otherwise JSON mode when the prompt mentions "json". The mock provider
     // ignores this; the regex repair in parseJsonResponse stays as a fallback.
     const responseFormat = resolveResponseFormat(templatePath, prompt);
-    const providerOptions = responseFormat
-      ? { ...defaultOptions, responseFormat }
-      : defaultOptions;
+    // `onUsage` for token-usage measurement (Phase 0): only wired when
+    // LOG_LLM_CALLS is on. See docs/implementation/PROMPT_CACHING.md.
+    const providerOptions: GenerateOptions = {
+      ...defaultOptions,
+      ...(responseFormat ? { responseFormat } : {}),
+      ...(shouldLog
+        ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
+        : {}),
+    };
 
     try {
       const response = await this.callProvider(prompt, providerOptions);
