@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.9.0](https://github.com/Smart-Apply/applo/compare/v4.8.0...v4.9.0) (2026-07-23)
+
+
+### Features
+
+* **prompts:** reorder prompts for improved caching efficiency and consistency ([#682](https://github.com/Smart-Apply/applo/issues/682)) ([7a68253](https://github.com/Smart-Apply/applo/commit/7a68253ffcbc0576c1ea6a6190ad9909e14bd78a))
+
 ## [4.8.0](https://github.com/Smart-Apply/applo/compare/v4.7.1...v4.8.0) (2026-07-22)
 
 
