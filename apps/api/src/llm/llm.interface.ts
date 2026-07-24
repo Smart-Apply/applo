@@ -30,6 +30,17 @@ export interface GenerateOptions {
    */
   responseFormat?: ResponseFormat;
   /**
+   * Azure `prompt_cache_key` (Chat Completions body param). A stable routing
+   * hint that co-locates requests sharing a long, common prompt prefix on the
+   * same backend so the cached prefix stays warm — higher hit rate under
+   * concurrency. Replaces the legacy `user` field. For Applo this is a stable
+   * per-generation key so the ~8 pipeline calls that share the byte-identical
+   * `tailoredProfile(+job)` prefix (Phase 1) route together. Providers that
+   * don't support it (mock) ignore this field. See
+   * docs/implementation/PROMPT_CACHING.md (Phase 2).
+   */
+  promptCacheKey?: string;
+  /**
    * Optional usage sink invoked after a successful call with normalized token
    * usage (incl. cached input tokens). Used only by the prompt-caching
    * measurement (LOG_LLM_CALLS) — no-op in the hot path when unset. See

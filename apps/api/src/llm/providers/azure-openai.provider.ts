@@ -75,6 +75,13 @@ export class AzureOpenAIProvider implements LLMProvider {
     if (options?.responseFormat) {
       requestBody.response_format = options.responseFormat;
     }
+    // Prompt caching (Phase 2): a stable routing hint that co-locates requests
+    // sharing our byte-identical prefix (Phase 1) on the same backend so the
+    // cached prefix stays warm (higher hit rate under load). Replaces the legacy
+    // `user` field. See docs/implementation/PROMPT_CACHING.md.
+    if (options?.promptCacheKey) {
+      requestBody.prompt_cache_key = options.promptCacheKey;
+    }
 
     try {
       const response = await firstValueFrom(
