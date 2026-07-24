@@ -187,7 +187,15 @@ const applicationValidationSchema = {
 const SCHEMA_REGISTRY: { match: string; name: string; schema: Record<string, unknown> }[] = [
   { match: 'v1/ats-keywords.md', name: 'ats_keywords', schema: atsKeywordsSchema },
   { match: 'v1/resume-rewrite.md', name: 'resume_rewrite', schema: resumeRewriteSchema },
-  { match: 'v1/resume-style-rewrite.md', name: 'resume_style_rewrite', schema: resumeRewriteSchema },
+  // Prompt caching (Phase 1b): the résumé JSON group (resume-rewrite writer,
+  // editor-resume + resume-style-rewrite readers) all return the same
+  // `RewrittenProfileDto` shape, so they share ONE response_format — identical
+  // `name` AND `schema`. Azure prepends response_format to the system message
+  // for the cache prefix, so a differing name would break the shared
+  // [schema + anchor + tailoredProfile + job] prefix. Keep all three on
+  // `resume_rewrite`. See docs/implementation/PROMPT_CACHING.md.
+  { match: 'v1/resume-style-rewrite.md', name: 'resume_rewrite', schema: resumeRewriteSchema },
+  { match: 'v1/editor-resume.md', name: 'resume_rewrite', schema: resumeRewriteSchema },
   { match: 'v1/job-facts.md', name: 'job_facts', schema: jobFactsSchema },
   { match: 'v1/translate-resume.md', name: 'translate_resume', schema: translateResumeSchema },
   {

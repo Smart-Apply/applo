@@ -8,6 +8,12 @@
 {{json tailoredProfile}}
 ```
 
+**Job Posting:**
+
+```json
+{{json job}}
+```
+
 **Rewritten résumé (to lightly fix):**
 
 ```json

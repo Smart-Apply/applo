@@ -8,6 +8,12 @@
 {{json tailoredProfile}}
 ```
 
+**Job Posting:**
+
+```json
+{{json job}}
+```
+
 **Draft cover letter (to lightly edit):**
 
 ```

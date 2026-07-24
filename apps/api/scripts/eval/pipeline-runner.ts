@@ -149,7 +149,7 @@ async function runEditorPass(
     const edited = await llm.callText(
       'v1/editor-cover-letter.md',
       { draft, job, tailoredProfile, language, lengthBudget, userId: fixtureId, jobPostingId: fixtureId },
-      { temperature: 0.4, maxTokens: 1500 },
+      { temperature: 0.4, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     if (!edited || edited.trim().length < draft.trim().length * 0.5) {
       return { text: draft, applied: false };
@@ -170,6 +170,7 @@ async function runWeavePass(
   draft: string,
   keywords: string[],
   tailoredProfile: TailoredProfileDto,
+  job: Record<string, unknown>,
   language: string,
   lengthBudget: number,
   fixtureId: string,
@@ -178,8 +179,8 @@ async function runWeavePass(
   try {
     const woven = await llm.callText(
       'v1/keyword-weave.md',
-      { draft, keywords, tailoredProfile, language, lengthBudget, userId: fixtureId, jobPostingId: fixtureId },
-      { temperature: 0.3, maxTokens: 1500 },
+      { draft, keywords, tailoredProfile, job, language, lengthBudget, userId: fixtureId, jobPostingId: fixtureId },
+      { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     if (!woven || woven.trim().length < draft.trim().length * 0.6) {
       return { text: draft, applied: false };
@@ -200,6 +201,7 @@ async function runStyleRewrite(
   llm: LLMService,
   draft: string,
   tailoredProfile: TailoredProfileDto,
+  job: Record<string, unknown>,
   language: string,
   fixtureId: string,
 ): Promise<{ text: string; applied: boolean; before: number; after: number }> {
@@ -209,7 +211,7 @@ async function runStyleRewrite(
   try {
     const rewritten = await llm.callText(
       'v1/style-rewrite.md',
-      { draft, violations, tailoredProfile, language, userId: fixtureId, jobPostingId: fixtureId },
+      { draft, violations, tailoredProfile, job, language, userId: fixtureId, jobPostingId: fixtureId },
       { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     const decision = evaluateStyleRewrite(draft, rewritten, language);
@@ -234,6 +236,7 @@ async function runLengthGovernor(
   draft: string,
   atsKeywords: MatchedAtsKeywords,
   tailoredProfile: TailoredProfileDto,
+  job: Record<string, unknown>,
   language: string,
   lengthBudget: number,
   fixtureId: string,
@@ -255,6 +258,7 @@ async function runLengthGovernor(
         lengthBudget,
         currentWords: lint.words,
         tailoredProfile,
+        job,
         language,
         userId: fixtureId,
         jobPostingId: fixtureId,
@@ -340,14 +344,15 @@ async function runResumeEditor(
   llm: LLMService,
   rewritten: RewrittenProfileDto,
   tailoredProfile: TailoredProfileDto,
+  job: Record<string, unknown>,
   language: string,
   fixtureId: string,
 ): Promise<{ profile: RewrittenProfileDto; applied: boolean }> {
   try {
     const edited = await llm.callJson<RewrittenProfileDto>(
       'v1/editor-resume.md',
-      { rewrittenProfile: rewritten, tailoredProfile, language, userId: fixtureId, jobPostingId: fixtureId },
-      { temperature: 0.35, maxTokens: 2000 },
+      { rewrittenProfile: rewritten, tailoredProfile, job, language, userId: fixtureId, jobPostingId: fixtureId },
+      { temperature: 0.35, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     if (!isValidResumeEdit(rewritten, edited)) {
       return { profile: rewritten, applied: false };
@@ -368,6 +373,7 @@ async function runResumeStyleRewrite(
   llm: LLMService,
   rewritten: RewrittenProfileDto,
   tailoredProfile: TailoredProfileDto,
+  job: Record<string, unknown>,
   language: string,
   fixtureId: string,
 ): Promise<{ profile: RewrittenProfileDto; applied: boolean; before: number; after: number }> {
@@ -378,7 +384,7 @@ async function runResumeStyleRewrite(
   try {
     const edited = await llm.callJson<RewrittenProfileDto>(
       'v1/resume-style-rewrite.md',
-      { rewrittenProfile: rewritten, tailoredProfile, violations, verbFirstBullets, language, userId: fixtureId, jobPostingId: fixtureId },
+      { rewrittenProfile: rewritten, tailoredProfile, job, violations, verbFirstBullets, language, userId: fixtureId, jobPostingId: fixtureId },
       { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     const decision = evaluateResumeStyleRewrite(rewritten, edited, language);
@@ -493,7 +499,7 @@ export async function generateForFixture(
   const weaveKeywords = applyWeave ? selectKeywordsToWeave(atsKeywords, editor.text) : [];
   const weave =
     coverLetterDraft && weaveKeywords.length > 0
-      ? await runWeavePass(llm, editor.text, weaveKeywords, tailoredProfile, language, lengthBudget, fixture.id)
+      ? await runWeavePass(llm, editor.text, weaveKeywords, tailoredProfile, serializedJob, language, lengthBudget, fixture.id)
       : { text: editor.text, applied: false };
 
   // Coverage is measured on the post-weave letter (the weave's own effect),
@@ -506,7 +512,7 @@ export async function generateForFixture(
   const styleViolationsBefore = postWeave ? lintGeneratedStyle(postWeave, language).total : 0;
   const styleRewrite =
     postWeave && applyStyleRewrite
-      ? await runStyleRewrite(llm, postWeave, tailoredProfile, language, fixture.id)
+      ? await runStyleRewrite(llm, postWeave, tailoredProfile, serializedJob, language, fixture.id)
       : {
           text: postWeave ?? '',
           applied: false,
@@ -523,6 +529,7 @@ export async function generateForFixture(
           styleRewrite.text,
           atsKeywords,
           tailoredProfile,
+          serializedJob,
           language,
           lengthBudget,
           fixture.id,
@@ -541,13 +548,13 @@ export async function generateForFixture(
 
   // Resume editor pass (#1) — JSON→JSON critique with ID-preservation guard.
   const resumeEditor = rewrittenProfile
-    ? await runResumeEditor(llm, rewrittenProfile, tailoredProfile, language, fixture.id)
+    ? await runResumeEditor(llm, rewrittenProfile, tailoredProfile, serializedJob, language, fixture.id)
     : { profile: null as RewrittenProfileDto | null, applied: false };
 
   // Résumé style-rewrite "teeth" — fix linter-flagged clichés in the résumé prose.
   const resumeStyle =
     resumeEditor.profile && applyStyleRewrite
-      ? await runResumeStyleRewrite(llm, resumeEditor.profile, tailoredProfile, language, fixture.id)
+      ? await runResumeStyleRewrite(llm, resumeEditor.profile, tailoredProfile, serializedJob, language, fixture.id)
       : { profile: resumeEditor.profile, applied: false, before: 0, after: 0 };
 
   const resumeView = assembleResumeView(
