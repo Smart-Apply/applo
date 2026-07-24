@@ -71,3 +71,17 @@ export interface LlmCallUsage {
   completionTokens: number;
   cachedTokens: number;
 }
+
+/**
+ * Aggregated token usage across every LLM call made within a
+ * `LLMService.runWithUsageCapture` scope, returned to the caller (the eval
+ * harness) so the prompt-caching cost delta can be persisted + compared. Same
+ * fields as {@link LlmCallUsage} plus the call count. See
+ * docs/implementation/PROMPT_CACHING.md (Phase 0/3).
+ */
+export interface CapturedUsage {
+  calls: number;
+  promptTokens: number;
+  completionTokens: number;
+  cachedTokens: number;
+}

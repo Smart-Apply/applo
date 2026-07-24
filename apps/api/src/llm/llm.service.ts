@@ -4,7 +4,7 @@ import { createHash } from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import CircuitBreaker from 'opossum';
-import { LLMProvider, GenerateOptions, LlmCallUsage } from './llm.interface';
+import { LLMProvider, GenerateOptions, LlmCallUsage, CapturedUsage } from './llm.interface';
 import { ConfigService } from '../config/config.service';
 import { stripClosingPhrase } from '../common/services/html-sanitizer';
 import { resolveResponseFormat } from './schemas/v1-schemas';
@@ -289,18 +289,41 @@ Translated text in ${targetLangName}:`;
   }
 
   /**
-   * Record token usage for a single LLM call: log a per-call line (incl. cached
-   * input tokens) and, when inside a runWithUsageTracking scope, add it to the
-   * per-request accumulator. Wired only when LOG_LLM_CALLS is on (via the
-   * callText/callJson onUsage hook). See docs/implementation/PROMPT_CACHING.md.
+   * Like {@link runWithUsageTracking} but RETURNS the aggregated token usage
+   * instead of only logging it, so callers can persist + compare it (used by the
+   * eval harness to measure the prompt-caching cost delta). Always establishes
+   * the accumulator scope, so it captures regardless of LOG_LLM_CALLS. See
+   * docs/implementation/PROMPT_CACHING.md (Phase 0/3).
+   */
+  async runWithUsageCapture<T>(
+    fn: () => Promise<T>,
+  ): Promise<{ result: T; usage: CapturedUsage }> {
+    const acc: UsageAccumulator = {
+      calls: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      cachedTokens: 0,
+    };
+    const result = await this.usageContext.run(acc, fn);
+    return {
+      result,
+      usage: {
+        calls: acc.calls,
+        promptTokens: acc.promptTokens,
+        completionTokens: acc.completionTokens,
+        cachedTokens: acc.cachedTokens,
+      },
+    };
+  }
+
+  /**
+   * Record token usage for a single LLM call. Always folds the call into the
+   * active accumulator scope (runWithUsageTracking / runWithUsageCapture) when
+   * one is present; the per-call log line is emitted only when LOG_LLM_CALLS is
+   * on. Wired via the callText/callJson onUsage hook whenever logging OR
+   * capturing. See docs/implementation/PROMPT_CACHING.md.
    */
   private reportUsage(templatePath: string, usage: LlmCallUsage): void {
-    const cachedPct =
-      usage.promptTokens > 0 ? Math.round((usage.cachedTokens / usage.promptTokens) * 100) : 0;
-    this.logger.log(
-      `LLM usage: ${templatePath} in=${usage.promptTokens} out=${usage.completionTokens} cached=${usage.cachedTokens} (${cachedPct}%)`,
-    );
-
     const acc = this.usageContext.getStore();
     if (acc) {
       acc.calls += 1;
@@ -308,6 +331,13 @@ Translated text in ${targetLangName}:`;
       acc.completionTokens += usage.completionTokens;
       acc.cachedTokens += usage.cachedTokens;
     }
+
+    if (process.env.LOG_LLM_CALLS !== 'true') return;
+    const cachedPct =
+      usage.promptTokens > 0 ? Math.round((usage.cachedTokens / usage.promptTokens) * 100) : 0;
+    this.logger.log(
+      `LLM usage: ${templatePath} in=${usage.promptTokens} out=${usage.completionTokens} cached=${usage.cachedTokens} (${cachedPct}%)`,
+    );
   }
 
   /**
@@ -371,10 +401,11 @@ Translated text in ${targetLangName}:`;
     // warm. Token-usage measurement (Phase 0) is wired only when LOG_LLM_CALLS
     // is on. See docs/implementation/PROMPT_CACHING.md.
     const promptCacheKey = this.derivePromptCacheKey(variables);
+    const capturing = this.usageContext.getStore() !== undefined;
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(promptCacheKey ? { promptCacheKey } : {}),
-      ...(shouldLog
+      ...(shouldLog || capturing
         ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
         : {}),
     };
@@ -440,11 +471,12 @@ Translated text in ${targetLangName}:`;
     // callText). `onUsage` token-usage measurement (Phase 0) is wired only when
     // LOG_LLM_CALLS is on. See docs/implementation/PROMPT_CACHING.md.
     const promptCacheKey = this.derivePromptCacheKey(variables);
+    const capturing = this.usageContext.getStore() !== undefined;
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(responseFormat ? { responseFormat } : {}),
       ...(promptCacheKey ? { promptCacheKey } : {}),
-      ...(shouldLog
+      ...(shouldLog || capturing
         ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
         : {}),
     };
