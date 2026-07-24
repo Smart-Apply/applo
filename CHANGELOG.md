@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.10.0](https://github.com/Smart-Apply/applo/compare/v4.9.0...v4.10.0) (2026-07-24)
+
+
+### Features
+
+* **prompt-caching:** implement cost measurement and usage capture for prompt caching evaluation ([#685](https://github.com/Smart-Apply/applo/issues/685)) ([167e9c9](https://github.com/Smart-Apply/applo/commit/167e9c9db71ad7bbd0705baa96541299e1b78996))
+* **prompt-caching:** implement promptCacheKey for improved request routing ([#684](https://github.com/Smart-Apply/applo/issues/684)) ([2e1d7f7](https://github.com/Smart-Apply/applo/commit/2e1d7f74b69ae03be0e2aa2dc6561cd67d33b889))
+
 ## [4.9.0](https://github.com/Smart-Apply/applo/compare/v4.8.0...v4.9.0) (2026-07-23)
 
 
