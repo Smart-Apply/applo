@@ -223,6 +223,11 @@ export class AzureAIFoundryProvider implements LLMProvider, OnModuleInit {
             messages,
             temperature: options?.temperature ?? 0.7,
             max_tokens: options?.maxTokens ?? 2000,
+            // Prompt caching (Phase 2): forward the same stable routing hint as
+            // the primary provider. See docs/implementation/PROMPT_CACHING.md.
+            ...(options?.promptCacheKey
+              ? { prompt_cache_key: options.promptCacheKey }
+              : {}),
           },
           {
             headers: {

@@ -1,5 +1,6 @@
 import { Injectable, Inject, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
+import { createHash } from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import CircuitBreaker from 'opossum';
@@ -310,6 +311,28 @@ Translated text in ${targetLangName}:`;
   }
 
   /**
+   * Derive a stable Azure `prompt_cache_key` for a pipeline call from its
+   * template variables. Every LLM call in one generation carries the same
+   * `userId` + `jobPostingId`, so they all resolve to the SAME key and route to
+   * the same backend — keeping the byte-identical `tailoredProfile(+job)` prefix
+   * (Phase 1) warm across the ~8-call burst. Returns undefined for calls that
+   * aren't part of a generation (no `jobPostingId`), where co-location adds
+   * nothing. The IDs are hashed so no internal identifier leaves in the routing
+   * metadata. See docs/implementation/PROMPT_CACHING.md (Phase 2).
+   */
+  private derivePromptCacheKey(variables: Record<string, unknown>): string | undefined {
+    const userId = typeof variables.userId === 'string' ? variables.userId : '';
+    const jobPostingId =
+      typeof variables.jobPostingId === 'string' ? variables.jobPostingId : '';
+    if (!userId || !jobPostingId) return undefined;
+    const digest = createHash('sha256')
+      .update(`${userId}:${jobPostingId}`)
+      .digest('hex')
+      .slice(0, 32);
+    return `applo:gen:${digest}`;
+  }
+
+  /**
    * Call LLM with template and return raw text response
    * Loads template from prompts/ folder, renders variables, and calls LLM
    *
@@ -342,14 +365,19 @@ Translated text in ${targetLangName}:`;
       ...options,
     };
 
-    // Token-usage measurement (Phase 0): only wired when LOG_LLM_CALLS is on, so
-    // there's zero overhead otherwise. See docs/implementation/PROMPT_CACHING.md.
-    const providerOptions: GenerateOptions = shouldLog
-      ? {
-          ...defaultOptions,
-          onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage),
-        }
-      : defaultOptions;
+    // Prompt caching (Phase 2): a stable per-generation `prompt_cache_key`
+    // co-locates the pipeline calls that share the byte-identical
+    // tailoredProfile(+job) prefix (Phase 1) on one backend so the cache stays
+    // warm. Token-usage measurement (Phase 0) is wired only when LOG_LLM_CALLS
+    // is on. See docs/implementation/PROMPT_CACHING.md.
+    const promptCacheKey = this.derivePromptCacheKey(variables);
+    const providerOptions: GenerateOptions = {
+      ...defaultOptions,
+      ...(promptCacheKey ? { promptCacheKey } : {}),
+      ...(shouldLog
+        ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
+        : {}),
+    };
 
     try {
       let response = await this.callProvider(prompt, providerOptions);
@@ -408,11 +436,14 @@ Translated text in ${targetLangName}:`;
     // otherwise JSON mode when the prompt mentions "json". The mock provider
     // ignores this; the regex repair in parseJsonResponse stays as a fallback.
     const responseFormat = resolveResponseFormat(templatePath, prompt);
-    // `onUsage` for token-usage measurement (Phase 0): only wired when
+    // Prompt caching (Phase 2): stable per-generation `prompt_cache_key` (see
+    // callText). `onUsage` token-usage measurement (Phase 0) is wired only when
     // LOG_LLM_CALLS is on. See docs/implementation/PROMPT_CACHING.md.
+    const promptCacheKey = this.derivePromptCacheKey(variables);
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(responseFormat ? { responseFormat } : {}),
+      ...(promptCacheKey ? { promptCacheKey } : {}),
       ...(shouldLog
         ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
         : {}),

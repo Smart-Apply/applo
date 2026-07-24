@@ -162,17 +162,30 @@ semantic content unchanged — only **position** moves.
 - [ ] `cached_tokens > 0` on calls 2–9 of a single generation. *(needs a live Azure run)*
 - [ ] ≥ 50% of input tokens cached on the hot calls once warm. *(needs a live Azure run)*
 
-### Phase 2 — Provider request shape `[ Status: ⬜ Not started ]`
+### Phase 2 — Provider request shape `[ Status: 🚧 In progress — prompt_cache_key shipped on all pipeline calls; under-load hit-rate check + optional system/user split pending ]`
 
-- Pass **`prompt_cache_key`** (stable per template, e.g. the template path) in the
-  request body to improve routing at concurrency.
-- Optional: split into **`system` (static) + `user` (dynamic)** messages instead of one
-  big user message — the cleanest cacheable prefix and aligns with the docs' guidance.
-- Keep `response_format` behavior unchanged (schema stays a stable per-template prefix).
+- [x] Pass **`prompt_cache_key`** in the request body to improve routing at concurrency.
+  **Keyed per generation, NOT per template.** Because Phase 1 shipped Strategy B (a prefix
+  shared *across* the ~8 downstream prompts within one run), a per-template key would scatter
+  those calls across backends and defeat the intra-app reuse. The key is a hash of
+  `userId:jobPostingId` (`applo:gen:<sha256[:32]>`), derived in `LLMService.callText/callJson`
+  from the template variables, so every call in one generation carries the *same* key and
+  routes together. Confirmed against the Azure docs: *"reuse the same key for requests that
+  share long, common prompt prefixes."* Forwarded by both real providers
+  ([`azure-openai.provider.ts`](../../apps/api/src/llm/providers/azure-openai.provider.ts),
+  [`azure-ai-foundry.provider.ts`](../../apps/api/src/llm/providers/azure-ai-foundry.provider.ts));
+  the mock ignores it.
+- [ ] **Deferred:** split into **`system` (static) + `user` (dynamic)** messages. Phase 1
+  already put a byte-identical prefix at the top of the single user message, so caching works
+  without the split — it's a stylistic/GPT-4.1-guidance win with real reorder risk, better
+  bundled with the Phase 3 eval.
+- [x] `response_format` behavior unchanged (schema stays a stable per-template prefix).
 
 **Acceptance criteria**
-- [ ] `prompt_cache_key` sent; hit rate improves vs. Phase 1 under load.
-- [ ] `response_format` / structured outputs still pass `v1-schemas` tests.
+- [x] `prompt_cache_key` sent on every pipeline call (stable per generation). Hit-rate
+  improvement vs. Phase 1 *under load* still needs an empirical check (real Azure + concurrency).
+- [x] `response_format` / structured outputs still pass `v1-schemas` tests — 16/16 green; full
+  API typecheck clean; 0 net-new lint warnings (28 pre-existing `any` = main baseline).
 
 ### Phase 3 — Verify + eval (quality gate) `[ Status: ⬜ Not started ]`
 
@@ -262,6 +275,23 @@ branch. No migration, no state.
 
 _Newest first. Add an entry per PR/branch with the files touched and the measured effect._
 
+- **2026-07-24** — `feat/prompt-caching-phase2-cache-key`: **Phase 2 `prompt_cache_key`
+  (provider request shape).** Added an optional `promptCacheKey` to `GenerateOptions`
+  ([`llm/llm.interface.ts`](../../apps/api/src/llm/llm.interface.ts)); both real providers now
+  forward it as the Azure `prompt_cache_key` body field
+  ([`azure-openai.provider.ts`](../../apps/api/src/llm/providers/azure-openai.provider.ts),
+  [`azure-ai-foundry.provider.ts`](../../apps/api/src/llm/providers/azure-ai-foundry.provider.ts));
+  `LLMService.callText`/`callJson` derive a stable per-generation key
+  (`applo:gen:<sha256(userId:jobPostingId)[:32]>`) from the template variables
+  ([`llm/llm.service.ts`](../../apps/api/src/llm/llm.service.ts)), so the ~8 pipeline calls that
+  share the Phase 1 `tailoredProfile(+job)` prefix route to the same backend and reuse the warm
+  cache under concurrency. **Keyed per generation, not per template** (per-template would defeat
+  the Strategy-B cross-prompt reuse — see Phase 2 above). No prompt/behaviour change; the mock
+  provider ignores the field. **Verified:** `v1-schemas` unit tests 16/16 green, full API
+  `tsc --noEmit` clean, and 0 net-new ESLint warnings (28 pre-existing `any` warnings = the
+  main baseline for the 4 files, proven via a stash diff). **Deferred:** the optional
+  system/user message split, and the empirical under-load hit-rate measurement (needs real
+  Azure + concurrency; pairs with the Phase 0/1 `cached_tokens` capture).
 - **2026-07-23** — `feat/prompt-caching-phase1-reorder`: **Phase 1 Strategy-B reorder (pure
   reorder — no semantic change).** Hoisted a byte-identical `## Input Data` prefix —
   `[tailoredProfile]` (+ `[job]` where the call already carries it) — to the very top of the 8
