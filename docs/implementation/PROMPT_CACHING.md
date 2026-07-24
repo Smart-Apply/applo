@@ -118,7 +118,7 @@ Requirements for Strategy B to actually hit:
 
 ## The plan (phases)
 
-### Phase 0 — Measure the baseline `[ Status: 🚧 In progress — accounting shipped, baseline capture pending ]`
+### Phase 0 — Measure the baseline `[ Status: ✅ Done — accounting shipped; baseline captured (cached=0 on every call) ]`
 
 You cannot optimize what you cannot see. Ship token accounting first.
 
@@ -132,9 +132,11 @@ You cannot optimize what you cannot see. Ship token accounting first.
 **Acceptance criteria**
 - [x] Provider reads and logs `cached_tokens` per call (no PII in logs).
 - [x] `LOG_LLM_CALLS=true` prints a per-application token summary (total in / out / cached).
-- [ ] Baseline captured in the [Changelog](#changelog) (cached ≈ 0 confirmed).
+- [x] Baseline captured in the [Changelog](#changelog) — the `phase3-newlayout` eval (24
+  fixtures, gpt-4.1) measured **`cached_tokens = 0` on every call**, confirming the current
+  (pre-caching-benefit) state.
 
-### Phase 1 — Restructure the prompts (the big lever) `[ Status: 🚧 In progress — Strategy-B cluster done (8 prompts, byte-identical prefix verified); Strategy-A trio + live cached-token measurement pending ]`
+### Phase 1 — Restructure the prompts (the big lever) `[ Status: ⚠️ Reorder shipped, but measured 0% cache hits — full-request-prefix mismatch (see Phase 3 finding); Strategy-A trio still deferred ]`
 
 Reorder each live-pipeline prompt to the chosen ordering (Strategy B preamble, or A where
 B does not apply) so the leading ≥1,024 tokens are identical across reuses. Keep the
@@ -159,10 +161,14 @@ semantic content unchanged — only **position** moves.
   the `tailoredProfile` fence) matches across all 8, and `head -15` (through the `job` block)
   matches across the 3 cluster-1 prompts. `resume.md` left untouched (not on the live
   `createWithGeneration` path).
-- [ ] `cached_tokens > 0` on calls 2–9 of a single generation. *(needs a live Azure run)*
-- [ ] ≥ 50% of input tokens cached on the hot calls once warm. *(needs a live Azure run)*
+- [ ] `cached_tokens > 0` on calls 2–9 of a single generation. **Measured 2026-07-24: still 0**
+  on every call across all 24 fixtures. The *user-message* prefix was aligned, but Azure keys
+  the cache on the FULL request prefix (`response_format` schema → system message → user
+  message), which differs per call. See the **Phase 3 finding** below.
+- [ ] ≥ 50% of input tokens cached on the hot calls once warm. **Not met (0% measured)** —
+  blocked on the same prefix mismatch; needs the full-prefix-alignment follow-up (Phase 1b).
 
-### Phase 2 — Provider request shape `[ Status: 🚧 In progress — prompt_cache_key shipped on all pipeline calls; under-load hit-rate check + optional system/user split pending ]`
+### Phase 2 — Provider request shape `[ Status: 🚧 prompt_cache_key shipped, but has no measurable effect yet (0% cached — see Phase 3 finding); the system/user split is now the critical path, not optional ]`
 
 - [x] Pass **`prompt_cache_key`** in the request body to improve routing at concurrency.
   **Keyed per generation, NOT per template.** Because Phase 1 shipped Strategy B (a prefix
@@ -175,10 +181,12 @@ semantic content unchanged — only **position** moves.
   ([`azure-openai.provider.ts`](../../apps/api/src/llm/providers/azure-openai.provider.ts),
   [`azure-ai-foundry.provider.ts`](../../apps/api/src/llm/providers/azure-ai-foundry.provider.ts));
   the mock ignores it.
-- [ ] **Deferred:** split into **`system` (static) + `user` (dynamic)** messages. Phase 1
-  already put a byte-identical prefix at the top of the single user message, so caching works
-  without the split — it's a stylistic/GPT-4.1-guidance win with real reorder risk, better
-  bundled with the Phase 3 eval.
+- [ ] **Deferred → now the critical path (see Phase 1b).** Move the shared block into an
+  **identical leading `system` message** with a **uniform `response_format`** across the
+  clustered calls (a JSON schema is prepended to the system message, so a plain-text call and a
+  JSON call can never share a prefix as-is). The Phase 3 eval proved the single-user-message
+  reorder does **not** cache — Azure keys on the schema + system message that *precede* the user
+  text — so this is the actual lever, not optional polish. See the Phase 3 finding.
 - [x] `response_format` behavior unchanged (schema stays a stable per-template prefix).
 
 **Acceptance criteria**
@@ -187,7 +195,7 @@ semantic content unchanged — only **position** moves.
 - [x] `response_format` / structured outputs still pass `v1-schemas` tests — 16/16 green; full
   API typecheck clean; 0 net-new lint warnings (28 pre-existing `any` = main baseline).
 
-### Phase 3 — Verify + eval (quality gate) `[ Status: ⬜ Not started ]`
+### Phase 3 — Verify + eval (quality gate) `[ Status: ✅ Done — quality: no regression; cost: measured 0% cached / $0 savings, root-caused (see finding) ]`
 
 Reordering can subtly shift model output (instruction position matters), so gate on eval.
 
@@ -197,8 +205,49 @@ Reordering can subtly shift model output (instruction position matters), so gate
 - Record the measured cost delta (cached % and $/app before vs. after).
 
 **Acceptance criteria**
-- [ ] Eval shows no quality regression (DE + EN, cover letter + résumé).
-- [ ] Measured per-application cost drop recorded in the [Changelog](#changelog).
+- [x] Eval shows no quality regression (DE + EN, cover letter + résumé) — full 24-fixture
+  `phase3-newlayout` run (gpt-4.1): OVERALL **4.96** (~5.00 saturated baseline), style **100%
+  clean / 0 violations**, length **0% overrun** (mean 250 words vs. 350 budget), priority-1
+  coverage 81.6 → 94.7 % (weave fired 7/24), grounding 75 % (all 6 flagged values are
+  job-posting-quoted numbers — the documented caveat). DE 5.00 / EN 4.92.
+- [x] Measured per-application cost delta recorded in the [Changelog](#changelog) — and it is
+  **$0 (0 % cached)**: the reorder does not yet produce cache hits (root cause below).
+
+**🔬 Finding — why the measured cost delta is $0 (the reorder alone is not sufficient).** Azure
+computes the cache key over the **entire request prefix** — the `response_format` JSON schema
+(prepended to the system message), then the **system message**, then the **user message** — not
+the user message alone. Phase 1 aligned only the user-message `tailoredProfile(+job)` block, but
+the components that *precede* it differ on every pipeline call, so the aligned block is never the
+actual *leading* prefix:
+
+| Call | Effective leading prefix (what Azure keys on) |
+|---|---|
+| `cover-letter` (callText) | `[system: ANCHOR][user: TP+job]` |
+| `resume-rewrite` (callJson) | `[schema][system: ANCHOR][user: TP+job]` |
+| `editor-cover-letter` (callText) | `[user: TP+job]` (no system) |
+| `editor-resume` (callJson) | `[schema][user: TP]` (no system) |
+| `keyword-weave` (callText) | `[user: TP]` (no system) |
+
+No two calls share a byte-identical prefix from token 0. Compounding factors: the two calls with
+the largest identical user prefix (`cover-letter` / `resume-rewrite`) run in **parallel** (no read
+benefit) *and* differ by schema anyway; and the `tailoredProfile`-only block (cluster-2) is likely
+**below Azure's 1,024-token minimum**. Verified empirically: `cached_tokens = 0` on all ~7.3
+calls/gen across 24 fixtures.
+
+**➡️ Recommended follow-up — Phase 1b (full-prefix alignment).** To realize any caching the
+*leading* bytes must match across the burst:
+1. Move the shared `[tailoredProfile(+job)]` block into an **identical leading `system` message**
+   used verbatim by every clustered call (so the prefix starts the same regardless of per-call
+   schema/anchor), **and/or**
+2. Make the pre-prefix components uniform — apply the **same `GENERATION_SYSTEM_ANCHOR` and the
+   same `response_format`** to every clustered call (a `json_schema` is prepended to the system
+   message, so a plain-text call and a JSON call can never share a prefix as-is).
+3. Ensure the shared leading block clears **≥ 1,024 tokens** (anchor + serialized job help;
+   tailoredProfile-only likely does not).
+4. Don't fire the two largest shared-prefix calls in **parallel** if you want the second to read
+   the first's cache write (or accept that only the later sequential calls benefit).
+Gate the redo on this same eval — the aggregator's **Cost & prompt caching** block now measures
+the cached % + $/gen delta directly.
 
 ### Phase 4 — Portability check (Mistral) `[ Status: ⬜ Not started ]`
 
@@ -275,6 +324,35 @@ branch. No migration, no state.
 
 _Newest first. Add an entry per PR/branch with the files touched and the measured effect._
 
+- **2026-07-24** — `feat/prompt-caching-phase3-eval`: **Phase 3 verify + eval (quality gate) —
+  DONE, with a decisive cost finding.** Built the cost/caching measurement the harness was
+  missing, then ran the full 24-fixture new-layout eval on real Azure (gpt-4.1).
+  **Tooling:** added `LLMService.runWithUsageCapture` (returns aggregated input/cached/output
+  tokens for a scope; decoupled accumulation from logging so capture works regardless of
+  `LOG_LLM_CALLS`) + a `CapturedUsage` type
+  ([`llm.interface.ts`](../../apps/api/src/llm/llm.interface.ts),
+  [`llm.service.ts`](../../apps/api/src/llm/llm.service.ts)); the harness now wraps **generation
+  only** (not the judge) in the capture scope
+  ([`run-eval.ts`](../../apps/api/scripts/eval/run-eval.ts)), and the aggregator gained a
+  **Cost & prompt caching** block — mean input/cached/output tokens, cached input share, and
+  est. $/gen with-vs-without caching + savings at documented gpt-4.1 rates
+  ([`aggregate.ts`](../../apps/api/scripts/eval/aggregate.ts); README updated). Verified
+  token-free (`eval:validate` green, 24 fixtures), project typecheck clean on the touched files
+  (only pre-existing test-suite drift remains), **0 net-new lint warnings** (18 = 18 vs. pristine).
+  **Quality result (no regression):** `phase3-newlayout`, 24 fixtures — OVERALL **4.96** (~5.00
+  saturated baseline), style **100% clean / 0 violations**, length **0% overrun** (mean 250
+  words vs. 350 budget), priority-1 coverage 81.6 → 94.7 % (weave fired 7/24), grounding 75 %
+  (all 6 flagged values are job-posting-quoted numbers — the documented caveat). DE 5.00 / EN
+  4.92. The pure reorder shifted nothing.
+  **Cost result (the finding):** **0 % cached, $0 savings.** Mean ~7.3 calls/gen, 22,270 input /
+  2,346 output tokens, est. **$0.0633/gen** *with and without* caching; `cached_tokens = 0` on
+  every call across all 24 fixtures. **Root cause:** Azure keys the cache on the full request
+  prefix (`response_format` schema → system message → user message); Phase 1 aligned only the
+  *user-message* prefix, so the differing schema/anchor that *precede* it break the match (see
+  the Phase 3 Finding table). The Phase 1/2 reorder + `prompt_cache_key` are necessary but **not
+  sufficient**; a **Phase 1b full-prefix alignment** is required before any saving materializes.
+  No prod behaviour change — `runWithUsageCapture` is measurement-only; the mock provider
+  ignores it; the eval harness lives under `scripts/` (out of the nest build + eslint scope).
 - **2026-07-24** — `feat/prompt-caching-phase2-cache-key`: **Phase 2 `prompt_cache_key`
   (provider request shape).** Added an optional `promptCacheKey` to `GenerateOptions`
   ([`llm/llm.interface.ts`](../../apps/api/src/llm/llm.interface.ts)); both real providers now

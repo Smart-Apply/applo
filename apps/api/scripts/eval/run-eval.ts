@@ -153,7 +153,12 @@ async function runOne(
     language: fixture.language,
   };
   try {
-    const docs = await withRetry(() => generateForFixture(llm, fixture, options), retries);
+    // Wrap generation (NOT the judge) in a usage-capture scope so the token
+    // counts reflect only the production-equivalent per-application cost.
+    const { result: docs, usage } = await withRetry(
+      () => llm.runWithUsageCapture(() => generateForFixture(llm, fixture, options)),
+      retries,
+    );
     const grounding = groundDocuments(fixture, docs);
     const style = styleCheckDocuments(fixture, docs);
     const judge = await withRetry(() => judgeDocuments(llm, fixture, docs), retries);
@@ -200,6 +205,12 @@ async function runOne(
       editorApplied: docs.editorApplied,
       resumeEditorApplied: docs.resumeEditorApplied,
       resumeRewriteSucceeded: docs.resumeRewriteSucceeded,
+      usage: {
+        calls: usage.calls,
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        cachedTokens: usage.cachedTokens,
+      },
     };
   } catch (err) {
     return {

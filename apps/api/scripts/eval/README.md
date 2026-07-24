@@ -76,7 +76,7 @@ For each fixture the runner mirrors `ApplicationsService.createWithGeneration`:
 7. `v1/resume-style-rewrite.md` (temp 0.3) — the résumé style-rewrite "teeth" pass (JSON→JSON,
    ID-preserving; skipped with `--no-style-rewrite`, or when the résumé prose is already clean)
 
-It then scores the output four ways:
+It then scores the output as follows:
 
 - **LLM judge** (`prompts/eval/judge-rubric.md`, temp 0) — 6 rubric dimensions
   scored 1–5: `action_verb_bullets`, `quantified_or_qualitative`,
@@ -101,6 +101,18 @@ It then scores the output four ways:
   **length-governor pass** shortened (per-fixture before→after word counts in
   the JSON). Makes the "grundsätzlich immer viel zu lang" complaint a measured,
   falsifiable number.
+- **Cost & prompt caching** (`usage`, always captured) — per generation the
+  runner wraps the v1 chain in `LLMService.runWithUsageCapture`, so the report
+  shows mean input / cached-input / output tokens, the **cached input share**
+  (`cached_tokens / prompt_tokens`), and an estimated **$/generation with vs.
+  without caching** plus the savings (documented gpt-4.1 Standard rates in
+  [`aggregate.ts`](./aggregate.ts) — the relative savings is rate-robust). The
+  judge call is deliberately outside the capture scope, so the numbers reflect
+  only the production-equivalent per-application cost. This is the measurement
+  backbone for [prompt caching](../../../../docs/implementation/PROMPT_CACHING.md)
+  (Phase 0/3): on the new prompt layout the cached share should be > 0 across the
+  back-to-back call burst; on the old layout it is ~0. Needs `LOG_LLM_CALLS=true`
+  for the per-call lines, but the aggregate `usage` is captured regardless.
 
 > The runner omits only PDF rendering + persistence (irrelevant to output
 > quality). The keyword weave shares `keyword-coverage.util.ts` with the live

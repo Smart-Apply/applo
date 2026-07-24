@@ -8,6 +8,20 @@
 import { RUBRIC_DIMENSIONS, type JudgeResult, type RubricDimension } from './judge';
 import type { EvalLanguage } from './fixture.types';
 
+/**
+ * Pricing assumption for the cost estimate — Azure OpenAI **gpt-4.1** Standard,
+ * USD per 1M tokens (input / discounted cached-input / output). Verify against
+ * the current Azure OpenAI pricing page; the RELATIVE savings is driven by the
+ * measured cached share and stays robust even if the absolute $ drifts. See
+ * docs/implementation/PROMPT_CACHING.md.
+ */
+const PRICING = {
+  model: 'gpt-4.1',
+  inputPerM: 2.0,
+  cachedInputPerM: 0.5,
+  outputPerM: 8.0,
+} as const;
+
 export interface FixtureGroundingSummary {
   grounded: boolean;
   score: number;
@@ -53,6 +67,17 @@ export interface FixtureLengthSummary {
   wordsBefore: number;
 }
 
+export interface FixtureUsageSummary {
+  /** LLM calls made during generation (excludes the judge call). */
+  calls: number;
+  /** Prompt (input) tokens summed across the generation calls. */
+  promptTokens: number;
+  /** Completion (output) tokens summed across the generation calls. */
+  completionTokens: number;
+  /** Cached input tokens (share of promptTokens served from the prompt cache). */
+  cachedTokens: number;
+}
+
 export interface FixtureResult {
   id: string;
   profession: string;
@@ -63,6 +88,8 @@ export interface FixtureResult {
   style?: FixtureStyleSummary;
   /** Deterministic length lint of the FINAL cover letter (absent when no letter). */
   length?: FixtureLengthSummary;
+  /** Per-fixture token usage of the generation (excludes the judge call). */
+  usage?: FixtureUsageSummary;
   /** True when the style-rewrite "teeth" pass replaced the draft with a cleaner one. */
   styleRewriteApplied?: boolean;
   /** Deterministic style violations in the cover letter BEFORE the teeth pass. */
@@ -138,6 +165,30 @@ export interface EvalSummary {
     /** Fixtures where the guarded shorten pass replaced an overrun draft. */
     governorAppliedCount: number;
   };
+  cost: {
+    /** Fixtures that captured token usage. */
+    fixturesMeasured: number;
+    /** Mean LLM calls per generation (excludes the judge call). */
+    meanCalls: number;
+    /** Mean prompt (input) tokens per generation. */
+    meanPromptTokens: number;
+    /** Mean cached input tokens per generation. */
+    meanCachedTokens: number;
+    /** Mean completion (output) tokens per generation. */
+    meanCompletionTokens: number;
+    /** Cached share of input tokens (sum cached / sum prompt), 0-100. */
+    cachedInputPct: number;
+    /** Estimated $/generation with ALL input billed at the full (no-cache) rate. */
+    estCostNoCacheUsd: number;
+    /** Estimated $/generation with the measured caching applied. */
+    estCostCachedUsd: number;
+    /** Estimated $/generation savings from caching (no-cache − cached). */
+    estSavingsUsd: number;
+    /** Savings as a % of the no-cache cost. */
+    estSavingsPct: number;
+    /** The pricing assumption used for the estimate. */
+    rates: { model: string; inputPerM: number; cachedInputPerM: number; outputPerM: number };
+  };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
 }
@@ -202,6 +253,51 @@ export function summarize(
     governorAppliedCount: withLength.filter((r) => r.length!.governorApplied).length,
   };
 
+  // Cost / prompt caching (Phase 3) — only over fixtures that captured usage.
+  const measured = ok.filter((r) => r.usage);
+  const sumPrompt = measured.reduce((acc, r) => acc + r.usage!.promptTokens, 0);
+  const sumCached = measured.reduce((acc, r) => acc + r.usage!.cachedTokens, 0);
+  const sumCompletion = measured.reduce((acc, r) => acc + r.usage!.completionTokens, 0);
+  const nMeasured = measured.length;
+  const meanPromptTokens = nMeasured ? Math.round(sumPrompt / nMeasured) : 0;
+  const meanCompletionTokens = nMeasured ? Math.round(sumCompletion / nMeasured) : 0;
+  const meanCachedTokens = nMeasured ? Math.round(sumCached / nMeasured) : 0;
+  const meanCalls = nMeasured
+    ? Math.round((measured.reduce((acc, r) => acc + r.usage!.calls, 0) / nMeasured) * 10) / 10
+    : 0;
+  const cachedInputPct = sumPrompt > 0 ? Math.round((sumCached / sumPrompt) * 100) : 0;
+  const usd = (tokens: number, ratePerM: number): number => (tokens / 1_000_000) * ratePerM;
+  const round4 = (n: number): number => Math.round(n * 10000) / 10000;
+  const estCostNoCacheUsd = round4(
+    usd(meanPromptTokens, PRICING.inputPerM) + usd(meanCompletionTokens, PRICING.outputPerM),
+  );
+  const estCostCachedUsd = round4(
+    usd(meanPromptTokens - meanCachedTokens, PRICING.inputPerM) +
+      usd(meanCachedTokens, PRICING.cachedInputPerM) +
+      usd(meanCompletionTokens, PRICING.outputPerM),
+  );
+  const estSavingsUsd = round4(estCostNoCacheUsd - estCostCachedUsd);
+  const estSavingsPct =
+    estCostNoCacheUsd > 0 ? Math.round((estSavingsUsd / estCostNoCacheUsd) * 100) : 0;
+  const cost = {
+    fixturesMeasured: nMeasured,
+    meanCalls,
+    meanPromptTokens,
+    meanCachedTokens,
+    meanCompletionTokens,
+    cachedInputPct,
+    estCostNoCacheUsd,
+    estCostCachedUsd,
+    estSavingsUsd,
+    estSavingsPct,
+    rates: {
+      model: PRICING.model,
+      inputPerM: PRICING.inputPerM,
+      cachedInputPerM: PRICING.cachedInputPerM,
+      outputPerM: PRICING.outputPerM,
+    },
+  };
+
   const byLanguage: Record<string, LanguageBreakdown> = {};
   for (const lang of ['de', 'en'] as EvalLanguage[]) {
     const subset = ok.filter((r) => r.language === lang);
@@ -232,6 +328,7 @@ export function summarize(
     coverage,
     style,
     length,
+    cost,
     byLanguage,
     results,
   };
@@ -280,6 +377,19 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    overrun rate (final letters)   ${summary.length.overrunRate}%`);
   lines.push(`    critical (≥1.5× budget)        ${summary.length.criticalCount} fixtures`);
   lines.push(`    length governor applied        ${summary.length.governorAppliedCount} fixtures`);
+  lines.push('');
+  lines.push(`  Cost & prompt caching (est., ${summary.cost.rates.model} Standard rates):`);
+  lines.push(`    fixtures measured              ${summary.cost.fixturesMeasured}`);
+  lines.push(`    mean LLM calls / generation    ${summary.cost.meanCalls}`);
+  lines.push(`    mean input tokens              ${summary.cost.meanPromptTokens}`);
+  lines.push(`    mean cached input tokens       ${summary.cost.meanCachedTokens}`);
+  lines.push(`    cached input share             ${summary.cost.cachedInputPct}%`);
+  lines.push(`    mean output tokens             ${summary.cost.meanCompletionTokens}`);
+  lines.push(`    est. $/gen without caching     $${summary.cost.estCostNoCacheUsd.toFixed(4)}`);
+  lines.push(`    est. $/gen with caching        $${summary.cost.estCostCachedUsd.toFixed(4)}`);
+  lines.push(
+    `    est. savings from caching      $${summary.cost.estSavingsUsd.toFixed(4)} (${summary.cost.estSavingsPct}%)`,
+  );
   lines.push('');
   lines.push('  By language:');
   for (const [lang, b] of Object.entries(summary.byLanguage)) {
