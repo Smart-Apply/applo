@@ -19,6 +19,29 @@ interface ParsedJobData {
   fullText: string;
 }
 
+/**
+ * Field caps for PARSED job postings.
+ *
+ * The manual-entry path is bounded by `CreateJobPostingDto` (@MaxLength 200 on
+ * title/company/location), but the parse path builds `ParsedJobData` in code
+ * and never passes through a DTO — so nothing bounded it. A JS-heavy careers
+ * page (Microsoft's SPA) yielded ONE newline-free 488KB blob, which sailed
+ * through `extractStructuredData` and was stored as BOTH the title and the
+ * fullText. Every generation prompt embeds fullText, so that single row made
+ * each pipeline call ~122K tokens: Azure rejected them at admission (estimated
+ * tokens = prompt + max_tokens vs. the deployment's TPM budget) with 429s,
+ * which opened the LLM circuit breaker and broke generation entirely.
+ *
+ * Title/company/location mirror the DTO's 200. `fullText` is generous — real
+ * postings measure 4.5–8K chars and the agent parser already caps its own
+ * input at 8K — while still making a runaway page dump impossible.
+ */
+const MAX_PARSED_FIELD_LENGTH = 200;
+const MAX_PARSED_FULL_TEXT_LENGTH = 20_000;
+
+/** Longest first line still plausible as a job title (vs. a page dump). */
+const MAX_TITLE_CANDIDATE_LENGTH = 200;
+
 @Injectable()
 export class JobPostingsService {
   private readonly logger = new Logger(JobPostingsService.name);
@@ -75,17 +98,18 @@ export class JobPostingsService {
     }
 
     // 2. Persist in DB
+    const safe = this.clampParsedJobData(parsed);
     const jobPosting = await this.prisma.jobPosting.create({
       data: {
         userId,
         rawText,
         sourceUrl: dto.url,
         fileId: dto.fileId,
-        title: parsed.title,
-        company: parsed.company,
-        location: parsed.location,
-        language: parsed.language,
-        fullText: parsed.fullText,
+        title: safe.title,
+        company: safe.company,
+        location: safe.location,
+        language: safe.language,
+        fullText: safe.fullText,
       },
     });
 
@@ -181,21 +205,30 @@ export class JobPostingsService {
   private extractStructuredData(text: string): ParsedJobData {
     // Basic extraction - try to find title and company in first few lines
     const lines = text.split('\n').filter((l) => l.trim());
-    const firstLine = lines[0] || 'Unknown Position';
-    const secondLine = lines[1] || 'Unknown Company';
+    // A single-page-app dump can be ONE enormous line with no newlines at all.
+    // Only lines short enough to plausibly BE a title/company may be used —
+    // otherwise the whole document would be stored as the title.
+    const isPlausibleField = (line: string | undefined): line is string =>
+      typeof line === 'string' && line.trim().length <= MAX_TITLE_CANDIDATE_LENGTH;
+    const firstLine = isPlausibleField(lines[0]) ? lines[0] : undefined;
+    const secondLine = isPlausibleField(lines[1]) ? lines[1] : undefined;
 
     // Simple title detection (first line with job keywords)
-    const title = firstLine.match(
-      /engineer|developer|manager|analyst|specialist|consultant|designer|architect/i,
-    )
-      ? firstLine.trim()
-      : 'Unknown Position';
+    const title =
+      firstLine &&
+      firstLine.match(
+        /engineer|developer|manager|analyst|specialist|consultant|designer|architect/i,
+      )
+        ? firstLine.trim()
+        : 'Unknown Position';
 
     // Simple company detection (second line or look for "at Company")
     const companyMatch = text.match(
       /(?:at|@)\s+([A-Z][a-zA-Z0-9\s&]+(?:Inc|LLC|Ltd|GmbH|AG|Corp)?)/,
     );
-    const company = companyMatch ? companyMatch[1].trim() : secondLine.trim() || 'Unknown Company';
+    const company = companyMatch
+      ? companyMatch[1].trim()
+      : (secondLine?.trim() ?? '') || 'Unknown Company';
 
     // Simple location detection
     const locationMatch = text.match(/(?:location|office|based in):\s*([^\n]+)/i);
@@ -207,6 +240,39 @@ export class JobPostingsService {
       location,
       language: 'en', // Default fallback
       fullText: text, // Use entire text as fullText
+    };
+  }
+
+  /**
+   * Last line of defense before a parsed posting is persisted.
+   *
+   * Applies to EVERY parse source (URL/Cheerio, agent, file, pasted text), so
+   * no parser can store a field large enough to blow up the generation prompts
+   * downstream. Truncation is preferred over rejection: a clipped posting still
+   * generates a usable application, whereas a hard failure loses the user's
+   * work. The untruncated page stays available in `rawText` for debugging.
+   */
+  private clampParsedJobData(parsed: ParsedJobData): ParsedJobData {
+    const clamp = (value: string, max: number): string =>
+      value.length > max ? value.slice(0, max).trimEnd() : value;
+
+    if (parsed.fullText.length > MAX_PARSED_FULL_TEXT_LENGTH) {
+      this.logger.warn(
+        `Parsed job posting fullText was ${parsed.fullText.length} chars — truncating to ${MAX_PARSED_FULL_TEXT_LENGTH}. Likely an unparseable JavaScript-rendered page.`,
+      );
+    }
+    if (parsed.title.length > MAX_PARSED_FIELD_LENGTH) {
+      this.logger.warn(
+        `Parsed job posting title was ${parsed.title.length} chars — truncating to ${MAX_PARSED_FIELD_LENGTH}.`,
+      );
+    }
+
+    return {
+      title: clamp(parsed.title, MAX_PARSED_FIELD_LENGTH) || 'Unknown Position',
+      company: clamp(parsed.company, MAX_PARSED_FIELD_LENGTH) || 'Unknown Company',
+      location: parsed.location ? clamp(parsed.location, MAX_PARSED_FIELD_LENGTH) : undefined,
+      language: parsed.language,
+      fullText: clamp(parsed.fullText, MAX_PARSED_FULL_TEXT_LENGTH),
     };
   }
 

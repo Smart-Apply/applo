@@ -48,7 +48,14 @@ export class UrlParser {
     'indeed.com',
     'glassdoor.com',
     'xing.com',
+    'careers.microsoft.com',
   ];
+
+  /**
+   * Longest single line still plausible as real posting prose (~800 words with
+   * no paragraph break). Anything above this is markup/JSON, not content.
+   */
+  private readonly MAX_PLAUSIBLE_LINE_LENGTH = 5000;
 
   constructor() {
     // Agent parser is enabled by default; disable with ENABLE_AGENT_PARSER=false
@@ -304,6 +311,23 @@ export class UrlParser {
   private isSufficientContent(text: string): boolean {
     // Must have reasonable length
     if (!text || text.length < 200) {
+      return false;
+    }
+
+    // Reject an unparsed single-page-app dump. Cheerio happily returns the
+    // whole document (inline scripts, JSON state, bundle hashes) for a
+    // JS-rendered careers page; that blob trivially clears the length + keyword
+    // checks below, so Cheerio "won" and the agent parser was never tried.
+    // Real postings are broken into paragraphs, so one absurdly long line is a
+    // reliable tell. Returning false here routes the URL to the agent parser,
+    // which renders the page and extracts the posting properly.
+    const longestLine = text
+      .split('\n')
+      .reduce((longest, line) => Math.max(longest, line.length), 0);
+    if (longestLine > this.MAX_PLAUSIBLE_LINE_LENGTH) {
+      this.logger.warn(
+        `Cheerio output has a ${longestLine}-char line — treating as an unparsed JavaScript-rendered page, falling back to the agent parser.`,
+      );
       return false;
     }
 
