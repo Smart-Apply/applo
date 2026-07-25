@@ -87,10 +87,10 @@ function parseArgs(argv: string[]): CliArgs {
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Rate-limit / circuit-breaker / network errors worth retrying. */
+/** Rate-limit / circuit-breaker / network (incl. transient DNS) errors worth retrying. */
 function isTransient(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
-  return /429|too many requests|overloaded|überlastet|Breaker is open|503|Service Unavailable|ECONNRESET|ETIMEDOUT|rechtzeitig/i.test(
+  return /429|too many requests|overloaded|überlastet|Breaker is open|503|Service Unavailable|ECONNRESET|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|getaddrinfo|rechtzeitig/i.test(
     msg,
   );
 }
