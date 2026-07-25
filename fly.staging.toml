@@ -73,7 +73,9 @@ primary_region = 'fra'
     timeout = '5s'
     grace_period = '30s'
     method = 'get'
-    path = '/api/v1/health'
+    # Readiness only — see fly.prod.toml for why this must not be the
+    # comprehensive `/api/v1/health` aggregate.
+    path = '/api/v1/health/ready'
 
 # VM size: shared-cpu-1x · 1 GB RAM. Half of prod's 2x/2GB because:
 #   • Single-instance — no concurrent agent URL parses competing for RAM

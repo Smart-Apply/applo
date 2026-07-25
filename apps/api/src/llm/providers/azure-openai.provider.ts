@@ -3,7 +3,59 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '../../config/config.service';
 import { LLMProvider, GenerateOptions, LlmCallUsage } from '../llm.interface';
+import { LlmRateLimitError } from '../llm-errors';
 import { buildV1ChatCompletionsUrl } from './azure-v1-url.util';
+
+/** Bounded in-call retries for HTTP 429. Must stay well inside the circuit
+ *  breaker's request timeout, which wraps the whole `generateText` call. */
+const RATE_LIMIT_MAX_RETRIES = 2;
+const RATE_LIMIT_FALLBACK_DELAY_MS = 2000;
+const RATE_LIMIT_MAX_DELAY_MS = 8000;
+
+/** The slice of an axios error we actually read. */
+interface HttpErrorLike {
+  message?: string;
+  response?: {
+    status?: number;
+    headers?: Record<string, unknown>;
+    data?: unknown;
+  };
+}
+
+function asHttpError(error: unknown): HttpErrorLike {
+  return typeof error === 'object' && error !== null ? (error as HttpErrorLike) : {};
+}
+
+/**
+ * Flatten an axios error into a loggable string that keeps Azure's own message.
+ * Without this the caller only ever saw "Request failed with status code 429",
+ * hiding *why* Azure refused (token-rate vs. request-rate vs. quota).
+ */
+function describeAxiosError(error: unknown): string {
+  const err = asHttpError(error);
+  const status = err.response?.status;
+  const body = err.response?.data;
+  const azureMessage =
+    typeof body === 'string'
+      ? body
+      : ((body as { error?: { message?: string }; message?: string } | undefined)?.error?.message ??
+        (body as { message?: string } | undefined)?.message);
+  const parts = [err.message ?? 'Unknown error'];
+  if (status) parts.push(`status=${status}`);
+  if (azureMessage) parts.push(`azure="${String(azureMessage).slice(0, 300)}"`);
+  return parts.join(' | ');
+}
+
+/** `Retry-After` is seconds (or an HTTP date) per RFC 9110. Returns ms. */
+function parseRetryAfterMs(header: unknown): number | undefined {
+  if (header === undefined || header === null) return undefined;
+  const raw = Array.isArray(header) ? header[0] : header;
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1000;
+  const date = Date.parse(String(raw));
+  if (!Number.isNaN(date)) return Math.max(0, date - Date.now());
+  return undefined;
+}
 
 /**
  * Minimal shape of the Azure `chat/completions` response we consume. Typing it
@@ -84,14 +136,7 @@ export class AzureOpenAIProvider implements LLMProvider {
     }
 
     try {
-      const response = await firstValueFrom(
-        this.httpService.post<ChatCompletionResponse>(url, requestBody, {
-          headers: {
-            'api-key': this.apiKey,
-            'Content-Type': 'application/json',
-          },
-        }),
-      );
+      const response = await this.postWithRateLimitRetry(url, requestBody);
 
       const content = response.data.choices?.[0]?.message?.content;
 
@@ -115,9 +160,62 @@ export class AzureOpenAIProvider implements LLMProvider {
 
       this.logger.log('Successfully generated text with Azure OpenAI');
       return content;
-    } catch (error: any) {
-      this.logger.error('Azure OpenAI generation failed', error.message);
-      throw new Error(`LLM generation failed: ${error.message}`);
+    } catch (error: unknown) {
+      // A 429 survived the retries: propagate it as-is so the circuit breaker
+      // can exclude it (rate limiting is back-pressure, not an outage).
+      if (error instanceof LlmRateLimitError) {
+        this.logger.warn(`Azure OpenAI rate limited: ${error.message}`);
+        throw error;
+      }
+      const detail = describeAxiosError(error);
+      this.logger.error(`Azure OpenAI generation failed: ${detail}`);
+      throw new Error(`LLM generation failed: ${detail}`);
+    }
+  }
+
+  /**
+   * POST the completion, retrying HTTP 429 a bounded number of times.
+   *
+   * Azure gates admission on *estimated* tokens (prompt + `max_tokens`), so a
+   * burst of parallel pipeline calls can be throttled even when the deployment
+   * is far below its real TPM. Those 429s clear in seconds, so a short honoured
+   * `Retry-After` wait recovers the generation instead of failing it.
+   */
+  private async postWithRateLimitRetry(
+    url: string,
+    requestBody: Record<string, unknown>,
+  ): Promise<{ data: ChatCompletionResponse }> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await firstValueFrom(
+          this.httpService.post<ChatCompletionResponse>(url, requestBody, {
+            headers: {
+              'api-key': this.apiKey,
+              'Content-Type': 'application/json',
+            },
+          }),
+        );
+      } catch (error: unknown) {
+        const err = asHttpError(error);
+        if (err.response?.status !== 429) throw error;
+
+        const retryAfterMs = parseRetryAfterMs(err.response.headers?.['retry-after']);
+        if (attempt >= RATE_LIMIT_MAX_RETRIES) {
+          throw new LlmRateLimitError(
+            `Azure OpenAI rate limit (429) after ${attempt + 1} attempts: ${describeAxiosError(error)}`,
+            retryAfterMs,
+          );
+        }
+
+        const delay = Math.min(
+          retryAfterMs ?? RATE_LIMIT_FALLBACK_DELAY_MS * (attempt + 1),
+          RATE_LIMIT_MAX_DELAY_MS,
+        );
+        this.logger.warn(
+          `Azure OpenAI 429 (attempt ${attempt + 1}/${RATE_LIMIT_MAX_RETRIES + 1}) — retrying in ${delay}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
     }
   }
 
