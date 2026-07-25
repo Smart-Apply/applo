@@ -5,6 +5,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import CircuitBreaker from 'opossum';
 import { LLMProvider, GenerateOptions, LlmCallUsage, CapturedUsage } from './llm.interface';
+import { isRateLimitError } from './llm-errors';
 import { ConfigService } from '../config/config.service';
 import { stripClosingPhrase } from '../common/services/html-sanitizer';
 import { resolveResponseFormat } from './schemas/v1-schemas';
@@ -42,6 +43,15 @@ export class LLMService {
         rollingCountTimeout: this.configService.llmCircuitBreakerRollingCountTimeout, // 10s window
         rollingCountBuckets: this.configService.llmCircuitBreakerRollingCountBuckets, // 10 buckets
         name: 'LLM-Provider', // Circuit breaker name for logging
+        // Rate limits are back-pressure, not an outage. Azure admits requests
+        // against an ESTIMATED token budget (prompt + max_tokens), so a burst
+        // of parallel pipeline calls can be throttled while the deployment is
+        // far below its real TPM. Counting those as breaker failures used to
+        // open the circuit mid-generation, which fast-failed every subsequent
+        // LLM call with a 503 for the whole reset window. The provider already
+        // retries 429 with Retry-After; anything that still surfaces here must
+        // not poison the breaker's error rate.
+        errorFilter: (error: unknown) => isRateLimitError(error),
       },
     );
 
@@ -122,6 +132,16 @@ export class LLMService {
     try {
       return await this.circuitBreaker.fire(prompt, options);
     } catch (error: any) {
+      // Provider rate limit that survived the in-provider retries. Distinct
+      // from an overloaded/broken provider, and deliberately excluded from the
+      // breaker's failure stats (see errorFilter above).
+      if (isRateLimitError(error)) {
+        this.logger.warn(`LLM provider rate limited: ${error.message}`);
+        throw new ServiceUnavailableException(
+          'AI-Service ist derzeit stark ausgelastet. Bitte versuche es in einer Minute erneut.',
+        );
+      }
+
       // Circuit breaker is open (too many failures)
       if (error.message && error.message.includes('Breaker is open')) {
         this.logger.error('Circuit breaker is open - LLM service temporarily unavailable');
