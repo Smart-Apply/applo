@@ -33,9 +33,11 @@ primary_region = 'fra'
   # Microsoft Graph push-notification webhook URL (mailbox-sync). Without
   # this, the API falls back to http://localhost:3000 — which Graph cannot
   # reach → subscription creation fails on every Outlook connect.
-  # TODO(applo.ai cutover): flip to https://api-staging.applo.ai once the
-  # DNS CNAME + Fly cert (fly certs add api-staging.applo.ai) are live.
-  API_BASE_URL = 'https://smart-apply-api-staging.fly.dev'
+  # MUST stay on an applo.ai host: the auth cookies are issued with
+  # Domain=.applo.ai (COOKIE_DOMAIN), which a *.fly.dev origin cannot set
+  # (different eTLD+1) — an OAuth callback landing there silently drops the
+  # session. See docs/incidents + the 2026-07-08 prod cutover.
+  API_BASE_URL = 'https://api-staging.applo.ai'
   JOBS_DRIVER = 'qstash'
   LLM_PROVIDER = 'azure-openai'
   LOG_LEVEL = 'info'
