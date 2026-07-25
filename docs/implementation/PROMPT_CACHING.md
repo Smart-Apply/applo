@@ -285,11 +285,14 @@ readers) share `[anchor][tailoredProfile+job]`; **JSON** (`resume-rewrite` write
   `skill-selector`/`ats-keywords` prefixes (re-running recently-run fixtures within Azure's
   retention window). Each unique production generation starts cold, so the production-representative
   win is the **intra-generation** cluster caching only — roughly **10–20%**.
-- [x] No quality regression (DE + EN) — deterministic scorers stable: **style 100% clean / 0
-  violations**, **length 0% overrun** (mean 241 words), coverage 87.8 → 98.8% (weave 5/24),
-  grounding 71% (job-posting-quoted numbers — the documented caveat). Judge OVERALL **4.83** vs.
-  4.96 baseline is within the judge's known saturation/noise (lead with the deterministic
-  scorers). DE 4.83 / EN 4.83.
+- [x] No quality regression (DE + EN) — confirmed by a **same-session A/B** (both layouts, full
+  24 fixtures, back-to-back on real Azure gpt-4.1). The reliable **deterministic** scorers are
+  **equal-or-better** on the new layout: **style 100% clean / 0 violations** (OLD 96% — 1 residual
+  violation + teeth fired 3×), **grounding 63% / mean 82.7** (OLD 58% / 76.4), **length 0%
+  overrun** (244 vs. 253 words), coverage 98.3% (OLD 100%, ≈ 1 fixture). The saturated judge
+  OVERALL is **4.92 (NEW) vs. 5.00 (OLD)** — a 0.08 dip within its documented noise, with
+  sub-dimensions trading both ways and contradicted by the deterministic style/grounding gains.
+  Across all four runs the judge just oscillates 4.83–5.00 regardless of layout.
 
 **Deferred:** the `editor-cover-letter` writer/reader race — it fires immediately after its writer
 `cover-letter`, so the text-group cache write isn't always registered in time (hit 2/3 in the
@@ -372,6 +375,18 @@ branch. No migration, no state.
 
 _Newest first. Add an entry per PR/branch with the files touched and the measured effect._
 
+- **2026-07-25** — `feat/prompt-caching-phase1b-prefix-alignment` (A/B verification): ran a
+  **same-session old-vs-new A/B** (both full 24 fixtures, back-to-back on real Azure gpt-4.1) to
+  definitively check Phase 1b for a quality regression. **Result: no regression — the new layout
+  is equal-or-better on the deterministic scorers.** NEW (`ab-new-2`): style **100% clean / 0
+  violations**, grounding **63% / 82.7**, length 0% overrun (244w), coverage 98.3%, judge OVERALL
+  4.92. OLD (`ab-old`): style 96% (1 residual violation + teeth fired 3×), grounding 58% / 76.4,
+  length 0% overrun (253w), coverage 100%, judge OVERALL 5.00. The only edge for OLD is the
+  saturated judge OVERALL (+0.08, within noise; sub-dimensions move both ways). Conclusion:
+  Phase 1b's caching win carries **no deterministic quality cost** — safe to ship. (Op note: a
+  transient morning DNS/network blip failed the first `ab-new` run 19/24 with `getaddrinfo
+  ENOTFOUND` — not covered by the harness `isTransient` retry regex; re-ran clean once
+  connectivity returned.)
 - **2026-07-24** — `feat/prompt-caching-phase1b-prefix-alignment`: **Phase 1b full-prefix
   alignment — caching now HITS (0% → 29% cached input, ~15% est. cost cut), no quality
   regression.** Resolves the Phase 3 finding that the reorder alone cached nothing. **Design C**
