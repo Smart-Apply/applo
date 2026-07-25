@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.10.0](https://github.com/Smart-Apply/applo/compare/v4.9.0...v4.10.0) (2026-07-25)
+
+
+### Features
+
+* **prompt-caching:** implement cost measurement and usage capture for prompt caching evaluation ([#685](https://github.com/Smart-Apply/applo/issues/685)) ([167e9c9](https://github.com/Smart-Apply/applo/commit/167e9c9db71ad7bbd0705baa96541299e1b78996))
+* **prompt-caching:** implement promptCacheKey for improved request routing ([#684](https://github.com/Smart-Apply/applo/issues/684)) ([2e1d7f7](https://github.com/Smart-Apply/applo/commit/2e1d7f74b69ae03be0e2aa2dc6561cd67d33b889))
+
+
+### Bug Fixes
+
+* **deploy:** sync react-pdf template catalog on every API deploy ([#691](https://github.com/Smart-Apply/applo/issues/691)) ([6714a9a](https://github.com/Smart-Apply/applo/commit/6714a9a1e4a65157e49c352202e6d697f6503679))
+* **job-postings:** bound parsed title and fullText ([#693](https://github.com/Smart-Apply/applo/issues/693)) ([a567ce4](https://github.com/Smart-Apply/applo/commit/a567ce410c5d373300223c6dfc753cde522cc379))
+* **job-postings:** call Azure via the v1 API in the URL parser ([#690](https://github.com/Smart-Apply/applo/issues/690)) ([f97493e](https://github.com/Smart-Apply/applo/commit/f97493e813e363f1cbfc3cf563f653b0eab9c7bb))
+* **llm:** stop Azure 429s from taking the whole API out of rotation ([#692](https://github.com/Smart-Apply/applo/issues/692)) ([23feb43](https://github.com/Smart-Apply/applo/commit/23feb430adacdb54d0ad87580c12168490dbc65f))
+* **pdf:** align Path2D global with pdfjs's own @napi-rs/canvas copy ([#694](https://github.com/Smart-Apply/applo/issues/694)) ([a990eed](https://github.com/Smart-Apply/applo/commit/a990eed70c99c59280ffddc2b2f2323a4f0e188c))
+* **staging:** point API_BASE_URL at api-staging.applo.ai ([#689](https://github.com/Smart-Apply/applo/issues/689)) ([a9990c8](https://github.com/Smart-Apply/applo/commit/a9990c8dcb42d1327a30302e207339bf0e3a094b))
+
 ## [4.9.0](https://github.com/Smart-Apply/applo/compare/v4.8.0...v4.9.0) (2026-07-23)
 
 
