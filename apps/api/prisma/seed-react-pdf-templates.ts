@@ -24,19 +24,24 @@
  * otherwise the next seed run will deactivate its rows.
  *
  * Usage:
- *   pnpm prisma:seed:templates          (local)
- *   node prisma/dist/seed-react-pdf-templates.js   (compiled, via seed-all)
+ *   pnpm prisma:seed:templates                              (local)
+ *   node apps/api/prisma/dist/prisma/seed-react-pdf-templates.js
+ *     — how staging/prod run it: chained after `prisma migrate deploy` in the
+ *       Fly `release_command` (fly.staging.toml / fly.prod.toml), so every
+ *       deploy re-syncs the catalog. Also reachable via `prisma db seed`
+ *       (seed-all), which additionally seeds demo data — do NOT use that one
+ *       against a deployed database.
  */
 
 import { PrismaClient, TemplateType } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import { config } from 'dotenv';
-import { join } from 'path';
 
-// Load .env from apps/api directory (one level up from prisma/)
-config({ path: join(__dirname, '../.env') });
-
+// NOTE: no `dotenv` import here on purpose. `dotenv` is a devDependency and is
+// stripped by `pnpm deploy --prod`, so requiring it would crash this script in
+// the production image — where the Fly release command runs it. Local runs get
+// their env from the `dotenv -e .env --` prefix on the pnpm scripts; deployed
+// runs read DATABASE_URL straight from the machine environment.
 const pool = new Pool({
   connectionString:
     process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/smartapply',
@@ -69,9 +74,10 @@ interface TsxDesign {
 }
 
 /**
- * Canonical catalog. Mirrors the three registered TSX designs; ids, names,
- * categories and accents intentionally match the rows that already exist in
- * staging/prod so re-runs are pure metadata upserts.
+ * Canonical catalog. Mirrors the registered TSX designs in
+ * src/pdf-v2/template-registry.ts; ids, names, categories and accents
+ * intentionally match the rows that already exist in staging/prod so re-runs
+ * are pure metadata upserts.
  */
 const DESIGNS: TsxDesign[] = [
   {

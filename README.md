@@ -194,6 +194,12 @@ topology and [CONTRIBUTING.md](CONTRIBUTING.md) for the daily-use flow.
 | **Staging** | Push to `main`                         | None (auto)  | `smart-apply-api-staging.fly.dev` + `smart-apply-web-staging.ari41dev.workers.dev` |
 | **Prod**    | Tag push `v*.*.*` (via release-please) | Manual click | `api.applo.ai` + `applo.ai`                                            |
 
+Each API deploy runs a Fly **release command** before the new machines take
+traffic: `prisma migrate deploy`, then the idempotent react-pdf
+template-catalog seed (`apps/api/prisma/seed-react-pdf-templates.ts`). The
+catalog lives in the DB but is code-owned, so a new TSX design only becomes
+visible once that seed has run — a failure in either step aborts the deploy.
+
 **Manual deploy commands** (rarely needed — CI handles both):
 
 ```bash
