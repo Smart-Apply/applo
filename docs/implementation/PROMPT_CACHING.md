@@ -136,7 +136,7 @@ You cannot optimize what you cannot see. Ship token accounting first.
   fixtures, gpt-4.1) measured **`cached_tokens = 0` on every call**, confirming the current
   (pre-caching-benefit) state.
 
-### Phase 1 — Restructure the prompts (the big lever) `[ Status: ⚠️ Reorder shipped, but measured 0% cache hits — full-request-prefix mismatch (see Phase 3 finding); Strategy-A trio still deferred ]`
+### Phase 1 — Restructure the prompts (the big lever) `[ Status: ✅ Reorder shipped; the 0%-hit gap it exposed is FIXED in Phase 1b (full-prefix alignment); Strategy-A trio still deferred ]`
 
 Reorder each live-pipeline prompt to the chosen ordering (Strategy B preamble, or A where
 B does not apply) so the leading ≥1,024 tokens are identical across reuses. Keep the
@@ -168,7 +168,7 @@ semantic content unchanged — only **position** moves.
 - [ ] ≥ 50% of input tokens cached on the hot calls once warm. **Not met (0% measured)** —
   blocked on the same prefix mismatch; needs the full-prefix-alignment follow-up (Phase 1b).
 
-### Phase 2 — Provider request shape `[ Status: 🚧 prompt_cache_key shipped, but has no measurable effect yet (0% cached — see Phase 3 finding); the system/user split is now the critical path, not optional ]`
+### Phase 2 — Provider request shape `[ Status: ✅ prompt_cache_key shipped; the uniform system-message + response_format it needed landed in Phase 1b → caching now hits (29% cached input) ]`
 
 - [x] Pass **`prompt_cache_key`** in the request body to improve routing at concurrency.
   **Keyed per generation, NOT per template.** Because Phase 1 shipped Strategy B (a prefix
@@ -195,7 +195,7 @@ semantic content unchanged — only **position** moves.
 - [x] `response_format` / structured outputs still pass `v1-schemas` tests — 16/16 green; full
   API typecheck clean; 0 net-new lint warnings (28 pre-existing `any` = main baseline).
 
-### Phase 3 — Verify + eval (quality gate) `[ Status: ✅ Done — quality: no regression; cost: measured 0% cached / $0 savings, root-caused (see finding) ]`
+### Phase 3 — Verify + eval (quality gate) `[ Status: ✅ Done — quality: no regression; cost: measured 0% cached / $0 savings, root-caused → fixed in Phase 1b ]`
 
 Reordering can subtly shift model output (instruction position matters), so gate on eval.
 
@@ -247,7 +247,58 @@ calls/gen across 24 fixtures.
 4. Don't fire the two largest shared-prefix calls in **parallel** if you want the second to read
    the first's cache write (or accept that only the later sequential calls benefit).
 Gate the redo on this same eval — the aggregator's **Cost & prompt caching** block now measures
-the cached % + $/gen delta directly.
+the cached % + $/gen delta directly. **✅ Shipped — see Phase 1b below.**
+
+### Phase 1b — Full-prefix alignment (make caching actually hit) `[ Status: ✅ Done — measured 0% → 29% cached input, ~15% est. cost cut, no quality regression ]`
+
+The Phase 3 finding above proved the reorder alone cached nothing because Azure keys on the FULL
+request prefix (`response_format` schema → system message → user message), which differed per
+call. Phase 1b makes that full prefix byte-identical across each back-to-back cache group. It
+keeps the candidate data in the **user message** (Design C — lowest quality risk: the cluster-1
+prompts stay byte-identical to the proven 4.96 layout; only the cluster-2 prompts change).
+
+**What shipped**
+- Extended the identical `## Input Data → tailoredProfile → Job Posting` block to all 8 downstream
+  prompts (the 5 cluster-2 prompts — editor-resume, resume-style-rewrite, keyword-weave,
+  style-rewrite, shorten-cover-letter — gained the `Job Posting` block). Verified byte-identical
+  with `shasum` (`head -15` → one hash `da56adce…` across all 8).
+- Threaded the serialized `job` + a uniform `GENERATION_SYSTEM_ANCHOR` system message into the
+  cluster-2 pass helpers ([applications.service.ts](../../apps/api/src/applications/applications.service.ts))
+  so every downstream call leads with the same `[anchor][tailoredProfile+job]`.
+- Unified the résumé JSON group on ONE `response_format`: `editor-resume` now uses the same
+  `resume_rewrite` schema **and name** as `resume-rewrite` / `resume-style-rewrite`
+  ([v1-schemas.ts](../../apps/api/src/llm/schemas/v1-schemas.ts)) — a differing schema name is
+  prepended to the system message and would break the shared prefix.
+- Mirrored all of it in the eval harness ([pipeline-runner.ts](../../apps/api/scripts/eval/pipeline-runner.ts)).
+
+Two cache groups form (text vs JSON can't share — a schema is prepended to the system message):
+**text** (`cover-letter` writer → `editor-cover-letter`/`keyword-weave`/`style-rewrite`/`shorten`
+readers) share `[anchor][tailoredProfile+job]`; **JSON** (`resume-rewrite` writer →
+`editor-resume`/`resume-style-rewrite` readers) share `[resume_rewrite schema][anchor][tailoredProfile+job]`.
+
+**Acceptance criteria**
+- [x] `cached_tokens > 0` on the sequential cluster calls — clean intra-generation hits on the
+  newly-aligned prefix (impossible in Phase 3): `editor-resume` cached ~1152 on **every** fixture,
+  `editor-cover-letter` ~1024, `keyword-weave` ~1024.
+- [x] Aggregate cached input **0% → 29%** (full 24-fixture run), est. **$0.0633 → $0.0536/gen
+  (~15% cut)**. ⚠️ The aggregate is **inflated by cross-run residual cache** on the *unchanged*
+  `skill-selector`/`ats-keywords` prefixes (re-running recently-run fixtures within Azure's
+  retention window). Each unique production generation starts cold, so the production-representative
+  win is the **intra-generation** cluster caching only — roughly **10–20%**.
+- [x] No quality regression (DE + EN) — confirmed by a **same-session A/B** (both layouts, full
+  24 fixtures, back-to-back on real Azure gpt-4.1). The reliable **deterministic** scorers are
+  **equal-or-better** on the new layout: **style 100% clean / 0 violations** (OLD 96% — 1 residual
+  violation + teeth fired 3×), **grounding 63% / mean 82.7** (OLD 58% / 76.4), **length 0%
+  overrun** (244 vs. 253 words), coverage 98.3% (OLD 100%, ≈ 1 fixture). The saturated judge
+  OVERALL is **4.92 (NEW) vs. 5.00 (OLD)** — a 0.08 dip within its documented noise, with
+  sub-dimensions trading both ways and contradicted by the deterministic style/grounding gains.
+  Across all four runs the judge just oscillates 4.83–5.00 regardless of layout.
+
+**Deferred:** the `editor-cover-letter` writer/reader race — it fires immediately after its writer
+`cover-letter`, so the text-group cache write isn't always registered in time (hit 2/3 in the
+smoke; missed the fixture where it fired instantly). Sequencing the parallel writers or a small
+yield could firm it up — low value vs. risk. The Strategy-A trio (skill-selector / job-facts /
+ats-keywords) remains deferred.
 
 ### Phase 4 — Portability check (Mistral) `[ Status: ⬜ Not started ]`
 
@@ -324,6 +375,40 @@ branch. No migration, no state.
 
 _Newest first. Add an entry per PR/branch with the files touched and the measured effect._
 
+- **2026-07-25** — `feat/prompt-caching-phase1b-prefix-alignment` (A/B verification): ran a
+  **same-session old-vs-new A/B** (both full 24 fixtures, back-to-back on real Azure gpt-4.1) to
+  definitively check Phase 1b for a quality regression. **Result: no regression — the new layout
+  is equal-or-better on the deterministic scorers.** NEW (`ab-new-2`): style **100% clean / 0
+  violations**, grounding **63% / 82.7**, length 0% overrun (244w), coverage 98.3%, judge OVERALL
+  4.92. OLD (`ab-old`): style 96% (1 residual violation + teeth fired 3×), grounding 58% / 76.4,
+  length 0% overrun (253w), coverage 100%, judge OVERALL 5.00. The only edge for OLD is the
+  saturated judge OVERALL (+0.08, within noise; sub-dimensions move both ways). Conclusion:
+  Phase 1b's caching win carries **no deterministic quality cost** — safe to ship. (Op note: a
+  transient morning DNS/network blip failed the first `ab-new` run 19/24 with `getaddrinfo
+  ENOTFOUND` — not covered by the harness `isTransient` retry regex; re-ran clean once
+  connectivity returned.)
+- **2026-07-24** — `feat/prompt-caching-phase1b-prefix-alignment`: **Phase 1b full-prefix
+  alignment — caching now HITS (0% → 29% cached input, ~15% est. cost cut), no quality
+  regression.** Resolves the Phase 3 finding that the reorder alone cached nothing. **Design C**
+  (data stays in the user message; cluster-1 prompts left byte-identical to the proven 4.96
+  layout — lowest quality risk): extended the identical `## Input Data → tailoredProfile → Job
+  Posting` block to all 8 downstream prompts (the 5 cluster-2 prompts gained the `Job Posting`
+  block — `shasum head -15` = one hash across all 8), threaded the serialized `job` + a uniform
+  `GENERATION_SYSTEM_ANCHOR` into the cluster-2 pass helpers
+  ([applications.service.ts](../../apps/api/src/applications/applications.service.ts)), and
+  unified the résumé JSON group on ONE `response_format` — `editor-resume` registered with the
+  `resume_rewrite` schema+name (a differing name would break the shared prefix)
+  ([v1-schemas.ts](../../apps/api/src/llm/schemas/v1-schemas.ts)). Mirrored in the harness
+  ([pipeline-runner.ts](../../apps/api/scripts/eval/pipeline-runner.ts)). **Measured (real Azure
+  gpt-4.1):** clean intra-generation hits — `editor-resume` cached ~1152 on every fixture,
+  `editor-cover-letter` ~1024, `keyword-weave` ~1024 (impossible in Phase 3); full-run aggregate
+  **29% cached / $0.0536 per gen (was $0.0633)**. ⚠️ Aggregate inflated by cross-run residual
+  cache on the unchanged skill-selector/ats-keywords prefixes; the production-representative
+  (cold-start, intra-generation) win is ~10–20%. **Quality (24 fixtures):** no regression — style
+  100% clean, length 0% overrun (mean 241 words), coverage 87.8 → 98.8%, grounding 71%; judge
+  OVERALL 4.83 (vs. 4.96) within the saturated-judge noise. Verified: shasum byte-identity,
+  `eval:validate` green, API typecheck clean on changed files, `v1-schemas` tests 16/16, 0
+  net-new lint warnings.
 - **2026-07-24** — `feat/prompt-caching-phase3-eval`: **Phase 3 verify + eval (quality gate) —
   DONE, with a decisive cost finding.** Built the cost/caching measurement the harness was
   missing, then ran the full 24-fixture new-layout eval on real Azure (gpt-4.1).

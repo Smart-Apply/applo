@@ -8,6 +8,12 @@
 {{json tailoredProfile}}
 ```
 
+**Job Posting:**
+
+```json
+{{json job}}
+```
+
 **Cover letter (to shorten):**
 
 ```

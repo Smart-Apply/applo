@@ -950,7 +950,7 @@ export class ApplicationsService {
         tailoredProfile,
         detectedLanguage,
         userId,
-        jobPosting.id,
+        jobPosting,
       );
 
       // Style rewrite ("teeth", résumé): surgically fix the AI clichés the linter
@@ -962,7 +962,7 @@ export class ApplicationsService {
         tailoredProfile,
         detectedLanguage,
         userId,
-        jobPosting.id,
+        jobPosting,
       );
 
       // Step 3: Convert tailoredProfile to JSON format for frontend editor
@@ -1022,7 +1022,7 @@ export class ApplicationsService {
             tailoredProfile,
             detectedLanguage,
             userId,
-            jobPosting.id,
+            jobPosting,
           )
         : wovenCoverLetterMarkdown;
 
@@ -1038,7 +1038,7 @@ export class ApplicationsService {
             detectedLanguage,
             coverLetterBudget,
             userId,
-            jobPosting.id,
+            jobPosting,
           )
         : polishedCoverLetterMarkdown;
 
@@ -1294,7 +1294,7 @@ export class ApplicationsService {
             language,
             coverLetterBudget,
             userId,
-            jobPosting.id,
+            jobPosting,
           )
         : wovenCoverLetter;
 
@@ -1515,7 +1515,7 @@ export class ApplicationsService {
     tailoredProfile: TailoredProfileDto,
     language: string,
     userId: string,
-    jobPostingId: string,
+    jobPosting: JobPosting,
   ): Promise<RewrittenProfileDto | null> {
     if (!rewrittenProfile) return rewrittenProfile;
 
@@ -1525,11 +1525,12 @@ export class ApplicationsService {
         {
           rewrittenProfile,
           tailoredProfile,
+          job: this.serializeJobPosting(jobPosting),
           language,
           userId,
-          jobPostingId,
+          jobPostingId: jobPosting.id,
         },
-        { temperature: 0.35, maxTokens: 2000 },
+        { temperature: 0.35, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
       );
 
       // Guard: the edit MUST preserve every ID and not gut an entry. Otherwise
@@ -1587,7 +1588,7 @@ export class ApplicationsService {
           userId,
           jobPostingId: jobPosting.id,
         },
-        { temperature: 0.4, maxTokens: 1500 },
+        { temperature: 0.4, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
       );
 
       // Guard: the editor must not gut the letter. If it returns empty or less
@@ -1646,12 +1647,13 @@ export class ApplicationsService {
           draft,
           keywords,
           tailoredProfile,
+          job: this.serializeJobPosting(jobPosting),
           language,
           lengthBudget,
           userId,
           jobPostingId: jobPosting.id,
         },
-        { temperature: 0.3, maxTokens: 1500 },
+        { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
       );
 
       // Guard: a surgical weave must not gut the letter. If it returns empty or
@@ -1689,7 +1691,7 @@ export class ApplicationsService {
     tailoredProfile: TailoredProfileDto,
     language: string,
     userId: string,
-    jobPostingId: string,
+    jobPosting: JobPosting,
   ): Promise<string | null> {
     if (!draft || draft.trim() === '') return draft;
 
@@ -1703,7 +1705,7 @@ export class ApplicationsService {
     try {
       const rewritten = await this.llmService.callText(
         'v1/style-rewrite.md',
-        { draft, violations, tailoredProfile, language, userId, jobPostingId },
+        { draft, violations, tailoredProfile, job: this.serializeJobPosting(jobPosting), language, userId, jobPostingId: jobPosting.id },
         { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
       );
 
@@ -1749,7 +1751,7 @@ export class ApplicationsService {
     language: string,
     lengthBudget: number,
     userId: string,
-    jobPostingId: string,
+    jobPosting: JobPosting,
   ): Promise<string | null> {
     if (!draft || draft.trim() === '') return draft;
 
@@ -1790,9 +1792,10 @@ export class ApplicationsService {
           lengthBudget,
           currentWords: lint.words,
           tailoredProfile,
+          job: this.serializeJobPosting(jobPosting),
           language,
           userId,
-          jobPostingId,
+          jobPostingId: jobPosting.id,
         },
         { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
       );
@@ -1840,7 +1843,7 @@ export class ApplicationsService {
     tailoredProfile: TailoredProfileDto,
     language: string,
     userId: string,
-    jobPostingId: string,
+    jobPosting: JobPosting,
   ): Promise<RewrittenProfileDto | null> {
     if (!rewrittenProfile) return rewrittenProfile;
 
@@ -1855,7 +1858,7 @@ export class ApplicationsService {
     try {
       const edited = await this.llmService.callJson<RewrittenProfileDto>(
         'v1/resume-style-rewrite.md',
-        { rewrittenProfile, tailoredProfile, violations, verbFirstBullets, language, userId, jobPostingId },
+        { rewrittenProfile, tailoredProfile, job: this.serializeJobPosting(jobPosting), violations, verbFirstBullets, language, userId, jobPostingId: jobPosting.id },
         { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
       );
 
@@ -2480,7 +2483,7 @@ export class ApplicationsService {
         language,
         lengthBudget,
         userId,
-        jobPosting.id,
+        jobPosting,
       );
       content = this.convertCoverLetterToHtml(governed) ?? governed ?? markdown;
     }
