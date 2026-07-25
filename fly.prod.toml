@@ -43,8 +43,16 @@ primary_region = 'fra'
 # - Going directly to `node node_modules/prisma/build/index.js` sidesteps
 #   docker-entrypoint.sh's bin-resolution (npm workspaces put the actual
 #   prisma binary under apps/api/node_modules/.bin/, not the root .bin/).
+# - AFTER migrations we sync the react-pdf template catalog. Those rows live in
+#   the DB but are code-owned (every active row must resolve to a factory in
+#   src/pdf-v2/template-registry.ts), so shipping a new TSX design without this
+#   step leaves it invisible in staging/prod. The seed is idempotent (upsert by
+#   id + deactivate unrenderable rows), never deletes, and is chained with `&&`
+#   so a failed migration aborts before it runs. NOTE: `exec` was dropped from
+#   the migrate call so the shell survives to run this second step; `sh -c 'a &&
+#   b'` still exits with b's status, so a seed failure aborts the deploy.
 [deploy]
-  release_command = '''sh -c 'if [ -z "$DIRECT_URL" ]; then echo "[release] FATAL: DIRECT_URL secret not set on this machine." >&2; exit 1; fi; DATABASE_URL="$DIRECT_URL" exec node apps/api/node_modules/prisma/build/index.js migrate deploy --schema=apps/api/prisma/schema.prisma' '''
+  release_command = '''sh -c 'if [ -z "$DIRECT_URL" ]; then echo "[release] FATAL: DIRECT_URL secret not set on this machine." >&2; exit 1; fi; DATABASE_URL="$DIRECT_URL" node apps/api/node_modules/prisma/build/index.js migrate deploy --schema=apps/api/prisma/schema.prisma && echo "[release] Syncing react-pdf template catalog..." && DATABASE_URL="$DIRECT_URL" node apps/api/prisma/dist/prisma/seed-react-pdf-templates.js' '''
 
 [env]
   # Public origin of THIS API. Drives OAuth callback URLs and the

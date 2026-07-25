@@ -22,11 +22,12 @@ primary_region = 'fra'
 [build]
   dockerfile = 'infra/Dockerfile'
 
-# Identical to prod — runs migrations against staging's DATABASE_URL/DIRECT_URL
-# secret (Neon `staging` branch). See fly.prod.toml for the full explanation
-# of the shell guard + DATABASE_URL=$DIRECT_URL injection.
+# Identical to prod — runs migrations, then syncs the react-pdf template
+# catalog, against staging's DATABASE_URL/DIRECT_URL secret (Neon `staging`
+# branch). See fly.prod.toml for the full explanation of the shell guard,
+# the DATABASE_URL=$DIRECT_URL injection and the template-seed step.
 [deploy]
-  release_command = '''sh -c 'if [ -z "$DIRECT_URL" ]; then echo "[release] FATAL: DIRECT_URL secret not set on this machine." >&2; exit 1; fi; DATABASE_URL="$DIRECT_URL" exec node apps/api/node_modules/prisma/build/index.js migrate deploy --schema=apps/api/prisma/schema.prisma' '''
+  release_command = '''sh -c 'if [ -z "$DIRECT_URL" ]; then echo "[release] FATAL: DIRECT_URL secret not set on this machine." >&2; exit 1; fi; DATABASE_URL="$DIRECT_URL" node apps/api/node_modules/prisma/build/index.js migrate deploy --schema=apps/api/prisma/schema.prisma && echo "[release] Syncing react-pdf template catalog..." && DATABASE_URL="$DIRECT_URL" node apps/api/prisma/dist/prisma/seed-react-pdf-templates.js' '''
 
 [env]
   # Public origin of THIS API. Drives OAuth callback URLs and the

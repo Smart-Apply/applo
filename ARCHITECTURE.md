@@ -367,7 +367,7 @@ User 1:1 Subscription
 | Secrets    | Fly Secrets (API) · Cloudflare Worker vars/secrets (Web) · `.env` (dev)                                                                                               |
 | Database   | Neon Postgres (serverless, EU/Frankfurt; `DATABASE_URL` pooled, `DIRECT_URL` for migrations)                                                                          |
 | DNS/CDN    | Cloudflare (proxied for all hostnames; ACME challenge DNS-only)                                                                                                       |
-| Migrations | `prisma migrate deploy` runs as a Fly **release command** before machines start serving traffic                                                                       |
+| Migrations | `prisma migrate deploy` runs as a Fly **release command** before machines start serving traffic, followed by the idempotent react-pdf template-catalog seed (`prisma/seed-react-pdf-templates.ts`) |
 
 ## 📊 API Endpoints (selection)
 
@@ -483,6 +483,7 @@ GitHub Actions
         │   │    --image; no rebuild; race-guard rebuilds only if missing) →
         │   │    Fly (smart-apply-api, fly.prod.toml)
         │   ├─ Release command: prisma migrate deploy (Neon DIRECT_URL)
+        │   │    → then seed-react-pdf-templates (idempotent catalog sync)
         │   ├─ Secrets via `flyctl secrets set` (CORS_ORIGINS, JWT_*, R2_*, ...)
         │   ├─ HTTPS terminated by Fly (Let's Encrypt for api.applo.ai)
         │   └─ Backed by Neon Postgres · Cloudflare R2 · Upstash QStash/Redis
