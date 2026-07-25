@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { createRequire } from 'node:module';
 import * as nodePath from 'node:path';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReactPdfRendererService } from './react-pdf-renderer.service';
@@ -140,6 +141,7 @@ export class PreviewRendererService {
 
   private async loadPdfjs(): Promise<PdfjsNamespace> {
     if (!this.pdfjsModule) {
+      PreviewRendererService.alignCanvasGlobals();
       // Same ESM workaround as react-pdf-loader.ts. `pdfjs-dist` exposes a
       // legacy CJS build at `pdfjs-dist/legacy/build/pdf.mjs` which still
       // requires the dynamic-import dance under TypeScript's `node16`
@@ -150,6 +152,39 @@ export class PreviewRendererService {
       this.pdfjsModule = dynamicImport('pdfjs-dist/legacy/build/pdf.mjs');
     }
     return this.pdfjsModule;
+  }
+
+  /**
+   * Force `globalThis.Path2D`/`DOMMatrix` to come from the SAME
+   * `@napi-rs/canvas` instance that pdfjs-dist itself resolves.
+   *
+   * pdfjs only installs those globals when they are still unset:
+   *
+   *   if (!globalThis.Path2D) { globalThis.Path2D = canvas.Path2D; }
+   *
+   * `pdf-parse` bundles its own pdfjs, which runs the identical polyfill on
+   * import — and it resolves `@napi-rs/canvas@0.1.80` while apps/api and
+   * pdfjs-dist resolve `@napi-rs/canvas@1.0.2`. Because the Nest module graph
+   * loads `pdf-parse` first (job-postings PDF parser, export page-count
+   * backstop), pdfjs found `Path2D` already defined and kept the 0.1.80 class.
+   * Glyph outlines were then built from 0.1.80 and filled into a 1.0.2 canvas
+   * context, so the native binding rejected them:
+   *   `Error: Value is none of these types \`String\`, \`Path\``
+   * — a 500 on EVERY uncached template preview.
+   *
+   * Resolving through pdfjs's own entry point keeps the two in lockstep even
+   * if the versions diverge again. Overwriting is safe: `pdf-parse` only
+   * extracts text and never rasterises, so it does not use these globals.
+   */
+  private static alignCanvasGlobals(): void {
+    const pdfjsEntry = require.resolve('pdfjs-dist/legacy/build/pdf.mjs');
+    const canvas = createRequire(pdfjsEntry)('@napi-rs/canvas') as {
+      Path2D?: unknown;
+      DOMMatrix?: unknown;
+    };
+    const globals = globalThis as Record<string, unknown>;
+    if (canvas.Path2D) globals.Path2D = canvas.Path2D;
+    if (canvas.DOMMatrix) globals.DOMMatrix = canvas.DOMMatrix;
   }
 
   /**
