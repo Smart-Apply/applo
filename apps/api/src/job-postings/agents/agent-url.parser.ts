@@ -3,6 +3,7 @@ import { chromium, Browser, Page } from 'playwright';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { PromptService } from '../../common/services';
+import { buildV1ChatCompletionsUrl } from '../../llm/providers/azure-v1-url.util';
 import { assertUrlIsPublic, resolveAndAssertPublic } from '../../common/security/url-safety.util';
 
 // Define the structured output schema for job posting extraction
@@ -784,10 +785,13 @@ export class AgentUrlParser {
    * gives up the response, this one actually closes the underlying socket.
    */
   private async callAzureOpenAI(messages: ChatMessage[]): Promise<string> {
-    const url =
-      `${this.azureEndpoint.replace(/\/$/, '')}` +
-      `/openai/deployments/${this.azureDeployment}/chat/completions` +
-      `?api-version=${this.azureApiVersion}`;
+    // v1 Foundry API: POST {endpoint}/openai/v1/chat/completions with the
+    // deployment passed as `model` in the body. The legacy
+    // /openai/deployments/{name}/... path only accepts DATED api-versions, so
+    // it 404s ('Resource not found') whenever AZURE_OPENAI_API_VERSION is a v1
+    // channel value ('preview' / 'v1') — which is exactly what broke URL
+    // parsing on staging. buildV1ChatCompletionsUrl normalizes both styles.
+    const url = buildV1ChatCompletionsUrl(this.azureEndpoint, this.azureApiVersion);
 
     const controller = new AbortController();
     const abortTimer = setTimeout(
@@ -805,6 +809,7 @@ export class AgentUrlParser {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          model: this.azureDeployment,
           messages,
           temperature: LLM_TEMPERATURE,
           max_tokens: LLM_MAX_TOKENS,
