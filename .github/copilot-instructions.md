@@ -73,6 +73,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 ### When you change `package.json`
 - Run `pnpm install` immediately after, and commit the resulting `pnpm-lock.yaml` change in the same PR. The `lint-and-typecheck` CI job blocks on lockfile drift (`pnpm install --lockfile-only` against the manifests must produce no diff against the committed lockfile).
 - For dependency upgrades: minor/patch bumps are handled by Dependabot's grouped weekly PRs. Major bumps for `next`, `react`, `react-dom`, `prisma`, `@prisma/*`, `@nestjs/*`, `puppeteer`, `playwright`, `tailwindcss`, `typescript`, `turbo`, `lucide-react`, `eslint`, `eslint-config-next`, `@types/node` are **explicitly ignored** in [`.github/dependabot.yml`](../.github/dependabot.yml) — those need a deliberate, hand-tested PR.
+- **`pdfjs-dist` in `apps/web` is NOT independently upgradable** (all its updates are ignored in `dependabot.yml`). [pdf-preview-modal.tsx](../apps/web/src/components/pdf/pdf-preview-modal.tsx) takes the pdf.js **API** from `react-pdf` (which pins `pdfjs-dist` to an exact version and, under pnpm, always gets its own nested copy) but loads the **worker** from `apps/web`'s own `pdfjs-dist` via `new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url)`. pdf.js hard-refuses to run when API and worker versions differ, so any drift breaks **every** PDF preview with the generic "PDF konnte nicht geladen werden" — with no source-code footprint for lint/typecheck to catch. It has taken down prod twice (fixed in PR #534, silently re-broken by two Dependabot bumps 5.4.296 → 6.0.227 → 6.1.200). Bump it **only** together with `react-pdf`, to exactly the version react-pdf depends on; `pnpm --filter @applo/web run check:pdfjs` ([apps/web/scripts/check-pdfjs-version.mjs](../apps/web/scripts/check-pdfjs-version.mjs)) enforces the pair and runs in CI and in `cf:build`.
 
 ### When architecture changes
 - **MANDATORY**: update `README.md` + `ARCHITECTURE.md` in the same PR. See "Documentation Sync" above.
@@ -119,6 +120,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - Shipping new code that introduces ESLint errors *or* warnings (see Lint policy)
 - `form.watch(...)` inside a component body — use `useWatch({ control, name })`
 - Binding `getSessionIdentifier` (CSRF middleware in [apps/api/src/main.ts](apps/api/src/main.ts)) to any auth-lifecycle value (cookies, headers, user id)
+- Bumping `pdfjs-dist` in `apps/web` away from the exact version `react-pdf` pins (breaks every PDF preview — see "When you change `package.json`")
 
 ## Non-Goals
 - Rich document editing beyond Tiptap StarterKit
@@ -172,7 +174,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - Zustand **5.0** (auth store)
   - **TanStack Query 5.90** (server state, caching, optimistic updates)
 - **Forms:** react-hook-form 7.66 + Zod 3.25 (`@hookform/resolvers`)
-- **PDF:** react-pdf 10 + pdfjs-dist 5
+- **PDF:** react-pdf 10 + pdfjs-dist 5 — `pdfjs-dist` is pinned to the **exact** version `react-pdf` bundles (the pdf.js worker and API must match); enforced by `pnpm --filter @applo/web run check:pdfjs`
 - **Charts:** recharts (Analytics activity chart only — the rest of `apps/web/src/components/analytics/*` uses Tailwind/inline SVG, no chart lib)
 - **Editor:** Tiptap 3.10 (StarterKit + TextStyle)
 - **Sanitization:** isomorphic-dompurify

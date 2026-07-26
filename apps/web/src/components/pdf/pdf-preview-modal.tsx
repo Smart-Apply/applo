@@ -11,6 +11,15 @@ import { handleDownload } from '@/lib/pdf-utils';
 
 // Set up PDF.js worker - bundle locally to avoid CDN/version mismatch and
 // mixed-content/CORS issues with dynamic ESM imports during dev.
+//
+// ⚠️ VERSION LOCKSTEP: this specifier resolves to apps/web's own `pdfjs-dist`,
+// while the `pdfjs` API imported above comes from the copy `react-pdf` pins.
+// pdf.js hard-refuses to run when the two versions differ ("The API version X
+// does not match the Worker version Y"), which surfaces as every preview
+// failing with the generic "PDF konnte nicht geladen werden". Keep
+// `pdfjs-dist` in apps/web/package.json pinned to exactly the version
+// react-pdf depends on; `pnpm --filter @applo/web run check:pdfjs` enforces it
+// in CI and in cf:build.
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url,
@@ -94,7 +103,10 @@ export function PDFPreviewModal({
   }
 
   function onDocumentLoadError(error: Error) {
-    console.error('PDF loading error:', error);
+    // Log name + message explicitly: pdf.js throws minified subclasses of
+    // Error, and logging the object alone prints just the mangled class name
+    // (e.g. "PDF loading error: N") with no clue what actually failed.
+    console.error('PDF loading error:', error?.name, error?.message, error);
     setIsLoading(false);
 
     // Check if it might be an expired URL
