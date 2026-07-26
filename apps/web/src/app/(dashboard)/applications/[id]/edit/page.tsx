@@ -311,17 +311,22 @@ export default function ApplicationResumeEditorPage() {
   };
 
   // ── insert a missing ATS keyword into the résumé (auto-save persists it) ──
+  // Appends to the first existing skill category — same place a manually added
+  // skill lands — instead of maintaining a separate "Weitere Kenntnisse" bucket.
   const handleAddKeyword = useCallback((term: string) => {
     setParsedResume((prev) => {
       if (!prev) return prev;
       const cats = [...(prev.skillCategories || [])];
-      const idx = cats.findIndex((c) => c.type === 'Weitere Kenntnisse');
-      if (idx >= 0) {
-        if (!cats[idx].skills.some((s) => s.toLowerCase() === term.toLowerCase())) {
-          cats[idx] = { ...cats[idx], skills: [...cats[idx].skills, term] };
-        }
+      const alreadyPresent = cats.some((c) =>
+        c.skills.some((s) => s.toLowerCase() === term.toLowerCase()),
+      );
+      if (alreadyPresent) return prev;
+      if (cats.length > 0) {
+        cats[0] = { ...cats[0], skills: [...cats[0].skills, term] };
       } else {
-        cats.push({ type: 'Weitere Kenntnisse', skills: [term] });
+        // No skills section yet — seed an unnamed category (single categories
+        // render without a label in both the editor and the PDF templates).
+        cats.push({ type: '', skills: [term] });
       }
       return { ...prev, skillCategories: cats };
     });

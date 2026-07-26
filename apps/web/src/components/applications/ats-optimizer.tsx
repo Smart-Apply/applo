@@ -9,9 +9,10 @@
  * "Hinzufügen" cards + already-covered list.
  *
  * Honest scoring (no fake bump): "Hinzufügen" calls `onAddKeyword`, which the page
- * inserts into the résumé (a "Weitere Kenntnisse" skill category) and auto-saves —
- * the term then shows up in the live CV. The score only moves on "Neu analysieren",
- * which re-runs the real analysis via `useAnalyzeKeywords`.
+ * inserts into the résumé (appended to the first skill category, like a manual
+ * skill add) and auto-saves — the term then shows up in the live CV. The score
+ * only moves on "Neu analysieren", which re-runs the real analysis via
+ * `useAnalyzeKeywords`.
  */
 
 import { useState } from 'react';
