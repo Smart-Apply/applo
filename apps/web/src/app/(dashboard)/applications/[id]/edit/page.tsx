@@ -455,7 +455,9 @@ export default function ApplicationResumeEditorPage() {
   const subtitle = [application.jobPosting?.company, application.jobPosting?.location, t('page.created.label', { value: createdLabel })]
     .filter(Boolean)
     .join(' · ');
-  const documentIntlLocale = toExportLanguage(application.language) === 'en' ? 'en-US' : 'de-DE';
+  // Document-language formatting follows the export-language selector so the
+  // mimic (section headers, letter date) matches what the export will produce.
+  const documentIntlLocale = selectedLanguage === 'en' ? 'en-US' : 'de-DE';
   const letterDate = new Intl.DateTimeFormat(documentIntlLocale, { day: 'numeric', month: 'long', year: 'numeric' }).format(createdAt);
   const letterLocation = [parsedResume?.city, parsedResume?.country].filter(Boolean).join(', ') || parsedResume?.fullAddress;
 
@@ -642,6 +644,7 @@ export default function ApplicationResumeEditorPage() {
               onChange={setParsedResume}
               accent={accent}
               design={resumeDesign}
+              language={selectedLanguage}
               designSettings={application.templateSettings}
               photoUrl={profilePhotoUrl}
               onGenerateSummary={handleGenerateSummary}

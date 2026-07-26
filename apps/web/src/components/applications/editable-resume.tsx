@@ -216,6 +216,36 @@ const DEFAULT_SECTION_ORDER: ResumeSection[] = [
 /** Sections the elegant-sidebar skin renders in the aside column. */
 const SIDEBAR_ASIDE_SECTIONS: ResumeSection[] = ['education', 'skills', 'languages'];
 
+/** Language the DOCUMENT is written in — drives the mimic's section labels. */
+export type ResumeDocLanguage = 'de' | 'en';
+/**
+ * Document-language section labels. These are document content (they mirror
+ * the exported PDF's headers, see apps/api/src/pdf-v2/i18n.ts), NOT UI copy —
+ * so they follow the application's export language, never the UI locale.
+ */
+const DOC_LABELS: Record<ResumeDocLanguage, Record<ResumeSection | 'contact', string>> = {
+  de: {
+    profile: 'Profil',
+    experience: 'Berufserfahrung',
+    education: 'Ausbildung',
+    projects: 'Projekte',
+    skills: 'Fähigkeiten',
+    languages: 'Sprachen',
+    certs: 'Zertifikate',
+    contact: 'Kontakt',
+  },
+  en: {
+    profile: 'Professional Summary',
+    experience: 'Professional Experience',
+    education: 'Education',
+    projects: 'Key Projects',
+    skills: 'Skills',
+    languages: 'Languages',
+    certs: 'Certifications',
+    contact: 'Contact',
+  },
+};
+
 /** Swap an item with its neighbor; null when the move is out of range. */
 function moveById<T extends { id: string }>(arr: T[], id: string, dir: -1 | 1): T[] | null {
   const i = arr.findIndex((x) => x.id === id);
@@ -256,6 +286,11 @@ interface EditableResumeProps {
   /** Which export template the edit surface should mimic (P1). */
   design?: ResumeDesign;
   /**
+   * Export language of the document — localizes the section headers exactly
+   * like the exported PDF. Defaults to German.
+   */
+  language?: ResumeDocLanguage;
+  /**
    * Approximate the per-application design settings on the edit surface
    * (font scale via zoom, family via a CSS stack, density via rhythm
    * overrides). The exported PDF stays the authoritative rendering.
@@ -291,6 +326,7 @@ export function EditableResume({
   onChange,
   accent,
   design = 'classic-ats',
+  language = 'de',
   designSettings,
   photoUrl,
   onGenerateSummary,
@@ -298,6 +334,7 @@ export function EditableResume({
   onGenerateProject,
 }: EditableResumeProps) {
   const t = useTranslations('editor');
+  const docLabel = DOC_LABELS[language];
   // Frozen snapshot for passthrough of untouched top-level fields.
   const [original] = useState(() => value);
 
@@ -803,7 +840,7 @@ export function EditableResume({
   const profileSection = removed.has('profile') ? null : (
     <div className="rd-sec">
       {sectionTitle(
-        'Profil',
+        docLabel.profile,
         'profile',
         onGenerateSummary ? (
           <AiAssistantPopover
@@ -829,7 +866,7 @@ export function EditableResume({
 
   const experienceSection = removed.has('experience') ? null : (
     <div className="rd-sec">
-      {sectionTitle('Berufserfahrung', 'experience')}
+      {sectionTitle(docLabel.experience, 'experience')}
       {lists.exp.map((x, index) => (
         <div className="rd-item" key={x.id}>
           {itemMovers('exp', x.id, index, lists.exp.length)}
@@ -884,7 +921,7 @@ export function EditableResume({
 
   const educationSection = removed.has('education') ? null : (
     <div className="rd-sec">
-      {sectionTitle('Ausbildung', 'education')}
+      {sectionTitle(docLabel.education, 'education')}
       {lists.edu.map((e, index) => (
         <div className="rd-item" key={e.id}>
           {itemMovers('edu', e.id, index, lists.edu.length)}
@@ -906,7 +943,7 @@ export function EditableResume({
 
   const projectsSection = removed.has('projects') ? null : (
       <div className="rd-sec">
-        {sectionTitle('Projekte', 'projects')}
+        {sectionTitle(docLabel.projects, 'projects')}
         {lists.projects.map((x, index) => (
           <div className="rd-item" key={x.id}>
             {itemMovers('projects', x.id, index, lists.projects.length)}
@@ -960,7 +997,7 @@ export function EditableResume({
 
   const skillsSection = removed.has('skills') ? null : (
     <div className="rd-sec">
-      {sectionTitle('Fähigkeiten', 'skills')}
+      {sectionTitle(docLabel.skills, 'skills')}
       {lists.skillCats.map((c, catIndex) => (
         <div key={c.id}>
           {multiCat && (
@@ -1024,7 +1061,7 @@ export function EditableResume({
 
   const languagesSection = removed.has('languages') ? null : (
     <div className="rd-sec">
-      {sectionTitle('Sprachen', 'languages')}
+      {sectionTitle(docLabel.languages, 'languages')}
       <div className="rd-skills">
         {lists.langs.map((l, index) => (
           <span className="rd-skill" key={l.id}>
@@ -1045,7 +1082,7 @@ export function EditableResume({
 
   const certsSection = removed.has('certs') ? null : (
       <div className="rd-sec">
-        {sectionTitle('Zertifikate', 'certs')}
+        {sectionTitle(docLabel.certs, 'certs')}
         {lists.certs.map((c, index) => (
           <div className="rd-item" key={c.id}>
             {itemMovers('certs', c.id, index, lists.certs.length)}
@@ -1125,7 +1162,7 @@ export function EditableResume({
                 )}
                 <div className="rd-sec">
                   <div className="rd-sec-title" style={{ color: accent }}>
-                    {t('resume.contact.sectionTitle')}
+                    {docLabel.contact}
                     <span className="rd-sec-ai">{contactPopover}</span>
                   </div>
                   {displayAddress && <div className="rd-contact-item">{displayAddress}</div>}
