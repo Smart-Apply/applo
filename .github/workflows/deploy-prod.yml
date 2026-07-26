@@ -166,7 +166,7 @@ jobs:
 
       - name: Build + push API image (fallback)
         if: steps.ensure-image.outputs.need_build == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: infra/Dockerfile

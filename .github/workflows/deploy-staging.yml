@@ -104,7 +104,7 @@ jobs:
         run: flyctl auth docker
 
       - name: Build + push API image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: infra/Dockerfile
