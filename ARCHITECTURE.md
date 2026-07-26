@@ -401,6 +401,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET/POST | `/job-postings`                    | Job CRUD                                                                    |
 | POST     | `/job-postings/parse`              | Parse text/URL/file                                                         |
 | GET/POST | `/applications`                    | Application pipeline                                                        |
+| POST     | `/applications/cancel-generation`  | Cancel in-flight generation (soft-deletes the PENDING/GENERATING row)       |
 | GET      | `/applications/:id/files`          | SAS download URLs                                                           |
 | PATCH    | `/applications/:id/template-settings` | Per-application design tuning (font scale, density, accent override)    |
 | GET      | `/applications/:id/stream`         | SSE status stream                                                           |

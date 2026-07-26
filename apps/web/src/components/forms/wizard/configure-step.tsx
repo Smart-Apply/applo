@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import { useCreateApplicationWithGeneration } from '@/hooks/use-applications';
 import { useCoverLetterTemplates, useResumeTemplates, getDefaultTemplate } from '@/hooks/use-templates';
 import { useUsage } from '@/hooks/use-usage';
 import { toast } from 'sonner';
+import { api } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import {
   Sparkles,
@@ -152,28 +153,37 @@ export function ConfigureStep({
   const [selectedLanguage, setSelectedLanguage] = useState<ApplicationLanguage>('de');
   const [hoverGroupKey, setHoverGroupKey] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  // Cancelling doesn't abort the in-flight request — it hides the loading
+  // screen and soft-deletes the in-flight row server-side right away (so no
+  // orphan survives a closed tab); the run's token tells the eventual
+  // settlement whether a client-side cleanup fallback is still needed.
+  const [cancelled, setCancelled] = useState(false);
+  const runTokenRef = useRef<{ cancelled: boolean; serverCancelled: boolean } | null>(null);
+  const pendingRunRef = useRef<Promise<void> | null>(null);
+  const pendingCancelRef = useRef<Promise<void> | null>(null);
   // Click the live preview to open the CV full-size in a dialog.
   const [zoomOpen, setZoomOpen] = useState(false);
 
   const isGenerating = createApplication.isPending || isRedirecting;
+  const showGenerating = isGenerating && !cancelled;
   // Fractional seconds, ticked at 200ms so the progress ring moves smoothly
   // instead of jumping once per second. Reset happens in handleSubmit (event
   // handler) — setting state synchronously inside the effect cascades renders.
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   useEffect(() => {
-    if (!isGenerating) return;
+    if (!showGenerating) return;
     const start = Date.now();
     const interval = setInterval(() => {
       setElapsedSeconds((Date.now() - start) / 1000);
     }, 200);
     return () => clearInterval(interval);
-  }, [isGenerating]);
+  }, [showGenerating]);
 
   // Drive the wizard-level Applo guide (process → success once actually done).
-  const isFinishing = isGenerating && isRedirecting;
+  const isFinishing = showGenerating && isRedirecting;
   useEffect(() => {
-    onGenerationStateChange?.(isGenerating, isFinishing);
-  }, [isGenerating, isFinishing, onGenerationStateChange]);
+    onGenerationStateChange?.(showGenerating, isFinishing);
+  }, [showGenerating, isFinishing, onGenerationStateChange]);
 
   const resumeTemplateGroups = resumeTemplates ? groupTemplatesByBase(resumeTemplates) : [];
 
@@ -202,63 +212,121 @@ export function ConfigureStep({
     return defaultCL?.id ?? null;
   })();
 
+  const handleCancel = () => {
+    const token = runTokenRef.current;
+    if (token) token.cancelled = true;
+    setCancelled(true);
+    toast.info(t('configureStep.progress.cancelledToast'));
+    // Server-side cancel at click time: soft-deletes the in-flight row so the
+    // cancelled run never shows up in the list — even if the tab closes
+    // before the generation request settles. `cancelled: false` means the row
+    // didn't exist yet (or just finished); the settlement fallback covers it.
+    pendingCancelRef.current = api.applications
+      .cancelGeneration({ jobPostingId: jobPosting.id })
+      .then((res) => {
+        if (token && res.cancelled) token.serverCancelled = true;
+      })
+      .catch((err: unknown) => {
+        console.warn('Server-side cancel failed; falling back to client cleanup', err);
+      });
+  };
+
   const handleSubmit = async () => {
     setElapsedSeconds(0);
-    try {
-      const application = await createApplication.mutateAsync({
-        jobPostingId: jobPosting.id,
-        coverLetterTemplateId: generateCoverLetter ? (effectiveCoverLetterTemplateId || undefined) : undefined,
-        resumeTemplateId: effectiveResumeTemplateId || undefined,
-        generateCoverLetter,
-        coverLetterLength,
-        language: selectedLanguage,
-      });
-
-      // Flip the loading screen into its "Fertig!" state (ring animates to
-      // 100%, steps turn green) and give that animation time to play —
-      // previously we navigated away immediately and the ring jumped from
-      // wherever it was straight out of the page.
-      setIsRedirecting(true);
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-      await new Promise(resolve => setTimeout(resolve, FINISH_ANIMATION_MS));
-      router.push(`/applications/${application.id}/edit`);
-    } catch (error: unknown) {
-      let message = t('configureStep.errors.unknown');
-      let applicationId: string | null = null;
-      let errorCode: string | undefined;
-      if (error && typeof error === 'object') {
-        const err = error as Record<string, unknown>;
-        const errData = err.data as Record<string, unknown> | undefined;
-        if (errData?.message) message = String(errData.message);
-        else if (err.message) message = String(err.message);
-        if (errData?.applicationId) applicationId = String(errData.applicationId);
-        if (errData?.code) errorCode = String(errData.code);
-        else if (errData?.error) errorCode = String(errData.error);
-      }
-
-      if (errorCode === 'EMAIL_NOT_VERIFIED') {
-        toast.error(message, {
-          duration: 10000,
-          action: {
-            label: t('configureStep.errors.resendEmail'),
-            onClick: () => router.push('/settings?verify=resend'),
-          },
-        });
-        return;
-      }
-
-      if (applicationId) {
-        toast.error(message, {
-          duration: 8000,
-          action: {
-            label: t('configureStep.errors.goToApplication'),
-            onClick: () => router.push(`/applications/${applicationId}`),
-          },
-        });
-      } else {
-        toast.error(message);
-      }
+    setCancelled(false);
+    // Register the run token BEFORE draining so cancelling during the drain
+    // wait marks this run too (otherwise it would start and later redirect).
+    const previousToken = runTokenRef.current;
+    const token = { cancelled: false, serverCancelled: false };
+    runTokenRef.current = token;
+    // Let a pending server-side cancel settle first (fast). Only when it
+    // couldn't cancel (row not created yet at click time) do we drain the
+    // old run — the backend duplicate-guard would 409 while it still holds a
+    // live PENDING row.
+    if (pendingCancelRef.current) {
+      await pendingCancelRef.current;
+      pendingCancelRef.current = null;
     }
+    if (pendingRunRef.current && !previousToken?.serverCancelled) {
+      await pendingRunRef.current;
+    }
+    pendingRunRef.current = null;
+    if (token.cancelled) return;
+    const run = (async () => {
+      try {
+        const application = await createApplication.mutateAsync({
+          jobPostingId: jobPosting.id,
+          coverLetterTemplateId: generateCoverLetter ? (effectiveCoverLetterTemplateId || undefined) : undefined,
+          resumeTemplateId: effectiveResumeTemplateId || undefined,
+          generateCoverLetter,
+          coverLetterLength,
+          language: selectedLanguage,
+        });
+
+        if (token.cancelled) {
+          // Fallback for the rare case the server-side cancel missed the row
+          // (cancel clicked before it was created, or the cancel call failed).
+          if (!token.serverCancelled) {
+            try {
+              await api.applications.delete(application.id);
+              queryClient.invalidateQueries({ queryKey: ['applications'] });
+            } catch (cleanupErr) {
+              console.warn('Cleanup of cancelled generation failed', cleanupErr);
+            }
+          }
+          return;
+        }
+
+        // Flip the loading screen into its "Fertig!" state (ring animates to
+        // 100%, steps turn green) and give that animation time to play —
+        // previously we navigated away immediately and the ring jumped from
+        // wherever it was straight out of the page.
+        setIsRedirecting(true);
+        queryClient.invalidateQueries({ queryKey: ['applications'] });
+        await new Promise(resolve => setTimeout(resolve, FINISH_ANIMATION_MS));
+        router.push(`/applications/${application.id}/edit`);
+      } catch (error: unknown) {
+        if (token.cancelled) return;
+        let message = t('configureStep.errors.unknown');
+        let applicationId: string | null = null;
+        let errorCode: string | undefined;
+        if (error && typeof error === 'object') {
+          const err = error as Record<string, unknown>;
+          const errData = err.data as Record<string, unknown> | undefined;
+          if (errData?.message) message = String(errData.message);
+          else if (err.message) message = String(err.message);
+          if (errData?.applicationId) applicationId = String(errData.applicationId);
+          if (errData?.code) errorCode = String(errData.code);
+          else if (errData?.error) errorCode = String(errData.error);
+        }
+
+        if (errorCode === 'EMAIL_NOT_VERIFIED') {
+          toast.error(message, {
+            duration: 10000,
+            action: {
+              label: t('configureStep.errors.resendEmail'),
+              onClick: () => router.push('/settings?verify=resend'),
+            },
+          });
+          return;
+        }
+
+        if (applicationId) {
+          toast.error(message, {
+            duration: 8000,
+            action: {
+              label: t('configureStep.errors.goToApplication'),
+              onClick: () => router.push(`/applications/${applicationId}`),
+            },
+          });
+        } else {
+          toast.error(message);
+        }
+      }
+    })();
+    pendingRunRef.current = run;
+    await run;
+    if (!token.cancelled) pendingRunRef.current = null;
   };
 
   const isGroupSelected = (group: TemplateGroup) =>
@@ -285,7 +353,7 @@ export function ConfigureStep({
   }
 
   // ── Loading screen with circular progress ring ──
-  if (isGenerating) {
+  if (showGenerating) {
     const STEPS = [
       { key: 'analyze', label: t('configureStep.progress.steps.analyze'), icon: Target, doneAt: 6 },
       { key: 'cover', label: t('configureStep.progress.steps.cover'), icon: FileText, doneAt: 28 },
@@ -406,6 +474,17 @@ export function ConfigureStep({
             </div>
           </CardContent>
         </Card>
+        {!isRedirecting && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              className="rounded-[3px] border-[#1B2A49] font-semibold hover:bg-[#E5E9F2]"
+            >
+              {t('configureStep.progress.cancelButton')}
+            </Button>
+          </div>
+        )}
         <p className="text-center text-xs text-[#A0A0A0]">
           {t('configureStep.progress.footnote')}
         </p>
