@@ -41,10 +41,16 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       const { id, emails, name, photos } = profile;
 
       // Extract user data from Google profile
-      const email = emails?.[0]?.value;
+      const primaryEmail = emails?.[0];
+      const email = primaryEmail?.value;
       if (!email) {
         return done(new Error('Email not provided by Google'), false);
       }
+
+      // Only a Google-verified email may drive account linking/creation
+      // (`verified` mirrors the OIDC `email_verified` claim). Unverified
+      // addresses are attacker-claimable — see oauth-email-trust.util.ts.
+      const emailTrusted = primaryEmail?.verified === true;
 
       // Validate OAuth user with our auth service
       const user = await this.authService.validateOAuthUser({
@@ -56,6 +62,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         avatarUrl: photos?.[0]?.value,
         accessToken,
         refreshToken,
+        emailTrusted,
       });
 
       return done(null, user);

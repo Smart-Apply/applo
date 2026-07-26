@@ -62,6 +62,7 @@ export enum ErrorCode {
   // OAuth
   OAUTH_ALREADY_LINKED = 'OAUTH_ALREADY_LINKED',
   CANNOT_UNLINK_ONLY_AUTH_METHOD = 'CANNOT_UNLINK_ONLY_AUTH_METHOD',
+  OAUTH_EMAIL_UNVERIFIED = 'OAUTH_EMAIL_UNVERIFIED',
 
   // Invite-code gate (closed beta)
   INVITE_CODE_REQUIRED = 'INVITE_CODE_REQUIRED',
@@ -154,6 +155,8 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Dieser OAuth-Account ist bereits mit einem anderen Benutzer verknüpft.',
   [ErrorCode.CANNOT_UNLINK_ONLY_AUTH_METHOD]:
     'Du kannst die einzige Anmeldemethode nicht entfernen. Bitte lege zuerst ein Passwort fest.',
+  [ErrorCode.OAUTH_EMAIL_UNVERIFIED]:
+    'Die E-Mail-Adresse deines Kontos konnte vom Anbieter nicht verifiziert werden. Bitte registriere dich mit E-Mail und Passwort.',
 
   // Invite-code gate (closed beta)
   [ErrorCode.INVITE_CODE_REQUIRED]:

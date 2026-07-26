@@ -303,7 +303,7 @@ User 1:1 Subscription
 | **Transport**     | HTTPS, HSTS                                                                                                   |
 | **Headers**       | Helmet, CSP, X-Frame-Options, X-Content-Type-Opts                                                             |
 | **Auth**          | JWT (HttpOnly cookies) + refresh rotation + 2FA                                                               |
-| **OAuth**         | Google, Microsoft, Azure AD (passport)                                                                        |
+| **OAuth**         | Google, Microsoft, Azure AD (passport) — email-match auto-linking & signup only for provider-verified emails (nOAuth guard: Google `email_verified`, Microsoft MSA tenant or `xms_edov`) |
 | **Rate Limit**    | 5/15min auth · 100/15min standard (`@nestjs/throttler`)                                                       |
 | **Input**         | class-validator DTOs, `@Sanitize()` + DOMPurify                                                               |
 | **AI Guardrails** | per-surface char + token limits on AI prompt inputs (`@applo/shared` + `gpt-tokenizer` model `gpt-4.1`) |

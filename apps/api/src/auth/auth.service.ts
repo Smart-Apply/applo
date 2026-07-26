@@ -1015,6 +1015,14 @@ export class AuthService {
   /**
    * Validate OAuth user from Google/Microsoft/LinkedIn
    * Creates new user if first login, links to existing account if email matches
+   *
+   * SECURITY (nOAuth): `email` is only allowed to MATCH an existing local
+   * account or CREATE a new one when the strategy asserts `emailTrusted`
+   * (provider-verified ownership — see oauth-email-trust.util.ts).
+   * Without this gate, an attacker who controls the asserted email (e.g.
+   * the freely-editable `mail` attribute in their own Entra tenant) could
+   * take over any local account by email collision. Identities already
+   * linked by provider+providerId are unaffected.
    */
   async validateOAuthUser(oauthData: {
     provider: string;
@@ -1025,9 +1033,19 @@ export class AuthService {
     avatarUrl?: string;
     accessToken?: string;
     refreshToken?: string;
+    emailTrusted: boolean;
   }): Promise<any> {
-    const { provider, providerId, email, firstName, lastName, avatarUrl, accessToken, refreshToken } =
-      oauthData;
+    const {
+      provider,
+      providerId,
+      email,
+      firstName,
+      lastName,
+      avatarUrl,
+      accessToken,
+      refreshToken,
+      emailTrusted,
+    } = oauthData;
 
     // Check if OAuth provider already linked
     const existingOAuth = await this.prisma.oAuthProvider.findUnique({
@@ -1064,6 +1082,19 @@ export class AuthService {
       });
 
       return existingOAuth.user;
+    }
+
+    // First-time sign-in with this OAuth identity: from here on the
+    // asserted email decides which account gets linked or created, so it
+    // MUST be provider-verified. Refuse otherwise (fail closed) — the
+    // user can register with email/password instead.
+    if (!emailTrusted) {
+      this.auditLogger.logOAuthEmailUntrusted(provider, email);
+      this.logger.warn(
+        `Refused OAuth ${provider} sign-in for unverified email assertion (${email}) — ` +
+          'auto-link/creation blocked (nOAuth mitigation)',
+      );
+      throw new ForbiddenWithCode(ErrorCode.OAUTH_EMAIL_UNVERIFIED);
     }
 
     // Check if user with this email already exists
