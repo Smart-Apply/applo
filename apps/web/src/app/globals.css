@@ -506,9 +506,11 @@ h1, h2, h3, .font-heading {
   .rd-sec-mv { display: grid; place-items: center; width: 24px; height: 24px; border: none; background: none; color: var(--muted-2); cursor: pointer; border-radius: 6px; opacity: 0.45; transition: opacity 0.12s, background 0.12s, color 0.12s; }
   .rd-sec-mv:hover:not(:disabled) { opacity: 1; background: var(--blue-bg); color: var(--blue); }
   .rd-sec-mv:disabled { opacity: 0.12; cursor: default; }
-  .ed-mv-sec { position: absolute; top: 0; width: 24px; height: 24px; border: none; background: none; color: var(--muted-2); display: grid; place-items: center; cursor: pointer; border-radius: 6px; opacity: 0; transition: opacity 0.12s, background 0.12s, color 0.12s; }
-  .ed-mv-sec.up { right: 52px; }
-  .ed-mv-sec.down { right: 26px; }
+  /* Entry movers: stacked vertically below the ✕ inside the reserved right
+     gutter so they never cover the date field on the entry's first line. */
+  .ed-mv-sec { position: absolute; right: 0; width: 24px; height: 24px; border: none; background: #fff; box-shadow: 0 0 0 1px var(--border); color: var(--muted-2); display: grid; place-items: center; cursor: pointer; border-radius: 6px; opacity: 0; z-index: 2; transition: opacity 0.12s, background 0.12s, color 0.12s; }
+  .ed-mv-sec.up { top: 26px; }
+  .ed-mv-sec.down { top: 52px; }
   .rd-item:hover .ed-mv-sec:not(:disabled) { opacity: 1; }
   .rd-item:hover .ed-mv-sec:disabled { opacity: 0.15; }
   .ed-mv-sec:hover:not(:disabled) { background: var(--blue-bg); color: var(--blue); }
@@ -516,7 +518,9 @@ h1, h2, h3, .font-heading {
   .rd-item { position: relative; margin-bottom: 14px; padding-right: 26px; }
   .rd-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
   .rd-item-title { font-weight: 700; font-size: 14px; color: #1f2937; flex: 1; }
-  .rd-item-date { font-size: 12.5px; color: #94a3b8; font-weight: 600; white-space: nowrap; }
+  /* min-width keeps the (often empty) date editable clickable anywhere in its
+     column, not just on the placeholder text at the far right. */
+  .rd-item-date { font-size: 12.5px; color: #94a3b8; font-weight: 600; white-space: nowrap; min-width: 96px; text-align: right; }
   .rd-item-org { font-size: 13px; color: #64748b; font-weight: 600; margin-top: 2px; }
   .rd-ul { list-style: none; padding: 0; margin: 8px 0 0; }
   .rd-li { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; line-height: 1.55; color: #374151; margin-bottom: 5px; }
@@ -594,7 +598,8 @@ h1, h2, h3, .font-heading {
   .rd-aside .rd-contact-item { font-size: 11.5px; color: #374151; margin-bottom: 6px; line-height: 1.4; word-break: break-word; }
   .rd-aside .rd-skills { flex-direction: column; align-items: stretch; gap: 3px; }
   .rd-aside .rd-skill { border: none; background: none; padding: 2px 0; font-size: 12px; }
-  .rd-aside .rd-item { padding-right: 0; }
+  .rd-aside .rd-item { padding-right: 26px; }
+  .rd-aside .rd-item-date { min-width: 56px; }
   .rd-aside .rd-item-title { font-size: 12.5px; }
   .rd-aside .rd-item-org { font-size: 11.5px; }
   .rd-topbar .edt:hover { background: rgba(255, 255, 255, 0.14); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.32); }
