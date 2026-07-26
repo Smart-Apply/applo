@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import { useCreateApplicationWithGeneration } from '@/hooks/use-applications';
 import { useCoverLetterTemplates, useResumeTemplates, getDefaultTemplate } from '@/hooks/use-templates';
 import { useUsage } from '@/hooks/use-usage';
 import { toast } from 'sonner';
+import { api } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import {
   Sparkles,
@@ -152,28 +153,35 @@ export function ConfigureStep({
   const [selectedLanguage, setSelectedLanguage] = useState<ApplicationLanguage>('de');
   const [hoverGroupKey, setHoverGroupKey] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  // Cancelling doesn't abort the in-flight request — it hides the loading
+  // screen; the run's token tells the eventual settlement to clean up
+  // silently (soft-delete on success, swallow on failure).
+  const [cancelled, setCancelled] = useState(false);
+  const runTokenRef = useRef<{ cancelled: boolean } | null>(null);
+  const pendingRunRef = useRef<Promise<void> | null>(null);
   // Click the live preview to open the CV full-size in a dialog.
   const [zoomOpen, setZoomOpen] = useState(false);
 
   const isGenerating = createApplication.isPending || isRedirecting;
+  const showGenerating = isGenerating && !cancelled;
   // Fractional seconds, ticked at 200ms so the progress ring moves smoothly
   // instead of jumping once per second. Reset happens in handleSubmit (event
   // handler) — setting state synchronously inside the effect cascades renders.
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   useEffect(() => {
-    if (!isGenerating) return;
+    if (!showGenerating) return;
     const start = Date.now();
     const interval = setInterval(() => {
       setElapsedSeconds((Date.now() - start) / 1000);
     }, 200);
     return () => clearInterval(interval);
-  }, [isGenerating]);
+  }, [showGenerating]);
 
   // Drive the wizard-level Applo guide (process → success once actually done).
-  const isFinishing = isGenerating && isRedirecting;
+  const isFinishing = showGenerating && isRedirecting;
   useEffect(() => {
-    onGenerationStateChange?.(isGenerating, isFinishing);
-  }, [isGenerating, isFinishing, onGenerationStateChange]);
+    onGenerationStateChange?.(showGenerating, isFinishing);
+  }, [showGenerating, isFinishing, onGenerationStateChange]);
 
   const resumeTemplateGroups = resumeTemplates ? groupTemplatesByBase(resumeTemplates) : [];
 
@@ -202,63 +210,94 @@ export function ConfigureStep({
     return defaultCL?.id ?? null;
   })();
 
+  const handleCancel = () => {
+    if (runTokenRef.current) runTokenRef.current.cancelled = true;
+    setCancelled(true);
+    toast.info(t('configureStep.progress.cancelledToast'));
+  };
+
   const handleSubmit = async () => {
     setElapsedSeconds(0);
-    try {
-      const application = await createApplication.mutateAsync({
-        jobPostingId: jobPosting.id,
-        coverLetterTemplateId: generateCoverLetter ? (effectiveCoverLetterTemplateId || undefined) : undefined,
-        resumeTemplateId: effectiveResumeTemplateId || undefined,
-        generateCoverLetter,
-        coverLetterLength,
-        language: selectedLanguage,
-      });
-
-      // Flip the loading screen into its "Fertig!" state (ring animates to
-      // 100%, steps turn green) and give that animation time to play —
-      // previously we navigated away immediately and the ring jumped from
-      // wherever it was straight out of the page.
-      setIsRedirecting(true);
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-      await new Promise(resolve => setTimeout(resolve, FINISH_ANIMATION_MS));
-      router.push(`/applications/${application.id}/edit`);
-    } catch (error: unknown) {
-      let message = t('configureStep.errors.unknown');
-      let applicationId: string | null = null;
-      let errorCode: string | undefined;
-      if (error && typeof error === 'object') {
-        const err = error as Record<string, unknown>;
-        const errData = err.data as Record<string, unknown> | undefined;
-        if (errData?.message) message = String(errData.message);
-        else if (err.message) message = String(err.message);
-        if (errData?.applicationId) applicationId = String(errData.applicationId);
-        if (errData?.code) errorCode = String(errData.code);
-        else if (errData?.error) errorCode = String(errData.error);
-      }
-
-      if (errorCode === 'EMAIL_NOT_VERIFIED') {
-        toast.error(message, {
-          duration: 10000,
-          action: {
-            label: t('configureStep.errors.resendEmail'),
-            onClick: () => router.push('/settings?verify=resend'),
-          },
-        });
-        return;
-      }
-
-      if (applicationId) {
-        toast.error(message, {
-          duration: 8000,
-          action: {
-            label: t('configureStep.errors.goToApplication'),
-            onClick: () => router.push(`/applications/${applicationId}`),
-          },
-        });
-      } else {
-        toast.error(message);
-      }
+    setCancelled(false);
+    // Drain a previously cancelled run first — the backend duplicate-guard
+    // would 409 while the old request is still generating server-side.
+    if (pendingRunRef.current) {
+      await pendingRunRef.current;
+      pendingRunRef.current = null;
     }
+    const token = { cancelled: false };
+    runTokenRef.current = token;
+    const run = (async () => {
+      try {
+        const application = await createApplication.mutateAsync({
+          jobPostingId: jobPosting.id,
+          coverLetterTemplateId: generateCoverLetter ? (effectiveCoverLetterTemplateId || undefined) : undefined,
+          resumeTemplateId: effectiveResumeTemplateId || undefined,
+          generateCoverLetter,
+          coverLetterLength,
+          language: selectedLanguage,
+        });
+
+        if (token.cancelled) {
+          try {
+            await api.applications.delete(application.id);
+            queryClient.invalidateQueries({ queryKey: ['applications'] });
+          } catch (cleanupErr) {
+            console.warn('Cleanup of cancelled generation failed', cleanupErr);
+          }
+          return;
+        }
+
+        // Flip the loading screen into its "Fertig!" state (ring animates to
+        // 100%, steps turn green) and give that animation time to play —
+        // previously we navigated away immediately and the ring jumped from
+        // wherever it was straight out of the page.
+        setIsRedirecting(true);
+        queryClient.invalidateQueries({ queryKey: ['applications'] });
+        await new Promise(resolve => setTimeout(resolve, FINISH_ANIMATION_MS));
+        router.push(`/applications/${application.id}/edit`);
+      } catch (error: unknown) {
+        if (token.cancelled) return;
+        let message = t('configureStep.errors.unknown');
+        let applicationId: string | null = null;
+        let errorCode: string | undefined;
+        if (error && typeof error === 'object') {
+          const err = error as Record<string, unknown>;
+          const errData = err.data as Record<string, unknown> | undefined;
+          if (errData?.message) message = String(errData.message);
+          else if (err.message) message = String(err.message);
+          if (errData?.applicationId) applicationId = String(errData.applicationId);
+          if (errData?.code) errorCode = String(errData.code);
+          else if (errData?.error) errorCode = String(errData.error);
+        }
+
+        if (errorCode === 'EMAIL_NOT_VERIFIED') {
+          toast.error(message, {
+            duration: 10000,
+            action: {
+              label: t('configureStep.errors.resendEmail'),
+              onClick: () => router.push('/settings?verify=resend'),
+            },
+          });
+          return;
+        }
+
+        if (applicationId) {
+          toast.error(message, {
+            duration: 8000,
+            action: {
+              label: t('configureStep.errors.goToApplication'),
+              onClick: () => router.push(`/applications/${applicationId}`),
+            },
+          });
+        } else {
+          toast.error(message);
+        }
+      }
+    })();
+    pendingRunRef.current = run;
+    await run;
+    if (!token.cancelled) pendingRunRef.current = null;
   };
 
   const isGroupSelected = (group: TemplateGroup) =>
@@ -285,7 +324,7 @@ export function ConfigureStep({
   }
 
   // ── Loading screen with circular progress ring ──
-  if (isGenerating) {
+  if (showGenerating) {
     const STEPS = [
       { key: 'analyze', label: t('configureStep.progress.steps.analyze'), icon: Target, doneAt: 6 },
       { key: 'cover', label: t('configureStep.progress.steps.cover'), icon: FileText, doneAt: 28 },
@@ -406,6 +445,17 @@ export function ConfigureStep({
             </div>
           </CardContent>
         </Card>
+        {!isRedirecting && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              className="rounded-[3px] border-[#1B2A49] font-semibold hover:bg-[#E5E9F2]"
+            >
+              {t('configureStep.progress.cancelButton')}
+            </Button>
+          </div>
+        )}
         <p className="text-center text-xs text-[#A0A0A0]">
           {t('configureStep.progress.footnote')}
         </p>

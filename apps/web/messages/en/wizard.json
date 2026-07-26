@@ -89,6 +89,8 @@
       "doNotClose": "Please do not close this window.",
       "stepDone": "Done",
       "footnote": "Completed steps are marked as done automatically after completion.",
+      "cancelButton": "Cancel",
+      "cancelledToast": "Generation cancelled. Your selections are unchanged.",
       "steps": {
         "analyze": "Analyzing profile and job posting",
         "cover": "Generating cover letter with AI",

@@ -89,6 +89,8 @@
       "doNotClose": "Bitte schließe dieses Fenster nicht.",
       "stepDone": "Fertig",
       "footnote": "Fertige Schritte werden nach Abschluss automatisch als erledigt markiert.",
+      "cancelButton": "Abbrechen",
+      "cancelledToast": "Generierung abgebrochen. Deine Auswahl bleibt erhalten.",
       "steps": {
         "analyze": "Profil und Stellenanzeige werden analysiert",
         "cover": "Anschreiben wird mit KI generiert",
