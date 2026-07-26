@@ -219,14 +219,17 @@ export function ConfigureStep({
   const handleSubmit = async () => {
     setElapsedSeconds(0);
     setCancelled(false);
+    // Register the run token BEFORE draining so cancelling during the drain
+    // wait marks this run too (otherwise it would start and later redirect).
+    const token = { cancelled: false };
+    runTokenRef.current = token;
     // Drain a previously cancelled run first — the backend duplicate-guard
     // would 409 while the old request is still generating server-side.
     if (pendingRunRef.current) {
       await pendingRunRef.current;
       pendingRunRef.current = null;
     }
-    const token = { cancelled: false };
-    runTokenRef.current = token;
+    if (token.cancelled) return;
     const run = (async () => {
       try {
         const application = await createApplication.mutateAsync({
