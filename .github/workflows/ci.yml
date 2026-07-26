@@ -78,6 +78,15 @@ jobs:
       - name: Build shared package (required by api + web)
         run: pnpm shared:build
 
+      - name: Verify pdf.js API and worker versions are in lockstep
+        # `react-pdf` pins `pdfjs-dist` to an exact version and (under pnpm)
+        # always gets its own nested copy. apps/web loads the WORKER from its
+        # own `pdfjs-dist`, so if the two versions drift, pdf.js refuses to
+        # run and every PDF preview breaks at runtime. Lint and typecheck are
+        # blind to it — it has no source-code footprint. Broke production
+        # twice (PR #534, then two Dependabot bumps).
+        run: pnpm --filter @applo/web run check:pdfjs
+
       - name: Lint
         run: pnpm lint
 

@@ -130,6 +130,15 @@ updates:
       # icon set — bump deliberately when you've planned the migration.
       - dependency-name: 'lucide-react'
         update-types: [version-update:semver-major]
+      # pdfjs-dist is NOT independently upgradable in apps/web: it must match
+      # the exact version `react-pdf` pins, or the pdf.js worker (loaded from
+      # apps/web's copy) and the pdf.js API (re-exported by react-pdf) end up
+      # on different versions and pdf.js refuses to run — every PDF preview
+      # then fails. Dependabot has broken production this way twice
+      # (5.4.296 → 6.0.227 → 6.1.200). Bump it only together with react-pdf,
+      # and let `pnpm --filter @applo/web run check:pdfjs` confirm the pair.
+      # (Dependabot SECURITY updates ignore this list and still open.)
+      - dependency-name: 'pdfjs-dist'
 
   # ───────────────────────────────────────────────────────────────────
   # GitHub Actions workflow versions (actions/checkout, setup-node, etc.)

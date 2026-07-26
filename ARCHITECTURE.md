@@ -347,7 +347,7 @@ User 1:1 Subscription
 | UI         | React 19.2 · shadcn/ui (Radix) · Tailwind v4            |
 | State      | Zustand 5 · TanStack Query 5                            |
 | Forms      | react-hook-form 7 · Zod (`@hookform/resolvers`)         |
-| PDF Viewer | react-pdf · pdfjs-dist                                  |
+| PDF Viewer | react-pdf · pdfjs-dist (pinned to react-pdf's exact version — worker/API lockstep, enforced by `check:pdfjs`) |
 | Charts     | recharts (Analytics activity chart)                     |
 | Editor     | Tiptap 3 (StarterKit + TextStyle)                       |
 | Toast      | Sonner                                                  |
