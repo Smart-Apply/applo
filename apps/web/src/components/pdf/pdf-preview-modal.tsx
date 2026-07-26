@@ -175,41 +175,47 @@ export function PDFPreviewModal({
 
         {/* PDF Viewer — flex-1 so it fills the space between header and
             controls, with overflow-auto for both pinch-zoom panning and
-            multi-page scrolling. */}
+            multi-page scrolling. Centering comes from the child's `m-auto`,
+            NOT items-center/justify-center on this container: flexbox
+            centering pushes overflow past the unreachable start edge, which
+            made a page taller than the viewport impossible to scroll to the
+            top of (auto margins collapse to 0 once the content overflows). */}
         <div
           ref={viewerRef}
-          className="flex flex-1 items-start justify-center overflow-auto bg-muted/40 p-2 sm:items-center sm:p-4"
+          className="flex flex-1 overflow-auto bg-muted/40 p-2 sm:p-4"
         >
-          <Document
-            file={file}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            loading={<CenteredLoader message={t('pdfPreview.loading')} />}
-            error={
-              <div className="text-center p-8">
-                <p className="text-destructive mb-2">{t('pdfPreview.errorTitle')}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t('pdfPreview.errorDescription')}
-                </p>
-              </div>
-            }
-          >
-            {/*
-              Drive sizing with `width` instead of `scale`. With `scale`,
-              react-pdf renders the page at full A4 width (794px) and
-              lets the browser shrink it via CSS — but the canvas is
-              still 794px so on a 360px phone the page overflows by
-              ~430px. `width` resizes the actual canvas, which is what
-              we want for crisp rendering AND no horizontal scroll.
-            */}
-            <Page
-              pageNumber={pageNumber}
-              width={renderWidth || undefined}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-              className="shadow-md"
-            />
-          </Document>
+          <div className="m-auto">
+            <Document
+              file={file}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={<CenteredLoader message={t('pdfPreview.loading')} />}
+              error={
+                <div className="text-center p-8">
+                  <p className="text-destructive mb-2">{t('pdfPreview.errorTitle')}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('pdfPreview.errorDescription')}
+                  </p>
+                </div>
+              }
+            >
+              {/*
+                Drive sizing with `width` instead of `scale`. With `scale`,
+                react-pdf renders the page at full A4 width (794px) and
+                lets the browser shrink it via CSS — but the canvas is
+                still 794px so on a 360px phone the page overflows by
+                ~430px. `width` resizes the actual canvas, which is what
+                we want for crisp rendering AND no horizontal scroll.
+              */}
+              <Page
+                pageNumber={pageNumber}
+                width={renderWidth || undefined}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                className="shadow-md"
+              />
+            </Document>
+          </div>
         </div>
 
         {/* Controls bar — pinned to the bottom on every screen. On
