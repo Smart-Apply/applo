@@ -439,6 +439,12 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
 - Query: `?includeJobPosting=true` (optional, default: false)
 - Returns: Array of application objects (sorted by createdAt desc)
 
+**POST /api/v1/applications/cancel-generation**
+- Cancel an in-flight generation for a job posting (wizard "Abbrechen")
+- Body: `{ jobPostingId }`
+- Soft-deletes the user's PENDING/GENERATING application for that posting so a cancelled run never surfaces in the list — even if the tab closes before the synchronous `create-with-generation` request settles. The pipeline keeps running and lands its final update on the hidden row; the duplicate-guard ignores soft-deleted rows, so an immediate re-generation works. The consumed usage credit is NOT refunded (the LLM ran).
+- Returns: `{ cancelled: boolean, applicationId: string | null }` (`cancelled: false` when nothing is in flight)
+
 **GET /api/v1/applications/:id**
 - Get single application details
 - Query: `?includeJobPosting=true` (optional, default: false)

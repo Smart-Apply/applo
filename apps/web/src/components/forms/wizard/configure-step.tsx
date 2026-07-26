@@ -154,11 +154,13 @@ export function ConfigureStep({
   const [hoverGroupKey, setHoverGroupKey] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
   // Cancelling doesn't abort the in-flight request — it hides the loading
-  // screen; the run's token tells the eventual settlement to clean up
-  // silently (soft-delete on success, swallow on failure).
+  // screen and soft-deletes the in-flight row server-side right away (so no
+  // orphan survives a closed tab); the run's token tells the eventual
+  // settlement whether a client-side cleanup fallback is still needed.
   const [cancelled, setCancelled] = useState(false);
-  const runTokenRef = useRef<{ cancelled: boolean } | null>(null);
+  const runTokenRef = useRef<{ cancelled: boolean; serverCancelled: boolean } | null>(null);
   const pendingRunRef = useRef<Promise<void> | null>(null);
+  const pendingCancelRef = useRef<Promise<void> | null>(null);
   // Click the live preview to open the CV full-size in a dialog.
   const [zoomOpen, setZoomOpen] = useState(false);
 
@@ -211,9 +213,22 @@ export function ConfigureStep({
   })();
 
   const handleCancel = () => {
-    if (runTokenRef.current) runTokenRef.current.cancelled = true;
+    const token = runTokenRef.current;
+    if (token) token.cancelled = true;
     setCancelled(true);
     toast.info(t('configureStep.progress.cancelledToast'));
+    // Server-side cancel at click time: soft-deletes the in-flight row so the
+    // cancelled run never shows up in the list — even if the tab closes
+    // before the generation request settles. `cancelled: false` means the row
+    // didn't exist yet (or just finished); the settlement fallback covers it.
+    pendingCancelRef.current = api.applications
+      .cancelGeneration({ jobPostingId: jobPosting.id })
+      .then((res) => {
+        if (token && res.cancelled) token.serverCancelled = true;
+      })
+      .catch((err: unknown) => {
+        console.warn('Server-side cancel failed; falling back to client cleanup', err);
+      });
   };
 
   const handleSubmit = async () => {
@@ -221,14 +236,21 @@ export function ConfigureStep({
     setCancelled(false);
     // Register the run token BEFORE draining so cancelling during the drain
     // wait marks this run too (otherwise it would start and later redirect).
-    const token = { cancelled: false };
+    const previousToken = runTokenRef.current;
+    const token = { cancelled: false, serverCancelled: false };
     runTokenRef.current = token;
-    // Drain a previously cancelled run first — the backend duplicate-guard
-    // would 409 while the old request is still generating server-side.
-    if (pendingRunRef.current) {
-      await pendingRunRef.current;
-      pendingRunRef.current = null;
+    // Let a pending server-side cancel settle first (fast). Only when it
+    // couldn't cancel (row not created yet at click time) do we drain the
+    // old run — the backend duplicate-guard would 409 while it still holds a
+    // live PENDING row.
+    if (pendingCancelRef.current) {
+      await pendingCancelRef.current;
+      pendingCancelRef.current = null;
     }
+    if (pendingRunRef.current && !previousToken?.serverCancelled) {
+      await pendingRunRef.current;
+    }
+    pendingRunRef.current = null;
     if (token.cancelled) return;
     const run = (async () => {
       try {
@@ -242,11 +264,15 @@ export function ConfigureStep({
         });
 
         if (token.cancelled) {
-          try {
-            await api.applications.delete(application.id);
-            queryClient.invalidateQueries({ queryKey: ['applications'] });
-          } catch (cleanupErr) {
-            console.warn('Cleanup of cancelled generation failed', cleanupErr);
+          // Fallback for the rare case the server-side cancel missed the row
+          // (cancel clicked before it was created, or the cancel call failed).
+          if (!token.serverCancelled) {
+            try {
+              await api.applications.delete(application.id);
+              queryClient.invalidateQueries({ queryKey: ['applications'] });
+            } catch (cleanupErr) {
+              console.warn('Cleanup of cancelled generation failed', cleanupErr);
+            }
           }
           return;
         }

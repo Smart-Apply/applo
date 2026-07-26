@@ -1106,6 +1106,42 @@ export class ApplicationsService {
   }
 
   /**
+   * Cancel an in-flight generation for a job posting by soft-deleting its
+   * PENDING/GENERATING application row. The synchronous pipeline keeps
+   * running and lands its final update on the (now hidden) row — the
+   * duplicate-guard ignores soft-deleted rows, so the user can immediately
+   * re-generate for the same posting. No-op when nothing is in flight.
+   */
+  async cancelPendingGeneration(
+    userId: string,
+    jobPostingId: string,
+  ): Promise<{ cancelled: boolean; applicationId: string | null }> {
+    const application = await this.prisma.application.findFirst({
+      where: {
+        userId,
+        jobPostingId,
+        deletedAt: null,
+        status: { in: [ApplicationStatus.PENDING, ApplicationStatus.GENERATING] },
+      },
+      select: { id: true },
+    });
+
+    if (!application) {
+      return { cancelled: false, applicationId: null };
+    }
+
+    await this.prisma.application.update({
+      where: { id: application.id },
+      data: { deletedAt: new Date() },
+    });
+
+    this.logger.log(
+      `Cancelled in-flight generation ${application.id} (user ${userId}, job posting ${jobPostingId})`,
+    );
+    return { cancelled: true, applicationId: application.id };
+  }
+
+  /**
    * NEW: Single-LLM pipeline for application generation
    * Replaces agent-based architecture with deterministic single-pass generation
    *

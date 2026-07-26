@@ -31,6 +31,10 @@ import { PaginationQueryDto } from '../common/dto';
 import { ApplicationsService } from './applications.service';
 import { LLMService } from '../llm/llm.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
+import {
+  CancelGenerationDto,
+  CancelGenerationResponseDto,
+} from './dto/cancel-generation.dto';
 import { ExportApplicationDto } from './dto/export-application.dto';
 import { ApplicationResponseDto } from './dto/application-response.dto';
 import { ApplicationFilesResponseDto } from './dto/application-files-response.dto';
@@ -118,6 +122,28 @@ export class ApplicationsController {
     return this.llmService.runWithUsageTracking('create-with-generation', () =>
       this.applicationsService.createWithGeneration(user.id, dto),
     );
+  }
+
+  @Post('cancel-generation')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Cancel an in-flight generation for a job posting',
+    description:
+      'Soft-deletes the PENDING/GENERATING application for the given job posting so a ' +
+      'cancelled generation never surfaces in the list. The duplicate-guard ignores ' +
+      'soft-deleted rows, so re-generating for the same posting works immediately.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Cancellation result (cancelled=false when nothing is in flight)',
+    type: CancelGenerationResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async cancelGeneration(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CancelGenerationDto,
+  ): Promise<CancelGenerationResponseDto> {
+    return this.applicationsService.cancelPendingGeneration(userId, dto.jobPostingId);
   }
 
   @Post(':id/regenerate-single-pipeline')

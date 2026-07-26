@@ -901,6 +901,18 @@ export const api = {
         retry: false,
       }),
 
+    cancelGeneration: (data: { jobPostingId: string }) =>
+      // Cancels an in-flight generation server-side: soft-deletes the
+      // PENDING/GENERATING row so the cancelled run never surfaces in the
+      // list, even if the tab closes before the request settles.
+      apiRequest<{ cancelled: boolean; applicationId: string | null }>(
+        '/applications/cancel-generation',
+        {
+          method: 'POST',
+          body: JSON.stringify(data),
+        },
+      ),
+
     list: (options?: { includeJobPosting?: boolean }) =>
       apiRequest<PaginatedResponse<Application>>(
         `/applications${options?.includeJobPosting ? '?includeJobPosting=true' : ''}`,
