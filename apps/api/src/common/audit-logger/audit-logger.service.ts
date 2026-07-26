@@ -50,6 +50,14 @@ export enum AuditEventType {
    * flow post-beta).
    */
   OAUTH_SIGNUP_BLOCKED = 'OAUTH_SIGNUP_BLOCKED',
+  /**
+   * A first-time OAuth sign-in asserted an email the provider does NOT
+   * vouch for (e.g. tenant-admin-editable `mail` attribute without
+   * `xms_edov`, or Google `email_verified=false`). Auto-linking/creation
+   * was refused — nOAuth account-takeover mitigation. A spike on a
+   * specific email suggests an active takeover attempt on that account.
+   */
+  OAUTH_EMAIL_UNTRUSTED = 'OAUTH_EMAIL_UNTRUSTED',
 }
 
 export interface AuditLogEntry {
@@ -328,6 +336,23 @@ export class AuditLoggerService {
   logOAuthSignupBlocked(provider: string, email: string) {
     this.log({
       eventType: AuditEventType.OAUTH_SIGNUP_BLOCKED,
+      email,
+      ip: 'unknown',
+      userAgent: 'oauth-callback',
+      timestamp: new Date(),
+      severity: 'warning',
+      metadata: { provider },
+    });
+  }
+
+  /**
+   * First-time OAuth sign-in refused because the provider-asserted email
+   * is not verifiably owned by the signing-in identity (nOAuth
+   * mitigation). Same no-`req` context as `logOAuthSignupBlocked`.
+   */
+  logOAuthEmailUntrusted(provider: string, email: string) {
+    this.log({
+      eventType: AuditEventType.OAUTH_EMAIL_UNTRUSTED,
       email,
       ip: 'unknown',
       userAgent: 'oauth-callback',

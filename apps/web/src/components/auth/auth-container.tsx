@@ -149,6 +149,11 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
         t('login.oauthInviteRequiredToast'),
         { duration: 12000 },
       );
+    } else if (message === 'email_unverified') {
+      toast.error(
+        t('login.oauthEmailUnverifiedToast'),
+        { duration: 12000 },
+      );
     } else if (message === 'authentication_failed') {
       toast.error(t('login.oauthFailedToast'));
     } else {

@@ -464,6 +464,10 @@ export class AuthController {
         if (req.oauthCallbackError?.code === ErrorCode.INVITE_CODE_REQUIRED) {
           return res.redirect(`${frontendUrl}/login?oauth=error&message=invite_required`);
         }
+        // Provider does not vouch for the asserted email (nOAuth guard).
+        if (req.oauthCallbackError?.code === ErrorCode.OAUTH_EMAIL_UNVERIFIED) {
+          return res.redirect(`${frontendUrl}/login?oauth=error&message=email_unverified`);
+        }
         return res.redirect(`${frontendUrl}/login?oauth=error&message=authentication_failed`);
       }
 
@@ -513,6 +517,10 @@ export class AuthController {
       if (!user) {
         if (req.oauthCallbackError?.code === ErrorCode.INVITE_CODE_REQUIRED) {
           return res.redirect(`${frontendUrl}/login?oauth=error&message=invite_required`);
+        }
+        // Provider does not vouch for the asserted email (nOAuth guard).
+        if (req.oauthCallbackError?.code === ErrorCode.OAUTH_EMAIL_UNVERIFIED) {
+          return res.redirect(`${frontendUrl}/login?oauth=error&message=email_unverified`);
         }
         return res.redirect(`${frontendUrl}/login?oauth=error&message=authentication_failed`);
       }

@@ -68,11 +68,44 @@ model OAuthProvider {
    - Fetches user profile (email, name, picture)
    - Calls `AuthService.validateOAuthUser()`
 5. **AuthService handles account logic:**
-   - **If OAuth provider exists:** Update last used, return user
+   - **If OAuth provider exists (provider + providerId):** Update last used, return user
+   - **Otherwise the asserted email must be provider-verified** (see
+     [Email trust / nOAuth mitigation](#email-trust--noauth-mitigation)) — if it
+     is not, the sign-in is refused with `OAUTH_EMAIL_UNVERIFIED` (no linking,
+     no account creation)
    - **If email exists (email match):** Link OAuth provider to existing account
    - **If new user:** Create user + profile + OAuth provider record
 6. **Controller generates JWT tokens** → Sets HttpOnly cookies
 7. **Redirect to dashboard** → User is logged in
+
+### Email trust / nOAuth mitigation
+
+An email asserted by an OAuth provider may only drive **account linking or
+creation** when the provider actually vouches for ownership of that address.
+Without this gate, an attacker who controls the asserted email — e.g. the
+freely-editable `mail` attribute of a user in their own Entra tenant
+("nOAuth", Descope 2023) — could take over any existing account by email
+match (the app signs in with `tenant: common`, so every Entra tenant in the
+world can authenticate).
+
+Trust rules (`apps/api/src/auth/utils/oauth-email-trust.util.ts`):
+
+| Provider  | Trusted when                                                                                                   |
+| --------- | -------------------------------------------------------------------------------------------------------------- |
+| Google    | `email_verified === true` (surfaced as `profile.emails[].verified`)                                            |
+| Microsoft | Personal account (MSA consumer tenant `9188040d-6c67-4c5b-b112-36a304b66dad`), OR org tenant with `xms_edov === true` / `email_verified === true` in the id_token |
+
+- The Microsoft strategy decodes the **id_token** from the token-endpoint
+  response (verify callback registered with `callbackArity: 5` so
+  `passport-oauth2` passes the raw params). A missing or undecodable id_token
+  is treated as untrusted — fail closed.
+- Already-linked identities (matched by provider + providerId) are unaffected;
+  the gate only guards email-match auto-linking and first-time signup.
+- Refusals are audit-logged as `OAUTH_EMAIL_UNTRUSTED` and surface in the UI
+  as a toast telling the user to register with email/password.
+- **Org-tenant users:** `xms_edov` is an *optional claim* — without the app
+  registration step below, brand-new Microsoft sign-ins from organizational
+  tenants are refused (personal Microsoft accounts are unaffected).
 
 ### Passport Strategies
 
@@ -130,6 +163,15 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 9. Go to **API permissions** → **Add a permission**
    - Microsoft Graph → Delegated permissions
    - Select: `openid`, `profile`, `email`
+10. **Enable the `xms_edov` optional claim** (required so users from
+    organizational Entra tenants with verified email domains can sign up —
+    see [Email trust / nOAuth mitigation](#email-trust--noauth-mitigation)):
+    - Go to **Token configuration** → **Add optional claim**
+    - Token type: **ID**
+    - Select `xms_pdl`… if `xms_edov` is not listed in the picker, add it via
+      **Manifest**: in `optionalClaims.idToken`, add
+      `{ "name": "xms_edov", "source": null, "essential": false, "additionalProperties": [] }`
+    - Also add the `email` optional claim (Token type: ID) if not present
 
 **Add to `.env`:**
 ```bash
