@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.11.0](https://github.com/Smart-Apply/applo/compare/v4.10.0...v4.11.0) (2026-07-26)
+
+
+### Features
+
+* **applications:** allow cancelling application generation ([#705](https://github.com/Smart-Apply/applo/issues/705)) ([ccb61d1](https://github.com/Smart-Apply/applo/commit/ccb61d1e837cfe17d75262d0f160101f2a6f2f3c))
+
+
+### Bug Fixes
+
+* **editor:** add optimizer keywords to the existing skill category ([#703](https://github.com/Smart-Apply/applo/issues/703)) ([63c450c](https://github.com/Smart-Apply/applo/commit/63c450cc3658328972505a954ded65020f8cd101))
+* **editor:** keep entry reorder controls clear of the date field ([#701](https://github.com/Smart-Apply/applo/issues/701)) ([7ecf7e2](https://github.com/Smart-Apply/applo/commit/7ecf7e22484790c1d56e7f0e46f33a706224f858))
+* **editor:** localize resume preview section labels to the export language ([#704](https://github.com/Smart-Apply/applo/issues/704)) ([3a929ed](https://github.com/Smart-Apply/applo/commit/3a929ed820ff06fefd902ec08dd452c8c671036c))
+* **web:** make tall PDF pages scrollable in the preview modal ([#707](https://github.com/Smart-Apply/applo/issues/707)) ([187a5de](https://github.com/Smart-Apply/applo/commit/187a5dee6ac3e3778cf28bc2d405e8c06d6c1b86))
+* **web:** restore PDF preview by pinning pdfjs-dist to react-pdf's version ([#695](https://github.com/Smart-Apply/applo/issues/695)) ([9de8784](https://github.com/Smart-Apply/applo/commit/9de87844349a4931383e5c76c2fffb5ee9df9f8b))
+
 ## [4.10.0](https://github.com/Smart-Apply/applo/compare/v4.9.0...v4.10.0) (2026-07-25)
 
 
