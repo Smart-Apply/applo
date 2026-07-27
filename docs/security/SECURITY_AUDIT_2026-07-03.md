@@ -2,6 +2,8 @@
 
 Read-only static audit. No code modified, no live/dynamic testing, no traffic sent to prod. Scope: `apps/api/**`, `apps/web/**`, `packages/shared/**`, Prisma schema/migrations, infra/IaC, workflows, `.env.example` files, and dependency manifests.
 
+> **Follow-up:** the 2026-07-27 combined architecture + security review and its remediation series (PRs #710–#720, incl. an IDOR fix and the CSRF rollout) are recorded in [ARCHITECTURE_SECURITY_REVIEW_2026-07-27.md](../implementation/ARCHITECTURE_SECURITY_REVIEW_2026-07-27.md).
+
 ## 1. Executive summary
 
 Overall posture is **strong**. The auth core is well-built: constant CSRF `getSessionIdentifier` (`'applo'`), argon2id password + refresh-token hashing, AES-256-GCM token cipher with per-call random IV and auth-tag verification, HttpOnly/Secure/SameSite=Lax cookies with matching clear-domains, AdminGuard that fails closed on empty `ADMIN_EMAILS`, SHA-256 hashed one-time password-reset/verify tokens with expiry, and signature-verified QStash + Graph webhooks. Ownership scoping is consistently applied across applications, job-postings, interviews, validation, sessions, and mailbox connections. No `$queryRawUnsafe`, no committed secrets, gitignore correctly covers `.env`, `*-secrets.env`, and `invite-codes-*.json`.
