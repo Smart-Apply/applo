@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.11.2](https://github.com/Smart-Apply/applo/compare/v4.11.1...v4.11.2) (2026-07-27)
+
+
+### Bug Fixes
+
+* **applications:** persist generation progress so SSE works across machines ([#714](https://github.com/Smart-Apply/applo/issues/714)) ([44a7003](https://github.com/Smart-Apply/applo/commit/44a7003a338997dfaaef3d3b91f8867971a1862a))
+* **applications:** scope generation queries to the caller (IDOR) ([#716](https://github.com/Smart-Apply/applo/issues/716)) ([7d994de](https://github.com/Smart-Apply/applo/commit/7d994de18dd15192c59e5b8914e181b7baac67a2))
+
 ## [4.11.1](https://github.com/Smart-Apply/applo/compare/v4.11.0...v4.11.1) (2026-07-27)
 
 
