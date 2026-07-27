@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, Inject, forwardRef, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
@@ -61,12 +61,11 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private auditLogger: AuditLoggerService,
-    // Use forwardRef to resolve circular dependency between AuthService and SessionService
-    // This is acceptable as both services are in the same module and need each other
-    @Inject(forwardRef(() => SessionService))
+    // Plain injection: SessionService and TwoFactorService live in this same
+    // module and inject only Prisma/Config/AuditLogger — they never inject
+    // AuthService back, so there is no cycle and forwardRef isn't needed.
     private sessionService: SessionService,
     private subscriptionService: SubscriptionService,
-    @Inject(forwardRef(() => TwoFactorService))
     private twoFactorService: TwoFactorService,
     private emailService: EmailService,
     private inviteCodeService: InviteCodeService,
