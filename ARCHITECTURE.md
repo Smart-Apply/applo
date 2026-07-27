@@ -114,7 +114,11 @@ User → Frontend (Next.js)
         │ POST /api/v1/applications
         ▼
 ┌──────────────────────────────────────┐
-│ ApplicationsService                  │
+│ GenerationService                    │
+│ (applications module — owns the      │
+│  create paths + LLM pass pipeline;   │
+│  CRUD/export/keywords stay in        │
+│  ApplicationsService)                │
 │ 1. Validate job posting              │
 │ 2. Enforce subscription limits       │
 │ 3. Create record (PENDING)           │

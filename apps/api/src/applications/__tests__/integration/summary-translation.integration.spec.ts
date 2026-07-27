@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import type { Mock } from 'vitest';
-import { ApplicationsService } from '../../applications.service';
+import { GenerationService } from '../../generation.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { JobsService } from '../../../jobs/jobs.service';
 import { StorageService } from '../../../storage/storage.service';
@@ -11,8 +11,8 @@ import { TemplatesService } from '../../../templates/templates.service';
 import { SubscriptionService } from '../../../subscription/subscription.service';
 import { GroundingValidatorService } from '../../grounding/grounding-validator.service';
 
-describe('ApplicationsService - Summary Translation Integration', () => {
-  let service: ApplicationsService;
+describe('GenerationService - Summary Translation Integration', () => {
+  let service: GenerationService;
   let llmService: LLMService;
 
   const mockJobPosting = {
@@ -45,7 +45,7 @@ describe('ApplicationsService - Summary Translation Integration', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ApplicationsService,
+        GenerationService,
         {
           provide: PrismaService,
           useValue: {
@@ -106,7 +106,7 @@ describe('ApplicationsService - Summary Translation Integration', () => {
       ],
     }).compile();
 
-    service = module.get<ApplicationsService>(ApplicationsService);
+    service = module.get<GenerationService>(GenerationService);
     llmService = module.get<LLMService>(LLMService);
   });
 
@@ -115,8 +115,8 @@ describe('ApplicationsService - Summary Translation Integration', () => {
       'Experienced Full-Stack Developer with 5+ years of experience in React and Node.js.';
     (llmService.translateSummary as Mock).mockResolvedValue(translatedSummary);
 
-    // Access private method for testing
-    const detectedLanguage = (service as any).detectLanguage(mockJobPosting.fullText);
+    // Access the language heuristic (public on GenerationService)
+    const detectedLanguage = service.detectLanguage(mockJobPosting.fullText);
     expect(detectedLanguage).toBe('en');
 
     // Verify translateSummary is called with correct parameters (now only 2 args)
@@ -131,7 +131,7 @@ describe('ApplicationsService - Summary Translation Integration', () => {
         'Wir suchen einen erfahrenen Entwickler für unser Team in München. Sie werden mit modernen Technologien arbeiten.',
     };
 
-    const detectedLanguage = (service as any).detectLanguage(germanJobPosting.fullText);
+    const detectedLanguage = service.detectLanguage(germanJobPosting.fullText);
     expect(detectedLanguage).toBe('de');
 
     // Translation should not be called when languages match

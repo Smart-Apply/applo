@@ -29,6 +29,7 @@ import { CheckUsage, RequiresFeature } from '../common/decorators/tier.decorator
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PaginationQueryDto } from '../common/dto';
 import { ApplicationsService } from './applications.service';
+import { GenerationService } from './generation.service';
 import { LLMService } from '../llm/llm.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import {
@@ -59,6 +60,7 @@ import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
 export class ApplicationsController {
   constructor(
     private readonly applicationsService: ApplicationsService,
+    private readonly generationService: GenerationService,
     private readonly llmService: LLMService,
   ) {}
 
@@ -88,7 +90,7 @@ export class ApplicationsController {
     @CurrentUser() user: any,
     @Body() dto: CreateApplicationDto,
   ): Promise<ApplicationResponseDto> {
-    return this.applicationsService.create(user.id, dto);
+    return this.generationService.create(user.id, dto);
   }
 
   @Post('create-with-generation')
@@ -120,7 +122,7 @@ export class ApplicationsController {
   ): Promise<ApplicationResponseDto> {
     // Wrapped for prompt-caching token measurement (no-op unless LOG_LLM_CALLS).
     return this.llmService.runWithUsageTracking('create-with-generation', () =>
-      this.applicationsService.createWithGeneration(user.id, dto),
+      this.generationService.createWithGeneration(user.id, dto),
     );
   }
 
@@ -143,7 +145,7 @@ export class ApplicationsController {
     @CurrentUser('id') userId: string,
     @Body() dto: CancelGenerationDto,
   ): Promise<CancelGenerationResponseDto> {
-    return this.applicationsService.cancelPendingGeneration(userId, dto.jobPostingId);
+    return this.generationService.cancelPendingGeneration(userId, dto.jobPostingId);
   }
 
   @Post(':id/regenerate-single-pipeline')
@@ -172,7 +174,7 @@ export class ApplicationsController {
   ): Promise<ApplicationResponseDto> {
     // Wrapped for prompt-caching token measurement (no-op unless LOG_LLM_CALLS).
     return this.llmService.runWithUsageTracking(`regenerate-single-pipeline:${id}`, () =>
-      this.applicationsService.generateWithSinglePipeline(id, user.id),
+      this.generationService.generateWithSinglePipeline(id, user.id),
     );
   }
 

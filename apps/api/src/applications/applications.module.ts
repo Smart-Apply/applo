@@ -8,6 +8,7 @@ import { TemplatesModule } from '../templates/templates.module';
 import { SubscriptionModule } from '../subscription/subscription.module';
 import { ApplicationsController } from './applications.controller';
 import { ApplicationsService } from './applications.service';
+import { GenerationService } from './generation.service';
 import { TitleGeneratorService } from './title-generator.service';
 import { GroundingValidatorService } from './grounding/grounding-validator.service';
 
@@ -22,7 +23,12 @@ import { GroundingValidatorService } from './grounding/grounding-validator.servi
     SubscriptionModule,
   ],
   controllers: [ApplicationsController],
-  providers: [ApplicationsService, TitleGeneratorService, GroundingValidatorService],
-  exports: [ApplicationsService],
+  providers: [
+    ApplicationsService,
+    GenerationService,
+    TitleGeneratorService,
+    GroundingValidatorService,
+  ],
+  exports: [ApplicationsService, GenerationService],
 })
 export class ApplicationsModule {}
