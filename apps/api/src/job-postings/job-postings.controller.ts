@@ -17,6 +17,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { UseThrottler } from '../common/decorators/throttle.decorator';
 import { PaginationQueryDto } from '../common/dto';
 import { JobPostingsService } from './job-postings.service';
 import { ParseJobPostingDto, CreateJobPostingDto, JobPostingResponseDto } from './dto';
@@ -50,6 +51,10 @@ export class JobPostingsController {
   }
 
   @Post('parse')
+  // LLM + Playwright per call — throttled via the shared LLM-actions bucket
+  // (the class-level @SkipThrottle() only skips the default bucket).
+  @UseThrottler('llm-actions')
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded (llm-actions bucket)' })
   @ApiOperation({ summary: 'Parse job posting from text, URL, or file' })
   @ApiResponse({
     status: 201,

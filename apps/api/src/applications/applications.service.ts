@@ -1364,6 +1364,19 @@ export class ApplicationsService {
         `Single-LLM pipeline completed in ${duration}ms for application ${applicationId}`,
       );
 
+      // Record usage AFTER success so failed runs don't burn the cap (mirrors
+      // createWithGeneration — the controller's UsageLimitGuard only checks,
+      // it never records). Best-effort: a failure here must not break the
+      // user-facing response.
+      try {
+        await this.subscriptionService.recordUsage(userId, 'application');
+      } catch (usageError) {
+        this.logger.warn(
+          `Failed to record usage for user ${userId} (application ${applicationId})`,
+          usageError,
+        );
+      }
+
       return this.mapToResponseDto(updated);
     } catch (error) {
       this.logger.error(`Single-LLM pipeline failed for application ${applicationId}`, error);
