@@ -70,7 +70,7 @@ Translated (en): "Experienced Full-Stack Developer with 5+ years of experience i
 ### Code Locations
 
 1. **Language Detection**
-   - File: `apps/api/src/applications/applications.service.ts`
+   - File: `apps/api/src/applications/generation.service.ts`
    - Method: `detectLanguage(text: string): 'de' | 'en' | null`
 
 2. **Translation Helper**
@@ -80,7 +80,7 @@ Translated (en): "Experienced Full-Stack Developer with 5+ years of experience i
 
 3. **LLM Context Builders**
    - File: `apps/api/src/applications/serialize.util.ts` (`serializeJobPostingForLlm`)
-   - The detected `language` is passed into the v1 prompt calls in `applications.service.ts`
+   - The detected `language` is passed into the v1 prompt calls in `generation.service.ts`
 
 4. **LLM Prompts**
    - Files: `apps/api/prompts/v1/*.md` (e.g. `cover-letter.md`, `resume.md`, `resume-rewrite.md`)
@@ -89,7 +89,7 @@ Translated (en): "Experienced Full-Stack Developer with 5+ years of experience i
 5. **Summary Translation**
    - File: `apps/api/src/llm/llm.service.ts`
    - Method: `translateSummary(summary: string, fromLang: string, toLang: string): Promise<string>`
-   - Integration: `apps/api/src/applications/applications.service.ts` (create, createWithGeneration)
+   - Integration: `apps/api/src/applications/generation.service.ts` (create, createWithGeneration)
 
 ### Data Flow
 

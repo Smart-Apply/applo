@@ -107,7 +107,7 @@ Das System verwendet jetzt ein Large Language Model (LLM), um Skills im Lebensla
 ### Architektur
 
 ```text
-ApplicationsService
+GenerationService (apps/api/src/applications/generation.service.ts)
   ├─> categorizeSkillsWithLLM()
   │     ├─> Cache Check (in-memory Map)
   │     ├─> LLMService.categorizeSkills()

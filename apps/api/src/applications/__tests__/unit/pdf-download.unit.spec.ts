@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import type { Mock } from 'vitest';
 import { ApplicationsService } from '../../applications.service';
+import { GenerationService } from '../../generation.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { JobsService } from '@/jobs/jobs.service';
 import { StorageService } from '@/storage/storage.service';
@@ -32,6 +33,7 @@ describe('ApplicationsService.getFileStream — PDF download (Unit)', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApplicationsService,
+        { provide: GenerationService, useValue: {} },
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JobsService, useValue: { enqueue: vi.fn() } },
         { provide: StorageService, useValue: storageService },
