@@ -7,9 +7,6 @@ import {
   Request,
   HttpCode,
   HttpStatus,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -20,8 +17,8 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { createDocumentUploadPipe } from '../common/pipes/file-validation.pipe';
 import { UploadsService } from './uploads.service';
 import { UploadResponseDto } from './dto/upload-response.dto';
 
@@ -30,10 +27,7 @@ import { UploadResponseDto } from './dto/upload-response.dto';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class UploadsController {
-  constructor(
-    private readonly uploadsService: UploadsService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly uploadsService: UploadsService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -67,18 +61,12 @@ export class UploadsController {
   })
   async uploadFile(
     @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: parseInt(process.env.MAX_FILE_SIZE_MB || '10', 10) * 1024 * 1024,
-            message: 'File size exceeds 10MB limit. Please compress or split your file.',
-          }),
-          new FileTypeValidator({
-            fileType: /(pdf|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/,
-          }),
-        ],
-        fileIsRequired: true,
-      }),
+      // MAX_FILE_SIZE_MB is read from process.env (not ConfigService) because
+      // decorator arguments evaluate at class-definition time, before the DI
+      // container exists. NOTE: this means the override only takes effect as a
+      // REAL process env var at boot (e.g. Fly secrets, `MAX_FILE_SIZE_MB=5
+      // pnpm start:dev`) — a value set solely in apps/api/.env loads too late.
+      createDocumentUploadPipe(parseInt(process.env.MAX_FILE_SIZE_MB || '10', 10)),
     )
     file: Express.Multer.File,
     @Request() req,

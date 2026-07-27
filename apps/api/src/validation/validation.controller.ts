@@ -8,9 +8,6 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -29,6 +26,7 @@ import { UsageLimitGuard } from '../common/guards/usage-limit.guard';
 import { EmailVerifiedGuard } from '../common/guards/email-verified.guard';
 import { CheckUsage } from '../common/decorators/tier.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { createDocumentUploadPipe } from '../common/pipes/file-validation.pipe';
 import { ValidationService } from './validation.service';
 import { CreateValidationDto } from './dto/create-validation.dto';
 import type { Validation, ValidationSummary } from '@applo/shared';
@@ -62,21 +60,7 @@ export class ValidationController {
   @ApiResponse({ status: 201, description: 'Extracted text' })
   @ApiResponse({ status: 400, description: 'Invalid file type or size' })
   async extractText(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: 10 * 1024 * 1024,
-            message: 'Die Datei ist zu groß. Bitte lade eine Datei mit maximal 10 MB hoch.',
-          }),
-          new FileTypeValidator({
-            fileType: /(pdf|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/,
-          }),
-        ],
-        fileIsRequired: true,
-        errorHttpStatusCode: 400,
-      }),
-    )
+    @UploadedFile(createDocumentUploadPipe())
     file: Express.Multer.File,
   ): Promise<{ text: string }> {
     return this.validationService.extractText(file.buffer, file.mimetype);

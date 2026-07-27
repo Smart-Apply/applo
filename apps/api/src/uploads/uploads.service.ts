@@ -1,52 +1,32 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { StorageService } from '../storage/storage.service';
 import { UploadResponseDto } from './dto/upload-response.dto';
+
+const PDF_MIME = 'application/pdf';
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 @Injectable()
 export class UploadsService {
   private readonly logger = new Logger(UploadsService.name);
 
-  // Allowed MIME types
-  private readonly ALLOWED_MIME_TYPES = [
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-  ];
-
-  // Max file size from environment (defaults to 10MB for job postings)
-  private readonly MAX_FILE_SIZE: number;
-
-  constructor(
-    private readonly storageService: StorageService,
-    private readonly configService: ConfigService,
-  ) {
-    // Get max file size from env (in MB) and convert to bytes
-    const maxSizeMB = parseInt(this.configService.get<string>('MAX_FILE_SIZE_MB', '10'), 10);
-    this.MAX_FILE_SIZE = maxSizeMB * 1024 * 1024;
-    this.logger.log(`Max file size configured: ${maxSizeMB}MB`);
-  }
+  constructor(private readonly storageService: StorageService) {}
 
   async uploadFile(userId: string, file: Express.Multer.File): Promise<UploadResponseDto> {
-    // Validate file exists
+    // Size + detected type (magic-byte sniffing) are enforced at the boundary
+    // by the shared document pipe (common/pipes/file-validation.pipe.ts) — the
+    // service no longer re-checks what the controller already rejected.
     if (!file) {
       throw new BadRequestException('No file provided');
     }
 
-    // Validate MIME type
-    if (!this.ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException(
-        `Invalid file type. Allowed types: PDF, DOCX. Received: ${file.mimetype}`,
-      );
-    }
-
-    // Validate file size
-    if (file.size > this.MAX_FILE_SIZE) {
-      const maxSizeMB = this.MAX_FILE_SIZE / (1024 * 1024);
-      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      throw new BadRequestException(
-        `File size exceeds ${maxSizeMB}MB limit. Your file is ${fileSizeMB}MB. Please compress or split your file.`,
-      );
-    }
+    // The pipe validates the DETECTED type; the CLAIMED multipart mimetype is
+    // still client-controlled. Never persist an attacker-chosen content-type
+    // to storage (a raw-serve path added later would turn e.g. text/html into
+    // a stored-XSS primitive) — store a known type or a safe default.
+    const contentType =
+      file.mimetype === PDF_MIME || file.mimetype === DOCX_MIME
+        ? file.mimetype
+        : 'application/octet-stream';
 
     // Validate and sanitize filename
     const sanitizedFilename = this.sanitizeFilename(file.originalname);
@@ -56,7 +36,7 @@ export class UploadsService {
 
     try {
       // Upload to storage
-      await this.storageService.upload(storageKey, file.buffer, file.mimetype);
+      await this.storageService.upload(storageKey, file.buffer, contentType);
 
       this.logger.log(`File uploaded successfully: ${storageKey}`);
 
@@ -64,7 +44,7 @@ export class UploadsService {
       const response: UploadResponseDto = {
         id: this.generateUploadId(storageKey),
         fileName: sanitizedFilename,
-        mimeType: file.mimetype,
+        mimeType: contentType,
         size: file.size,
         storageKey,
         uploadedAt: new Date(),

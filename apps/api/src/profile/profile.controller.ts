@@ -10,9 +10,6 @@ import {
   Res,
   UseInterceptors,
   UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
   StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -29,6 +26,10 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UseThrottler } from '../common/decorators/throttle.decorator';
+import {
+  createDocumentUploadPipe,
+  createPhotoUploadPipe,
+} from '../common/pipes/file-validation.pipe';
 import { ProfileService } from './profile.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
@@ -115,21 +116,7 @@ export class ProfileController {
     description: 'Rate limit exceeded - max 10 resume parses per hour',
   })
   async parseResume(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: 10 * 1024 * 1024, // 10MB
-            message: 'Die Datei ist zu groß. Bitte laden Sie eine Datei mit maximal 10 MB hoch.',
-          }),
-          new FileTypeValidator({
-            fileType: /(pdf|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/,
-          }),
-        ],
-        fileIsRequired: true,
-        errorHttpStatusCode: 400,
-      }),
-    )
+    @UploadedFile(createDocumentUploadPipe())
     file: Express.Multer.File,
   ): Promise<ExtractedProfileDto> {
     return this.resumeParserService.parseResume(file.buffer, file.mimetype);
@@ -170,19 +157,7 @@ export class ProfileController {
   })
   async uploadPhoto(
     @CurrentUser('id') userId: string,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: 2 * 1024 * 1024, // 2MB
-            message: 'Das Foto ist zu groß. Bitte lade ein Bild mit maximal 2 MB hoch.',
-          }),
-          new FileTypeValidator({ fileType: /^image\/(jpeg|png)$/ }),
-        ],
-        fileIsRequired: true,
-        errorHttpStatusCode: 400,
-      }),
-    )
+    @UploadedFile(createPhotoUploadPipe())
     file: Express.Multer.File,
   ): Promise<{ hasPhoto: boolean }> {
     return this.profileService.uploadPhoto(userId, file);
