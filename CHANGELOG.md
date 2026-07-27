@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.11.1](https://github.com/Smart-Apply/applo/compare/v4.11.0...v4.11.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **api:** hide Swagger in prod and enforce profile upload rate limits ([#710](https://github.com/Smart-Apply/applo/issues/710)) ([7737325](https://github.com/Smart-Apply/applo/commit/77373254b45bc643246559c77673a388ea2540c3))
+* **api:** throttle and meter LLM-backed application endpoints ([#711](https://github.com/Smart-Apply/applo/issues/711)) ([4ee3e9d](https://github.com/Smart-Apply/applo/commit/4ee3e9d98b9f3144f49d7903dd8e359e90c66532))
+* **auth:** refuse OAuth account linking for unverified provider emails (nOAuth) ([#708](https://github.com/Smart-Apply/applo/issues/708)) ([41ad8c2](https://github.com/Smart-Apply/applo/commit/41ad8c21f932df026dc95bf11b40b028efb91e3f))
+* **deps:** override vulnerable transitive deps (fast-uri, sharp, uuid) ([#712](https://github.com/Smart-Apply/applo/issues/712)) ([d339818](https://github.com/Smart-Apply/applo/commit/d3398182d44574c300d8a7cc5845b374cf191269))
+
 ## [4.11.0](https://github.com/Smart-Apply/applo/compare/v4.10.0...v4.11.0) (2026-07-26)
 
 
