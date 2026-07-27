@@ -29,25 +29,21 @@ MAX_PROFILE_PHOTO_SIZE_MB=5      # Max size for profile photos (reserved for fut
 
 ### Controller-Level Validation
 
-`apps/api/src/uploads/uploads.controller.ts` now uses `ParseFilePipe` with validators:
+All four multipart routes share one pipe factory — `apps/api/src/common/pipes/file-validation.pipe.ts` (added when the previously-inlined, drifted copies were deduplicated):
 
 ```typescript
-@UploadedFile(
-  new ParseFilePipe({
-    validators: [
-      new MaxFileSizeValidator({
-        maxSize: parseInt(process.env.MAX_FILE_SIZE_MB || '10', 10) * 1024 * 1024,
-        message: 'File size exceeds 10MB limit. Please compress or split your file.',
-      }),
-      new FileTypeValidator({
-        fileType: /(pdf|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/,
-      }),
-    ],
-    fileIsRequired: true,
-  }),
-)
+// uploads.controller.ts — env-configurable cap
+@UploadedFile(createDocumentUploadPipe(parseInt(process.env.MAX_FILE_SIZE_MB || '10', 10)))
 file: Express.Multer.File
+
+// profile.controller.ts (parse-resume) + validation.controller.ts (extract-text)
+@UploadedFile(createDocumentUploadPipe())
+
+// profile.controller.ts (photo) — deliberate 2 MB cap, JPEG/PNG
+@UploadedFile(createPhotoUploadPipe())
 ```
+
+The factories build a `ParseFilePipe` with `MaxFileSizeValidator` (unified German message) and `FileTypeValidator` (magic-byte sniffing — NestJS 11 default — so the real file content is checked, not just the client-supplied MIME string).
 
 **Benefits:**
 
@@ -58,28 +54,12 @@ file: Express.Multer.File
 
 ### Service-Level Validation
 
-`apps/api/src/uploads/uploads.service.ts` validates as a **defense-in-depth** layer:
+`apps/api/src/uploads/uploads.service.ts` no longer re-checks size/MIME — the shared pipe at the controller boundary is the single validation point. The service keeps what is genuinely its own:
 
-```typescript
-constructor(
-  private readonly storageService: StorageService,
-  private readonly configService: ConfigService,
-) {
-  const maxSizeMB = parseInt(
-    this.configService.get<string>('MAX_FILE_SIZE_MB', '10'),
-    10,
-  );
-  this.MAX_FILE_SIZE = maxSizeMB * 1024 * 1024;
-  this.logger.log(`Max file size configured: ${maxSizeMB}MB`);
-}
-```
+**Remaining service checks:**
 
-**Validation checks:**
-
-1. File exists
-2. MIME type whitelist (PDF, DOCX)
-3. File size < MAX_FILE_SIZE
-4. Filename sanitization (path traversal protection)
+1. File exists (cheap null guard)
+2. Filename sanitization (path traversal protection)
 
 ### API Documentation
 
@@ -151,44 +131,37 @@ npm run test:e2e -- --testPathPattern=uploads
 
 ## Error Messages
 
-### File Too Large (Service-level)
+### File Too Large
 
 ```json
 {
   "statusCode": 400,
-  "message": "File size exceeds 10MB limit. Your file is 15.50MB. Please compress or split your file.",
+  "message": "Die Datei ist zu groß. Bitte lade eine Datei mit maximal 10 MB hoch.",
   "error": "Bad Request"
 }
 ```
 
-### File Too Large (Controller-level)
-
-```json
-{
-  "statusCode": 400,
-  "message": "File size exceeds 10MB limit. Please compress or split your file.",
-  "error": "Bad Request"
-}
-```
+(Unified German du-form across all document routes — previously the uploads route answered in English and parse-resume used the Sie-form.)
 
 ### Invalid File Type
 
 ```json
 {
   "statusCode": 400,
-  "message": "Invalid file type. Allowed types: PDF, DOCX. Received: text/plain",
+  "message": "Validation failed (expected type is /(pdf|vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document)$/)",
   "error": "Bad Request"
 }
 ```
+
+(`FileTypeValidator`'s library message — the pipe rejects before any service code runs.)
 
 ## Security Considerations
 
 ### Defense-in-Depth
 
-1. **Controller validation** (ParseFilePipe) - First line of defense, rejects before processing
-2. **Service validation** (UploadsService) - Backup validation with detailed logging
-3. **MIME type whitelist** - Only PDF and DOCX allowed
-4. **Filename sanitization** - Path traversal protection (`../../../etc/passwd` → `etc_passwd`)
+1. **Controller validation** (shared `ParseFilePipe` factory) - single validation boundary; size + MIME with magic-byte sniffing
+2. **MIME type whitelist** - Only PDF and DOCX allowed (JPEG/PNG for the profile photo)
+3. **Filename sanitization** (UploadsService) - Path traversal protection (`../../../etc/passwd` → `etc_passwd`)
 
 ### Resource Protection
 
@@ -207,10 +180,12 @@ npm run test:e2e -- --testPathPattern=uploads
 
 ## Related Files
 
+- `apps/api/src/common/pipes/file-validation.pipe.ts` - Shared pipe factories (single source of truth)
 - `apps/api/src/config/env.schema.ts` - Environment variable schema
-- `apps/api/src/uploads/uploads.controller.ts` - Controller-level validation
-- `apps/api/src/uploads/uploads.service.ts` - Service-level validation
-- `apps/api/src/uploads/uploads.service.spec.ts` - Unit tests
+- `apps/api/src/uploads/uploads.controller.ts` - General document upload route
+- `apps/api/src/profile/profile.controller.ts` - Resume parse + profile photo routes
+- `apps/api/src/validation/validation.controller.ts` - Bewerbungs-Check text extraction route
+- `apps/api/src/uploads/uploads.service.ts` - Filename sanitization + storage key generation
 - `apps/api/test/e2e/features/uploads.e2e-spec.ts` - E2E tests
 - `apps/api/.env.test` - Test environment configuration
 
@@ -236,8 +211,8 @@ Query logs:
 
 ```bash
 # Count rejections by reason
-grep "File size exceeds" /var/log/api.log | wc -l
-grep "Invalid file type" /var/log/api.log | wc -l
+grep "Die Datei ist zu groß" /var/log/api.log | wc -l
+grep "expected type" /var/log/api.log | wc -l
 
 # Average file size
 grep "File uploaded successfully" /var/log/api.log | awk '{print $NF}' | datamash mean 1

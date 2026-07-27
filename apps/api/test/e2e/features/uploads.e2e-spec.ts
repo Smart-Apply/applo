@@ -98,8 +98,10 @@ describe('UploadsController (e2e)', () => {
         .attach('file', largeFilePath)
         .expect(400);
 
-      expect(response.body.message).toContain('File size exceeds');
-      expect(response.body.message).toContain('10MB');
+      // Unified German message from the shared document pipe
+      // (common/pipes/file-validation.pipe.ts)
+      expect(response.body.message).toContain('Die Datei ist zu groß');
+      expect(response.body.message).toContain('10 MB');
     });
 
     it('should reject unsupported file type', async () => {
@@ -114,7 +116,10 @@ describe('UploadsController (e2e)', () => {
           .attach('file', txtFilePath)
           .expect(400);
 
-        expect(response.body.message).toContain('Invalid file type');
+        // FileTypeValidator's library message — the pipe rejects before any
+        // service code runs (the old 'Invalid file type' service message was
+        // unreachable even before the dedup).
+        expect(response.body.message).toContain('expected type');
       } finally {
         // Cleanup
         if (fs.existsSync(txtFilePath)) {
