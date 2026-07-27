@@ -3,9 +3,6 @@ import { ThrottlerGuard, ThrottlerException, ThrottlerRequest } from '@nestjs/th
 import { THROTTLER_NAME_KEY } from '../decorators/throttle.decorator';
 import { AuditLoggerService } from '../audit-logger';
 
-// NestJS Throttler internal constants
-const THROTTLER_SKIP = 'THROTTLER:SKIP';
-
 /**
  * Custom ThrottlerGuard that:
  * 1. Skips rate limiting in development (NODE_ENV === 'development')
@@ -23,6 +20,13 @@ const THROTTLER_SKIP = 'THROTTLER:SKIP';
  * (default: 'default'), we short-circuit and return `true` without
  * touching storage. Only the requested throttler accounts for the
  * request — yielding true per-route isolation.
+ *
+ * @SkipThrottle() handling lives entirely in the BASE guard: the library
+ * decorator writes per-throttler metadata keys ('THROTTLER:SKIP' + name,
+ * e.g. 'THROTTLER:SKIPdefault'), and the base canActivate reads exactly
+ * those per configured throttler. Don't re-check skipping here — an
+ * earlier bare 'THROTTLER:SKIP' lookup in this class was dead code (that
+ * un-suffixed key is never written by the decorator).
  *
  * Note: @nestjs/throttler v6 changed the handleRequest signature to use
  * ThrottlerRequest.
@@ -53,20 +57,9 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
       return true;
     }
 
-    // Check if @SkipThrottle() is applied at handler or class level
-    const handler = context.getHandler();
-    const classRef = context.getClass();
-    const shouldSkip = this.reflector.getAllAndOverride<boolean>(THROTTLER_SKIP, [
-      handler,
-      classRef,
-    ]);
-
-    if (shouldSkip) {
-      return true;
-    }
-
     // Call parent's canActivate which will call handleRequest for every
-    // configured throttler. We filter inside handleRequest below.
+    // configured throttler (and honor @SkipThrottle() via its per-name
+    // metadata keys). We filter inside handleRequest below.
     return super.canActivate(context);
   }
 
