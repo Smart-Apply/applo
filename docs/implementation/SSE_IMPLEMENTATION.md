@@ -23,15 +23,16 @@ GET /api/v1/applications/:id/stream
 ### How It Works
 
 1. **Client initiates connection:** Frontend creates EventSource connection to the stream endpoint
-2. **Server polls database:** Every 2 seconds, the server queries the application status
+2. **Server polls database:** Every 5 seconds, the server queries the application status + persisted progress
 3. **Server sends updates:** Status changes are pushed to client as SSE events
 4. **Auto-close:** Connection automatically closes when status reaches `READY` or `FAILED`
 
 ### Technical Details
 
-**Implementation:** RxJS Observable with `interval` operator
+**Implementation:** RxJS Observable with `timer(0, 5000)` (immediate first emit, then every 5s)
 
-- Polls every 2 seconds
+- Polls every 5 seconds (single row read serves status + progress + message)
+- Progress comes from the persisted `generationProgress`/`generationMessage` columns — cross-machine safe (prod runs 2 Fly machines)
 - Uses `switchMap` to fetch latest application data
 - Uses `takeWhile` to close stream on final status
 
@@ -44,6 +45,8 @@ GET /api/v1/applications/:id/stream
     status: 'PENDING' | 'GENERATING' | 'READY' | 'FAILED';
     updatedAt: string;
     errorMessage: string | null;
+    progress: number;   // 0-100, floored to 100 on READY
+    message: string;    // German step label ('' when none)
   }
 }
 ```
@@ -55,11 +58,14 @@ GET /api/v1/applications/:id/stream
 async streamStatus(userId: string, applicationId: string): Promise<Observable<MessageEvent>> {
   await this.ensureApplicationOwnership(userId, applicationId);
 
-  return interval(2000).pipe(
+  return timer(0, 5000).pipe(
     switchMap(async () => {
       const application = await this.prisma.application.findFirst({
         where: { id: applicationId, userId },
-        select: { id: true, status: true, updatedAt: true, errorMessage: true },
+        select: {
+          id: true, status: true, updatedAt: true, errorMessage: true,
+          generationProgress: true, generationMessage: true,
+        },
       });
       return application;
     }),
@@ -69,6 +75,8 @@ async streamStatus(userId: string, applicationId: string): Promise<Observable<Me
         status: application.status,
         updatedAt: application.updatedAt,
         errorMessage: application.errorMessage,
+        progress: application.status === 'READY' ? 100 : application.generationProgress,
+        message: application.generationMessage ?? '',
       },
     } as MessageEvent)),
     takeWhile((event: any) => {

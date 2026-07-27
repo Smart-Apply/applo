@@ -1172,8 +1172,17 @@ export class ApplicationsService {
         });
     };
 
-    // 0. Initial progress
-    emitProgress(0, 'Starte Generierung...');
+    // 0. Initial progress — awaited unconditional reset so the monotonic
+    // ladder below has a stable floor (a fire-and-forget 0-write could
+    // otherwise commit AFTER the 10% write and drag the bar backwards).
+    await this.prisma.application
+      .updateMany({
+        where: { id: applicationId },
+        data: { generationProgress: 0, generationMessage: 'Starte Generierung...' },
+      })
+      .catch((error) => {
+        this.logger.warn(`Failed to reset progress for ${applicationId}`, error);
+      });
 
     // 1. Load data
     emitProgress(10, 'Lade Profil und Stellenanzeige...');
