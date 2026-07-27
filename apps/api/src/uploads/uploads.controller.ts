@@ -63,7 +63,9 @@ export class UploadsController {
     @UploadedFile(
       // MAX_FILE_SIZE_MB is read from process.env (not ConfigService) because
       // decorator arguments evaluate at class-definition time, before the DI
-      // container exists. Same value the service used to re-check.
+      // container exists. NOTE: this means the override only takes effect as a
+      // REAL process env var at boot (e.g. Fly secrets, `MAX_FILE_SIZE_MB=5
+      // pnpm start:dev`) — a value set solely in apps/api/.env loads too late.
       createDocumentUploadPipe(parseInt(process.env.MAX_FILE_SIZE_MB || '10', 10)),
     )
     file: Express.Multer.File,

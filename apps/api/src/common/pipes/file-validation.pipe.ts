@@ -26,7 +26,7 @@ export const PHOTO_FILE_TYPE_REGEX = /^image\/(jpeg|png)$/;
 const documentTooLargeMessage = (maxSizeMb: number) =>
   `Die Datei ist zu groß. Bitte lade eine Datei mit maximal ${maxSizeMb} MB hoch.`;
 
-const PHOTO_TOO_LARGE_MESSAGE = 'Das Foto ist zu groß. Bitte lade ein Bild mit maximal 2 MB hoch.';
+const PHOTO_TOO_LARGE_MESSAGE = `Das Foto ist zu groß. Bitte lade ein Bild mit maximal ${PHOTO_MAX_SIZE_MB} MB hoch.`;
 
 /**
  * PDF/DOCX document upload (resume parsing, general uploads, Bewerbungs-Check).

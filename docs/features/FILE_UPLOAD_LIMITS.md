@@ -12,20 +12,18 @@ Added to `apps/api/src/config/env.schema.ts`:
 
 ```bash
 # File Upload Limits (in MB)
-MAX_FILE_SIZE_MB=10              # Max size for job posting files (PDF/DOCX)
-MAX_PROFILE_PHOTO_SIZE_MB=5      # Max size for profile photos (reserved for future use)
+MAX_FILE_SIZE_MB=10              # Max size for document uploads (PDF/DOCX) on POST /uploads
 ```
 
 **Defaults:**
 
-- Job posting files: 10 MB
-- Profile photos: 5 MB (not yet implemented)
+- Document uploads: 10 MB (`MAX_FILE_SIZE_MB`, POST /uploads only — parse-resume and extract-text use the fixed 10 MB default)
+- Profile photo: 2 MB — **hardcoded** product decision (`PHOTO_MAX_SIZE_MB` in `common/pipes/file-validation.pipe.ts`); the legacy `MAX_PROFILE_PHOTO_SIZE_MB` env var is unused
 
 **Configuration:**
 
-- Development: Set in `.env` or `.env.local`
-- Testing: Set in `.env.test` (already configured)
-- Production: Set via Azure Key Vault or environment variables
+- The override is read from `process.env` at class-definition time (decorator argument), so it only takes effect as a **real process env var at boot** — e.g. Fly secrets in prod/staging, or `MAX_FILE_SIZE_MB=5 pnpm start:dev` locally. A value set solely in `apps/api/.env` loads too late to affect the pipe.
+- Testing: Set in `.env.test` context via the process environment
 
 ### Controller-Level Validation
 
@@ -148,7 +146,7 @@ npm run test:e2e -- --testPathPattern=uploads
 ```json
 {
   "statusCode": 400,
-  "message": "Validation failed (expected type is /(pdf|vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document)$/)",
+  "message": "Validation failed (current file type is text/plain, expected type is /(pdf|vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document)$/)",
   "error": "Bad Request"
 }
 ```
