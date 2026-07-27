@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Client, Receiver } from '@upstash/qstash';
 import { QueueProvider, JobType, Job, JobStatus } from '../interfaces/queue.interface';
 import { ConfigService } from '../../config/config.service';
@@ -45,7 +45,6 @@ export class QStashQueueProvider implements QueueProvider {
 
   constructor(
     private readonly configService: ConfigService,
-    @Inject(forwardRef(() => PrismaService))
     private readonly prisma: PrismaService,
   ) {
     const token = this.configService.qstashToken;
