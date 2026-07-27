@@ -326,6 +326,13 @@ model Application {
   // PDF Generation Status (system-facing)
   status ApplicationGenerationStatus @default(PENDING)
 
+  // Pipeline progress (0-100) + step label, PERSISTED on the row so the SSE
+  // poll can serve progress from ANY machine. Prod runs 2 Fly machines; the
+  // previous in-memory callback map only delivered progress when the SSE
+  // stream and the generation request happened to land on the same machine.
+  generationProgress Int     @default(0)
+  generationMessage  String?
+
   // Generated content (Markdown/HTML before PDF)
   coverLetterText String?
   resumeText      String?

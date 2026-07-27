@@ -77,9 +77,6 @@ import {
 } from './constants';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 
-// Type for progress callback function
-export type ProgressCallback = (progress: number, message: string) => void;
-
 @Injectable()
 export class ApplicationsService {
   private readonly logger = new Logger(ApplicationsService.name);
@@ -89,9 +86,6 @@ export class ApplicationsService {
     string,
     { type: string; skills: string[] }[]
   >();
-
-  // In-memory cache for progress callbacks (keyed by application ID)
-  private readonly progressCallbacks = new Map<string, ProgressCallback>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -803,6 +797,10 @@ export class ApplicationsService {
         title,
         applicationStatus: ApplicationTrackingStatus.CREATED,
         status: ApplicationStatus.PENDING,
+        // Reset persisted progress — a reused FAILED row would otherwise show
+        // the previous run's stale bar until the pipeline's first write.
+        generationProgress: 0,
+        generationMessage: null,
         notes: dto.notes,
         coverLetterTemplateId: resolvedCoverLetterTemplateId,
         resumeTemplateId: resolvedResumeTemplateId,
@@ -1154,16 +1152,37 @@ export class ApplicationsService {
     const startTime = Date.now();
     this.logger.log(`Starting single-LLM pipeline for application ${applicationId}`);
 
-    // Get progress callback if one is registered
+    // Persist progress on the row (fire-and-forget) so the SSE poll can
+    // serve it from ANY machine — prod runs 2 Fly machines and in-memory
+    // callbacks only reached streams on the machine running the pipeline.
+    // progress=0 resets unconditionally (new run); later writes are
+    // monotonic (`lt`) so a stale async write can never move the bar back.
     const emitProgress = (progress: number, message: string) => {
-      const callback = this.progressCallbacks.get(applicationId);
-      if (callback) {
-        callback(progress, message);
-      }
+      this.prisma.application
+        .updateMany({
+          where:
+            progress === 0
+              ? { id: applicationId }
+              : { id: applicationId, generationProgress: { lt: progress } },
+          data: { generationProgress: progress, generationMessage: message },
+        })
+        .catch((error) => {
+          // Progress is cosmetic — never let a failed write break the pipeline.
+          this.logger.warn(`Failed to persist progress for ${applicationId}`, error);
+        });
     };
 
-    // 0. Initial progress
-    emitProgress(0, 'Starte Generierung...');
+    // 0. Initial progress — awaited unconditional reset so the monotonic
+    // ladder below has a stable floor (a fire-and-forget 0-write could
+    // otherwise commit AFTER the 10% write and drag the bar backwards).
+    await this.prisma.application
+      .updateMany({
+        where: { id: applicationId },
+        data: { generationProgress: 0, generationMessage: 'Starte Generierung...' },
+      })
+      .catch((error) => {
+        this.logger.warn(`Failed to reset progress for ${applicationId}`, error);
+      });
 
     // 1. Load data
     emitProgress(10, 'Lade Profil und Stellenanzeige...');
@@ -1391,9 +1410,6 @@ export class ApplicationsService {
       });
 
       throw error;
-    } finally {
-      // Clean up progress callback
-      this.progressCallbacks.delete(applicationId);
     }
   }
 
@@ -2757,6 +2773,8 @@ export class ApplicationsService {
       where: { id: applicationId },
       data: {
         status: ApplicationStatus.GENERATING,
+        generationProgress: 0,
+        generationMessage: null,
         coverLetterFileKey: null,
         resumeFileKey: null,
         errorMessage: null,
@@ -2810,6 +2828,8 @@ export class ApplicationsService {
       where: { id: applicationId },
       data: {
         status: ApplicationStatus.GENERATING,
+        generationProgress: 0,
+        generationMessage: null,
         coverLetterFileKey: null,
         resumeFileKey: null,
         errorMessage: null,
@@ -3353,7 +3373,10 @@ export class ApplicationsService {
 
   /**
    * Stream real-time status updates for an application via Server-Sent Events (SSE)
-   * Polls the database every second and streams updates until application reaches a final state
+   * Polls the database every 5 seconds and streams updates until the application
+   * reaches a final state. Progress comes from the persisted
+   * generationProgress/generationMessage columns on the same row read, so it is
+   * correct regardless of which machine runs the pipeline (prod runs 2).
    * @param userId - User ID (for authorization)
    * @param applicationId - Application ID to stream status for
    * @returns Observable that emits SSE MessageEvents with status updates
@@ -3364,22 +3387,12 @@ export class ApplicationsService {
 
     this.logger.log(`SSE stream started for application ${applicationId} by user ${userId}`);
 
-    // Create a subject to emit progress updates
-    let lastProgress = 0;
-    let lastMessage = '';
-
-    // Register progress callback for this application
-    this.progressCallbacks.set(applicationId, (progress: number, message: string) => {
-      lastProgress = progress;
-      lastMessage = message;
-    });
-
     // Create SSE stream that polls status every 5 seconds.
     // Was 1s but that produced ~60 DB round-trips per generation; combined
     // with hundreds of generations/day this dominated Neon egress (5GB/mo cap).
-    // 5s is still snappy enough for the wizard UI — progress bar updates
-    // come from the in-memory `progressCallbacks` closure between polls,
-    // and the final READY/FAILED transition is bounded by one extra poll.
+    // 5s is still snappy enough for the wizard UI — progress rides on the
+    // same row read, and the final READY/FAILED transition is bounded by one
+    // extra poll.
     return timer(0, 5000).pipe(
       // Fetch latest application status
       switchMap(async () => {
@@ -3393,6 +3406,8 @@ export class ApplicationsService {
             status: true,
             updatedAt: true,
             errorMessage: true,
+            generationProgress: true,
+            generationMessage: true,
           },
         });
 
@@ -3402,12 +3417,13 @@ export class ApplicationsService {
         }
 
         this.logger.debug(
-          `SSE emit: application ${applicationId} status=${application.status} progress=${lastProgress}%`,
+          `SSE emit: application ${applicationId} status=${application.status} progress=${application.generationProgress}%`,
         );
-        return { application, progress: lastProgress, message: lastMessage };
+        return application;
       }),
-      // Transform to SSE MessageEvent format
-      map(({ application, progress, message }) => {
+      // Transform to SSE MessageEvent format (field names are the frontend
+      // contract — keep `progress` + `message`).
+      map((application) => {
         const status = application.status;
         return {
           data: {
@@ -3415,8 +3431,10 @@ export class ApplicationsService {
             status: status,
             updatedAt: application.updatedAt,
             errorMessage: application.errorMessage,
-            progress: progress,
-            message: message,
+            // The final 'Fertig!' write races the READY status update — floor
+            // the bar at 100 once the terminal success state is visible.
+            progress: status === 'READY' ? 100 : application.generationProgress,
+            message: application.generationMessage ?? '',
           },
         } as MessageEvent;
       }),
@@ -3431,8 +3449,6 @@ export class ApplicationsService {
           this.logger.log(
             `SSE stream closing for application ${applicationId} (final status: ${status}, progress: ${eventData.progress}%)`,
           );
-          // Clean up progress callback when stream closes
-          this.progressCallbacks.delete(applicationId);
         }
 
         return shouldContinue;

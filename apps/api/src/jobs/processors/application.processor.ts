@@ -66,6 +66,8 @@ export class ApplicationProcessor {
         throw new Error('Resume not provided');
       }
 
+      this.persistProgress(applicationId, 10, 'Lade Bewerbungsdaten...');
+
       // Cover letter is optional - user may have opted out during creation
       const hasCoverLetter = !!application.coverLetterText;
       if (!hasCoverLetter) {
@@ -100,6 +102,7 @@ export class ApplicationProcessor {
       let effectiveLanguage: TranslationLanguage = targetLanguage;
 
       if (targetLanguage !== sourceLanguage) {
+        this.persistProgress(applicationId, 25, 'Übersetze Inhalte...');
         const translated = await this.resolveTranslation(
           application.id,
           userId,
@@ -129,6 +132,7 @@ export class ApplicationProcessor {
 
       // 4. Convert to PDFs
       this.logger.log('Converting templates to PDFs...');
+      this.persistProgress(applicationId, 50, 'Erstelle PDF-Dokumente...');
 
       let coverLetterKey: string | null = null;
 
@@ -216,17 +220,21 @@ export class ApplicationProcessor {
 
       // 5. Upload resume to Storage
       this.logger.log('Uploading to storage...');
+      this.persistProgress(applicationId, 85, 'Lade Dokumente hoch...');
       const resumeKey = await this.storageService.upload(
         `applications/${applicationId}/resume.pdf`,
         resumePdf,
         'application/pdf',
       );
 
-      // 6. Update Application with results
+      // 6. Update Application with results (progress folded into the same
+      // write — atomic with the READY flip, no race with the SSE poll)
       await this.prisma.application.update({
         where: { id: applicationId },
         data: {
           status: 'READY',
+          generationProgress: 100,
+          generationMessage: 'Fertig!',
           coverLetterFileKey: coverLetterKey,
           resumeFileKey: resumeKey,
         },
@@ -249,6 +257,24 @@ export class ApplicationProcessor {
 
       throw error; // Re-throw for retry logic
     }
+  }
+
+  /**
+   * Persist a pipeline progress milestone on the row (fire-and-forget) so the
+   * SSE poll serves it from any machine. Monotonic (`lt` guard): a stale
+   * async write can never move the bar backwards. The enqueueing flows
+   * (export/regenerate/create) reset progress to 0 before publishing the job.
+   * Progress is cosmetic — a failed write must never break the pipeline.
+   */
+  private persistProgress(applicationId: string, progress: number, message: string): void {
+    this.prisma.application
+      .updateMany({
+        where: { id: applicationId, generationProgress: { lt: progress } },
+        data: { generationProgress: progress, generationMessage: message },
+      })
+      .catch((error) => {
+        this.logger.warn(`Failed to persist progress for ${applicationId}`, error);
+      });
   }
 
   /**

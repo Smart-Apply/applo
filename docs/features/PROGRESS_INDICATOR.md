@@ -17,7 +17,7 @@ The visual progress indicator provides real-time feedback to users during the PD
 
 - Visual progress bar showing 0-100% completion
 - Stage-specific messages in German (e.g., "Generiere Lebenslauf mit KI...")
-- Real-time updates every 2 seconds via Server-Sent Events
+- Updates every 5 seconds via Server-Sent Events (DB-poll driven)
 - Clear indication of what's happening at each stage
 - Reduced user anxiety and support requests
 
@@ -25,17 +25,25 @@ The visual progress indicator provides real-time feedback to users during the PD
 
 ### Backend (NestJS)
 
-#### Progress Callback System
+#### Persisted Progress Columns
 
-The backend uses an in-memory callback system to track progress across the generation pipeline:
+Progress is **persisted on the `Application` row** so the SSE poll can serve it
+from any machine — prod runs 2 Fly machines, and the earlier in-memory callback
+map only delivered progress when the SSE stream and the generation ran on the
+same machine:
 
-```typescript
-// Type definition
-export type ProgressCallback = (progress: number, message: string) => void;
-
-// In-memory storage (ApplicationsService)
-private readonly progressCallbacks = new Map<string, ProgressCallback>();
+```prisma
+// apps/api/prisma/schema.prisma (model Application)
+generationProgress Int     @default(0) // 0-100
+generationMessage  String?             // German step label
 ```
+
+Writes are fire-and-forget and **monotonic** (`generationProgress: { lt: progress }`
+guard), so a stale async write can never move the bar backwards. A new run
+starts with an awaited unconditional reset to 0. Both the inline pipeline
+(`generateWithSinglePipeline`) and the export/regenerate job processor
+(`application.processor.ts`) emit milestones; the processor folds the final
+`100 / 'Fertig!'` into the same write as the `READY` status flip.
 
 #### Progress Emission Points
 
@@ -56,29 +64,32 @@ The `generateWithSinglePipeline` method emits progress at 8 key milestones:
 
 #### SSE Stream Implementation
 
-The `streamStatus` endpoint emits progress data via Server-Sent Events:
+The `streamStatus` endpoint reads the persisted progress on its existing 5-second
+status poll (one row read serves status + progress + message — no extra queries):
 
 ```typescript
 async streamStatus(userId: string, applicationId: string): Promise<Observable<MessageEvent>> {
-  // Register progress callback for this application
-  this.progressCallbacks.set(applicationId, (progress: number, message: string) => {
-    lastProgress = progress;
-    lastMessage = message;
-  });
+  await this.ensureApplicationOwnership(userId, applicationId);
 
-  // Poll database every 2 seconds and emit progress
-  return interval(2000).pipe(
+  return timer(0, 5000).pipe(
     switchMap(async () => {
-      const application = await this.prisma.application.findFirst({...});
-      return { application, progress: lastProgress, message: lastMessage };
+      return this.prisma.application.findFirst({
+        where: { id: applicationId, userId },
+        select: {
+          id: true, status: true, updatedAt: true, errorMessage: true,
+          generationProgress: true, generationMessage: true,
+        },
+      });
     }),
-    map(({ application, progress, message }) => ({
+    map((application) => ({
       data: {
         id: application.id,
         status: application.status,
-        progress: progress,
-        message: message,
         updatedAt: application.updatedAt,
+        errorMessage: application.errorMessage,
+        // Floor at 100 once READY is visible (the final write races the flip)
+        progress: application.status === 'READY' ? 100 : application.generationProgress,
+        message: application.generationMessage ?? '',
       },
     })),
     // Close when READY or FAILED
