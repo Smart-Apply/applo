@@ -1,6 +1,7 @@
 import { Controller, Get, Param, NotFoundException, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { ConfigService } from '../config/config.service';
 import { JobsService } from './jobs.service';
 
 /**
@@ -22,7 +23,10 @@ class JobStatusDto {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class JobsController {
-  constructor(private readonly jobsService: JobsService) {}
+  constructor(
+    private readonly jobsService: JobsService,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
    * Get job status by ID
@@ -86,7 +90,7 @@ export class JobsController {
   })
   async healthCheck(): Promise<{ healthy: boolean; provider: string }> {
     const healthy = await this.jobsService.healthCheck();
-    const provider = process.env.JOBS_DRIVER || 'in-memory';
+    const provider = this.configService.jobsDriver;
 
     return { healthy, provider };
   }
