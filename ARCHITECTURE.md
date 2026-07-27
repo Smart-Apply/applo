@@ -371,7 +371,7 @@ User 1:1 Subscription
 
 ## 📊 API Endpoints (selection)
 
-All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>.
+All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs> (Swagger UI is mounted only when `NODE_ENV` ≠ `production` — Fly prod/staging don't expose `/docs`).
 
 ### Public
 
