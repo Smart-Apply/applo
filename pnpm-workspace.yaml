@@ -63,6 +63,24 @@ overrides:
   # dedicated refactor PR to address. Main was on 7.0.1 via the old
   # package-lock; matching exactly keeps the pnpm migration behaviour-neutral.
   eslint-plugin-react-hooks: 7.0.1
+  # Dependabot alerts 2026-07-27 — vulnerable transitives whose parents haven't
+  # released fixed ranges yet. Scoped (parent>child) where a global pin would
+  # clash with another major already in the tree:
+  # - fast-uri < 3.1.4: host confusion via literal backslash authority
+  #   (GHSA-v2hh-gcrm-f6hx); in-range for its only consumer ajv@8.
+  # - next>sharp < 0.35.0: inherited libvips CVEs (GHSA-f88m-g3jw-g9cj).
+  #   Scoped — miniflare already ships 0.35.2; sharp only runs in local `next
+  #   dev` image optimization (the Workers deploy never bundles native sharp).
+  # - node-jose>uuid < 11.1.1: missing buffer bounds check in v3/v5/v6
+  #   (GHSA-w5hq-g745-h8pq). Scoped — @applo/api depends on uuid@14 directly;
+  #   a blanket pin would DOWNGRADE it.
+  # NOT overridden: brace-expansion ≤ 5.0.7 (GHSA-mh99-v99m-4gvg). The patched
+  # v5 is a named-export rewrite (`exports.expand`) that breaks CJS
+  # minimatch@3 consumers expecting `module.exports = fn` (eslint/glob
+  # tooling). Dev-only surface — no untrusted glob patterns — wait for parents.
+  fast-uri: ^3.1.4
+  'next>sharp': ^0.35.2
+  'node-jose>uuid': ^11.1.1
 
 peerDependencyRules:
   allowedVersions:
