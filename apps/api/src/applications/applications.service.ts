@@ -619,9 +619,11 @@ export class ApplicationsService {
   async create(userId: string, dto: CreateApplicationDto): Promise<ApplicationResponseDto> {
     this.logger.log(`Creating application for user ${userId}`);
 
-    // 1. Verify job posting exists
-    const jobPosting = await this.prisma.jobPosting.findUnique({
-      where: { id: dto.jobPostingId },
+    // 1. Verify job posting exists AND belongs to the caller (IDOR defense —
+    // a foreign posting id must 404, not let the user attach an application
+    // to and read another user's posting).
+    const jobPosting = await this.prisma.jobPosting.findFirst({
+      where: { id: dto.jobPostingId, userId },
     });
 
     if (!jobPosting) {
@@ -722,9 +724,11 @@ export class ApplicationsService {
     const coverLetterLength = dto.coverLetterLength || DEFAULT_COVER_LETTER_LENGTH;
     const coverLetterBudget = resolveCoverLetterBudget(coverLetterLength);
 
-    // 1. Verify job posting exists
-    const jobPosting = await this.prisma.jobPosting.findUnique({
-      where: { id: dto.jobPostingId },
+    // 1. Verify job posting exists AND belongs to the caller (IDOR defense —
+    // a foreign posting id must 404, not let the user attach an application
+    // to and read another user's posting).
+    const jobPosting = await this.prisma.jobPosting.findFirst({
+      where: { id: dto.jobPostingId, userId },
     });
 
     if (!jobPosting) {
@@ -1152,6 +1156,18 @@ export class ApplicationsService {
     const startTime = Date.now();
     this.logger.log(`Starting single-LLM pipeline for application ${applicationId}`);
 
+    // 0. Ownership check FIRST — before any write. `findFirst` scoped by
+    // userId (not `findUnique` by id alone) is the IDOR defense: a foreign
+    // application id must 404 before this method resets or overwrites the row.
+    const application = await this.prisma.application.findFirst({
+      where: { id: applicationId, userId },
+      include: { jobPosting: true },
+    });
+
+    if (!application) {
+      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
+    }
+
     // Persist progress on the row (fire-and-forget) so the SSE poll can
     // serve it from ANY machine — prod runs 2 Fly machines and in-memory
     // callbacks only reached streams on the machine running the pipeline.
@@ -1187,14 +1203,6 @@ export class ApplicationsService {
     // 1. Load data
     emitProgress(10, 'Lade Profil und Stellenanzeige...');
     const profile = await this.getProfileWithRelations(userId);
-    const application = await this.prisma.application.findUnique({
-      where: { id: applicationId },
-      include: { jobPosting: true },
-    });
-
-    if (!application) {
-      throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
-    }
 
     const jobPosting = application.jobPosting;
     const shouldGenerateCoverLetter = application.coverLetterText !== null; // Infer from initial state
