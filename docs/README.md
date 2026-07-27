@@ -9,6 +9,7 @@
 Sicherheitsdokumentation
 
 - **SECURITY.md** - Umfassende Sicherheitsübersicht
+- **SECURITY_AUDIT_2026-07-03.md** - Statisches Security-Audit (Findings F1–F8)
 - **CORS_SECURITY.md** - CORS Konfiguration
 - **XSS_PROTECTION.md** - XSS-Schutzmaßnahmen
 - **AUDIT_LOGGING.md** - Audit-Logging System
@@ -29,6 +30,7 @@ Feature-Dokumentation
 
 Technische Implementierungsdetails
 
+- **ARCHITECTURE_SECURITY_REVIEW_2026-07-27.md** - Review-Remediation-Record (PRs #710–#720: IDOR-Fix, GenerationService-Split, Throttling, Upload-Dedup, CSRF-Rollout)
 - **WIZARD_IMPLEMENTATION.md** - Application Wizard
 - **SSE_IMPLEMENTATION.md** - Real-time Updates
 - **TEMPLATE_CACHING.md** - Template Cache Strategy
