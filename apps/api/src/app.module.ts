@@ -84,6 +84,11 @@ import { InviteCodeModule } from './invite-codes/invite-codes.module';
               limit: 10, // 10 resume parses per hour per user - LLM calls are expensive
             },
             {
+              name: 'uploads',
+              ttl: 3600000, // 1 hour
+              limit: 20, // 20 profile-photo uploads per hour per user - caps 2MB multipart abuse
+            },
+            {
               name: 'translation',
               ttl: 900000, // 15 minutes
               limit: 10, // 10 translation requests per 15 minutes - LLM calls are expensive

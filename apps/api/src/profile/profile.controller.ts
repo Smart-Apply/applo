@@ -25,9 +25,10 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
-import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { UseThrottler } from '../common/decorators/throttle.decorator';
 import { ProfileService } from './profile.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
@@ -74,8 +75,12 @@ export class ProfileController {
   }
 
   @Post('parse-resume')
-  @SkipThrottle({ default: true }) // Skip default throttle
-  @Throttle({ 'resume-parser': {} }) // Apply resume-parser throttle (10/hour)
+  // CustomThrottlerGuard only counts the bucket a route selects via
+  // @UseThrottler — a bare @Throttle({ 'resume-parser': {} }) is never
+  // enforced by it. Limits come from the 'resume-parser' throttler in
+  // app.module.ts (10/hour); the class-level @SkipThrottle() keeps the
+  // default bucket out of the way.
+  @UseThrottler('resume-parser')
   @UseInterceptors(FileInterceptor('file', { storage: undefined })) // Memory storage only
   @ApiOperation({
     summary: 'Parse resume file and extract profile data',
@@ -131,6 +136,10 @@ export class ProfileController {
   }
 
   @Post('photo')
+  // Class-level @SkipThrottle() only skips the default bucket — this opts the
+  // 2 MB multipart upload into the 'uploads' bucket (20/hour, app.module.ts)
+  // so an authenticated user can't hammer storage writes.
+  @UseThrottler('uploads')
   @UseInterceptors(FileInterceptor('file', { storage: undefined })) // Memory storage only
   @ApiOperation({
     summary: 'Bewerbungsfoto hochladen',
@@ -155,6 +164,10 @@ export class ProfileController {
   })
   @ApiResponse({ status: 201, description: 'Foto gespeichert' })
   @ApiResponse({ status: 400, description: 'Ungültiger Dateityp oder Datei zu groß' })
+  @ApiResponse({
+    status: 429,
+    description: 'Rate limit überschritten – max. 20 Foto-Uploads pro Stunde',
+  })
   async uploadPhoto(
     @CurrentUser('id') userId: string,
     @UploadedFile(

@@ -19,7 +19,7 @@ if (process.env.NODE_ENV !== 'production') {
   try {
     const { config } = require('dotenv');
     config({ path: join(__dirname, '../../../.env') });
-  } catch (error) {
+  } catch {
     // Silently ignore in production where dotenv is not installed
   }
 }
@@ -290,100 +290,104 @@ async function bootstrap() {
   }
 
   // Swagger/OpenAPI Documentation
-  // Available in both development and production for better API discoverability
-  // Access at: http://localhost:3000/api/docs
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Applo API')
-    .setDescription(
-      'AI-powered job application assistant API\n\n' +
-        '## Features\n' +
-        '- 🔐 JWT Authentication (HttpOnly cookies)\n' +
-        '- 👤 User Profile Management\n' +
-        '- 📝 Job Postings (Manual & Parser)\n' +
-        '- 📄 Application Generation (LLM → PDF)\n' +
-        '- 🎨 Custom Templates (Cover Letter & Resume)\n' +
-        '- 📊 Real-time Status Updates (SSE)\n' +
-        '- 🔒 Security Features (CSRF, Rate Limiting, XSS Protection)\n\n' +
-        '## Authentication\n' +
-        'This API uses JWT tokens stored in HttpOnly cookies for authentication. ' +
-        'After logging in via `/auth/login`, the access token is automatically included in subsequent requests. ' +
-        'Use the "Authorize" button to test endpoints in this UI.',
-    )
-    .setVersion('1.0')
-    .setContact(
-      'Applo Team',
-      'https://github.com/applo/applo',
-      'support@applo.ai',
-    )
-    .setLicense('MIT', 'https://opensource.org/licenses/MIT')
-    // JWT Bearer Authentication (for manual testing)
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token (without "Bearer " prefix)',
-        in: 'header',
-      },
-      'JWT-auth', // This name must match @ApiBearerAuth() in controllers
-    )
-    // Cookie Authentication (primary authentication method)
-    .addCookieAuth(
-      'access_token',
-      {
-        type: 'apiKey',
-        in: 'cookie',
-        name: 'access_token',
-        description: 'JWT access token stored in HttpOnly cookie (automatically sent after login)',
-      },
-      'cookie-auth',
-    )
-    // API Tags (organized by module)
-    .addTag('auth', 'Authentication endpoints (register, login, logout, refresh)')
-    .addTag('auth/sessions', 'Session management (list, revoke sessions)')
-    .addTag('profile', 'User profile management (skills, experience, education)')
-    .addTag('job-postings', 'Job postings management (manual creation & parser)')
-    .addTag('applications', 'Application generation & management (LLM → PDF pipeline)')
-    .addTag('templates', 'Template management (cover letter & resume templates)')
-    .addTag('uploads', 'File uploads (PDF, DOCX)')
-    .addTag('security', 'Security endpoints (CSP violation reporting)')
-    // Server URLs
-    .addServer('http://localhost:3000', 'Local Development')
-    .addServer('https://api.applo.ai', 'Production')
-    .build();
+  // Mounted only outside production: the generated schema is a complete
+  // endpoint map (incl. admin routes) that we don't hand to the public
+  // internet. NODE_ENV=production covers both Fly prod and staging; local
+  // dev keeps http://localhost:3000/docs.
+  if (!configService.isProduction) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Applo API')
+      .setDescription(
+        'AI-powered job application assistant API\n\n' +
+          '## Features\n' +
+          '- 🔐 JWT Authentication (HttpOnly cookies)\n' +
+          '- 👤 User Profile Management\n' +
+          '- 📝 Job Postings (Manual & Parser)\n' +
+          '- 📄 Application Generation (LLM → PDF)\n' +
+          '- 🎨 Custom Templates (Cover Letter & Resume)\n' +
+          '- 📊 Real-time Status Updates (SSE)\n' +
+          '- 🔒 Security Features (CSRF, Rate Limiting, XSS Protection)\n\n' +
+          '## Authentication\n' +
+          'This API uses JWT tokens stored in HttpOnly cookies for authentication. ' +
+          'After logging in via `/auth/login`, the access token is automatically included in subsequent requests. ' +
+          'Use the "Authorize" button to test endpoints in this UI.',
+      )
+      .setVersion('1.0')
+      .setContact(
+        'Applo Team',
+        'https://github.com/applo/applo',
+        'support@applo.ai',
+      )
+      .setLicense('MIT', 'https://opensource.org/licenses/MIT')
+      // JWT Bearer Authentication (for manual testing)
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter JWT token (without "Bearer " prefix)',
+          in: 'header',
+        },
+        'JWT-auth', // This name must match @ApiBearerAuth() in controllers
+      )
+      // Cookie Authentication (primary authentication method)
+      .addCookieAuth(
+        'access_token',
+        {
+          type: 'apiKey',
+          in: 'cookie',
+          name: 'access_token',
+          description: 'JWT access token stored in HttpOnly cookie (automatically sent after login)',
+        },
+        'cookie-auth',
+      )
+      // API Tags (organized by module)
+      .addTag('auth', 'Authentication endpoints (register, login, logout, refresh)')
+      .addTag('auth/sessions', 'Session management (list, revoke sessions)')
+      .addTag('profile', 'User profile management (skills, experience, education)')
+      .addTag('job-postings', 'Job postings management (manual creation & parser)')
+      .addTag('applications', 'Application generation & management (LLM → PDF pipeline)')
+      .addTag('templates', 'Template management (cover letter & resume templates)')
+      .addTag('uploads', 'File uploads (PDF, DOCX)')
+      .addTag('security', 'Security endpoints (CSP violation reporting)')
+      // Server URLs
+      .addServer('http://localhost:3000', 'Local Development')
+      .addServer('https://api.applo.ai', 'Production')
+      .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig, {
-    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey, // Use method name as operationId
-  });
+    const document = SwaggerModule.createDocument(app, swaggerConfig, {
+      operationIdFactory: (controllerKey: string, methodKey: string) => methodKey, // Use method name as operationId
+    });
 
-  SwaggerModule.setup('docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true, // Remember auth token in localStorage
-      docExpansion: 'none', // Collapse all endpoints by default
-      filter: true, // Enable search/filter
-      showRequestDuration: true, // Show request duration in UI
-      tryItOutEnabled: true, // Enable "Try it out" by default
-      displayOperationId: false, // Hide operation IDs
-      displayRequestDuration: true, // Show request duration
-      tagsSorter: 'alpha', // Sort tags alphabetically
-      operationsSorter: 'alpha', // Sort operations alphabetically
-      defaultModelsExpandDepth: 2, // Expand models 2 levels deep
-      defaultModelExpandDepth: 2, // Expand model schemas 2 levels deep
-    },
-    customSiteTitle: 'Applo API Documentation',
-    customfavIcon: 'https://nestjs.com/img/logo-small.svg',
-    customCss: `
+    SwaggerModule.setup('docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true, // Remember auth token in localStorage
+        docExpansion: 'none', // Collapse all endpoints by default
+        filter: true, // Enable search/filter
+        showRequestDuration: true, // Show request duration in UI
+        tryItOutEnabled: true, // Enable "Try it out" by default
+        displayOperationId: false, // Hide operation IDs
+        displayRequestDuration: true, // Show request duration
+        tagsSorter: 'alpha', // Sort tags alphabetically
+        operationsSorter: 'alpha', // Sort operations alphabetically
+        defaultModelsExpandDepth: 2, // Expand models 2 levels deep
+        defaultModelExpandDepth: 2, // Expand model schemas 2 levels deep
+      },
+      customSiteTitle: 'Applo API Documentation',
+      customfavIcon: 'https://nestjs.com/img/logo-small.svg',
+      customCss: `
       .swagger-ui .topbar { display: none }
       .swagger-ui .info { margin: 20px 0; }
       .swagger-ui .info .title { font-size: 36px; }
     `,
-  });
+    });
 
-  logger.log(
-    `📚 Swagger documentation available at: http://localhost:${configService.port}/docs`,
-    'Bootstrap',
-  );
+    logger.log(
+      `📚 Swagger documentation available at: http://localhost:${configService.port}/docs`,
+      'Bootstrap',
+    );
+  }
 
   const port = configService.port;
   await app.listen(port);

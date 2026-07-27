@@ -254,7 +254,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 
 ## API Endpoints (v1)
 
-All endpoints are prefixed with `/api/v1` and documented at `http://localhost:3000/docs` (Swagger UI).
+All endpoints are prefixed with `/api/v1` and documented at `http://localhost:3000/docs` (Swagger UI — mounted only when `NODE_ENV` ≠ `production`; Fly prod/staging don't expose `/docs`).
 
 ### Authentication Endpoints (Public)
 
@@ -498,6 +498,8 @@ Standalone AI quality + ATS check of an application the user created **outside**
 - **Auth endpoints** (register, login): 5 attempts / 15 minutes (strict)
 - **CSRF token endpoint**: 100 requests / 15 minutes (default, NOT strict)
 - **All other endpoints**: 100 requests / 15 minutes (default)
+- **Resume parse** (`POST /profile/parse-resume`): 10 / hour (`resume-parser` bucket via `@UseThrottler`)
+- **Profile photo upload** (`POST /profile/photo`): 20 / hour (`uploads` bucket via `@UseThrottler`)
 
 ### Error Format
 
