@@ -7,7 +7,6 @@ import { PreviewRendererService } from '../pdf-v2/preview-renderer.service';
 import { isRenderableTemplate } from '../pdf-v2/template-registry';
 import { TemplateType } from '../generated/prisma/client';
 import { TemplateResponseDto, TemplateWithContentResponseDto } from './dto/template-response.dto';
-import { CreateTemplateDto } from './dto/create-template.dto';
 
 /** The row fields the react-pdf registry needs to resolve a design. */
 interface RegistryLookupRow {
@@ -213,60 +212,6 @@ export class TemplatesService {
   }
 
   /**
-   * Get all language variants of a template design
-   */
-  async findLanguageVariants(baseTemplateId: string): Promise<TemplateResponseDto[]> {
-    const cacheKey = `templates:variants:${baseTemplateId}`;
-
-    // Check cache first (use !== undefined to properly handle null cached values)
-    const cached = this.cache.get<TemplateResponseDto[]>(cacheKey);
-    if (cached !== undefined) {
-      this.cacheStats.hits++;
-      this.logger.debug(
-        `Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
-      );
-      return cached;
-    }
-
-    // Cache miss - fetch from database
-    this.cacheStats.misses++;
-    this.logger.debug(
-      `Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
-    );
-
-    const variants = await this.prisma.template.findMany({
-      where: {
-        OR: [
-          { baseTemplateId },
-          { id: baseTemplateId }, // Include the base template itself
-        ],
-        isActive: true,
-      },
-      orderBy: { language: 'asc' },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        type: true,
-        category: true,
-        language: true,
-        baseTemplateId: true,
-        thumbnailUrl: true,
-        isActive: true,
-        isDefault: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    // Cache the result
-    this.cache.set(cacheKey, variants);
-    this.logger.debug(`Cached ${variants.length} variants with key ${cacheKey}`);
-
-    return variants;
-  }
-
-  /**
    * Get a single template by ID with full content
    */
   async findOne(id: string): Promise<TemplateWithContentResponseDto> {
@@ -301,136 +246,6 @@ export class TemplatesService {
     this.logger.debug(`Cached template with key ${cacheKey}`);
 
     return template;
-  }
-
-  /**
-   * Get default template for a specific type
-   */
-  async findDefault(type: TemplateType): Promise<TemplateWithContentResponseDto> {
-    const cacheKey = `templates:default:${type}`;
-
-    // Check cache first (use !== undefined to properly handle null cached values)
-    const cached = this.cache.get<TemplateWithContentResponseDto>(cacheKey);
-    if (cached !== undefined) {
-      this.cacheStats.hits++;
-      this.logger.debug(
-        `Cache HIT for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
-      );
-      return cached;
-    }
-
-    // Cache miss - fetch from database
-    this.cacheStats.misses++;
-    this.logger.debug(
-      `Cache MISS for ${cacheKey} (hits: ${this.cacheStats.hits}, misses: ${this.cacheStats.misses})`,
-    );
-
-    const defaults = await this.prisma.template.findMany({
-      where: {
-        type: { in: [type, TemplateType.BOTH] },
-        isActive: true,
-        isDefault: true,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
-    const template = defaults.find((t) => this.isRenderable(t)) ?? null;
-
-    if (!template) {
-      // Fallback to first active template of this type
-      const fallbackCandidates = await this.prisma.template.findMany({
-        where: {
-          type: { in: [type, TemplateType.BOTH] },
-          isActive: true,
-        },
-        orderBy: { createdAt: 'asc' },
-      });
-      const fallback = fallbackCandidates.find((t) => this.isRenderable(t)) ?? null;
-
-      if (!fallback) {
-        throw new NotFoundException(`No active template found for type ${type}`);
-      }
-
-      this.logger.warn(`No default template for ${type}, using fallback: ${fallback.id}`);
-
-      // Cache the fallback
-      this.cache.set(cacheKey, fallback);
-      return fallback;
-    }
-
-    // Cache the result
-    this.cache.set(cacheKey, template);
-    this.logger.debug(`Cached default template with key ${cacheKey}`);
-
-    return template;
-  }
-
-  /**
-   * Invalidate all template caches
-   * Called after any template mutation (create, update, delete)
-   * Note: keyCount may not be 100% accurate due to race conditions (non-atomic operation)
-   */
-  private invalidateCache(): void {
-    const keyCount = this.cache.keys().length;
-    this.cache.flushAll();
-    this.logger.log(`Template cache invalidated (~${keyCount} keys cleared)`);
-  }
-
-  /**
-   * Get cache statistics for monitoring
-   * Note: Hit rate is estimated and may not be 100% accurate in concurrent environments
-   */
-  getCacheStats() {
-    return {
-      ...this.cacheStats,
-      hitRate:
-        this.cacheStats.hits + this.cacheStats.misses > 0
-          ? (this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses)) * 100
-          : 0,
-      keys: this.cache.keys().length,
-      stats: this.cache.getStats(),
-    };
-  }
-
-  /**
-   * Create a new template (admin operation)
-   */
-  async create(dto: CreateTemplateDto): Promise<TemplateWithContentResponseDto> {
-    const template = await this.prisma.template.create({
-      data: dto,
-    });
-
-    this.invalidateCache(); // Clear cache after mutation
-    this.logger.log(`Created template: ${template.id} (${template.name})`);
-    return template;
-  }
-
-  /**
-   * Update an existing template (admin operation)
-   */
-  async update(
-    id: string,
-    dto: Partial<CreateTemplateDto>,
-  ): Promise<TemplateWithContentResponseDto> {
-    const template = await this.prisma.template.update({
-      where: { id },
-      data: dto,
-    });
-
-    this.invalidateCache(); // Clear cache after mutation
-    this.logger.log(`Updated template: ${template.id} (${template.name})`);
-    return template;
-  }
-
-  /**
-   * Delete a template (admin operation)
-   */
-  async delete(id: string): Promise<void> {
-    await this.prisma.template.delete({
-      where: { id },
-    });
-
-    this.invalidateCache(); // Clear cache after mutation
-    this.logger.log(`Deleted template: ${id}`);
   }
 
   /**

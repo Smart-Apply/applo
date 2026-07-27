@@ -291,7 +291,7 @@ User 1:1 Subscription
 
 ```text
 1. Login (email/password OR OAuth: Google / Microsoft / Azure AD)
-   → Optional 2FA challenge (TOTP via otplib)
+   → Optional 2FA challenge (TOTP via speakeasy)
    → Access token (HttpOnly cookie, ~15 min)
    → Refresh token (HttpOnly cookie, 7 days, rotated)
 2. Access token expires → silent refresh via /auth/refresh
@@ -326,7 +326,7 @@ User 1:1 Subscription
 | Framework     | NestJS 11                                                                                                                           |
 | Database      | Neon Postgres (serverless, EU/Frankfurt; pooled + direct URLs)                                                                      |
 | ORM           | Prisma 6.19 (`@prisma/adapter-pg` + connection pool)                                                                                |
-| Auth          | passport-jwt · passport-google · passport-microsoft · passport-azure-ad · argon2 · otplib (2FA)                                     |
+| Auth          | passport-jwt · passport-google · passport-microsoft · passport-azure-ad · argon2 · speakeasy (2FA)                                     |
 | Queue         | Upstash QStash · in-memory                                                                                                          |
 | Cache         | Upstash Redis · node-cache                                                                                                          |
 | Storage       | Cloudflare R2 (S3-compatible) · local disk                                                                                          |

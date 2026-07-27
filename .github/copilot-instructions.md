@@ -141,7 +141,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
     - `DATABASE_URL` — **pooled** (pgbouncer hostname contains `-pooler`); used by the runtime PrismaService
     - `DIRECT_URL` — **unpooled**; used by the Prisma CLI for migrations & seed (transaction-mode poolers don't support Prisma Migrate)
   - Local fallback: Docker Postgres 16 (`infra/docker-compose.yml`); CLI falls back to `DATABASE_URL` when `DIRECT_URL` is unset
-- **Auth:** passport-jwt, passport-google-oauth20, passport-microsoft, passport-azure-ad, argon2id, **otplib + qrcode + speakeasy** (TOTP 2FA)
+- **Auth:** passport-jwt, passport-google-oauth20, passport-microsoft, passport-azure-ad, argon2id, **speakeasy + qrcode** (TOTP 2FA)
 - **Refresh tokens:** dual-token rotation, device tracking, max 5/user
 - **Sessions:** multi-device, IP/UA, remote logout, cron cleanup
 - **Storage (pluggable via `STORAGE_DRIVER`):** `disk` | `r2` (`@aws-sdk/client-s3`). Boot refuses to start when `NODE_ENV=production` and the driver isn't `r2`.
@@ -304,7 +304,7 @@ All endpoints are prefixed with `/api/v1` and documented at `http://localhost:30
 - Note: GET to avoid CSRF validation
 
 **POST /api/v1/auth/2fa/setup** / **/2fa/verify** / **/2fa/disable**
-- TOTP enrollment (returns QR), verification, and disable flows (otplib)
+- TOTP enrollment (returns QR), verification, and disable flows (speakeasy)
 
 ### Resume Parser (Protected)
 
@@ -632,7 +632,7 @@ The active generation prompts live under `apps/api/prompts/v1/*` and are describ
 - Session management (Issue #146) - Multi-device tracking, remote logout, max 5 sessions
 
 **Shipped Since Original MVP ✅**
-- ✅ **Two-factor authentication (2FA)** — TOTP via otplib + qrcode + speakeasy
+- ✅ **Two-factor authentication (2FA)** — TOTP via speakeasy + qrcode
 - ✅ **OAuth login** — Google, Microsoft, Azure AD (verified-email account linking; unverified provider emails are refused — nOAuth mitigation)
 - ✅ **Sentry monitoring** — `@sentry/node` + profiling
 - ✅ **Refresh token rotation** with reuse-detection
