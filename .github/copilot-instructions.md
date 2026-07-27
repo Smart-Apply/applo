@@ -500,6 +500,7 @@ Standalone AI quality + ATS check of an application the user created **outside**
 - **All other endpoints**: 100 requests / 15 minutes (default)
 - **Resume parse** (`POST /profile/parse-resume`): 10 / hour (`resume-parser` bucket via `@UseThrottler`)
 - **Profile photo upload** (`POST /profile/photo`): 20 / hour (`uploads` bucket via `@UseThrottler`)
+- **LLM-backed application actions** (regenerate, editor AI summary/experience/project, export, job-posting parse, keyword analysis): 30 / 15 minutes (`llm-actions` bucket via `@UseThrottler`). `POST /applications/:id/cover-letter` is deliberately exempt — it doubles as the editor autosave.
 
 ### Error Format
 

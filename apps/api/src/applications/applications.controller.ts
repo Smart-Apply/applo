@@ -147,6 +147,13 @@ export class ApplicationsController {
   }
 
   @Post(':id/regenerate-single-pipeline')
+  // Full pipeline rerun = real LLM cost. Meter it like a generation and
+  // throttle it — the class-level @SkipThrottle() only skips the default
+  // bucket, so without @UseThrottler this route was entirely uncapped.
+  @UseGuards(EmailVerifiedGuard, UsageLimitGuard)
+  @CheckUsage('application')
+  @UseThrottler('llm-actions')
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded (llm-actions bucket)' })
   @ApiOperation({
     summary: '🧪 TEST: Regenerate application with new single-LLM pipeline',
     description:
@@ -170,6 +177,10 @@ export class ApplicationsController {
   }
 
   @Post(':id/regenerate')
+  // Reruns the pipeline (LLM cost) — throttled, but no @CheckUsage: the
+  // original generation already consumed the usage credit.
+  @UseThrottler('llm-actions')
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded (llm-actions bucket)' })
   @ApiOperation({
     summary: 'Retry failed PDF generation',
     description:
@@ -205,6 +216,9 @@ export class ApplicationsController {
   }
 
   @Post(':id/cover-letter')
+  // Deliberately NOT throttled: this route doubles as the editor's cover-letter
+  // autosave (content-only saves); a throttle would break active writing
+  // sessions. The LLM path (regenerate: true) is bounded by explicit UI clicks.
   @ApiOperation({ summary: 'Anschreiben generieren oder speichern' })
   @ApiResponse({ status: 200, type: ApplicationResponseDto })
   async upsertCoverLetter(
@@ -216,6 +230,8 @@ export class ApplicationsController {
   }
 
   @Post(':id/summary')
+  @UseThrottler('llm-actions')
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded (llm-actions bucket)' })
   @ApiOperation({
     summary: 'Professionelle Zusammenfassung mit AI generieren',
     description:
@@ -243,6 +259,8 @@ export class ApplicationsController {
   }
 
   @Post(':id/experience-description')
+  @UseThrottler('llm-actions')
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded (llm-actions bucket)' })
   @ApiOperation({
     summary: 'Berufserfahrung-Beschreibung mit AI generieren',
     description:
@@ -270,6 +288,8 @@ export class ApplicationsController {
   }
 
   @Post(':id/project-description')
+  @UseThrottler('llm-actions')
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded (llm-actions bucket)' })
   @ApiOperation({
     summary: 'Projekt-Beschreibung mit AI generieren',
     description:
@@ -297,6 +317,9 @@ export class ApplicationsController {
   }
 
   @Post(':id/export')
+  // PDF re-render + possible LLM translation per call.
+  @UseThrottler('llm-actions')
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded (llm-actions bucket)' })
   @ApiOperation({ summary: 'PDF-Export anstoßen' })
   @ApiResponse({ status: 200, type: ApplicationResponseDto })
   async export(
@@ -611,6 +634,8 @@ export class ApplicationsController {
   @Post(':id/analyze-keywords')
   @UseGuards(FeatureGuard)
   @RequiresFeature('atsOptimization')
+  @UseThrottler('llm-actions')
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded (llm-actions bucket)' })
   @ApiOperation({
     summary: 'Trigger keyword extraction and analysis',
     description:
