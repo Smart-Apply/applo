@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.12.0](https://github.com/Smart-Apply/applo/compare/v4.11.2...v4.12.0) (2026-07-29)
+
+
+### Features
+
+* **pdf:** normalize resume template data and collapse soft line breaks in rich text rendering ([#723](https://github.com/Smart-Apply/applo/issues/723)) ([96a4357](https://github.com/Smart-Apply/applo/commit/96a43570870c2a394667705538e7fc8a0a899b37))
+
 ## [4.11.2](https://github.com/Smart-Apply/applo/compare/v4.11.1...v4.11.2) (2026-07-27)
 
 
