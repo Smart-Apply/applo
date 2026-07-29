@@ -8,6 +8,7 @@
 
 import { createElement, Fragment, type ReactNode } from 'react';
 import type { ReactPdfNamespace, ReactPdfStyle } from './react-pdf-loader';
+import { collapseSoftWhitespace } from './template-data';
 
 interface RichTextStyles {
   paragraph?: ReactPdfStyle;
@@ -35,7 +36,7 @@ function decodeEntities(input: string): string {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ');
+    .replace(/&nbsp;/g, '\u00a0');
 }
 
 function parseAttrs(raw: string): Record<string, string> {
@@ -57,7 +58,7 @@ function parseHtml(html: string): Node[] {
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) !== null) {
     if (m[3] !== undefined) {
-      const text = decodeEntities(m[3]);
+      const text = collapseSoftWhitespace(decodeEntities(m[3]));
       if (text) current.push({ type: 'text', text });
       continue;
     }
@@ -173,18 +174,27 @@ export function createRichTextRenderer(
     nodes.forEach((node, i) => {
       const key = `${keyPrefix}-${i}`;
       if (node.type === 'text') {
-        if (node.text && node.text.trim()) inlineBuffer.push(node);
+        if (node.text && (node.text.trim() || inlineBuffer.length > 0)) inlineBuffer.push(node);
         return;
       }
       switch (node.tag) {
         case 'p':
-        case 'div':
           flushInline();
           out.push(
             createElement(
               Text,
               { key, style: styles.paragraph },
               renderInline(node.children ?? [], styles, key),
+            ),
+          );
+          break;
+        case 'div':
+          flushInline();
+          out.push(
+            createElement(
+              View,
+              { key },
+              ...renderBlock(node.children ?? [], styles, key),
             ),
           );
           break;
@@ -201,7 +211,11 @@ export function createRichTextRenderer(
                   createElement(
                     View,
                     { key: `${key}-li-${idx}`, style: { flexDirection: 'row' } },
-                    createElement(Text, { style: { width: 10 } }, '•'),
+                    createElement(
+                      Text,
+                      { style: { width: node.tag === 'ol' ? 16 : 10 } },
+                      node.tag === 'ol' ? `${idx + 1}.` : '•',
+                    ),
                     createElement(
                       Text,
                       { style: styles.listItem },
@@ -232,7 +246,11 @@ export function createRichTextRenderer(
     const trimmed = html.trim();
     if (!trimmed) return null;
     if (!trimmed.includes('<')) {
-      return createElement(Text, { style: styles.paragraph }, decodeEntities(trimmed));
+      return createElement(
+        Text,
+        { style: styles.paragraph },
+        collapseSoftWhitespace(decodeEntities(trimmed)),
+      );
     }
     const tree = parseHtml(trimmed);
     return createElement(Fragment, null, ...renderBlock(tree, styles, 'rt'));

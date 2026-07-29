@@ -6,6 +6,7 @@ import type {
   CoverLetterTemplateData,
   ResumeTemplateData,
 } from './template-data';
+import { normalizeResumeTemplateData } from './template-data';
 import { loadReactPdf, type ReactPdfNamespace } from './react-pdf-loader';
 import { normalizeTemplateSettings } from './design-tokens';
 import { resolveReactPdfTemplate } from './template-registry';
@@ -73,7 +74,10 @@ export class ReactPdfRendererService {
     const rp = await loadReactPdf();
     const Component = registered.factory.resume(rp);
     const componentMeta = this.buildMeta(meta, options);
-    const element = createElement(Component, { data, meta: componentMeta });
+    const element = createElement(Component, {
+      data: normalizeResumeTemplateData(data),
+      meta: componentMeta,
+    });
 
     this.logger.debug(
       `Rendering resume via react-pdf (template=${meta.id}, key=${registered.key}, lang=${meta.language})`,
