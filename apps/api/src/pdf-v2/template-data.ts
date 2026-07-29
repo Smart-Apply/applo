@@ -142,3 +142,101 @@ export interface Certification {
   issuer: string;
   date?: string;
 }
+
+/** Match browser whitespace semantics for text imported from PDF/DOCX sources. */
+export function collapseSoftWhitespace(value: string): string {
+  return value.replace(/[ \t\f\r\n]+/g, ' ');
+}
+
+function normalizeInlineText(value: string): string {
+  return collapseSoftWhitespace(value).replace(/^[ \t\f\r\n]+|[ \t\f\r\n]+$/g, '');
+}
+
+function normalizeCompactText(value: string): string {
+  return value.replace(/[ \t\f\r\n]+/g, '');
+}
+
+function normalizeOptionalInlineText(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  return normalizeInlineText(value) || undefined;
+}
+
+function normalizeRichText(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.includes('<') ? trimmed : normalizeInlineText(trimmed);
+}
+
+function normalizeOptionalRichText(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  return normalizeRichText(value) || undefined;
+}
+
+function normalizeOptionalSummary(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  return normalizeRichText(value.replace(/<br\s*\/?\s*>/gi, ' ')) || undefined;
+}
+
+/**
+ * Collapse source-document line wrapping in fields rendered as inline text.
+ * Explicit rich-text structure (`<p>`, `<div>`, `<br>`) stays untouched and
+ * is interpreted later by `rich-text.tsx`.
+ */
+export function normalizeResumeTemplateData(data: ResumeTemplateData): ResumeTemplateData {
+  return {
+    ...data,
+    candidateName: normalizeInlineText(data.candidateName),
+    targetJobTitle: normalizeOptionalInlineText(data.targetJobTitle),
+    email: data.email === undefined ? undefined : normalizeCompactText(data.email) || undefined,
+    phone: normalizeOptionalInlineText(data.phone),
+    linkedin:
+      data.linkedin === undefined ? undefined : normalizeCompactText(data.linkedin) || undefined,
+    github: data.github === undefined ? undefined : normalizeCompactText(data.github) || undefined,
+    street: normalizeOptionalInlineText(data.street),
+    postalCode: normalizeOptionalInlineText(data.postalCode),
+    city: normalizeOptionalInlineText(data.city),
+    country: normalizeOptionalInlineText(data.country),
+    fullAddress: normalizeOptionalInlineText(data.fullAddress),
+    summary: normalizeOptionalSummary(data.summary),
+    skillCategories: data.skillCategories?.map((category) => ({
+      ...category,
+      type: normalizeInlineText(category.type),
+      skills: category.skills.map(normalizeInlineText),
+    })),
+    experiences: data.experiences?.map((experience) => ({
+      ...experience,
+      title: normalizeInlineText(experience.title),
+      company: normalizeInlineText(experience.company),
+      location: normalizeOptionalInlineText(experience.location),
+      dateRange: normalizeInlineText(experience.dateRange),
+      description: normalizeOptionalRichText(experience.description),
+      achievements: experience.achievements?.map(normalizeRichText),
+    })),
+    projects: data.projects?.map((project) => ({
+      ...project,
+      name: normalizeInlineText(project.name),
+      description: normalizeOptionalRichText(project.description),
+      date: normalizeOptionalInlineText(project.date),
+      highlights: project.highlights?.map(normalizeRichText),
+    })),
+    education: data.education?.map((education) => ({
+      ...education,
+      degree: normalizeInlineText(education.degree),
+      institution: normalizeInlineText(education.institution),
+      year: normalizeInlineText(education.year),
+      fieldOfStudy: normalizeOptionalInlineText(education.fieldOfStudy),
+      gpa: normalizeOptionalInlineText(education.gpa),
+      description: normalizeOptionalRichText(education.description),
+    })),
+    certifications: data.certifications?.map((certification) => ({
+      ...certification,
+      name: normalizeInlineText(certification.name),
+      issuer: normalizeInlineText(certification.issuer),
+      date: normalizeOptionalInlineText(certification.date),
+    })),
+    languages: data.languages?.map((language) => ({
+      ...language,
+      name: normalizeInlineText(language.name),
+      level: normalizeOptionalInlineText(language.level),
+    })),
+  };
+}
