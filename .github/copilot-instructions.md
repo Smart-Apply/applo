@@ -194,7 +194,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `email` — Resend transactional email
 - `health` — Terminus health checks
 - `interviews` — AI mock interviews in **two modes**: typed text Q&A and a spoken **voice interview** (`voice/` sub-folder — pluggable `VOICE_PROVIDER` = `azure-realtime` | `mock`; Azure OpenAI Realtime API over browser-direct WebRTC, Sweden Central/EU). The backend only mints a short-lived ephemeral token (`POST /openai/v1/realtime/client_secrets`) and finalizes the transcript; the browser talks WebRTC to Azure directly (`?webrtcfilter=on` keeps the interviewer instructions private). Both modes reuse the same answer-analyzer/feedback-generator scoring. The voice interviewer opens with a persona-led introduction and asks questions grounded in a bounded plain-text dossier of the candidate's profile (built server-side in `buildInstructions`). The voice call length is a user-chosen 5/10/15-minute target (clamped by `VOICE_INTERVIEW_MAX_SESSION_MINUTES` and the monthly budget); the client sends data-channel time cues so the interviewer wraps up in the final minute and speaks a closing at time-up. Premium-gated (`interviewCoach`), with a per-user monthly voice-minute cap computed on the fly from `InterviewSession.voiceDurationSeconds`. No audio is persisted — transcript + scores only.
-- `invite-codes` — Closed-beta invite-code gate. Hashed-at-rest (sha256), single-use, atomic redemption inside the registration transaction so failed signups never burn a code. Toggle via `REQUIRE_INVITE_CODES` (default `true`). Admins issue codes via `POST /admin/invite-codes`; plaintexts are returned **once** at issuance and never readable again.
+- `invite-codes` — Closed-beta invite-code gate. Hashed-at-rest (sha256), single-use, atomic redemption inside the registration transaction so failed signups never burn a code. Toggle via `REQUIRE_INVITE_CODES` (default `false` since launch — open signup). Admins issue codes via `POST /admin/invite-codes`; plaintexts are returned **once** at issuance and never readable again.
 - `job-postings` — parse text/URL/file → normalized JobPosting
 - `jobs` — pluggable queue providers (`in-memory` | `qstash`)
 - `keywords` — ATS keyword extraction & matching with language detection
@@ -248,7 +248,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Validation** (Bewerbungs-Check — standalone AI check of an external application; inputs + cached result, scoped to user)
 - **RefreshToken**, **Session** (auth/security)
 - **InviteCode** (closed-beta gate — hashed, single-use, optional expiry)
-- **Subscription** (plans & usage) — `SubscriptionUsage.validationsUsed` tracks the monthly Bewerbungs-Check count (Free 5/month, Pro+ unlimited via `validationsPerMonth`)
+- **Subscription** (plans & usage) — monthly application hard limits per tier (Free 0 / Pro 50 @ €9.95 / Premium 100 @ €19.95) with `Subscription.addonCreditsRemaining` holding purchased add-on credits (packages of 10/30/75) that persist until used and are consumed after the tier allowance; `SubscriptionUsage.validationsUsed` tracks the monthly Bewerbungs-Check count (Free 5/month, Pro+ unlimited via `validationsPerMonth`)
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
 
@@ -749,13 +749,13 @@ SENTRY_ENVIRONMENT=development
 # Admin (comma-separated, case-insensitive). Leave empty to disable /admin/*.
 ADMIN_EMAILS=you@example.com,coworker@example.com
 
-# Closed-beta invite-code gate on POST /auth/register. Default 'true'
-# (fail-closed). Codes are issued via POST /admin/invite-codes and
-# redeemed atomically inside the registration transaction. Flip to
-# 'false' to open registration to the public — takes effect without a
-# frontend redeploy because the web client reads GET /auth/config at
-# runtime.
-REQUIRE_INVITE_CODES=true
+# Closed-beta invite-code gate on POST /auth/register. Default 'false'
+# (open public signup — launched). Codes are issued via POST
+# /admin/invite-codes and redeemed atomically inside the registration
+# transaction. Flip to 'true' to re-enable the gate — takes effect
+# without a frontend redeploy because the web client reads
+# GET /auth/config at runtime.
+REQUIRE_INVITE_CODES=false
 
 # Email Tracking (Premium feature) — OAuth Inbox Sync
 # AES-256-GCM key (32 bytes hex) for encrypting persisted refresh tokens.

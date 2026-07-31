@@ -718,9 +718,9 @@ model BackgroundJob {
 // =====================================
 
 // Subscription tier levels (3-tier pricing model)
-// FREE (€0)            - Risk-free entry: try Applo with 3 applications/month
-// PRO (€9.99/month)    - Optimise every application with AI (templates, ATS, analytics)
-// PREMIUM (€19.99/month) - Premium tooling (email tracking, interview coach)
+// FREE (€0)            - 0 applications/month (generation disabled; add-on credits still usable)
+// PRO (€9.95/month)    - Hard limit: 50 applications/month
+// PREMIUM (€19.95/month) - Hard limit: 100 applications/month
 enum SubscriptionTier {
   FREE
   PRO
@@ -755,6 +755,11 @@ model Subscription {
   currentPeriodStart DateTime?
   currentPeriodEnd   DateTime?
   cancelAtPeriodEnd  Boolean   @default(false)
+
+  // Consumable add-on application credits (purchased packages).
+  // Persist across billing periods — consumed only after the monthly
+  // tier allowance is exhausted. Never reset by the usage cron.
+  addonCreditsRemaining Int @default(0)
 
   // Trial
   trialStart DateTime?

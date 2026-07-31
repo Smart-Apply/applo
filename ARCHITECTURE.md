@@ -271,7 +271,7 @@ recorded baselines live in
 | **RefreshToken**   | Rotated refresh tokens                         |
 | **Session**        | Device/IP/UA tracking                          |
 | **InviteCode**     | Closed-beta gate (hashed, single-use)          |
-| **Subscription**   | Plan & usage counters                          |
+| **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`) |
 | **AuditLog**       | Security event log                             |
 
 ### Key Relations
@@ -381,7 +381,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 
 | Method | Endpoint                | Description                                                                  |
 | ------ | ----------------------- | ---------------------------------------------------------------------------- |
-| POST   | `/auth/register`        | Register (closed-beta invite code required when `REQUIRE_INVITE_CODES=true`) |
+| POST   | `/auth/register`        | Register (closed-beta invite code only when `REQUIRE_INVITE_CODES=true`; default `false` since launch) |
 | POST   | `/auth/login`           | Email/password login                                                         |
 | POST   | `/auth/refresh`         | Rotate access token                                                          |
 | GET    | `/auth/oauth/google`    | OAuth (Google)                                                               |
@@ -422,7 +422,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/templates`                       | Template catalog (registry-filtered: only designs with a react-pdf factory) |
 | GET      | `/sessions`                        | Active sessions                                                             |
 | DELETE   | `/sessions/:id`                    | Remote logout                                                               |
-| GET      | `/subscription`                    | Plan & usage                                                                |
+| GET      | `/subscription`                    | Plan & usage (incl. monthly application hard limit + add-on credit balance) |
 | GET      | `/admin/users?email=`              | Admin: search users (allow-listed)                                          |
 | POST     | `/admin/users/:email/tier`         | Admin: set subscription tier (allow-listed)                                 |
 | DELETE   | `/admin/users/:email`              | Admin: permanently delete user (allow-listed)                               |

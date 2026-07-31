@@ -261,8 +261,8 @@ export class ConfigService {
       .filter(Boolean);
   }
 
-  // Closed-beta invite-code gate. Defaults to TRUE (fail-closed) at the
-  // schema layer; this getter just decodes the validated string.
+  // Closed-beta invite-code gate. Defaults to FALSE (open signup — launched)
+  // at the schema layer; this getter just decodes the validated string.
   get requireInviteCodes(): boolean {
     return this.nestConfig.get('REQUIRE_INVITE_CODES', { infer: true }) === 'true';
   }
