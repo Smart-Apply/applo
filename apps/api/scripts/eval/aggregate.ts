@@ -118,6 +118,8 @@ export interface LanguageBreakdown {
 export interface EvalSummary {
   generatedAt: string;
   provider: string;
+  /** Provider that scored the rubric — pinned separately for provider A/Bs. */
+  judgeProvider: string;
   tag: string;
   fixtureCount: number;
   okCount: number;
@@ -200,7 +202,7 @@ function mean(values: number[]): number {
 
 export function summarize(
   results: FixtureResult[],
-  meta: { provider: string; tag: string },
+  meta: { provider: string; tag: string; judgeProvider: string },
 ): EvalSummary {
   const ok = results.filter((r) => !r.error && r.judge && r.grounding);
 
@@ -314,6 +316,7 @@ export function summarize(
   return {
     generatedAt: new Date().toISOString(),
     provider: meta.provider,
+    judgeProvider: meta.judgeProvider,
     tag: meta.tag,
     fixtureCount: results.length,
     okCount: ok.length,
@@ -342,6 +345,11 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`  LLM OUTPUT QUALITY — EVAL REPORT (${summary.tag})`);
   lines.push('═══════════════════════════════════════════════════════════');
   lines.push(`  Provider:   ${summary.provider}`);
+  lines.push(
+    `  Judge:      ${summary.judgeProvider}${
+      summary.judgeProvider === summary.provider ? ' (same as generation)' : ' (pinned)'
+    }`,
+  );
   lines.push(`  Generated:  ${summary.generatedAt}`);
   lines.push(`  Fixtures:   ${summary.okCount} ok / ${summary.fixtureCount} total` +
     (summary.errorCount ? `  (${summary.errorCount} errored)` : ''));

@@ -138,6 +138,7 @@ async function loadFixtures(args: CliArgs): Promise<EvalFixture[]> {
 
 async function runOne(
   llm: LLMService,
+  judgeLlm: LLMService,
   fixture: EvalFixture,
   retries: number,
   options: {
@@ -161,7 +162,7 @@ async function runOne(
     );
     const grounding = groundDocuments(fixture, docs);
     const style = styleCheckDocuments(fixture, docs);
-    const judge = await withRetry(() => judgeDocuments(llm, fixture, docs), retries);
+    const judge = await withRetry(() => judgeDocuments(judgeLlm, fixture, docs), retries);
     return {
       ...base,
       judge,
@@ -227,6 +228,7 @@ async function runOne(
 /** Run fixtures with a small concurrency pool to respect rate limits. */
 async function runPool(
   llm: LLMService,
+  judgeLlm: LLMService,
   fixtures: EvalFixture[],
   args: CliArgs,
 ): Promise<FixtureResult[]> {
@@ -239,7 +241,7 @@ async function runPool(
       if (index >= fixtures.length) return;
       const fixture = fixtures[index];
       process.stdout.write(`  → [${index + 1}/${fixtures.length}] ${fixture.id} ... `);
-      const result = await runOne(llm, fixture, args.retries, {
+      const result = await runOne(llm, judgeLlm, fixture, args.retries, {
         applyWeave: args.applyWeave,
         applyAnchor: args.applyAnchor,
         applyStyleRewrite: args.applyStyleRewrite,
@@ -285,6 +287,25 @@ async function validateFixtures(fixtures: EvalFixture[]): Promise<number> {
     }
   }
   return failed;
+}
+
+/**
+ * Build a second DI context whose LLMService is bound to `judgeProvider`.
+ * `ConfigService` reads LLM_PROVIDER from the environment at instantiation, so
+ * the swap has to bracket the context creation; each context gets its own
+ * container, so the generation provider is unaffected.
+ */
+async function createJudgeContext(judgeProvider: string) {
+  const previous = process.env.LLM_PROVIDER;
+  process.env.LLM_PROVIDER = judgeProvider;
+  try {
+    return await NestFactory.createApplicationContext(EvalHarnessModule, {
+      logger: ['error', 'warn'],
+    });
+  } finally {
+    if (previous === undefined) delete process.env.LLM_PROVIDER;
+    else process.env.LLM_PROVIDER = previous;
+  }
 }
 
 async function main(): Promise<void> {
@@ -333,10 +354,21 @@ async function main(): Promise<void> {
       process.env.LOG_LLM_CALLS === 'true' ? ['error', 'warn', 'log'] : ['error', 'warn'],
   });
 
+  // A provider A/B must not be graded by the model under test, so the judge
+  // gets its own context pinned to EVAL_JUDGE_PROVIDER (default azure-openai).
+  // Same provider on both sides = reuse one context, as before.
+  const judgeProvider = (process.env.EVAL_JUDGE_PROVIDER ?? 'azure-openai').toLowerCase();
+  const judgeApp =
+    judgeProvider === provider ? null : await createJudgeContext(judgeProvider);
+  if (judgeApp) {
+    console.log(`   ⚖️  judge pinned to provider=${judgeProvider} (generation=${provider})\n`);
+  }
+
   try {
     const llm = app.get(LLMService);
-    const results = await runPool(llm, fixtures, args);
-    const summary = summarize(results, { provider, tag: args.tag });
+    const judgeLlm = judgeApp ? judgeApp.get(LLMService) : llm;
+    const results = await runPool(llm, judgeLlm, fixtures, args);
+    const summary = summarize(results, { provider, tag: args.tag, judgeProvider });
 
     console.log(formatReport(summary));
 
@@ -349,6 +381,7 @@ async function main(): Promise<void> {
     console.log(`📄 Full results written to ${outPath}\n`);
   } finally {
     await app.close();
+    if (judgeApp) await judgeApp.close();
   }
 }
 
