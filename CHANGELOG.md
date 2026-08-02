@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.13.0](https://github.com/Smart-Apply/applo/compare/v4.12.0...v4.13.0) (2026-08-02)
+
+
+### Features
+
+* **llm:** Mistral extraction fast lane — evaluated split, guarded hand-offs, eval hardening ([#726](https://github.com/Smart-Apply/applo/issues/726)) ([0aa84b3](https://github.com/Smart-Apply/applo/commit/0aa84b3cafbbb0768eaa735e7fbe8316e5f2d6d7))
+
 ## [4.12.0](https://github.com/Smart-Apply/applo/compare/v4.11.2...v4.12.0) (2026-07-29)
 
 
