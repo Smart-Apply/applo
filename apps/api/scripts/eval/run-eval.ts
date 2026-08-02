@@ -368,7 +368,11 @@ async function main(): Promise<void> {
     const llm = app.get(LLMService);
     const judgeLlm = judgeApp ? judgeApp.get(LLMService) : llm;
     const results = await runPool(llm, judgeLlm, fixtures, args);
-    const summary = summarize(results, { provider, tag: args.tag, judgeProvider });
+    const model =
+      provider === 'mistral'
+        ? process.env.MISTRAL_MODEL
+        : process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
+    const summary = summarize(results, { provider, tag: args.tag, judgeProvider, model });
 
     console.log(formatReport(summary));
 

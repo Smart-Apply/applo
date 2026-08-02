@@ -9,18 +9,48 @@ import { RUBRIC_DIMENSIONS, type JudgeResult, type RubricDimension } from './jud
 import type { EvalLanguage } from './fixture.types';
 
 /**
- * Pricing assumption for the cost estimate — Azure OpenAI **gpt-4.1** Standard,
- * USD per 1M tokens (input / discounted cached-input / output). Verify against
- * the current Azure OpenAI pricing page; the RELATIVE savings is driven by the
- * measured cached share and stays robust even if the absolute $ drifts. See
- * docs/implementation/PROMPT_CACHING.md.
+ * Pricing for the cost estimate — USD per 1M tokens (input / cached-input /
+ * output), list rates verified 2026-08-02 against the Azure OpenAI and Mistral
+ * pricing pages. Re-verify before quoting; the RELATIVE cached-share saving
+ * stays robust even if the absolute $ drifts.
+ *
+ * Mistral publishes no separate cached-input rate, so cached input is billed at
+ * the full rate here — deliberately conservative, it under-states the win
+ * rather than inventing a discount. See docs/guides/LLM_MODEL_SELECTION.md.
  */
-const PRICING = {
-  model: 'gpt-4.1',
-  inputPerM: 2.0,
-  cachedInputPerM: 0.5,
-  outputPerM: 8.0,
-} as const;
+const PRICING_TABLE: Record<
+  string,
+  { inputPerM: number; cachedInputPerM: number; outputPerM: number }
+> = {
+  'gpt-4.1': { inputPerM: 2.0, cachedInputPerM: 0.5, outputPerM: 8.0 },
+  'gpt-4.1-mini': { inputPerM: 0.4, cachedInputPerM: 0.1, outputPerM: 1.6 },
+  'gpt-5-mini': { inputPerM: 0.25, cachedInputPerM: 0.03, outputPerM: 2.0 },
+  'mistral-small-latest': { inputPerM: 0.15, cachedInputPerM: 0.15, outputPerM: 0.6 },
+  'mistral-large-latest': { inputPerM: 0.5, cachedInputPerM: 0.5, outputPerM: 1.5 },
+  'mistral-medium-latest': { inputPerM: 1.5, cachedInputPerM: 1.5, outputPerM: 7.5 },
+};
+
+const DEFAULT_PRICING_MODEL = 'gpt-4.1';
+
+/**
+ * Map a deployment/model name onto a rate card. Azure deployment names carry
+ * per-env suffixes (`gpt-4.1-local`, `gpt-4.1-staging`), so match on the longest
+ * known key the name starts with. Unknown names fall back to gpt-4.1 and say so.
+ */
+export function resolvePricing(model: string | undefined): {
+  model: string;
+  inputPerM: number;
+  cachedInputPerM: number;
+  outputPerM: number;
+  matched: boolean;
+} {
+  const name = (model ?? '').trim().toLowerCase();
+  const key = Object.keys(PRICING_TABLE)
+    .filter((k) => name === k || name.startsWith(k))
+    .sort((a, b) => b.length - a.length)[0];
+  if (key) return { model: key, ...PRICING_TABLE[key], matched: true };
+  return { model: DEFAULT_PRICING_MODEL, ...PRICING_TABLE[DEFAULT_PRICING_MODEL], matched: false };
+}
 
 export interface FixtureGroundingSummary {
   grounded: boolean;
@@ -189,7 +219,14 @@ export interface EvalSummary {
     /** Savings as a % of the no-cache cost. */
     estSavingsPct: number;
     /** The pricing assumption used for the estimate. */
-    rates: { model: string; inputPerM: number; cachedInputPerM: number; outputPerM: number };
+    rates: {
+      model: string;
+      inputPerM: number;
+      cachedInputPerM: number;
+      outputPerM: number;
+      matched: boolean;
+      requestedModel: string;
+    };
   };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
@@ -202,7 +239,7 @@ function mean(values: number[]): number {
 
 export function summarize(
   results: FixtureResult[],
-  meta: { provider: string; tag: string; judgeProvider: string },
+  meta: { provider: string; tag: string; judgeProvider: string; model?: string },
 ): EvalSummary {
   const ok = results.filter((r) => !r.error && r.judge && r.grounding);
 
@@ -270,13 +307,14 @@ export function summarize(
   const cachedInputPct = sumPrompt > 0 ? Math.round((sumCached / sumPrompt) * 100) : 0;
   const usd = (tokens: number, ratePerM: number): number => (tokens / 1_000_000) * ratePerM;
   const round4 = (n: number): number => Math.round(n * 10000) / 10000;
+  const pricing = resolvePricing(meta.model);
   const estCostNoCacheUsd = round4(
-    usd(meanPromptTokens, PRICING.inputPerM) + usd(meanCompletionTokens, PRICING.outputPerM),
+    usd(meanPromptTokens, pricing.inputPerM) + usd(meanCompletionTokens, pricing.outputPerM),
   );
   const estCostCachedUsd = round4(
-    usd(meanPromptTokens - meanCachedTokens, PRICING.inputPerM) +
-      usd(meanCachedTokens, PRICING.cachedInputPerM) +
-      usd(meanCompletionTokens, PRICING.outputPerM),
+    usd(meanPromptTokens - meanCachedTokens, pricing.inputPerM) +
+      usd(meanCachedTokens, pricing.cachedInputPerM) +
+      usd(meanCompletionTokens, pricing.outputPerM),
   );
   const estSavingsUsd = round4(estCostNoCacheUsd - estCostCachedUsd);
   const estSavingsPct =
@@ -293,10 +331,13 @@ export function summarize(
     estSavingsUsd,
     estSavingsPct,
     rates: {
-      model: PRICING.model,
-      inputPerM: PRICING.inputPerM,
-      cachedInputPerM: PRICING.cachedInputPerM,
-      outputPerM: PRICING.outputPerM,
+      model: pricing.model,
+      inputPerM: pricing.inputPerM,
+      cachedInputPerM: pricing.cachedInputPerM,
+      outputPerM: pricing.outputPerM,
+      /** False when the run's model was unknown and gpt-4.1 rates were assumed. */
+      matched: pricing.matched,
+      requestedModel: meta.model ?? '(unset)',
     },
   };
 
@@ -386,7 +427,12 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    critical (≥1.5× budget)        ${summary.length.criticalCount} fixtures`);
   lines.push(`    length governor applied        ${summary.length.governorAppliedCount} fixtures`);
   lines.push('');
-  lines.push(`  Cost & prompt caching (est., ${summary.cost.rates.model} Standard rates):`);
+  lines.push(`  Cost & prompt caching (est., ${summary.cost.rates.model} list rates):`);
+  if (!summary.cost.rates.matched) {
+    lines.push(
+      `    ⚠️  unknown model "${summary.cost.rates.requestedModel}" — priced at gpt-4.1 rates`,
+    );
+  }
   lines.push(`    fixtures measured              ${summary.cost.fixturesMeasured}`);
   lines.push(`    mean LLM calls / generation    ${summary.cost.meanCalls}`);
   lines.push(`    mean input tokens              ${summary.cost.meanPromptTokens}`);
