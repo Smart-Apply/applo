@@ -51,11 +51,6 @@ export const registerSchema = z.object({
     .min(8, { error: passwordMinLength })
     .regex(PASSWORD_REGEX, { error: passwordComplexity }),
   confirmPassword: z.string(),
-  // Closed-beta invite code. Optional in the schema because we don't know
-  // at build time whether the gate is enabled — the AuthContainer fetches
-  // GET /auth/config and decides at render time whether to require it.
-  // Bounded to 64 chars to match the backend DTO.
-  inviteCode: z.string().max(64, { error: m('Einladungscode ist zu lang', 'Invite code is too long') }).optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   error: passwordsMismatch,
   path: ['confirmPassword'],

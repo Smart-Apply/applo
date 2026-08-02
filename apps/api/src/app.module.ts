@@ -33,7 +33,6 @@ import { UpstashThrottlerStorage } from './common/throttler/upstash-throttler-st
 import { AdminModule } from './admin/admin.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MailboxSyncModule } from './mailbox-sync/mailbox-sync.module';
-import { InviteCodeModule } from './invite-codes/invite-codes.module';
 
 @Module({
   imports: [
@@ -125,7 +124,6 @@ import { InviteCodeModule } from './invite-codes/invite-codes.module';
     AdminModule,
     AnalyticsModule,
     MailboxSyncModule,
-    InviteCodeModule,
     HealthModule,
   ],
   controllers: [CSPViolationController],

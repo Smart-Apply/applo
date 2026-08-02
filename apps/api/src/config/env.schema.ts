@@ -232,16 +232,6 @@ const envSchema = z.object({
   // unset, all /admin/* routes return 403.
   ADMIN_EMAILS: z.string().optional(),
 
-  // Closed-beta invite-code gate. Defaults to 'false' — Applo has launched
-  // and public signup is open. Set to 'true' to re-enable the gate: the
-  // `POST /auth/register` endpoint then requires a valid unused row in
-  // `invite_codes`. Backend-only on purpose: a NEXT_PUBLIC_* flag would be
-  // baked into the Cloudflare Worker build, the frontend reads the value at
-  // runtime from `GET /auth/config` instead.
-  REQUIRE_INVITE_CODES: z
-    .enum(['true', 'false'])
-    .default('false'),
-
   // -------------------------------------------------------------------------
   // Email Tracking (Premium feature) — OAuth Inbox Sync
   // -------------------------------------------------------------------------
