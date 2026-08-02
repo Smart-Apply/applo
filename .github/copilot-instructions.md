@@ -152,8 +152,8 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - Azure AI Foundry agents (`@azure/ai-agents`) for ATS keyword extraction, CV/CL writing
   - **opossum** circuit breaker around LLM calls
   - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Runs on the v1 Foundry API: `AZURE_OPENAI_API_VERSION` is the v1 channel (`preview` default | `v1`); legacy dated values auto-map to `preview` (`azure-v1-url.util.ts`).
-  - **Mistral (opt-in, `mistral`):** `MistralProvider` (`llm/providers/mistral.provider.ts`) calls the OpenAI-wire-compatible `/chat/completions` on **La Plateforme** (`MISTRAL_ENDPOINT=https://api.mistral.ai/v1`, no api-version) or **Azure AI Foundry** (`https://<res>.services.ai.azure.com/models`, set `MISTRAL_API_VERSION`). Scaffolded for A/B testing — see [docs/guides/LLM_MODEL_SELECTION.md](../docs/guides/LLM_MODEL_SELECTION.md); gate on a `json_schema` A/B eval before switching the default.
-  - **Per-task model routing (opt-in, `LLM_FAST_MODEL`):** `LLMService.resolveTaskModel()` routes the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector` — the `FAST_MODEL_TEMPLATES` set) to a cheaper model while candidate-facing writing stays on the default. Provider-agnostic — a per-call `model` override on `GenerateOptions`, honored by every HTTP provider (`options?.model ?? <default>`); no-op when `LLM_FAST_MODEL` is unset (zero behaviour change). Same `json_schema`/German A/B gate before trusting it in prod — see [docs/guides/LLM_MODEL_SELECTION.md](../docs/guides/LLM_MODEL_SELECTION.md).
+  - **Mistral (fast lane only):** `MistralProvider` (`llm/providers/mistral.provider.ts`) calls the OpenAI-wire-compatible `/chat/completions` on **La Plateforme** (`MISTRAL_ENDPOINT=https://api.mistral.ai/v1`, no api-version) or **Azure AI Foundry** (`https://<res>.services.ai.azure.com/models`, set `MISTRAL_API_VERSION`). **Eval verdict 2026-08-02 (24-fixture A/B, judge pinned to gpt-4.1): REJECTED for prose** — Small/Large fabricated 10/22 impact numbers (gpt-4.1: 0) and wrote half-length cover letters (157/183 words vs 240–247 on a 350 budget). Kept for the extraction fast lane — see [docs/guides/LLM_MODEL_SELECTION.md](../docs/guides/LLM_MODEL_SELECTION.md).
+  - **Per-task model routing (opt-in, `LLM_FAST_MODEL` + `LLM_FAST_PROVIDER`):** `LLMService.resolveTaskModel()` routes the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector` — the `FAST_MODEL_TEMPLATES` set) to a cheaper model while candidate-facing writing stays on the default. `LLM_FAST_PROVIDER` hosts that model on a **different provider** (second DI instance `LLM_FAST_PROVIDER_INSTANCE` with its **own opossum breaker**; a fast-lane failure falls back to the main provider on its default model — the fast lane is an optimization, the main lane is the floor). An explicit per-call `model` override wins over routing (used by the skill-selector escalation). No-op when `LLM_FAST_MODEL` is unset. The `skill-selector` hand-off is guarded (`tailored-profile.util.ts`: `isValidTailoredProfile` + `isDegradedTailoredProfile`, escalate-once in `selectTailoredProfile`).
 - **PDF:**
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
@@ -687,9 +687,11 @@ UPSTASH_REDIS_REST_TOKEN=<token>
 # LLM (pluggable)
 LLM_PROVIDER=mock            # azure-openai | azure-ai-foundry | mistral | mock
 # Optional per-task routing: the extraction steps (ats-keywords/job-facts/
-# skill-selector) use this cheaper model; writing stays on the default. Unset =
-# no routing. Mistral Small 4 is La Plateforme-only.
+# skill-selector) use this cheaper model; writing stays on the default.
+# LLM_FAST_PROVIDER hosts it on a different provider (fast-lane failures fall
+# back to the main provider). Unset = no routing.
 # LLM_FAST_MODEL=mistral-small-latest
+# LLM_FAST_PROVIDER=mistral
 AZURE_OPENAI_ENDPOINT=https://your-aoai.openai.azure.com/
 AZURE_OPENAI_API_KEY=<key>
 AZURE_OPENAI_DEPLOYMENT_NAME=<deployment>

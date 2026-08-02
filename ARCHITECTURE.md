@@ -37,7 +37,7 @@
 
 > **Pluggable providers:** Storage (Cloudflare R2 / disk), Queue (QStash / in-memory),
 > LLM (Azure OpenAI / Azure AI Foundry / Mistral / mock), and Cache (Upstash Redis / node-cache) are all selected via env.
-> Optional **per-task model routing** (`LLM_FAST_MODEL`) sends the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector`) to a cheaper model while candidate-facing writing stays on the default — opt-in, provider-agnostic, no-op when unset ([details](docs/guides/LLM_MODEL_SELECTION.md)).
+> Optional **per-task model routing** (`LLM_FAST_MODEL` + `LLM_FAST_PROVIDER`) sends the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector`) to a cheaper model — optionally on a **different provider** (second instance + own circuit breaker; fast-lane failures fall back to the main provider). Candidate-facing writing stays on the default model: the 2026-08-02 A/B eval rejected Mistral Small/Large for prose (fabricated metrics, half-length letters) while clearing them for extraction ([details](docs/guides/LLM_MODEL_SELECTION.md)).
 
 ### Production hostnames
 

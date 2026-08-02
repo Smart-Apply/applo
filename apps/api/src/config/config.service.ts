@@ -195,6 +195,14 @@ export class ConfigService {
     return this.nestConfig.get('LLM_FAST_MODEL', { infer: true });
   }
 
+  /**
+   * Provider hosting LLM_FAST_MODEL when it differs from the main provider.
+   * Unset = the fast model runs on the main provider (same-provider routing).
+   */
+  get llmFastProvider(): 'azure-openai' | 'mistral' | undefined {
+    return this.nestConfig.get('LLM_FAST_PROVIDER', { infer: true });
+  }
+
   // Mistral (used when LLM_PROVIDER=mistral) — La Plateforme or Azure Foundry
   get mistralEndpoint(): string | undefined {
     return this.nestConfig.get('MISTRAL_ENDPOINT', { infer: true });

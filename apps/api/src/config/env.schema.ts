@@ -107,6 +107,10 @@ const envSchema = z.object({
   // deployment name). Unset = every task uses the default model. Gate a switch
   // on the json_schema/German-prose A/B eval — see docs/guides/LLM_MODEL_SELECTION.md.
   LLM_FAST_MODEL: z.string().optional(),
+  // Optional provider for LLM_FAST_MODEL when it lives on a DIFFERENT provider
+  // than LLM_PROVIDER (e.g. main prose on azure-openai, extraction on Mistral
+  // La Plateforme). Unset = fast model runs on the main provider.
+  LLM_FAST_PROVIDER: z.enum(['azure-openai', 'mistral']).optional(),
 
   // Mistral (used when LLM_PROVIDER=mistral) — La Plateforme or Azure Foundry.
   MISTRAL_ENDPOINT: z.string().default('https://api.mistral.ai/v1'),

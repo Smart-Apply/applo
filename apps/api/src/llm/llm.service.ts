@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Inject, Logger, Optional, ServiceUnavailableException } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { createHash } from 'crypto';
 import * as fs from 'fs/promises';
@@ -26,12 +26,16 @@ interface UsageAccumulator {
 export class LLMService {
   private readonly logger = new Logger(LLMService.name);
   private readonly circuitBreaker: CircuitBreaker<[string, any?], string>;
+  private readonly fastCircuitBreaker: CircuitBreaker<[string, any?], string> | null = null;
   private readonly usageContext = new AsyncLocalStorage<UsageAccumulator>();
 
   constructor(
     @Inject('LLM_PROVIDER')
     private readonly provider: LLMProvider,
     private readonly configService: ConfigService,
+    @Optional()
+    @Inject('LLM_FAST_PROVIDER_INSTANCE')
+    private readonly fastProvider: LLMProvider | null = null,
   ) {
     // Initialize circuit breaker for LLM provider calls
     this.circuitBreaker = new CircuitBreaker(
@@ -89,6 +93,35 @@ export class LLMService {
     this.logger.log(
       `🛡️  LLM Circuit Breaker initialized (timeout: ${this.configService.llmCircuitBreakerTimeout}ms, error threshold: ${this.configService.llmCircuitBreakerErrorThreshold}%, reset: ${this.configService.llmCircuitBreakerResetTimeout}ms)`,
     );
+
+    // Separate breaker for the cross-provider fast lane so a Mistral outage
+    // can't open the main breaker (and vice versa). Same settings; failures
+    // fall back to the main provider in callFastProvider, so an open fast
+    // breaker only means "skip the optimization".
+    if (this.fastProvider) {
+      this.fastCircuitBreaker = new CircuitBreaker(
+        async (prompt: string, options?: any) =>
+          await this.fastProvider!.generateText(prompt, options),
+        {
+          timeout: this.configService.llmCircuitBreakerTimeout,
+          errorThresholdPercentage: this.configService.llmCircuitBreakerErrorThreshold,
+          resetTimeout: this.configService.llmCircuitBreakerResetTimeout,
+          rollingCountTimeout: this.configService.llmCircuitBreakerRollingCountTimeout,
+          rollingCountBuckets: this.configService.llmCircuitBreakerRollingCountBuckets,
+          name: 'LLM-Fast-Provider',
+          errorFilter: (error: unknown) => isRateLimitError(error),
+        },
+      );
+      this.fastCircuitBreaker.on('open', () => {
+        this.logger.error('🔴 Fast-lane circuit breaker OPEN — fast tasks fall back to the main provider.');
+      });
+      this.fastCircuitBreaker.on('close', () => {
+        this.logger.log('🟢 Fast-lane circuit breaker CLOSED — fast provider recovered.');
+      });
+      this.logger.log(
+        `🛡️  Fast-lane provider active (${this.configService.llmFastProvider}, model: ${this.configService.llmFastModel ?? '(default)'})`,
+      );
+    }
   }
 
   /**
@@ -122,6 +155,31 @@ export class LLMService {
       this.logger.error(`LLM health check failed: ${error.message}`);
       return false;
     }
+  }
+
+  /**
+   * Dispatch to the fast-lane provider (own breaker) or the main provider. A
+   * fast-lane failure falls back to the main provider WITHOUT the model
+   * override — the fast model's name is meaningless there; the task simply
+   * runs on the default model. The fast lane is an optimization, the main
+   * lane is the floor.
+   */
+  private async callRouted(
+    prompt: string,
+    options: GenerateOptions,
+    useFastLane: boolean,
+  ): Promise<string> {
+    if (useFastLane && this.fastCircuitBreaker) {
+      try {
+        return await this.fastCircuitBreaker.fire(prompt, options);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Fast-lane call failed (${message}); falling back to the main provider`);
+        const { model: _model, ...withoutModel } = options;
+        return this.callProvider(prompt, withoutModel);
+      }
+    }
+    return this.callProvider(prompt, options);
   }
 
   /**
@@ -469,7 +527,11 @@ Translated text in ${targetLangName}:`;
     // Per-task model routing: mechanical extraction steps run on the cheaper
     // LLM_FAST_MODEL when it's set (no-op otherwise). An explicit per-call
     // `model` wins, so a caller can escalate a failed fast call to the default.
-    const taskModel = options?.model ?? this.resolveTaskModel(templatePath);
+    // When LLM_FAST_PROVIDER differs from the main provider, fast tasks go
+    // through the fast-lane breaker (fallback to main inside callRouted).
+    const routedFastModel = options?.model ? undefined : this.resolveTaskModel(templatePath);
+    const useFastLane = Boolean(routedFastModel && this.fastCircuitBreaker);
+    const taskModel = options?.model ?? routedFastModel;
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(promptCacheKey ? { promptCacheKey } : {}),
@@ -480,7 +542,7 @@ Translated text in ${targetLangName}:`;
     };
 
     try {
-      let response = await this.callProvider(prompt, providerOptions);
+      let response = await this.callRouted(prompt, providerOptions, useFastLane);
       const duration = Date.now() - startTime;
 
       // Post-process to remove LLM placeholder patterns (e.g., "[Your Name]")
@@ -544,7 +606,11 @@ Translated text in ${targetLangName}:`;
     // Per-task model routing: mechanical extraction steps run on the cheaper
     // LLM_FAST_MODEL when it's set (no-op otherwise). An explicit per-call
     // `model` wins, so a caller can escalate a failed fast call to the default.
-    const taskModel = options?.model ?? this.resolveTaskModel(templatePath);
+    // When LLM_FAST_PROVIDER differs from the main provider, fast tasks go
+    // through the fast-lane breaker (fallback to main inside callRouted).
+    const routedFastModel = options?.model ? undefined : this.resolveTaskModel(templatePath);
+    const useFastLane = Boolean(routedFastModel && this.fastCircuitBreaker);
+    const taskModel = options?.model ?? routedFastModel;
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(responseFormat ? { responseFormat } : {}),
@@ -556,7 +622,7 @@ Translated text in ${targetLangName}:`;
     };
 
     try {
-      const response = await this.callProvider(prompt, providerOptions);
+      const response = await this.callRouted(prompt, providerOptions, useFastLane);
       const parsed = this.parseJsonResponse<T>(response, templatePath);
       const duration = Date.now() - startTime;
 

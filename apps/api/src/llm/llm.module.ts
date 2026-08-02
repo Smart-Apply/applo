@@ -38,6 +38,24 @@ import { ConfigService } from '../config/config.service';
       },
       inject: [ConfigService, HttpService],
     },
+    // Second provider instance for LLM_FAST_MODEL when it lives on a different
+    // provider than LLM_PROVIDER (e.g. prose on azure-openai, extraction on
+    // Mistral). Null when unset or same as the main provider — LLMService then
+    // routes fast tasks through the main provider as before.
+    {
+      provide: 'LLM_FAST_PROVIDER_INSTANCE',
+      useFactory: (configService: ConfigService, httpService: HttpService) => {
+        const fastProvider = configService.llmFastProvider;
+        if (!fastProvider || fastProvider === configService.llmProvider) {
+          return null;
+        }
+        if (fastProvider === 'mistral') {
+          return new MistralProvider(httpService, configService);
+        }
+        return new AzureOpenAIProvider(httpService, configService);
+      },
+      inject: [ConfigService, HttpService],
+    },
     LLMService,
   ],
   exports: [LLMService, 'AZURE_OPENAI_PROVIDER'],
