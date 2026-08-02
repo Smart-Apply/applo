@@ -438,7 +438,7 @@ Translated text in ${targetLangName}:`;
   async callText(
     templatePath: string,
     variables: Record<string, any>,
-    options?: { temperature?: number; maxTokens?: number; systemMessage?: string },
+    options?: { temperature?: number; maxTokens?: number; systemMessage?: string; model?: string },
   ): Promise<string> {
     const startTime = Date.now();
     const template = await this.loadTemplate(templatePath);
@@ -510,7 +510,7 @@ Translated text in ${targetLangName}:`;
   async callJson<T>(
     templatePath: string,
     variables: Record<string, any>,
-    options?: { temperature?: number; maxTokens?: number; systemMessage?: string },
+    options?: { temperature?: number; maxTokens?: number; systemMessage?: string; model?: string },
   ): Promise<T> {
     const startTime = Date.now();
     const template = await this.loadTemplate(templatePath);

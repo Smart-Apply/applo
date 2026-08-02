@@ -17,11 +17,11 @@ export interface GroundingFinding {
  * Result of a grounding check.
  */
 export interface GroundingReport {
-  /** True when every impactful numeric claim traces back to the profile. */
+  /** True when every impactful numeric claim traces back to its source corpus. */
   grounded: boolean;
   /** How many distinct impact numbers were checked. */
   totalChecked: number;
-  /** Numbers that do NOT appear anywhere in the source profile. */
+  /** Numbers that do NOT appear in the corpus allowed for their document. */
   unsupported: GroundingFinding[];
   /** 0-100 share of checked claims that are grounded (100 when none checked). */
   score: number;
@@ -45,6 +45,13 @@ export interface GroundingReport {
  *   treat the profile corpus leniently (any matching digit token grounds a
  *   claim). Small standalone integers (e.g. "5 years", derivable from dates)
  *   are intentionally NOT checked to avoid false positives.
+ * - **Per-document corpus.** Cover-letter numbers may also be grounded by the
+ *   job posting — quoting the ad's facts ("Ihre 400.000 Kunden") is legitimate
+ *   personalization, and a 2026-08-02 audit showed job quotes were 100% of the
+ *   gpt-4.1 baseline's flags. Résumé numbers are checked against the profile
+ *   ONLY: a job-ad KPI appearing as a candidate achievement IS a fabrication.
+ * - **Standard designations** (ISO 9001, DIN 14675 …) are certification names,
+ *   not impact metrics, and are excluded everywhere.
  * - Handles both resume shapes: JSON (the `createWithGeneration` path) and
  *   Markdown/plain text (the `generateWithSinglePipeline` path).
  */
@@ -70,17 +77,50 @@ export class GroundingValidatorService {
 
   /**
    * Validate generated output against the source profile.
+   *
+   * @param jobPostingText Optional raw job-posting text. When provided, it
+   *   additionally grounds COVER-LETTER numbers (quoting the ad is legitimate);
+   *   it never grounds résumé numbers.
    */
   validate(
     input: { resume?: string | null; coverLetter?: string | null },
     profile: ProfileWithRelations,
+    jobPostingText?: string | null,
   ): GroundingReport {
-    const corpusNumbers = this.extractCorpusNumberSet(this.buildProfileCorpus(profile));
-    const text = this.extractGeneratedText(input.resume, input.coverLetter);
-    const claims = this.extractImpactClaims(text);
+    const profileNumbers = this.extractCorpusNumberSet(this.buildProfileCorpus(profile));
+    const coverLetterNumbers = jobPostingText
+      ? new Set([...profileNumbers, ...this.extractCorpusNumberSet(jobPostingText)])
+      : profileNumbers;
 
-    const unsupported = claims.filter((claim) => !corpusNumbers.has(claim.normalized));
-    const totalChecked = claims.length;
+    const resumeClaims = this.extractImpactClaims(
+      input.resume ? this.extractTextFromResume(input.resume.trim()) : '',
+    );
+    const coverClaims = this.extractImpactClaims(
+      input.coverLetter ? this.stripHtml(input.coverLetter) : '',
+    );
+
+    // De-duplicate across documents; a number unsupported in the résumé stays
+    // unsupported even if the job posting grounds its cover-letter twin.
+    const unsupportedMap = new Map<string, GroundingFinding>();
+    for (const claim of resumeClaims) {
+      if (!profileNumbers.has(claim.normalized)) unsupportedMap.set(claim.normalized, claim);
+    }
+    for (const claim of coverClaims) {
+      if (!coverLetterNumbers.has(claim.normalized) && !unsupportedMap.has(claim.normalized)) {
+        unsupportedMap.set(claim.normalized, claim);
+      }
+    }
+
+    const seen = new Set<string>();
+    let totalChecked = 0;
+    for (const claim of [...resumeClaims, ...coverClaims]) {
+      if (!seen.has(claim.normalized)) {
+        seen.add(claim.normalized);
+        totalChecked++;
+      }
+    }
+
+    const unsupported = Array.from(unsupportedMap.values());
     const groundedCount = totalChecked - unsupported.length;
     const score = totalChecked === 0 ? 100 : Math.round((groundedCount / totalChecked) * 100);
 
@@ -168,16 +208,6 @@ export class GroundingValidatorService {
   // Generated-output text extraction
   // ---------------------------------------------------------------------------
 
-  private extractGeneratedText(
-    resume: string | null | undefined,
-    coverLetter: string | null | undefined,
-  ): string {
-    const parts: string[] = [];
-    if (coverLetter) parts.push(this.stripHtml(coverLetter));
-    if (resume) parts.push(this.extractTextFromResume(resume));
-    return parts.join('\n');
-  }
-
   /**
    * Resume content can be persisted as JSON (editor format) or Markdown.
    * For JSON we walk ONLY prose fields (summary / description / achievements /
@@ -234,6 +264,14 @@ export class GroundingValidatorService {
   // ---------------------------------------------------------------------------
 
   /**
+   * Standard/certification designations — numbers that name a norm, not a
+   * metric (ISO 9001, DIN EN 14675, IEC 27001 …). Matched against the token's
+   * immediate left context.
+   */
+  private static readonly STANDARD_DESIGNATION_CONTEXT =
+    /(?:ISO|DIN|EN|IEC|VDE|VDI|HACCP|GMP)[\s/-]*$/i;
+
+  /**
    * Extract the high-signal "impact" numbers worth grounding: percentages,
    * currency amounts, magnitude-suffixed numbers (2k, 3 Mio, 5M), "+" counts,
    * and any plain number with 3+ digits (>= 100). Small standalone integers
@@ -245,6 +283,9 @@ export class GroundingValidatorService {
     const add = (value: string, index: number): void => {
       const normalized = this.normalizeNumber(value);
       if (!normalized) return;
+      // "ISO 9001" / "DIN EN 14675": the number names a standard, not a claim.
+      const leftContext = text.slice(Math.max(0, index - 12), index);
+      if (GroundingValidatorService.STANDARD_DESIGNATION_CONTEXT.test(leftContext)) return;
       if (!found.has(normalized)) {
         found.set(normalized, {
           value: value.trim(),

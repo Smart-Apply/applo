@@ -811,6 +811,7 @@ export class GenerationService {
         application.id,
         { resume: JSON.stringify(resumeJson), coverLetter: governedCoverLetterMarkdown },
         profile,
+        jobPosting.fullText,
       );
 
       // Style check: flag forbidden AI clichés + German hedging (non-destructive).
@@ -1111,6 +1112,7 @@ export class GenerationService {
         applicationId,
         { resume: resumeMarkdown, coverLetter: governedCoverLetter },
         profile,
+        jobPosting.fullText,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
@@ -1713,16 +1715,19 @@ export class GenerationService {
 
   /**
    * Grounding check (#7) — deterministic, non-destructive. Logs a warning when
-   * the generated documents contain impact numbers that don't appear anywhere
-   * in the source profile (likely fabrications). Never throws.
+   * the generated documents contain impact numbers that look fabricated. The
+   * job posting additionally grounds cover-letter numbers (quoting the ad is
+   * legitimate personalization); résumé numbers must come from the profile.
+   * Never throws.
    */
   private runGroundingCheck(
     applicationId: string,
     generated: { resume?: string | null; coverLetter?: string | null },
     profile: ProfileWithRelations,
+    jobPostingText?: string | null,
   ): void {
     try {
-      const report = this.groundingValidator.validate(generated, profile);
+      const report = this.groundingValidator.validate(generated, profile, jobPostingText);
       if (!report.grounded) {
         this.logger.warn(
           `Grounding check (application ${applicationId}): ${report.unsupported.length}/${report.totalChecked} impact numbers not found in profile (score ${report.score}). Unsupported: ${report.unsupported
