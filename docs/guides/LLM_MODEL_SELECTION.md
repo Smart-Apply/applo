@@ -19,6 +19,33 @@
 
 ## Decision
 
+**DECIDED 2026-08-02 (24-fixture A/B on the real prompt chain): prose stays on
+`gpt-4.1`; Mistral is REJECTED for candidate-facing writing and ADOPTED for the
+extraction fast lane.**
+
+- Runtime: `LLM_PROVIDER=azure-openai` → `gpt-4.1` for `cover-letter`,
+  `resume-rewrite` and every editor/style/translation pass.
+- **Extraction split (shipped):** `LLM_FAST_MODEL=mistral-small-latest` +
+  `LLM_FAST_PROVIDER=mistral` routes `ats-keywords` / `job-facts` /
+  `skill-selector` to Mistral Small on La Plateforme through a second provider
+  instance with its own circuit breaker; any fast-lane failure falls back to the
+  main provider on its default model. The `skill-selector` hand-off is guarded
+  (`isValidTailoredProfile` / `isDegradedTailoredProfile`, escalate-once).
+- **Why Mistral lost prose** (full data below): both Small and Large fabricated
+  impact metrics the profile doesn't support (10 and 22 instances vs. **0** for
+  gpt-4.1) and wrote half-length cover letters (157/183 body words vs. 240–247
+  on a 350 budget). Large was *worse* than Small at 3× its price — the judge's
+  higher "quantified" score came precisely from the invented numbers (Goodhart).
+- The earlier recommendation (move prose to Mistral Large 3 via Foundry) is
+  **retired**. The Foundry Marketplace blocker (2026-07-23, below) is therefore
+  moot for prose; La Plateforme serves the fast lane.
+- Still true: if cost pressure returns for prose, `gpt-4.1-mini` / `gpt-5-mini`
+  on the existing Azure resource remain the zero-migration candidates — but any
+  such switch takes the same eval gate this decision used.
+
+<details>
+<summary>Superseded decision text (2026-07-23)</summary>
+
 **Primary recommendation: keep the pipeline on Azure and, when we optimise for cost,
 move prose generation to `Mistral Large 3` via _Azure AI Foundry_ (EU Data Zone
 Standard) — _gated_ on passing a strict `json_schema` A/B eval on the real German
@@ -39,6 +66,52 @@ prompt chain first.**
   (`MISTRAL_ENDPOINT=https://api.mistral.ai/v1`, no api-version) — no code change, and
   GDPR is unaffected (Mistral is an EU/France vendor). Foundry stays the target if/when
   enablement lands; see [Foundry vs. La Plateforme](#foundry-vs-la-plateforme).
+
+</details>
+
+---
+
+## Eval results (2026-08-02) — the gate ran; prose said no
+
+Full 24-fixture runs (12 DE / 12 EN) of the real v1 chain on La Plateforme,
+judge **pinned to gpt-4.1** (`EVAL_JUDGE_PROVIDER`), deterministic scorers
+throughout. Two same-config gpt-4.1 runs first established the **noise floor**
+(grounding pass swings ±13 pts, OVERALL ±0.08, words ±7 — deltas inside those
+bands are meaningless). Fabrication counts below are **audited**: every flagged
+number was re-classified offline against the job-posting text, which exposed
+that the pre-fix grounding metric was 100% false positives on the baseline
+(job-ad quotes + ISO designations; validator fixed the same day — cover-letter
+numbers now ground against profile ∪ job posting, résumé numbers against the
+profile only).
+
+| Metric | gpt-4.1 (noise band) | Mistral Small 4 | Mistral Large 3 |
+|---|--:|--:|--:|
+| **Truly fabricated numbers** (audited) | **0** | 10 (9 EN / 1 DE) | **22** (18 EN / 4 DE) |
+| Mean cover-letter body words (350 budget) | 240–247 | **157** | **183** |
+| Coverage before weave | 80.9–89.9% | 66.1% | 52.1% |
+| Coverage after weave | 92.5–100% | 89.2% | 100% (weave ×13) |
+| Judge OVERALL | 4.88–4.96 | 4.83 | 4.71 |
+| `quantified_or_qualitative` | 4.21–4.25 | 4.75 | 4.79 ⬅ the fabrications |
+| Style violations (deterministic) | 0–1 | 0 | 0 |
+| $/gen at list rates | $0.0624 | $0.0054 | $0.0167 |
+
+Readings:
+- **The judge alone would have shipped this.** OVERALL stayed within noise while
+  the models invented candidate metrics — the deterministic scorers (audited
+  grounding, length floor, coverage-before-weave) carried the decision.
+- **Half-length letters were invisible** until the floor check
+  (`COVER_LETTER_FLOOR_FACTOR = 0.6`, added 2026-08-02) — the old lint only
+  measured overruns.
+- **Extraction is safe**: the three fast-lane templates emit structured data
+  (two under strict `json_schema`), no prose, no impact numbers — none of the
+  failure modes apply, and the guarded hand-off escalates a bad selection.
+- Cost effect of the split: ~38% of input tokens move from $2.00/M to $0.15/M ≈
+  **$0.0624 → ~$0.042/gen (≈ −⅓)** — not the 11× of a full switch, but with
+  zero prose risk.
+
+Runs: `eval-baseline-gpt41-*`, `eval-mistral-small-full-*`,
+`eval-mistral-large-full-*` under `apps/api/scripts/eval/results/` (gitignored;
+re-run with the commands in [How to A/B test](#how-to-ab-test-right-now)).
 
 ---
 
@@ -266,6 +339,18 @@ output. To widen the routed set later, add template basenames to
 
 ## Changelog
 
+- **2026-08-02** — **DECISION: prose stays on `gpt-4.1`; Mistral rejected for
+  writing, adopted for extraction.** Ran the full gate: 24-fixture A/B (Small +
+  Large 3, La Plateforme, judge pinned to gpt-4.1) after establishing a
+  same-config noise floor. Small/Large fabricated 10/22 audited impact numbers
+  (gpt-4.1: 0) and wrote 157/183-word letters on a 350 budget; Large was worse
+  than Small at 3× the price. Shipped the split: `LLM_FAST_PROVIDER` (second
+  provider instance + own breaker + fallback-to-main), guarded `skill-selector`
+  hand-off, cover-letter length floor (`under` severity), grounding validator
+  corpus fix (cover letter grounds against profile ∪ job posting; ISO/DIN
+  designations excluded), provider-aware eval pricing, judge pinning
+  (`EVAL_JUDGE_PROVIDER`). Prices re-verified 2026-08-02 (unchanged from
+  2026-07-23). Branch `feat/mistral-provider-eval`.
 - **2026-07-23** — Added **per-task model routing** (`LLM_FAST_MODEL`): the mechanical
   extraction steps (`ats-keywords`, `job-facts`, `skill-selector`) can run on a cheaper
   model while the writing steps stay on the flagship. Opt-in, provider-agnostic, no-op

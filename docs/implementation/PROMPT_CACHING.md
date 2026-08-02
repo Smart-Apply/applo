@@ -249,7 +249,7 @@ calls/gen across 24 fixtures.
 Gate the redo on this same eval — the aggregator's **Cost & prompt caching** block now measures
 the cached % + $/gen delta directly. **✅ Shipped — see Phase 1b below.**
 
-### Phase 1b — Full-prefix alignment (make caching actually hit) `[ Status: ✅ Done — measured 0% → 29% cached input, ~15% est. cost cut, no quality regression ]`
+### Phase 1b — Full-prefix alignment (make caching actually hit) `[ Status: ✅ Done — but see the 2026-08-02 cold-start correction: production-representative win is ~9% cached / ~5% cost cut, not the warm 29%/15% below ]`
 
 The Phase 3 finding above proved the reorder alone cached nothing because Azure keys on the FULL
 request prefix (`response_format` schema → system message → user message), which differed per
@@ -374,6 +374,17 @@ branch. No migration, no state.
 ## Changelog
 
 _Newest first. Add an entry per PR/branch with the files touched and the measured effect._
+
+- **2026-08-02** — `feat/mistral-provider-eval` (cold-start correction): a **clean cold
+  baseline** (first run of the day, 24 fixtures, real Azure gpt-4.1) measured **9% cached
+  input / $0.0033/gen saved (5%) / $0.0624/gen** — *below* the 10–20% band Phase 1b
+  predicted for production. Two same-day re-runs then measured 38% and 37% cached,
+  experimentally confirming the residual-cache inflation this doc warned about: the
+  Phase 1b headline (29% / ~15% cut) was a **warm** number. Treat **~9% cached / ~5%
+  cost cut ($0.0624/gen)** as the production-representative figure. Also: the eval
+  cost block now prices from the model actually used ([aggregate.ts](../../apps/api/scripts/eval/aggregate.ts)
+  `resolvePricing`), and Mistral La Plateforme runs measured ~2–4% `cached_tokens`
+  (its prefix caching barely hit on our shapes — relevant to Phase 4).
 
 - **2026-07-25** — `feat/prompt-caching-phase1b-prefix-alignment` (A/B verification): ran a
   **same-session old-vs-new A/B** (both full 24 fixtures, back-to-back on real Azure gpt-4.1) to
