@@ -191,6 +191,7 @@ async function runOne(
             words: docs.lengthLint.words,
             budget: docs.lengthLint.budget,
             overrun: docs.lengthLint.overrun,
+            underrun: docs.lengthLint.underrun,
             severity: docs.lengthLint.severity,
             governorApplied: docs.lengthGovernorApplied,
             wordsBefore: docs.wordsBeforeGovernor,

@@ -89,8 +89,10 @@ export interface FixtureLengthSummary {
   budget: number;
   /** Whether the final letter still overruns budget + tolerance. */
   overrun: boolean;
-  /** 'critical' = the "2-page" class (words >= budget × 1.5). */
-  severity: 'ok' | 'warn' | 'critical';
+  /** Whether the final letter is under the low-effort floor (budget × 0.6). */
+  underrun: boolean;
+  /** 'critical' = the "2-page" class (words >= budget × 1.5); 'under' = below floor. */
+  severity: 'ok' | 'warn' | 'critical' | 'under';
   /** True when the guarded shorten pass replaced an overrun draft. */
   governorApplied: boolean;
   /** Body words BEFORE the governor pass. */
@@ -188,6 +190,8 @@ export interface EvalSummary {
   length: {
     /** % of fixtures whose FINAL cover letter overruns budget + tolerance. */
     overrunRate: number;
+    /** % of fixtures whose FINAL cover letter is under the low-effort floor. */
+    underrunRate: number;
     /** Mean body word count of the final cover letters. */
     meanWords: number;
     /** The word budget measured against. */
@@ -285,6 +289,12 @@ export function summarize(
         ? 0
         : Math.round(
             (withLength.filter((r) => r.length!.overrun).length / withLength.length) * 100,
+          ),
+    underrunRate:
+      withLength.length === 0
+        ? 0
+        : Math.round(
+            (withLength.filter((r) => r.length!.underrun).length / withLength.length) * 100,
           ),
     meanWords: mean(withLength.map((r) => r.length!.words)),
     budget: withLength[0]?.length?.budget ?? 0,
@@ -424,6 +434,7 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    budget                         ${summary.length.budget} words`);
   lines.push(`    mean word count                ${summary.length.meanWords.toFixed(0)}`);
   lines.push(`    overrun rate (final letters)   ${summary.length.overrunRate}%`);
+  lines.push(`    underrun rate (< 60% budget)   ${summary.length.underrunRate}%`);
   lines.push(`    critical (≥1.5× budget)        ${summary.length.criticalCount} fixtures`);
   lines.push(`    length governor applied        ${summary.length.governorAppliedCount} fixtures`);
   lines.push('');

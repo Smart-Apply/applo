@@ -19,6 +19,7 @@
  */
 import {
   COVER_LETTER_CRITICAL_FACTOR,
+  COVER_LETTER_FLOOR_FACTOR,
   COVER_LETTER_LENGTH_TOLERANCE,
   COVER_LETTER_LENGTH_TOLERANCE_DE,
 } from './constants';
@@ -241,8 +242,12 @@ export interface LengthLintResult {
   tolerance: number;
   /** `words > budget + tolerance`. */
   overrun: boolean;
-  /** `critical` = the "2-page" class (`words >= budget × 1.5`). */
-  severity: 'ok' | 'warn' | 'critical';
+  /** Minimum body words before the letter reads as low-effort. */
+  floor: number;
+  /** `words < floor` (empty letters excluded — words must be > 0). */
+  underrun: boolean;
+  /** `critical` = the "2-page" class; `under` = below the floor. */
+  severity: 'ok' | 'warn' | 'critical' | 'under';
 }
 
 /** Salutation contract from `buildSalutation` / the cover-letter prompt. */
@@ -323,13 +328,18 @@ export function lintCoverLetterLength(
   const tolerance = Math.round(budget * toleranceFactor);
   const overrun = words > budget + tolerance;
   const critical = words >= Math.round(budget * COVER_LETTER_CRITICAL_FACTOR);
+  const floor = Math.round(budget * COVER_LETTER_FLOOR_FACTOR);
+  // words === 0 means "no cover letter" (resume-only application), not a short one.
+  const underrun = words > 0 && words < floor;
 
   return {
     words,
     budget,
     tolerance,
     overrun,
-    severity: critical ? 'critical' : overrun ? 'warn' : 'ok',
+    floor,
+    underrun,
+    severity: critical ? 'critical' : overrun ? 'warn' : underrun ? 'under' : 'ok',
   };
 }
 

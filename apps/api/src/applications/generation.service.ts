@@ -1781,6 +1781,10 @@ export class GenerationService {
           this.logger.warn(
             `Length check (application ${applicationId}): ${length.words} words vs budget ${length.budget} (+${overrunPct}%) — severity: ${length.severity}`,
           );
+        } else if (length.underrun) {
+          this.logger.warn(
+            `Length check (application ${applicationId}): ${length.words} words vs budget ${length.budget} — UNDER floor ${length.floor} (reads as low-effort)`,
+          );
         } else {
           this.logger.debug(
             `Length check (application ${applicationId}): ${length.words}/${length.budget} words — ok`,

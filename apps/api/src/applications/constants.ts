@@ -44,6 +44,16 @@ export const COVER_LETTER_LENGTH_TOLERANCE_DE = 0.2;
 export const COVER_LETTER_CRITICAL_FACTOR = 1.5;
 
 /**
+ * `words < budget × factor` classifies as `under` — a letter so far below its
+ * budget it reads as low-effort (a half-page "standard" letter). Calibrated
+ * against the 2026-08-02 eval: gpt-4.1 writes 69–71% of budget (fine at 0.6);
+ * the rejected Mistral prose wrote 45–52% (flagged). Detection only — there is
+ * deliberately no "expand" governor; padding prose with an LLM invites
+ * fabrication, so underruns surface in logs/eval for prompt-side fixes.
+ */
+export const COVER_LETTER_FLOOR_FACTOR = 0.6;
+
+/**
  * Resolve a stored/user-supplied length preference to its word budget,
  * defaulting unknown or missing values to the standard budget.
  */
