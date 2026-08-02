@@ -409,11 +409,11 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/applications/:id/files`          | SAS download URLs                                                           |
 | PATCH    | `/applications/:id/template-settings` | Per-application design tuning (font scale, density, accent override)    |
 | GET      | `/applications/:id/stream`         | SSE status stream                                                           |
-| POST     | `/validation`                      | Check an external application (AI quality + ATS; Free 5/mo, Pro+ unlimited) |
+| POST     | `/validation`                      | Check an external application (AI quality + ATS; Free 5/mo, Pro 15/mo, Premium 35/mo) |
 | GET      | `/validation`                      | Validation history                                                          |
 | POST     | `/interviews`                      | Generate mock interview                                                     |
-| POST     | `/interviews/:id/voice/session`    | Mint voice session (Premium; 5/10/15 min, persona-led, CV-grounded)         |
-| POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Premium)                                  |
+| POST     | `/interviews/:id/voice/session`    | Mint voice session (Pro 5/mo, Premium 45/mo; 5/10/15 min, persona-led, CV-grounded) |
+| POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Pro/Premium)                              |
 | GET      | `/mailbox-sync/connections`        | List connected mailboxes (Premium)                                          |
 | GET      | `/mailbox-sync/microsoft/connect`  | Start MS Graph OAuth (Premium)                                              |
 | GET      | `/mailbox-sync/microsoft/callback` | OAuth redirect target (public)                                              |
@@ -423,6 +423,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/sessions`                        | Active sessions                                                             |
 | DELETE   | `/sessions/:id`                    | Remote logout                                                               |
 | GET      | `/subscription`                    | Plan & usage (incl. monthly application hard limit + add-on credit balance) |
+| GET      | `/subscription/tiers`              | Public tiers + prices, hard limits, and persistent add-on packages          |
 | GET      | `/admin/users?email=`              | Admin: search users (allow-listed)                                          |
 | POST     | `/admin/users/:email/tier`         | Admin: set subscription tier (allow-listed)                                 |
 | DELETE   | `/admin/users/:email`              | Admin: permanently delete user (allow-listed)                               |

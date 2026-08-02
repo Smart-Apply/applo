@@ -25,7 +25,7 @@
     },
     "betaCost": {
       "q": "What does Applo cost during the beta?",
-      "a": "Applo is free for all beta testers — including all Pro and Premium features (email tracking, interview coach, unlimited applications). If you actively tested during the beta, you will keep Premium free for a while after the public launch too — we will let you know in good time if anything changes."
+      "a": "Applo is free for all beta testers — including Pro and Premium features such as email tracking and the interview coach. If you actively tested during the beta, you will keep Premium free for a while after the public launch too — we will let you know in good time if anything changes."
     },
     "betaIssues": {
       "q": "What can still go wrong?",
@@ -57,7 +57,7 @@
     },
     "pricing": {
       "q": "What does Applo cost?",
-      "a": "Getting started is free and does not require a credit card. In the Free plan, you can try Applo calmly with 3 applications per month. Pro (€9.99 / month) helps you optimize every application with AI. Premium (€19.99 / month) adds email tracking and the interview coach. All prices are transparent, cancellable monthly, and have no hidden fees — details are on our <pricing>pricing page</pricing>."
+      "a": "Free costs €0 and includes one résumé profile, 3 AI applications, and 5 application checks per month; downloads have no watermark and use a 15-second ad wait. Pro costs €9.95 per month and includes 50 AI applications, 15 checks, and 5 mock interviews. Premium costs €19.95 per month and includes 100 AI applications, 35 checks, 45 mock interviews, and email tracking. Persistent extra credits are available in packs of 10, 30, or 75 applications — see our <pricing>pricing page</pricing> for details."
     },
     "editing": {
       "q": "How can I adjust my application after generation?",

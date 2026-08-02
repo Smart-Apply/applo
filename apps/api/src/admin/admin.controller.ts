@@ -37,7 +37,7 @@ import { AuditLoggerService } from '../common/audit-logger';
 import { Sanitize } from '../common/decorators/sanitize.decorator';
 
 class SetTierDto {
-  @IsIn(['FREE', 'PREMIUM', 'PREMIUM_PLUS'])
+  @IsIn(['FREE', 'PRO', 'PREMIUM'])
   tier!: SubscriptionTier;
 
   @IsOptional()

@@ -10,7 +10,7 @@ import type { CreateValidationInput } from '@/types';
 /**
  * Standalone application check ("Bewerbungs-Check"): run an AI quality + ATS
  * review of the user's OWN externally-created application. Metered (Free: 5/mo,
- * Pro+: unlimited).
+ * Pro: 15/mo, Premium: 35/mo).
  */
 
 export function useValidations() {

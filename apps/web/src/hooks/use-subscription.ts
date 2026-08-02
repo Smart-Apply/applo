@@ -7,8 +7,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import {
   useSubscriptionStore,
   useTier,
+  useIsPro,
   useIsPremium,
-  useIsPremiumPlus,
   useTierFeatures,
 } from '@/stores/subscription-store';
 import type { SubscriptionUsageStats, TierLimits } from '@/types';
@@ -23,8 +23,8 @@ export function useSubscription() {
   
   // Computed values from store (primitives only to avoid re-render loops)
   const tier = useTier();
+  const isPro = useIsPro();
   const isPremium = useIsPremium();
-  const isPremiumPlus = useIsPremiumPlus();
   const features = useTierFeatures();
 
   // React Query for data fetching with caching
@@ -70,22 +70,44 @@ export function useSubscription() {
   const limits = useMemo((): TierLimits => {
     if (!subscription) {
       return {
-        applicationsPerMonth: 5,
+        applicationsPerMonth: 3,
+        coverLettersPerMonth: 3,
+        resumesPerMonth: 3,
+        jobParsingPerMonth: 10,
         interviewSessionsPerMonth: 0,
+        validationsPerMonth: 5,
+        applicationsPerDay: 5,
         priority: 'low',
         features: {
-          customTemplates: false,
-          prioritySupport: false,
+          pdfExport: true,
+          multipleTemplates: false,
+          premiumTemplates: false,
+          customBranding: false,
+          atsOptimization: false,
+          keywordMatching: 'none',
+          applicationTracking: 'manual',
+          basicAnalytics: false,
           advancedAnalytics: false,
+          extendedProfile: false,
+          linkedinImport: false,
+          multiLanguage: 'none',
           interviewCoach: false,
+          emailParsing: false,
+          prioritySupport: false,
+          noAds: false,
         },
       };
     }
 
     return {
       applicationsPerMonth: subscription.applications.limit,
+      coverLettersPerMonth: subscription.coverLetters?.limit ?? 0,
+      resumesPerMonth: subscription.resumes?.limit ?? 0,
+      jobParsingPerMonth: subscription.jobParsing?.limit ?? 0,
       interviewSessionsPerMonth: subscription.interviewSessions.limit,
-      priority: tier === 'PREMIUM_PLUS' ? 'high' : tier === 'PREMIUM' ? 'normal' : 'low',
+      validationsPerMonth: subscription.validations?.limit ?? 0,
+      applicationsPerDay: subscription.applicationsToday?.limit ?? 0,
+      priority: tier === 'PREMIUM' ? 'high' : tier === 'PRO' ? 'normal' : 'low',
       features: subscription.features,
     };
   }, [subscription, tier]);
@@ -105,8 +127,8 @@ export function useSubscription() {
 
     // Computed
     tier,
+    isPro,
     isPremium,
-    isPremiumPlus,
     limits,
     features,
 

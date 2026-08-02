@@ -74,7 +74,7 @@ export class FeatureGuard implements CanActivate {
         requiredFeature,
         requiredTier,
         currentTier,
-        upgradeUrl: '/pricing',
+        upgradeUrl: '/#preise',
       });
     }
 

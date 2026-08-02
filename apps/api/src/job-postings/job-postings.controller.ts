@@ -22,6 +22,9 @@ import { PaginationQueryDto } from '../common/dto';
 import { JobPostingsService } from './job-postings.service';
 import { ParseJobPostingDto, CreateJobPostingDto, JobPostingResponseDto } from './dto';
 import { KeywordsService, MatchAnalysisResponseDto } from '../keywords';
+import { UsageLimitGuard } from '../common/guards/usage-limit.guard';
+import { CheckUsage } from '../common/decorators/tier.decorator';
+import { SubscriptionService } from '../subscription/subscription.service';
 
 @ApiTags('job-postings')
 @Controller('job-postings')
@@ -32,6 +35,7 @@ export class JobPostingsController {
   constructor(
     private readonly jobPostingsService: JobPostingsService,
     private readonly keywordsService: KeywordsService,
+    private readonly subscriptionService: SubscriptionService,
   ) {}
 
   @Post()
@@ -51,6 +55,8 @@ export class JobPostingsController {
   }
 
   @Post('parse')
+  @UseGuards(UsageLimitGuard)
+  @CheckUsage('jobParsing')
   // LLM + Playwright per call — throttled via the shared LLM-actions bucket
   // (the class-level @SkipThrottle() only skips the default bucket).
   @UseThrottler('llm-actions')
@@ -63,11 +69,18 @@ export class JobPostingsController {
   })
   @ApiResponse({ status: 400, description: 'Invalid input or parsing failed' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Smart Job Ingestion requires remaining Pro quota' })
   async parseJobPosting(
     @CurrentUser('id') userId: string,
     @Body() dto: ParseJobPostingDto,
   ): Promise<JobPostingResponseDto> {
-    return this.jobPostingsService.parseJobPosting(userId, dto);
+    const reservation = await this.subscriptionService.reserveUsage(userId, 'jobParsing');
+    try {
+      return await this.jobPostingsService.parseJobPosting(userId, dto);
+    } catch (error) {
+      await this.subscriptionService.releaseUsage(reservation);
+      throw error;
+    }
   }
 
   @Get()

@@ -193,7 +193,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `contact` — contact form
 - `email` — Resend transactional email
 - `health` — Terminus health checks
-- `interviews` — AI mock interviews in **two modes**: typed text Q&A and a spoken **voice interview** (`voice/` sub-folder — pluggable `VOICE_PROVIDER` = `azure-realtime` | `mock`; Azure OpenAI Realtime API over browser-direct WebRTC, Sweden Central/EU). The backend only mints a short-lived ephemeral token (`POST /openai/v1/realtime/client_secrets`) and finalizes the transcript; the browser talks WebRTC to Azure directly (`?webrtcfilter=on` keeps the interviewer instructions private). Both modes reuse the same answer-analyzer/feedback-generator scoring. The voice interviewer opens with a persona-led introduction and asks questions grounded in a bounded plain-text dossier of the candidate's profile (built server-side in `buildInstructions`). The voice call length is a user-chosen 5/10/15-minute target (clamped by `VOICE_INTERVIEW_MAX_SESSION_MINUTES` and the monthly budget); the client sends data-channel time cues so the interviewer wraps up in the final minute and speaks a closing at time-up. Premium-gated (`interviewCoach`), with a per-user monthly voice-minute cap computed on the fly from `InterviewSession.voiceDurationSeconds`. No audio is persisted — transcript + scores only.
+- `interviews` — AI mock interviews in **two modes**: typed text Q&A and a spoken **voice interview** (`voice/` sub-folder — pluggable `VOICE_PROVIDER` = `azure-realtime` | `mock`; Azure OpenAI Realtime API over browser-direct WebRTC, Sweden Central/EU). The backend only mints a short-lived ephemeral token (`POST /openai/v1/realtime/client_secrets`) and finalizes the transcript; the browser talks WebRTC to Azure directly (`?webrtcfilter=on` keeps the interviewer instructions private). Both modes reuse the same answer-analyzer/feedback-generator scoring. The voice interviewer opens with a persona-led introduction and asks questions grounded in a bounded plain-text dossier of the candidate's profile (built server-side in `buildInstructions`). The voice call length is a user-chosen 5/10/15-minute target (clamped by `VOICE_INTERVIEW_MAX_SESSION_MINUTES` and the monthly budget); the client sends data-channel time cues so the interviewer wraps up in the final minute and speaks a closing at time-up. Pro/Premium-gated (`interviewCoach`) with monthly session limits (Pro 5, Premium 45), plus a per-user monthly voice-minute cap computed on the fly from `InterviewSession.voiceDurationSeconds`. No audio is persisted — transcript + scores only.
 - `invite-codes` — Closed-beta invite-code gate. Hashed-at-rest (sha256), single-use, atomic redemption inside the registration transaction so failed signups never burn a code. Toggle via `REQUIRE_INVITE_CODES` (default `false` since launch — open signup). Admins issue codes via `POST /admin/invite-codes`; plaintexts are returned **once** at issuance and never readable again.
 - `job-postings` — parse text/URL/file → normalized JobPosting
 - `jobs` — pluggable queue providers (`in-memory` | `qstash`)
@@ -211,7 +211,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `templates` — template catalog. Read paths are registry-filtered: `findAll`, `findByCategoryAndLanguage` and `findDefault` only return rows whose design resolves to a registered react-pdf factory (`pdf-v2/template-registry.ts#isRenderableTemplate`), so the wizard can never offer a template that would crash generation. Rows are seeded by `prisma/seed-react-pdf-templates.ts` (the canonical source; deactivates unresolvable active rows).
 - `uploads` — file uploads
 - `user-preferences` — per-user settings
-- `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Applo. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 5/month, Pro+ unlimited); usage recorded only after success. Each check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
+- `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Applo. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 5/month, Pro 15/month, Premium 35/month); quota is reserved atomically before the LLM call and refunded when the request fails. Each successful check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
 
 ## Frontend Structure
 - `messages/` - next-intl message catalogs (`de/*.json` + `en/*.json`, one file per namespace: common, auth, twoFactor, applications, editor, wizard, profile, dashboard, settings, analytics, subscription, jobs, interviews, validation, templates, landing, faq). de/en key trees must stay identical.
@@ -248,7 +248,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Validation** (Bewerbungs-Check — standalone AI check of an external application; inputs + cached result, scoped to user)
 - **RefreshToken**, **Session** (auth/security)
 - **InviteCode** (closed-beta gate — hashed, single-use, optional expiry)
-- **Subscription** (plans & usage) — monthly application hard limits per tier (Free 0 / Pro 50 @ €9.95 / Premium 100 @ €19.95) with `Subscription.addonCreditsRemaining` holding purchased add-on credits (packages of 10/30/75) that persist until used and are consumed after the tier allowance; `SubscriptionUsage.validationsUsed` tracks the monthly Bewerbungs-Check count (Free 5/month, Pro+ unlimited via `validationsPerMonth`)
+- **Subscription** (plans & usage) — monthly hard limits for applications (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95), Bewerbungs-Checks (5/15/35), and mock interviews (0/5/45), with `Subscription.addonCreditsRemaining` holding purchased add-on credits (packages of 10/30/75) that persist until used and are consumed after the tier allowance
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
 
@@ -317,9 +317,10 @@ All endpoints are prefixed with `/api/v1` and documented at `http://localhost:30
 **GET /api/v1/sessions** — list active sessions (device, IP, geolocation)
 **DELETE /api/v1/sessions/:id** — remote logout for a specific session
 
-### Subscription (Protected)
+### Subscription
 
-**GET /api/v1/subscription** — current plan + usage counters
+**GET /api/v1/subscription** — current plan + usage counters (protected)
+**GET /api/v1/subscription/tiers** — public final tier contract and add-on packages (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95; checks 5/15/35; interviews 0/5/45; persistent add-ons 10 @ €2.99 / 30 @ €6.99 / 75 @ €14.99)
 
 ### Admin (Protected, allow-listed)
 
@@ -327,7 +328,7 @@ Gated by `ADMIN_EMAILS` (comma-separated, case-insensitive). Returns 403 when th
 
 **GET /api/v1/admin/users?email=<query>** — search users by partial email (case-insensitive, max 20 results)
 **POST /api/v1/admin/users/:email/tier** — set a user's subscription tier and reset the billing period
-  - Body: `{ "tier": "FREE" | "PREMIUM" | "PREMIUM_PLUS", "periodMonths"?: number (1–120, default 12) }`
+  - Body: `{ "tier": "FREE" | "PRO" | "PREMIUM", "periodMonths"?: number (1–120, default 12) }`
   - Idempotent; `:email` matched case-insensitively
   - Replaces the old `flyctl ssh` + `node /app/promote-premium.js` workflow
 **DELETE /api/v1/admin/users/:email** — permanently delete a user account (admin override; no password confirmation)
@@ -351,9 +352,9 @@ Gated by `ADMIN_EMAILS` (comma-separated, case-insensitive). Returns 403 when th
 
 **GET/PUT /api/v1/user-preferences** — per-user settings
 
-### Interviews (Protected, Premium — `@RequiresFeature('interviewCoach')`)
+### Interviews (Protected, Pro/Premium — `@RequiresFeature('interviewCoach')`)
 
-**POST /api/v1/interviews/start** — start a session (text mode by default). Text flow: **POST /:id/questions/:questionId/answer**, **/:id/next**, **/:id/complete**, **/:id/abandon**; **GET /interviews**, **/interviews/:id**, **/interviews/stats**.
+**POST /api/v1/interviews/start** — start a session (text mode by default; Pro 5/month, Premium 45/month). Text flow: **POST /:id/questions/:questionId/answer**, **/:id/next**, **/:id/complete**, **/:id/abandon**; **GET /interviews**, **/interviews/:id**, **/interviews/stats**.
 
 Voice interview (Azure OpenAI Realtime API via browser-direct WebRTC):
 **GET /api/v1/interviews/voice/config** — availability + remaining monthly voice minutes. Returns `available:false` when `VOICE_PROVIDER=mock`, so the frontend hides the voice toggle cleanly.
@@ -457,10 +458,12 @@ Example: To add a skill, include it in `skills` array without `id`. To update, i
 
 **GET /api/v1/applications/:id/download/cover-letter**
 - Direct download of cover letter PDF (alternative to SAS URLs)
+- Free-tier downloads wait 15 seconds; Pro/Premium downloads start immediately
 - Returns: PDF file stream with Content-Disposition: attachment
 
 **GET /api/v1/applications/:id/download/resume**
 - Direct download of resume PDF (alternative to SAS URLs)
+- Free-tier downloads wait 15 seconds; Pro/Premium downloads start immediately
 - Returns: PDF file stream with Content-Disposition: attachment
 
 **GET /api/v1/applications/:id/stream**
@@ -488,7 +491,7 @@ Standalone AI quality + ATS check of an application the user created **outside**
 **POST /api/v1/validation**
 - Body: `{ resumeText (required), coverLetterText?, jobContext?, language?, title? }` — all `@Sanitize()`d, DTO length-capped (résumé ≤ 24k, cover letter ≤ 12k, jobContext ≤ 24k chars).
 - Runs `v1/application-validation.md` (strict `json_schema`); returns a `Validation` record (inputs + `ApplicationValidationResult`).
-- Metered via `UsageLimitGuard` + `@CheckUsage('validation')`: **Free = 5/month, Pro & above = unlimited** (`validationsPerMonth`). Usage recorded only after success.
+- Metered via `UsageLimitGuard` + `@CheckUsage('validation')`: **Free = 5/month, Pro = 15/month, Premium = 35/month** (`validationsPerMonth`). Quota is reserved atomically before work and refunded on request failure.
 
 **GET /api/v1/validation** — history (newest first, lightweight `ValidationSummary[]`).
 **GET /api/v1/validation/:id** — a single check (inputs + result), ownership-scoped.

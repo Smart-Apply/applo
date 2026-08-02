@@ -434,7 +434,7 @@ enum ApplicationGenerationStatus {
 // application the user created OUTSIDE Applo. The user pastes/uploads
 // their own résumé (+ optional cover letter + optional job context) and gets
 // actionable feedback. NOT linked to a generated Application/JobPosting.
-// Metered via SubscriptionUsage.validationsUsed (Free 5/month, Pro+ unlimited).
+// Metered via SubscriptionUsage.validationsUsed (Free 5, Pro 15, Premium 35/month).
 model Validation {
   id     String @id @default(cuid())
   userId String
@@ -718,7 +718,7 @@ model BackgroundJob {
 // =====================================
 
 // Subscription tier levels (3-tier pricing model)
-// FREE (€0)            - 0 applications/month (generation disabled; add-on credits still usable)
+// FREE (€0)            - 3 applications/month
 // PRO (€9.95/month)    - Hard limit: 50 applications/month
 // PREMIUM (€19.95/month) - Hard limit: 100 applications/month
 enum SubscriptionTier {
@@ -790,7 +790,7 @@ model SubscriptionUsage {
   resumesGenerated      Int @default(0) // KI-Lebensläufe count
   jobParsingUsed        Int @default(0) // URL/text parsing count
   interviewSessionsUsed Int @default(0) // Interview Coach sessions
-  validationsUsed       Int @default(0) // Bewerbungs-Validierungen (Free: 5/Monat, Pro+: unbegrenzt)
+  validationsUsed       Int @default(0) // Bewerbungs-Validierungen (Free: 5, Pro: 15, Premium: 35/Monat)
 
   // Rolling 24h window (cost-protection cap, independent of monthly period)
   dailyApplicationsUsed Int      @default(0)
@@ -810,7 +810,7 @@ model SubscriptionUsage {
 }
 
 // =====================================
-// KI INTERVIEW COACH (Premium Feature)
+// KI INTERVIEW COACH (Pro/Premium Feature)
 // =====================================
 
 // Interview session type

@@ -25,7 +25,7 @@
     },
     "betaCost": {
       "q": "Was kostet Applo während der Beta?",
-      "a": "Für alle Beta-Tester ist Applo kostenlos — inklusive aller Pro- und Premium-Features (E-Mail-Tracking, Interview-Coach, unbegrenzte Bewerbungen). Wenn du in der Beta aktiv mitgetestet hast, behältst du Premium auch nach dem offenen Launch ein Stück weit kostenlos — wir geben rechtzeitig Bescheid, wenn sich daran etwas ändert."
+      "a": "Für alle Beta-Tester ist Applo kostenlos — inklusive der Pro- und Premium-Features wie E-Mail-Tracking und Interview-Coach. Wenn du in der Beta aktiv mitgetestet hast, behältst du Premium auch nach dem offenen Launch ein Stück weit kostenlos — wir geben rechtzeitig Bescheid, wenn sich daran etwas ändert."
     },
     "betaIssues": {
       "q": "Was kann (noch) schiefgehen?",
@@ -57,7 +57,7 @@
     },
     "pricing": {
       "q": "Was kostet Applo?",
-      "a": "Der Einstieg ist kostenlos und ohne Kreditkarte. Im Free-Plan kannst du Applo mit 3 Bewerbungen pro Monat in Ruhe ausprobieren. Pro (9,99 € / Monat) hilft dir, jede Bewerbung mit KI zu optimieren. Premium (19,99 € / Monat) ergänzt das um E-Mail-Tracking und Interview-Coach. Alle Preise sind transparent, monatlich kündbar und ohne versteckte Kosten — Details auf unserer <pricing>Preisseite</pricing>."
+      "a": "Free kostet 0 € und enthält ein Lebenslauf-Profil, 3 KI-Bewerbungen und 5 Bewerbungs-Checks pro Monat; Downloads sind ohne Wasserzeichen nach 15 Sekunden Werbe-Wartezeit möglich. Pro kostet 9,95 € pro Monat und umfasst 50 KI-Bewerbungen, 15 Checks und 5 Mock-Interviews. Premium kostet 19,95 € pro Monat und umfasst 100 KI-Bewerbungen, 35 Checks, 45 Mock-Interviews und E-Mail-Tracking. Dauerhaft gültige Extra-Credits gibt es in Paketen mit 10, 30 oder 75 Bewerbungen — Details auf unserer <pricing>Preisseite</pricing>."
     },
     "editing": {
       "q": "Wie kann ich meine Bewerbung nach der Generierung noch anpassen?",

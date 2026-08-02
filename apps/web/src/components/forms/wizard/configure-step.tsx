@@ -145,7 +145,11 @@ export function ConfigureStep({
   const createApplication = useCreateApplicationWithGeneration();
   const { data: coverLetterTemplates, isLoading: clLoading } = useCoverLetterTemplates();
   const { data: resumeTemplates, isLoading: rtLoading } = useResumeTemplates();
+  const applicationUsage = useUsage('application');
   const dailyUsage = useUsage('applicationsToday');
+  const usageLimitReached = applicationUsage.isExhausted || dailyUsage.isExhausted;
+  const displayedUsage =
+    applicationUsage.isExhausted || dailyUsage.isUnlimited ? applicationUsage : dailyUsage;
 
   const [selectedResumeTemplateId, setSelectedResumeTemplateId] = useState<string | null>(null);
   const [generateCoverLetter, setGenerateCoverLetter] = useState(true);
@@ -753,20 +757,20 @@ export function ConfigureStep({
           {t('configureStep.actions.back')}
         </Button>
         <div className="flex items-center gap-4">
-          {!dailyUsage.isUnlimited && !dailyUsage.isLoading && (
+          {!displayedUsage.isUnlimited && !displayedUsage.isLoading && (
             <p
               className={cn(
                 'text-right font-mono text-[11px] tracking-[.04em]',
-                dailyUsage.isExhausted
+                usageLimitReached
                   ? 'font-medium text-destructive'
-                  : dailyUsage.isLow
+                  : displayedUsage.isLow
                     ? 'font-medium text-amber-600'
                     : 'text-muted-foreground',
               )}
             >
-              {dailyUsage.isExhausted
-                ? t('configureStep.usage.exhausted', { used: dailyUsage.used, limit: dailyUsage.limit })
-                : t('configureStep.usage.remaining', { remaining: dailyUsage.remaining, limit: dailyUsage.limit })}
+              {usageLimitReached
+                ? t('configureStep.usage.exhausted', { used: displayedUsage.used, limit: displayedUsage.limit })
+                : t('configureStep.usage.remaining', { remaining: displayedUsage.remaining, limit: displayedUsage.limit })}
             </p>
           )}
           <SubmitButton
@@ -774,7 +778,7 @@ export function ConfigureStep({
             isLoading={createApplication.isPending}
             loadingText={t('configureStep.actions.creating')}
             size="lg"
-            disabled={dailyUsage.isExhausted}
+            disabled={usageLimitReached}
             className="rounded-[3px] px-6 font-semibold"
           >
             {t('configureStep.actions.create')}

@@ -240,30 +240,6 @@ html { scroll-behavior: smooth; }
 .applo-home .not .x { flex:none; width:22px; height:22px; background:rgba(220,38,38,.22);
   display:grid; place-items:center; color:var(--red); font-weight:700; font-size:13px; font-family:var(--mono); }
 
-/* pricing — gapped cards; Pro = navy + hard offset shadow */
-.applo-home .price-grid { display:grid; gap:20px; background:none; border:0; overflow:visible; grid-template-columns:1fr; }
-@media(min-width:880px) { .applo-home .price-grid { grid-template-columns:repeat(3,1fr); align-items:stretch; } }
-.applo-home .price { background:#fff; border:1px solid var(--border); padding:30px; display:flex; flex-direction:column; transition:border-color .15s ease; }
-.applo-home .price:hover { background:#fff; border-color:var(--navy); }
-.applo-home .price.feature { background:var(--navy); border:1px solid var(--navy); position:relative; box-shadow:10px 10px 0 var(--soft); color:#fff; }
-.applo-home .price.feature:hover { border-color:var(--navy); }
-.applo-home .price .badge { position:absolute; top:-12px; left:30px; background:var(--blue); color:#fff;
-  font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; padding:5px 10px; }
-.applo-home .price .pname { font-family:var(--heading); font-weight:700; font-size:17px; }
-.applo-home .price .pamt { font-family:var(--mono); font-size:36px; font-weight:600; letter-spacing:-.02em; margin:16px 0 4px; }
-.applo-home .price .pamt small { font-size:13px; font-weight:500; color:var(--muted); }
-.applo-home .price.feature .pamt small { color:rgba(229,233,242,.6); }
-.applo-home .price .ptbd { font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted-2); }
-.applo-home .price.feature .ptbd { color:rgba(229,233,242,.5); }
-.applo-home .price ul { list-style:none; margin:24px 0 28px; padding:0; display:grid; gap:12px; border-top:1px solid var(--border); padding-top:22px; }
-.applo-home .price.feature ul { border-top-color:rgba(255,255,255,.2); }
-.applo-home .price li { display:flex; gap:10px; font-size:14px; color:var(--ink); line-height:1.5; }
-.applo-home .price.feature li { color:#fff; }
-.applo-home .price li .ck { flex:none; margin-top:2px; }
-.applo-home .price .btn { width:100%; justify-content:center; margin-top:auto; padding:14px 24px; font-size:14.5px; }
-.applo-home .price.feature .btn { background:#fff; color:var(--ink); border-color:#fff; }
-.applo-home .price.feature .btn:hover { background:var(--soft); }
-
 /* faq — 2-col: mono number + heading left, boxed <details> list right */
 .applo-home .faq-sec { background:var(--surface); }
 .applo-home .faq-grid { display:grid; grid-template-columns:1fr; gap:clamp(28px,4vw,64px); align-items:start; }
@@ -299,13 +275,6 @@ html { scroll-behavior: smooth; }
   .applo-home .cta-applo-wrap:not(.revealed) { transform:none; }
 }
 
-/* stats strip — hairline 1px grid, mono count-up numbers */
-.applo-home .stats { display:grid; grid-template-columns:1fr; gap:1px; background:var(--border); border:1px solid var(--border); overflow:hidden; margin-top:52px; }
-@media(min-width:680px) { .applo-home .stats { grid-template-columns:repeat(3,1fr); } }
-.applo-home .stat { background:#fff; text-align:center; padding:28px 20px; }
-.applo-home .stat b { display:block; font-family:var(--mono); font-size:clamp(32px,4vw,46px); font-weight:600; letter-spacing:-.02em; color:var(--ink); }
-.applo-home .stat span { font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
-
 /* footer — navy with 3px blue top rule */
 .applo-home .footer { background:var(--navy); border-top:3px solid var(--blue); color:rgba(229,233,242,.7); padding:52px 0 40px; font-size:14px; }
 .applo-home .footer .wrap { display:flex; flex-wrap:wrap; gap:28px 48px; align-items:flex-start; }
@@ -326,8 +295,8 @@ html { scroll-behavior: smooth; }
 }
 
 /* ============================================================
-   Mobile (≤600px): swipeable card carousels.
-   On phones the step / feature / value / pricing card grids turn
+  Mobile (≤600px): swipeable card carousels.
+  On phones the step / feature / value card grids turn
    into horizontal scroll-snap rows, so the user swipes left↔right
    to read through "infos & preise" instead of scrolling one tall
    vertical stack. Kept inside .wrap (no full-bleed) so the page
@@ -337,8 +306,7 @@ html { scroll-behavior: smooth; }
 @media(max-width:600px) {
   .applo-home .grid.steps,
   .applo-home .grid.feat-grid,
-  .applo-home .grid.val-grid,
-  .applo-home .grid.price-grid {
+  .applo-home .grid.val-grid {
     display:flex; grid-template-columns:none; flex-wrap:nowrap;
     background:none; border:0; overflow:visible;
     gap:14px; overflow-x:auto; overflow-y:hidden;
@@ -355,13 +323,11 @@ html { scroll-behavior: smooth; }
 
   .applo-home .grid.steps::-webkit-scrollbar,
   .applo-home .grid.feat-grid::-webkit-scrollbar,
-  .applo-home .grid.val-grid::-webkit-scrollbar,
-  .applo-home .grid.price-grid::-webkit-scrollbar { display:none; } /* Chrome/Safari */
+  .applo-home .grid.val-grid::-webkit-scrollbar { display:none; } /* Chrome/Safari */
 
   .applo-home .grid.steps > *,
   .applo-home .grid.feat-grid > *,
-  .applo-home .grid.val-grid > *,
-  .applo-home .grid.price-grid > * {
+  .applo-home .grid.val-grid > * {
     flex:0 0 84%; scroll-snap-align:start;
   }
 }

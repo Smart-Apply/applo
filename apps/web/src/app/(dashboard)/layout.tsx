@@ -17,8 +17,7 @@ import {
 } from '@/components/ui/tooltip';
 import { CurrentTierBadge } from '@/components/subscription';
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
-import { useFeatureGate } from '@/hooks/use-tier-gate';
-import type { TierFeatures } from '@/types';
+import { useFeatureGate, type BooleanTierFeature } from '@/hooks/use-tier-gate';
 import {
   FileText,
   User,
@@ -44,7 +43,7 @@ interface NavItem {
    * access see a non-clickable, greyed-out tile with an upgrade tooltip
    * (no broken navigation into a paywalled page).
    */
-  requiresFeature?: keyof TierFeatures;
+  requiresFeature?: BooleanTierFeature;
 }
 
 const navigation: NavItem[] = [

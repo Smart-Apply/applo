@@ -25,15 +25,15 @@ const tierConfig: Record<
     className: 'border-border bg-muted text-muted-foreground',
     icon: null,
   },
+  PRO: {
+    label: 'Pro',
+    className: 'border-primary-soft bg-primary-soft/40 text-brand dark:border-slate-600 dark:bg-slate-800/60',
+    icon: Sparkles,
+  },
   PREMIUM: {
     label: 'Premium',
-    className: 'border-primary-soft bg-primary-soft/40 text-brand dark:border-slate-600 dark:bg-slate-800/60',
-    icon: Crown,
-  },
-  PREMIUM_PLUS: {
-    label: 'Premium+',
     className: 'border-primary bg-primary text-primary-foreground',
-    icon: Sparkles,
+    icon: Crown,
   },
 };
 
@@ -55,7 +55,7 @@ const iconSizeConfig = {
  * @example
  * ```tsx
  * <TierBadge tier="PREMIUM" />
- * <TierBadge tier="PREMIUM_PLUS" size="lg" />
+ * <TierBadge tier="PRO" size="lg" />
  * <TierBadge tier="FREE" showIcon={false} />
  * ```
  */

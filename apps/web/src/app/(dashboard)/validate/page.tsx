@@ -149,11 +149,13 @@ export default function ValidatePage() {
               {t('page.limitReachedTitle', { limit: validations?.limit ?? 0 })}
             </p>
             <p className="mt-0.5">
-              Mit{' '}
-              <Link href="/pricing" className="font-medium underline">
-                Pro
-              </Link>{' '}
-              {t('page.limitReachedDescription')}
+              {t.rich('page.limitReachedDescription', {
+                pricing: (chunks) => (
+                  <Link href="/#preise" className="font-medium underline">
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </p>
           </div>
         </div>

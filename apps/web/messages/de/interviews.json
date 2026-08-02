@@ -1,7 +1,7 @@
 {
   "page": {
     "subtitle": "Üben Sie Vorstellungsgespräche mit KI-gestütztem Feedback",
-    "unlockPremium": "Premium freischalten",
+    "unlockInterviews": "Mit Pro freischalten",
     "startNew": "Neues Interview starten",
     "generalInterview": "Allgemeines Interview",
     "sessionQuestions": "{count, plural, one {# Frage} other {# Fragen}}",
@@ -24,9 +24,9 @@
     "freeInterviewDescription": "Für eine beliebige Position üben",
     "applicationBased": "Basierend auf Bewerbung",
     "applicationBasedDescription": "Fragen aus einer echten Stelle",
-    "lockedAria": "Nur in Premium verfügbar – jetzt upgraden",
-    "premiumOnly": "Nur in Premium verfügbar",
-    "premiumTooltip": "Nur in Premium verfügbar. Klicke, um zu upgraden."
+    "lockedAria": "Ab Pro verfügbar – jetzt upgraden",
+    "planOnly": "Ab Pro verfügbar",
+    "planTooltip": "Ab Pro verfügbar. Klicke, um die Tarife zu vergleichen."
   },
   "detail": {
     "notFound": "Interview-Session nicht gefunden.",

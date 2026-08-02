@@ -61,7 +61,7 @@
     "jobLabel": "STELLE",
     "jobValue": "Vertriebsleitung · Nordwind GmbH",
     "generationLabel": "KI-GENERIERUNG",
-    "note": "Grounding-Check aktiv: keine erfundenen Kennzahlen.",
+    "note": "Fakten-Check aktiv: keine erfundenen Kennzahlen.",
     "scoreLabel": "ATS-SCORE",
     "keywords": "KEYWORDS 21/24",
     "scoreWord": "STARK",
@@ -75,11 +75,11 @@
     "steps": {
       "one": {
         "title": "Profil & CV hochladen",
-        "desc": "Lade deinen Lebenslauf hoch. Der Resume-Parser liest ihn aus und füllt dein Profil automatisch. Du prüfst und korrigierst."
+        "desc": "Lade deinen Lebenslauf hoch. Applo liest ihn aus und füllt dein Profil automatisch. Du prüfst und korrigierst."
       },
       "two": {
         "title": "Stelle einfügen",
-        "desc": "Füge eine Stelle als Text, URL oder PDF ein. Die KI schreibt Anschreiben und Lebenslauf passend zur Ausschreibung, ATS-optimiert."
+        "desc": "Füge eine Stelle als Text, Link oder PDF ein. Die KI schreibt Anschreiben und Lebenslauf passend zur Ausschreibung, ATS-optimiert."
       },
       "three": {
         "title": "Als PDF exportieren",
@@ -94,11 +94,11 @@
     "items": {
       "generation": {
         "title": "KI-Generierung",
-        "desc": "Self-Review & ATS-Keyword-Loop verfeinern Anschreiben und CV automatisch, auf Basis deiner echten Daten."
+        "desc": "Die KI prüft ihre Texte selbst und verfeinert Anschreiben und Lebenslauf automatisch, auf Basis deiner echten Daten."
       },
       "ingestion": {
-        "title": "Smart Job-Ingestion",
-        "desc": "Stellen aus Indeed, LinkedIn und Glassdoor einlesen: als Text, URL oder PDF."
+        "title": "Stellenanzeigen einlesen",
+        "desc": "Stellen aus Indeed, LinkedIn und Glassdoor übernehmen: als Text, Link oder PDF."
       },
       "validation": {
         "title": "Bewerbungs-Check",
@@ -110,7 +110,7 @@
       },
       "interviews": {
         "title": "Mock-Interviews",
-        "desc": "Übe Interviews als Text oder per Voice und erhalte konkretes Feedback.<tag>Premium</tag>"
+        "desc": "Übe Interviews schriftlich oder im Gespräch und erhalte konkretes Feedback.<tag>Pro</tag>"
       },
       "tracking": {
         "title": "E-Mail-Tracking",
@@ -121,7 +121,7 @@
         "desc": "Erstelle und exportiere Bewerbungen wahlweise auf Deutsch oder Englisch."
       },
       "pipeline": {
-        "title": "Live-Status der Pipeline",
+        "title": "Live-Status deiner Bewerbungen",
         "desc": "Behalte alle Bewerbungen und ihren aktuellen Stand an einem Ort im Blick."
       }
     }
@@ -133,7 +133,7 @@
     "items": {
       "grounded": {
         "title": "Keine erfundenen Daten",
-        "desc": "Die KI nutzt nur, was dein Profil belegt. Ein Grounding-Check markiert erfundene Kennzahlen, bevor sie in deine Bewerbung geraten."
+        "desc": "Die KI nutzt nur, was dein Profil belegt. Eine automatische Prüfung markiert erfundene Kennzahlen, bevor sie in deine Bewerbung geraten."
       },
       "eu": {
         "title": "Deine Daten bleiben in der EU",
@@ -141,7 +141,7 @@
       },
       "audio": {
         "title": "Interviews: kein Audio gespeichert",
-        "desc": "Von Mock-Interviews bleiben nur Transcript und Feedback, keine Audioaufnahme."
+        "desc": "Von Mock-Interviews bleiben nur Mitschrift und Feedback, keine Audioaufnahme."
       },
       "email": {
         "title": "E-Mail-Tracking ohne Inhalte",
@@ -149,7 +149,7 @@
       },
       "security": {
         "title": "Sicherheit eingebaut",
-        "desc": "HttpOnly-JWT, 2FA, CSRF-Schutz, Rate-Limiting und Audit-Logs sind standardmäßig aktiv."
+        "desc": "Zwei-Faktor-Anmeldung, verschlüsselte Verbindungen und weitere Schutzmechanismen sind standardmäßig aktiv."
       },
       "candidate": {
         "title": "Für dich, nicht für Recruiter",
@@ -168,7 +168,7 @@
   "pricing": {
     "eyebrow": "04 · Preise",
     "title": "Fair und ohne Überraschungen",
-    "lead": "Starte kostenlos. Upgrade nur, wenn du mehr brauchst. Jederzeit kündbar.",
+    "lead": "Klare monatliche Limits, keine Wasserzeichen und Extra-Credits, die nicht verfallen. Jederzeit kündbar.",
     "plans": {
       "free": {
         "name": "Free",
@@ -177,10 +177,11 @@
         "period": "/ Monat",
         "tagline": "Zum Ausprobieren",
         "features": {
-          "0": "5 Bewerbungs-Checks / Monat",
-          "1": "KI-Generierung & ATS-Score",
-          "2": "50 ATS-PDF-Vorlagen",
-          "3": "DE/EN"
+          "profile": "1 Lebenslauf-Profil",
+          "applications": "3 KI-Bewerbungen / Monat",
+          "validations": "5 Bewerbungs-Checks / Monat",
+          "noWatermark": "Kein Wasserzeichen",
+          "adDownload": "Download mit 15 Sek. Werbe-Wartezeit"
         },
         "cta": "Kostenlos starten"
       },
@@ -188,36 +189,57 @@
         "badge": "Beliebt",
         "name": "Pro",
         "currency": "€",
-        "amount": "TBD",
+        "amount": "9,95",
         "period": "/ Monat",
-        "tagline": "Preis folgt",
+        "tagline": "Für aktive Bewerbungsphasen",
         "features": {
-          "0": "Unlimitierte Bewerbungs-Checks",
-          "1": "Smart Job-Ingestion",
-          "2": "Live-Status der Pipeline",
-          "3": "Alles aus Free"
+          "includedFree": "Alles aus Free",
+          "applications": "50 Bewerbungen / Monat",
+          "interviews": "5 Mock-Interviews / Monat",
+          "validations": "15 Bewerbungs-Checks / Monat",
+          "ingestion": "Stellenanzeigen einlesen (Text, Link oder Datei)",
+          "pipeline": "Live-Status deiner Bewerbungen",
+          "export": "Werbefrei & Export auf Deutsch oder Englisch"
         },
         "cta": "Pro wählen"
       },
       "premium": {
         "name": "Premium",
         "currency": "€",
-        "amount": "TBD",
+        "amount": "19,95",
         "period": "/ Monat",
-        "tagline": "Preis folgt",
+        "tagline": "Für die intensive Jobsuche",
         "features": {
-          "0": "Mock-Interviews (Text & Voice)",
-          "1": "E-Mail-Tracking (Outlook/M365)",
-          "2": "Alles aus Pro"
+          "includedPro": "Alles aus Pro",
+          "applications": "100 Bewerbungen / Monat",
+          "interviews": "45 Mock-Interviews (Gespräch & Text)",
+          "validations": "35 Bewerbungs-Checks / Monat",
+          "tracking": "E-Mail-Tracking (Outlook / Microsoft 365)"
         },
         "cta": "Premium wählen"
       }
     },
-    "stats": {
-      "templates": "ATS-Vorlagen",
-      "languagesSuffix": " Sprachen",
-      "languages": "Deutsch & Englisch",
-      "hosting": "EU-Hosting & DSGVO"
+    "addons": {
+      "eyebrow": "Extra-Kontingente",
+      "badge": "Verfällt nicht",
+      "title": "Mehr Bewerbungen, wenn du sie brauchst",
+      "lead": "Extra-Credits bleiben dauerhaft erhalten und werden erst verbraucht, wenn dein monatliches Tarifkontingent aufgebraucht ist.",
+      "oneTime": "einmalig",
+      "note": "Extra-Credits gelten für zusätzliche KI-Bewerbungen und werden nicht zum Monatswechsel zurückgesetzt.",
+      "packages": {
+        "small": {
+          "applications": "10 Bewerbungen extra",
+          "price": "2,99 €"
+        },
+        "medium": {
+          "applications": "30 Bewerbungen extra",
+          "price": "6,99 €"
+        },
+        "large": {
+          "applications": "75 Bewerbungen extra",
+          "price": "14,99 €"
+        }
+      }
     }
   },
   "faq": {
@@ -230,7 +252,7 @@
       },
       "fabrication": {
         "q": "Erfindet die KI Dinge über mich?",
-        "a": "Nein. Die KI nutzt nur, was dein Profil belegt. Ein Grounding-Check markiert erfundene Kennzahlen, damit nichts Unwahres in deine Bewerbung gerät."
+        "a": "Nein. Die KI nutzt nur, was dein Profil belegt. Eine automatische Prüfung markiert erfundene Kennzahlen, damit nichts Unwahres in deine Bewerbung gerät."
       },
       "recruiters": {
         "q": "Können Recruiter mein Profil sehen oder finden?",

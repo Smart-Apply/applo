@@ -237,9 +237,9 @@ export default function InterviewsPage() {
         </div>
         {isLocked ? (
           <Button asChild size="lg" className="gap-2">
-            <Link href="/#pricing">
+            <Link href="/#preise">
               <Lock className="h-4 w-4" />
-              {t('page.unlockPremium')}
+              {t('page.unlockInterviews')}
             </Link>
           </Button>
         ) : (
@@ -416,18 +416,18 @@ export default function InterviewsPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/#pricing"
+                  href="/#preise"
                   aria-label={t('page.lockedAria')}
                   className="absolute inset-0 z-10 flex cursor-not-allowed items-start justify-center rounded-[3px] pt-12"
                 >
                   <span className="rounded-[2px] border border-[#F3E3B3] bg-[#FDF6E7]/95 px-4 py-2 text-sm font-medium text-[#854D0E] shadow-sm backdrop-blur dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300/90">
                     <Lock className="mr-1 inline h-4 w-4" />
-                    {t('page.premiumOnly')}
+                    {t('page.planOnly')}
                   </span>
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-xs text-center">
-                {t('page.premiumTooltip')}
+                {t('page.planTooltip')}
               </TooltipContent>
             </Tooltip>
           )}

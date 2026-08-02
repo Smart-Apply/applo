@@ -28,6 +28,7 @@ import { CheckUsage } from '../common/decorators/tier.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { createDocumentUploadPipe } from '../common/pipes/file-validation.pipe';
 import { ValidationService } from './validation.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { CreateValidationDto } from './dto/create-validation.dto';
 import type { Validation, ValidationSummary } from '@applo/shared';
 
@@ -36,7 +37,10 @@ import type { Validation, ValidationSummary } from '@applo/shared';
 @UseGuards(JwtAuthGuard)
 @Controller('validation')
 export class ValidationController {
-  constructor(private readonly validationService: ValidationService) {}
+  constructor(
+    private readonly validationService: ValidationService,
+    private readonly subscriptionService: SubscriptionService,
+  ) {}
 
   @Post('extract-text')
   @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20 uploads/min
@@ -74,17 +78,23 @@ export class ValidationController {
     description:
       "Runs an AI quality + ATS review of the user's own résumé (+ optional cover letter and job " +
       'context) created outside Applo, and returns actionable feedback. Metered: Free tier gets ' +
-      '5 checks/month, Pro and above are unlimited. The result is persisted so it can be revisited.',
+      '5 checks/month, Pro gets 15, and Premium gets 35. The result is persisted so it can be revisited.',
   })
   @ApiResponse({ status: 201, description: 'Validation completed and stored' })
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Monthly validation limit reached (free tier)' })
+  @ApiResponse({ status: 403, description: 'Monthly validation limit reached' })
   async create(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateValidationDto,
   ): Promise<Validation> {
-    return this.validationService.create(userId, dto);
+    const reservation = await this.subscriptionService.reserveUsage(userId, 'validation');
+    try {
+      return await this.validationService.create(userId, dto);
+    } catch (error) {
+      await this.subscriptionService.releaseUsage(reservation);
+      throw error;
+    }
   }
 
   @Get()

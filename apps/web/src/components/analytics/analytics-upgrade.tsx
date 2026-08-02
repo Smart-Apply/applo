@@ -28,7 +28,7 @@ export function AnalyticsUpgrade() {
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-3 justify-center pb-12">
           <Button asChild>
-            <Link href="/#pricing">
+            <Link href="/#preise">
               <Lock className="mr-2 h-4 w-4" />
               {t('upgrade.unlock')}
             </Link>

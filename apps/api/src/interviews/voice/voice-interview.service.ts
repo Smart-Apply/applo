@@ -84,7 +84,7 @@ export class VoiceInterviewService {
         error: 'VOICE_LIMIT_EXCEEDED',
         remaining: 0,
         limit: this.config.voiceInterviewMinutesPerMonth,
-        upgradeUrl: '/pricing',
+        upgradeUrl: '/#preise',
       });
     }
 

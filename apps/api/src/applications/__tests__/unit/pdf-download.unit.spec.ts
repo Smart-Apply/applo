@@ -83,6 +83,30 @@ describe('ApplicationsService.getFileStream — PDF download (Unit)', () => {
     expect(Buffer.isBuffer(result)).toBe(true);
   });
 
+  it('should validate the application before waiting, then read storage', async () => {
+    const events: string[] = [];
+    prisma.application.findFirst = vi.fn().mockImplementation(async () => {
+      events.push('validate');
+      return {
+        id: applicationId,
+        userId,
+        status: 'READY',
+        coverLetterFileKey: 'cover-letter-key.pdf',
+        resumeFileKey: 'resume-key.pdf',
+      };
+    });
+    storageService.getFile.mockImplementation(async () => {
+      events.push('storage');
+      return fakePdf;
+    });
+
+    await service.getFileStream(userId, applicationId, 'resume', async () => {
+      events.push('wait');
+    });
+
+    expect(events).toEqual(['validate', 'wait', 'storage']);
+  });
+
   it('should throw NotFoundWithCode when application does not belong to the user', async () => {
     prisma.application.findFirst = vi.fn().mockResolvedValue(null);
 

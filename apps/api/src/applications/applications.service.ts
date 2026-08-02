@@ -1,6 +1,7 @@
 import {
   Injectable,
   BadRequestException,
+  ForbiddenException,
   Logger,
   MessageEvent,
 } from '@nestjs/common';
@@ -45,6 +46,8 @@ import { resolveCoverLetterBudget } from './constants';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 import { convertCoverLetterToHtml } from './cover-letter-html.util';
 import { mapApplicationToResponseDto } from './application-response.util';
+import { SubscriptionService } from '../subscription/subscription.service';
+import { SubscriptionTier } from '../generated/prisma/client';
 
 @Injectable()
 export class ApplicationsService {
@@ -57,6 +60,7 @@ export class ApplicationsService {
     private readonly llmService: LLMService,
     private readonly keywordsService: KeywordsService,
     private readonly generationService: GenerationService,
+    private readonly subscriptionService: SubscriptionService,
   ) {}
 
   private sanitizeCoverLetter(content: string): string {
@@ -346,6 +350,10 @@ export class ApplicationsService {
     const application = await this.ensureApplicationOwnership(userId, applicationId, true);
     this.ensureNotGenerating(application);
 
+    if (dto.regenerate && !(await this.subscriptionService.hasTier(userId, SubscriptionTier.PRO))) {
+      throw new ForbiddenException('KI-Anschreiben-Generierung ist ab Pro verfügbar.');
+    }
+
     // Guardrail: enforce char/token limits on the AI instructions (issue #520)
     assertPromptWithinLimits(dto.instructions, 'editModeAssistant');
 
@@ -383,7 +391,7 @@ export class ApplicationsService {
     // job-facts personalization, keyword coverage) instead of the retired
     // cover-letter-ats.md path. The stored resume is already tailored, so we map
     // it straight into the TailoredProfileDto shape (no extra skill-selector call).
-    else if (!content || dto.regenerate) {
+    else if (dto.regenerate) {
       this.logger.log('Regenerating cover letter via v1 pipeline prompt');
       const language =
         jobPosting.language || this.generationService.detectLanguage(jobPosting.fullText) || 'en';
@@ -412,6 +420,10 @@ export class ApplicationsService {
         jobPosting,
       );
       content = convertCoverLetterToHtml(governed) ?? governed ?? markdown;
+    }
+
+    if (content === undefined) {
+      throw new BadRequestException('content ist erforderlich, wenn regenerate nicht gesetzt ist.');
     }
 
     const sanitizedContent = this.sanitizeCoverLetter(content);
@@ -889,6 +901,7 @@ export class ApplicationsService {
     userId: string,
     applicationId: string,
     fileType: 'cover-letter' | 'resume',
+    beforeRead?: () => Promise<void>,
   ): Promise<Buffer> {
     const application = await this.prisma.application.findFirst({
       where: {
@@ -913,6 +926,8 @@ export class ApplicationsService {
     if (!fileKey) {
       throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
+
+    await beforeRead?.();
 
     // Get file from storage
     return this.storageService.getFile(fileKey);
