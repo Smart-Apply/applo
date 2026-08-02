@@ -1,0 +1,370 @@
+{
+  "page": {
+    "subtitle": "Practica entrevistas de trabajo con comentarios impulsados por IA",
+    "unlockInterviews": "Desbloquear con Pro",
+    "startNew": "Iniciar nueva entrevista",
+    "generalInterview": "Entrevista general",
+    "sessionQuestions": "{count, plural, one {# pregunta} other {# preguntas}}",
+    "filters": {
+      "all": "Todas",
+      "inProgress": "En curso",
+      "completed": "Completadas",
+      "abandoned": "Abandonadas"
+    },
+    "status": {
+      "inProgress": "En curso",
+      "completed": "Completada",
+      "abandoned": "Abandonada"
+    },
+    "recentSessions": "Sesiones recientes",
+    "noSessionsForStatus": "No hay sesiones con este estado.",
+    "nextRoundTitle": "¿Listo para la siguiente ronda?",
+    "nextRoundDescription": "Sigue practicando con enfoque — cada ronda te hace mejorar.",
+    "freeInterview": "Entrevista libre",
+    "freeInterviewDescription": "Practica para cualquier puesto",
+    "applicationBased": "Basada en una candidatura",
+    "applicationBasedDescription": "Preguntas de una oferta de empleo real",
+    "lockedAria": "Disponible desde Pro — actualiza ahora",
+    "planOnly": "Disponible desde Pro",
+    "planTooltip": "Disponible desde Pro. Haz clic para comparar planes."
+  },
+  "detail": {
+    "notFound": "Sesión de entrevista no encontrada.",
+    "backToOverview": "Volver al resumen",
+    "questionsProgress": "{answered}/{total} preguntas",
+    "scorePoints": "{score}/100 puntos",
+    "mode": {
+      "text": "Chat de texto",
+      "voice": "Entrevista por voz"
+    },
+    "modeSwitchHint": "Puedes cambiar de modo en cualquier momento",
+    "endedTitle": "Entrevista finalizada",
+    "endedDescriptionAbandoned": "Esta sesión de entrevista fue abandonada.",
+    "endedDescriptionEnded": "Esta sesión de entrevista ha finalizado.",
+    "endedAbandonedHint": "Puedes iniciar una nueva entrevista para practicar.",
+    "endedCompletedHint": "Revisa tus comentarios y resultados.",
+    "difficulty": {
+      "easy": "Principiante",
+      "medium": "Estándar",
+      "hard": "Experto"
+    },
+    "type": {
+      "behavioral": "Conductual",
+      "behavioralLong": "Conductual",
+      "technical": "Técnica",
+      "caseStudy": "Caso práctico",
+      "mixed": "Mixta"
+    }
+  },
+  "intro": {
+    "preview": {
+      "modesTitle": "Dos modos",
+      "freeInterview": "Entrevista libre",
+      "freeInterviewDescription": "Practica para cualquier puesto.",
+      "applicationBased": "Basada en una candidatura",
+      "applicationBasedDescription": "Preguntas para un puesto real.",
+      "questionExample": "Describe un proyecto en el que trabajaras estrechamente con clientes o partes interesadas. ¿Cómo lo abordaste?",
+      "answerExample": "En mi último proyecto, yo…",
+      "answerPlaceholder": "Escribe tu respuesta…",
+      "feedbackTitle": "Comentarios sobre tu respuesta",
+      "strengthLabel": "Punto fuerte",
+      "strengthText": "Estructura STAR clara y un ejemplo concreto con un resultado medible.",
+      "tipLabel": "Consejo",
+      "tipText": "Al final, menciona qué aprendiste — eso redondea la respuesta."
+    },
+    "steps": {
+      "mode": {
+        "heading": "Elige tu modo",
+        "lead": "Practica libremente para cualquier puesto — o genera preguntas directamente a partir de una de tus candidaturas.",
+        "bullets": {
+          "free": {
+            "title": "Entrevista libre",
+            "description": "control total sobre el puesto, la empresa y el sector."
+          },
+          "application": {
+            "title": "Basada en una candidatura",
+            "description": "preguntas de la oferta de empleo real."
+          }
+        }
+      },
+      "questions": {
+        "heading": "Responde a las preguntas",
+        "lead": "Applo hace preguntas realistas. Respondes por chat — a tu ritmo, con pausas o repeticiones cuando lo necesites.",
+        "bullets": {
+          "oneByOne": {
+            "title": "Una pregunta cada vez",
+            "description": "sin estrés ni presión de tiempo."
+          },
+          "star": {
+            "title": "Método STAR",
+            "description": "Situación · Tarea · Acción · Resultado."
+          }
+        }
+      },
+      "feedback": {
+        "heading": "Recibe comentarios de la IA",
+        "lead": "Después de cada respuesta recibes una puntuación además de puntos fuertes concretos y consejos de mejora — así cada ronda te hace mejorar.",
+        "bullets": {
+          "score": {
+            "title": "Puntuación por respuesta",
+            "description": "descubre al instante en qué punto estás."
+          },
+          "tips": {
+            "title": "Consejos concretos",
+            "description": "prácticos, no genéricos."
+          }
+        }
+      }
+    },
+    "stepCounter": "Paso {current} de {total}",
+    "skip": "Omitir",
+    "back": "Atrás",
+    "start": "Vamos allá",
+    "next": "Siguiente",
+    "footnote": "Consejo: estructura cada respuesta con el método STAR — mejora notablemente tu puntuación."
+  },
+  "modeSelect": {
+    "title": "¿Cómo te gustaría practicar?",
+    "descriptionWithVoice": "Elige tu modo de entrevista. Ambas variantes usan las mismas preguntas y terminan con una evaluación completa — puedes cambiar en cualquier momento.",
+    "descriptionTextOnly": "Elige tu modo de entrevista. Ambas variantes usan las mismas preguntas y terminan con una evaluación completa.",
+    "text": {
+      "title": "Chat de texto",
+      "description": "Escribe tus respuestas con calma y a tu ritmo — ideal para redactar y revisar.",
+      "features": {
+        "noTimePressure": "Responde sin presión de tiempo",
+        "feedback": "Comentarios después de cada pregunta",
+        "noMic": "No requiere micrófono"
+      },
+      "cta": "Iniciar chat de texto"
+    },
+    "voice": {
+      "title": "Entrevista por voz",
+      "badge": "Realista",
+      "description": "Mantén una conversación real con tu entrevistador de IA. Habla con naturalidad, igual que en una entrevista de verdad.",
+      "features": {
+        "conversation": "Diálogo natural",
+        "confidence": "Practica la pronunciación y la seguridad",
+        "micRequired": "Requiere micrófono"
+      },
+      "cta": "Elegir entrevista por voz"
+    }
+  },
+  "chat": {
+    "questionType": {
+      "behavioral": "Conductual",
+      "technical": "Técnica",
+      "situational": "Situacional",
+      "open": "Abierta",
+      "followUp": "De seguimiento",
+      "question": "Pregunta"
+    },
+    "welcome": "¡Bienvenido a la entrevista! Vas a responder {count, plural, one {# pregunta} other {# preguntas}}. Tómate tu tiempo para responder con cuidado.",
+    "feedbackGenerating": "Generando comentarios...",
+    "allQuestionsAnsweredSystem": "¡Has respondido todas las preguntas! Haz clic en \"Completar entrevista\" para ver tu evaluación general.",
+    "errors": {
+      "sendAnswer": "Error al enviar tu respuesta",
+      "complete": "Error al completar la entrevista",
+      "abandon": "Error al abandonar la entrevista"
+    },
+    "toasts": {
+      "completed": "¡Entrevista completada!",
+      "abandoned": "Entrevista abandonada"
+    },
+    "title": "Simulación de entrevista",
+    "cancel": "Cancelar",
+    "progressQuestion": "Pregunta {current} de {total}",
+    "progressComplete": "{percent}% completado",
+    "scoreLabel": "Puntuación:",
+    "allQuestionsAnsweredComposer": "Has respondido todas las preguntas. Completa la entrevista para recibir tu evaluación general.",
+    "completeInterview": "Completar entrevista",
+    "answerPlaceholder": "Escribe tu respuesta…  (Intro para enviar · Mayús+Intro para un salto de línea)",
+    "send": "Enviar",
+    "abandonTitle": "¿Abandonar la entrevista?",
+    "abandonDescription": "¿Seguro que quieres abandonar la entrevista? Perderás tu progreso y no recibirás una evaluación general.",
+    "continue": "Seguir"
+  },
+  "voice": {
+    "minutesAvailable": "{count, plural, one {# min. disponible} other {# min. disponibles}}",
+    "remainingQuota": "Cuota de voz restante: {count, plural, one {# min.} other {# min.}}",
+    "toasts": {
+      "noAnswerRecorded": "No se registró ninguna respuesta.",
+      "timeUp": "Se acabó el tiempo — Applo se despide."
+    },
+    "cues": {
+      "de": {
+        "wrapUp": "Zeithinweis: Es verbleibt noch etwa eine Minute. Schließe das aktuelle Thema ab und stelle höchstens EINE letzte Frage.",
+        "timeUp": "Die Zeit ist um. Bedanke dich jetzt kurz und warm, verabschiede dich und beende das Gespräch – stelle keine weiteren Fragen."
+      },
+      "en": {
+        "wrapUp": "Time note: About one minute remains. Finish the current topic and ask at most ONE final question.",
+        "timeUp": "Time is up. Give brief, warm thanks, say goodbye, and end the interview now – ask no further questions."
+      }
+    },
+    "preCall": {
+      "title": "¿Listo para tu entrevista por voz?",
+      "description": "Vas a mantener una conversación realista con Applo, tu entrevistador de IA. Habla con libertad y naturalidad — al final recibirás una evaluación completa."
+    },
+    "errors": {
+      "mic": "No hay acceso al micrófono. Permite el acceso al micrófono en tu navegador y vuelve a intentarlo — o cambia al chat de texto.",
+      "unsupported": "Tu navegador no admite entrevistas por voz. Usa un navegador actual o cambia al chat de texto.",
+      "connect": "No se pudo establecer la conexión de voz. Vuelve a intentarlo o cambia al chat de texto."
+    },
+    "checklist": {
+      "micReady": {
+        "title": "Micrófono listo",
+        "description": "El acceso se solicita al iniciar"
+      },
+      "quietEnvironment": {
+        "title": "Entorno tranquilo",
+        "description": "Se recomiendan auriculares para evitar el eco"
+      }
+    },
+    "durationLabel": "Duración de la llamada",
+    "minutesShort": "{count, plural, one {# min.} other {# min.}}",
+    "durationDisabledHint": "Las opciones que superan tu cuota de tiempo restante están desactivadas.",
+    "connecting": "Conectando…",
+    "startCall": "Iniciar llamada",
+    "minutesRemaining": "{count, plural, one {# min. restante} other {# min. restantes}}",
+    "switchToText": "¿Prefieres escribir? Ve al chat de texto",
+    "liveTitle": "Entrevista por voz",
+    "liveTitleWithJob": "Entrevista por voz · {jobTitle}",
+    "connected": "Conectado",
+    "evaluationCreating": "Creando evaluación…",
+    "apploSpeaking": "Applo está hablando…",
+    "youSpeaking": "Estás hablando…",
+    "speakWhenReady": "Habla cuando estés listo.",
+    "oneMinuteRemaining": "Queda aproximadamente 1 minuto",
+    "yourMicrophone": "Tu micrófono",
+    "voiceDetected": "Voz detectada",
+    "speakPrompt": "Habla para que el entrevistador pueda responder…",
+    "youLabel": "Tú",
+    "muted": "Silenciado",
+    "microphoneOn": "Micrófono activado",
+    "endCall": "Finalizar llamada"
+  },
+  "feedback": {
+    "noEvaluation": "No hay ninguna evaluación disponible. Completa la entrevista primero.",
+    "categories": {
+      "communication": "Comunicación",
+      "presentation": "Presentación",
+      "technical": "Conocimientos técnicos",
+      "problemSolving": "Resolución de problemas",
+      "cultureFit": "Encaje cultural"
+    },
+    "overallRating": "Valoración general",
+    "strengths": "Puntos fuertes",
+    "improvements": "Margen de mejora",
+    "questionAnalysis": "Análisis pregunta por pregunta",
+    "questionLabel": "Pregunta",
+    "answerLabel": "Tu respuesta"
+  },
+  "stats": {
+    "completedSessions": "Sesiones completadas",
+    "averageScore": "Puntuación media",
+    "averageScoreWithQuestions": "Puntuación media · {count, plural, one {# pregunta} other {# preguntas}}",
+    "bestScore": "Mejor puntuación",
+    "improvement": "Mejora",
+    "minimumSessions": "Mín. 4 sesiones",
+    "totalSessions": "de {count, plural, one {# sesión} other {# sesiones}} en total",
+    "questionsAnswered": "{count, plural, one {# pregunta respondida} other {# preguntas respondidas}}",
+    "personalRecord": "Tu récord personal",
+    "pointsSinceStart": "Puntos desde el inicio",
+    "minimumSessionsNeeded": "Se requieren al menos 4 sesiones"
+  },
+  "progress": {
+    "noStats": "Completa al menos una entrevista para ver estadísticas.",
+    "averageCategoryScores": "Puntuaciones medias por categoría",
+    "interviewTypes": "Tipos de entrevista",
+    "mostPracticedType": "Tipo más practicado:"
+  },
+  "startDialog": {
+    "title": "Iniciar nueva entrevista",
+    "description": "Configura tu práctica de entrevista. La IA adapta las preguntas a tus ajustes.",
+    "tabs": {
+      "custom": "Entrevista libre",
+      "application": "Basada en una candidatura"
+    },
+    "application": {
+      "selectLabel": "Seleccionar candidatura",
+      "selectPlaceholder": "Elige una candidatura",
+      "unnamed": "Candidatura sin título",
+      "helper": "Las preguntas se generan a partir de la descripción del puesto.",
+      "empty": "Aún no tienes ninguna candidatura completada. Crea primero una candidatura para generar preguntas de entrevista adecuadas a partir de ella.",
+      "createApplication": "Crear candidatura"
+    },
+    "custom": {
+      "position": "Puesto",
+      "positionPlaceholder": "p. ej. jefe de proyecto, enfermero, responsable de ventas",
+      "company": "Empresa",
+      "companyPlaceholder": "p. ej. Empresa Ejemplo S. L.",
+      "industry": "Sector",
+      "industryPlaceholder": "Opcional: elige un sector",
+      "jobDescription": "Descripción del puesto (opcional)",
+      "jobDescriptionPlaceholder": "Pega la descripción del puesto para recibir preguntas más específicas..."
+    },
+    "typeLabel": "Tipo de entrevista",
+    "difficultyLabel": "Dificultad",
+    "questionCountLabel": "Número de preguntas",
+    "questionCount": "{count, plural, one {# pregunta} other {# preguntas}}",
+    "languageLabel": "Idioma",
+    "languageGerman": "Alemán",
+    "cancel": "Cancelar",
+    "start": "Iniciar entrevista",
+    "types": {
+      "mixed": {
+        "label": "Mixta",
+        "description": "Combinación de todos los tipos de preguntas"
+      },
+      "behavioral": {
+        "label": "Conductual",
+        "description": "Método STAR, preguntas situacionales"
+      },
+      "technical": {
+        "label": "Técnica",
+        "description": "Preguntas técnicas y específicas del área"
+      },
+      "caseStudy": {
+        "label": "Caso práctico",
+        "description": "Resolución de problemas y análisis"
+      }
+    },
+    "difficulty": {
+      "easy": {
+        "label": "Principiante",
+        "description": "Preguntas básicas"
+      },
+      "medium": {
+        "label": "Estándar",
+        "description": "Dificultad media"
+      },
+      "hard": {
+        "label": "Experto",
+        "description": "Preguntas complejas y exigentes"
+      }
+    },
+    "industries": {
+      "it": "IT / Software",
+      "finance": "Finanzas / Banca",
+      "healthcare": "Sanidad",
+      "sales": "Ventas",
+      "marketing": "Marketing",
+      "consulting": "Consultoría",
+      "manufacturing": "Producción / Manufactura",
+      "logistics": "Logística",
+      "hr": "Recursos Humanos / RR. HH.",
+      "other": "Otro"
+    }
+  },
+  "hooks": {
+    "startSuccess": "Sesión de entrevista iniciada",
+    "startError": "Error al iniciar la sesión de entrevista",
+    "submitAnswerError": "Error al enviar la respuesta",
+    "nextQuestionError": "Error al cargar la siguiente pregunta",
+    "completeSuccess": "¡Entrevista completada! Generando comentarios...",
+    "completeError": "Error al completar la entrevista",
+    "abandonSuccess": "Sesión de entrevista abandonada",
+    "abandonError": "Error al abandonar la sesión",
+    "voiceStartError": "No se ha podido iniciar la entrevista por voz",
+    "voiceCompleteError": "Error al completar la entrevista por voz"
+  }
+}

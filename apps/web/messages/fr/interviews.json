@@ -1,0 +1,370 @@
+{
+  "page": {
+    "subtitle": "Entraînez-vous aux entretiens d'embauche grâce à des retours propulsés par l'IA",
+    "unlockInterviews": "Débloquer avec Pro",
+    "startNew": "Démarrer un nouvel entretien",
+    "generalInterview": "Entretien général",
+    "sessionQuestions": "{count, plural, one {# question} other {# questions}}",
+    "filters": {
+      "all": "Tous",
+      "inProgress": "En cours",
+      "completed": "Terminé",
+      "abandoned": "Abandonné"
+    },
+    "status": {
+      "inProgress": "En cours",
+      "completed": "Terminé",
+      "abandoned": "Abandonné"
+    },
+    "recentSessions": "Sessions récentes",
+    "noSessionsForStatus": "Aucune session avec ce statut.",
+    "nextRoundTitle": "Prêt pour la prochaine série ?",
+    "nextRoundDescription": "Continuez à vous entraîner avec concentration — chaque série vous fait progresser.",
+    "freeInterview": "Entretien libre",
+    "freeInterviewDescription": "Entraînez-vous pour n'importe quel poste",
+    "applicationBased": "Basé sur une candidature",
+    "applicationBasedDescription": "Questions issues d'une offre d'emploi réelle",
+    "lockedAria": "Disponible à partir de Pro – passez à la version supérieure",
+    "planOnly": "Disponible à partir de Pro",
+    "planTooltip": "Disponible à partir de Pro. Cliquez pour comparer les forfaits."
+  },
+  "detail": {
+    "notFound": "Session d'entretien introuvable.",
+    "backToOverview": "Retour à l'aperçu",
+    "questionsProgress": "{answered}/{total} questions",
+    "scorePoints": "{score}/100 points",
+    "mode": {
+      "text": "Chat texte",
+      "voice": "Entretien vocal"
+    },
+    "modeSwitchHint": "Vous pouvez changer de mode à tout moment",
+    "endedTitle": "Entretien terminé",
+    "endedDescriptionAbandoned": "Cette session d'entretien a été abandonnée.",
+    "endedDescriptionEnded": "Cette session d'entretien est terminée.",
+    "endedAbandonedHint": "Vous pouvez démarrer un nouvel entretien pour vous entraîner.",
+    "endedCompletedHint": "Consultez votre retour et vos résultats.",
+    "difficulty": {
+      "easy": "Débutant",
+      "medium": "Standard",
+      "hard": "Expert"
+    },
+    "type": {
+      "behavioral": "Comportemental",
+      "behavioralLong": "Comportemental",
+      "technical": "Technique",
+      "caseStudy": "Étude de cas",
+      "mixed": "Mixte"
+    }
+  },
+  "intro": {
+    "preview": {
+      "modesTitle": "Deux modes",
+      "freeInterview": "Entretien libre",
+      "freeInterviewDescription": "Entraînez-vous pour n'importe quel poste.",
+      "applicationBased": "Basé sur une candidature",
+      "applicationBasedDescription": "Questions pour un poste réel.",
+      "questionExample": "Décrivez un projet où vous avez travaillé en étroite collaboration avec des clients ou des parties prenantes. Comment avez-vous procédé ?",
+      "answerExample": "Dans mon dernier projet, j'ai …",
+      "answerPlaceholder": "Saisissez votre réponse …",
+      "feedbackTitle": "Retour sur votre réponse",
+      "strengthLabel": "Point fort",
+      "strengthText": "Structure STAR claire et exemple concret avec un résultat mesurable.",
+      "tipLabel": "Astuce",
+      "tipText": "À la fin, mentionnez ce que vous en avez retenu — cela complète bien la réponse."
+    },
+    "steps": {
+      "mode": {
+        "heading": "Choisissez votre mode",
+        "lead": "Entraînez-vous librement pour n'importe quel poste — ou générez des questions directement à partir de l'une de vos candidatures.",
+        "bullets": {
+          "free": {
+            "title": "Entretien libre",
+            "description": "contrôle total sur le poste, l'entreprise et le secteur."
+          },
+          "application": {
+            "title": "Basé sur une candidature",
+            "description": "questions issues de l'offre d'emploi réelle."
+          }
+        }
+      },
+      "questions": {
+        "heading": "Répondez aux questions",
+        "lead": "Applo pose des questions réalistes. Vous répondez dans le chat — à votre rythme, avec la possibilité de faire une pause ou de répéter quand vous en avez besoin.",
+        "bullets": {
+          "oneByOne": {
+            "title": "Une question à la fois",
+            "description": "sans stress, sans pression du temps."
+          },
+          "star": {
+            "title": "Méthode STAR",
+            "description": "Situation · Tâche · Action · Résultat."
+          }
+        }
+      },
+      "feedback": {
+        "heading": "Recevez un retour de l'IA",
+        "lead": "Après chaque réponse, vous recevez un score ainsi que des points forts concrets et des conseils d'amélioration — pour progresser à chaque série.",
+        "bullets": {
+          "score": {
+            "title": "Score par réponse",
+            "description": "voyez immédiatement où vous en êtes."
+          },
+          "tips": {
+            "title": "Conseils concrets",
+            "description": "applicables, pas génériques."
+          }
+        }
+      }
+    },
+    "stepCounter": "Étape {current} sur {total}",
+    "skip": "Ignorer",
+    "back": "Retour",
+    "start": "C'est parti",
+    "next": "Suivant",
+    "footnote": "Astuce : structurez chaque réponse avec la méthode STAR — cela améliore nettement votre score."
+  },
+  "modeSelect": {
+    "title": "Comment souhaitez-vous vous entraîner ?",
+    "descriptionWithVoice": "Choisissez votre mode d'entretien. Les deux variantes utilisent les mêmes questions et se terminent par une évaluation complète — vous pouvez changer à tout moment.",
+    "descriptionTextOnly": "Choisissez votre mode d'entretien. Les deux variantes utilisent les mêmes questions et se terminent par une évaluation complète.",
+    "text": {
+      "title": "Chat texte",
+      "description": "Rédigez vos réponses calmement et à votre rythme — idéal pour soigner la formulation et vous relire.",
+      "features": {
+        "noTimePressure": "Répondez sans pression du temps",
+        "feedback": "Retour après chaque question",
+        "noMic": "Aucun microphone requis"
+      },
+      "cta": "Démarrer le chat texte"
+    },
+    "voice": {
+      "title": "Entretien vocal",
+      "badge": "Réaliste",
+      "description": "Ayez une véritable conversation avec votre recruteur IA. Exprimez-vous librement, comme lors d'un vrai entretien.",
+      "features": {
+        "conversation": "Échange naturel",
+        "confidence": "Entraînez votre prononciation et votre assurance",
+        "micRequired": "Microphone requis"
+      },
+      "cta": "Choisir l'entretien vocal"
+    }
+  },
+  "chat": {
+    "questionType": {
+      "behavioral": "Comportemental",
+      "technical": "Technique",
+      "situational": "Situationnel",
+      "open": "Ouverte",
+      "followUp": "Complémentaire",
+      "question": "Question"
+    },
+    "welcome": "Bienvenue dans l'entretien ! Vous allez répondre à {count, plural, one {# question} other {# questions}}. Prenez le temps de bien réfléchir à vos réponses.",
+    "feedbackGenerating": "Le retour est en cours de génération...",
+    "allQuestionsAnsweredSystem": "Toutes les questions ont reçu une réponse ! Cliquez sur « Terminer l'entretien » pour voir votre évaluation globale.",
+    "errors": {
+      "sendAnswer": "Erreur lors de l'envoi de votre réponse",
+      "complete": "Erreur lors de la finalisation de l'entretien",
+      "abandon": "Erreur lors de l'abandon de l'entretien"
+    },
+    "toasts": {
+      "completed": "Entretien terminé !",
+      "abandoned": "Entretien abandonné"
+    },
+    "title": "Simulation d'entretien",
+    "cancel": "Annuler",
+    "progressQuestion": "Question {current} sur {total}",
+    "progressComplete": "{percent} % terminé",
+    "scoreLabel": "Score :",
+    "allQuestionsAnsweredComposer": "Vous avez répondu à toutes les questions. Terminez l'entretien pour recevoir votre évaluation globale.",
+    "completeInterview": "Terminer l'entretien",
+    "answerPlaceholder": "Saisissez votre réponse…  (Entrée pour envoyer · Maj+Entrée pour un retour à la ligne)",
+    "send": "Envoyer",
+    "abandonTitle": "Abandonner l'entretien ?",
+    "abandonDescription": "Voulez-vous vraiment abandonner l'entretien ? Votre progression sera perdue et vous ne recevrez pas d'évaluation globale.",
+    "continue": "Continuer"
+  },
+  "voice": {
+    "minutesAvailable": "{count, plural, one {# min. disponible} other {# min. disponibles}}",
+    "remainingQuota": "Quota vocal restant : {count, plural, one {# min.} other {# min.}}",
+    "toasts": {
+      "noAnswerRecorded": "Aucune réponse n'a été enregistrée.",
+      "timeUp": "Le temps est écoulé – Applo prend congé."
+    },
+    "cues": {
+      "de": {
+        "wrapUp": "Zeithinweis: Es verbleibt noch etwa eine Minute. Schließe das aktuelle Thema ab und stelle höchstens EINE letzte Frage.",
+        "timeUp": "Die Zeit ist um. Bedanke dich jetzt kurz und warm, verabschiede dich und beende das Gespräch – stelle keine weiteren Fragen."
+      },
+      "en": {
+        "wrapUp": "Time note: About one minute remains. Finish the current topic and ask at most ONE final question.",
+        "timeUp": "Time is up. Give brief, warm thanks, say goodbye, and end the interview now – ask no further questions."
+      }
+    },
+    "preCall": {
+      "title": "Prêt pour votre entretien vocal ?",
+      "description": "Vous allez avoir une conversation réaliste avec Applo, votre recruteur IA. Exprimez-vous librement et naturellement — à la fin, vous recevez une évaluation complète."
+    },
+    "errors": {
+      "mic": "Aucun accès au microphone. Veuillez autoriser l'accès au microphone dans votre navigateur et réessayer – ou passez au chat texte.",
+      "unsupported": "Votre navigateur ne prend pas en charge les entretiens vocaux. Veuillez utiliser un navigateur récent ou passer au chat texte.",
+      "connect": "La connexion vocale n'a pas pu être établie. Veuillez réessayer ou passer au chat texte."
+    },
+    "checklist": {
+      "micReady": {
+        "title": "Microphone prêt",
+        "description": "L'accès est demandé au démarrage"
+      },
+      "quietEnvironment": {
+        "title": "Environnement calme",
+        "description": "Casque recommandé pour éviter l'écho"
+      }
+    },
+    "durationLabel": "Durée de l'appel",
+    "minutesShort": "{count, plural, one {# min.} other {# min.}}",
+    "durationDisabledHint": "Les options dépassant votre quota de temps restant sont désactivées.",
+    "connecting": "Connexion en cours …",
+    "startCall": "Démarrer l'appel",
+    "minutesRemaining": "{count, plural, one {# min. restante} other {# min. restantes}}",
+    "switchToText": "Vous préférez écrire ? Passez au chat texte",
+    "liveTitle": "Entretien vocal",
+    "liveTitleWithJob": "Entretien vocal · {jobTitle}",
+    "connected": "Connecté",
+    "evaluationCreating": "Création de l'évaluation …",
+    "apploSpeaking": "Applo parle …",
+    "youSpeaking": "Vous parlez …",
+    "speakWhenReady": "Parlez quand vous êtes prêt.",
+    "oneMinuteRemaining": "Environ 1 minute restante",
+    "yourMicrophone": "Votre microphone",
+    "voiceDetected": "Voix détectée",
+    "speakPrompt": "Parlez pour que le recruteur puisse répondre …",
+    "youLabel": "Vous",
+    "muted": "Muet",
+    "microphoneOn": "Microphone activé",
+    "endCall": "Terminer l'appel"
+  },
+  "feedback": {
+    "noEvaluation": "Aucune évaluation disponible. Terminez d'abord l'entretien.",
+    "categories": {
+      "communication": "Communication",
+      "presentation": "Présentation",
+      "technical": "Expertise technique",
+      "problemSolving": "Résolution de problèmes",
+      "cultureFit": "Adéquation culturelle"
+    },
+    "overallRating": "Évaluation globale",
+    "strengths": "Points forts",
+    "improvements": "Axes d'amélioration",
+    "questionAnalysis": "Analyse question par question",
+    "questionLabel": "Question",
+    "answerLabel": "Votre réponse"
+  },
+  "stats": {
+    "completedSessions": "Sessions terminées",
+    "averageScore": "Score moyen",
+    "averageScoreWithQuestions": "Score moyen · {count, plural, one {# question} other {# questions}}",
+    "bestScore": "Meilleur score",
+    "improvement": "Progression",
+    "minimumSessions": "Min. 4 sessions",
+    "totalSessions": "sur {count, plural, one {# session} other {# sessions}} au total",
+    "questionsAnswered": "{count, plural, one {# question répondue} other {# questions répondues}}",
+    "personalRecord": "Votre record personnel",
+    "pointsSinceStart": "Points depuis le début",
+    "minimumSessionsNeeded": "Min. 4 sessions requises"
+  },
+  "progress": {
+    "noStats": "Terminez au moins un entretien pour voir les statistiques.",
+    "averageCategoryScores": "Scores moyens par catégorie",
+    "interviewTypes": "Types d'entretien",
+    "mostPracticedType": "Type le plus pratiqué :"
+  },
+  "startDialog": {
+    "title": "Démarrer un nouvel entretien",
+    "description": "Configurez votre entraînement à l'entretien. L'IA adapte les questions à vos paramètres.",
+    "tabs": {
+      "custom": "Entretien libre",
+      "application": "Basé sur une candidature"
+    },
+    "application": {
+      "selectLabel": "Sélectionner une candidature",
+      "selectPlaceholder": "Choisissez une candidature",
+      "unnamed": "Candidature sans titre",
+      "helper": "Les questions sont générées à partir de la description du poste.",
+      "empty": "Vous n'avez pas encore de candidature terminée. Créez d'abord une candidature pour en générer des questions d'entretien adaptées.",
+      "createApplication": "Créer une candidature"
+    },
+    "custom": {
+      "position": "Poste",
+      "positionPlaceholder": "p. ex. chef de projet, infirmier, responsable des ventes",
+      "company": "Entreprise",
+      "companyPlaceholder": "p. ex. Exemple SARL",
+      "industry": "Secteur",
+      "industryPlaceholder": "Facultatif : choisissez un secteur",
+      "jobDescription": "Description du poste (facultatif)",
+      "jobDescriptionPlaceholder": "Collez la description du poste pour obtenir des questions plus précises..."
+    },
+    "typeLabel": "Type d'entretien",
+    "difficultyLabel": "Difficulté",
+    "questionCountLabel": "Nombre de questions",
+    "questionCount": "{count, plural, one {# question} other {# questions}}",
+    "languageLabel": "Langue",
+    "languageGerman": "Allemand",
+    "cancel": "Annuler",
+    "start": "Démarrer l'entretien",
+    "types": {
+      "mixed": {
+        "label": "Mixte",
+        "description": "Combinaison de tous les types de questions"
+      },
+      "behavioral": {
+        "label": "Comportemental",
+        "description": "Méthode STAR, questions de mise en situation"
+      },
+      "technical": {
+        "label": "Technique",
+        "description": "Questions techniques et spécifiques au domaine"
+      },
+      "caseStudy": {
+        "label": "Étude de cas",
+        "description": "Résolution de problèmes et analyse"
+      }
+    },
+    "difficulty": {
+      "easy": {
+        "label": "Débutant",
+        "description": "Questions de base"
+      },
+      "medium": {
+        "label": "Standard",
+        "description": "Difficulté moyenne"
+      },
+      "hard": {
+        "label": "Expert",
+        "description": "Questions complexes et exigeantes"
+      }
+    },
+    "industries": {
+      "it": "Informatique / Logiciel",
+      "finance": "Finance / Banque",
+      "healthcare": "Santé",
+      "sales": "Vente",
+      "marketing": "Marketing",
+      "consulting": "Conseil",
+      "manufacturing": "Production / Industrie",
+      "logistics": "Logistique",
+      "hr": "Ressources humaines / RH",
+      "other": "Autre"
+    }
+  },
+  "hooks": {
+    "startSuccess": "Session d'entretien démarrée",
+    "startError": "Erreur lors du démarrage de la session d'entretien",
+    "submitAnswerError": "Erreur lors de l'envoi de la réponse",
+    "nextQuestionError": "Erreur lors du chargement de la question suivante",
+    "completeSuccess": "Entretien terminé ! Le retour est en cours de génération...",
+    "completeError": "Erreur lors de la finalisation de l'entretien",
+    "abandonSuccess": "Session d'entretien abandonnée",
+    "abandonError": "Erreur lors de l'abandon de la session",
+    "voiceStartError": "L'entretien vocal n'a pas pu être démarré",
+    "voiceCompleteError": "Erreur lors de la finalisation de l'entretien vocal"
+  }
+}

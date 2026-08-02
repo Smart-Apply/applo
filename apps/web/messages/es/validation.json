@@ -1,0 +1,96 @@
+{
+  "page": {
+    "title": "Revisión de candidatura",
+    "subtitle": "Evaluación con IA de la calidad y la compatibilidad ATS de tu propia candidatura.",
+    "quotaBadge": "{remaining} / {limit} revisiones",
+    "newCheck": "Nueva revisión",
+    "history": "Revisiones anteriores",
+    "limitReachedTitle": "Has alcanzado tu límite mensual de {limit} revisiones.",
+    "limitReachedDescription": "Compara los <pricing>planes</pricing> para conseguir una cuota mensual mayor.",
+    "historyTitle": "Revisiones anteriores",
+    "freeHistoryDescription": "El plan Free incluye 5 revisiones al mes.",
+    "savedHistoryDescription": "Tus revisiones guardadas.",
+    "noHistory": "Aún no hay revisiones.",
+    "open": "Abrir",
+    "deleteAria": "Eliminar revisión",
+    "createSuccess": "Candidatura revisada",
+    "createError": "Error en la revisión",
+    "deleteSuccess": "Revisión eliminada",
+    "deleteError": "No se ha podido eliminar la revisión"
+  },
+  "documentInput": {
+    "fileReadError": "No se ha podido leer el archivo",
+    "detected": "Detectado",
+    "fileReadSuccess": "{size} · Texto leído correctamente",
+    "removeFileAria": "Quitar archivo",
+    "chooseFile": "Elegir archivo",
+    "orDragHere": "o arrástralo aquí",
+    "fileHint": "PDF o DOCX · máx. 10 MB",
+    "toggle": {
+      "upload": "Subir archivo",
+      "text": "Pegar texto"
+    },
+    "title": "Tus documentos",
+    "subtitle": "Solo el currículum es obligatorio. Añade una carta de presentación para obtener comentarios aún más precisos.",
+    "resumeLabel": "Currículum",
+    "resumePlaceholder": "Pega aquí el texto de tu currículum…",
+    "addCoverLetter": "Añadir carta de presentación",
+    "coverLetterLabel": "Carta de presentación",
+    "optional": "(opcional)",
+    "remove": "Quitar",
+    "coverLetterPlaceholder": "Pega aquí el texto de tu carta de presentación…",
+    "next": "Continuar al puesto objetivo"
+  },
+  "jobContext": {
+    "toggle": {
+      "link": "Analizar enlace",
+      "text": "Pegar texto"
+    },
+    "title": "Puesto objetivo y comentarios",
+    "subtitle": "Opcional — con el contexto del puesto, la IA también evalúa el encaje con el rol.",
+    "jobPostingLabel": "Oferta de empleo",
+    "optional": "(opcional)",
+    "analyzed": "Analizada",
+    "readSuccess": "{host} · Oferta leída correctamente",
+    "removeLinkAria": "Quitar enlace",
+    "analyzing": "Analizando…",
+    "analyze": "Analizar",
+    "linkError": "No se ha podido leer el enlace.",
+    "pasteAdText": "Pega el texto de la oferta →",
+    "textPlaceholder": "p. ej. supervisor/a de planta de enfermería — o pega la oferta de empleo completa…",
+    "titleLabel": "Título",
+    "titlePlaceholder": "p. ej. candidatura para Hospital Central",
+    "feedbackLanguage": "Idioma de los comentarios",
+    "languageAuto": "Automático",
+    "languageGerman": "Alemán",
+    "privacyNote": "Tus documentos se usan solo para esta revisión y no se almacenan. Sin el contexto del puesto, la IA evalúa únicamente la calidad y la estructura ATS.",
+    "back": "Atrás",
+    "submit": "Revisar candidatura"
+  },
+  "loading": {
+    "title": "Se está revisando tu candidatura…",
+    "subtitle": "Esto suele tardar entre 15 y 30 segundos.",
+    "checklist": {
+      "documents": "Leyendo documentos",
+      "quality": "Evaluando calidad",
+      "ats": "Comprobando compatibilidad ATS",
+      "recommendations": "Creando recomendaciones"
+    }
+  },
+  "result": {
+    "verdict": {
+      "strong": "Lista para enviar",
+      "good": "Sólida, con mejoras menores",
+      "needsWork": "Se recomienda revisarla"
+    },
+    "yourResult": "Tu resultado",
+    "overallScore": "Puntuación general",
+    "atsScore": "Puntuación ATS*",
+    "categoryScores": "Evaluación por categoría",
+    "recommendationsChecklist": "Recomendaciones · lista de tareas",
+    "markOpen": "Marcar como pendiente",
+    "markDone": "Marcar como hecho",
+    "strengthsHeading": "✓ Puntos fuertes",
+    "atsDisclaimer": "*La puntuación ATS es una estimación de la IA, no una ejecución real de un analizador ATS."
+  }
+}

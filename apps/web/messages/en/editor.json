@@ -40,8 +40,7 @@
       "button": "Export",
       "tooltip": "Export PDFs",
       "translationTitle": "Content will be translated automatically",
-      "translationDescriptionEn": "The export will be translated into English – please review the result.",
-      "translationDescriptionDe": "The export will be translated into German – please review the result.",
+      "translationDescription": "The export will be translated into {language} – please review the result.",
       "disabled": {
         "generating": "Export is already running. Please wait until it finishes.",
         "savingChanges": "Changes are being saved …",

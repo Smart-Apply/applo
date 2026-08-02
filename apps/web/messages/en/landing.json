@@ -66,7 +66,7 @@
     "keywords": "KEYWORDS 21/24",
     "scoreWord": "STRONG",
     "export": "Export as PDF",
-    "hint": "50 TEMPLATES · DE/EN"
+    "hint": "50 TEMPLATES · 6 LANGUAGES"
   },
   "how": {
     "eyebrow": "01 · How it works",
@@ -83,7 +83,7 @@
       },
       "three": {
         "title": "Export as PDF",
-        "desc": "Choose from 50 ATS templates, export as PDF (DE/EN), and apply. Done."
+        "desc": "Choose from 50 ATS templates, export as PDF in 6 languages, and apply. Done."
       }
     }
   },
@@ -117,8 +117,8 @@
         "desc": "Connect Outlook/M365. Your application status updates automatically.<tag>Premium</tag>"
       },
       "languages": {
-        "title": "Multilingual DE/EN",
-        "desc": "Create and export applications in German or English."
+        "title": "Multilingual – 6 languages",
+        "desc": "Create applications in German or English and export them in 6 languages – including French, Spanish, Portuguese, and Italian."
       },
       "pipeline": {
         "title": "Live status of your applications",
@@ -199,7 +199,7 @@
           "validations": "15 application checks / month",
           "ingestion": "Import job postings (text, link, or file)",
           "pipeline": "Live status of your applications",
-          "export": "Ad-free & export in German or English"
+          "export": "Ad-free & export in 6 languages"
         },
         "cta": "Choose Pro"
       },
@@ -260,7 +260,7 @@
       },
       "languages": {
         "q": "Which languages can I apply in?",
-        "a": "You can create applications in German and English and export them as PDFs."
+        "a": "You can create applications in German and English and have the PDF export translated into 6 languages – including French, Spanish, Portuguese, and Italian."
       },
       "cancel": {
         "q": "Can I cancel Applo?",

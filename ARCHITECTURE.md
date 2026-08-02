@@ -89,12 +89,12 @@ applo/
 │   │   └── test/                  # Unit / integration / e2e
 │   │
 │   └── web/                  # @applo/web (Next.js 16)
-│       ├── messages/              # next-intl catalogs (de/ + en/, one JSON per namespace)
+│       ├── messages/              # next-intl catalogs (de/en/fr/es/pt/it, one JSON per namespace)
 │       ├── src/
 │       │   ├── app/               # App Router (route groups)
 │       │   ├── components/        # UI + shadcn/ui + pdf + analytics (recharts) + i18n
 │       │   ├── hooks/             # Custom React hooks
-│       │   ├── i18n/              # next-intl config (cookie-based de/en, no URL prefixes)
+│       │   ├── i18n/              # next-intl config (cookie-based de/en/fr/es/pt/it, no URL prefixes)
 │       │   ├── lib/               # api-client, providers, i18n-runtime, utils
 │       │   ├── stores/            # Zustand
 │       │   └── types/             # Shared TS types
@@ -205,8 +205,9 @@ User → Frontend (Next.js)
 > cover-letter generation path.
 
 > **Cross-language export (translation-on-export).** `POST /applications/:id/export`
-> accepts `language: 'de' | 'en'` (fr/es/it were removed — the prompt chain never
-> fully supported them). When the target differs from the content's source language
+> accepts `language: 'de' | 'en' | 'fr' | 'es' | 'pt' | 'it'` — generation itself
+> stays de/en (job-posting driven), the other four are export-time translation
+> targets. When the target differs from the content's source language
 > (`Application.sourceLanguage`, LLM-detected on legacy rows), the export job
 > translates the stored content instead of shipping a mixed-language PDF:
 > the résumé's display strings are extracted as flat `{ id, text }` segments
@@ -347,7 +348,7 @@ User 1:1 Subscription
 | ---------- | ------------------------------------------------------- |
 | Framework  | Next.js 16.1 (App Router, React Compiler enabled)       |
 | Language   | TypeScript (strict)                                     |
-| i18n       | next-intl 4 (cookie-based de/en, no URL routing)        |
+| i18n       | next-intl 4 (cookie-based de/en/fr/es/pt/it, no URL routing) |
 | UI         | React 19.2 · shadcn/ui (Radix) · Tailwind v4            |
 | State      | Zustand 5 · TanStack Query 5                            |
 | Forms      | react-hook-form 7 · Zod (`@hookform/resolvers`)         |

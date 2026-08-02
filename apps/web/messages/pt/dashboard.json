@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "dashboard": "Painel",
+    "profile": "Perfil",
+    "applications": "Candidaturas",
+    "applicationCheck": "Verificação de candidatura",
+    "analytics": "Analytics",
+    "interviewCoach": "Coach de entrevistas",
+    "settings": "Definições",
+    "start": "Início",
+    "menu": "Menu",
+    "mainNavigation": "Navegação principal",
+    "openMore": "Abrir mais itens do menu",
+    "more": "Mais",
+    "openMenu": "Abrir menu",
+    "mainMenu": "Menu principal",
+    "sheetDescription": "Navegação do painel da Applo.",
+    "upgradeTitle": "Atualizar para o Premium",
+    "upgradeDescription": "{feature} está disponível apenas para membros Premium."
+  },
+  "page": {
+    "loading": "A carregar...",
+    "oauthFinishing": "A concluir o início de sessão...",
+    "greeting": {
+      "morning": "Bom dia",
+      "day": "Olá",
+      "evening": "Boa noite"
+    },
+    "heroReplayTitle": "Clica para a chegada em voo da Applo",
+    "eyebrow": "Painel · {month}",
+    "welcome": "{greeting}, {name}!",
+    "fallbackUser": "Utilizador",
+    "summary": "Resumo das tuas candidaturas atuais. Tens <strong>{count}</strong> candidaturas ativas em curso.",
+    "actions": {
+      "newApplication": "Nova candidatura",
+      "findJobs": "Encontrar empregos"
+    },
+    "stats": {
+      "total": "Total",
+      "active": "Ativas",
+      "interviews": "Entrevistas",
+      "offers": "Propostas"
+    },
+    "recent": {
+      "title": "Candidaturas recentes",
+      "description": "As tuas candidaturas editadas recentemente",
+      "showAll": "Mostrar todas",
+      "emptyTitle": "Sem candidaturas",
+      "emptyDescription": "Ainda não criaste nenhuma candidatura. Cria a tua primeira candidatura em apenas 2 passos!",
+      "emptyAction": "Criar primeira candidatura",
+      "positionCompany": "Cargo / Empresa",
+      "untitledApplication": "Candidatura sem título",
+      "noDetails": "Sem detalhes",
+      "updated": "Atualizada"
+    },
+    "profile": {
+      "title": "Estado do perfil",
+      "description": "Completa o teu perfil",
+      "perfect": "Perfeito!",
+      "almostDone": "Quase lá",
+      "edit": "Editar perfil"
+    },
+    "usage": {
+      "title": "Quota",
+      "description": "A tua quota mensal"
+    },
+    "trends": {
+      "title": "Tendências de mercado",
+      "tipLabel": "Dica",
+      "tip": "Enfermeiros e gestores de projeto estão atualmente muito procurados. Atualiza as tuas competências!"
+    }
+  },
+  "guide": {
+    "steps": {
+      "add": {
+        "eyebrow": "Passo 1 de 3",
+        "message": "Olá, sou a <b>Applo</b>! Adiciona uma oferta de emprego por link ou texto — eu trato do resto."
+      },
+      "config": {
+        "eyebrow": "Passo 2 de 3",
+        "message": "Ótimo! Agora definimos o <b>idioma, a carta de apresentação e o design</b>. Passa o rato sobre um modelo para veres a pré-visualização."
+      },
+      "loading": {
+        "eyebrow": "Passo 3 de 3",
+        "message": "Estou a <b>analisar a oferta de emprego</b> e a escrever os teus documentos. Isto demora só um momento…"
+      },
+      "finishing": {
+        "eyebrow": "Passo 3 de 3",
+        "message": "Concluído! A tua candidatura está <b>pronta</b> — a continuar num instante…"
+      },
+      "done": {
+        "eyebrow": "Concluído",
+        "message": "A tua candidatura está <b>pronta</b>! Revê-a e transfere-a já."
+      }
+    }
+  },
+  "promptUsage": {
+    "chars": "Caracteres: {count} / {max}",
+    "tokens": "Tokens: {count} / {max}",
+    "charsOver": "{count} caracteres",
+    "tokensOver": "{count} tokens",
+    "joiner": " e ",
+    "tooLong": "O texto introduzido é demasiado longo. Reduz em {overage}."
+  }
+}

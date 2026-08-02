@@ -1,0 +1,363 @@
+{
+  "page": {
+    "loadingApplication": "Caricamento dati della candidatura...",
+    "backToApplications": "Torna alle candidature",
+    "backToOverview": "Torna alla panoramica",
+    "unavailableTitle": "Editor non disponibile",
+    "unavailableDescription": "Non è stato possibile caricare la candidatura.",
+    "fallbackTitle": "Candidatura",
+    "readyBadge": "Pronta",
+    "tabs": {
+      "ariaLabel": "Schede dell'editor",
+      "resume": "Curriculum",
+      "coverLetter": "Lettera di presentazione",
+      "optimize": "Ottimizza"
+    },
+    "upgrade": {
+      "title": "Passa a Premium",
+      "description": "Passa a Premium per usare questa funzione."
+    },
+    "created": {
+      "today": "oggi",
+      "onDate": "il {date}",
+      "label": "creata {value}"
+    },
+    "ai": {
+      "title": "Istruzioni per l'IA",
+      "coverLetterPlaceholder": "Es.: Dai più risalto alla mia esperienza nella gestione dei progetti...",
+      "coverLetterDescription": "Descrivi come deve essere adattata la lettera di presentazione."
+    },
+    "editHint": {
+      "resume": "Fai clic su qualsiasi testo per modificarlo.",
+      "coverLetter": "Fai clic all'interno della lettera di presentazione per modificare testo, formula di apertura o paragrafi."
+    },
+    "saveStatus": {
+      "saving": "Salvataggio…",
+      "dirty": "Modifiche non salvate",
+      "saved": "Modifiche salvate automaticamente"
+    },
+    "export": {
+      "button": "Esporta",
+      "tooltip": "Esporta PDF",
+      "translationTitle": "Il contenuto verrà tradotto automaticamente",
+      "translationDescription": "L'esportazione verrà tradotta in {language} — controlla il risultato.",
+      "disabled": {
+        "generating": "L'esportazione è già in corso. Attendi che finisca.",
+        "savingChanges": "Le modifiche sono in fase di salvataggio…",
+        "missingResume": "Manca il curriculum.",
+        "missingCoverLetter": "Manca la lettera di presentazione."
+      }
+    },
+    "toasts": {
+      "resumeSaveFailed": "Non è stato possibile salvare il curriculum",
+      "coverLetterSaveFailed": "Non è stato possibile salvare la lettera di presentazione",
+      "coverLetterGenerateFailed": "Non è stato possibile generare la lettera di presentazione: {message}",
+      "instructionsRequired": "Inserisci le istruzioni per l'IA",
+      "aiChangesApplied": "Modifiche dell'IA applicate",
+      "aiGenerationFailed": "Generazione IA non riuscita: {message}",
+      "exportStarted": "Esportazione avviata! Verrai reindirizzato alla pagina di dettaglio..."
+    },
+    "errors": {
+      "emptyServerResponse": "Nessuna risposta ricevuta dal server"
+    }
+  },
+  "coverLetter": {
+    "cta": {
+      "title": "Ancora nessuna lettera di presentazione",
+      "description": "Una lettera di presentazione su misura aiuta la tua candidatura a distinguersi e migliora il tasso di risposta. Viene creata dal tuo profilo e da questo annuncio in circa 20 secondi.",
+      "generating": "Generazione in corso…",
+      "generate": "Genera ora la lettera di presentazione"
+    },
+    "benefits": {
+      "tailored": "Su misura per il lavoro",
+      "aiWritten": "Scritta con il supporto dell'IA",
+      "editable": "Completamente modificabile dopo la creazione"
+    }
+  },
+  "resume": {
+    "moveUp": "Sposta su",
+    "moveDown": "Sposta giù",
+    "moveLeft": "Sposta a sinistra",
+    "moveRight": "Sposta a destra",
+    "categoryMoveUp": "Sposta categoria su",
+    "categoryMoveDown": "Sposta categoria giù",
+    "sectionMoveUp": "Sposta {label} su",
+    "sectionMoveDown": "Sposta {label} giù",
+    "sectionRemove": "Rimuovi {label}",
+    "addSection": "Aggiungi sezione:",
+    "photoAlt": "Foto della candidatura",
+    "sections": {
+      "profile": "Profilo",
+      "experience": "Esperienza lavorativa",
+      "education": "Istruzione",
+      "projects": "Progetti",
+      "skills": "Competenze",
+      "languages": "Lingue",
+      "certs": "Certificati"
+    },
+    "contact": {
+      "button": "Dati di contatto",
+      "edit": "Modifica dati di contatto",
+      "street": "Via",
+      "city": "Città",
+      "country": "Paese",
+      "sectionTitle": "Contatti",
+      "postalCode": "CAP"
+    },
+    "ai": {
+      "profileTitle": "IA: Profilo",
+      "profileDescription": "Descrivi come deve essere adattato il tuo profilo.",
+      "profilePlaceholder": "Es.: Dai più risalto alla mia esperienza di leadership...",
+      "profileApply": "Adatta profilo",
+      "descriptionTitle": "IA: Descrizione",
+      "experienceDescription": "Descrivi come deve essere adattato questo ruolo.",
+      "experiencePlaceholder": "Es.: Più risultati misurabili, più breve...",
+      "descriptionApply": "Adatta descrizione",
+      "projectTitle": "IA: Progetto",
+      "projectDescription": "Descrivi come deve essere adattato questo progetto.",
+      "projectPlaceholder": "Es.: Dai risalto all'impatto...",
+      "projectApply": "Adatta progetto"
+    },
+    "placeholders": {
+      "summary": "Breve profilo su di te…",
+      "position": "Posizione",
+      "dateRange": "Periodo",
+      "company": "Azienda",
+      "achievement": "Cosa hai ottenuto?",
+      "degree": "Titolo di studio",
+      "year": "Anno",
+      "institution": "Istituto",
+      "projectName": "Nome del progetto",
+      "projectBullet": "Cosa hai fatto?",
+      "category": "Categoria",
+      "skill": "Competenza",
+      "addSkill": "Aggiungi competenza…",
+      "language": "Lingua",
+      "level": "Livello",
+      "certificate": "Certificato",
+      "date": "Data",
+      "issuer": "Ente emittente",
+      "name": "Il tuo nome",
+      "role": "Posizione desiderata"
+    },
+    "remove": {
+      "station": "Rimuovi ruolo",
+      "entry": "Rimuovi voce",
+      "bullet": "Rimuovi punto elenco",
+      "project": "Rimuovi progetto",
+      "generic": "Rimuovi"
+    },
+    "add": {
+      "bullet": "Punto elenco",
+      "station": "Aggiungi ruolo",
+      "entry": "Aggiungi voce",
+      "project": "Aggiungi progetto",
+      "category": "Categoria",
+      "language": "Lingua",
+      "certificate": "Aggiungi certificato",
+      "generic": "Aggiungi"
+    }
+  },
+  "resumeForm": {
+    "optional": "(facoltativo)",
+    "description": "Descrizione",
+    "sectionSelector": {
+      "label": "Modifica sezione:"
+    },
+    "sections": {
+      "personal": "Dati personali",
+      "jobDetails": "Dettagli del lavoro",
+      "skills": "Competenze",
+      "experience": "Esperienza lavorativa",
+      "projects": "Progetti",
+      "education": "Istruzione",
+      "certifications": "Certificati"
+    },
+    "personal": {
+      "name": "Nome *",
+      "namePlaceholder": "Nome e cognome",
+      "phone": "Telefono",
+      "street": "Via e numero civico",
+      "streetPlaceholder": "Via Esempio 123",
+      "postalCode": "CAP",
+      "city": "Città",
+      "country": "Paese",
+      "countryPlaceholder": "es. Italia",
+      "summary": "Riepilogo",
+      "summaryPlaceholder": "Breve riepilogo delle tue qualifiche e delle competenze più importanti. Usa - + spazio per i punti elenco."
+    },
+    "jobDetails": {
+      "targetJobTitle": "Posizione desiderata *",
+      "targetJobTitlePlaceholder": "es. Senior Software Engineer",
+      "targetJobTitleHelp": "Il titolo di lavoro che appare nel tuo curriculum",
+      "company": "Azienda",
+      "companyHelp": "L'azienda dell'annuncio di lavoro (non modificabile)"
+    },
+    "skills": {
+      "addCategory": "Aggiungi categoria",
+      "categoryPlaceholder": "Categoria (facoltativo, es. linguaggi di programmazione)",
+      "skillsPlaceholder": "Separa le competenze con virgole (es. TypeScript, React, Node.js)",
+      "empty": "Nessuna competenza aggiunta ancora"
+    },
+    "experience": {
+      "add": "Aggiungi esperienza",
+      "positionPlaceholder": "Posizione *",
+      "companyPlaceholder": "Azienda *",
+      "locationPlaceholder": "Luogo",
+      "dateRangePlaceholder": "Periodo (es. gen 2020 - dic 2023)",
+      "descriptionPlaceholder": "Descrivi i tuoi compiti, responsabilità e risultati in questa posizione. Usa - + spazio per i punti elenco.",
+      "empty": "Nessuna esperienza lavorativa aggiunta ancora"
+    },
+    "projects": {
+      "add": "Aggiungi progetto",
+      "namePlaceholder": "Nome del progetto *",
+      "datePlaceholder": "Periodo",
+      "descriptionPlaceholder": "Descrivi il progetto, il tuo ruolo e i risultati ottenuti. Usa - + spazio per i punti elenco.",
+      "highlightsPlaceholder": "Punti salienti (uno per riga)",
+      "empty": "Nessun progetto aggiunto ancora"
+    },
+    "education": {
+      "add": "Aggiungi istruzione",
+      "degreePlaceholder": "Titolo di studio *",
+      "institutionPlaceholder": "Istituto *",
+      "yearPlaceholder": "Anno *",
+      "fieldPlaceholder": "Ambito di studio",
+      "gpaPlaceholder": "Voto/media",
+      "descriptionPlaceholder": "Ulteriori dettagli come aree di specializzazione, corsi rilevanti o riconoscimenti. Usa - + spazio per i punti elenco.",
+      "empty": "Nessun percorso di istruzione aggiunto ancora"
+    },
+    "certifications": {
+      "add": "Aggiungi certificato",
+      "namePlaceholder": "Certificato *",
+      "issuerPlaceholder": "Ente emittente *",
+      "datePlaceholder": "Data",
+      "empty": "Nessun certificato aggiunto ancora"
+    },
+    "ai": {
+      "summaryPlaceholder": "Es.: Dai più risalto alla mia esperienza nella gestione dei progetti e alle mie capacità di leadership...",
+      "summaryTitle": "Ottimizza riepilogo",
+      "summaryDescription": "Descrivi come deve essere adattato il riepilogo (3-5 frasi).",
+      "summaryWarning": "L'IA genera un nuovo riepilogo. Dovrai poi salvarlo manualmente.",
+      "experiencePlaceholder": "es. Dai risalto ai risultati misurabili e alla leadership di team",
+      "projectPlaceholder": "es. Dai risalto ai metodi utilizzati e all'impatto sul business",
+      "descriptionTitle": "Migliora la descrizione con l'IA",
+      "experienceDescription": "L'IA genera punti elenco efficaci con verbi d'azione e risultati quantificabili.",
+      "projectDescription": "L'IA genera punti elenco efficaci con aree di interesse e risultati misurabili.",
+      "descriptionWarning": "Inserisci le istruzioni per generare la descrizione."
+    }
+  },
+  "designPanel": {
+    "tooltip": "Regola dimensione del testo, densità, carattere e colore accento",
+    "title": "Regola design",
+    "description": "Influisce sui PDF esportati. L'anteprima nell'editor è un'approssimazione.",
+    "fontScale": {
+      "label": "Dimensione del testo",
+      "sm": {
+        "label": "S",
+        "hint": "Più piccolo (−8%)"
+      },
+      "md": {
+        "label": "M",
+        "hint": "Originale"
+      },
+      "lg": {
+        "label": "L",
+        "hint": "Più grande (+8%)"
+      }
+    },
+    "density": {
+      "label": "Densità",
+      "compact": {
+        "label": "Compatta",
+        "hint": "Spaziatura più stretta — più contenuto per pagina"
+      },
+      "normal": {
+        "label": "Normale",
+        "hint": "Spaziatura originale del design"
+      },
+      "relaxed": {
+        "label": "Rilassata",
+        "hint": "Spaziatura più ampia"
+      }
+    },
+    "fontFamily": {
+      "label": "Carattere",
+      "default": "Predefinito (carattere del design)",
+      "lato": "Lato (senza grazie)",
+      "sourceSans": "Source Sans 3 (senza grazie)",
+      "merriweather": "Merriweather (con grazie)"
+    },
+    "accent": {
+      "label": "Colore accento",
+      "reset": "Ripristina",
+      "ariaPreset": "Colore accento {name}",
+      "customTitle": "Scegli colore personalizzato",
+      "customAria": "Scegli colore accento personalizzato",
+      "presets": {
+        "navy": "Blu navy",
+        "anthracite": "Antracite",
+        "carmine": "Rosso carminio",
+        "teal": "Verde acqua",
+        "forestGreen": "Verde foresta",
+        "brown": "Marrone"
+      }
+    },
+    "photo": {
+      "label": "Foto",
+      "uploadPrefix": "Carica prima una foto nel tuo",
+      "profileLink": "profilo",
+      "uploadSuffix": ".",
+      "aria": "Mostra foto sul curriculum",
+      "atsWarning": "Consigliato per i sistemi ATS e per le candidature al di fuori dell'area DACH: nessuna foto."
+    }
+  },
+  "fontSize": {
+    "ariaLabel": "Dimensione del testo",
+    "placeholder": "Dimensione"
+  },
+  "pdfPreview": {
+    "loading": "Caricamento PDF...",
+    "loadingShort": "Caricamento...",
+    "errorTitle": "Impossibile caricare il PDF",
+    "errorDescription": "Il link di download potrebbe essere scaduto.",
+    "previousPage": "Pagina precedente",
+    "nextPage": "Pagina successiva",
+    "zoomOut": "Riduci zoom",
+    "zoomIn": "Aumenta zoom",
+    "pageCount": "Pagina {page} / {pages}",
+    "download": "Scarica",
+    "downloadWait": "Download tra {seconds}s"
+  },
+  "richText": {
+    "bold": "Grassetto",
+    "italic": "Corsivo",
+    "bulletList": "Elenco puntato",
+    "orderedList": "Elenco numerato",
+    "quote": "Citazione",
+    "defaultPlaceholder": "Inizia a scrivere..."
+  },
+  "aiAssistant": {
+    "trigger": "Assistente IA",
+    "defaultPlaceholder": "Es.: Dai più risalto alla mia esperienza nella gestione degli stakeholder...",
+    "title": "Istruzioni per l'IA",
+    "description": "Descrivi come deve essere adattato il contenuto.",
+    "loading": "L'IA sta elaborando...",
+    "warning": "L'IA adatta il contenuto. Le modifiche vengono salvate automaticamente.",
+    "apply": "Applica"
+  },
+  "description": {
+    "defaultPlaceholder": "Descrivi i tuoi compiti, responsabilità e risultati..."
+  },
+  "templatePreview": {
+    "loadingTemplate": "Caricamento modello...",
+    "loadFailed": "Impossibile caricare il modello",
+    "templateLabel": "Modello:",
+    "defaultBadge": "(Predefinito)",
+    "resumeTitle": "Anteprima curriculum",
+    "coverLetterTitle": "Anteprima lettera di presentazione",
+    "noCoverLetter": "Ancora nessuna lettera di presentazione"
+  },
+  "resumePreview": {
+    "footer": "Anteprima · Il PDF finale viene creato al momento del download"
+  }
+}

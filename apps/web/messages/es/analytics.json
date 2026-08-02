@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Analíticas",
+    "description": "¿Cómo va tu búsqueda de empleo? Tendencias, tasas de conversión y rendimiento de las plantillas de un vistazo.",
+    "updatedNow": "Actualizado justo ahora",
+    "errorTitle": "No se han podido cargar las analíticas",
+    "unknownError": "Error desconocido",
+    "kpis": {
+      "applied": {
+        "label": "Enviadas",
+        "tipHtml": "Cuántas de tus candidaturas creadas has <b>enviado</b> realmente. Más candidaturas = más oportunidades."
+      },
+      "interviewRate": {
+        "label": "Tasa de entrevistas",
+        "tipHtml": "Porcentaje de tus candidaturas enviadas que llevaron a una <b>invitación a entrevista</b>. Media habitual: 15–25%."
+      },
+      "accepted": {
+        "label": "Aceptadas",
+        "tipHtml": "Candidaturas que terminaron con una <b>oferta de trabajo</b>."
+      },
+      "ats": {
+        "label": "Puntuación ATS media",
+        "tipHtml": "Qué tan bien pueden leer tu currículum los sistemas de seguimiento de candidatos (<b>ATS</b>) — de 0 a 100. Objetivo: 80 o más."
+      }
+    }
+  },
+  "upgrade": {
+    "title": "Analíticas avanzadas y tendencias",
+    "description": "Tasas de éxito, embudo de conversión, tendencias de puntuación ATS y rendimiento de plantillas — exclusivo para miembros Premium.",
+    "unlock": "Desbloquear con Premium",
+    "back": "Volver al panel"
+  },
+  "stages": {
+    "CREATED": "Creada",
+    "APPLIED": "Enviada",
+    "INTERVIEW": "Entrevista",
+    "ACCEPTED": "Aceptada"
+  },
+  "activity": {
+    "title": "Actividad",
+    "tipHtml": "Actividad diaria de candidaturas. Activa o desactiva métricas con los chips; pasa el cursor sobre el gráfico para ver los valores exactos.",
+    "description": "Candidaturas creadas y enviadas por día · últimos {count} días",
+    "series": {
+      "created": "Creadas",
+      "applied": "Enviadas",
+      "interview": "Entrevista",
+      "accepted": "Aceptadas"
+    }
+  },
+  "range": {
+    "ariaLabel": "Seleccionar periodo",
+    "days7": "7 d",
+    "days30": "30 d",
+    "days90": "90 d"
+  },
+  "funnel": {
+    "title": "Embudo de conversión",
+    "tipHtml": "Cada etapa muestra cuántas candidaturas han llegado hasta ahí. El porcentaje es la <b>tasa de paso</b> respecto a la etapa anterior. Haz clic en una etapa para abrir las candidaturas filtradas.",
+    "description": "Cuántas candidaturas llegan a una oferta de trabajo.",
+    "continue": "{value}% continúa",
+    "opensStatus": "Abre <strong>{count}</strong> {count, plural, one {candidatura} other {candidaturas}} con estado “{status}”.",
+    "biggestDropAt": "Mayor caída en",
+    "biggestDropValue": ": solo el {value}% llega a este paso.",
+    "clickStage": "Haz clic en una etapa para abrir las candidaturas relacionadas."
+  },
+  "insight": {
+    "new": "Buen comienzo — <strong>{applications} candidaturas</strong> creadas, <strong>{applied} enviadas</strong>. <muted>Crea algunas más para que empiecen a aparecer tendencias significativas.</muted>",
+    "established": "Tu tasa de entrevistas es del <strong>{rate}%</strong>.",
+    "establishedAboveAverage": "Tu tasa de entrevistas es del <strong>{rate}%</strong> — por encima de la media.",
+    "biggestHurdle": "El mayor obstáculo es",
+    "continue": "({value}% continúa).",
+    "tip": "Consejo: una puntuación ATS más alta reduce notablemente el abandono."
+  },
+  "scoreBuckets": {
+    "title": "Puntuación ATS y entrevistas",
+    "tipHtml": "Agrupamos tus candidaturas enviadas por <b>puntuación ATS</b> y mostramos la tasa de entrevistas de cada grupo. Objetivo: el mayor número posible de candidaturas en el rango verde (80 o más).",
+    "description": "Qué rangos de puntuación llevan más a menudo a entrevistas.",
+    "empty": "En cuanto crees candidaturas con puntuación ATS, aquí te mostraremos qué rangos de puntuación generan más entrevistas.",
+    "bucketTitle": "{bucket} pts · {count} candidaturas · {rate}% de tasa de entrevistas",
+    "applicationsShort": "{count} cand.",
+    "best": "Las candidaturas con <strong>{bucket} puntos</strong> logran la mayor tasa de entrevistas ({rate}%)."
+  },
+  "topTemplates": {
+    "title": "Plantillas más usadas",
+    "description": "Qué plantillas de currículum usas más a menudo — y cómo rinden.",
+    "empty": "Todavía no hay datos de plantillas disponibles. Crea candidaturas con distintas plantillas para comparar su rendimiento.",
+    "usage": "{count, plural, one {# candidatura} other {# candidaturas}}",
+    "interview": "Entrevista"
+  }
+}

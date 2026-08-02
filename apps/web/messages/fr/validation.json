@@ -1,0 +1,96 @@
+{
+  "page": {
+    "title": "Vérification de candidature",
+    "subtitle": "Évaluation par IA de la qualité et de la compatibilité ATS de votre propre candidature.",
+    "quotaBadge": "{remaining} / {limit} vérifications",
+    "newCheck": "Nouvelle vérification",
+    "history": "Vérifications précédentes",
+    "limitReachedTitle": "Vous avez atteint votre limite mensuelle de {limit} vérifications.",
+    "limitReachedDescription": "Comparez les <pricing>forfaits</pricing> pour un quota mensuel plus élevé.",
+    "historyTitle": "Vérifications précédentes",
+    "freeHistoryDescription": "Le forfait Free inclut 5 vérifications par mois.",
+    "savedHistoryDescription": "Vos vérifications enregistrées.",
+    "noHistory": "Aucune vérification pour le moment.",
+    "open": "Ouvrir",
+    "deleteAria": "Supprimer la vérification",
+    "createSuccess": "Candidature vérifiée",
+    "createError": "Échec de la vérification",
+    "deleteSuccess": "Vérification supprimée",
+    "deleteError": "La vérification n'a pas pu être supprimée"
+  },
+  "documentInput": {
+    "fileReadError": "Le fichier n'a pas pu être lu",
+    "detected": "Détecté",
+    "fileReadSuccess": "{size} · Texte lu avec succès",
+    "removeFileAria": "Retirer le fichier",
+    "chooseFile": "Choisir un fichier",
+    "orDragHere": "ou glissez-le ici",
+    "fileHint": "PDF ou DOCX · 10 Mo max.",
+    "toggle": {
+      "upload": "Téléverser un fichier",
+      "text": "Coller le texte"
+    },
+    "title": "Vos documents",
+    "subtitle": "Seul le CV est requis. Ajoutez une lettre de motivation pour un retour encore plus précis.",
+    "resumeLabel": "CV",
+    "resumePlaceholder": "Collez ici le texte de votre CV…",
+    "addCoverLetter": "Ajouter une lettre de motivation",
+    "coverLetterLabel": "Lettre de motivation",
+    "optional": "(facultatif)",
+    "remove": "Retirer",
+    "coverLetterPlaceholder": "Collez ici le texte de votre lettre de motivation…",
+    "next": "Continuer vers le poste visé"
+  },
+  "jobContext": {
+    "toggle": {
+      "link": "Analyser un lien",
+      "text": "Coller le texte"
+    },
+    "title": "Poste visé et retour",
+    "subtitle": "Facultatif — avec le contexte du poste, l'IA évalue aussi l'adéquation avec celui-ci.",
+    "jobPostingLabel": "Offre d'emploi",
+    "optional": "(facultatif)",
+    "analyzed": "Analysée",
+    "readSuccess": "{host} · Offre lue avec succès",
+    "removeLinkAria": "Retirer le lien",
+    "analyzing": "Analyse en cours…",
+    "analyze": "Analyser",
+    "linkError": "Le lien n'a pas pu être lu.",
+    "pasteAdText": "Coller le texte de l'offre →",
+    "textPlaceholder": "p. ex. cadre de santé — ou collez l'offre d'emploi complète…",
+    "titleLabel": "Titre",
+    "titlePlaceholder": "p. ex. candidature pour l'Hôpital de la Ville",
+    "feedbackLanguage": "Langue du retour",
+    "languageAuto": "Automatique",
+    "languageGerman": "Allemand",
+    "privacyNote": "Vos documents ne sont utilisés que pour cette vérification et ne sont pas stockés. Sans contexte de poste, l'IA n'évalue que la qualité et la structure ATS.",
+    "back": "Retour",
+    "submit": "Vérifier la candidature"
+  },
+  "loading": {
+    "title": "Votre candidature est en cours de vérification …",
+    "subtitle": "Cela prend généralement 15 à 30 secondes.",
+    "checklist": {
+      "documents": "Lecture des documents en cours",
+      "quality": "Évaluation de la qualité en cours",
+      "ats": "Vérification de la compatibilité ATS en cours",
+      "recommendations": "Création des recommandations en cours"
+    }
+  },
+  "result": {
+    "verdict": {
+      "strong": "Prête à être envoyée",
+      "good": "Solide, petites améliorations possibles",
+      "needsWork": "Révision recommandée"
+    },
+    "yourResult": "Votre résultat",
+    "overallScore": "Score global",
+    "atsScore": "Score ATS*",
+    "categoryScores": "Évaluation par catégorie",
+    "recommendationsChecklist": "Recommandations · liste de contrôle",
+    "markOpen": "Marquer comme à faire",
+    "markDone": "Marquer comme fait",
+    "strengthsHeading": "✓ Points forts",
+    "atsDisclaimer": "*Le score ATS est une estimation par l'IA, pas une véritable analyse par un ATS."
+  }
+}

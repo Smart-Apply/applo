@@ -10,15 +10,37 @@ import { pick } from './i18n-runtime';
 export const toast = sonnerToast;
 
 const TOAST_MESSAGES = {
-  retryLabel: { de: 'Wiederholen', en: 'Retry' },
+  retryLabel: {
+    de: 'Wiederholen',
+    en: 'Retry',
+    fr: 'Réessayer',
+    es: 'Reintentar',
+    pt: 'Tentar novamente',
+    it: 'Riprova',
+  },
   networkError: {
     de: 'Netzwerkfehler. Bitte überprüfe deine Internetverbindung.',
     en: 'Network error. Please check your internet connection.',
+    fr: 'Erreur réseau. Veuillez vérifier votre connexion Internet.',
+    es: 'Error de red. Comprueba tu conexión a Internet.',
+    pt: 'Erro de rede. Verifica a tua ligação à Internet.',
+    it: 'Errore di rete. Controlla la tua connessione a Internet.',
   },
-  validationTitle: { de: 'Validierungsfehler', en: 'Validation error' },
+  validationTitle: {
+    de: 'Validierungsfehler',
+    en: 'Validation error',
+    fr: 'Erreur de validation',
+    es: 'Error de validación',
+    pt: 'Erro de validação',
+    it: 'Errore di convalida',
+  },
   validationDescription: {
     de: 'Bitte überprüfe deine Eingaben.',
     en: 'Please check your input.',
+    fr: 'Veuillez vérifier vos saisies.',
+    es: 'Comprueba tus datos.',
+    pt: 'Verifica os teus dados.',
+    it: 'Controlla i tuoi dati.',
   },
 };
 

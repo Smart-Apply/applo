@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export type ExportLanguage = 'de' | 'en';
+export type ExportLanguage = 'de' | 'en' | 'fr' | 'es' | 'pt' | 'it';
 
 interface LanguageOption {
   value: ExportLanguage;
@@ -20,15 +20,21 @@ interface LanguageOption {
 const LANGUAGES: LanguageOption[] = [
   { value: 'de', label: 'Deutsch', flag: '🇩🇪' },
   { value: 'en', label: 'English', flag: '🇬🇧' },
+  { value: 'fr', label: 'Français', flag: '🇫🇷' },
+  { value: 'es', label: 'Español', flag: '🇪🇸' },
+  { value: 'pt', label: 'Português', flag: '🇵🇹' },
+  { value: 'it', label: 'Italiano', flag: '🇮🇹' },
 ];
 
 /** Narrow any stored language code to a supported export language. */
 export function toExportLanguage(value?: string | null): ExportLanguage {
-  return value === 'en' ? 'en' : 'de';
+  return LANGUAGES.some((option) => option.value === value)
+    ? (value as ExportLanguage)
+    : 'de';
 }
 
 interface LanguageSelectorProps {
-  /** Current export language ('de' | 'en'). */
+  /** Current export language (de/en/fr/es/pt/it). */
   value: ExportLanguage;
   /** Called when the user picks a different export language. */
   onChange: (value: ExportLanguage) => void;

@@ -1,0 +1,84 @@
+{
+  "list": {
+    "title": "Ofertas de empleo",
+    "description": "Gestiona tus ofertas de empleo guardadas y crea candidaturas a partir de ellas.",
+    "toasts": {
+      "saved": "Oferta de empleo guardada",
+      "created": "Oferta de empleo creada",
+      "deleted": "Oferta de empleo eliminada"
+    },
+    "actions": {
+      "close": "Cerrar",
+      "add": "Añadir nueva oferta",
+      "openOriginal": "Abrir original",
+      "showDetails": "Ver detalles",
+      "apply": "Enviar candidatura",
+      "delete": "Eliminar"
+    },
+    "input": {
+      "title": "Añadir nueva oferta de empleo",
+      "description": "Añade una URL o copia el texto para guardar la oferta.",
+      "tabs": {
+        "link": "Por enlace",
+        "manual": "Manual"
+      }
+    },
+    "moreRequirements": "+{count} más",
+    "empty": {
+      "title": "No hay ofertas de empleo",
+      "description": "Aún no has guardado ninguna oferta de empleo. Añade tu primera oferta para empezar.",
+      "action": "Añadir primera oferta"
+    },
+    "workflow": {
+      "title": "Cómo funciona el flujo de trabajo de Applo",
+      "step1": {
+        "title": "1 · Guarda la oferta",
+        "description": "Añade una URL de LinkedIn/Indeed o copia el texto de la oferta."
+      },
+      "step2": {
+        "title": "2 · Analiza",
+        "description": "Nuestra IA extrae automáticamente todos los requisitos y habilidades importantes."
+      },
+      "step3": {
+        "title": "3 · Envía tu candidatura",
+        "description": "Crea una candidatura a medida para esta oferta con un solo clic."
+      }
+    },
+    "deleteDialog": {
+      "title": "¿Eliminar oferta de empleo?",
+      "description": "¿Seguro que quieres eliminar la oferta de empleo <strong>{title}</strong>?",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar",
+      "deleting": "Eliminando..."
+    }
+  },
+  "detail": {
+    "loading": "Cargando oferta de empleo...",
+    "back": "Atrás",
+    "notFound": {
+      "title": "Oferta de empleo no encontrada",
+      "description": "La oferta de empleo solicitada no existe o no tienes permiso para verla.",
+      "toApplications": "A candidaturas"
+    },
+    "source": "Fuente",
+    "sections": {
+      "description": "Descripción del puesto",
+      "requirements": "Requisitos",
+      "responsibilities": "Tareas y responsabilidades",
+      "niceToHave": "Deseable",
+      "rawText": "Texto original"
+    },
+    "showFullText": "Mostrar texto completo"
+  },
+  "hooks": {
+    "createError": "Error al crear la oferta de empleo",
+    "createSuccess": "Oferta de empleo creada correctamente",
+    "loadingTitle": "Cargando...",
+    "analyzingTitle": "Analizando...",
+    "unknownCompany": "Desconocida",
+    "parseError": "Error al analizar la oferta de empleo",
+    "parseSuccess": "Oferta de empleo analizada correctamente",
+    "deleteError": "Error al eliminar la oferta de empleo",
+    "deleteSuccess": "Oferta de empleo eliminada correctamente"
+  }
+}

@@ -66,7 +66,7 @@
     "keywords": "KEYWORDS 21/24",
     "scoreWord": "STARK",
     "export": "Als PDF exportieren",
-    "hint": "50 VORLAGEN · DE/EN"
+    "hint": "50 VORLAGEN · 6 SPRACHEN"
   },
   "how": {
     "eyebrow": "01 · So funktioniert’s",
@@ -83,7 +83,7 @@
       },
       "three": {
         "title": "Als PDF exportieren",
-        "desc": "Wähle aus 50 ATS-Vorlagen, exportiere als PDF (DE/EN) und bewirb dich. Fertig."
+        "desc": "Wähle aus 50 ATS-Vorlagen, exportiere als PDF in 6 Sprachen und bewirb dich. Fertig."
       }
     }
   },
@@ -117,8 +117,8 @@
         "desc": "Verbinde Outlook/M365. Der Status deiner Bewerbungen aktualisiert sich automatisch.<tag>Premium</tag>"
       },
       "languages": {
-        "title": "Mehrsprachig DE/EN",
-        "desc": "Erstelle und exportiere Bewerbungen wahlweise auf Deutsch oder Englisch."
+        "title": "Mehrsprachig – 6 Sprachen",
+        "desc": "Erstelle Bewerbungen auf Deutsch oder Englisch und exportiere sie in 6 Sprachen – auch Französisch, Spanisch, Portugiesisch und Italienisch."
       },
       "pipeline": {
         "title": "Live-Status deiner Bewerbungen",
@@ -199,7 +199,7 @@
           "validations": "15 Bewerbungs-Checks / Monat",
           "ingestion": "Stellenanzeigen einlesen (Text, Link oder Datei)",
           "pipeline": "Live-Status deiner Bewerbungen",
-          "export": "Werbefrei & Export auf Deutsch oder Englisch"
+          "export": "Werbefrei & Export in 6 Sprachen"
         },
         "cta": "Pro wählen"
       },
@@ -260,7 +260,7 @@
       },
       "languages": {
         "q": "In welchen Sprachen kann ich bewerben?",
-        "a": "Du kannst Bewerbungen auf Deutsch und Englisch erstellen und als PDF exportieren."
+        "a": "Du kannst Bewerbungen auf Deutsch und Englisch erstellen und beim PDF-Export in 6 Sprachen übersetzen lassen – auch Französisch, Spanisch, Portugiesisch und Italienisch."
       },
       "cancel": {
         "q": "Ist Applo kündbar?",

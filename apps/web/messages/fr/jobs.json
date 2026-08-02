@@ -1,0 +1,84 @@
+{
+  "list": {
+    "title": "Offres d'emploi",
+    "description": "Gérez vos offres d'emploi enregistrées et créez des candidatures à partir de celles-ci.",
+    "toasts": {
+      "saved": "Offre d'emploi enregistrée",
+      "created": "Offre d'emploi créée",
+      "deleted": "Offre d'emploi supprimée"
+    },
+    "actions": {
+      "close": "Fermer",
+      "add": "Ajouter une offre",
+      "openOriginal": "Ouvrir l'original",
+      "showDetails": "Afficher les détails",
+      "apply": "Postuler",
+      "delete": "Supprimer"
+    },
+    "input": {
+      "title": "Ajouter une nouvelle offre d'emploi",
+      "description": "Ajoutez une URL ou copiez le texte pour enregistrer l'offre.",
+      "tabs": {
+        "link": "Par lien",
+        "manual": "Manuel"
+      }
+    },
+    "moreRequirements": "+{count} de plus",
+    "empty": {
+      "title": "Aucune offre d'emploi",
+      "description": "Vous n'avez encore enregistré aucune offre d'emploi. Ajoutez votre première offre pour commencer.",
+      "action": "Ajouter la première offre"
+    },
+    "workflow": {
+      "title": "Comment fonctionne le processus Applo",
+      "step1": {
+        "title": "1 · Enregistrer l'offre",
+        "description": "Ajoutez une URL depuis LinkedIn/Indeed ou copiez le texte de l'offre."
+      },
+      "step2": {
+        "title": "2 · Analyser",
+        "description": "Notre IA extrait automatiquement toutes les exigences et compétences importantes."
+      },
+      "step3": {
+        "title": "3 · Postuler",
+        "description": "Créez une candidature sur mesure pour cette offre en un clic."
+      }
+    },
+    "deleteDialog": {
+      "title": "Supprimer l'offre d'emploi ?",
+      "description": "Voulez-vous vraiment supprimer l'offre d'emploi <strong>{title}</strong> ?",
+      "cancel": "Annuler",
+      "confirm": "Supprimer",
+      "deleting": "Suppression..."
+    }
+  },
+  "detail": {
+    "loading": "Chargement de l'offre d'emploi...",
+    "back": "Retour",
+    "notFound": {
+      "title": "Offre d'emploi introuvable",
+      "description": "L'offre d'emploi demandée n'existe pas ou vous n'avez pas les autorisations nécessaires.",
+      "toApplications": "Vers les candidatures"
+    },
+    "source": "Source",
+    "sections": {
+      "description": "Description du poste",
+      "requirements": "Exigences",
+      "responsibilities": "Tâches et responsabilités",
+      "niceToHave": "Atouts supplémentaires",
+      "rawText": "Texte original"
+    },
+    "showFullText": "Afficher le texte complet"
+  },
+  "hooks": {
+    "createError": "Échec de la création de l'offre d'emploi",
+    "createSuccess": "Offre d'emploi créée avec succès",
+    "loadingTitle": "Chargement...",
+    "analyzingTitle": "Analyse en cours...",
+    "unknownCompany": "Inconnue",
+    "parseError": "Échec de l'analyse de l'offre d'emploi",
+    "parseSuccess": "Offre d'emploi analysée avec succès",
+    "deleteError": "Échec de la suppression de l'offre d'emploi",
+    "deleteSuccess": "Offre d'emploi supprimée avec succès"
+  }
+}

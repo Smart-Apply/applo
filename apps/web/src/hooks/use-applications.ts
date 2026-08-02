@@ -315,7 +315,7 @@ export function useExportApplication(applicationId: string) {
   const t = useTranslations('applications');
 
   return useMutation({
-    mutationFn: (language?: 'de' | 'en') =>
+    mutationFn: (language?: 'de' | 'en' | 'fr' | 'es' | 'pt' | 'it') =>
       api.applications.export(applicationId, language),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId] });

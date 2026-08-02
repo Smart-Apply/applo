@@ -1,11 +1,11 @@
 /**
  * Static message loader. Each feature area owns one namespace file per
- * locale under apps/web/messages/{de,en}/<namespace>.json — keep the two
- * locales structurally identical (same keys) when editing them.
+ * locale under apps/web/messages/{de,en,fr,es,pt,it}/<namespace>.json —
+ * keep all locales structurally identical (same keys) when editing them.
  *
  * Static imports keep this bundler-friendly on the OpenNext/Cloudflare
  * Workers runtime (no fs access at request time). Only the server bundle
- * contains both locales; the client receives the active locale's messages
+ * contains all locales; the client receives the active locale's messages
  * serialized through NextIntlClientProvider.
  */
 
@@ -47,6 +47,78 @@ import enTwoFactor from '../../messages/en/two-factor.json';
 import enValidation from '../../messages/en/validation.json';
 import enWizard from '../../messages/en/wizard.json';
 
+import frAnalytics from '../../messages/fr/analytics.json';
+import frApplications from '../../messages/fr/applications.json';
+import frAuth from '../../messages/fr/auth.json';
+import frCommon from '../../messages/fr/common.json';
+import frDashboard from '../../messages/fr/dashboard.json';
+import frEditor from '../../messages/fr/editor.json';
+import frFaq from '../../messages/fr/faq.json';
+import frInterviews from '../../messages/fr/interviews.json';
+import frJobs from '../../messages/fr/jobs.json';
+import frLanding from '../../messages/fr/landing.json';
+import frProfile from '../../messages/fr/profile.json';
+import frSettings from '../../messages/fr/settings.json';
+import frSubscription from '../../messages/fr/subscription.json';
+import frTemplates from '../../messages/fr/templates.json';
+import frTwoFactor from '../../messages/fr/two-factor.json';
+import frValidation from '../../messages/fr/validation.json';
+import frWizard from '../../messages/fr/wizard.json';
+
+import esAnalytics from '../../messages/es/analytics.json';
+import esApplications from '../../messages/es/applications.json';
+import esAuth from '../../messages/es/auth.json';
+import esCommon from '../../messages/es/common.json';
+import esDashboard from '../../messages/es/dashboard.json';
+import esEditor from '../../messages/es/editor.json';
+import esFaq from '../../messages/es/faq.json';
+import esInterviews from '../../messages/es/interviews.json';
+import esJobs from '../../messages/es/jobs.json';
+import esLanding from '../../messages/es/landing.json';
+import esProfile from '../../messages/es/profile.json';
+import esSettings from '../../messages/es/settings.json';
+import esSubscription from '../../messages/es/subscription.json';
+import esTemplates from '../../messages/es/templates.json';
+import esTwoFactor from '../../messages/es/two-factor.json';
+import esValidation from '../../messages/es/validation.json';
+import esWizard from '../../messages/es/wizard.json';
+
+import ptAnalytics from '../../messages/pt/analytics.json';
+import ptApplications from '../../messages/pt/applications.json';
+import ptAuth from '../../messages/pt/auth.json';
+import ptCommon from '../../messages/pt/common.json';
+import ptDashboard from '../../messages/pt/dashboard.json';
+import ptEditor from '../../messages/pt/editor.json';
+import ptFaq from '../../messages/pt/faq.json';
+import ptInterviews from '../../messages/pt/interviews.json';
+import ptJobs from '../../messages/pt/jobs.json';
+import ptLanding from '../../messages/pt/landing.json';
+import ptProfile from '../../messages/pt/profile.json';
+import ptSettings from '../../messages/pt/settings.json';
+import ptSubscription from '../../messages/pt/subscription.json';
+import ptTemplates from '../../messages/pt/templates.json';
+import ptTwoFactor from '../../messages/pt/two-factor.json';
+import ptValidation from '../../messages/pt/validation.json';
+import ptWizard from '../../messages/pt/wizard.json';
+
+import itAnalytics from '../../messages/it/analytics.json';
+import itApplications from '../../messages/it/applications.json';
+import itAuth from '../../messages/it/auth.json';
+import itCommon from '../../messages/it/common.json';
+import itDashboard from '../../messages/it/dashboard.json';
+import itEditor from '../../messages/it/editor.json';
+import itFaq from '../../messages/it/faq.json';
+import itInterviews from '../../messages/it/interviews.json';
+import itJobs from '../../messages/it/jobs.json';
+import itLanding from '../../messages/it/landing.json';
+import itProfile from '../../messages/it/profile.json';
+import itSettings from '../../messages/it/settings.json';
+import itSubscription from '../../messages/it/subscription.json';
+import itTemplates from '../../messages/it/templates.json';
+import itTwoFactor from '../../messages/it/two-factor.json';
+import itValidation from '../../messages/it/validation.json';
+import itWizard from '../../messages/it/wizard.json';
+
 const messages = {
   de: {
     analytics: deAnalytics,
@@ -85,6 +157,82 @@ const messages = {
     twoFactor: enTwoFactor,
     validation: enValidation,
     wizard: enWizard,
+  },
+  fr: {
+    analytics: frAnalytics,
+    applications: frApplications,
+    auth: frAuth,
+    common: frCommon,
+    dashboard: frDashboard,
+    editor: frEditor,
+    faq: frFaq,
+    interviews: frInterviews,
+    jobs: frJobs,
+    landing: frLanding,
+    profile: frProfile,
+    settings: frSettings,
+    subscription: frSubscription,
+    templates: frTemplates,
+    twoFactor: frTwoFactor,
+    validation: frValidation,
+    wizard: frWizard,
+  },
+  es: {
+    analytics: esAnalytics,
+    applications: esApplications,
+    auth: esAuth,
+    common: esCommon,
+    dashboard: esDashboard,
+    editor: esEditor,
+    faq: esFaq,
+    interviews: esInterviews,
+    jobs: esJobs,
+    landing: esLanding,
+    profile: esProfile,
+    settings: esSettings,
+    subscription: esSubscription,
+    templates: esTemplates,
+    twoFactor: esTwoFactor,
+    validation: esValidation,
+    wizard: esWizard,
+  },
+  pt: {
+    analytics: ptAnalytics,
+    applications: ptApplications,
+    auth: ptAuth,
+    common: ptCommon,
+    dashboard: ptDashboard,
+    editor: ptEditor,
+    faq: ptFaq,
+    interviews: ptInterviews,
+    jobs: ptJobs,
+    landing: ptLanding,
+    profile: ptProfile,
+    settings: ptSettings,
+    subscription: ptSubscription,
+    templates: ptTemplates,
+    twoFactor: ptTwoFactor,
+    validation: ptValidation,
+    wizard: ptWizard,
+  },
+  it: {
+    analytics: itAnalytics,
+    applications: itApplications,
+    auth: itAuth,
+    common: itCommon,
+    dashboard: itDashboard,
+    editor: itEditor,
+    faq: itFaq,
+    interviews: itInterviews,
+    jobs: itJobs,
+    landing: itLanding,
+    profile: itProfile,
+    settings: itSettings,
+    subscription: itSubscription,
+    templates: itTemplates,
+    twoFactor: itTwoFactor,
+    validation: itValidation,
+    wizard: itWizard,
   },
 } as const;
 

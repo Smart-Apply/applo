@@ -1,0 +1,66 @@
+{
+  "card": {
+    "defaultBadge": "Predefinido",
+    "noDescription": "Sem descrição disponível",
+    "previewAlt": "Pré-visualização de {name}",
+    "colorLabel": "Cor:",
+    "selected": "Selecionado",
+    "select": "Selecionar"
+  },
+  "demoLoading": {
+    "title": "Demonstração de componentes de carregamento",
+    "subtitle": "Demonstração de todos os estados de carregamento e componentes skeleton",
+    "spinner": {
+      "title": "Componente Spinner",
+      "description": "Disponível em vários tamanhos",
+      "small": "Pequeno",
+      "default": "Predefinido",
+      "large": "Grande",
+      "extraLarge": "Extra grande"
+    },
+    "wrappers": {
+      "title": "Wrappers de carregamento",
+      "description": "Estados de carregamento predefinidos para padrões comuns",
+      "centered": "Loader centrado",
+      "loadingData": "A carregar dados...",
+      "inline": "Loader em linha",
+      "processing": "A processar...",
+      "loadingContent": "A carregar conteúdo...",
+      "generatingReport": "A gerar relatório...",
+      "fullPage": "Loader de página completa",
+      "showFullPage": "Mostrar loader de página completa",
+      "loadingApplication": "A carregar candidatura...",
+      "hide": "Ocultar"
+    },
+    "buttons": {
+      "title": "Estados de carregamento em botões",
+      "description": "Botões com spinners de carregamento integrados",
+      "default": "Botão predefinido",
+      "outline": "Botão contornado",
+      "destructive": "Botão destrutivo"
+    },
+    "basicSkeleton": {
+      "title": "Skeleton básico",
+      "description": "Formas skeleton simples com animação de pulsação"
+    },
+    "specialized": {
+      "title": "Skeletons especializados",
+      "description": "Skeletons predefinidos para tipos de conteúdo comuns",
+      "applicationCard": "Skeleton de cartão de candidatura",
+      "jobPostingCard": "Skeleton de cartão de oferta de emprego",
+      "profileCard": "Skeleton de cartão de perfil",
+      "formField": "Skeleton de campo de formulário",
+      "text": "Skeleton de texto",
+      "table": "Skeleton de tabela",
+      "avatarButtons": "Skeletons de avatar e botões",
+      "image": "Skeleton de imagem",
+      "square": "Quadrado",
+      "video": "Vídeo (16:9)",
+      "portrait": "Retrato (3:4)"
+    },
+    "completeProfile": {
+      "title": "Skeleton de perfil completo",
+      "description": "Estado de carregamento da página de perfil completa"
+    }
+  }
+}

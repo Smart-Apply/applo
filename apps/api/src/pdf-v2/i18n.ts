@@ -13,6 +13,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Contact',
     es: 'Contacto',
     it: 'Contatto',
+    pt: 'Contacto',
   },
   'resume.summary': {
     en: 'Professional Summary',
@@ -20,6 +21,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Résumé Professionnel',
     es: 'Resumen Profesional',
     it: 'Profilo Professionale',
+    pt: 'Resumo Profissional',
   },
   'resume.skills': {
     en: 'Skills',
@@ -27,6 +29,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Compétences',
     es: 'Habilidades',
     it: 'Competenze',
+    pt: 'Competências',
   },
   'resume.experience': {
     en: 'Professional Experience',
@@ -34,6 +37,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Expérience Professionnelle',
     es: 'Experiencia Profesional',
     it: 'Esperienza Professionale',
+    pt: 'Experiência Profissional',
   },
   'resume.education': {
     en: 'Education',
@@ -41,6 +45,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Formation',
     es: 'Educación',
     it: 'Formazione',
+    pt: 'Formação',
   },
   'resume.certifications': {
     en: 'Certifications',
@@ -48,6 +53,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Certifications',
     es: 'Certificaciones',
     it: 'Certificazioni',
+    pt: 'Certificações',
   },
   'resume.languages': {
     en: 'Languages',
@@ -55,6 +61,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Langues',
     es: 'Idiomas',
     it: 'Lingue',
+    pt: 'Línguas',
   },
   'resume.projects': {
     en: 'Key Projects',
@@ -62,6 +69,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Projets Clés',
     es: 'Proyectos Clave',
     it: 'Progetti Chiave',
+    pt: 'Projetos Principais',
   },
   'level.native': {
     en: 'Native',
@@ -69,6 +77,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Langue maternelle',
     es: 'Nativo',
     it: 'Madrelingua',
+    pt: 'Língua materna',
   },
   'level.fluent': {
     en: 'Fluent',
@@ -76,6 +85,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Courant',
     es: 'Fluido',
     it: 'Fluente',
+    pt: 'Fluente',
   },
   'level.advanced': {
     en: 'Advanced',
@@ -83,6 +93,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Avancé',
     es: 'Avanzado',
     it: 'Avanzato',
+    pt: 'Avançado',
   },
   'level.good': {
     en: 'Good',
@@ -90,6 +101,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Bon',
     es: 'Bueno',
     it: 'Buono',
+    pt: 'Bom',
   },
   'level.intermediate': {
     en: 'Intermediate',
@@ -97,6 +109,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Intermédiaire',
     es: 'Intermedio',
     it: 'Intermedio',
+    pt: 'Intermédio',
   },
   'level.conversational': {
     en: 'Conversational',
@@ -104,6 +117,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Conversationnel',
     es: 'Conversacional',
     it: 'Conversazionale',
+    pt: 'Conversacional',
   },
   'level.basic': {
     en: 'Basic',
@@ -111,6 +125,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Notions de base',
     es: 'Básico',
     it: 'Base',
+    pt: 'Básico',
   },
   'level.beginner': {
     en: 'Beginner',
@@ -118,6 +133,7 @@ const LABELS: Record<string, Record<string, string>> = {
     fr: 'Débutant',
     es: 'Principiante',
     it: 'Principiante',
+    pt: 'Iniciante',
   },
 };
 

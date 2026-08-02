@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Statistiche",
+    "description": "Come sta andando la tua ricerca di lavoro? Tendenze, tassi di conversione e prestazioni dei modelli a colpo d'occhio.",
+    "updatedNow": "Aggiornato proprio ora",
+    "errorTitle": "Impossibile caricare le statistiche",
+    "unknownError": "Errore sconosciuto",
+    "kpis": {
+      "applied": {
+        "label": "Inviate",
+        "tipHtml": "Quante delle candidature create hai effettivamente <b>inviato</b>. Più candidature = più opportunità."
+      },
+      "interviewRate": {
+        "label": "Tasso di colloqui",
+        "tipHtml": "Percentuale delle candidature inviate che hanno portato a un <b>invito al colloquio</b>. Media tipica: 15–25%."
+      },
+      "accepted": {
+        "label": "Accettate",
+        "tipHtml": "Candidature che si sono concluse con un'<b>offerta di lavoro</b>."
+      },
+      "ats": {
+        "label": "Punteggio ATS medio",
+        "tipHtml": "Quanto bene i sistemi di gestione delle candidature (<b>ATS</b>) riescono a leggere i tuoi curriculum — da 0 a 100. Obiettivo: 80+."
+      }
+    }
+  },
+  "upgrade": {
+    "title": "Statistiche e tendenze avanzate",
+    "description": "Tassi di successo, funnel di conversione, andamento del punteggio ATS e prestazioni dei modelli — esclusivi per i membri Premium.",
+    "unlock": "Sblocca con Premium",
+    "back": "Torna alla dashboard"
+  },
+  "stages": {
+    "CREATED": "Creata",
+    "APPLIED": "Inviata",
+    "INTERVIEW": "Colloquio",
+    "ACCEPTED": "Accettata"
+  },
+  "activity": {
+    "title": "Attività",
+    "tipHtml": "Attività giornaliera delle candidature. Attiva/disattiva le metriche con i chip; passa il mouse sul grafico per i valori esatti.",
+    "description": "Candidature create e inviate al giorno · ultimi {count} giorni",
+    "series": {
+      "created": "Create",
+      "applied": "Inviate",
+      "interview": "Colloquio",
+      "accepted": "Accettate"
+    }
+  },
+  "range": {
+    "ariaLabel": "Seleziona intervallo di tempo",
+    "days7": "7 gg",
+    "days30": "30 gg",
+    "days90": "90 gg"
+  },
+  "funnel": {
+    "title": "Funnel di conversione",
+    "tipHtml": "Ogni fase mostra quante candidature sono arrivate fin qui. La percentuale è il <b>tasso di passaggio</b> rispetto alla fase precedente. Fai clic su una fase per aprire le candidature filtrate.",
+    "description": "Quante candidature arrivano fino a un'offerta di lavoro.",
+    "continue": "{value}% continuano",
+    "opensStatus": "Apre <strong>{count}</strong> {count, plural, one {candidatura} other {candidature}} con stato \"{status}\".",
+    "biggestDropAt": "Il calo maggiore è a",
+    "biggestDropValue": ": solo il {value}% supera questa fase.",
+    "clickStage": "Fai clic su una fase per aprire le candidature correlate."
+  },
+  "insight": {
+    "new": "Ottimo inizio — <strong>{applications} candidature</strong> create, <strong>{applied} inviate</strong>. <muted>Creane qualcuna in più così potranno emergere tendenze significative.</muted>",
+    "established": "Il tuo tasso di colloqui è del <strong>{rate}%</strong>.",
+    "establishedAboveAverage": "Il tuo tasso di colloqui è del <strong>{rate}%</strong> — sopra la media.",
+    "biggestHurdle": "L'ostacolo maggiore è",
+    "continue": "({value}% continuano).",
+    "tip": "Suggerimento: un punteggio ATS più alto riduce sensibilmente gli abbandoni."
+  },
+  "scoreBuckets": {
+    "title": "Punteggio ATS e colloqui",
+    "tipHtml": "Raggruppiamo le tue candidature inviate per <b>punteggio ATS</b> e mostriamo il tasso di colloqui per ciascun gruppo. Obiettivo: quante più candidature possibile nella fascia verde (80+).",
+    "description": "Quali fasce di punteggio portano più spesso a colloqui.",
+    "empty": "Non appena crei candidature con un punteggio ATS, qui ti mostreremo quali fasce di punteggio portano più colloqui.",
+    "bucketTitle": "{bucket} pt · {count} candidature · {rate}% tasso di colloqui",
+    "applicationsShort": "{count} cand.",
+    "best": "Le candidature con <strong>{bucket} punti</strong> ottengono il tasso di colloqui più alto ({rate}%)."
+  },
+  "topTemplates": {
+    "title": "Modelli più usati",
+    "description": "Quali modelli di curriculum usi più spesso — e come si comportano.",
+    "empty": "Non sono ancora disponibili dati sui modelli. Crea candidature con modelli diversi per confrontarne le prestazioni.",
+    "usage": "{count, plural, one {# candidatura} other {# candidature}}",
+    "interview": "Colloquio"
+  }
+}

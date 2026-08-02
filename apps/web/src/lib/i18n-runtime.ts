@@ -22,6 +22,7 @@ import {
   LOCALE_COOKIE,
   LOCALE_COOKIE_MAX_AGE,
   toIntlLocale,
+  type IntlLocale,
   type Locale,
 } from '@/i18n/config';
 
@@ -43,7 +44,7 @@ export function getActiveLocale(): Locale {
 }
 
 /** BCP-47 tag for Intl.* APIs based on the active locale. */
-export function getIntlLocale(): 'de-DE' | 'en-US' {
+export function getIntlLocale(): IntlLocale {
   return toIntlLocale(getActiveLocale());
 }
 

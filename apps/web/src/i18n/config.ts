@@ -7,7 +7,7 @@
  * product's home market default).
  */
 
-export const locales = ['de', 'en'] as const;
+export const locales = ['de', 'en', 'fr', 'es', 'pt', 'it'] as const;
 
 export type Locale = (typeof locales)[number];
 
@@ -39,6 +39,17 @@ export function pickLocaleFromAcceptLanguage(header: string | null): Locale | un
 }
 
 /** BCP-47 tag for Intl.* APIs (dates, numbers). */
-export function toIntlLocale(locale: Locale): 'de-DE' | 'en-US' {
-  return locale === 'de' ? 'de-DE' : 'en-US';
+export type IntlLocale = 'de-DE' | 'en-US' | 'fr-FR' | 'es-ES' | 'pt-PT' | 'it-IT';
+
+const INTL_LOCALES: Record<Locale, IntlLocale> = {
+  de: 'de-DE',
+  en: 'en-US',
+  fr: 'fr-FR',
+  es: 'es-ES',
+  pt: 'pt-PT',
+  it: 'it-IT',
+};
+
+export function toIntlLocale(locale: Locale): IntlLocale {
+  return INTL_LOCALES[locale];
 }

@@ -217,7 +217,7 @@ const DEFAULT_SECTION_ORDER: ResumeSection[] = [
 const SIDEBAR_ASIDE_SECTIONS: ResumeSection[] = ['education', 'skills', 'languages'];
 
 /** Language the DOCUMENT is written in — drives the mimic's section labels. */
-export type ResumeDocLanguage = 'de' | 'en';
+export type ResumeDocLanguage = 'de' | 'en' | 'fr' | 'es' | 'pt' | 'it';
 /**
  * Document-language section labels. These are document content (they mirror
  * the exported PDF's headers, see apps/api/src/pdf-v2/i18n.ts), NOT UI copy —
@@ -243,6 +243,46 @@ const DOC_LABELS: Record<ResumeDocLanguage, Record<ResumeSection | 'contact', st
     languages: 'Languages',
     certs: 'Certifications',
     contact: 'Contact',
+  },
+  fr: {
+    profile: 'Résumé Professionnel',
+    experience: 'Expérience Professionnelle',
+    education: 'Formation',
+    projects: 'Projets Clés',
+    skills: 'Compétences',
+    languages: 'Langues',
+    certs: 'Certifications',
+    contact: 'Contact',
+  },
+  es: {
+    profile: 'Resumen Profesional',
+    experience: 'Experiencia Profesional',
+    education: 'Educación',
+    projects: 'Proyectos Clave',
+    skills: 'Habilidades',
+    languages: 'Idiomas',
+    certs: 'Certificaciones',
+    contact: 'Contacto',
+  },
+  pt: {
+    profile: 'Resumo Profissional',
+    experience: 'Experiência Profissional',
+    education: 'Formação',
+    projects: 'Projetos Principais',
+    skills: 'Competências',
+    languages: 'Línguas',
+    certs: 'Certificações',
+    contact: 'Contacto',
+  },
+  it: {
+    profile: 'Profilo Professionale',
+    experience: 'Esperienza Professionale',
+    education: 'Formazione',
+    projects: 'Progetti Chiave',
+    skills: 'Competenze',
+    languages: 'Lingue',
+    certs: 'Certificazioni',
+    contact: 'Contatto',
   },
 };
 

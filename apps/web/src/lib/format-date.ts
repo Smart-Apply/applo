@@ -1,6 +1,6 @@
 import { format, formatDistanceToNow } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { de, enUS } from 'date-fns/locale';
+import { de, enUS, es, fr, it, pt } from 'date-fns/locale';
 import type { Locale as DateFnsLocale } from 'date-fns';
 import { getActiveLocale } from './i18n-runtime';
 
@@ -25,6 +25,46 @@ const DATE_LOCALE_CONFIG = {
     time: 'h:mm a',
     todayAt: (time: string) => `Today at ${time}`,
     yesterdayAt: (time: string) => `Yesterday at ${time}`,
+  },
+  fr: {
+    dateFns: fr as DateFnsLocale,
+    dateTime: 'dd/MM/yyyy HH:mm',
+    date: 'dd/MM/yyyy',
+    dayMonthTime: "dd MMM 'à' HH:mm",
+    tooltip: 'dd MMMM yyyy, HH:mm:ss',
+    time: 'HH:mm',
+    todayAt: (time: string) => `Aujourd’hui à ${time}`,
+    yesterdayAt: (time: string) => `Hier à ${time}`,
+  },
+  es: {
+    dateFns: es as DateFnsLocale,
+    dateTime: 'dd/MM/yyyy HH:mm',
+    date: 'dd/MM/yyyy',
+    dayMonthTime: "dd MMM 'a las' HH:mm",
+    tooltip: 'dd MMMM yyyy, HH:mm:ss',
+    time: 'HH:mm',
+    todayAt: (time: string) => `Hoy a las ${time}`,
+    yesterdayAt: (time: string) => `Ayer a las ${time}`,
+  },
+  pt: {
+    dateFns: pt as DateFnsLocale,
+    dateTime: 'dd/MM/yyyy HH:mm',
+    date: 'dd/MM/yyyy',
+    dayMonthTime: "dd MMM 'às' HH:mm",
+    tooltip: 'dd MMMM yyyy, HH:mm:ss',
+    time: 'HH:mm',
+    todayAt: (time: string) => `Hoje às ${time}`,
+    yesterdayAt: (time: string) => `Ontem às ${time}`,
+  },
+  it: {
+    dateFns: it as DateFnsLocale,
+    dateTime: 'dd/MM/yyyy HH:mm',
+    date: 'dd/MM/yyyy',
+    dayMonthTime: "dd MMM 'alle' HH:mm",
+    tooltip: 'dd MMMM yyyy, HH:mm:ss',
+    time: 'HH:mm',
+    todayAt: (time: string) => `Oggi alle ${time}`,
+    yesterdayAt: (time: string) => `Ieri alle ${time}`,
   },
 } as const;
 

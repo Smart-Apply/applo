@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "title": "FAQ – Applo",
+    "description": "Questions fréquentes sur Applo : candidatures, CV, lettres de motivation, confidentialité et tarifs."
+  },
+  "title": "Foire aux questions (FAQ)",
+  "intro": "Réponses aux questions les plus fréquentes sur Applo. Vous ne trouvez pas la vôtre ? Contactez-nous via le formulaire de contact sur la <home>page d'accueil</home>.",
+  "sections": {
+    "general": "Général"
+  },
+  "items": {
+    "what": {
+      "q": "Que fait exactement Applo ?",
+      "a": "Applo crée en quelques secondes une lettre de motivation adaptée et un CV PDF optimisé à partir de votre profil et d'une offre d'emploi — tous deux personnalisés pour le poste visé. Vous pouvez modifier le texte directement dans l'éditeur avant de le télécharger."
+    },
+    "industries": {
+      "q": "Applo fonctionne-t-il aussi en dehors des métiers de l'informatique ?",
+      "a": "Oui. Applo est volontairement neutre vis-à-vis des secteurs d'activité. Les modèles et les prompts fonctionnent pour des postes dans la santé, la vente, le marketing, l'artisanat, l'administration, l'éducation et la logistique — pas uniquement dans la tech."
+    },
+    "languages": {
+      "q": "Dans quelle langue mes candidatures seront-elles rédigées ?",
+      "a": "Nous détectons automatiquement la langue de l'offre d'emploi (actuellement l'allemand et l'anglais) et créons la lettre de motivation et le CV dans la même langue. À l'export, vous pouvez en plus faire traduire les documents en français, espagnol, portugais ou italien. Les termes spécifiques (par exemple les noms d'outils) conservent leur orthographe habituelle."
+    },
+    "data": {
+      "q": "Que deviennent mes données ?",
+      "a": "Votre profil et vos données de candidature sont chiffrés dans une base de données située dans l'UE (Microsoft Azure, Suède). Nous ne vendons pas vos données et ne les utilisons ni pour la publicité ni pour entraîner des modèles. Les détails figurent dans notre <privacy>politique de confidentialité</privacy>. Vous pouvez télécharger vos données à tout moment via « Paramètres → Exporter les données » ou supprimer entièrement votre compte."
+    },
+    "pricing": {
+      "q": "Combien coûte Applo ?",
+      "a": "Free coûte 0 € et inclut un profil CV, 3 candidatures IA et 5 vérifications de candidature par mois ; les téléchargements sont sans filigrane avec un délai publicitaire de 15 secondes. Pro coûte 9,95 € par mois et inclut 50 candidatures IA, 15 vérifications et 5 entretiens d'entraînement. Premium coûte 19,95 € par mois et inclut 100 candidatures IA, 35 vérifications, 45 entretiens d'entraînement et le suivi des e-mails. Des crédits supplémentaires permanents sont disponibles par lots de 10, 30 ou 75 candidatures — voir notre <pricing>page tarifaire</pricing> pour plus de détails."
+    },
+    "editing": {
+      "q": "Comment puis-je ajuster ma candidature après la génération ?",
+      "a": "Après la génération, un éditeur s'ouvre automatiquement où vous pouvez modifier la lettre de motivation et le CV directement dans le navigateur, puis les exporter à nouveau en PDF — sans nouvelle génération et sans consommer de jetons."
+    },
+    "ats": {
+      "q": "Les CV générés sont-ils compatibles ATS ?",
+      "a": "Oui. Tous les modèles PDF sont conçus pour que les systèmes de suivi des candidatures (ATS) courants puissent les lire correctement : mise en page à une seule colonne, structure HTML simple, aucun tableau ni élément graphique dans les zones critiques, en-têtes de section clairs et polices standard."
+    },
+    "contact": {
+      "q": "J'ai trouvé un bug ou j'ai une idée — comment vous contacter ?",
+      "a": "Contactez-nous via le formulaire de contact sur la <home>page d'accueil</home> ou directement à <email>support@applo.ai</email>. Nous répondons généralement sous 1 à 2 jours ouvrés."
+    }
+  },
+  "legalLayout": {
+    "backHome": "← Retour à la page d'accueil",
+    "home": "Accueil",
+    "copyright": "© {year} Applo. Tous droits réservés."
+  }
+}

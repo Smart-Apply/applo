@@ -1,0 +1,96 @@
+{
+  "page": {
+    "title": "Verifica della candidatura",
+    "subtitle": "Valutazione IA per la qualità e la compatibilità ATS della tua candidatura.",
+    "quotaBadge": "{remaining} / {limit} verifiche",
+    "newCheck": "Nuova verifica",
+    "history": "Verifiche precedenti",
+    "limitReachedTitle": "Hai raggiunto il tuo limite mensile di {limit} verifiche.",
+    "limitReachedDescription": "Confronta i <pricing>piani</pricing> per una quota mensile più alta.",
+    "historyTitle": "Verifiche precedenti",
+    "freeHistoryDescription": "Il piano Free include 5 verifiche al mese.",
+    "savedHistoryDescription": "Le tue verifiche salvate.",
+    "noHistory": "Ancora nessuna verifica.",
+    "open": "Apri",
+    "deleteAria": "Elimina verifica",
+    "createSuccess": "Candidatura verificata",
+    "createError": "Verifica non riuscita",
+    "deleteSuccess": "Verifica eliminata",
+    "deleteError": "Impossibile eliminare la verifica"
+  },
+  "documentInput": {
+    "fileReadError": "Impossibile leggere il file",
+    "detected": "Rilevato",
+    "fileReadSuccess": "{size} · Testo letto con successo",
+    "removeFileAria": "Rimuovi file",
+    "chooseFile": "Scegli file",
+    "orDragHere": "oppure trascinalo qui",
+    "fileHint": "PDF o DOCX · max. 10 MB",
+    "toggle": {
+      "upload": "Carica file",
+      "text": "Incolla testo"
+    },
+    "title": "I tuoi documenti",
+    "subtitle": "È richiesto solo il curriculum. Aggiungi una lettera di presentazione per un feedback ancora più preciso.",
+    "resumeLabel": "Curriculum",
+    "resumePlaceholder": "Incolla qui il testo del tuo curriculum…",
+    "addCoverLetter": "Aggiungi lettera di presentazione",
+    "coverLetterLabel": "Lettera di presentazione",
+    "optional": "(facoltativo)",
+    "remove": "Rimuovi",
+    "coverLetterPlaceholder": "Incolla qui il testo della tua lettera di presentazione…",
+    "next": "Continua verso la posizione desiderata"
+  },
+  "jobContext": {
+    "toggle": {
+      "link": "Analizza link",
+      "text": "Incolla testo"
+    },
+    "title": "Posizione desiderata e feedback",
+    "subtitle": "Facoltativo — con il contesto del lavoro, l'IA valuta anche l'idoneità per il ruolo.",
+    "jobPostingLabel": "Annuncio di lavoro",
+    "optional": "(facoltativo)",
+    "analyzed": "Analizzato",
+    "readSuccess": "{host} · Annuncio letto con successo",
+    "removeLinkAria": "Rimuovi link",
+    "analyzing": "Analisi in corso…",
+    "analyze": "Analizza",
+    "linkError": "Impossibile leggere il link.",
+    "pasteAdText": "Incolla il testo dell'annuncio →",
+    "textPlaceholder": "es. caposala infermieristico — oppure incolla l'intero annuncio di lavoro…",
+    "titleLabel": "Titolo",
+    "titlePlaceholder": "es. candidatura per City Hospital",
+    "feedbackLanguage": "Lingua del feedback",
+    "languageAuto": "Automatica",
+    "languageGerman": "Tedesco",
+    "privacyNote": "I tuoi documenti vengono utilizzati solo per questa verifica e non vengono conservati. Senza il contesto del lavoro, l'IA valuta solo la qualità e la struttura ATS.",
+    "back": "Indietro",
+    "submit": "Verifica candidatura"
+  },
+  "loading": {
+    "title": "La tua candidatura è in fase di verifica…",
+    "subtitle": "Di solito richiede 15-30 secondi.",
+    "checklist": {
+      "documents": "I documenti sono in fase di lettura",
+      "quality": "La qualità è in fase di valutazione",
+      "ats": "La compatibilità ATS è in fase di verifica",
+      "recommendations": "I consigli sono in fase di creazione"
+    }
+  },
+  "result": {
+    "verdict": {
+      "strong": "Pronta per l'invio",
+      "good": "Solida, piccoli miglioramenti",
+      "needsWork": "Revisione consigliata"
+    },
+    "yourResult": "Il tuo risultato",
+    "overallScore": "Punteggio complessivo",
+    "atsScore": "Punteggio ATS*",
+    "categoryScores": "Valutazione per categoria",
+    "recommendationsChecklist": "Consigli · checklist",
+    "markOpen": "Contrassegna come aperto",
+    "markDone": "Contrassegna come completato",
+    "strengthsHeading": "✓ Punti di forza",
+    "atsDisclaimer": "*Il punteggio ATS è una stima dell'IA, non l'esecuzione di un parser ATS reale."
+  }
+}

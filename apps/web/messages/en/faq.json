@@ -19,7 +19,7 @@
     },
     "languages": {
       "q": "Which language will my applications be written in?",
-      "a": "We automatically detect the job posting language (currently German and English) and create the cover letter and résumé in the same language. Domain terms (for example tool names) keep their usual spelling."
+      "a": "We automatically detect the job posting language (currently German and English) and create the cover letter and résumé in the same language. On export you can additionally have the documents translated into French, Spanish, Portuguese, or Italian. Domain terms (for example tool names) keep their usual spelling."
     },
     "data": {
       "q": "What happens to my data?",

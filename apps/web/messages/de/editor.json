@@ -40,8 +40,7 @@
       "button": "Export",
       "tooltip": "PDFs exportieren",
       "translationTitle": "Inhalte werden automatisch übersetzt",
-      "translationDescriptionEn": "Der Export wird ins Englische übersetzt – bitte prüfe das Ergebnis.",
-      "translationDescriptionDe": "Der Export wird ins Deutsche übersetzt – bitte prüfe das Ergebnis.",
+      "translationDescription": "Der Export wird auf {language} übersetzt – bitte prüfe das Ergebnis.",
       "disabled": {
         "generating": "Export läuft bereits. Bitte warte auf den Abschluss.",
         "savingChanges": "Änderungen werden gespeichert …",

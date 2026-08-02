@@ -1,0 +1,66 @@
+{
+  "card": {
+    "defaultBadge": "Predefinito",
+    "noDescription": "Nessuna descrizione disponibile",
+    "previewAlt": "Anteprima {name}",
+    "colorLabel": "Colore:",
+    "selected": "Selezionato",
+    "select": "Seleziona"
+  },
+  "demoLoading": {
+    "title": "Demo dei componenti di caricamento",
+    "subtitle": "Vetrina di tutti gli stati di caricamento e componenti skeleton",
+    "spinner": {
+      "title": "Componente Spinner",
+      "description": "Disponibile in più dimensioni",
+      "small": "Piccolo",
+      "default": "Predefinito",
+      "large": "Grande",
+      "extraLarge": "Molto grande"
+    },
+    "wrappers": {
+      "title": "Wrapper di caricamento",
+      "description": "Stati di caricamento predefiniti per i pattern più comuni",
+      "centered": "Loader centrato",
+      "loadingData": "Caricamento dati...",
+      "inline": "Loader in linea",
+      "processing": "Elaborazione in corso...",
+      "loadingContent": "Caricamento contenuto...",
+      "generatingReport": "Generazione report in corso...",
+      "fullPage": "Loader a schermo intero",
+      "showFullPage": "Mostra loader a schermo intero",
+      "loadingApplication": "Caricamento candidatura...",
+      "hide": "Nascondi"
+    },
+    "buttons": {
+      "title": "Stati di caricamento dei pulsanti",
+      "description": "Pulsanti con spinner di caricamento integrati",
+      "default": "Pulsante predefinito",
+      "outline": "Pulsante con contorno",
+      "destructive": "Pulsante distruttivo"
+    },
+    "basicSkeleton": {
+      "title": "Skeleton di base",
+      "description": "Forme skeleton semplici con animazione pulsante"
+    },
+    "specialized": {
+      "title": "Skeleton specializzati",
+      "description": "Skeleton predefiniti per i tipi di contenuto più comuni",
+      "applicationCard": "Skeleton scheda candidatura",
+      "jobPostingCard": "Skeleton scheda annuncio di lavoro",
+      "profileCard": "Skeleton scheda profilo",
+      "formField": "Skeleton campo modulo",
+      "text": "Skeleton testo",
+      "table": "Skeleton tabella",
+      "avatarButtons": "Skeleton avatar e pulsanti",
+      "image": "Skeleton immagine",
+      "square": "Quadrato",
+      "video": "Video (16:9)",
+      "portrait": "Verticale (3:4)"
+    },
+    "completeProfile": {
+      "title": "Skeleton profilo completo",
+      "description": "Stato di caricamento della pagina profilo completa"
+    }
+  }
+}
