@@ -119,7 +119,7 @@ export class AzureOpenAIProvider implements LLMProvider {
     // don't support it surface a 400 here, which the LLMService JSON-repair
     // fallback then handles on a retry path.
     const requestBody: Record<string, unknown> = {
-      model: this.deploymentName,
+      model: options?.model ?? this.deploymentName,
       messages,
       temperature: options?.temperature ?? 0.7,
       max_tokens: options?.maxTokens ?? 2000,

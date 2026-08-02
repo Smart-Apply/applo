@@ -168,7 +168,7 @@ export class ConfigService {
     );
   }
 
-  get llmProvider(): 'azure-openai' | 'azure-ai-foundry' | 'mock' {
+  get llmProvider(): 'azure-openai' | 'azure-ai-foundry' | 'mistral' | 'mock' {
     return this.nestConfig.get('LLM_PROVIDER', { infer: true });
   }
 
@@ -183,6 +183,41 @@ export class ConfigService {
 
   get logLlmCalls(): boolean {
     return this.nestConfig.get('LOG_LLM_CALLS', { infer: true }) === 'true';
+  }
+
+  /**
+   * Optional cheaper "fast" model for the mechanical extraction/classification
+   * steps of the pipeline (per-task routing). Provider-agnostic: a Mistral model
+   * name on La Plateforme, or an Azure deployment name. Unset = every task uses
+   * the default model (no routing). See docs/guides/LLM_MODEL_SELECTION.md.
+   */
+  get llmFastModel(): string | undefined {
+    return this.nestConfig.get('LLM_FAST_MODEL', { infer: true });
+  }
+
+  /**
+   * Provider hosting LLM_FAST_MODEL when it differs from the main provider.
+   * Unset = the fast model runs on the main provider (same-provider routing).
+   */
+  get llmFastProvider(): 'azure-openai' | 'mistral' | undefined {
+    return this.nestConfig.get('LLM_FAST_PROVIDER', { infer: true });
+  }
+
+  // Mistral (used when LLM_PROVIDER=mistral) — La Plateforme or Azure Foundry
+  get mistralEndpoint(): string | undefined {
+    return this.nestConfig.get('MISTRAL_ENDPOINT', { infer: true });
+  }
+
+  get mistralApiKey(): string | undefined {
+    return this.nestConfig.get('MISTRAL_API_KEY', { infer: true });
+  }
+
+  get mistralModel(): string {
+    return this.nestConfig.get('MISTRAL_MODEL', { infer: true });
+  }
+
+  get mistralApiVersion(): string | undefined {
+    return this.nestConfig.get('MISTRAL_API_VERSION', { infer: true });
   }
 
   // Azure AI Foundry Agents

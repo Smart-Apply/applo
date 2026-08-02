@@ -9,18 +9,48 @@ import { RUBRIC_DIMENSIONS, type JudgeResult, type RubricDimension } from './jud
 import type { EvalLanguage } from './fixture.types';
 
 /**
- * Pricing assumption for the cost estimate — Azure OpenAI **gpt-4.1** Standard,
- * USD per 1M tokens (input / discounted cached-input / output). Verify against
- * the current Azure OpenAI pricing page; the RELATIVE savings is driven by the
- * measured cached share and stays robust even if the absolute $ drifts. See
- * docs/implementation/PROMPT_CACHING.md.
+ * Pricing for the cost estimate — USD per 1M tokens (input / cached-input /
+ * output), list rates verified 2026-08-02 against the Azure OpenAI and Mistral
+ * pricing pages. Re-verify before quoting; the RELATIVE cached-share saving
+ * stays robust even if the absolute $ drifts.
+ *
+ * Mistral publishes no separate cached-input rate, so cached input is billed at
+ * the full rate here — deliberately conservative, it under-states the win
+ * rather than inventing a discount. See docs/guides/LLM_MODEL_SELECTION.md.
  */
-const PRICING = {
-  model: 'gpt-4.1',
-  inputPerM: 2.0,
-  cachedInputPerM: 0.5,
-  outputPerM: 8.0,
-} as const;
+const PRICING_TABLE: Record<
+  string,
+  { inputPerM: number; cachedInputPerM: number; outputPerM: number }
+> = {
+  'gpt-4.1': { inputPerM: 2.0, cachedInputPerM: 0.5, outputPerM: 8.0 },
+  'gpt-4.1-mini': { inputPerM: 0.4, cachedInputPerM: 0.1, outputPerM: 1.6 },
+  'gpt-5-mini': { inputPerM: 0.25, cachedInputPerM: 0.03, outputPerM: 2.0 },
+  'mistral-small-latest': { inputPerM: 0.15, cachedInputPerM: 0.15, outputPerM: 0.6 },
+  'mistral-large-latest': { inputPerM: 0.5, cachedInputPerM: 0.5, outputPerM: 1.5 },
+  'mistral-medium-latest': { inputPerM: 1.5, cachedInputPerM: 1.5, outputPerM: 7.5 },
+};
+
+const DEFAULT_PRICING_MODEL = 'gpt-4.1';
+
+/**
+ * Map a deployment/model name onto a rate card. Azure deployment names carry
+ * per-env suffixes (`gpt-4.1-local`, `gpt-4.1-staging`), so match on the longest
+ * known key the name starts with. Unknown names fall back to gpt-4.1 and say so.
+ */
+export function resolvePricing(model: string | undefined): {
+  model: string;
+  inputPerM: number;
+  cachedInputPerM: number;
+  outputPerM: number;
+  matched: boolean;
+} {
+  const name = (model ?? '').trim().toLowerCase();
+  const key = Object.keys(PRICING_TABLE)
+    .filter((k) => name === k || name.startsWith(k))
+    .sort((a, b) => b.length - a.length)[0];
+  if (key) return { model: key, ...PRICING_TABLE[key], matched: true };
+  return { model: DEFAULT_PRICING_MODEL, ...PRICING_TABLE[DEFAULT_PRICING_MODEL], matched: false };
+}
 
 export interface FixtureGroundingSummary {
   grounded: boolean;
@@ -59,8 +89,10 @@ export interface FixtureLengthSummary {
   budget: number;
   /** Whether the final letter still overruns budget + tolerance. */
   overrun: boolean;
-  /** 'critical' = the "2-page" class (words >= budget × 1.5). */
-  severity: 'ok' | 'warn' | 'critical';
+  /** Whether the final letter is under the low-effort floor (budget × 0.6). */
+  underrun: boolean;
+  /** 'critical' = the "2-page" class (words >= budget × 1.5); 'under' = below floor. */
+  severity: 'ok' | 'warn' | 'critical' | 'under';
   /** True when the guarded shorten pass replaced an overrun draft. */
   governorApplied: boolean;
   /** Body words BEFORE the governor pass. */
@@ -118,6 +150,8 @@ export interface LanguageBreakdown {
 export interface EvalSummary {
   generatedAt: string;
   provider: string;
+  /** Provider that scored the rubric — pinned separately for provider A/Bs. */
+  judgeProvider: string;
   tag: string;
   fixtureCount: number;
   okCount: number;
@@ -156,6 +190,8 @@ export interface EvalSummary {
   length: {
     /** % of fixtures whose FINAL cover letter overruns budget + tolerance. */
     overrunRate: number;
+    /** % of fixtures whose FINAL cover letter is under the low-effort floor. */
+    underrunRate: number;
     /** Mean body word count of the final cover letters. */
     meanWords: number;
     /** The word budget measured against. */
@@ -187,7 +223,15 @@ export interface EvalSummary {
     /** Savings as a % of the no-cache cost. */
     estSavingsPct: number;
     /** The pricing assumption used for the estimate. */
-    rates: { model: string; inputPerM: number; cachedInputPerM: number; outputPerM: number };
+    rates: {
+      model: string;
+      inputPerM: number;
+      cachedInputPerM: number;
+      outputPerM: number;
+      matched: boolean;
+      requestedModel: string;
+      fastModel?: string;
+    };
   };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
@@ -200,7 +244,7 @@ function mean(values: number[]): number {
 
 export function summarize(
   results: FixtureResult[],
-  meta: { provider: string; tag: string },
+  meta: { provider: string; tag: string; judgeProvider: string; model?: string; fastModel?: string },
 ): EvalSummary {
   const ok = results.filter((r) => !r.error && r.judge && r.grounding);
 
@@ -247,6 +291,12 @@ export function summarize(
         : Math.round(
             (withLength.filter((r) => r.length!.overrun).length / withLength.length) * 100,
           ),
+    underrunRate:
+      withLength.length === 0
+        ? 0
+        : Math.round(
+            (withLength.filter((r) => r.length!.underrun).length / withLength.length) * 100,
+          ),
     meanWords: mean(withLength.map((r) => r.length!.words)),
     budget: withLength[0]?.length?.budget ?? 0,
     criticalCount: withLength.filter((r) => r.length!.severity === 'critical').length,
@@ -268,13 +318,14 @@ export function summarize(
   const cachedInputPct = sumPrompt > 0 ? Math.round((sumCached / sumPrompt) * 100) : 0;
   const usd = (tokens: number, ratePerM: number): number => (tokens / 1_000_000) * ratePerM;
   const round4 = (n: number): number => Math.round(n * 10000) / 10000;
+  const pricing = resolvePricing(meta.model);
   const estCostNoCacheUsd = round4(
-    usd(meanPromptTokens, PRICING.inputPerM) + usd(meanCompletionTokens, PRICING.outputPerM),
+    usd(meanPromptTokens, pricing.inputPerM) + usd(meanCompletionTokens, pricing.outputPerM),
   );
   const estCostCachedUsd = round4(
-    usd(meanPromptTokens - meanCachedTokens, PRICING.inputPerM) +
-      usd(meanCachedTokens, PRICING.cachedInputPerM) +
-      usd(meanCompletionTokens, PRICING.outputPerM),
+    usd(meanPromptTokens - meanCachedTokens, pricing.inputPerM) +
+      usd(meanCachedTokens, pricing.cachedInputPerM) +
+      usd(meanCompletionTokens, pricing.outputPerM),
   );
   const estSavingsUsd = round4(estCostNoCacheUsd - estCostCachedUsd);
   const estSavingsPct =
@@ -291,10 +342,15 @@ export function summarize(
     estSavingsUsd,
     estSavingsPct,
     rates: {
-      model: PRICING.model,
-      inputPerM: PRICING.inputPerM,
-      cachedInputPerM: PRICING.cachedInputPerM,
-      outputPerM: PRICING.outputPerM,
+      model: pricing.model,
+      inputPerM: pricing.inputPerM,
+      cachedInputPerM: pricing.cachedInputPerM,
+      outputPerM: pricing.outputPerM,
+      /** False when the run's model was unknown and gpt-4.1 rates were assumed. */
+      matched: pricing.matched,
+      requestedModel: meta.model ?? '(unset)',
+      /** Set when LLM_FAST_MODEL routed the extraction steps to another model. */
+      fastModel: meta.fastModel,
     },
   };
 
@@ -314,6 +370,7 @@ export function summarize(
   return {
     generatedAt: new Date().toISOString(),
     provider: meta.provider,
+    judgeProvider: meta.judgeProvider,
     tag: meta.tag,
     fixtureCount: results.length,
     okCount: ok.length,
@@ -342,6 +399,11 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`  LLM OUTPUT QUALITY — EVAL REPORT (${summary.tag})`);
   lines.push('═══════════════════════════════════════════════════════════');
   lines.push(`  Provider:   ${summary.provider}`);
+  lines.push(
+    `  Judge:      ${summary.judgeProvider}${
+      summary.judgeProvider === summary.provider ? ' (same as generation)' : ' (pinned)'
+    }`,
+  );
   lines.push(`  Generated:  ${summary.generatedAt}`);
   lines.push(`  Fixtures:   ${summary.okCount} ok / ${summary.fixtureCount} total` +
     (summary.errorCount ? `  (${summary.errorCount} errored)` : ''));
@@ -375,10 +437,25 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    budget                         ${summary.length.budget} words`);
   lines.push(`    mean word count                ${summary.length.meanWords.toFixed(0)}`);
   lines.push(`    overrun rate (final letters)   ${summary.length.overrunRate}%`);
+  lines.push(`    underrun rate (< 60% budget)   ${summary.length.underrunRate}%`);
   lines.push(`    critical (≥1.5× budget)        ${summary.length.criticalCount} fixtures`);
   lines.push(`    length governor applied        ${summary.length.governorAppliedCount} fixtures`);
   lines.push('');
-  lines.push(`  Cost & prompt caching (est., ${summary.cost.rates.model} Standard rates):`);
+  lines.push(`  Cost & prompt caching (est., ${summary.cost.rates.model} list rates):`);
+  if (summary.cost.rates.fastModel) {
+    lines.push(
+      `    ⚠️  mixed-model run — fast lane (${summary.cost.rates.fastModel}) served the`,
+    );
+    lines.push(
+      `       extraction steps; $/gen below prices ALL tokens at ${summary.cost.rates.model}`,
+    );
+    lines.push(`       rates and OVERSTATES the true blended cost`);
+  }
+  if (!summary.cost.rates.matched) {
+    lines.push(
+      `    ⚠️  unknown model "${summary.cost.rates.requestedModel}" — priced at gpt-4.1 rates`,
+    );
+  }
   lines.push(`    fixtures measured              ${summary.cost.fixturesMeasured}`);
   lines.push(`    mean LLM calls / generation    ${summary.cost.meanCalls}`);
   lines.push(`    mean input tokens              ${summary.cost.meanPromptTokens}`);

@@ -36,7 +36,8 @@
 ```
 
 > **Pluggable providers:** Storage (Cloudflare R2 / disk), Queue (QStash / in-memory),
-> LLM (Azure OpenAI / Azure AI Foundry / mock), and Cache (Upstash Redis / node-cache) are all selected via env.
+> LLM (Azure OpenAI / Azure AI Foundry / Mistral / mock), and Cache (Upstash Redis / node-cache) are all selected via env.
+> Optional **per-task model routing** (`LLM_FAST_MODEL` + `LLM_FAST_PROVIDER`) sends the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector`) to a cheaper model — optionally on a **different provider** (second instance + own circuit breaker; fast-lane failures fall back to the main provider). Candidate-facing writing stays on the default model: the 2026-08-02 A/B eval rejected Mistral Small/Large for prose (fabricated metrics, half-length letters) while clearing them for extraction ([details](docs/guides/LLM_MODEL_SELECTION.md)).
 
 ### Production hostnames
 
@@ -142,7 +143,7 @@ User → Frontend (Next.js)
         ▼
 ┌──────────────────────────────────────┐
 │ LLM Service                          │
-│ Provider: Azure OpenAI (GPT-4o) /    │
+│ Provider: Azure OpenAI / Mistral /   │
 │           Azure AI Foundry / mock    │
 │ Circuit-breaker + retries (opossum)  │
 │ Structured outputs: json_schema /    │
@@ -329,7 +330,7 @@ User 1:1 Subscription
 | Queue         | Upstash QStash · in-memory                                                                                                          |
 | Cache         | Upstash Redis · node-cache                                                                                                          |
 | Storage       | Cloudflare R2 (S3-compatible) · local disk                                                                                          |
-| LLM           | Azure AI Foundry · Azure OpenAI · mock                                                                                              |
+| LLM           | Azure AI Foundry · Azure OpenAI · Mistral · mock                                                                                    |
 | PDF           | `@react-pdf/renderer` 4.5 (TSX templates, bundled OFL fonts: Lato · Source Sans 3 · Merriweather) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake) |
 | Email         | Resend                                                                                                                              |
 | Logging       | Pino (req logs) + Winston (audit, daily rotation)                                                                                   |

@@ -40,6 +40,7 @@ import {
   normalizeJobFacts,
   type JobFactsDto,
 } from './job-facts.util';
+import { isValidTailoredProfile, isDegradedTailoredProfile } from './tailored-profile.util';
 import {
   evaluateShortenRewrite,
   evaluateStyleRewrite,
@@ -630,20 +631,7 @@ export class GenerationService {
       // critical-path latency).
       this.logger.log('Step 1: Selecting relevant profile data...');
       const [tailoredProfile, jobFacts] = await Promise.all([
-        this.llmService.callJson<TailoredProfileDto>(
-          'v1/skill-selector.md',
-          {
-            profile: this.serializeProfile(profile),
-            job: this.serializeJobPosting(jobPosting),
-            language: detectedLanguage,
-            userId,
-            jobPostingId: jobPosting.id,
-          },
-          {
-            temperature: 0.2, // Low temperature for deterministic skill matching
-            maxTokens: 3000,
-          },
-        ),
+        this.selectTailoredProfile(profile, jobPosting, detectedLanguage, userId),
         shouldGenerateCoverLetter
           ? this.extractJobFacts(jobPosting, detectedLanguage, userId)
           : Promise.resolve(null),
@@ -823,6 +811,7 @@ export class GenerationService {
         application.id,
         { resume: JSON.stringify(resumeJson), coverLetter: governedCoverLetterMarkdown },
         profile,
+        jobPosting.fullText,
       );
 
       // Style check: flag forbidden AI clichés + German hedging (non-destructive).
@@ -981,13 +970,7 @@ export class GenerationService {
       emitProgress(20, 'Wähle relevante Profildaten aus...');
       this.logger.log('Step 1: Selecting relevant profile data...');
       const [tailoredProfile, jobFacts] = await Promise.all([
-        this.llmService.callJson<TailoredProfileDto>('v1/skill-selector.md', {
-          profile: this.serializeProfile(profile),
-          job: this.serializeJobPosting(jobPosting),
-          language,
-          userId,
-          jobPostingId: jobPosting.id,
-        }),
+        this.selectTailoredProfile(profile, jobPosting, language, userId),
         shouldGenerateCoverLetter
           ? this.extractJobFacts(jobPosting, language, userId)
           : Promise.resolve(null),
@@ -1129,6 +1112,7 @@ export class GenerationService {
         applicationId,
         { resume: resumeMarkdown, coverLetter: governedCoverLetter },
         profile,
+        jobPosting.fullText,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
@@ -1219,6 +1203,70 @@ export class GenerationService {
    * cover-letter writer gets them ready-made instead of scanning `fullText` while
    * it writes. Graceful degradation: on any failure returns null and the prompt
    * falls back to scanning `fullText` itself.
+   */
+  /**
+   * Run the skill-selector and validate the hand-off before the prose calls
+   * consume it.
+   *
+   * This is the pipeline's only non-optional producer: it runs first and feeds
+   * BOTH `cover-letter` and `resume-rewrite`. `job-facts` and `ats-keywords`
+   * degrade to null; this cannot. It also has no strict `json_schema`, so when
+   * `LLM_FAST_MODEL` routes it to a cheaper model a malformed or gutted payload
+   * is retried once on the default model — the fast model is an optimization,
+   * the default is the floor.
+   */
+  private async selectTailoredProfile(
+    profile: ProfileWithRelations,
+    jobPosting: JobPosting,
+    language: string,
+    userId: string,
+  ): Promise<TailoredProfileDto> {
+    const TEMPLATE = 'v1/skill-selector.md';
+    const variables = {
+      profile: this.serializeProfile(profile),
+      job: this.serializeJobPosting(jobPosting),
+      language,
+      userId,
+      jobPostingId: jobPosting.id,
+    };
+    const sourceExperienceCount = profile.experiences?.length ?? 0;
+
+    const attempt = async (model?: string): Promise<TailoredProfileDto | string> => {
+      try {
+        const raw = await this.llmService.callJson<TailoredProfileDto>(TEMPLATE, variables, {
+          temperature: 0.2, // deterministic skill matching
+          maxTokens: 3000,
+          ...(model ? { model } : {}),
+        });
+        if (!isValidTailoredProfile(raw)) return 'malformed payload';
+        if (isDegradedTailoredProfile(raw, sourceExperienceCount)) {
+          return 'no skills selected or every experience dropped';
+        }
+        return raw;
+      } catch (error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+    };
+
+    const first = await attempt();
+    if (typeof first !== 'string') return first;
+
+    if (!this.llmService.isFastRouted(TEMPLATE)) {
+      throw new Error(`Skill selection failed: ${first}`);
+    }
+
+    this.logger.warn(
+      `Skill selection failed on the fast model (${first}); escalating to ${this.llmService.defaultModel}`,
+    );
+    const escalated = await attempt(this.llmService.defaultModel);
+    if (typeof escalated === 'string') {
+      throw new Error(`Skill selection failed on both models: ${escalated}`);
+    }
+    return escalated;
+  }
+
+  /**
+   * Extract the job facts (#5) used by the cover letter.
    */
   async extractJobFacts(
     jobPosting: JobPosting,
@@ -1667,16 +1715,19 @@ export class GenerationService {
 
   /**
    * Grounding check (#7) — deterministic, non-destructive. Logs a warning when
-   * the generated documents contain impact numbers that don't appear anywhere
-   * in the source profile (likely fabrications). Never throws.
+   * the generated documents contain impact numbers that look fabricated. The
+   * job posting additionally grounds cover-letter numbers (quoting the ad is
+   * legitimate personalization); résumé numbers must come from the profile.
+   * Never throws.
    */
   private runGroundingCheck(
     applicationId: string,
     generated: { resume?: string | null; coverLetter?: string | null },
     profile: ProfileWithRelations,
+    jobPostingText?: string | null,
   ): void {
     try {
-      const report = this.groundingValidator.validate(generated, profile);
+      const report = this.groundingValidator.validate(generated, profile, jobPostingText);
       if (!report.grounded) {
         this.logger.warn(
           `Grounding check (application ${applicationId}): ${report.unsupported.length}/${report.totalChecked} impact numbers not found in profile (score ${report.score}). Unsupported: ${report.unsupported
@@ -1729,6 +1780,10 @@ export class GenerationService {
           const overrunPct = Math.round(((length.words - length.budget) / length.budget) * 100);
           this.logger.warn(
             `Length check (application ${applicationId}): ${length.words} words vs budget ${length.budget} (+${overrunPct}%) — severity: ${length.severity}`,
+          );
+        } else if (length.underrun) {
+          this.logger.warn(
+            `Length check (application ${applicationId}): ${length.words} words vs budget ${length.budget} — UNDER floor ${length.floor} (reads as low-effort)`,
           );
         } else {
           this.logger.debug(

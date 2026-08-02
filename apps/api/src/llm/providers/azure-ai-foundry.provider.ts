@@ -219,7 +219,7 @@ export class AzureAIFoundryProvider implements LLMProvider, OnModuleInit {
         this.httpService.post(
           url,
           {
-            model: this.azureOpenAIDeploymentName,
+            model: options?.model ?? this.azureOpenAIDeploymentName,
             messages,
             temperature: options?.temperature ?? 0.7,
             max_tokens: options?.maxTokens ?? 2000,

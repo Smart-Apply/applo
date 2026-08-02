@@ -20,5 +20,6 @@ export function groundDocuments(
   return validator.validate(
     { resume: docs.resumeJsonForGrounding, coverLetter: docs.coverLetter },
     profile,
+    fixture.jobPosting.fullText,
   );
 }

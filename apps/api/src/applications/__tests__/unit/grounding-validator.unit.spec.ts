@@ -130,6 +130,51 @@ describe('GroundingValidatorService (Unit)', () => {
     expect(report.grounded).toBe(true);
   });
 
+  it('grounds a cover-letter number quoted from the job posting', () => {
+    const profile = makeProfile({ summary: 'Kundenservice-Teamleiterin.' });
+    const jobPosting = 'Wir betreuen über 400.000 Kunden in ganz Europa.';
+
+    const report = service.validate(
+      { coverLetter: '<p>Ihre 400.000 Kunden verdienen erstklassigen Service.</p>' },
+      profile,
+      jobPosting,
+    );
+
+    expect(report.grounded).toBe(true);
+    expect(report.score).toBe(100);
+  });
+
+  it('still flags a job-posting number when it appears in the RESUME', () => {
+    const profile = makeProfile({ summary: 'Kundenservice-Teamleiterin.' });
+    const jobPosting = 'Wir betreuen über 400.000 Kunden in ganz Europa.';
+
+    const resumeJson = JSON.stringify({
+      summary: 'Teamleiterin.',
+      experiences: [{ title: 'Teamleiterin', achievements: ['Betreute 400.000 Kunden'] }],
+    });
+
+    // The ad's KPI lifted into a candidate achievement IS a fabrication.
+    const report = service.validate({ resume: resumeJson }, profile, jobPosting);
+
+    expect(report.grounded).toBe(false);
+    expect(report.unsupported.map((u) => u.normalized)).toContain('400000');
+  });
+
+  it('does not flag ISO/DIN standard designations as impact numbers', () => {
+    const profile = makeProfile({ summary: 'Qualitätsmanagerin.' });
+
+    const report = service.validate(
+      {
+        coverLetter:
+          '<p>Ich verantwortete Audits nach ISO 9001 und DIN EN 14675 im gesamten Werk.</p>',
+      },
+      profile,
+    );
+
+    expect(report.totalChecked).toBe(0);
+    expect(report.grounded).toBe(true);
+  });
+
   it('grounds a large count that appears in the profile', () => {
     const profile = makeProfile({
       projects: [

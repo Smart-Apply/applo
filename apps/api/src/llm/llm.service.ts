@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Inject, Logger, Optional, ServiceUnavailableException } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { createHash } from 'crypto';
 import * as fs from 'fs/promises';
@@ -26,12 +26,16 @@ interface UsageAccumulator {
 export class LLMService {
   private readonly logger = new Logger(LLMService.name);
   private readonly circuitBreaker: CircuitBreaker<[string, any?], string>;
+  private readonly fastCircuitBreaker: CircuitBreaker<[string, any?], string> | null = null;
   private readonly usageContext = new AsyncLocalStorage<UsageAccumulator>();
 
   constructor(
     @Inject('LLM_PROVIDER')
     private readonly provider: LLMProvider,
     private readonly configService: ConfigService,
+    @Optional()
+    @Inject('LLM_FAST_PROVIDER_INSTANCE')
+    private readonly fastProvider: LLMProvider | null = null,
   ) {
     // Initialize circuit breaker for LLM provider calls
     this.circuitBreaker = new CircuitBreaker(
@@ -89,6 +93,35 @@ export class LLMService {
     this.logger.log(
       `🛡️  LLM Circuit Breaker initialized (timeout: ${this.configService.llmCircuitBreakerTimeout}ms, error threshold: ${this.configService.llmCircuitBreakerErrorThreshold}%, reset: ${this.configService.llmCircuitBreakerResetTimeout}ms)`,
     );
+
+    // Separate breaker for the cross-provider fast lane so a Mistral outage
+    // can't open the main breaker (and vice versa). Same settings; failures
+    // fall back to the main provider in callFastProvider, so an open fast
+    // breaker only means "skip the optimization".
+    if (this.fastProvider) {
+      this.fastCircuitBreaker = new CircuitBreaker(
+        async (prompt: string, options?: any) =>
+          await this.fastProvider!.generateText(prompt, options),
+        {
+          timeout: this.configService.llmCircuitBreakerTimeout,
+          errorThresholdPercentage: this.configService.llmCircuitBreakerErrorThreshold,
+          resetTimeout: this.configService.llmCircuitBreakerResetTimeout,
+          rollingCountTimeout: this.configService.llmCircuitBreakerRollingCountTimeout,
+          rollingCountBuckets: this.configService.llmCircuitBreakerRollingCountBuckets,
+          name: 'LLM-Fast-Provider',
+          errorFilter: (error: unknown) => isRateLimitError(error),
+        },
+      );
+      this.fastCircuitBreaker.on('open', () => {
+        this.logger.error('🔴 Fast-lane circuit breaker OPEN — fast tasks fall back to the main provider.');
+      });
+      this.fastCircuitBreaker.on('close', () => {
+        this.logger.log('🟢 Fast-lane circuit breaker CLOSED — fast provider recovered.');
+      });
+      this.logger.log(
+        `🛡️  Fast-lane provider active (${this.configService.llmFastProvider}, model: ${this.configService.llmFastModel ?? '(default)'})`,
+      );
+    }
   }
 
   /**
@@ -122,6 +155,31 @@ export class LLMService {
       this.logger.error(`LLM health check failed: ${error.message}`);
       return false;
     }
+  }
+
+  /**
+   * Dispatch to the fast-lane provider (own breaker) or the main provider. A
+   * fast-lane failure falls back to the main provider WITHOUT the model
+   * override — the fast model's name is meaningless there; the task simply
+   * runs on the default model. The fast lane is an optimization, the main
+   * lane is the floor.
+   */
+  private async callRouted(
+    prompt: string,
+    options: GenerateOptions,
+    useFastLane: boolean,
+  ): Promise<string> {
+    if (useFastLane && this.fastCircuitBreaker) {
+      try {
+        return await this.fastCircuitBreaker.fire(prompt, options);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Fast-lane call failed (${message}); falling back to the main provider`);
+        const { model: _model, ...withoutModel } = options;
+        return this.callProvider(prompt, withoutModel);
+      }
+    }
+    return this.callProvider(prompt, options);
   }
 
   /**
@@ -383,6 +441,50 @@ Translated text in ${targetLangName}:`;
   }
 
   /**
+   * Fast-model-eligible templates (per-task routing). These are the mechanical
+   * extraction/classification steps — no candidate-facing prose — so they can
+   * run on a cheaper model without quality risk. Candidate-facing writing
+   * (cover letter, résumé rewrite, editor/style/translation passes) always uses
+   * the default flagship model. Matched with `includes()`, so the `v1/` prefix
+   * and `.md` suffix don't matter (this also covers `ats-keywords-extract`).
+   */
+  private static readonly FAST_MODEL_TEMPLATES = ['ats-keywords', 'job-facts', 'skill-selector'];
+
+  /** True when `templatePath` would be routed to the fast model right now. */
+  isFastRouted(templatePath: string): boolean {
+    return (
+      Boolean(this.configService.llmFastModel) &&
+      LLMService.FAST_MODEL_TEMPLATES.some((t) => templatePath.includes(t))
+    );
+  }
+
+  /**
+   * The provider's configured default (non-fast) model. Callers pass this as an
+   * explicit `model` override to escalate a failed fast-model call.
+   */
+  get defaultModel(): string {
+    return this.configService.llmProvider === 'mistral'
+      ? this.configService.mistralModel
+      : this.configService.azureOpenAIDeploymentName;
+  }
+
+  /**
+   * Resolve the model for a task. Returns the configured fast model for the
+   * mechanical extraction steps when LLM_FAST_MODEL is set, otherwise undefined
+   * (the provider then uses its own default model). Provider-agnostic — the value
+   * is passed straight through as the request `model`. Gate a switch on the
+   * json_schema/German-prose A/B eval (docs/guides/LLM_MODEL_SELECTION.md).
+   */
+  private resolveTaskModel(templatePath: string): string | undefined {
+    const fastModel = this.configService.llmFastModel;
+    if (!fastModel) return undefined;
+    const isFastTask = LLMService.FAST_MODEL_TEMPLATES.some((t) => templatePath.includes(t));
+    if (!isFastTask) return undefined;
+    this.logger.debug(`Per-task routing: ${templatePath} → fast model (${fastModel})`);
+    return fastModel;
+  }
+
+  /**
    * Call LLM with template and return raw text response
    * Loads template from prompts/ folder, renders variables, and calls LLM
    *
@@ -394,7 +496,7 @@ Translated text in ${targetLangName}:`;
   async callText(
     templatePath: string,
     variables: Record<string, any>,
-    options?: { temperature?: number; maxTokens?: number; systemMessage?: string },
+    options?: { temperature?: number; maxTokens?: number; systemMessage?: string; model?: string },
   ): Promise<string> {
     const startTime = Date.now();
     const template = await this.loadTemplate(templatePath);
@@ -422,16 +524,25 @@ Translated text in ${targetLangName}:`;
     // is on. See docs/implementation/PROMPT_CACHING.md.
     const promptCacheKey = this.derivePromptCacheKey(variables);
     const capturing = this.usageContext.getStore() !== undefined;
+    // Per-task model routing: mechanical extraction steps run on the cheaper
+    // LLM_FAST_MODEL when it's set (no-op otherwise). An explicit per-call
+    // `model` wins, so a caller can escalate a failed fast call to the default.
+    // When LLM_FAST_PROVIDER differs from the main provider, fast tasks go
+    // through the fast-lane breaker (fallback to main inside callRouted).
+    const routedFastModel = options?.model ? undefined : this.resolveTaskModel(templatePath);
+    const useFastLane = Boolean(routedFastModel && this.fastCircuitBreaker);
+    const taskModel = options?.model ?? routedFastModel;
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(promptCacheKey ? { promptCacheKey } : {}),
+      ...(taskModel ? { model: taskModel } : {}),
       ...(shouldLog || capturing
         ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
         : {}),
     };
 
     try {
-      let response = await this.callProvider(prompt, providerOptions);
+      let response = await this.callRouted(prompt, providerOptions, useFastLane);
       const duration = Date.now() - startTime;
 
       // Post-process to remove LLM placeholder patterns (e.g., "[Your Name]")
@@ -461,7 +572,7 @@ Translated text in ${targetLangName}:`;
   async callJson<T>(
     templatePath: string,
     variables: Record<string, any>,
-    options?: { temperature?: number; maxTokens?: number; systemMessage?: string },
+    options?: { temperature?: number; maxTokens?: number; systemMessage?: string; model?: string },
   ): Promise<T> {
     const startTime = Date.now();
     const template = await this.loadTemplate(templatePath);
@@ -492,17 +603,26 @@ Translated text in ${targetLangName}:`;
     // LOG_LLM_CALLS is on. See docs/implementation/PROMPT_CACHING.md.
     const promptCacheKey = this.derivePromptCacheKey(variables);
     const capturing = this.usageContext.getStore() !== undefined;
+    // Per-task model routing: mechanical extraction steps run on the cheaper
+    // LLM_FAST_MODEL when it's set (no-op otherwise). An explicit per-call
+    // `model` wins, so a caller can escalate a failed fast call to the default.
+    // When LLM_FAST_PROVIDER differs from the main provider, fast tasks go
+    // through the fast-lane breaker (fallback to main inside callRouted).
+    const routedFastModel = options?.model ? undefined : this.resolveTaskModel(templatePath);
+    const useFastLane = Boolean(routedFastModel && this.fastCircuitBreaker);
+    const taskModel = options?.model ?? routedFastModel;
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(responseFormat ? { responseFormat } : {}),
       ...(promptCacheKey ? { promptCacheKey } : {}),
+      ...(taskModel ? { model: taskModel } : {}),
       ...(shouldLog || capturing
         ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
         : {}),
     };
 
     try {
-      const response = await this.callProvider(prompt, providerOptions);
+      const response = await this.callRouted(prompt, providerOptions, useFastLane);
       const parsed = this.parseJsonResponse<T>(response, templatePath);
       const duration = Date.now() - startTime;
 

@@ -278,6 +278,27 @@ describe('lintCoverLetterLength', () => {
     // 250 × 0.2 = 50 → limit 300 → 340 overruns.
     expect(result.overrun).toBe(true);
   });
+
+  it('flags a half-length letter as under the floor', () => {
+    // Floor: 350 × 0.6 = 210 → the Mistral-class 157-word letter is flagged.
+    const result = lintCoverLetterLength(makeLetter(157), 350, 'de');
+    expect(result).toMatchObject({ underrun: true, overrun: false, severity: 'under' });
+    expect(result.floor).toBe(210);
+  });
+
+  it('does not flag the normal short-of-budget range', () => {
+    // gpt-4.1 writes ~240-247 on a 350 budget — must stay ok.
+    const result = lintCoverLetterLength(makeLetter(240), 350, 'de');
+    expect(result.underrun).toBe(false);
+    expect(result.severity).toBe('ok');
+  });
+
+  it('treats an empty letter as absent, not under the floor', () => {
+    const result = lintCoverLetterLength('', 350, 'de');
+    expect(result.words).toBe(0);
+    expect(result.underrun).toBe(false);
+    expect(result.severity).toBe('ok');
+  });
 });
 
 describe('evaluateShortenRewrite', () => {
