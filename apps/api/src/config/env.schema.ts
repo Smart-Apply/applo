@@ -90,7 +90,9 @@ const envSchema = z.object({
   // Central resource for EU/GDPR data residency.
   AZURE_OPENAI_REALTIME_ENDPOINT: z.string().optional(),
   AZURE_OPENAI_REALTIME_API_KEY: z.string().optional(),
-  AZURE_OPENAI_REALTIME_DEPLOYMENT: z.string().default('gpt-realtime'),
+  // Deployment name, not model name — one per environment
+  // (gpt-realtime-mini / -staging / -local).
+  AZURE_OPENAI_REALTIME_DEPLOYMENT: z.string().default('gpt-realtime-mini'),
   AZURE_OPENAI_REALTIME_VOICE: z.string().default('alloy'),
   // Per-session hard ceiling (minutes). Azure caps a realtime session at 60.
   VOICE_INTERVIEW_MAX_SESSION_MINUTES: z.string().default('15'),
