@@ -230,6 +230,7 @@ export interface EvalSummary {
       outputPerM: number;
       matched: boolean;
       requestedModel: string;
+      fastModel?: string;
     };
   };
   byLanguage: Record<string, LanguageBreakdown>;
@@ -243,7 +244,7 @@ function mean(values: number[]): number {
 
 export function summarize(
   results: FixtureResult[],
-  meta: { provider: string; tag: string; judgeProvider: string; model?: string },
+  meta: { provider: string; tag: string; judgeProvider: string; model?: string; fastModel?: string },
 ): EvalSummary {
   const ok = results.filter((r) => !r.error && r.judge && r.grounding);
 
@@ -348,6 +349,8 @@ export function summarize(
       /** False when the run's model was unknown and gpt-4.1 rates were assumed. */
       matched: pricing.matched,
       requestedModel: meta.model ?? '(unset)',
+      /** Set when LLM_FAST_MODEL routed the extraction steps to another model. */
+      fastModel: meta.fastModel,
     },
   };
 
@@ -439,6 +442,15 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    length governor applied        ${summary.length.governorAppliedCount} fixtures`);
   lines.push('');
   lines.push(`  Cost & prompt caching (est., ${summary.cost.rates.model} list rates):`);
+  if (summary.cost.rates.fastModel) {
+    lines.push(
+      `    ⚠️  mixed-model run — fast lane (${summary.cost.rates.fastModel}) served the`,
+    );
+    lines.push(
+      `       extraction steps; $/gen below prices ALL tokens at ${summary.cost.rates.model}`,
+    );
+    lines.push(`       rates and OVERSTATES the true blended cost`);
+  }
   if (!summary.cost.rates.matched) {
     lines.push(
       `    ⚠️  unknown model "${summary.cost.rates.requestedModel}" — priced at gpt-4.1 rates`,

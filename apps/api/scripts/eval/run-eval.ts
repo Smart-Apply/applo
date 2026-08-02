@@ -373,7 +373,13 @@ async function main(): Promise<void> {
       provider === 'mistral'
         ? process.env.MISTRAL_MODEL
         : process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
-    const summary = summarize(results, { provider, tag: args.tag, judgeProvider, model });
+    const summary = summarize(results, {
+      provider,
+      tag: args.tag,
+      judgeProvider,
+      model,
+      fastModel: process.env.LLM_FAST_MODEL,
+    });
 
     console.log(formatReport(summary));
 
