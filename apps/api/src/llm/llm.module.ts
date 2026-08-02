@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { LLMService } from './llm.service';
 import { AzureOpenAIProvider } from './providers/azure-openai.provider';
@@ -49,10 +49,21 @@ import { ConfigService } from '../config/config.service';
         if (!fastProvider || fastProvider === configService.llmProvider) {
           return null;
         }
-        if (fastProvider === 'mistral') {
-          return new MistralProvider(httpService, configService);
+        // The fast lane is an optimization — a misconfigured fast provider
+        // (e.g. LLM_FAST_PROVIDER=mistral without MISTRAL_API_KEY) must
+        // degrade to main-lane routing, never crash boot.
+        try {
+          if (fastProvider === 'mistral') {
+            return new MistralProvider(httpService, configService);
+          }
+          return new AzureOpenAIProvider(httpService, configService);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          new Logger('LLMModule').warn(
+            `Fast-lane provider "${fastProvider}" unavailable (${message}); fast tasks stay on the main provider`,
+          );
+          return null;
         }
-        return new AzureOpenAIProvider(httpService, configService);
       },
       inject: [ConfigService, HttpService],
     },
