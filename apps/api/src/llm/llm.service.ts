@@ -392,6 +392,24 @@ Translated text in ${targetLangName}:`;
    */
   private static readonly FAST_MODEL_TEMPLATES = ['ats-keywords', 'job-facts', 'skill-selector'];
 
+  /** True when `templatePath` would be routed to the fast model right now. */
+  isFastRouted(templatePath: string): boolean {
+    return (
+      Boolean(this.configService.llmFastModel) &&
+      LLMService.FAST_MODEL_TEMPLATES.some((t) => templatePath.includes(t))
+    );
+  }
+
+  /**
+   * The provider's configured default (non-fast) model. Callers pass this as an
+   * explicit `model` override to escalate a failed fast-model call.
+   */
+  get defaultModel(): string {
+    return this.configService.llmProvider === 'mistral'
+      ? this.configService.mistralModel
+      : this.configService.azureOpenAIDeploymentName;
+  }
+
   /**
    * Resolve the model for a task. Returns the configured fast model for the
    * mechanical extraction steps when LLM_FAST_MODEL is set, otherwise undefined
@@ -449,8 +467,9 @@ Translated text in ${targetLangName}:`;
     const promptCacheKey = this.derivePromptCacheKey(variables);
     const capturing = this.usageContext.getStore() !== undefined;
     // Per-task model routing: mechanical extraction steps run on the cheaper
-    // LLM_FAST_MODEL when it's set (no-op otherwise).
-    const taskModel = this.resolveTaskModel(templatePath);
+    // LLM_FAST_MODEL when it's set (no-op otherwise). An explicit per-call
+    // `model` wins, so a caller can escalate a failed fast call to the default.
+    const taskModel = options?.model ?? this.resolveTaskModel(templatePath);
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(promptCacheKey ? { promptCacheKey } : {}),
@@ -523,8 +542,9 @@ Translated text in ${targetLangName}:`;
     const promptCacheKey = this.derivePromptCacheKey(variables);
     const capturing = this.usageContext.getStore() !== undefined;
     // Per-task model routing: mechanical extraction steps run on the cheaper
-    // LLM_FAST_MODEL when it's set (no-op otherwise).
-    const taskModel = this.resolveTaskModel(templatePath);
+    // LLM_FAST_MODEL when it's set (no-op otherwise). An explicit per-call
+    // `model` wins, so a caller can escalate a failed fast call to the default.
+    const taskModel = options?.model ?? this.resolveTaskModel(templatePath);
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(responseFormat ? { responseFormat } : {}),
