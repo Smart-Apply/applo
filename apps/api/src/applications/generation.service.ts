@@ -853,17 +853,6 @@ export class GenerationService {
         `Application ${application.id} generated successfully in ${duration}ms (coverLetter: ${shouldGenerateCoverLetter})`,
       );
 
-      // Record usage AFTER success so failed generations don't burn the cap.
-      // Best-effort: a failure here must not break the user-facing response.
-      try {
-        await this.subscriptionService.recordUsage(userId, 'application');
-      } catch (usageError) {
-        this.logger.warn(
-          `Failed to record usage for user ${userId} (application ${application.id})`,
-          usageError,
-        );
-      }
-
       return mapApplicationToResponseDto(updatedApplication);
     } catch (error) {
       this.logger.error(`Failed to generate application ${application.id}`, error);
@@ -1164,19 +1153,6 @@ export class GenerationService {
       this.logger.log(
         `Single-LLM pipeline completed in ${duration}ms for application ${applicationId}`,
       );
-
-      // Record usage AFTER success so failed runs don't burn the cap (mirrors
-      // createWithGeneration — the controller's UsageLimitGuard only checks,
-      // it never records). Best-effort: a failure here must not break the
-      // user-facing response.
-      try {
-        await this.subscriptionService.recordUsage(userId, 'application');
-      } catch (usageError) {
-        this.logger.warn(
-          `Failed to record usage for user ${userId} (application ${applicationId})`,
-          usageError,
-        );
-      }
 
       return mapApplicationToResponseDto(updated);
     } catch (error) {

@@ -54,9 +54,8 @@ model User {
   twoFactorAuth  TwoFactorAuth?
   trustedDevices TrustedDevice[]
 
-  // Closed-beta invite code that was redeemed to create this account.
-  // Optional (null for accounts created before the gate, OAuth signups, or
-  // when REQUIRE_INVITE_CODES is disabled for the public launch).
+  // RETIRED closed-beta relation — kept until the invite_codes table is
+  // dropped in a follow-up release.
   inviteCodeRedeemed InviteCode? @relation("InviteCodeRedemption")
 
   createdAt DateTime @default(now())
@@ -434,7 +433,7 @@ enum ApplicationGenerationStatus {
 // application the user created OUTSIDE Applo. The user pastes/uploads
 // their own résumé (+ optional cover letter + optional job context) and gets
 // actionable feedback. NOT linked to a generated Application/JobPosting.
-// Metered via SubscriptionUsage.validationsUsed (Free 5/month, Pro+ unlimited).
+// Metered via SubscriptionUsage.validationsUsed (Free 5, Pro 15, Premium 35/month).
 model Validation {
   id     String @id @default(cuid())
   userId String
@@ -524,23 +523,9 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-// Closed-beta / invite-only registration gate (see
-// docs/guides/CLOSED_BETA_PLAN.md, item #A3). When the backend env var
-// `REQUIRE_INVITE_CODES=true`, a valid unused row here is required to
-// complete `POST /auth/register`.
-//
-// Storage rules (same shape as RefreshToken):
-//   - We NEVER persist plaintext codes — only sha256(plaintext) in
-//     `codeHash`. Codes are 128-bit cryptographically random, so plain
-//     sha256 is enough; argon2 would be overkill for high-entropy tokens.
-//   - `prefix` is the first 8 chars of the plaintext so the admin UI can
-//     render "BETA-3F2A…" without revealing the full code.
-//   - Redemption is a single atomic UPDATE … WHERE usedAt IS NULL guarded
-//     by the unique `codeHash`, which makes double-spend impossible at
-//     the DB layer.
-//   - `usedByUserId` is @unique so each user can redeem at most one code.
-//   - `onDelete: SetNull` keeps the redemption row when the user is
-//     deleted (GDPR), so we retain "slot was used" without retaining PII.
+// RETIRED: closed-beta invite-code gate (beta ended; feature code removed).
+// The table is kept this release per the expand→contract migration rule —
+// drop it (and User.inviteCodeRedeemed) in a follow-up release.
 model InviteCode {
   id           String    @id @default(cuid())
   codeHash     String    @unique // sha256(plaintext) hex — never store plaintext
@@ -718,9 +703,9 @@ model BackgroundJob {
 // =====================================
 
 // Subscription tier levels (3-tier pricing model)
-// FREE (€0)            - Risk-free entry: try Applo with 3 applications/month
-// PRO (€9.99/month)    - Optimise every application with AI (templates, ATS, analytics)
-// PREMIUM (€19.99/month) - Premium tooling (email tracking, interview coach)
+// FREE (€0)            - 3 applications/month
+// PRO (€9.95/month)    - Hard limit: 50 applications/month
+// PREMIUM (€19.95/month) - Hard limit: 100 applications/month
 enum SubscriptionTier {
   FREE
   PRO
@@ -756,6 +741,11 @@ model Subscription {
   currentPeriodEnd   DateTime?
   cancelAtPeriodEnd  Boolean   @default(false)
 
+  // Consumable add-on application credits (purchased packages).
+  // Persist across billing periods — consumed only after the monthly
+  // tier allowance is exhausted. Never reset by the usage cron.
+  addonCreditsRemaining Int @default(0)
+
   // Trial
   trialStart DateTime?
   trialEnd   DateTime?
@@ -785,7 +775,7 @@ model SubscriptionUsage {
   resumesGenerated      Int @default(0) // KI-Lebensläufe count
   jobParsingUsed        Int @default(0) // URL/text parsing count
   interviewSessionsUsed Int @default(0) // Interview Coach sessions
-  validationsUsed       Int @default(0) // Bewerbungs-Validierungen (Free: 5/Monat, Pro+: unbegrenzt)
+  validationsUsed       Int @default(0) // Bewerbungs-Validierungen (Free: 5, Pro: 15, Premium: 35/Monat)
 
   // Rolling 24h window (cost-protection cap, independent of monthly period)
   dailyApplicationsUsed Int      @default(0)
@@ -805,7 +795,7 @@ model SubscriptionUsage {
 }
 
 // =====================================
-// KI INTERVIEW COACH (Premium Feature)
+// KI INTERVIEW COACH (Pro/Premium Feature)
 // =====================================
 
 // Interview session type

@@ -11,8 +11,7 @@ import {
   Lock,
   type LucideIcon,
 } from 'lucide-react';
-import { useFeatureGate } from '@/hooks/use-tier-gate';
-import type { TierFeatures } from '@/types';
+import { useFeatureGate, type BooleanTierFeature } from '@/hooks/use-tier-gate';
 import { cn } from '@/lib/utils';
 
 /**
@@ -35,7 +34,7 @@ interface BottomNavItem {
    * subtle lock badge instead of the active indicator and tapping still
    * navigates to the page (which renders its own paywall card).
    */
-  requiresFeature?: keyof TierFeatures;
+  requiresFeature?: BooleanTierFeature;
 }
 
 const BOTTOM_NAV_ITEMS: BottomNavItem[] = [

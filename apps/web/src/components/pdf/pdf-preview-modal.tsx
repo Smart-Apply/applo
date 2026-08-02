@@ -32,6 +32,7 @@ interface PDFPreviewModalProps {
   filename: string;
   title: string;
   onExpired?: () => void;
+  downloadWaitSeconds?: number;
 }
 
 /**
@@ -49,6 +50,7 @@ export function PDFPreviewModal({
   filename,
   title,
   onExpired,
+  downloadWaitSeconds = 0,
 }: PDFPreviewModalProps) {
   const t = useTranslations('editor');
   const [numPages, setNumPages] = useState<number>(0);
@@ -58,6 +60,7 @@ export function PDFPreviewModal({
   // mobile the page always fits horizontally at the default zoom.
   const [zoom, setZoom] = useState<number>(1.0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [downloadCountdown, setDownloadCountdown] = useState<number | null>(null);
 
   // Measure the viewer container so we can fit pages to it. Using
   // ResizeObserver instead of `window.innerWidth` keeps this correct
@@ -90,7 +93,6 @@ export function PDFPreviewModal({
   // and break navigation/zoom mid-preview.
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPageNumber(1);
       setZoom(1.0);
       setIsLoading(true);
@@ -132,18 +134,29 @@ export function PDFPreviewModal({
   };
 
   const handleDownloadClick = async () => {
-    // If file is a Blob, create a temporary URL for download
-    if (file instanceof Blob) {
-      const url = URL.createObjectURL(file);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } else {
-      await handleDownload(file, filename, onExpired);
+    try {
+      for (let seconds = downloadWaitSeconds; seconds > 0; seconds -= 1) {
+        setDownloadCountdown(seconds);
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1000);
+        });
+      }
+
+      // If file is a Blob, create a temporary URL for download
+      if (file instanceof Blob) {
+        const url = URL.createObjectURL(file);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        await handleDownload(file, filename, onExpired);
+      }
+    } finally {
+      setDownloadCountdown(null);
     }
   };
 
@@ -277,10 +290,13 @@ export function PDFPreviewModal({
           <Button
             onClick={handleDownloadClick}
             size="sm"
+            disabled={downloadCountdown !== null}
             className="h-10 w-full sm:h-9 sm:w-auto"
           >
             <Download className="mr-2 h-4 w-4" />
-            {t('pdfPreview.download')}
+            {downloadCountdown === null
+              ? t('pdfPreview.download')
+              : t('pdfPreview.downloadWait', { seconds: downloadCountdown })}
           </Button>
         </div>
       </DialogContent>

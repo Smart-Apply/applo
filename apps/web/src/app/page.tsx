@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { PricingSection } from '@/components/landing/pricing-section';
 import { ApploRig, type ApploState } from '@/components/ui/applo-rig';
 
 /** Inline reveal-delay helper (drives the CSS `--d` custom property). */
@@ -49,16 +50,15 @@ export default function Home() {
   const [ctaState, setCtaState] = useState<ApploState>('idle');
   const [ctaRevealed, setCtaRevealed] = useState(false);
 
-  // Companion driver: pose per section, dock position, scroll-reveal and
-  // animated stat counters, a React port of the design's vanilla script.
+  // Companion driver: pose per section, dock position, and scroll reveal.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const poseEls = Array.from(root.querySelectorAll<HTMLElement>('[data-pose]'));
     const hero = root.querySelector<HTMLElement>('#hero');
+    const pricingSec = root.querySelector<HTMLElement>('#preise');
     const ctaSec = root.querySelector<HTMLElement>('#cta');
-    const stats = root.querySelector<HTMLElement>('#stats');
 
     let curPose: string | null = null;
     let lastDocked: 'hero' | 'float' | null = null;
@@ -101,13 +101,18 @@ export default function Home() {
           window.setTimeout(() => setCtaState('success'), 520);
         }
       }
+      let inPricing = false;
+      if (pricingSec) {
+        const pricingRect = pricingSec.getBoundingClientRect();
+        inPricing = pricingRect.top < vh * 0.85 && pricingRect.bottom > vh * 0.15;
+      }
       const hr = hero?.getBoundingClientRect();
       const next: 'hero' | 'float' = hr && hr.bottom > vh * 0.4 ? 'hero' : 'float';
       if (next !== lastDocked) {
         lastDocked = next;
         setDocked(next);
       }
-      const hidden = next === 'float' && inCta;
+      const hidden = next === 'float' && (inPricing || inCta);
       if (hidden !== lastHidden) {
         lastHidden = hidden;
         setDockHidden(hidden);
@@ -145,48 +150,11 @@ export default function Home() {
       revealTimer = window.setTimeout(checkReveal, 60);
     }
 
-    // animated counters
-    let counted = false;
-    const runCount = () => {
-      if (counted) return;
-      counted = true;
-      root.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
-        const target = parseFloat(el.getAttribute('data-count') || '0');
-        const suffix = el.getAttribute('data-suffix') || '';
-        if (prefersReduced) {
-          el.textContent = target + suffix;
-          return;
-        }
-        const dur = 1100;
-        let t0: number | null = null;
-        const step = (ts: number) => {
-          if (t0 === null) t0 = ts;
-          const k = Math.min((ts - t0) / dur, 1);
-          const eased = 1 - Math.pow(1 - k, 3);
-          el.textContent = Math.round(target * eased) + suffix;
-          if (k < 1) requestAnimationFrame(step);
-        };
-        requestAnimationFrame(step);
-      });
-    };
-    const checkCount = () => {
-      if (counted || !stats) return;
-      const r = stats.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      if (r.top < vh * 0.85 && r.bottom > 0) {
-        runCount();
-        window.removeEventListener('scroll', checkCount);
-      }
-    };
-    window.addEventListener('scroll', checkCount, { passive: true });
-    checkCount();
-
     return () => {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
       window.removeEventListener('scroll', checkReveal);
       window.removeEventListener('resize', checkReveal);
-      window.removeEventListener('scroll', checkCount);
       window.clearTimeout(revealTimer);
     };
   }, []);
@@ -567,60 +535,7 @@ export default function Home() {
         </section>
 
         {/* PREISE */}
-        <section className="section" id="preise" data-pose="idle">
-          <div className="wrap">
-            <div className="sec-row reveal">
-              <div>
-                <p className="eyebrow">{t('pricing.eyebrow')}</p>
-                <h2 className="h2">{t('pricing.title')}</h2>
-              </div>
-              <p className="lead">{t('pricing.lead')}</p>
-            </div>
-            <div className="grid price-grid">
-              <article className="card price reveal">
-                <div className="pname">{t('pricing.plans.free.name')}</div>
-                <div className="pamt">{t('pricing.plans.free.currency')} {t('pricing.plans.free.amount')} <small>{t('pricing.plans.free.period')}</small></div>
-                <div className="ptbd">{t('pricing.plans.free.tagline')}</div>
-                <ul>
-                  <li><span className="ck"><Check /></span> {t('pricing.plans.free.features.0')}</li>
-                  <li><span className="ck"><Check /></span> {t('pricing.plans.free.features.1')}</li>
-                  <li><span className="ck"><Check /></span> {t('pricing.plans.free.features.2')}</li>
-                  <li><span className="ck"><Check /></span> {t('pricing.plans.free.features.3')}</li>
-                </ul>
-                <Link className="btn btn-ghost" href="/register">{t('pricing.plans.free.cta')}</Link>
-              </article>
-              <article className="card price feature reveal" style={d('.08s')}>
-                <span className="badge">{t('pricing.plans.pro.badge')}</span>
-                <div className="pname">{t('pricing.plans.pro.name')}</div>
-                <div className="pamt">{t('pricing.plans.pro.currency')} <span style={{ color: 'rgba(229,233,242,.5)' }}>{t('pricing.plans.pro.amount')}</span> <small>{t('pricing.plans.pro.period')}</small></div>
-                <div className="ptbd">{t('pricing.plans.pro.tagline')}</div>
-                <ul>
-                  <li><span className="ck"><Check color="#5581C7" /></span> {t('pricing.plans.pro.features.0')}</li>
-                  <li><span className="ck"><Check color="#5581C7" /></span> {t('pricing.plans.pro.features.1')}</li>
-                  <li><span className="ck"><Check color="#5581C7" /></span> {t('pricing.plans.pro.features.2')}</li>
-                  <li><span className="ck"><Check color="#5581C7" /></span> {t('pricing.plans.pro.features.3')}</li>
-                </ul>
-                <Link className="btn btn-primary" href="/register">{t('pricing.plans.pro.cta')}<span className="m">→</span></Link>
-              </article>
-              <article className="card price reveal" style={d('.16s')}>
-                <div className="pname">{t('pricing.plans.premium.name')}</div>
-                <div className="pamt">{t('pricing.plans.premium.currency')} <span style={{ color: 'var(--muted-2)' }}>{t('pricing.plans.premium.amount')}</span> <small>{t('pricing.plans.premium.period')}</small></div>
-                <div className="ptbd">{t('pricing.plans.premium.tagline')}</div>
-                <ul>
-                  <li><span className="ck"><Check /></span> {t('pricing.plans.premium.features.0')}</li>
-                  <li><span className="ck"><Check /></span> {t('pricing.plans.premium.features.1')}</li>
-                  <li><span className="ck"><Check /></span> {t('pricing.plans.premium.features.2')}</li>
-                </ul>
-                <Link className="btn btn-ghost" href="/register">{t('pricing.plans.premium.cta')}</Link>
-              </article>
-            </div>
-            <div className="stats reveal" id="stats">
-              <div className="stat"><b data-count="50">0</b><span>{t('pricing.stats.templates')}</span></div>
-              <div className="stat"><b data-count="2" data-suffix={t('pricing.stats.languagesSuffix')}>0</b><span>{t('pricing.stats.languages')}</span></div>
-              <div className="stat"><b data-suffix="%" data-count="100">0</b><span>{t('pricing.stats.hosting')}</span></div>
-            </div>
-          </div>
-        </section>
+        <PricingSection />
 
         {/* FAQ */}
         <section className="section faq-sec" id="faq" data-pose="think">

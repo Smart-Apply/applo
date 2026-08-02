@@ -8,7 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AppLogo } from '@/components/ui/app-logo';
 import { api, resetAuthRedirectFlag } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
-import { useAuthConfig } from '@/hooks/use-auth-config';
 import { toast } from '@/lib/toast';
 import { TwoFactorChallengeForm } from '@/components/two-factor';
 import { TurnstileWidget, resetTurnstile } from '@/components/auth/turnstile-widget';
@@ -135,21 +134,12 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { setAuth, isAuthenticated, hasHydrated } = useAuthStore();
-  // Closed-beta invite-code gate — default TRUE while loading so we never
-  // flash a gate-less form against a gated backend.
-  const { data: authConfig } = useAuthConfig();
-  const requireInviteCode = authConfig?.requireInviteCode ?? true;
 
   // Surface OAuth callback errors redirected back to /login?oauth=error.
   useEffect(() => {
     if (searchParams.get('oauth') !== 'error') return;
     const message = searchParams.get('message');
-    if (message === 'invite_required') {
-      toast.error(
-        t('login.oauthInviteRequiredToast'),
-        { duration: 12000 },
-      );
-    } else if (message === 'email_unverified') {
+    if (message === 'email_unverified') {
       toast.error(
         t('login.oauthEmailUnverifiedToast'),
         { duration: 12000 },
@@ -194,7 +184,6 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       email: '',
       password: '',
       confirmPassword: '',
-      inviteCode: '',
     },
   });
 
@@ -276,22 +265,14 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       return;
     }
 
-    // Client-side guard for the invite-code gate (server is authoritative).
-    if (requireInviteCode && !data.inviteCode?.trim()) {
-      registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeRequiredError') });
-      pulseError();
-      return;
-    }
-
     try {
-      const { confirmPassword: _confirmPassword, inviteCode, ...registerData } = data;
+      const { confirmPassword: _confirmPassword, ...registerData } = data;
       const response = await api.auth.register({
         email: registerData.email,
         password: registerData.password,
         firstName: registerData.firstName || '',
         lastName: registerData.lastName || '',
         turnstileToken: turnstileToken ?? undefined,
-        inviteCode: inviteCode?.trim() || undefined,
       });
       resetAuthRedirectFlag();
       setAuth(response.user);
@@ -307,18 +288,6 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
       if (ApiError.isApiError(error)) {
         if (error.data?.code === 'CAPTCHA_FAILED') {
           toast.error(t('register.captchaFailedToast'), { duration: 10000 });
-        } else if (error.data?.code === 'INVITE_CODE_REQUIRED') {
-          registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeRequiredError') });
-          toast.error(t('register.inviteCodeRequiredToast'), { duration: 8000 });
-        } else if (error.data?.code === 'INVITE_CODE_INVALID') {
-          registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeInvalidError') });
-          toast.error(t('register.inviteCodeInvalidToast'));
-        } else if (error.data?.code === 'INVITE_CODE_ALREADY_USED') {
-          registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeUsedError') });
-          toast.error(t('register.inviteCodeUsedToast'));
-        } else if (error.data?.code === 'INVITE_CODE_EXPIRED') {
-          registerForm.setError('inviteCode', { type: 'manual', message: t('register.inviteCodeExpiredError') });
-          toast.error(t('register.inviteCodeExpiredToast'));
         } else if (error.status === 400 || error.status === 409) {
           toast.error(t('register.emailExistsToast'));
         } else if (error.status === 429) {
@@ -695,39 +664,6 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                         </Field>
                       )}
                     />
-
-                    {requireInviteCode && (
-                      <Controller
-                        control={registerForm.control}
-                        name="inviteCode"
-                        render={({ field, fieldState }) => (
-                          <Field label={t('register.inviteCodeLabel')} error={fieldState.error?.message}>
-                            <input
-                              className={`input input-mono${fieldState.error ? ' invalid' : ''}`}
-                              placeholder="BETA-XXXX-XXXX-XXXX"
-                              autoComplete="off"
-                              autoCapitalize="characters"
-                              spellCheck={false}
-                              {...field}
-                              value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                              onFocus={() => setFocused('inviteCode')}
-                              onBlur={() => {
-                                field.onBlur();
-                                setFocused(null);
-                              }}
-                            />
-                          </Field>
-                        )}
-                      />
-                    )}
-
-                    {requireInviteCode && (
-                      <div className="beta-note">
-                        <span className="beta-tag">{t('register.betaTag')}</span>
-                        {t('register.betaNote')}
-                      </div>
-                    )}
 
                     {/* Cloudflare Turnstile — renders nothing in dev without a site key. */}
                     <TurnstileWidget onToken={setTurnstileToken} />

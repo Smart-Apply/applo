@@ -129,6 +129,7 @@
       "pdfDocument": "PDF document",
       "preview": "Preview",
       "download": "Download",
+      "freeDownloadWait": "On Free, the ad-supported download starts after {seconds} seconds.",
       "missing": "Not available"
     },
     "nextStep": {

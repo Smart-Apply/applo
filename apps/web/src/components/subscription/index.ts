@@ -8,5 +8,5 @@ export {
   FeatureGate,
   FeatureFeatureGate,
   PremiumGate,
-  PremiumPlusGate,
+  ProGate,
 } from './feature-gate';

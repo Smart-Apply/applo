@@ -4,14 +4,18 @@ import { useMemo } from 'react';
 import { useSubscription } from './use-subscription';
 import type { SubscriptionTier, TierFeatures } from '@/types';
 
+export type BooleanTierFeature = {
+  [Key in keyof TierFeatures]: TierFeatures[Key] extends boolean ? Key : never;
+}[keyof TierFeatures];
+
 /**
  * Tier hierarchy for comparison
  * Higher number = higher tier
  */
 const TIER_ORDER: Record<SubscriptionTier, number> = {
   FREE: 0,
-  PREMIUM: 1,
-  PREMIUM_PLUS: 2,
+  PRO: 1,
+  PREMIUM: 2,
 };
 
 interface TierGateResult {
@@ -74,7 +78,7 @@ interface FeatureGateResult {
  * if (!hasAccess) return <UpgradePrompt feature="Interview Coach" />;
  * ```
  */
-export function useFeatureGate(feature: keyof TierFeatures): FeatureGateResult {
+export function useFeatureGate(feature: BooleanTierFeature): FeatureGateResult {
   const { tier, features, isLoading } = useSubscription();
 
   const result = useMemo(() => {

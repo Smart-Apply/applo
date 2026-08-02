@@ -51,9 +51,8 @@ export class ValidationService {
    * OUTSIDE Applo (their own résumé + optional cover letter + optional
    * job context), persist it, and return the record.
    *
-   * Metered: the controller's `UsageLimitGuard` + `@CheckUsage('validation')`
-   * enforces the monthly cap (Free: 5, Pro+: unlimited) BEFORE this runs. Usage
-   * is recorded only AFTER a successful run, so a failed check never burns quota.
+  * Metered: the controller atomically reserves monthly quota (Free: 5,
+  * Pro: 15, Premium: 35) before this runs and refunds it if this method throws.
    */
   async create(userId: string, dto: CreateValidationDto): Promise<ValidationRecord> {
     const language = dto.language?.trim() || '';
@@ -83,14 +82,6 @@ export class ValidationService {
         score: result.overallScore,
       },
     });
-
-    // Record usage AFTER success so a failed check doesn't burn the cap.
-    // Best-effort: a metering hiccup must not fail the user-facing response.
-    try {
-      await this.subscriptionService.recordUsage(userId, 'validation');
-    } catch (usageError) {
-      this.logger.warn(`Failed to record validation usage for user ${userId}`, usageError);
-    }
 
     this.logger.log(
       `Validation ${record.id} for user ${userId} (overall=${result.overallScore}, verdict=${result.verdict})`,

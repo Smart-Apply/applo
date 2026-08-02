@@ -1,7 +1,7 @@
 {
   "page": {
     "subtitle": "Practice job interviews with AI-powered feedback",
-    "unlockPremium": "Unlock Premium",
+    "unlockInterviews": "Unlock with Pro",
     "startNew": "Start new interview",
     "generalInterview": "General interview",
     "sessionQuestions": "{count, plural, one {# question} other {# questions}}",
@@ -24,9 +24,9 @@
     "freeInterviewDescription": "Practice for any role",
     "applicationBased": "Based on an application",
     "applicationBasedDescription": "Questions from a real job posting",
-    "lockedAria": "Premium only – upgrade now",
-    "premiumOnly": "Premium only",
-    "premiumTooltip": "Premium only. Click to upgrade."
+    "lockedAria": "Available from Pro – upgrade now",
+    "planOnly": "Available from Pro",
+    "planTooltip": "Available from Pro. Click to compare plans."
   },
   "detail": {
     "notFound": "Interview session not found.",

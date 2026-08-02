@@ -61,7 +61,7 @@
     "jobLabel": "JOB",
     "jobValue": "Sales Lead · Nordwind GmbH",
     "generationLabel": "AI GENERATION",
-    "note": "Grounding check active: no invented metrics.",
+    "note": "Fact check active: no invented metrics.",
     "scoreLabel": "ATS SCORE",
     "keywords": "KEYWORDS 21/24",
     "scoreWord": "STRONG",
@@ -75,11 +75,11 @@
     "steps": {
       "one": {
         "title": "Upload profile & CV",
-        "desc": "Upload your résumé. The resume parser reads it and fills your profile automatically. You review and correct it."
+        "desc": "Upload your résumé. Applo reads it and fills your profile automatically. You review and correct it."
       },
       "two": {
         "title": "Add the job posting",
-        "desc": "Paste a job as text, URL, or PDF. The AI writes a cover letter and résumé tailored to the posting and optimized for ATS."
+        "desc": "Paste a job as text, link, or PDF. The AI writes a cover letter and résumé tailored to the posting and optimized for ATS."
       },
       "three": {
         "title": "Export as PDF",
@@ -94,11 +94,11 @@
     "items": {
       "generation": {
         "title": "AI generation",
-        "desc": "Self-review and an ATS keyword loop refine your cover letter and CV automatically, based on your real data."
+        "desc": "The AI reviews its own drafts and refines your cover letter and CV automatically, based on your real data."
       },
       "ingestion": {
-        "title": "Smart job ingestion",
-        "desc": "Import jobs from Indeed, LinkedIn, and Glassdoor as text, URL, or PDF."
+        "title": "Easy job import",
+        "desc": "Bring in jobs from Indeed, LinkedIn, and Glassdoor as text, link, or PDF."
       },
       "validation": {
         "title": "Application check",
@@ -110,7 +110,7 @@
       },
       "interviews": {
         "title": "Mock interviews",
-        "desc": "Practice interviews by text or voice and get concrete feedback.<tag>Premium</tag>"
+        "desc": "Practice interviews by text or voice and get concrete feedback.<tag>Pro</tag>"
       },
       "tracking": {
         "title": "Email tracking",
@@ -121,7 +121,7 @@
         "desc": "Create and export applications in German or English."
       },
       "pipeline": {
-        "title": "Live pipeline status",
+        "title": "Live status of your applications",
         "desc": "Keep every application and its current status in one place."
       }
     }
@@ -133,7 +133,7 @@
     "items": {
       "grounded": {
         "title": "No invented data",
-        "desc": "The AI uses only what your profile supports. A grounding check flags invented metrics before they enter your application."
+        "desc": "The AI uses only what your profile supports. An automatic check flags invented metrics before they enter your application."
       },
       "eu": {
         "title": "Your data stays in the EU",
@@ -149,7 +149,7 @@
       },
       "security": {
         "title": "Security built in",
-        "desc": "HttpOnly JWTs, 2FA, CSRF protection, rate limiting, and audit logs are active by default."
+        "desc": "Two-factor sign-in, encrypted connections, and further safeguards are active by default."
       },
       "candidate": {
         "title": "For you, not recruiters",
@@ -168,7 +168,7 @@
   "pricing": {
     "eyebrow": "04 · Pricing",
     "title": "Fair and without surprises",
-    "lead": "Start free. Upgrade only when you need more. Cancel anytime.",
+    "lead": "Clear monthly limits, no watermarks, and extra credits that never expire. Cancel anytime.",
     "plans": {
       "free": {
         "name": "Free",
@@ -177,10 +177,11 @@
         "period": "/ month",
         "tagline": "For trying it out",
         "features": {
-          "0": "5 application checks / month",
-          "1": "AI generation & ATS score",
-          "2": "50 ATS PDF templates",
-          "3": "DE/EN"
+          "profile": "1 résumé profile",
+          "applications": "3 AI applications / month",
+          "validations": "5 application checks / month",
+          "noWatermark": "No watermark",
+          "adDownload": "Ad-supported download (15s wait time)"
         },
         "cta": "Start free"
       },
@@ -188,36 +189,57 @@
         "badge": "Popular",
         "name": "Pro",
         "currency": "€",
-        "amount": "TBD",
+        "amount": "9.95",
         "period": "/ month",
-        "tagline": "Price coming soon",
+        "tagline": "For active application phases",
         "features": {
-          "0": "Unlimited application checks",
-          "1": "Smart job ingestion",
-          "2": "Live pipeline status",
-          "3": "Everything in Free"
+          "includedFree": "Includes all Free features",
+          "applications": "50 applications / month",
+          "interviews": "5 mock interviews / month",
+          "validations": "15 application checks / month",
+          "ingestion": "Import job postings (text, link, or file)",
+          "pipeline": "Live status of your applications",
+          "export": "Ad-free & export in German or English"
         },
         "cta": "Choose Pro"
       },
       "premium": {
         "name": "Premium",
         "currency": "€",
-        "amount": "TBD",
+        "amount": "19.95",
         "period": "/ month",
-        "tagline": "Price coming soon",
+        "tagline": "For an intensive job search",
         "features": {
-          "0": "Mock interviews (text & voice)",
-          "1": "Email tracking (Outlook/M365)",
-          "2": "Everything in Pro"
+          "includedPro": "Includes all Pro features",
+          "applications": "100 applications / month",
+          "interviews": "45 mock interviews (voice & text)",
+          "validations": "35 application checks / month",
+          "tracking": "Email tracking (Outlook / Microsoft 365)"
         },
         "cta": "Choose Premium"
       }
     },
-    "stats": {
-      "templates": "ATS templates",
-      "languagesSuffix": " languages",
-      "languages": "German & English",
-      "hosting": "EU hosting & GDPR"
+    "addons": {
+      "eyebrow": "Extra allowances",
+      "badge": "Never expires",
+      "title": "More applications when you need them",
+      "lead": "Extra credits remain available until used and are only consumed after your monthly plan allowance runs out.",
+      "oneTime": "one-time",
+      "note": "Extra credits cover additional AI applications and do not reset at the end of the month.",
+      "packages": {
+        "small": {
+          "applications": "10 extra applications",
+          "price": "€2.99"
+        },
+        "medium": {
+          "applications": "30 extra applications",
+          "price": "€6.99"
+        },
+        "large": {
+          "applications": "75 extra applications",
+          "price": "€14.99"
+        }
+      }
     }
   },
   "faq": {
@@ -230,7 +252,7 @@
       },
       "fabrication": {
         "q": "Does the AI invent things about me?",
-        "a": "No. The AI uses only what your profile supports. A grounding check flags invented metrics so nothing untrue enters your application."
+        "a": "No. The AI uses only what your profile supports. An automatic check flags invented metrics so nothing untrue enters your application."
       },
       "recruiters": {
         "q": "Can recruiters see or find my profile?",

@@ -37,8 +37,8 @@ interface UpgradePromptProps {
  * 
  * // Compact inline version
  * <UpgradePrompt
- *   feature="Unbegrenzte Bewerbungen"
- *   requiredTier="PREMIUM_PLUS"
+ *   feature="Mock-Interviews"
+ *   requiredTier="PRO"
  *   variant="compact"
  * />
  * ```
@@ -54,11 +54,11 @@ export function UpgradePrompt({
   const router = useRouter();
   const t = useTranslations('subscription');
 
-  const tierLabel = requiredTier === 'PREMIUM' ? 'Premium' : 'Premium+';
+  const tierLabel = requiredTier === 'PREMIUM' ? 'Premium' : requiredTier === 'PRO' ? 'Pro' : 'Free';
   const defaultCta = t('upgradePrompt.defaultCta', { tier: tierLabel });
 
   const handleUpgrade = () => {
-    router.push('/#pricing');
+    router.push('/#preise');
   };
 
   // Inline variant - minimal styling
@@ -204,7 +204,7 @@ export function LimitReachedPrompt({
                 {t('limit.description', { used, limit, action: actionLabel })}
               </p>
             </div>
-            <Button onClick={() => router.push('/#pricing')} size="sm">
+            <Button onClick={() => router.push('/#preise')} size="sm">
               <Sparkles className="mr-2 h-4 w-4" />
               {t('upgradePrompt.upgradeNow')}
             </Button>

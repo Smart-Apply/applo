@@ -129,6 +129,7 @@
       "pdfDocument": "PDF-Dokument",
       "preview": "Vorschau",
       "download": "Download",
+      "freeDownloadWait": "Im Free-Tarif startet der werbefinanzierte Download nach {seconds} Sekunden.",
       "missing": "Nicht vorhanden"
     },
     "nextStep": {

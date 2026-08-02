@@ -51,6 +51,7 @@ import { SummaryDto } from './dto/summary.dto';
 import { ExperienceDescriptionDto } from './dto/experience-description.dto';
 import { ProjectDescriptionDto } from './dto/project-description.dto';
 import { ApplicationKeywordsResponseDto } from './dto/application-keywords.dto';
+import { SubscriptionService } from '../subscription/subscription.service';
 
 @ApiTags('applications')
 @ApiBearerAuth()
@@ -62,6 +63,7 @@ export class ApplicationsController {
     private readonly applicationsService: ApplicationsService,
     private readonly generationService: GenerationService,
     private readonly llmService: LLMService,
+    private readonly subscriptionService: SubscriptionService,
   ) {}
 
   @Post()
@@ -90,7 +92,13 @@ export class ApplicationsController {
     @CurrentUser() user: any,
     @Body() dto: CreateApplicationDto,
   ): Promise<ApplicationResponseDto> {
-    return this.generationService.create(user.id, dto);
+    const reservation = await this.subscriptionService.reserveUsage(user.id, 'application');
+    try {
+      return await this.generationService.create(user.id, dto);
+    } catch (error) {
+      await this.subscriptionService.releaseUsage(reservation);
+      throw error;
+    }
   }
 
   @Post('create-with-generation')
@@ -120,10 +128,16 @@ export class ApplicationsController {
     @CurrentUser() user: any,
     @Body() dto: CreateApplicationDto,
   ): Promise<ApplicationResponseDto> {
-    // Wrapped for prompt-caching token measurement (no-op unless LOG_LLM_CALLS).
-    return this.llmService.runWithUsageTracking('create-with-generation', () =>
-      this.generationService.createWithGeneration(user.id, dto),
-    );
+    const reservation = await this.subscriptionService.reserveUsage(user.id, 'application');
+    try {
+      // Wrapped for prompt-caching token measurement (no-op unless LOG_LLM_CALLS).
+      return await this.llmService.runWithUsageTracking('create-with-generation', () =>
+        this.generationService.createWithGeneration(user.id, dto),
+      );
+    } catch (error) {
+      await this.subscriptionService.releaseUsage(reservation);
+      throw error;
+    }
   }
 
   @Post('cancel-generation')
@@ -172,10 +186,16 @@ export class ApplicationsController {
     @CurrentUser() user: any,
     @Param('id') id: string,
   ): Promise<ApplicationResponseDto> {
-    // Wrapped for prompt-caching token measurement (no-op unless LOG_LLM_CALLS).
-    return this.llmService.runWithUsageTracking(`regenerate-single-pipeline:${id}`, () =>
-      this.generationService.generateWithSinglePipeline(id, user.id),
-    );
+    const reservation = await this.subscriptionService.reserveUsage(user.id, 'application');
+    try {
+      // Wrapped for prompt-caching token measurement (no-op unless LOG_LLM_CALLS).
+      return await this.llmService.runWithUsageTracking(`regenerate-single-pipeline:${id}`, () =>
+        this.generationService.generateWithSinglePipeline(id, user.id),
+      );
+    } catch (error) {
+      await this.subscriptionService.releaseUsage(reservation);
+      throw error;
+    }
   }
 
   @Post(':id/regenerate')
@@ -543,7 +563,7 @@ export class ApplicationsController {
   @Get(':id/files')
   @ApiOperation({
     summary: 'Get download URLs for application files',
-    description: 'Returns SAS URLs for cover letter and resume PDFs (1 hour expiry)',
+    description: 'Returns signed URLs for cover letter and resume PDFs (15 minute expiry)',
   })
   @ApiResponse({
     status: 200,
@@ -561,9 +581,11 @@ export class ApplicationsController {
   }
 
   @Get(':id/download/cover-letter')
+  @SkipThrottle({ default: false })
   @ApiOperation({
     summary: 'Download cover letter PDF',
-    description: 'Streams the cover letter PDF file for download',
+    description:
+      'Streams the cover letter PDF file. Ad-supported tiers wait 15 seconds before download.',
   })
   @ApiResponse({ status: 200, description: 'PDF file stream' })
   @ApiResponse({ status: 400, description: 'Application not ready or file not found' })
@@ -574,7 +596,12 @@ export class ApplicationsController {
     @Param('id') id: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const file = await this.applicationsService.getFileStream(user.id, id, 'cover-letter');
+    const file = await this.applicationsService.getFileStream(
+      user.id,
+      id,
+      'cover-letter',
+      () => this.subscriptionService.waitForDownloadAccess(user.id),
+    );
 
     res.set({
       'Content-Type': 'application/pdf',
@@ -586,9 +613,10 @@ export class ApplicationsController {
   }
 
   @Get(':id/download/resume')
+  @SkipThrottle({ default: false })
   @ApiOperation({
     summary: 'Download resume PDF',
-    description: 'Streams the resume PDF file for download',
+    description: 'Streams the resume PDF file. Ad-supported tiers wait 15 seconds before download.',
   })
   @ApiResponse({ status: 200, description: 'PDF file stream' })
   @ApiResponse({ status: 400, description: 'Application not ready or file not found' })
@@ -599,7 +627,12 @@ export class ApplicationsController {
     @Param('id') id: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const file = await this.applicationsService.getFileStream(user.id, id, 'resume');
+    const file = await this.applicationsService.getFileStream(
+      user.id,
+      id,
+      'resume',
+      () => this.subscriptionService.waitForDownloadAccess(user.id),
+    );
 
     res.set({
       'Content-Type': 'application/pdf',

@@ -38,25 +38,36 @@ export interface OAuthProvider {
 // Subscription Types
 // ============================================
 
-export type SubscriptionTier = 'FREE' | 'PREMIUM' | 'PREMIUM_PLUS';
+export type SubscriptionTier = 'FREE' | 'PRO' | 'PREMIUM';
 export type SubscriptionStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'TRIALING' | 'INCOMPLETE';
 
 export interface TierFeatures {
-  customTemplates: boolean;
-  prioritySupport: boolean;
+  pdfExport: boolean;
+  multipleTemplates: boolean;
+  premiumTemplates: boolean;
+  customBranding: boolean;
+  atsOptimization: boolean;
+  keywordMatching: 'none' | 'basic' | 'semantic';
+  applicationTracking: 'manual' | 'semi-auto' | 'auto';
+  basicAnalytics: boolean;
   advancedAnalytics: boolean;
+  extendedProfile: boolean;
+  linkedinImport: boolean;
+  multiLanguage: 'none' | 'de-en' | 'all';
   interviewCoach: boolean;
-  /** LinkedIn job search & import (Premium feature) */
-  linkedinImport?: boolean;
-  /** Email-based application tracking (future Premium feature) */
-  emailParsing?: boolean;
-  /** ATS keyword analysis & match score (Pro & Premium feature) */
-  atsOptimization?: boolean;
+  emailParsing: boolean;
+  prioritySupport: boolean;
+  noAds: boolean;
 }
 
 export interface TierLimits {
   applicationsPerMonth: number;
+  coverLettersPerMonth: number;
+  resumesPerMonth: number;
+  jobParsingPerMonth: number;
   interviewSessionsPerMonth: number;
+  validationsPerMonth: number;
+  applicationsPerDay: number;
   priority: 'low' | 'normal' | 'high';
   features: TierFeatures;
 }
@@ -76,9 +87,14 @@ export interface SubscriptionUsageStats {
   tier: SubscriptionTier;
   status: SubscriptionStatus;
   applications: UsageStat;
+  coverLetters?: UsageStat;
+  resumes?: UsageStat;
+  jobParsing?: UsageStat;
   interviewSessions: UsageStat;
-  /** Monthly cap on AI application validations (Free: 5, Pro+: unlimited) */
-  validations?: UsageStat;
+  /** Monthly cap on AI application validations (Free: 5, Pro: 15, Premium: 35) */
+  validations: UsageStat;
+  /** Purchased application credits that persist until consumed */
+  addonCredits?: { remaining: number };
   /** Rolling 24h cap on full application generations (cost protection) */
   applicationsToday?: DailyUsageStat;
   periodStart: string;
@@ -89,13 +105,28 @@ export interface SubscriptionUsageStats {
 export interface TierInfo {
   id: SubscriptionTier;
   name: string;
+  tagline: string;
   price: number;
+  priceDisplay: string;
+  priceInterval: string;
+  recommended?: boolean;
+  badge?: string;
   features: string[];
   limits: TierLimits;
 }
 
+export interface AddonPackageInfo {
+  id: 'SMALL' | 'MEDIUM' | 'LARGE';
+  credits: 10 | 30 | 75;
+  price: number;
+  priceDisplay: string;
+  persistsUntilUsed: true;
+  consumedAfterMonthlyAllowance: true;
+}
+
 export interface TiersResponse {
   tiers: TierInfo[];
+  addonPackages: AddonPackageInfo[];
 }
 
 export interface CanPerformActionResult {

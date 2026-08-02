@@ -17,7 +17,7 @@ import { SubscriptionUsageCron } from './subscription-usage.cron';
  * - Controllers can inject SubscriptionService for custom logic
  *
  * Features:
- * - Tier management (FREE, PREMIUM, PREMIUM_PLUS)
+ * - Tier management (FREE, PRO, PREMIUM)
  * - Usage tracking (applications, interview sessions)
  * - Automatic usage reset via cron job
  */

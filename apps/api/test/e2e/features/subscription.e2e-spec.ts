@@ -10,6 +10,25 @@ import { PrismaService } from '../../../src/prisma/prisma.service';
 import { TransformInterceptor } from '../../../src/common/interceptors';
 
 describe('SubscriptionController (e2e)', () => {
+  interface TierPayload {
+    id: 'FREE' | 'PRO' | 'PREMIUM';
+    name: string;
+    price: number;
+    limits: {
+      applicationsPerMonth: number;
+      interviewSessionsPerMonth: number;
+      validationsPerMonth: number;
+    };
+  }
+
+  interface AddonPackagePayload {
+    id: 'SMALL' | 'MEDIUM' | 'LARGE';
+    credits: number;
+    price: number;
+    persistsUntilUsed: boolean;
+    consumedAfterMonthlyAllowance: boolean;
+  }
+
   let app: INestApplication;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let prisma: PrismaService;
@@ -135,24 +154,47 @@ describe('SubscriptionController (e2e)', () => {
       expect(response.body.data).toHaveProperty('tiers');
       expect(Array.isArray(response.body.data.tiers)).toBe(true);
       expect(response.body.data.tiers).toHaveLength(3);
+      expect(response.body.data.addonPackages).toHaveLength(3);
 
-      // Verify tier structure
-      const freeTier = response.body.data.tiers.find((t: any) => t.id === 'FREE');
-      expect(freeTier).toBeDefined();
+      const tiers = response.body.data.tiers as TierPayload[];
+      const freeTier = tiers.find((tier) => tier.id === 'FREE');
+      if (!freeTier) throw new Error('FREE tier missing from response');
       expect(freeTier.name).toBe('Free');
       expect(freeTier.price).toBe(0);
+      expect(freeTier.limits.applicationsPerMonth).toBe(3);
+      expect(freeTier.limits.interviewSessionsPerMonth).toBe(0);
+      expect(freeTier.limits.validationsPerMonth).toBe(5);
       expect(freeTier).toHaveProperty('features');
       expect(freeTier).toHaveProperty('limits');
 
-      const premiumTier = response.body.data.tiers.find((t: any) => t.id === 'PREMIUM');
-      expect(premiumTier).toBeDefined();
-      expect(premiumTier.name).toBe('Premium');
-      expect(premiumTier.price).toBe(999);
+      const proTier = tiers.find((tier) => tier.id === 'PRO');
+      if (!proTier) throw new Error('PRO tier missing from response');
+      expect(proTier.name).toBe('Pro');
+      expect(proTier.price).toBe(995);
+      expect(proTier.limits.applicationsPerMonth).toBe(50);
+      expect(proTier.limits.interviewSessionsPerMonth).toBe(5);
+      expect(proTier.limits.validationsPerMonth).toBe(15);
 
-      const premiumPlusTier = response.body.data.tiers.find((t: any) => t.id === 'PREMIUM_PLUS');
-      expect(premiumPlusTier).toBeDefined();
-      expect(premiumPlusTier.name).toBe('Premium+');
-      expect(premiumPlusTier.price).toBe(2499);
+      const premiumTier = tiers.find((tier) => tier.id === 'PREMIUM');
+      if (!premiumTier) throw new Error('PREMIUM tier missing from response');
+      expect(premiumTier.name).toBe('Premium');
+      expect(premiumTier.price).toBe(1995);
+      expect(premiumTier.limits.applicationsPerMonth).toBe(100);
+      expect(premiumTier.limits.interviewSessionsPerMonth).toBe(45);
+      expect(premiumTier.limits.validationsPerMonth).toBe(35);
+
+      const addonPackages = response.body.data.addonPackages as AddonPackagePayload[];
+      expect(addonPackages.map(({ credits, price }) => ({ credits, price }))).toEqual([
+        { credits: 10, price: 299 },
+        { credits: 30, price: 699 },
+        { credits: 75, price: 1499 },
+      ]);
+      expect(
+        addonPackages.every(
+          (addonPackage) =>
+            addonPackage.persistsUntilUsed && addonPackage.consumedAfterMonthlyAllowance,
+        ),
+      ).toBe(true);
     });
   });
 

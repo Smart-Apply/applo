@@ -658,21 +658,11 @@ export const api = {
       firstName: string;
       lastName: string;
       turnstileToken?: string;
-      inviteCode?: string;
     }) =>
       apiRequest<{ user: User }>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-
-    /**
-     * Public auth-time configuration. Read once on register-page mount to
-     * decide whether to render the invite-code field. Heavily cached on
-     * the client (TanStack Query staleTime: 10min) since toggles are
-     * rare.
-     */
-    getConfig: () =>
-      apiRequest<{ requireInviteCode: boolean }>('/auth/config'),
 
     login: (data: { email: string; password: string }) =>
       apiRequest<{ user?: User; requiresTwoFactor?: boolean; challengeToken?: string; methods?: string[] }>('/auth/login', {
@@ -844,6 +834,7 @@ export const api = {
       apiRequest<JobPosting>('/job-postings/parse', {
         method: 'POST',
         body: JSON.stringify(data),
+        retry: false,
       }),
 
     list: () => apiRequest<PaginatedResponse<JobPosting>>('/job-postings'),
@@ -1042,7 +1033,7 @@ export const api = {
   },
 
   // Standalone application check (AI quality + ATS review of the user's OWN,
-  // externally-created application). Metered: Free 5/month, Pro+ unlimited.
+  // externally-created application). Metered: Free 5, Pro 15, Premium 35/month.
   validation: {
     // Non-idempotent + metered — never auto-retry a network blip, or a run that
     // already spent quota server-side would re-spend it.
@@ -1112,7 +1103,7 @@ export const api = {
       apiRequest<CanPerformActionResult>(`/subscription/can-perform/${action}`),
   },
 
-  // Interview Coach (Premium Feature)
+  // Interview Coach (Pro/Premium feature)
   interviews: {
     list: (options?: { status?: InterviewSessionStatus; limit?: number; offset?: number }) => {
       const params = new URLSearchParams();
@@ -1133,6 +1124,7 @@ export const api = {
       apiRequest<InterviewSessionDetail>('/interviews/start', {
         method: 'POST',
         body: JSON.stringify(data),
+        retry: false,
       }),
 
     submitAnswer: (sessionId: string, questionId: string, data: SubmitAnswerDto) =>

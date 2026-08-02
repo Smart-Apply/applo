@@ -1,10 +1,14 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useTierGate, useFeatureGate } from '@/hooks/use-tier-gate';
+import {
+  useTierGate,
+  useFeatureGate,
+  type BooleanTierFeature,
+} from '@/hooks/use-tier-gate';
 import { UpgradePrompt } from './upgrade-prompt';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { SubscriptionTier, TierFeatures } from '@/types';
+import type { SubscriptionTier } from '@/types';
 
 interface FeatureGateProps {
   /** Required tier to access this feature */
@@ -35,9 +39,9 @@ interface FeatureGateProps {
  * 
  * // With description
  * <FeatureGate 
- *   requiredTier="PREMIUM_PLUS" 
- *   feature="Unbegrenzte Bewerbungen"
- *   description="Erstelle so viele Bewerbungen wie du möchtest"
+ *   requiredTier="PRO"
+ *   feature="Mock-Interviews"
+ *   description="Übe Bewerbungsgespräche mit KI-Feedback"
  * >
  *   <UnlimitedApplicationsFeature />
  * </FeatureGate>
@@ -95,7 +99,7 @@ export function FeatureGate({
 
 interface FeatureFeatureGateProps {
   /** Required feature (from TierFeatures) */
-  requiredFeature: keyof TierFeatures;
+  requiredFeature: BooleanTierFeature;
   /** Display name of the feature (shown in upgrade prompt) */
   feature: string;
   /** Tier needed to access this feature (for the upgrade prompt) */
@@ -189,9 +193,9 @@ export function PremiumGate({
 }
 
 /**
- * PremiumPlusGate - Shorthand for FeatureGate with PREMIUM_PLUS tier
+ * ProGate - Shorthand for FeatureGate with PRO tier
  */
-export function PremiumPlusGate({
+export function ProGate({
   feature,
   description,
   children,
@@ -200,7 +204,7 @@ export function PremiumPlusGate({
 }: Omit<FeatureGateProps, 'requiredTier'>) {
   return (
     <FeatureGate
-      requiredTier="PREMIUM_PLUS"
+      requiredTier="PRO"
       feature={feature}
       description={description}
       fallback={fallback}

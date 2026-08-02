@@ -10,7 +10,7 @@ import { CodedHttpException } from '../../common/exceptions/coded-http.exception
  * message instead of returning a raw JSON 401.
  */
 export interface OAuthCallbackError {
-  /** Structured error code (e.g. `INVITE_CODE_REQUIRED`) when available. */
+  /** Structured error code (e.g. `OAUTH_EMAIL_UNVERIFIED`) when available. */
   code?: string;
   /** Human-readable reason — falls back to `'authentication_failed'`. */
   message: string;
@@ -28,14 +28,14 @@ export type OAuthRequest = Request & { oauthCallbackError?: OAuthCallbackError }
  * unset and attaches a structured `oauthCallbackError` to the request so
  * the controller can redirect the browser to a friendly login page.
  *
- * Without this, throwing `ForbiddenWithCode(INVITE_CODE_REQUIRED)` inside
+ * Without this, throwing `ForbiddenWithCode(OAUTH_EMAIL_UNVERIFIED)` inside
  * the strategy would surface as raw JSON 401 to a user mid-OAuth-redirect —
  * the controller's handler would never run.
  *
  * Strategy contract: when `done(err)` is called, the `err` lands here as
  * the `err` argument. We surface `err.code` so the controller can branch
- * (e.g. show `oauth=error&message=invite_required` for a closed-beta
- * block vs the generic `authentication_failed`).
+ * (e.g. show `oauth=error&message=email_unverified` for an nOAuth
+ * rejection vs the generic `authentication_failed`).
  */
 function createOAuthCallbackGuard(strategy: 'google' | 'microsoft'): Type<unknown> {
   @Injectable()

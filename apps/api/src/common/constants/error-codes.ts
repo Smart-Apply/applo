@@ -64,12 +64,6 @@ export enum ErrorCode {
   CANNOT_UNLINK_ONLY_AUTH_METHOD = 'CANNOT_UNLINK_ONLY_AUTH_METHOD',
   OAUTH_EMAIL_UNVERIFIED = 'OAUTH_EMAIL_UNVERIFIED',
 
-  // Invite-code gate (closed beta)
-  INVITE_CODE_REQUIRED = 'INVITE_CODE_REQUIRED',
-  INVITE_CODE_INVALID = 'INVITE_CODE_INVALID',
-  INVITE_CODE_ALREADY_USED = 'INVITE_CODE_ALREADY_USED',
-  INVITE_CODE_EXPIRED = 'INVITE_CODE_EXPIRED',
-
   // Generic errors
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
   VALIDATION_ERROR = 'VALIDATION_ERROR',
@@ -157,16 +151,6 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Du kannst die einzige Anmeldemethode nicht entfernen. Bitte lege zuerst ein Passwort fest.',
   [ErrorCode.OAUTH_EMAIL_UNVERIFIED]:
     'Die E-Mail-Adresse deines Kontos konnte vom Anbieter nicht verifiziert werden. Bitte registriere dich mit E-Mail und Passwort.',
-
-  // Invite-code gate (closed beta)
-  [ErrorCode.INVITE_CODE_REQUIRED]:
-    'Applo ist gerade in der geschlossenen Beta. Bitte gib deinen Einladungscode ein.',
-  [ErrorCode.INVITE_CODE_INVALID]:
-    'Dieser Einladungscode ist ungültig. Bitte überprüfe die Schreibweise.',
-  [ErrorCode.INVITE_CODE_ALREADY_USED]:
-    'Dieser Einladungscode wurde bereits eingelöst. Bitte fordere einen neuen an.',
-  [ErrorCode.INVITE_CODE_EXPIRED]:
-    'Dieser Einladungscode ist abgelaufen. Bitte fordere einen neuen an.',
 
   // Generic errors
   [ErrorCode.INTERNAL_SERVER_ERROR]: 'Ein Fehler ist aufgetreten. Bitte versuche es später erneut.',

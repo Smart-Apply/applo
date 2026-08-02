@@ -67,7 +67,6 @@ applo/
 │   │   │   ├── email/             # Resend transactional email
 │   │   │   ├── health/            # Terminus health checks
 │   │   │   ├── interviews/        # AI mock interviews (text + voice/WebRTC)
-│   │   │   ├── invite-codes/      # Closed-beta invite-code gate (hashed, single-use)
 │   │   │   ├── job-postings/      # Text/URL/file parsers
 │   │   │   ├── jobs/              # Queue providers (QStash / mem)
 │   │   │   ├── keywords/          # ATS keyword extraction & matching
@@ -270,8 +269,8 @@ recorded baselines live in
 | **Interview**      | AI-generated interview Q&A                     |
 | **RefreshToken**   | Rotated refresh tokens                         |
 | **Session**        | Device/IP/UA tracking                          |
-| **InviteCode**     | Closed-beta gate (hashed, single-use)          |
-| **Subscription**   | Plan & usage counters                          |
+| **InviteCode**     | RETIRED — beta gate removed; schema row kept until a follow-up release drops it (expand→contract) |
+| **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`) |
 | **AuditLog**       | Security event log                             |
 
 ### Key Relations
@@ -381,13 +380,12 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 
 | Method | Endpoint                | Description                                                                  |
 | ------ | ----------------------- | ---------------------------------------------------------------------------- |
-| POST   | `/auth/register`        | Register (closed-beta invite code required when `REQUIRE_INVITE_CODES=true`) |
+| POST   | `/auth/register`        | Register (email/password)                                                    |
 | POST   | `/auth/login`           | Email/password login                                                         |
 | POST   | `/auth/refresh`         | Rotate access token                                                          |
 | GET    | `/auth/oauth/google`    | OAuth (Google)                                                               |
 | GET    | `/auth/oauth/microsoft` | OAuth (Microsoft)                                                            |
 | GET    | `/auth/csrf-token`      | CSRF token (optional)                                                        |
-| GET    | `/auth/config`          | Public auth flags (e.g. `requireInviteCode`)                                 |
 | GET    | `/health`               | Health check                                                                 |
 | POST   | `/contact`              | Contact form                                                                 |
 
@@ -409,11 +407,11 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/applications/:id/files`          | SAS download URLs                                                           |
 | PATCH    | `/applications/:id/template-settings` | Per-application design tuning (font scale, density, accent override)    |
 | GET      | `/applications/:id/stream`         | SSE status stream                                                           |
-| POST     | `/validation`                      | Check an external application (AI quality + ATS; Free 5/mo, Pro+ unlimited) |
+| POST     | `/validation`                      | Check an external application (AI quality + ATS; Free 5/mo, Pro 15/mo, Premium 35/mo) |
 | GET      | `/validation`                      | Validation history                                                          |
 | POST     | `/interviews`                      | Generate mock interview                                                     |
-| POST     | `/interviews/:id/voice/session`    | Mint voice session (Premium; 5/10/15 min, persona-led, CV-grounded)         |
-| POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Premium)                                  |
+| POST     | `/interviews/:id/voice/session`    | Mint voice session (Pro 5/mo, Premium 45/mo; 5/10/15 min, persona-led, CV-grounded) |
+| POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Pro/Premium)                              |
 | GET      | `/mailbox-sync/connections`        | List connected mailboxes (Premium)                                          |
 | GET      | `/mailbox-sync/microsoft/connect`  | Start MS Graph OAuth (Premium)                                              |
 | GET      | `/mailbox-sync/microsoft/callback` | OAuth redirect target (public)                                              |
@@ -422,12 +420,11 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/templates`                       | Template catalog (registry-filtered: only designs with a react-pdf factory) |
 | GET      | `/sessions`                        | Active sessions                                                             |
 | DELETE   | `/sessions/:id`                    | Remote logout                                                               |
-| GET      | `/subscription`                    | Plan & usage                                                                |
+| GET      | `/subscription`                    | Plan & usage (incl. monthly application hard limit + add-on credit balance) |
+| GET      | `/subscription/tiers`              | Public tiers + prices, hard limits, and persistent add-on packages          |
 | GET      | `/admin/users?email=`              | Admin: search users (allow-listed)                                          |
 | POST     | `/admin/users/:email/tier`         | Admin: set subscription tier (allow-listed)                                 |
 | DELETE   | `/admin/users/:email`              | Admin: permanently delete user (allow-listed)                               |
-| POST     | `/admin/invite-codes`              | Admin: issue 1–100 closed-beta invite codes (plaintexts returned **once**)  |
-| GET      | `/admin/invite-codes`              | Admin: list invite codes (metadata only — never plaintext)                  |
 | GET/PUT  | `/user-preferences`                | Settings                                                                    |
 
 ## 🚀 Deployment

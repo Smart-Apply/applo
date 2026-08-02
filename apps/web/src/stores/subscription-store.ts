@@ -6,14 +6,31 @@ import type { SubscriptionTier, SubscriptionUsageStats, TierLimits, TierFeatures
  * Used when subscription data hasn't been fetched yet
  */
 const DEFAULT_LIMITS: TierLimits = {
-  applicationsPerMonth: 5,
+  applicationsPerMonth: 3,
+  coverLettersPerMonth: 3,
+  resumesPerMonth: 3,
+  jobParsingPerMonth: 10,
   interviewSessionsPerMonth: 0,
+  validationsPerMonth: 5,
+  applicationsPerDay: 5,
   priority: 'low',
   features: {
-    customTemplates: false,
-    prioritySupport: false,
+    pdfExport: true,
+    multipleTemplates: false,
+    premiumTemplates: false,
+    customBranding: false,
+    atsOptimization: false,
+    keywordMatching: 'none',
+    applicationTracking: 'manual',
+    basicAnalytics: false,
     advancedAnalytics: false,
+    extendedProfile: false,
+    linkedinImport: false,
+    multiLanguage: 'none',
     interviewCoach: false,
+    emailParsing: false,
+    prioritySupport: false,
+    noAds: false,
   },
 };
 
@@ -75,20 +92,20 @@ export function useTier(): SubscriptionTier {
 }
 
 /**
- * Check if user has Premium or Premium+ tier
+ * Check if user has at least Pro tier
  */
-export function useIsPremium(): boolean {
+export function useIsPro(): boolean {
   return useSubscriptionStore((state) => {
     const tier = state.subscription?.tier ?? 'FREE';
-    return tier === 'PREMIUM' || tier === 'PREMIUM_PLUS';
+    return tier === 'PRO' || tier === 'PREMIUM';
   });
 }
 
 /**
- * Check if user has Premium+ tier
+ * Check if user has Premium tier
  */
-export function useIsPremiumPlus(): boolean {
-  return useSubscriptionStore((state) => state.subscription?.tier === 'PREMIUM_PLUS');
+export function useIsPremium(): boolean {
+  return useSubscriptionStore((state) => state.subscription?.tier === 'PREMIUM');
 }
 
 /**

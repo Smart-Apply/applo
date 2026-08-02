@@ -8,12 +8,11 @@ import {
   RequiresPro,
   RequiresPremium,
   CheckUsage,
-  ProFeature,
   PremiumFeature,
 } from '../common/decorators/tier.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
-import { SubscriptionService, TIER_LIMITS } from './subscription.service';
+import { ADDON_PACKAGES, SubscriptionService } from './subscription.service';
 import { CheckActionDto } from './dto/check-action.dto';
 
 @ApiTags('Subscription')
@@ -94,7 +93,8 @@ export class SubscriptionController {
   @ApiOperation({ summary: 'Get all available tiers with features' })
   @ApiResponse({
     status: 200,
-    description: 'Returns all subscription tiers with their limits, features, and pricing',
+    description:
+      'Returns all subscription tiers and persistent add-on packages with limits, features, and pricing',
   })
   async getTiers() {
     return {
@@ -107,52 +107,59 @@ export class SubscriptionController {
           priceDisplay: '0 €',
           priceInterval: 'Monat',
           features: [
-            '3 Bewerbungen pro Monat',
-            'ATS-Score für jede Bewerbung',
-            '5 KI-Bewerbungs-Checks pro Monat (Qualität & ATS)',
-            'Übersichtliches Bewerbungstracking',
-            'Keine Kreditkarte erforderlich',
+            '1 Lebenslauf-Profil',
+            '3 KI-Bewerbungen pro Monat',
+            '5 Bewerbungs-Checks pro Monat',
+            'Kein Wasserzeichen',
+            'Download mit 15 Sek. Werbe-Wartezeit',
           ],
           limits: this.subscriptionService.getTierLimits('FREE'),
         },
         {
           id: 'PRO',
           name: 'Pro',
-          tagline: 'Bessere Bewerbungen, mehr Interviews',
-          price: 999, // cents
-          priceDisplay: '9,99 €',
+          tagline: 'Für aktive Bewerbungsphasen',
+          price: 995, // cents
+          priceDisplay: '9,95 €',
           priceInterval: 'Monat',
+          recommended: true,
+          badge: 'Beliebt',
           features: [
-            'KI-generierte Lebensläufe & Anschreiben',
-            'Mehrere professionelle Templates',
-            'ATS-Optimierung & Keyword-Matching',
-            'Unbegrenzte KI-Bewerbungs-Checks (Qualität & ATS)',
-            'Bewerbungstracking mit Statusverlauf',
-            'Analytics: ATS-Score, Keyword-Score, Match-Insights',
-            'Zugang zur integrierten Jobsuche',
+            'Alles aus Free',
+            '50 Bewerbungen pro Monat',
+            '5 Mock-Interviews pro Monat',
+            '15 Bewerbungs-Checks pro Monat',
+            'Stellenanzeigen einlesen (Text, Link oder Datei)',
+            'Live-Status deiner Bewerbungen',
+            'Werbefrei & Export auf Deutsch oder Englisch',
           ],
           limits: this.subscriptionService.getTierLimits('PRO'),
         },
         {
           id: 'PREMIUM',
           name: 'Premium',
-          tagline: 'Deine Jobsuche läuft auf Autopilot',
-          price: 1999, // cents
-          priceDisplay: '19,99 €',
+          tagline: 'Für die intensive Jobsuche',
+          price: 1995, // cents
+          priceDisplay: '19,95 €',
           priceInterval: 'Monat',
-          recommended: true,
-          badge: 'Beste Wahl für aktive Jobsuche',
           features: [
             'Alles aus Pro',
-            'Auto-Apply Agent — bewirbt sich automatisch für dich',
-            'Automatisches Tracking per E-Mail-Erkennung',
-            'KI Interview-Coach für die Vorbereitung',
-            'Erweiterte Analytics & Trends',
-            'Priorisierte Generierung & Premium-Support',
+            '100 Bewerbungen pro Monat',
+            '45 Mock-Interviews (Gespräch & Text)',
+            '35 Bewerbungs-Checks pro Monat',
+            'E-Mail-Tracking (Outlook / Microsoft 365)',
           ],
           limits: this.subscriptionService.getTierLimits('PREMIUM'),
         },
       ],
+      addonPackages: Object.entries(ADDON_PACKAGES).map(([id, addonPackage]) => ({
+        id,
+        credits: addonPackage.credits,
+        price: Math.round(addonPackage.priceEur * 100),
+        priceDisplay: `${addonPackage.priceEur.toFixed(2).replace('.', ',')} €`,
+        persistsUntilUsed: true,
+        consumedAfterMonthlyAllowance: true,
+      })),
     };
   }
 
@@ -281,7 +288,7 @@ export class SubscriptionController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Test: Record cover letter usage' })
   async testRecordCoverLetter(@CurrentUser('id') userId: string) {
-    await this.subscriptionService.recordUsage(userId, 'coverLetter');
+    await this.subscriptionService.reserveUsage(userId, 'coverLetter');
     const stats = await this.subscriptionService.getUsageStats(userId);
     return {
       message: 'Anschreiben wurde gezählt!',

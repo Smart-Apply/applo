@@ -23,7 +23,7 @@ import { TierGuard } from '../common/guards/tier.guard';
 import { FeatureGuard } from '../common/guards/feature.guard';
 import { UsageLimitGuard } from '../common/guards/usage-limit.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { RequiresPremium, RequiresFeature, CheckUsage } from '../common/decorators/tier.decorator';
+import { RequiresPro, RequiresFeature, CheckUsage } from '../common/decorators/tier.decorator';
 import { InterviewsService } from './interviews.service';
 import { VoiceInterviewService } from './voice/voice-interview.service';
 import {
@@ -41,6 +41,7 @@ import {
   VoiceConfigResponseDto,
 } from './dto';
 import { InterviewSessionStatus } from '../generated/prisma/client';
+import { SubscriptionService } from '../subscription/subscription.service';
 
 interface AuthenticatedUser {
   id: string;
@@ -55,36 +56,42 @@ export class InterviewsController {
   constructor(
     private readonly interviewsService: InterviewsService,
     private readonly voiceService: VoiceInterviewService,
+    private readonly subscriptionService: SubscriptionService,
   ) {}
 
   /**
    * Start a new interview session
-   * Premium feature - requires Premium subscription
+  * Pro feature - requires Pro or Premium subscription
    */
   @Post('start')
   @UseGuards(TierGuard, FeatureGuard, UsageLimitGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @CheckUsage('interview')
   @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 starts per minute
   @ApiOperation({
     summary: 'Start a new interview session',
     description:
-      'Starts a new AI interview coaching session. Can be based on an existing application or custom job details. Premium feature only.',
+      'Starts a new AI interview coaching session. Can be based on an existing application or custom job details. Available on Pro and Premium.',
   })
   @ApiResponse({
     status: 201,
     description: 'Interview session started successfully',
     type: InterviewSessionDetailResponseDto,
   })
-  @ApiResponse({ status: 403, description: 'Premium subscription required' })
+  @ApiResponse({ status: 403, description: 'Pro or Premium subscription required' })
   async startSession(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: StartInterviewDto,
   ): Promise<InterviewSessionDetailResponseDto> {
-    const session = await this.interviewsService.startSession(user.id, dto);
-
-    return this.mapSessionToDetailResponse(session);
+    const reservation = await this.subscriptionService.reserveUsage(user.id, 'interview');
+    try {
+      const session = await this.interviewsService.startSession(user.id, dto);
+      return this.mapSessionToDetailResponse(session);
+    } catch (error) {
+      await this.subscriptionService.releaseUsage(reservation);
+      throw error;
+    }
   }
 
   /**
@@ -92,7 +99,7 @@ export class InterviewsController {
    */
   @Get()
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @ApiOperation({
     summary: 'List all interview sessions',
@@ -134,7 +141,7 @@ export class InterviewsController {
    */
   @Get('stats')
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @ApiOperation({
     summary: 'Get interview statistics',
@@ -154,7 +161,7 @@ export class InterviewsController {
    */
   @Get(':id')
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @ApiOperation({
     summary: 'Get interview session details',
@@ -180,7 +187,7 @@ export class InterviewsController {
    */
   @Post(':id/questions/:questionId/answer')
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 answers per minute
   @ApiOperation({
@@ -223,7 +230,7 @@ export class InterviewsController {
    */
   @Post(':id/next')
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20 next requests per minute
   @ApiOperation({
@@ -257,7 +264,7 @@ export class InterviewsController {
    */
   @Post(':id/complete')
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @ApiOperation({
     summary: 'Complete interview session',
@@ -283,7 +290,7 @@ export class InterviewsController {
    */
   @Post(':id/abandon')
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -311,7 +318,7 @@ export class InterviewsController {
    */
   @Get('voice/config')
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @ApiOperation({
     summary: 'Voice interview config',
@@ -328,7 +335,7 @@ export class InterviewsController {
    */
   @Post(':id/voice/session')
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 mints per minute
   @ApiOperation({
@@ -338,7 +345,7 @@ export class InterviewsController {
   })
   @ApiParam({ name: 'id', description: 'Interview session ID' })
   @ApiResponse({ status: 201, description: 'Ephemeral voice session', type: VoiceSessionResponseDto })
-  @ApiResponse({ status: 403, description: 'Voice quota exceeded or Premium required' })
+  @ApiResponse({ status: 403, description: 'Voice quota exceeded or Pro subscription required' })
   @ApiResponse({ status: 503, description: 'Voice interview not available' })
   async startVoiceSession(
     @CurrentUser() user: AuthenticatedUser,
@@ -353,7 +360,7 @@ export class InterviewsController {
    */
   @Post(':id/voice/transcript')
   @UseGuards(TierGuard, FeatureGuard)
-  @RequiresPremium()
+  @RequiresPro()
   @RequiresFeature('interviewCoach')
   @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20 finalizes per minute
   @ApiOperation({

@@ -6,7 +6,7 @@
     "newCheck": "Neuer Check",
     "history": "Frühere Checks",
     "limitReachedTitle": "Du hast dein monatliches Limit von {limit} Checks erreicht.",
-    "limitReachedDescription": "prüfst du unbegrenzt.",
+    "limitReachedDescription": "Vergleiche die <pricing>Tarife</pricing> für ein höheres monatliches Kontingent.",
     "historyTitle": "Frühere Checks",
     "freeHistoryDescription": "Im Free-Tarif sind 5 Checks pro Monat enthalten.",
     "savedHistoryDescription": "Deine gespeicherten Prüfungen.",

@@ -63,6 +63,7 @@ import { formatFullTimestamp, formatDate } from '@/lib/format-date';
 import { LOADING_MESSAGES } from '@/lib/constants';
 import { ApploRig } from '@/components/ui/applo-rig';
 import { cn } from '@/lib/utils';
+import { useSubscription } from '@/hooks/use-subscription';
 
 // Dynamic import for PDF preview modal (saves ~300KB) — loaded on demand.
 const PDFPreviewModal = dynamic(
@@ -99,6 +100,8 @@ export default function ApplicationDetailPage() {
   const user = useAuthStore((state) => state.user);
   const applicationId = params.id as string;
   const retryMutation = useRetryApplication();
+  const { tier } = useSubscription();
+  const downloadWaitSeconds = tier === 'FREE' ? 15 : 0;
 
   const [previewFile, setPreviewFile] = useState<{
     url: string;
@@ -306,7 +309,8 @@ export default function ApplicationDetailPage() {
   const handlePreview = async (type: 'cover-letter' | 'resume', title: string) => {
     if (!application?.id || !isAuthenticated) return;
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/applications/${application.id}/download/${type}`;
+      const signedUrl = type === 'cover-letter' ? files?.coverLetter?.url : files?.resume?.url;
+      const url = signedUrl ?? `${process.env.NEXT_PUBLIC_API_URL}/applications/${application.id}/download/${type}`;
       const response = await authenticatedFetch(url);
       if (!response.ok) throw new Error('Failed to fetch PDF');
       const blob = await response.blob();
@@ -424,6 +428,7 @@ export default function ApplicationDetailPage() {
           <DocumentsCard
             files={files}
             isDownloading={isDownloading}
+            downloadWaitSeconds={downloadWaitSeconds}
             onPreview={handlePreview}
             onDownloadCoverLetter={handleDownloadCoverLetter}
             onDownloadResume={handleDownloadResume}
@@ -501,6 +506,7 @@ export default function ApplicationDetailPage() {
           file={previewFile.blob || previewFile.url}
           filename={previewFile.filename}
           title={previewFile.title}
+          downloadWaitSeconds={downloadWaitSeconds}
           onExpired={handleExpiredUrl}
         />
       )}
@@ -564,14 +570,15 @@ function CelebrationHero({
 /* ---- Documents (READY hero) ---- */
 type FilesData =
   | {
-      coverLetter?: { expiresAt: string } | null;
-      resume?: { expiresAt: string } | null;
+  coverLetter?: { expiresAt: string; url: string } | null;
+  resume?: { expiresAt: string; url: string } | null;
     }
   | undefined;
 
 function DocumentsCard({
   files,
   isDownloading,
+  downloadWaitSeconds,
   onPreview,
   onDownloadCoverLetter,
   onDownloadResume,
@@ -580,6 +587,7 @@ function DocumentsCard({
 }: {
   files: FilesData;
   isDownloading: { coverLetter?: boolean; resume?: boolean; both?: boolean };
+  downloadWaitSeconds: number;
   onPreview: (type: 'cover-letter' | 'resume', title: string) => void;
   onDownloadCoverLetter: () => void;
   onDownloadResume: () => void;
@@ -641,16 +649,24 @@ function DocumentsCard({
       </div>
 
       {(files?.coverLetter || files?.resume) && (
-        <p className="mt-3.5 flex items-center gap-2 text-[12.5px] text-muted-foreground">
-          <Clock className="h-3.5 w-3.5" />
-          {t('detail.documents.downloadLinksLimited')}
-          {files?.coverLetter
-            ? t('detail.documents.expiresAt', { time: formatDate(files.coverLetter.expiresAt, 'HH:mm') })
-            : files?.resume
-              ? t('detail.documents.expiresAt', { time: formatDate(files.resume.expiresAt, 'HH:mm') })
-              : ''}
-          .
-        </p>
+        <div className="mt-3.5 space-y-2 text-[12.5px] text-muted-foreground">
+          {downloadWaitSeconds > 0 && (
+            <p className="flex items-center gap-2 rounded-[4px] border border-[#F3E3B3] bg-[#FDF6E7] px-3 py-2 text-[#854D0E]">
+              <Clock className="h-3.5 w-3.5 shrink-0" />
+              {t('detail.documents.freeDownloadWait', { seconds: downloadWaitSeconds })}
+            </p>
+          )}
+          <p className="flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5 shrink-0" />
+            {t('detail.documents.downloadLinksLimited')}
+            {files?.coverLetter
+              ? t('detail.documents.expiresAt', { time: formatDate(files.coverLetter.expiresAt, 'HH:mm') })
+              : files?.resume
+                ? t('detail.documents.expiresAt', { time: formatDate(files.resume.expiresAt, 'HH:mm') })
+                : ''}
+            .
+          </p>
+        </div>
       )}
     </div>
   );

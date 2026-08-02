@@ -10,7 +10,6 @@ import { SessionService } from '../../session.service';
 import { TwoFactorService } from '../../two-factor.service';
 import { EmailService } from '@/email/email.service';
 import { SubscriptionService } from '@/subscription/subscription.service';
-import { InviteCodeService } from '@/invite-codes/invite-code.service';
 import { StorageService } from '@/storage/storage.service';
 import { ConflictWithCode } from '@/common/exceptions/coded-http.exception';
 import { MockHelper } from '../../../../test/helpers/mock.helper';
@@ -58,12 +57,6 @@ describe('AuthService.register (Unit)', () => {
           useValue: { isTrustedDevice: vi.fn().mockResolvedValue(false) },
         },
         { provide: EmailService, useValue: { sendVerificationEmail: vi.fn() } },
-        {
-          // Gate is OFF in the mock ConfigService, so redeemInTransaction
-          // never runs — a bare jest.fn() is enough to satisfy DI.
-          provide: InviteCodeService,
-          useValue: { redeemInTransaction: vi.fn() },
-        },
         {
           // register() never touches storage; only deleteAccount does.
           provide: StorageService,

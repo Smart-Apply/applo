@@ -1,32 +1,33 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ConfigService } from '../config/config.service';
-import { SubscriptionTier, SubscriptionStatus } from '../generated/prisma/client';
+import { Prisma, SubscriptionTier, SubscriptionStatus } from '../generated/prisma/client';
 import type { SubscriptionUsage } from '../generated/prisma/client';
 
 /**
  * Tier limits configuration
  * Defines the resource limits for each subscription tier
  *
- * Pricing Model (value-positioned, not feature-count-positioned):
- * - FREE (€0):            Risk-free entry. 3 applications/month so users can try Applo.
- * - PRO (€9.99/month):    Optimise every application with AI. Templates, ATS-Optimisation,
- *                        keyword matching, analytics, integrated job search.
- * - PREMIUM (€19.99/month): Automate the job search. Auto-Apply agent, automatic email-based
- *                        tracking, interview coach, advanced analytics, priority queue.
+ * Pricing Model:
+ * - FREE (€0):            3 applications/month to try Applo.
+ * - PRO (€9.95/month):    Hard limit: 50 applications/month.
+ * - PREMIUM (€19.95/month): Hard limit: 100 applications/month.
  *
- * Note: the numeric per-month caps below are cost-protection ceilings and intentionally
- * not part of the marketing copy. Users see value-oriented benefits, not application counts.
+ * The monthly application allowance resets with the usage period. Purchased
+ * add-on credits (`Subscription.addonCreditsRemaining`) persist until used and
+ * are consumed only after the monthly allowance is exhausted.
  */
 export interface TierLimits {
   // Generation limits
+  // Monthly hard limit for full application generations (cover letter + resume).
+  // Consumed first; add-on credits are the overflow. -1 = unlimited.
+  applicationsPerMonth: number;
   coverLettersPerMonth: number; // -1 = unlimited
   resumesPerMonth: number; // -1 = unlimited
   jobParsingPerMonth: number; // URL parsing limit
   interviewSessionsPerMonth: number;
 
   // Application validation (KI quality + ATS check of an existing application).
-  // Free gets a monthly taster; Pro and above are unlimited. -1 = unlimited.
+  // Every tier has a monthly hard limit. -1 = unlimited.
   validationsPerMonth: number;
 
   // Cost-protection cap (rolling 24h window): one "application" =
@@ -70,6 +71,7 @@ export interface TierLimits {
 
 export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
   FREE: {
+    applicationsPerMonth: 3, // Hard limit
     coverLettersPerMonth: 3,
     resumesPerMonth: 3,
     jobParsingPerMonth: 10,
@@ -78,7 +80,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     applicationsPerDay: 5,
     priority: 'low',
     features: {
-      pdfExport: false,
+      pdfExport: true,
       multipleTemplates: false,
       premiumTemplates: false,
       customBranding: false,
@@ -97,11 +99,12 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     },
   },
   PRO: {
+    applicationsPerMonth: 50, // Hard limit
     coverLettersPerMonth: 50,
     resumesPerMonth: 50,
     jobParsingPerMonth: -1, // Unlimited
-    interviewSessionsPerMonth: 0, // Not included in Pro
-    validationsPerMonth: -1, // Unlimited
+    interviewSessionsPerMonth: 5,
+    validationsPerMonth: 15,
     applicationsPerDay: -1,
     priority: 'normal',
     features: {
@@ -117,18 +120,19 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
       extendedProfile: true,
       linkedinImport: false, // Premium-only feature
       multiLanguage: 'de-en',
-      interviewCoach: false,
+      interviewCoach: true,
       emailParsing: false,
       prioritySupport: false,
       noAds: true,
     },
   },
   PREMIUM: {
+    applicationsPerMonth: 100, // Hard limit
     coverLettersPerMonth: -1, // Unlimited
     resumesPerMonth: -1, // Unlimited
     jobParsingPerMonth: -1, // Unlimited
-    interviewSessionsPerMonth: -1, // Unlimited
-    validationsPerMonth: -1, // Unlimited
+    interviewSessionsPerMonth: 45,
+    validationsPerMonth: 35,
     applicationsPerDay: -1,
     priority: 'high',
     features: {
@@ -153,6 +157,42 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
 };
 
 /**
+ * Consumable add-on packages for extra application credits.
+ * Credits do NOT expire monthly — they persist until used.
+ */
+export const ADDON_PACKAGES = {
+  SMALL: { credits: 10, priceEur: 2.99 },
+  MEDIUM: { credits: 30, priceEur: 6.99 },
+  LARGE: { credits: 75, priceEur: 14.99 },
+} as const;
+
+export const AD_SUPPORTED_DOWNLOAD_WAIT_MS = 15_000;
+
+type MeteredUsageField =
+  | 'coverLettersGenerated'
+  | 'resumesGenerated'
+  | 'jobParsingUsed'
+  | 'interviewSessionsUsed'
+  | 'validationsUsed';
+
+type ReservedUsageAction =
+  | 'application'
+  | 'coverLetter'
+  | 'resume'
+  | 'jobParsing'
+  | 'interview'
+  | 'validation';
+
+export interface UsageReservation {
+  action: ReservedUsageAction;
+  subscriptionId: string;
+  usageId: string;
+  source: 'counter' | 'monthly' | 'addon';
+  periodEnd: Date;
+  dailyWindowStart: Date;
+}
+
+/**
  * Tier hierarchy for comparison
  * Higher number = higher tier
  */
@@ -173,20 +213,40 @@ export interface CanPerformActionResult {
 export class SubscriptionService {
   private readonly logger = new Logger(SubscriptionService.name);
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  private resolveEffectiveTier(subscription: {
+    tier: SubscriptionTier;
+    status: SubscriptionStatus;
+    currentPeriodEnd: Date | null;
+    trialEnd: Date | null;
+  }): SubscriptionTier {
+    if (
+      subscription.status !== SubscriptionStatus.ACTIVE &&
+      subscription.status !== SubscriptionStatus.TRIALING
+    ) {
+      return SubscriptionTier.FREE;
+    }
+
+    const now = Date.now();
+    if (subscription.status === SubscriptionStatus.TRIALING) {
+      if (!subscription.trialEnd || subscription.trialEnd.getTime() <= now) {
+        return SubscriptionTier.FREE;
+      }
+    }
+
+    if (
+      subscription.tier !== SubscriptionTier.FREE &&
+      (!subscription.currentPeriodEnd || subscription.currentPeriodEnd.getTime() <= now)
+    ) {
+      return SubscriptionTier.FREE;
+    }
+
+    return subscription.tier;
+  }
 
   /**
-   * Get or create subscription for a user.
-   *
-   * Default tier is FREE. While the closed-beta gate is on
-   * (`REQUIRE_INVITE_CODES=true`), new signups instead get PREMIUM so
-   * invitees can exercise the full product — matches the promise in
-   * the beta FAQ that all features are free during the closed beta.
-   * Once the gate flips off (open launch), new signups start FREE
-   * again, and existing beta users keep their PREMIUM row.
+   * Get or create subscription for a user. New signups start on FREE.
    */
   async getOrCreateSubscription(userId: string) {
     let subscription = await this.prisma.subscription.findUnique({
@@ -197,15 +257,11 @@ export class SubscriptionService {
     if (!subscription) {
       const now = new Date();
       const periodEnd = this.getNextPeriodEnd(now);
-      const grantBetaPremium = this.configService.requireInviteCodes;
-      const initialTier = grantBetaPremium
-        ? SubscriptionTier.PREMIUM
-        : SubscriptionTier.FREE;
 
       subscription = await this.prisma.subscription.create({
         data: {
           userId,
-          tier: initialTier,
+          tier: SubscriptionTier.FREE,
           status: SubscriptionStatus.ACTIVE,
           usage: {
             create: {
@@ -219,10 +275,7 @@ export class SubscriptionService {
         include: { usage: true },
       });
 
-      this.logger.log(
-        `Created ${initialTier} subscription for user ${userId}` +
-          (grantBetaPremium ? ' (closed-beta auto-grant)' : ''),
-      );
+      this.logger.log(`Created FREE subscription for user ${userId}`);
     }
 
     return subscription;
@@ -277,20 +330,12 @@ export class SubscriptionService {
    */
   async getUserTier(userId: string): Promise<SubscriptionTier> {
     const subscription = await this.getOrCreateSubscription(userId);
-    // If subscription is not active, treat as FREE
-    if (
-      subscription.status !== SubscriptionStatus.ACTIVE &&
-      subscription.status !== SubscriptionStatus.TRIALING
-    ) {
-      return SubscriptionTier.FREE;
-    }
-
-    return subscription.tier;
+    return this.resolveEffectiveTier(subscription);
   }
 
   /**
    * Check if user has at least the required tier
-   * Respects tier hierarchy: FREE < PREMIUM < PREMIUM_PLUS
+    * Respects tier hierarchy: FREE < PRO < PREMIUM
    */
   async hasTier(userId: string, requiredTier: SubscriptionTier): Promise<boolean> {
     const userTier = await this.getUserTier(userId);
@@ -312,12 +357,41 @@ export class SubscriptionService {
     action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview' | 'validation',
   ): Promise<CanPerformActionResult> {
     const subscription = await this.getOrCreateSubscription(userId);
-    const limits = this.getTierLimits(subscription.tier);
+    const effectiveTier = this.resolveEffectiveTier(subscription);
+    const limits = this.getTierLimits(effectiveTier);
 
     // Ensure usage period is current (monthly window)
     let usage = await this.ensureCurrentUsagePeriod(subscription.id);
     // Roll the rolling 24h daily window if needed
     usage = await this.ensureCurrentDailyWindow(usage);
+
+    // Full application generation: hard monthly tier limit + persistent
+    // add-on credits. Total balance = (tier limit − usage this month) +
+    // add-on credits remaining. The daily cost-protection cap below still
+    // applies on top.
+    if (action === 'application') {
+      const monthlyLimit = limits.applicationsPerMonth;
+      if (monthlyLimit !== -1) {
+        const monthlyRemaining = Math.max(0, monthlyLimit - usage.applicationsUsed);
+        const totalBalance = monthlyRemaining + subscription.addonCreditsRemaining;
+        if (totalBalance <= 0) {
+          return {
+            allowed: false,
+            reason: 'LIMIT_REACHED: Please upgrade your tier or purchase an add-on package.',
+            remaining: 0,
+            limit: monthlyLimit,
+          };
+        }
+        // Balance available — if no daily cap applies, report the balance.
+        if (limits.applicationsPerDay === -1) {
+          return {
+            allowed: true,
+            remaining: totalBalance,
+            limit: monthlyLimit,
+          };
+        }
+      }
+    }
 
     let used: number;
     let limit: number;
@@ -390,49 +464,272 @@ export class SubscriptionService {
    * Record usage for an action
    * Call this after successfully completing the action
    */
-  async recordUsage(
+  async reserveUsage(
     userId: string,
-    action: 'application' | 'coverLetter' | 'resume' | 'jobParsing' | 'interview' | 'validation',
-  ): Promise<void> {
+    action: ReservedUsageAction,
+  ): Promise<UsageReservation> {
     const subscription = await this.getOrCreateSubscription(userId);
+    const effectiveTier = this.resolveEffectiveTier(subscription);
     let usage = await this.ensureCurrentUsagePeriod(subscription.id);
     usage = await this.ensureCurrentDailyWindow(usage);
 
-    const updateData: Record<string, { increment: number }> = {};
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      let source: UsageReservation['source'] | null = 'counter';
 
-    switch (action) {
-      case 'application':
-        // One full "application generated" event — increments the daily
-        // cost-protection counter only. Per-document monthly counters are
-        // bumped separately by 'coverLetter' / 'resume' calls when those
-        // sub-steps actually run.
-        updateData.dailyApplicationsUsed = { increment: 1 };
-        break;
-      case 'coverLetter':
-        updateData.coverLettersGenerated = { increment: 1 };
-        updateData.applicationsUsed = { increment: 1 }; // Also increment combined counter
-        break;
-      case 'resume':
-        updateData.resumesGenerated = { increment: 1 };
-        updateData.applicationsUsed = { increment: 1 }; // Also increment combined counter
-        break;
-      case 'jobParsing':
-        updateData.jobParsingUsed = { increment: 1 };
-        break;
-      case 'interview':
-        updateData.interviewSessionsUsed = { increment: 1 };
-        break;
-      case 'validation':
-        updateData.validationsUsed = { increment: 1 };
-        break;
+      switch (action) {
+        case 'application':
+          // One full "application generated" event — consumes the monthly
+          // tier allowance first, then persistent add-on credits, plus the
+          // daily cost-protection counter. Handled transactionally.
+          source = await this.consumeApplicationAllowance(
+            subscription.id,
+            effectiveTier,
+            usage,
+          );
+          break;
+        case 'coverLetter':
+          source = (await this.incrementUsageWithinLimit(
+            usage,
+            'coverLettersGenerated',
+            this.getTierLimits(effectiveTier).coverLettersPerMonth,
+            { applicationsUsed: { increment: 1 } },
+          ))
+            ? 'counter'
+            : null;
+          break;
+        case 'resume':
+          source = (await this.incrementUsageWithinLimit(
+            usage,
+            'resumesGenerated',
+            this.getTierLimits(effectiveTier).resumesPerMonth,
+            { applicationsUsed: { increment: 1 } },
+          ))
+            ? 'counter'
+            : null;
+          break;
+        case 'jobParsing':
+          source = (await this.incrementUsageWithinLimit(
+            usage,
+            'jobParsingUsed',
+            this.getTierLimits(effectiveTier).jobParsingPerMonth,
+          ))
+            ? 'counter'
+            : null;
+          break;
+        case 'interview':
+          source = (await this.incrementUsageWithinLimit(
+            usage,
+            'interviewSessionsUsed',
+            this.getTierLimits(effectiveTier).interviewSessionsPerMonth,
+          ))
+            ? 'counter'
+            : null;
+          break;
+        case 'validation':
+          source = (await this.incrementUsageWithinLimit(
+            usage,
+            'validationsUsed',
+            this.getTierLimits(effectiveTier).validationsPerMonth,
+          ))
+            ? 'counter'
+            : null;
+          break;
+      }
+
+      if (source) {
+        this.logger.debug(`Reserved ${action} usage for user ${userId}`);
+        return {
+          action,
+          subscriptionId: subscription.id,
+          usageId: usage.id,
+          source,
+          periodEnd: usage.periodEnd,
+          dailyWindowStart: usage.dailyWindowStart,
+        };
+      }
+
+      usage = await this.ensureCurrentUsagePeriod(subscription.id);
+      usage = await this.ensureCurrentDailyWindow(usage);
     }
 
-    await this.prisma.subscriptionUsage.update({
-      where: { id: usage.id },
-      data: updateData,
-    });
+    throw new ConflictException('Nutzungszeitraum wurde aktualisiert. Bitte erneut versuchen.');
+  }
 
-    this.logger.debug(`Recorded ${action} usage for user ${userId}`);
+  async releaseUsage(reservation: UsageReservation): Promise<void> {
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        if (reservation.action === 'application') {
+          await tx.subscriptionUsage.updateMany({
+            where: {
+              id: reservation.usageId,
+              dailyWindowStart: reservation.dailyWindowStart,
+              dailyApplicationsUsed: { gt: 0 },
+            },
+            data: { dailyApplicationsUsed: { decrement: 1 } },
+          });
+
+          if (reservation.source === 'addon') {
+            await tx.subscription.update({
+              where: { id: reservation.subscriptionId },
+              data: { addonCreditsRemaining: { increment: 1 } },
+            });
+          } else {
+            await tx.subscriptionUsage.updateMany({
+              where: {
+                id: reservation.usageId,
+                periodEnd: reservation.periodEnd,
+                applicationsUsed: { gt: 0 },
+              },
+              data: { applicationsUsed: { decrement: 1 } },
+            });
+          }
+          return;
+        }
+
+        const field = this.getUsageField(reservation.action);
+        const data: Prisma.SubscriptionUsageUpdateManyMutationInput = {
+          [field]: { decrement: 1 },
+          ...(reservation.action === 'coverLetter' || reservation.action === 'resume'
+            ? { applicationsUsed: { decrement: 1 } }
+            : {}),
+        };
+        await tx.subscriptionUsage.updateMany({
+          where: {
+            id: reservation.usageId,
+            periodEnd: reservation.periodEnd,
+            [field]: { gt: 0 },
+          },
+          data,
+        });
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to release ${reservation.action} reservation ${reservation.usageId}`,
+        error,
+      );
+    }
+  }
+
+  private getUsageField(action: Exclude<ReservedUsageAction, 'application'>): MeteredUsageField {
+    const fields: Record<Exclude<ReservedUsageAction, 'application'>, MeteredUsageField> = {
+      coverLetter: 'coverLettersGenerated',
+      resume: 'resumesGenerated',
+      jobParsing: 'jobParsingUsed',
+      interview: 'interviewSessionsUsed',
+      validation: 'validationsUsed',
+    };
+    return fields[action];
+  }
+
+  private async incrementUsageWithinLimit(
+    usage: SubscriptionUsage,
+    field: MeteredUsageField,
+    limit: number,
+    additionalData: Prisma.SubscriptionUsageUpdateManyMutationInput = {},
+  ): Promise<boolean> {
+    const where = {
+      id: usage.id,
+      periodEnd: usage.periodEnd,
+      ...(limit === -1 ? {} : { [field]: { lt: limit } }),
+    } as Prisma.SubscriptionUsageWhereInput;
+    const data = {
+      ...additionalData,
+      [field]: { increment: 1 },
+    } as Prisma.SubscriptionUsageUpdateManyMutationInput;
+
+    const updated = await this.prisma.subscriptionUsage.updateMany({ where, data });
+    if (updated.count > 0) {
+      return true;
+    }
+
+    const current = await this.prisma.subscriptionUsage.findUniqueOrThrow({
+      where: { id: usage.id },
+    });
+    if (current.periodEnd.getTime() !== usage.periodEnd.getTime()) {
+      return false;
+    }
+
+    throw new ForbiddenException({
+      message: 'Monatliches Nutzungslimit erreicht.',
+      error: 'USAGE_LIMIT_EXCEEDED',
+      limit,
+    });
+  }
+
+  /**
+   * Transactionally consume one application generation:
+   * - always bumps the rolling 24h daily counter,
+   * - uses the monthly tier allowance while it lasts,
+   * - once the tier limit is exhausted, decrements one persistent add-on
+   *   credit instead (guarded so credits can never go negative).
+   */
+  private async consumeApplicationAllowance(
+    subscriptionId: string,
+    tier: SubscriptionTier,
+    usage: SubscriptionUsage,
+  ): Promise<'monthly' | 'addon' | null> {
+    const limits = this.getTierLimits(tier);
+    const monthlyLimit = limits.applicationsPerMonth;
+    const dailyLimit = limits.applicationsPerDay;
+
+    return this.prisma.$transaction(async (tx) => {
+      const monthlyAllowance = await tx.subscriptionUsage.updateMany({
+        where: {
+          id: usage.id,
+          periodEnd: usage.periodEnd,
+          dailyWindowStart: usage.dailyWindowStart,
+          ...(monthlyLimit === -1 ? {} : { applicationsUsed: { lt: monthlyLimit } }),
+          ...(dailyLimit === -1 ? {} : { dailyApplicationsUsed: { lt: dailyLimit } }),
+        },
+        data: {
+          applicationsUsed: { increment: 1 },
+          dailyApplicationsUsed: { increment: 1 },
+        },
+      });
+      if (monthlyAllowance.count > 0) {
+        return 'monthly';
+      }
+
+      const currentUsage = await tx.subscriptionUsage.findUniqueOrThrow({
+        where: { id: usage.id },
+      });
+      if (
+        currentUsage.periodEnd.getTime() !== usage.periodEnd.getTime() ||
+        currentUsage.dailyWindowStart.getTime() !== usage.dailyWindowStart.getTime()
+      ) {
+        return null;
+      }
+
+      const dailyAllowance = await tx.subscriptionUsage.updateMany({
+        where: {
+          id: usage.id,
+          periodEnd: usage.periodEnd,
+          dailyWindowStart: usage.dailyWindowStart,
+          ...(dailyLimit === -1 ? {} : { dailyApplicationsUsed: { lt: dailyLimit } }),
+        },
+        data: { dailyApplicationsUsed: { increment: 1 } },
+      });
+      if (dailyAllowance.count === 0) {
+        throw new ForbiddenException({
+          message: 'Tägliches Nutzungslimit erreicht.',
+          error: 'USAGE_LIMIT_EXCEEDED',
+          limit: dailyLimit,
+        });
+      }
+
+      const addonAllowance = await tx.subscription.updateMany({
+        where: { id: subscriptionId, addonCreditsRemaining: { gt: 0 } },
+        data: { addonCreditsRemaining: { decrement: 1 } },
+      });
+      if (addonAllowance.count === 0) {
+        throw new ForbiddenException({
+          message: 'Monatliches Nutzungslimit erreicht.',
+          error: 'USAGE_LIMIT_EXCEEDED',
+          limit: monthlyLimit,
+        });
+      }
+      return 'addon';
+    });
   }
 
   /**
@@ -440,12 +737,13 @@ export class SubscriptionService {
    */
   async getUsageStats(userId: string) {
     const subscription = await this.getOrCreateSubscription(userId);
+    const effectiveTier = this.resolveEffectiveTier(subscription);
     let usage = await this.ensureCurrentUsagePeriod(subscription.id);
     usage = await this.ensureCurrentDailyWindow(usage);
-    const limits = this.getTierLimits(subscription.tier);
+    const limits = this.getTierLimits(effectiveTier);
 
     return {
-      tier: subscription.tier,
+      tier: effectiveTier,
       status: subscription.status,
       coverLetters: {
         used: usage.coverLettersGenerated,
@@ -497,11 +795,19 @@ export class SubscriptionService {
             : Math.max(0, limits.applicationsPerDay - usage.dailyApplicationsUsed),
         windowStart: usage.dailyWindowStart,
       },
-      // Combined applications (cover letters + resumes for legacy compatibility)
+      // Full application generations (monthly hard limit + add-on credits)
       applications: {
         used: usage.applicationsUsed,
-        limit: -1, // Applications are tracked individually now
-        remaining: -1,
+        limit: limits.applicationsPerMonth,
+        remaining:
+          limits.applicationsPerMonth === -1
+            ? -1
+            : Math.max(0, limits.applicationsPerMonth - usage.applicationsUsed) +
+              subscription.addonCreditsRemaining,
+      },
+      // Persistent purchased credits (never reset monthly)
+      addonCredits: {
+        remaining: subscription.addonCreditsRemaining,
       },
       periodStart: usage.periodStart,
       periodEnd: usage.periodEnd,
@@ -516,6 +822,17 @@ export class SubscriptionService {
     const tier = await this.getUserTier(userId);
     const limits = this.getTierLimits(tier);
     return !!limits.features[feature];
+  }
+
+  async waitForDownloadAccess(userId: string): Promise<void> {
+    const tier = await this.getUserTier(userId);
+    if (this.getTierLimits(tier).features.noAds) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, AD_SUPPORTED_DOWNLOAD_WAIT_MS);
+    });
   }
 
   /**
@@ -556,10 +873,12 @@ export class SubscriptionService {
 
     // Check if period has ended
     if (new Date() > subscription.usage.periodEnd) {
-      // Reset for new period
       const now = new Date();
-      return await this.prisma.subscriptionUsage.update({
-        where: { id: subscription.usage.id },
+      await this.prisma.subscriptionUsage.updateMany({
+        where: {
+          id: subscription.usage.id,
+          periodEnd: subscription.usage.periodEnd,
+        },
         data: {
           periodStart: now,
           periodEnd: this.getNextPeriodEnd(now),
@@ -570,6 +889,10 @@ export class SubscriptionService {
           interviewSessionsUsed: 0,
           validationsUsed: 0,
         },
+      });
+
+      return this.prisma.subscriptionUsage.findUniqueOrThrow({
+        where: { id: subscription.usage.id },
       });
     }
 
@@ -595,12 +918,13 @@ export class SubscriptionService {
     if (ageMs < 24 * 60 * 60 * 1000) {
       return usage;
     }
-    return this.prisma.subscriptionUsage.update({
-      where: { id: usage.id },
+    await this.prisma.subscriptionUsage.updateMany({
+      where: { id: usage.id, dailyWindowStart: usage.dailyWindowStart },
       data: {
         dailyApplicationsUsed: 0,
         dailyWindowStart: new Date(),
       },
     });
+    return this.prisma.subscriptionUsage.findUniqueOrThrow({ where: { id: usage.id } });
   }
 }

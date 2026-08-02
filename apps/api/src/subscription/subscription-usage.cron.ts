@@ -57,11 +57,15 @@ export class SubscriptionUsageCron {
         const newPeriodEnd = new Date(now);
         newPeriodEnd.setMonth(newPeriodEnd.getMonth() + 1);
 
-        return this.prisma.subscriptionUsage.update({
-          where: { id: usage.id },
+        return this.prisma.subscriptionUsage.updateMany({
+          where: { id: usage.id, periodEnd: usage.periodEnd },
           data: {
             applicationsUsed: 0,
+            coverLettersGenerated: 0,
+            resumesGenerated: 0,
+            jobParsingUsed: 0,
             interviewSessionsUsed: 0,
+            validationsUsed: 0,
             periodStart: newPeriodStart,
             periodEnd: newPeriodEnd,
           },
@@ -100,7 +104,11 @@ export class SubscriptionUsageCron {
       where: { subscriptionId },
       data: {
         applicationsUsed: 0,
+        coverLettersGenerated: 0,
+        resumesGenerated: 0,
+        jobParsingUsed: 0,
         interviewSessionsUsed: 0,
+        validationsUsed: 0,
         periodStart: now,
         periodEnd: newPeriodEnd,
       },

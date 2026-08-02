@@ -67,7 +67,7 @@ export class UsageLimitGuard implements CanActivate {
         action,
         remaining: result.remaining,
         limit: result.limit,
-        upgradeUrl: '/pricing',
+        upgradeUrl: '/#preise',
       });
     }
 

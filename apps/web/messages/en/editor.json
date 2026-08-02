@@ -326,7 +326,8 @@
     "zoomOut": "Zoom out",
     "zoomIn": "Zoom in",
     "pageCount": "Page {page} / {pages}",
-    "download": "Download"
+    "download": "Download",
+    "downloadWait": "Download in {seconds}s"
   },
   "richText": {
     "bold": "Bold",
