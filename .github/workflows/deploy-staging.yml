@@ -146,7 +146,7 @@ jobs:
           # Now poll for readiness. 12 attempts × 5s = up to 60s total.
           for i in {1..12}; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
-              "https://${{ env.STAGING_HEALTH_HOST }}/api/v1/health")
+              "https://${{ env.STAGING_HEALTH_HOST }}/api/v1/health" || true)
             if [ "$code" = "200" ]; then
               echo "✅ Staging API healthy"
               exit 0
@@ -223,7 +223,7 @@ jobs:
           sleep 10
           for i in {1..6}; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
-              "https://${{ env.STAGING_WEB_HOST }}/register")
+              "https://${{ env.STAGING_WEB_HOST }}/register" || true)
             if [ "$code" = "200" ]; then
               echo "✅ Staging Worker /register returned 200"
               exit 0

@@ -86,13 +86,13 @@ jobs:
               - 'fly.staging.toml'
               - 'package.json'
               - 'pnpm-lock.yaml'
-              - '.github/workflows/deploy.yml'
+              - '.github/workflows/deploy-prod.yml'
             web:
               - 'apps/web/**'
               - 'packages/shared/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
-              - '.github/workflows/deploy.yml'
+              - '.github/workflows/deploy-prod.yml'
 
   # ─────────────────────────────────────────────────────────────────────
   # deploy-api — Build + deploy the NestJS API to Fly.io.
@@ -200,7 +200,7 @@ jobs:
           # proxy/cert issue affecting public traffic only.
           for i in {1..6}; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
-              "https://${{ env.HEALTH_CHECK_HOST }}/api/v1/health")
+              "https://${{ env.HEALTH_CHECK_HOST }}/api/v1/health" || true)
             if [ "$code" = "200" ]; then
               echo "✅ External health check passed"
               exit 0
@@ -297,7 +297,8 @@ jobs:
           echo "⏳ Verifying https://applo.ai/register loads..."
           sleep 5
           for i in {1..6}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://applo.ai/register)
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+              https://applo.ai/register || true)
             if [ "$code" = "200" ]; then
               echo "✅ /register returned 200"
               exit 0
