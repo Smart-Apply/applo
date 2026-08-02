@@ -33,8 +33,9 @@ import {
 } from 'lucide-react';
 import type { JobPosting, Template } from '@/types';
 
-// Only de/en — the generation prompts never fully supported fr/es/it
-// (see docs/bug_fixes/LANGUAGE_SWITCH_EXPORT.md).
+// Only de/en — GENERATION follows the job posting language (the prompt chain
+// writes de/en). Exports can additionally be translated to fr/es/pt/it via the
+// guarded translation pass (see docs/bug_fixes/LANGUAGE_SWITCH_EXPORT.md).
 export type ApplicationLanguage = 'de' | 'en';
 
 /** Faked generation progress: estimated total duration of the pipeline. */

@@ -260,7 +260,7 @@ export function generatePdfFilename(options: FilenameOptions): string {
   }
   
   // Final fallback: Generic name
-  return `${pick({ de: 'Bewerbung', en: 'Application' })}_${documentType}${pdfExtension}`;
+  return `${pick({ de: 'Bewerbung', en: 'Application', fr: 'Candidature', es: 'Candidatura', pt: 'Candidatura', it: 'Candidatura' })}_${documentType}${pdfExtension}`;
 }
 
 /**
@@ -276,8 +276,8 @@ export function generateFilename(
   firstName?: string
 ): string {
   const documentType = type === 'cover-letter'
-    ? pick({ de: 'Anschreiben', en: 'Cover-Letter' })
-    : pick({ de: 'Lebenslauf', en: 'Resume' });
+    ? pick({ de: 'Anschreiben', en: 'Cover-Letter', fr: 'Lettre-de-motivation', es: 'Carta-de-presentacion', pt: 'Carta-de-apresentacao', it: 'Lettera-di-presentazione' })
+    : pick({ de: 'Lebenslauf', en: 'Resume', fr: 'CV', es: 'Curriculum', pt: 'Curriculo', it: 'Curriculum' });
   
   // Use new intelligent filename generator
   return generatePdfFilename({
@@ -297,20 +297,48 @@ export async function handleDownload(
   filename: string,
   onExpired?: () => void
 ): Promise<void> {
-  const loadingToast = toast.loading(pick({ de: 'Download wird vorbereitet...', en: 'Preparing download...' }));
+  const loadingToast = toast.loading(pick({
+    de: 'Download wird vorbereitet...',
+    en: 'Preparing download...',
+    fr: 'Préparation du téléchargement...',
+    es: 'Preparando la descarga...',
+    pt: 'A preparar a transferência...',
+    it: 'Preparazione del download...',
+  }));
   
   try {
     await downloadFile(url, filename);
-    toast.success(pick({ de: 'Download erfolgreich!', en: 'Download successful!' }), { id: loadingToast });
+    toast.success(pick({
+      de: 'Download erfolgreich!',
+      en: 'Download successful!',
+      fr: 'Téléchargement réussi !',
+      es: '¡Descarga completada!',
+      pt: 'Transferência concluída!',
+      it: 'Download completato!',
+    }), { id: loadingToast });
   } catch (error) {
     toast.dismiss(loadingToast);
     
     // Check if it might be an expired URL error
     if (error instanceof Error && error.message.includes('403')) {
-      toast.error(pick({ de: 'Download-Link ist abgelaufen. Wird neu geladen...', en: 'Download link expired. Reloading...' }));
+      toast.error(pick({
+        de: 'Download-Link ist abgelaufen. Wird neu geladen...',
+        en: 'Download link expired. Reloading...',
+        fr: 'Le lien de téléchargement a expiré. Rechargement...',
+        es: 'El enlace de descarga ha caducado. Recargando...',
+        pt: 'A ligação de transferência expirou. A recarregar...',
+        it: 'Il link di download è scaduto. Ricaricamento...',
+      }));
       onExpired?.();
     } else {
-      toast.error(pick({ de: 'Download fehlgeschlagen. Bitte versuche es erneut.', en: 'Download failed. Please try again.' }));
+      toast.error(pick({
+        de: 'Download fehlgeschlagen. Bitte versuche es erneut.',
+        en: 'Download failed. Please try again.',
+        fr: 'Échec du téléchargement. Veuillez réessayer.',
+        es: 'Error en la descarga. Inténtalo de nuevo.',
+        pt: 'Falha na transferência. Tenta novamente.',
+        it: 'Download non riuscito. Riprova.',
+      }));
     }
     
     throw error;
@@ -325,19 +353,47 @@ export async function handleZipDownload(
   zipFilename: string,
   onExpired?: () => void
 ): Promise<void> {
-  const loadingToast = toast.loading(pick({ de: 'ZIP-Archiv wird erstellt...', en: 'Creating ZIP archive...' }));
+  const loadingToast = toast.loading(pick({
+    de: 'ZIP-Archiv wird erstellt...',
+    en: 'Creating ZIP archive...',
+    fr: 'Création de l’archive ZIP...',
+    es: 'Creando el archivo ZIP...',
+    pt: 'A criar o arquivo ZIP...',
+    it: 'Creazione dell’archivio ZIP...',
+  }));
   
   try {
     await downloadAsZip(files, zipFilename);
-    toast.success(pick({ de: 'ZIP-Download erfolgreich!', en: 'ZIP download successful!' }), { id: loadingToast });
+    toast.success(pick({
+      de: 'ZIP-Download erfolgreich!',
+      en: 'ZIP download successful!',
+      fr: 'Téléchargement du ZIP réussi !',
+      es: '¡Descarga del ZIP completada!',
+      pt: 'Transferência do ZIP concluída!',
+      it: 'Download dello ZIP completato!',
+    }), { id: loadingToast });
   } catch (error) {
     toast.dismiss(loadingToast);
     
     if (error instanceof Error && error.message.includes('403')) {
-      toast.error(pick({ de: 'Download-Links sind abgelaufen. Wird neu geladen...', en: 'Download links expired. Reloading...' }));
+      toast.error(pick({
+        de: 'Download-Links sind abgelaufen. Wird neu geladen...',
+        en: 'Download links expired. Reloading...',
+        fr: 'Les liens de téléchargement ont expiré. Rechargement...',
+        es: 'Los enlaces de descarga han caducado. Recargando...',
+        pt: 'As ligações de transferência expiraram. A recarregar...',
+        it: 'I link di download sono scaduti. Ricaricamento...',
+      }));
       onExpired?.();
     } else {
-      toast.error(pick({ de: 'ZIP-Download fehlgeschlagen. Bitte versuche es erneut.', en: 'ZIP download failed. Please try again.' }));
+      toast.error(pick({
+        de: 'ZIP-Download fehlgeschlagen. Bitte versuche es erneut.',
+        en: 'ZIP download failed. Please try again.',
+        fr: 'Échec du téléchargement du ZIP. Veuillez réessayer.',
+        es: 'Error en la descarga del ZIP. Inténtalo de nuevo.',
+        pt: 'Falha na transferência do ZIP. Tenta novamente.',
+        it: 'Download dello ZIP non riuscito. Riprova.',
+      }));
     }
     
     throw error;

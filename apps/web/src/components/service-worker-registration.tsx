@@ -6,12 +6,30 @@ import { hardReloadWithCacheBust } from '@/lib/hard-reload';
 import { pick } from '@/lib/i18n-runtime';
 
 const SW_UPDATE_MESSAGES = {
-  title: { de: 'Neue Version verfügbar', en: 'New version available' },
+  title: {
+    de: 'Neue Version verfügbar',
+    en: 'New version available',
+    fr: 'Nouvelle version disponible',
+    es: 'Nueva versión disponible',
+    pt: 'Nova versão disponível',
+    it: 'Nuova versione disponibile',
+  },
   description: {
     de: 'Lade die Seite neu, um die aktuelle Version von Applo zu sehen. Deine Eingaben in offenen Formularen gehen dabei verloren.',
     en: 'Reload the page to get the latest version of Applo. Unsaved input in open forms will be lost.',
+    fr: 'Rechargez la page pour obtenir la dernière version d’Applo. Les saisies non enregistrées dans les formulaires ouverts seront perdues.',
+    es: 'Recarga la página para obtener la última versión de Applo. Se perderán los datos no guardados en formularios abiertos.',
+    pt: 'Recarrega a página para obteres a versão mais recente do Applo. As entradas não guardadas em formulários abertos serão perdidas.',
+    it: 'Ricarica la pagina per ottenere l’ultima versione di Applo. Gli input non salvati nei moduli aperti andranno persi.',
   },
-  action: { de: 'Jetzt aktualisieren', en: 'Update now' },
+  action: {
+    de: 'Jetzt aktualisieren',
+    en: 'Update now',
+    fr: 'Mettre à jour',
+    es: 'Actualizar ahora',
+    pt: 'Atualizar agora',
+    it: 'Aggiorna ora',
+  },
 };
 
 /**

@@ -1,0 +1,96 @@
+{
+  "page": {
+    "title": "Verificação de candidatura",
+    "subtitle": "Avaliação por IA da qualidade e compatibilidade ATS da tua candidatura.",
+    "quotaBadge": "{remaining} / {limit} verificações",
+    "newCheck": "Nova verificação",
+    "history": "Verificações anteriores",
+    "limitReachedTitle": "Atingiste o teu limite mensal de {limit} verificações.",
+    "limitReachedDescription": "Compara <pricing>planos</pricing> para uma quota mensal mais alta.",
+    "historyTitle": "Verificações anteriores",
+    "freeHistoryDescription": "O plano Free inclui 5 verificações por mês.",
+    "savedHistoryDescription": "As tuas verificações guardadas.",
+    "noHistory": "Ainda sem verificações.",
+    "open": "Abrir",
+    "deleteAria": "Eliminar verificação",
+    "createSuccess": "Candidatura verificada",
+    "createError": "Falha na verificação",
+    "deleteSuccess": "Verificação eliminada",
+    "deleteError": "Não foi possível eliminar a verificação"
+  },
+  "documentInput": {
+    "fileReadError": "Não foi possível ler o ficheiro",
+    "detected": "Detetado",
+    "fileReadSuccess": "{size} · Texto lido com sucesso",
+    "removeFileAria": "Remover ficheiro",
+    "chooseFile": "Escolher ficheiro",
+    "orDragHere": "ou arrasta-o para aqui",
+    "fileHint": "PDF ou DOCX · máx. 10 MB",
+    "toggle": {
+      "upload": "Carregar ficheiro",
+      "text": "Colar texto"
+    },
+    "title": "Os teus documentos",
+    "subtitle": "Só o currículo é obrigatório. Adiciona uma carta de apresentação para um feedback ainda mais preciso.",
+    "resumeLabel": "Currículo",
+    "resumePlaceholder": "Cola aqui o texto do teu currículo…",
+    "addCoverLetter": "Adicionar carta de apresentação",
+    "coverLetterLabel": "Carta de apresentação",
+    "optional": "(opcional)",
+    "remove": "Remover",
+    "coverLetterPlaceholder": "Cola aqui o texto da tua carta de apresentação…",
+    "next": "Continuar para a função pretendida"
+  },
+  "jobContext": {
+    "toggle": {
+      "link": "Analisar link",
+      "text": "Colar texto"
+    },
+    "title": "Função pretendida e feedback",
+    "subtitle": "Opcional — com o contexto da oferta de emprego, a IA também avalia a adequação à função.",
+    "jobPostingLabel": "Oferta de emprego",
+    "optional": "(opcional)",
+    "analyzed": "Analisada",
+    "readSuccess": "{host} · Oferta lida com sucesso",
+    "removeLinkAria": "Remover link",
+    "analyzing": "A analisar…",
+    "analyze": "Analisar",
+    "linkError": "Não foi possível ler o link.",
+    "pasteAdText": "Cola o texto da oferta →",
+    "textPlaceholder": "ex. enfermeiro-chefe — ou cola a oferta de emprego completa…",
+    "titleLabel": "Título",
+    "titlePlaceholder": "ex. candidatura para o Hospital Central",
+    "feedbackLanguage": "Idioma do feedback",
+    "languageAuto": "Automático",
+    "languageGerman": "Alemão",
+    "privacyNote": "Os teus documentos são usados apenas para esta verificação e não são armazenados. Sem o contexto da oferta de emprego, a IA avalia apenas a qualidade e a estrutura ATS.",
+    "back": "Voltar",
+    "submit": "Verificar candidatura"
+  },
+  "loading": {
+    "title": "A tua candidatura está a ser verificada …",
+    "subtitle": "Isto demora normalmente 15 a 30 segundos.",
+    "checklist": {
+      "documents": "Os documentos estão a ser lidos",
+      "quality": "A qualidade está a ser avaliada",
+      "ats": "A compatibilidade ATS está a ser verificada",
+      "recommendations": "As recomendações estão a ser criadas"
+    }
+  },
+  "result": {
+    "verdict": {
+      "strong": "Pronta a enviar",
+      "good": "Sólida, pequenas melhorias",
+      "needsWork": "Revisão recomendada"
+    },
+    "yourResult": "O teu resultado",
+    "overallScore": "Pontuação geral",
+    "atsScore": "Pontuação ATS*",
+    "categoryScores": "Avaliação por categoria",
+    "recommendationsChecklist": "Recomendações · lista de verificação",
+    "markOpen": "Marcar como pendente",
+    "markDone": "Marcar como concluído",
+    "strengthsHeading": "✓ Pontos fortes",
+    "atsDisclaimer": "*A pontuação ATS é uma estimativa da IA, não uma execução real de um analisador ATS."
+  }
+}

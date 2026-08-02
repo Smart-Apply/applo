@@ -6,6 +6,7 @@ import { StorageService } from '../../storage/storage.service';
 import { TemplatesService } from '../../templates/templates.service';
 import { LLMService } from '../../llm/llm.service';
 import {
+  isTranslationLanguage,
   StoredTranslationEntry,
   StoredTranslations,
   TranslationLanguage,
@@ -25,7 +26,7 @@ export interface ApplicationJobData {
 }
 
 function asTranslationLanguage(value?: string | null): TranslationLanguage | null {
-  return value === 'de' || value === 'en' ? value : null;
+  return isTranslationLanguage(value) ? value : null;
 }
 
 @Injectable()

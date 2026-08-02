@@ -1,0 +1,237 @@
+{
+  "page": {
+    "title": "Ajustes",
+    "description": "Gestiona tu cuenta, la seguridad y tus preferencias.",
+    "toasts": {
+      "loadError": "Error al cargar los ajustes",
+      "preferenceSaved": "Ajuste guardado",
+      "preferenceSaveError": "Error al guardar el ajuste"
+    }
+  },
+  "sections": {
+    "account": {
+      "label": "Cuenta",
+      "sub": "Perfil y datos maestros",
+      "headerSub": "Gestiona tu información personal y los datos de tu cuenta."
+    },
+    "security": {
+      "label": "Seguridad",
+      "sub": "Contraseña y 2FA",
+      "headerSub": "Protege tu cuenta con medidas de seguridad adicionales."
+    },
+    "notifications": {
+      "label": "Notificaciones",
+      "sub": "Correos y seguimiento",
+      "headerSub": "Elige sobre qué te mantiene informado Applo y cuándo."
+    },
+    "preferences": {
+      "label": "Preferencias",
+      "sub": "Idioma, diseño, datos",
+      "headerSub": "Adapta Applo a tu idioma, diseño y preferencias de privacidad."
+    }
+  },
+  "search": {
+    "placeholder": "Buscar ajustes…",
+    "ariaLabel": "Buscar ajustes",
+    "reset": "Restablecer búsqueda",
+    "noResults": "No se encontró ningún ajuste para <strong>{query}</strong>.",
+    "items": {
+      "name": "Nombre y apellidos",
+      "email": "Dirección de correo electrónico",
+      "photo": "Foto de perfil",
+      "deleteAccount": "Eliminar cuenta",
+      "password": "Cambiar contraseña",
+      "twoFactor": "Autenticación de dos factores (2FA)",
+      "sessions": "Sesiones activas",
+      "emailNotifications": "Notificaciones por correo",
+      "emailTracking": "Seguimiento automático de candidaturas",
+      "language": "Idioma y región",
+      "theme": "Diseño / Tema",
+      "privacy": "Privacidad y exportación"
+    },
+    "keywords": {
+      "name": "name profil profile vorname first name nachname last name nombre apellido apellidos",
+      "email": "email e-mail mail adresse address login correo electrónico correo",
+      "photo": "avatar bild image foto photo profilbild profile picture avatar imagen",
+      "deleteAccount": "loeschen löschen delete account entfernen remove dsgvo gdpr eliminar cuenta borrar",
+      "password": "passwort password aendern ändern change google login contraseña cambiar",
+      "twoFactor": "2fa zwei faktor two factor authenticator sicherheit security otp autenticación doble factor",
+      "sessions": "sitzungen sessions geraete geräte devices abmelden sign out logout sesiones dispositivos cerrar sesión",
+      "emailNotifications": "email e-mail benachrichtigung notifications newsletter updates correo notificaciones",
+      "emailTracking": "tracking postfach inbox outlook gmail automatisch automatic premium seguimiento bandeja entrada",
+      "language": "sprache language region deutsch german english idioma español región",
+      "theme": "theme design dark mode hell light dunkel dark erscheinungsbild appearance tema oscuro claro",
+      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public privacidad datos exportar"
+    }
+  },
+  "account": {
+    "profile": {
+      "title": "Información del perfil",
+      "description": "Estos datos aparecen en tus documentos generados.",
+      "uploadPhoto": "Subir foto",
+      "removePhoto": "Quitar",
+      "photoHint": "JPG o PNG, máx. 2 MB.",
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "email": "Dirección de correo electrónico",
+      "emailLinked": "Vinculado a tu proveedor — la dirección de correo no se puede cambiar."
+    },
+    "delete": {
+      "title": "Eliminar cuenta",
+      "description": "Elimina tu cuenta y todos los datos asociados de forma permanente.",
+      "action": "Eliminar cuenta",
+      "dialogTitle": "¿Estás seguro?",
+      "dialogDescription": "Esta acción no se puede deshacer. Todos tus datos, incluidos el perfil, las candidaturas y las ofertas de empleo, se eliminarán de forma permanente.",
+      "emailConfirmLabel": "Introduce tu dirección de correo electrónico para confirmar",
+      "oauthHint": "Iniciaste sesión con un proveedor externo y no tienes una contraseña definida. Introduce tu dirección de correo electrónico para confirmar la eliminación.",
+      "passwordLabel": "Contraseña para confirmar",
+      "cancel": "Cancelar",
+      "deleting": "Eliminando..."
+    },
+    "toasts": {
+      "profileUpdated": "Perfil actualizado correctamente",
+      "profileUpdateError": "Error al actualizar el perfil",
+      "emailConfirmRequired": "Introduce tu dirección de correo electrónico para confirmar",
+      "passwordRequired": "Introduce tu contraseña",
+      "deleted": "Cuenta eliminada",
+      "deleteError": "Error al eliminar la cuenta"
+    }
+  },
+  "security": {
+    "password": {
+      "title": "Cambiar contraseña",
+      "description": "Actualiza tu contraseña periódicamente para mayor seguridad",
+      "oauthDescription": "Tu cuenta está vinculada a un proveedor externo. No hay ninguna contraseña definida que puedas cambiar.",
+      "providerLogin": "Inicio de sesión mediante <providerSpan>{provider}</providerSpan>",
+      "providerHint": "Gestiona tu contraseña directamente con tu proveedor.",
+      "manage": "Gestionar",
+      "current": "Contraseña actual",
+      "new": "Nueva contraseña",
+      "confirm": "Confirmar contraseña",
+      "changing": "Cambiando...",
+      "action": "Cambiar contraseña"
+    },
+    "toasts": {
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+      "passwordChanged": "Contraseña cambiada correctamente. Vuelve a iniciar sesión.",
+      "passwordChangeError": "Error al cambiar la contraseña"
+    }
+  },
+  "notifications": {
+    "email": {
+      "title": "Notificaciones por correo",
+      "description": "Elige qué correos quieres recibir",
+      "applicationUpdates": {
+        "title": "Actualizaciones de candidaturas",
+        "description": "Cambios de estado y recordatorios de tus candidaturas."
+      },
+      "newJobPostings": {
+        "title": "Nuevas ofertas de empleo",
+        "description": "Empleos que encajan contigo en cuanto estén disponibles."
+      },
+      "marketing": {
+        "title": "Producto y boletín",
+        "description": "Nuevas funciones, consejos y ofertas ocasionales."
+      }
+    }
+  },
+  "preferences": {
+    "language": {
+      "title": "Idioma y región",
+      "description": "Determina el idioma de la interfaz y de los documentos generados.",
+      "label": "Idioma"
+    },
+    "design": {
+      "title": "Diseño",
+      "description": "Elige el aspecto que debe tener Applo. “Sistema” sigue los ajustes de tu dispositivo."
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "description": "Mantienes el control de tus datos.",
+      "publicProfile": {
+        "title": "Perfil público",
+        "description": "Otras personas pueden ver tu perfil."
+      },
+      "analytics": {
+        "title": "Datos de uso anónimos",
+        "description": "Ayúdanos a mejorar Applo. Sin contenido personal."
+      }
+    },
+    "export": {
+      "title": "Exportar mis datos",
+      "description": "Descarga todos los datos que almacenamos sobre ti en un archivo JSON (RGPD art. 15/20).",
+      "success": "Exportación de datos descargada",
+      "error": "Error al exportar los datos. Vuelve a intentarlo.",
+      "preparing": "Preparando...",
+      "download": "Descargar"
+    }
+  },
+  "sessions": {
+    "title": "Sesiones activas",
+    "shortDescription": "Gestiona tus sesiones activas en distintos dispositivos.",
+    "cardDescription": "Gestiona tus sesiones activas en distintos dispositivos",
+    "manage": "Gestionar sesiones",
+    "currentBadge": "Actual",
+    "lastActive": "Última actividad: {date}",
+    "signOut": "Cerrar sesión",
+    "end": "Finalizar",
+    "loadErrorTitle": "Error al cargar las sesiones",
+    "loadErrorDescription": "No se han podido cargar las sesiones activas",
+    "signOutAll": "Cerrar sesión en todos los dispositivos",
+    "signOutAllTitle": "¿Cerrar sesión en todos los dispositivos?",
+    "signOutAllDescription": "Se cerrará la sesión en {count, plural, one {# sesión activa} other {# sesiones activas}}, incluido este dispositivo. Tendrás que volver a iniciar sesión en todos los dispositivos.",
+    "cancel": "Cancelar",
+    "description": "Gestiona tus sesiones activas en distintos dispositivos. Puedes finalizar el acceso desde cualquier dispositivo en cualquier momento.",
+    "currentSession": "Sesión actual",
+    "otherSessions": "Otras sesiones ({count})",
+    "emptyTitle": "Solo una sesión activa",
+    "emptyDescription": "Esta es tu única sesión activa. Inicia sesión desde otro dispositivo para ver más sesiones aquí.",
+    "toasts": {
+      "currentRevoked": "Sesión actual cerrada",
+      "revoked": "Sesión finalizada correctamente",
+      "revokeError": "No se ha podido finalizar la sesión",
+      "allRevoked": "Sesión cerrada en {count, plural, one {# dispositivo} other {# dispositivos}}",
+      "revokeAllError": "Error al cerrar sesión en todos los dispositivos"
+    }
+  },
+  "emailTracking": {
+    "toasts": {
+      "connected": "Buzón conectado — Applo ahora detecta los correos entrantes.",
+      "connectionFailed": "Error de conexión ({reason}). Vuelve a intentarlo.",
+      "connectStartFailed": "No se ha podido iniciar la conexión.",
+      "disconnected": "Buzón desconectado",
+      "disconnectFailed": "Error al desconectar."
+    },
+    "loadingTitle": "Seguimiento de candidaturas",
+    "feature": "Seguimiento automático de candidaturas",
+    "upgradeDescription": "Conecta tu buzón y Applo detecta automáticamente las respuestas de las empresas — invitaciones a entrevista, confirmaciones y rechazos. El estado de tu candidatura se actualiza en vivo.",
+    "title": "Seguimiento automático de candidaturas",
+    "description": "Conecta tu buzón. Applo detecta automáticamente las respuestas de las empresas (confirmaciones, invitaciones, rechazos) y actualiza el estado de tu candidatura.",
+    "loadingConnections": "Cargando conexiones…",
+    "notify": {
+      "title": "Correo al cambiar el estado automáticamente",
+      "description": "Applo solo te envía un correo cuando el seguimiento cambió el estado — no cuando lo cambias tú mismo."
+    },
+    "enabled": "Activado",
+    "disabled": "Desactivado",
+    "privacyNote": "Applo lee los correos solo para clasificarlos. No almacenamos <strong>el cuerpo de los correos</strong> — solo el remitente, el asunto y el resultado de la clasificación (consulta la privacidad).",
+    "connection": {
+      "comingSoon": "Próximamente",
+      "active": "Activo",
+      "error": "Error",
+      "googleVerification": "Actualmente estamos a la espera de la verificación de Google.",
+      "notConnected": "Aún no hay ningún buzón conectado.",
+      "disconnect": "Desconectar",
+      "disconnectTitle": "¿Desconectar buzón?",
+      "disconnectDescription": "Applo dejará de detectar nuevos correos de <strong>{email}</strong>. Las candidaturas existentes se mantienen, pero el estado ya no se actualizará automáticamente.",
+      "cancel": "Cancelar",
+      "connect": "Conectar"
+    }
+  },
+  "saveBar": {
+    "unsavedChanges": "Cambios sin guardar",
+    "discard": "Descartar",
+    "save": "Guardar"
+  }
+}

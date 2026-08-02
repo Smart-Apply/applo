@@ -1,0 +1,370 @@
+{
+  "page": {
+    "subtitle": "Esercitati per i colloqui di lavoro con feedback basato sull'IA",
+    "unlockInterviews": "Sblocca con Pro",
+    "startNew": "Avvia nuovo colloquio",
+    "generalInterview": "Colloquio generale",
+    "sessionQuestions": "{count, plural, one {# domanda} other {# domande}}",
+    "filters": {
+      "all": "Tutti",
+      "inProgress": "In corso",
+      "completed": "Completati",
+      "abandoned": "Abbandonati"
+    },
+    "status": {
+      "inProgress": "In corso",
+      "completed": "Completato",
+      "abandoned": "Abbandonato"
+    },
+    "recentSessions": "Sessioni recenti",
+    "noSessionsForStatus": "Nessuna sessione con questo stato.",
+    "nextRoundTitle": "Pronto per il prossimo turno?",
+    "nextRoundDescription": "Continua a esercitarti con concentrazione — ogni turno ti rende più bravo.",
+    "freeInterview": "Colloquio libero",
+    "freeInterviewDescription": "Esercitati per qualsiasi ruolo",
+    "applicationBased": "Basato su una candidatura",
+    "applicationBasedDescription": "Domande da un annuncio di lavoro reale",
+    "lockedAria": "Disponibile da Pro – passa ora",
+    "planOnly": "Disponibile da Pro",
+    "planTooltip": "Disponibile da Pro. Fai clic per confrontare i piani."
+  },
+  "detail": {
+    "notFound": "Sessione di colloquio non trovata.",
+    "backToOverview": "Torna alla panoramica",
+    "questionsProgress": "{answered}/{total} domande",
+    "scorePoints": "{score}/100 punti",
+    "mode": {
+      "text": "Chat testuale",
+      "voice": "Colloquio vocale"
+    },
+    "modeSwitchHint": "Puoi cambiare modalità in qualsiasi momento",
+    "endedTitle": "Colloquio terminato",
+    "endedDescriptionAbandoned": "Questa sessione di colloquio è stata abbandonata.",
+    "endedDescriptionEnded": "Questa sessione di colloquio è terminata.",
+    "endedAbandonedHint": "Puoi avviare un nuovo colloquio per esercitarti.",
+    "endedCompletedHint": "Rivedi il tuo feedback e i risultati.",
+    "difficulty": {
+      "easy": "Principiante",
+      "medium": "Standard",
+      "hard": "Esperto"
+    },
+    "type": {
+      "behavioral": "Comportamentale",
+      "behavioralLong": "Comportamentale",
+      "technical": "Tecnico",
+      "caseStudy": "Caso di studio",
+      "mixed": "Misto"
+    }
+  },
+  "intro": {
+    "preview": {
+      "modesTitle": "Due modalità",
+      "freeInterview": "Colloquio libero",
+      "freeInterviewDescription": "Esercitati per qualsiasi ruolo.",
+      "applicationBased": "Basato su una candidatura",
+      "applicationBasedDescription": "Domande per un ruolo reale.",
+      "questionExample": "Descrivi un progetto in cui hai lavorato a stretto contatto con clienti o stakeholder. Come lo hai affrontato?",
+      "answerExample": "Nel mio ultimo progetto, io …",
+      "answerPlaceholder": "Inserisci la tua risposta …",
+      "feedbackTitle": "Feedback sulla tua risposta",
+      "strengthLabel": "Punto di forza",
+      "strengthText": "Struttura STAR chiara ed esempio concreto con un risultato misurabile.",
+      "tipLabel": "Suggerimento",
+      "tipText": "Alla fine, menziona cosa hai imparato — questo completa la risposta."
+    },
+    "steps": {
+      "mode": {
+        "heading": "Scegli la tua modalità",
+        "lead": "Esercitati liberamente per qualsiasi ruolo — oppure genera domande direttamente da una delle tue candidature.",
+        "bullets": {
+          "free": {
+            "title": "Colloquio libero",
+            "description": "pieno controllo su ruolo, azienda e settore."
+          },
+          "application": {
+            "title": "Basato su una candidatura",
+            "description": "domande dall'annuncio di lavoro reale."
+          }
+        }
+      },
+      "questions": {
+        "heading": "Rispondi alle domande",
+        "lead": "Applo pone domande realistiche. Rispondi in chat — al tuo ritmo, con pause o ripetizioni ogni volta che ne hai bisogno.",
+        "bullets": {
+          "oneByOne": {
+            "title": "Una domanda alla volta",
+            "description": "niente stress, nessuna pressione di tempo."
+          },
+          "star": {
+            "title": "Metodo STAR",
+            "description": "Situazione · Compito · Azione · Risultato."
+          }
+        }
+      },
+      "feedback": {
+        "heading": "Ricevi feedback dall'IA",
+        "lead": "Dopo ogni risposta ricevi un punteggio più punti di forza concreti e consigli di miglioramento — così ogni turno ti rende più bravo.",
+        "bullets": {
+          "score": {
+            "title": "Punteggio per risposta",
+            "description": "scopri subito a che punto sei."
+          },
+          "tips": {
+            "title": "Consigli concreti",
+            "description": "pratici, non generici."
+          }
+        }
+      }
+    },
+    "stepCounter": "Passo {current} di {total}",
+    "skip": "Salta",
+    "back": "Indietro",
+    "start": "Iniziamo",
+    "next": "Avanti",
+    "footnote": "Suggerimento: struttura ogni risposta con il metodo STAR — migliora sensibilmente il tuo punteggio."
+  },
+  "modeSelect": {
+    "title": "Come vuoi esercitarti?",
+    "descriptionWithVoice": "Scegli la modalità del colloquio. Entrambe le varianti usano le stesse domande e terminano con una valutazione completa — puoi cambiare in qualsiasi momento.",
+    "descriptionTextOnly": "Scegli la modalità del colloquio. Entrambe le varianti usano le stesse domande e terminano con una valutazione completa.",
+    "text": {
+      "title": "Chat testuale",
+      "description": "Scrivi le tue risposte con calma e al tuo ritmo — ideale per formulare e rivedere il testo.",
+      "features": {
+        "noTimePressure": "Rispondi senza pressione di tempo",
+        "feedback": "Feedback dopo ogni domanda",
+        "noMic": "Nessun microfono richiesto"
+      },
+      "cta": "Avvia chat testuale"
+    },
+    "voice": {
+      "title": "Colloquio vocale",
+      "badge": "Realistico",
+      "description": "Fai una conversazione reale con il tuo intervistatore IA. Parla liberamente, proprio come in un colloquio vero.",
+      "features": {
+        "conversation": "Scambio naturale",
+        "confidence": "Esercita pronuncia e sicurezza",
+        "micRequired": "Microfono richiesto"
+      },
+      "cta": "Scegli il colloquio vocale"
+    }
+  },
+  "chat": {
+    "questionType": {
+      "behavioral": "Comportamentale",
+      "technical": "Tecnica",
+      "situational": "Situazionale",
+      "open": "Aperta",
+      "followUp": "Domanda di approfondimento",
+      "question": "Domanda"
+    },
+    "welcome": "Benvenuto al colloquio! Risponderai a {count, plural, one {# domanda} other {# domande}}. Prenditi il tuo tempo per risposte ponderate.",
+    "feedbackGenerating": "Il feedback è in fase di generazione...",
+    "allQuestionsAnsweredSystem": "Hai risposto a tutte le domande! Fai clic su \"Completa colloquio\" per vedere la tua valutazione complessiva.",
+    "errors": {
+      "sendAnswer": "Errore nell'invio della tua risposta",
+      "complete": "Errore nel completamento del colloquio",
+      "abandon": "Errore nell'abbandono del colloquio"
+    },
+    "toasts": {
+      "completed": "Colloquio completato!",
+      "abandoned": "Colloquio abbandonato"
+    },
+    "title": "Simulazione di colloquio",
+    "cancel": "Annulla",
+    "progressQuestion": "Domanda {current} di {total}",
+    "progressComplete": "{percent}% completato",
+    "scoreLabel": "Punteggio:",
+    "allQuestionsAnsweredComposer": "Hai risposto a tutte le domande. Completa il colloquio per ricevere la tua valutazione complessiva.",
+    "completeInterview": "Completa colloquio",
+    "answerPlaceholder": "Inserisci la tua risposta…  (Invio per inviare · Maiusc+Invio per una nuova riga)",
+    "send": "Invia",
+    "abandonTitle": "Abbandonare il colloquio?",
+    "abandonDescription": "Sei sicuro di voler abbandonare il colloquio? I tuoi progressi andranno persi e non riceverai una valutazione complessiva.",
+    "continue": "Continua"
+  },
+  "voice": {
+    "minutesAvailable": "{count, plural, one {# min. disponibile} other {# min. disponibili}}",
+    "remainingQuota": "Quota vocale rimanente: {count, plural, one {# min.} other {# min.}}",
+    "toasts": {
+      "noAnswerRecorded": "Non è stata registrata alcuna risposta.",
+      "timeUp": "Il tempo è scaduto – Applo si sta congedando."
+    },
+    "cues": {
+      "de": {
+        "wrapUp": "Zeithinweis: Es verbleibt noch etwa eine Minute. Schließe das aktuelle Thema ab und stelle höchstens EINE letzte Frage.",
+        "timeUp": "Die Zeit ist um. Bedanke dich jetzt kurz und warm, verabschiede dich und beende das Gespräch – stelle keine weiteren Fragen."
+      },
+      "en": {
+        "wrapUp": "Time note: About one minute remains. Finish the current topic and ask at most ONE final question.",
+        "timeUp": "Time is up. Give brief, warm thanks, say goodbye, and end the interview now – ask no further questions."
+      }
+    },
+    "preCall": {
+      "title": "Pronto per il tuo colloquio vocale?",
+      "description": "Avrai una conversazione realistica con Applo, il tuo intervistatore IA. Parla liberamente e in modo naturale — alla fine riceverai una valutazione completa."
+    },
+    "errors": {
+      "mic": "Nessun accesso al microfono. Consenti l'accesso al microfono nel tuo browser e riprova — oppure passa alla chat testuale.",
+      "unsupported": "Il tuo browser non supporta i colloqui vocali. Usa un browser aggiornato oppure passa alla chat testuale.",
+      "connect": "Non è stato possibile stabilire la connessione vocale. Riprova oppure passa alla chat testuale."
+    },
+    "checklist": {
+      "micReady": {
+        "title": "Microfono pronto",
+        "description": "L'accesso viene richiesto all'avvio"
+      },
+      "quietEnvironment": {
+        "title": "Ambiente silenzioso",
+        "description": "Cuffie consigliate per evitare l'eco"
+      }
+    },
+    "durationLabel": "Durata della chiamata",
+    "minutesShort": "{count, plural, one {# min.} other {# min.}}",
+    "durationDisabledHint": "Le opzioni superiori alla tua quota di tempo rimanente sono disattivate.",
+    "connecting": "Connessione in corso …",
+    "startCall": "Avvia chiamata",
+    "minutesRemaining": "{count, plural, one {# min. rimanente} other {# min. rimanenti}}",
+    "switchToText": "Preferisci scrivere? Vai alla chat testuale",
+    "liveTitle": "Colloquio vocale",
+    "liveTitleWithJob": "Colloquio vocale · {jobTitle}",
+    "connected": "Connesso",
+    "evaluationCreating": "Creazione della valutazione …",
+    "apploSpeaking": "Applo sta parlando …",
+    "youSpeaking": "Stai parlando …",
+    "speakWhenReady": "Parla quando sei pronto.",
+    "oneMinuteRemaining": "Circa 1 minuto rimanente",
+    "yourMicrophone": "Il tuo microfono",
+    "voiceDetected": "Voce rilevata",
+    "speakPrompt": "Parla in modo che l'intervistatore possa rispondere …",
+    "youLabel": "Tu",
+    "muted": "Silenziato",
+    "microphoneOn": "Microfono attivo",
+    "endCall": "Termina chiamata"
+  },
+  "feedback": {
+    "noEvaluation": "Nessuna valutazione disponibile. Completa prima il colloquio.",
+    "categories": {
+      "communication": "Comunicazione",
+      "presentation": "Presentazione",
+      "technical": "Competenza tecnica",
+      "problemSolving": "Problem solving",
+      "cultureFit": "Adattamento culturale"
+    },
+    "overallRating": "Valutazione complessiva",
+    "strengths": "Punti di forza",
+    "improvements": "Margini di miglioramento",
+    "questionAnalysis": "Analisi domanda per domanda",
+    "questionLabel": "Domanda",
+    "answerLabel": "La tua risposta"
+  },
+  "stats": {
+    "completedSessions": "Sessioni completate",
+    "averageScore": "Punteggio medio",
+    "averageScoreWithQuestions": "Punteggio medio · {count, plural, one {# domanda} other {# domande}}",
+    "bestScore": "Punteggio migliore",
+    "improvement": "Miglioramento",
+    "minimumSessions": "Min. 4 sessioni",
+    "totalSessions": "su {count, plural, one {# sessione} other {# sessioni}} totali",
+    "questionsAnswered": "{count, plural, one {# domanda risposta} other {# domande risposte}}",
+    "personalRecord": "Il tuo record personale",
+    "pointsSinceStart": "Punti dall'inizio",
+    "minimumSessionsNeeded": "Richieste almeno 4 sessioni"
+  },
+  "progress": {
+    "noStats": "Completa almeno un colloquio per vedere le statistiche.",
+    "averageCategoryScores": "Punteggi medi per categoria",
+    "interviewTypes": "Tipi di colloquio",
+    "mostPracticedType": "Tipo più praticato:"
+  },
+  "startDialog": {
+    "title": "Avvia nuovo colloquio",
+    "description": "Configura il tuo colloquio di prova. L'IA adatta le domande alle tue impostazioni.",
+    "tabs": {
+      "custom": "Colloquio libero",
+      "application": "Basato su una candidatura"
+    },
+    "application": {
+      "selectLabel": "Seleziona candidatura",
+      "selectPlaceholder": "Scegli una candidatura",
+      "unnamed": "Candidatura senza titolo",
+      "helper": "Le domande vengono generate in base alla descrizione del lavoro.",
+      "empty": "Non hai ancora una candidatura completata. Crea prima una candidatura per generarne domande di colloquio adatte.",
+      "createApplication": "Crea candidatura"
+    },
+    "custom": {
+      "position": "Ruolo",
+      "positionPlaceholder": "es. project manager, infermiere, responsabile vendite",
+      "company": "Azienda",
+      "companyPlaceholder": "es. Esempio S.r.l.",
+      "industry": "Settore",
+      "industryPlaceholder": "Facoltativo: scegli un settore",
+      "jobDescription": "Descrizione del lavoro (facoltativo)",
+      "jobDescriptionPlaceholder": "Incolla la descrizione del lavoro per ricevere domande più specifiche..."
+    },
+    "typeLabel": "Tipo di colloquio",
+    "difficultyLabel": "Difficoltà",
+    "questionCountLabel": "Numero di domande",
+    "questionCount": "{count, plural, one {# domanda} other {# domande}}",
+    "languageLabel": "Lingua",
+    "languageGerman": "Tedesco",
+    "cancel": "Annulla",
+    "start": "Avvia colloquio",
+    "types": {
+      "mixed": {
+        "label": "Misto",
+        "description": "Combinazione di tutti i tipi di domande"
+      },
+      "behavioral": {
+        "label": "Comportamentale",
+        "description": "Metodo STAR, domande situazionali"
+      },
+      "technical": {
+        "label": "Tecnico",
+        "description": "Domande specifiche del settore e tecniche"
+      },
+      "caseStudy": {
+        "label": "Caso di studio",
+        "description": "Problem solving e analisi"
+      }
+    },
+    "difficulty": {
+      "easy": {
+        "label": "Principiante",
+        "description": "Domande di base"
+      },
+      "medium": {
+        "label": "Standard",
+        "description": "Difficoltà media"
+      },
+      "hard": {
+        "label": "Esperto",
+        "description": "Domande complesse e impegnative"
+      }
+    },
+    "industries": {
+      "it": "IT / Software",
+      "finance": "Finanza / Banche",
+      "healthcare": "Sanità",
+      "sales": "Vendite",
+      "marketing": "Marketing",
+      "consulting": "Consulenza",
+      "manufacturing": "Produzione / Manifattura",
+      "logistics": "Logistica",
+      "hr": "Risorse umane / HR",
+      "other": "Altro"
+    }
+  },
+  "hooks": {
+    "startSuccess": "Sessione di colloquio avviata",
+    "startError": "Errore nell'avvio della sessione di colloquio",
+    "submitAnswerError": "Errore nell'invio della risposta",
+    "nextQuestionError": "Errore nel caricamento della prossima domanda",
+    "completeSuccess": "Colloquio completato! Il feedback è in fase di generazione...",
+    "completeError": "Errore nel completamento del colloquio",
+    "abandonSuccess": "Sessione di colloquio abbandonata",
+    "abandonError": "Errore nell'abbandono della sessione",
+    "voiceStartError": "Non è stato possibile avviare il colloquio vocale",
+    "voiceCompleteError": "Errore nel completamento del colloquio vocale"
+  }
+}

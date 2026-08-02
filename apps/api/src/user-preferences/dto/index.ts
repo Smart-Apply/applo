@@ -60,11 +60,13 @@ export class UpdateUserPreferencesDto {
   @ApiProperty({
     example: 'de',
     required: false,
-    description: 'Preferred language (de, en, fr, es)',
+    description: 'Preferred language (de, en, fr, es, pt, it)',
   })
   @IsOptional()
   @IsString()
-  @IsIn(['de', 'en', 'fr', 'es'], { message: 'Language must be one of: de, en, fr, es' })
+  @IsIn(['de', 'en', 'fr', 'es', 'pt', 'it'], {
+    message: 'Language must be one of: de, en, fr, es, pt, it',
+  })
   language?: string;
 
   @ApiProperty({

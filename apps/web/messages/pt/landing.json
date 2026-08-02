@@ -1,0 +1,290 @@
+{
+  "mascot": {
+    "wave": {
+      "title": "Olá, sou a Applo!",
+      "text": "Ajudo-te a criar candidaturas honestas."
+    },
+    "search": {
+      "text": "Estou a ler o teu currículo."
+    },
+    "process": {
+      "text": "Estou a escrever …"
+    },
+    "success": {
+      "text": "Muito bem feito!"
+    },
+    "idle": {
+      "text": "Honesta e tranquila."
+    },
+    "love": {
+      "text": "Feita para ti."
+    },
+    "auto": {
+      "text": "Empregos num instante."
+    },
+    "coach": {
+      "text": "Pratica comigo."
+    },
+    "think": {
+      "text": "Vamos ver …"
+    },
+    "done": {
+      "text": "Concluído!"
+    }
+  },
+  "nav": {
+    "ariaLabel": "Navegação principal",
+    "features": "Funcionalidades",
+    "values": "Valores",
+    "pricing": "Preços",
+    "faq": "FAQ",
+    "login": "Iniciar sessão",
+    "start": "Começar grátis"
+  },
+  "hero": {
+    "eyebrow": "Candidaturas de emprego, com honestidade",
+    "title": "Candidaturas que se adequam a <highlight>ti</highlight>, não a uma versão inventada de ti.",
+    "lead": "A Applo escreve cartas de apresentação e currículos a partir do teu <strong>perfil real</strong>: com apoio de IA, otimizados para ATS e transparentes. Tu manténs o controlo; a IA não inventa nada.",
+    "primaryCta": "Começar grátis",
+    "secondaryCta": "Como funciona",
+    "trust": {
+      "hosting": "Alojamento na UE",
+      "gdpr": "RGPD",
+      "grounded": "Sem dados inventados"
+    }
+  },
+  "receipt": {
+    "file": "candidatura_direcao_comercial.pdf",
+    "language": "PT",
+    "profileLabel": "PERFIL",
+    "profileValue": "Lena Weber · Diretora Comercial",
+    "jobLabel": "EMPREGO",
+    "jobValue": "Direção Comercial · Nordwind GmbH",
+    "generationLabel": "GERAÇÃO IA",
+    "note": "Verificação de factos ativa: sem métricas inventadas.",
+    "scoreLabel": "PONTUAÇÃO ATS",
+    "keywords": "PALAVRAS-CHAVE 21/24",
+    "scoreWord": "FORTE",
+    "export": "Exportar como PDF",
+    "hint": "50 MODELOS · 6 LÍNGUAS"
+  },
+  "how": {
+    "eyebrow": "01 · Como funciona",
+    "title": "A tua candidatura terminada em três passos",
+    "lead": "Do currículo ao envio, uma candidatura otimizada para ATS — sem caos de copiar e colar.",
+    "steps": {
+      "one": {
+        "title": "Carrega o perfil e o currículo",
+        "desc": "Carrega o teu currículo. A Applo lê-o e preenche o teu perfil automaticamente. Tu revês e corriges."
+      },
+      "two": {
+        "title": "Adiciona a oferta de emprego",
+        "desc": "Cola um emprego como texto, link ou PDF. A IA escreve uma carta de apresentação e um currículo adaptados à oferta e otimizados para ATS."
+      },
+      "three": {
+        "title": "Exporta como PDF",
+        "desc": "Escolhe entre 50 modelos ATS, exporta como PDF em 6 línguas e candidata-te. Está feito."
+      }
+    }
+  },
+  "features": {
+    "eyebrow": "02 · Funcionalidades",
+    "title": "Tudo o que uma candidatura honesta precisa",
+    "lead": "Ferramentas concretas em vez de promessas vazias. Feitas para que a tua candidatura seja forte <emphasis>e</emphasis> verdadeira.",
+    "items": {
+      "generation": {
+        "title": "Geração com IA",
+        "desc": "A IA revê os seus próprios rascunhos e aperfeiçoa automaticamente a tua carta de apresentação e o teu currículo, com base nos teus dados reais."
+      },
+      "ingestion": {
+        "title": "Importação fácil de empregos",
+        "desc": "Importa empregos do Indeed, LinkedIn e Glassdoor como texto, link ou PDF."
+      },
+      "validation": {
+        "title": "Verificação de candidatura",
+        "desc": "Pontuação ATS mais feedback em semáforo mostra o que pode ser melhorado antes de enviares."
+      },
+      "templates": {
+        "title": "50 modelos de PDF ATS",
+        "desc": "Modelos bem estruturados em alemão e inglês, otimizados para sistemas de gestão de candidaturas."
+      },
+      "interviews": {
+        "title": "Entrevistas de prática",
+        "desc": "Pratica entrevistas por texto ou voz e recebe feedback concreto.<tag>Pro</tag>"
+      },
+      "tracking": {
+        "title": "Acompanhamento de e-mail",
+        "desc": "Liga o Outlook/M365. O estado da tua candidatura atualiza-se automaticamente.<tag>Premium</tag>"
+      },
+      "languages": {
+        "title": "Multilingue – 6 línguas",
+        "desc": "Cria candidaturas em alemão ou inglês e exporta-as em 6 línguas – incluindo francês, espanhol, português e italiano."
+      },
+      "pipeline": {
+        "title": "Estado em direto das tuas candidaturas",
+        "desc": "Mantém todas as candidaturas e o respetivo estado atual num só lugar."
+      }
+    }
+  },
+  "values": {
+    "eyebrow": "03 · Valores e transparência",
+    "title": "Honesta. Verificável. Do teu lado.",
+    "lead": "A transparência não é uma funcionalidade a assinalar — é a base. Dizemos claramente o que acontece e o que não acontece.",
+    "items": {
+      "grounded": {
+        "title": "Sem dados inventados",
+        "desc": "A IA usa apenas aquilo que o teu perfil comprova. Uma verificação automática assinala métricas inventadas antes de entrarem na tua candidatura."
+      },
+      "eu": {
+        "title": "Os teus dados ficam na UE",
+        "desc": "O alojamento e o armazenamento acontecem na UE, ao abrigo do RGPD."
+      },
+      "audio": {
+        "title": "Entrevistas: sem áudio armazenado",
+        "desc": "As entrevistas de prática guardam apenas a transcrição e o feedback, nunca a gravação de áudio."
+      },
+      "email": {
+        "title": "Acompanhamento de e-mail sem conteúdo",
+        "desc": "Lemos o estado, não as tuas mensagens. O conteúdo dos e-mails não é armazenado."
+      },
+      "security": {
+        "title": "Segurança incorporada",
+        "desc": "Início de sessão com dois fatores, ligações encriptadas e outras proteções estão ativas por predefinição."
+      },
+      "candidate": {
+        "title": "Para ti, não para recrutadores",
+        "desc": "O teu perfil é a base para <strong>as tuas</strong> candidaturas, não uma montra pesquisável para empresas."
+      }
+    },
+    "not": {
+      "title": "O que a Applo <underline>não</underline> faz",
+      "items": {
+        "spam": "Sem candidaturas em massa em teu nome.",
+        "fake": "Sem conquistas falsas e sem métricas inventadas.",
+        "sale": "Sem vender os teus dados, a ninguém."
+      }
+    }
+  },
+  "pricing": {
+    "eyebrow": "04 · Preços",
+    "title": "Justo e sem surpresas",
+    "lead": "Limites mensais claros, sem marcas de água e créditos extra que nunca expiram. Cancela quando quiseres.",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "currency": "€",
+        "amount": "0",
+        "period": "/ mês",
+        "tagline": "Para experimentar",
+        "features": {
+          "profile": "1 perfil de currículo",
+          "applications": "3 candidaturas com IA / mês",
+          "validations": "5 verificações de candidatura / mês",
+          "noWatermark": "Sem marca de água",
+          "adDownload": "Transferência com publicidade (15s de espera)"
+        },
+        "cta": "Começar grátis"
+      },
+      "pro": {
+        "badge": "Popular",
+        "name": "Pro",
+        "currency": "€",
+        "amount": "9.95",
+        "period": "/ mês",
+        "tagline": "Para fases ativas de candidatura",
+        "features": {
+          "includedFree": "Inclui todas as funcionalidades do Free",
+          "applications": "50 candidaturas / mês",
+          "interviews": "5 entrevistas de prática / mês",
+          "validations": "15 verificações de candidatura / mês",
+          "ingestion": "Importar ofertas de emprego (texto, link ou ficheiro)",
+          "pipeline": "Estado em direto das tuas candidaturas",
+          "export": "Sem publicidade e exportação em 6 línguas"
+        },
+        "cta": "Escolher o Pro"
+      },
+      "premium": {
+        "name": "Premium",
+        "currency": "€",
+        "amount": "19.95",
+        "period": "/ mês",
+        "tagline": "Para uma procura de emprego intensiva",
+        "features": {
+          "includedPro": "Inclui todas as funcionalidades do Pro",
+          "applications": "100 candidaturas / mês",
+          "interviews": "45 entrevistas de prática (voz e texto)",
+          "validations": "35 verificações de candidatura / mês",
+          "tracking": "Acompanhamento de e-mail (Outlook / Microsoft 365)"
+        },
+        "cta": "Escolher o Premium"
+      }
+    },
+    "addons": {
+      "eyebrow": "Créditos extra",
+      "badge": "Nunca expira",
+      "title": "Mais candidaturas sempre que precisares",
+      "lead": "Os créditos extra permanecem disponíveis até serem usados e só são consumidos depois de esgotada a tua quota mensal do plano.",
+      "oneTime": "pagamento único",
+      "note": "Os créditos extra cobrem candidaturas com IA adicionais e não são repostos no final do mês.",
+      "packages": {
+        "small": {
+          "applications": "10 candidaturas extra",
+          "price": "€2.99"
+        },
+        "medium": {
+          "applications": "30 candidaturas extra",
+          "price": "€6.99"
+        },
+        "large": {
+          "applications": "75 candidaturas extra",
+          "price": "€14.99"
+        }
+      }
+    }
+  },
+  "faq": {
+    "eyebrow": "05 · FAQ",
+    "title": "Respostas claras",
+    "items": {
+      "data": {
+        "q": "O que acontece aos meus dados?",
+        "a": "Os teus dados são alojados e armazenados na UE, ao abrigo do RGPD. Não vendemos os teus dados. As entrevistas de prática não guardam áudio, e o acompanhamento de e-mail não guarda o conteúdo dos e-mails."
+      },
+      "fabrication": {
+        "q": "A IA inventa coisas sobre mim?",
+        "a": "Não. A IA usa apenas o que o teu perfil comprova. Uma verificação automática assinala métricas inventadas para que nada de falso entre na tua candidatura."
+      },
+      "recruiters": {
+        "q": "Os recrutadores podem ver ou encontrar o meu perfil?",
+        "a": "Não. O teu perfil é a base privada para as tuas próprias candidaturas, não uma montra pesquisável. As empresas não o podem usar para te procurar."
+      },
+      "languages": {
+        "q": "Em que idiomas posso candidatar-me?",
+        "a": "Podes criar candidaturas em alemão e inglês e traduzir a exportação em PDF para 6 línguas – incluindo francês, espanhol, português e italiano."
+      },
+      "cancel": {
+        "q": "Posso cancelar a Applo?",
+        "a": "Sim, a qualquer momento. O plano Free mantém-se gratuito; os planos pagos não têm qualquer fidelização a longo prazo."
+      },
+      "ownership": {
+        "q": "A quem pertencem os meus dados?",
+        "a": "A ti. O teu perfil e conteúdo pertencem-te. A Applo usa-os apenas para criar as tuas candidaturas."
+      }
+    }
+  },
+  "final": {
+    "title": "Pronto para candidaturas honestas?",
+    "lead": "Começa grátis: sem dados inventados, sem candidaturas em massa.",
+    "cta": "Começar grátis",
+    "trust": {
+      "hosting": "Alojamento na UE",
+      "gdpr": "RGPD",
+      "cancel": "cancela quando quiseres"
+    }
+  },
+  "footer": {
+    "tagline": "Candidaturas a partir do teu perfil real: honestas, otimizadas para ATS, alojadas na UE.",
+    "compliance": "UE · RGPD",
+    "license": "Código disponível · BSL 1.1"
+  }
+}

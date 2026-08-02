@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "title": "Applo - Candidature di lavoro basate sull'IA",
+    "description": "Crea candidature di lavoro personalizzate con l'assistenza dell'IA"
+  },
+  "language": {
+    "label": "Lingua",
+    "switchLabel": "Cambia lingua",
+    "de": "Deutsch",
+    "en": "English",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano"
+  },
+  "actions": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "close": "Chiudi",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "back": "Indietro",
+    "next": "Avanti",
+    "retry": "Riprova",
+    "loading": "Caricamento...",
+    "understood": "Ho capito"
+  },
+  "loadingMessages": {
+    "pdfPreview": "Caricamento anteprima PDF...",
+    "editor": "Caricamento editor...",
+    "form": "Caricamento modulo..."
+  },
+  "cookieBanner": {
+    "ariaLabel": "Informativa sui cookie",
+    "text": "Utilizziamo solo cookie strettamente necessari per mantenerti connesso e per inviare i moduli in modo sicuro. Non viene effettuato alcun tracciamento. Scopri di più nella nostra <privacyLink>informativa sulla privacy</privacyLink>.",
+    "dismiss": "Ho capito"
+  },
+  "errorPage": {
+    "title": "Qualcosa è andato storto",
+    "description": "Si è verificato un errore durante il caricamento di questa pagina.",
+    "errorMessageLabel": "Messaggio di errore:",
+    "retry": "Riprova",
+    "toDashboard": "Vai alla dashboard"
+  },
+  "serviceWorker": {
+    "updateTitle": "Nuova versione disponibile",
+    "updateDescription": "Ricarica la pagina per ottenere l'ultima versione di Applo. I dati non salvati nei moduli aperti andranno persi.",
+    "updateAction": "Aggiorna ora"
+  },
+  "fileUpload": {
+    "dropActive": "Rilascia il file qui...",
+    "dropPrompt": "Trascina un file qui o fai clic per selezionarlo",
+    "defaultHint": "PDF o DOCX, max. 10 MB",
+    "removeFile": "Rimuovi file",
+    "errorTooLarge": "Il file è troppo grande. La dimensione massima è 10 MB.",
+    "errorInvalidType": "Tipo di file non valido. Sono consentiti solo file PDF e DOCX.",
+    "errorGeneric": "Non è stato possibile caricare il file."
+  },
+  "passwordStrength": {
+    "label": "Sicurezza della password",
+    "weak": "Debole",
+    "medium": "Media",
+    "strong": "Forte",
+    "requirementMinLength": "Almeno 8 caratteri",
+    "requirementUppercase": "Una lettera maiuscola",
+    "requirementLowercase": "Una lettera minuscola",
+    "requirementNumber": "Un numero",
+    "requirementSpecial": "Un carattere speciale (@$!%*?&#)"
+  }
+}

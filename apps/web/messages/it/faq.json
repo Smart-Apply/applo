@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "title": "FAQ – Applo",
+    "description": "Domande frequenti su Applo: candidature, curriculum, lettere di presentazione, privacy e prezzi."
+  },
+  "title": "Domande frequenti (FAQ)",
+  "intro": "Risposte alle domande più comuni su Applo. Non trovi la tua? Scrivici tramite il modulo di contatto nella <home>pagina principale</home>.",
+  "sections": {
+    "general": "Generale"
+  },
+  "items": {
+    "what": {
+      "q": "Cosa fa esattamente Applo?",
+      "a": "Applo crea in pochi secondi una lettera di presentazione corrispondente e un curriculum PDF ottimizzato a partire dal tuo profilo e da un annuncio di lavoro — entrambi su misura per il ruolo specifico. Puoi modificare il testo direttamente nell'editor prima di scaricarlo."
+    },
+    "industries": {
+      "q": "Applo funziona anche al di fuori dei ruoli IT?",
+      "a": "Sì. Applo è intenzionalmente neutrale rispetto al settore. I modelli e i prompt funzionano con ruoli in ambito sanitario, vendite, marketing, artigianato, amministrazione, istruzione e logistica — non solo tecnologia."
+    },
+    "languages": {
+      "q": "In quale lingua verranno scritte le mie candidature?",
+      "a": "Rileviamo automaticamente la lingua dell'annuncio di lavoro (attualmente tedesco e inglese) e creiamo la lettera di presentazione e il curriculum nella stessa lingua. In fase di esportazione puoi inoltre far tradurre i documenti in francese, spagnolo, portoghese o italiano. I termini di settore (ad esempio i nomi degli strumenti) mantengono la loro grafia abituale."
+    },
+    "data": {
+      "q": "Cosa succede ai miei dati?",
+      "a": "Il tuo profilo e i dati delle candidature sono criptati in un database UE (Microsoft Azure, Svezia). Non vendiamo né utilizziamo i tuoi dati per pubblicità o per l'addestramento di modelli. I dettagli sono nella nostra <privacy>Datenschutzerklärung</privacy>. Puoi scaricare i tuoi dati in qualsiasi momento in \"Impostazioni → Esporta dati\" oppure eliminare completamente il tuo account."
+    },
+    "pricing": {
+      "q": "Quanto costa Applo?",
+      "a": "Free costa 0 € e include un profilo curriculum, 3 candidature IA e 5 verifiche della candidatura al mese; i download non hanno filigrana e prevedono un'attesa pubblicitaria di 15 secondi. Pro costa 9,95 € al mese e include 50 candidature IA, 15 verifiche e 5 colloqui di prova. Premium costa 19,95 € al mese e include 100 candidature IA, 35 verifiche, 45 colloqui di prova e il tracciamento delle email. Sono disponibili crediti extra permanenti in pacchetti da 10, 30 o 75 candidature — consulta la nostra <pricing>pagina dei prezzi</pricing> per i dettagli."
+    },
+    "editing": {
+      "q": "Come posso modificare la mia candidatura dopo la generazione?",
+      "a": "Dopo la generazione, si apre automaticamente un editor in cui puoi modificare la lettera di presentazione e il curriculum direttamente nel browser ed esportarli di nuovo come PDF — senza un'altra generazione e senza consumare token."
+    },
+    "ats": {
+      "q": "I curriculum generati sono compatibili con l'ATS?",
+      "a": "Sì. Tutti i modelli PDF sono realizzati in modo che i comuni sistemi di gestione delle candidature (ATS) possano leggerli correttamente: layout a colonna singola, struttura HTML semplice, nessuna tabella o elemento grafico nelle aree critiche, intestazioni di sezione chiare e caratteri standard."
+    },
+    "contact": {
+      "q": "Ho trovato un bug o ho un'idea — dove posso contattarvi?",
+      "a": "Scrivici tramite il modulo di contatto nella <home>pagina principale</home> o direttamente a <email>support@applo.ai</email>. Di solito rispondiamo entro 1-2 giorni lavorativi."
+    }
+  },
+  "legalLayout": {
+    "backHome": "← Torna alla pagina principale",
+    "home": "Home",
+    "copyright": "© {year} Applo. Tutti i diritti riservati."
+  }
+}

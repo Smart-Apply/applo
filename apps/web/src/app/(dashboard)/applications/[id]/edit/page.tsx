@@ -422,12 +422,12 @@ export default function ApplicationResumeEditorPage() {
       // set the expectation and ask the user to double-check the result.
       const contentLanguage = toExportLanguage(application.sourceLanguage ?? application.language);
       if (selectedLanguage !== contentLanguage) {
+        const languageName =
+          new Intl.DisplayNames([getIntlLocale()], { type: 'language' }).of(selectedLanguage) ??
+          selectedLanguage;
         toast.info(t('page.export.translationTitle'), {
           id: 'export-translation-hint',
-          description:
-            selectedLanguage === 'en'
-              ? t('page.export.translationDescriptionEn')
-              : t('page.export.translationDescriptionDe'),
+          description: t('page.export.translationDescription', { language: languageName }),
         });
       }
       await exportApplication.mutateAsync(selectedLanguage);

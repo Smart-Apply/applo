@@ -74,10 +74,10 @@ overrides:
   # - node-jose>uuid < 11.1.1: missing buffer bounds check in v3/v5/v6
   #   (GHSA-w5hq-g745-h8pq). Scoped — @applo/api depends on uuid@14 directly;
   #   a blanket pin would DOWNGRADE it.
-  # NOT overridden: brace-expansion ≤ 5.0.7 (GHSA-mh99-v99m-4gvg). The patched
-  # v5 is a named-export rewrite (`exports.expand`) that breaks CJS
-  # minimatch@3 consumers expecting `module.exports = fn` (eslint/glob
-  # tooling). Dev-only surface — no untrusted glob patterns — wait for parents.
+  # Keep each brace-expansion major on its own API while moving the vulnerable
+  # 1.1.16 resolution used by minimatch@3 to its same-major patched release.
+  # A blanket override would replace the v2/v5 copies and break their consumers.
+  'brace-expansion@1.1.16': 1.1.18
   fast-uri: ^3.1.4
   'next>sharp': ^0.35.2
   'node-jose>uuid': ^11.1.1

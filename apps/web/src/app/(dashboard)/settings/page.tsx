@@ -58,6 +58,7 @@ import { ThemeCards } from '@/components/settings/theme-cards';
 import { ProfileSaveBar } from '@/components/settings/profile-save-bar';
 import { SettingsSearch } from '@/components/settings/settings-search';
 import { useLocaleSwitch } from '@/components/i18n/language-switcher';
+import { locales, type Locale } from '@/i18n/config';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -536,15 +537,18 @@ export default function SettingsPage() {
                     value={locale}
                     onValueChange={(value) => {
                       void handleUpdatePreference('language', value);
-                      switchLocale(value as 'de' | 'en');
+                      switchLocale(value as Locale);
                     }}
                   >
                     <SelectTrigger id="language" className="max-w-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="de">{tLanguage('de')}</SelectItem>
-                      <SelectItem value="en">{tLanguage('en')}</SelectItem>
+                      {locales.map((availableLocale) => (
+                        <SelectItem key={availableLocale} value={availableLocale}>
+                          {tLanguage(availableLocale)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

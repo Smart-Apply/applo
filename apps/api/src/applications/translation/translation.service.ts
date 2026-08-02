@@ -10,7 +10,23 @@ import {
   TranslationSegment,
 } from './translation-segments.util';
 
-export type TranslationLanguage = 'de' | 'en';
+export type TranslationLanguage = 'de' | 'en' | 'fr' | 'es' | 'pt' | 'it';
+
+/** All export/translation target languages, in UI display order. */
+export const TRANSLATION_LANGUAGES: readonly TranslationLanguage[] = [
+  'de',
+  'en',
+  'fr',
+  'es',
+  'pt',
+  'it',
+];
+
+export function isTranslationLanguage(value: unknown): value is TranslationLanguage {
+  return (
+    typeof value === 'string' && (TRANSLATION_LANGUAGES as readonly string[]).includes(value)
+  );
+}
 
 /**
  * One cached translation of an application's content, stored per target
@@ -33,6 +49,10 @@ export type StoredTranslations = Record<string, StoredTranslationEntry>;
 const LANGUAGE_NAMES: Record<TranslationLanguage, string> = {
   de: 'German',
   en: 'English',
+  fr: 'French',
+  es: 'Spanish',
+  pt: 'European Portuguese',
+  it: 'Italian',
 };
 
 /**

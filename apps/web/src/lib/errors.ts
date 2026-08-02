@@ -3,11 +3,15 @@
  */
 
 import { getErrorMessage as getLocalizedErrorMessage, formatValidationErrors } from './error-messages';
-import { getActiveLocale, pick } from './i18n-runtime';
+import { pick } from './i18n-runtime';
 
 const NETWORK_ERROR_MESSAGE = {
   de: 'Netzwerkfehler. Bitte überprüfe deine Internetverbindung.',
   en: 'Network error. Please check your internet connection.',
+  fr: 'Erreur réseau. Veuillez vérifier votre connexion Internet.',
+  es: 'Error de red. Comprueba tu conexión a Internet.',
+  pt: 'Erro de rede. Verifica a tua ligação à Internet.',
+  it: 'Errore di rete. Controlla la tua connessione a Internet.',
 };
 
 /**
@@ -116,9 +120,14 @@ export function getErrorMessage(error: unknown): string {
       case ErrorType.SERVER_ERROR:
         return getLocalizedErrorMessage('INTERNAL_SERVER_ERROR');
       default:
-        return getActiveLocale() === 'de'
-          ? `Ein Fehler ist aufgetreten: ${error.statusText}`
-          : `An error occurred: ${error.statusText}`;
+        return `${pick({
+          de: 'Ein Fehler ist aufgetreten',
+          en: 'An error occurred',
+          fr: 'Une erreur est survenue',
+          es: 'Se ha producido un error',
+          pt: 'Ocorreu um erro',
+          it: 'Si è verificato un errore',
+        })}: ${error.statusText}`;
     }
   }
 

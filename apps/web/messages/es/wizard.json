@@ -1,0 +1,241 @@
+{
+  "page": {
+    "loading": "Cargando...",
+    "cancel": "Cancelar",
+    "next": "Siguiente"
+  },
+  "steps": {
+    "job": {
+      "shortTitle": "Empleo"
+    },
+    "configure": {
+      "shortTitle": "Configurar"
+    },
+    "generate": {
+      "shortTitle": "Listo"
+    }
+  },
+  "jobStep": {
+    "title": "Añadir empleo",
+    "description": "Añade la oferta de empleo por enlace o pegando el texto.",
+    "tabs": {
+      "url": "Pegar enlace",
+      "text": "Pegar texto"
+    },
+    "success": {
+      "title": "Empleo guardado",
+      "description": "La oferta de empleo se guardó correctamente.",
+      "badge": "Guardada",
+      "useOther": "Usar otro empleo"
+    },
+    "summary": {
+      "title": "Título",
+      "company": "Empresa",
+      "location": "Ubicación",
+      "info": "Información"
+    },
+    "urlFallback": {
+      "title": "No hemos podido leer esta oferta de empleo automáticamente.",
+      "descriptionTextTab": "Algunos portales de empleo bloquean la extracción. Copia el texto de la oferta y pégalo en la pestaña “Pegar texto”.",
+      "switchToText": "Cambiar a la pestaña de texto →"
+    },
+    "urlForm": {
+      "urlLabel": "Enlace a la oferta de empleo",
+      "urlHelp": "Compatible con LinkedIn, Indeed y otros portales de empleo.",
+      "analyzing": "Analizando...",
+      "submit": "Analizar oferta de empleo"
+    },
+    "manualForm": {
+      "titlePlaceholder": "p. ej. responsable de marketing, enfermero",
+      "fullTextHelp": "Copia el texto completo de la oferta de empleo y pégalo aquí.",
+      "fullTextPlaceholder": "Pega aquí el texto completo de la oferta de empleo...",
+      "saving": "Guardando...",
+      "submit": "Guardar empleo"
+    }
+  },
+  "configureStep": {
+    "title": "Configurar",
+    "loadingTemplates": "Cargando plantillas...",
+    "language": {
+      "de": "Alemán",
+      "en": "Inglés"
+    },
+    "coverLetterLength": {
+      "kurz": {
+        "label": "Compacta (~250 palabras)",
+        "hint": "Directa al grano — ideal cuando la oferta de empleo enumera pocos requisitos."
+      },
+      "standard": {
+        "label": "Estándar (~350 palabras)",
+        "hint": "La longitud clásica para una página."
+      }
+    },
+    "options": {
+      "generateCoverLetter": "Generar carta de presentación",
+      "generateCoverLetterHelp": "Crea una carta de presentación adaptada al empleo.",
+      "language": "Idioma"
+    },
+    "errors": {
+      "unknown": "Se produjo un error desconocido",
+      "resendEmail": "Reenviar correo",
+      "goToApplication": "Ir a la candidatura"
+    },
+    "progress": {
+      "created": "creada",
+      "doneTitle": "¡Listo!",
+      "redirecting": "Candidatura creada — te estamos redirigiendo…",
+      "eta": "Tiempo restante estimado: ~{seconds} s",
+      "almostDone": "Casi terminado…",
+      "doNotClose": "No cierres esta ventana, por favor.",
+      "stepDone": "Hecho",
+      "footnote": "Los pasos completados se marcan como hechos automáticamente al finalizar.",
+      "cancelButton": "Cancelar",
+      "cancelledToast": "Generación cancelada. Tus selecciones no han cambiado.",
+      "steps": {
+        "analyze": "Analizando perfil y oferta de empleo",
+        "cover": "Generando carta de presentación con IA",
+        "resume": "Adaptando el currículum al empleo",
+        "save": "Guardando documentos"
+      }
+    },
+    "templates": {
+      "thumbnailAlt": "Miniatura de {name}",
+      "color": "Color"
+    },
+    "preview": {
+      "label": "Vista previa:",
+      "live": "En vivo",
+      "zoomTitle": "Haz clic para ampliar",
+      "alt": "Vista previa de la plantilla",
+      "zoom": "Ampliar",
+      "dialogTitle": "Vista previa: {name}",
+      "largeAlt": "Vista previa ampliada de la plantilla"
+    },
+    "usage": {
+      "exhausted": "Límite diario alcanzado ({used}/{limit}). Vuelve en 24 horas.",
+      "remaining": "Aún puedes crear {remaining} de {limit} candidaturas hoy"
+    },
+    "actions": {
+      "back": "Atrás",
+      "creating": "Creando candidatura...",
+      "create": "Crear candidatura"
+    }
+  },
+  "generateStep": {
+    "toasts": {
+      "existingApplication": "Ya existe una candidatura para este empleo. Te la abrimos."
+    },
+    "progress": {
+      "title": "Creando candidatura...",
+      "overdue": "Está tardando más de lo habitual, un momento…",
+      "estimate": "Esto suele tardar {seconds} segundos. No cierres esta ventana, por favor.",
+      "creating": "Tu candidatura se está creando con IA...",
+      "steps": {
+        "analyze": "Analizando perfil y oferta de empleo",
+        "cover": "Generando carta de presentación con IA",
+        "resume": "Adaptando el currículum al empleo",
+        "refineCover": "Revisando y perfeccionando la carta de presentación",
+        "save": "Guardando documentos"
+      }
+    },
+    "summary": {
+      "title": "Resumen",
+      "profile": "Tu perfil",
+      "skills": "{count, plural, one {# habilidad} other {# habilidades}}",
+      "experiences": "{count, plural, one {# experiencia} other {# experiencias}}",
+      "education": "{count} entradas de formación",
+      "job": "Este empleo"
+    },
+    "options": {
+      "title": "Opciones",
+      "languageTitle": "Idioma de la candidatura",
+      "languageHelp": "Se detecta automáticamente. Puedes ajustarlo aquí."
+    },
+    "templates": {
+      "title": "Elegir diseño",
+      "description": "Elige una plantilla para tu currículum.",
+      "coverLetterNote": "La carta de presentación se crea automáticamente con el diseño a juego.",
+      "showLess": "Menos",
+      "showAll": "Mostrar todas"
+    }
+  },
+  "jobPostingForm": {
+    "title": "Crear oferta de empleo manualmente",
+    "description": "Rellena todos los campos relevantes para crear una nueva oferta de empleo",
+    "sections": {
+      "basicInfo": "Información básica",
+      "jobDescription": "Descripción del puesto"
+    },
+    "fields": {
+      "title": "Puesto",
+      "company": "Empresa",
+      "location": "Ubicación",
+      "url": "URL de la oferta de empleo",
+      "salary": "Salario",
+      "employmentType": "Tipo de contrato",
+      "description": "Descripción",
+      "jobDescription": "Descripción del puesto"
+    },
+    "placeholders": {
+      "title": "p. ej. responsable de marketing, enfermero, comercial",
+      "company": "p. ej. Empresa Ejemplo S. L.",
+      "location": "p. ej. Madrid, España",
+      "salary": "p. ej. 30.000 - 40.000 EUR",
+      "employmentType": "p. ej. jornada completa, media jornada, autónomo",
+      "description": "Describe el puesto, el equipo y qué hace especial a la empresa..."
+    },
+    "help": {
+      "description": "Descripción general del puesto y de la empresa"
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "create": "Crear oferta de empleo"
+    }
+  },
+  "jobPostingParser": {
+    "toasts": {
+      "changesSaved": "Cambios guardados"
+    },
+    "input": {
+      "title": "Añadir por enlace",
+      "description": "Añade una oferta de empleo por enlace y analízala automáticamente",
+      "urlLabel": "Enlace a la oferta de empleo",
+      "urlHelp": "Compatible con LinkedIn, Indeed y otros portales de empleo",
+      "submit": "Analizar oferta de empleo"
+    },
+    "urlFallback": {
+      "title": "No hemos podido leer esta oferta de empleo automáticamente.",
+      "descriptionManualTab": "Algunos portales de empleo bloquean la extracción. Cambia a la pestaña “Manual” y copia allí el texto de la oferta."
+    },
+    "result": {
+      "title": "Oferta de empleo analizada",
+      "description": "Revisa la información extraída",
+      "badge": "Analizada correctamente"
+    },
+    "fields": {
+      "title": "Título",
+      "company": "Empresa",
+      "location": "Ubicación",
+      "description": "Descripción",
+      "requirements": "Requisitos",
+      "originalUrl": "URL original"
+    },
+    "actions": {
+      "edit": "Editar",
+      "analyzeAgain": "Analizar de nuevo",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "saveChanges": "Guardar cambios"
+    },
+    "edit": {
+      "title": "Editar oferta de empleo",
+      "description": "Ajusta la información si es necesario",
+      "titleLabel": "Título *",
+      "companyLabel": "Empresa *"
+    },
+    "help": {
+      "title": "Plataformas compatibles",
+      "description": "Puedes importar ofertas de empleo desde LinkedIn, Indeed y otros portales de empleo. Si el análisis falla, también puedes introducir la información manualmente."
+    }
+  }
+}

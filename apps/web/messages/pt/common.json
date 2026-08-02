@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "title": "Applo - Candidaturas de emprego com IA",
+    "description": "Cria candidaturas de emprego personalizadas com a ajuda de IA"
+  },
+  "language": {
+    "label": "Idioma",
+    "switchLabel": "Mudar de idioma",
+    "de": "Deutsch",
+    "en": "English",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Voltar",
+    "next": "Seguinte",
+    "retry": "Tentar novamente",
+    "loading": "A carregar...",
+    "understood": "Entendido"
+  },
+  "loadingMessages": {
+    "pdfPreview": "A carregar pré-visualização do PDF...",
+    "editor": "A carregar o editor...",
+    "form": "A carregar formulário..."
+  },
+  "cookieBanner": {
+    "ariaLabel": "Aviso de cookies",
+    "text": "Utilizamos apenas cookies estritamente necessários para te manter com sessão iniciada e para submeter formulários com segurança. Não é feito qualquer rastreio. Sabe mais na nossa <privacyLink>política de privacidade</privacyLink>.",
+    "dismiss": "Entendido"
+  },
+  "errorPage": {
+    "title": "Ocorreu um erro",
+    "description": "Ocorreu um erro ao carregar esta página.",
+    "errorMessageLabel": "Mensagem de erro:",
+    "retry": "Tentar novamente",
+    "toDashboard": "Ir para o painel"
+  },
+  "serviceWorker": {
+    "updateTitle": "Nova versão disponível",
+    "updateDescription": "Recarrega a página para obteres a versão mais recente da Applo. As alterações não guardadas em formulários abertos serão perdidas.",
+    "updateAction": "Atualizar agora"
+  },
+  "fileUpload": {
+    "dropActive": "Larga o ficheiro aqui...",
+    "dropPrompt": "Arrasta um ficheiro para aqui ou clica para procurar",
+    "defaultHint": "PDF ou DOCX, máx. 10 MB",
+    "removeFile": "Remover ficheiro",
+    "errorTooLarge": "O ficheiro é demasiado grande. O tamanho máximo é 10 MB.",
+    "errorInvalidType": "Tipo de ficheiro inválido. Só são permitidos ficheiros PDF e DOCX.",
+    "errorGeneric": "Não foi possível carregar o ficheiro."
+  },
+  "passwordStrength": {
+    "label": "Força da palavra-passe",
+    "weak": "Fraca",
+    "medium": "Média",
+    "strong": "Forte",
+    "requirementMinLength": "Pelo menos 8 caracteres",
+    "requirementUppercase": "Uma letra maiúscula",
+    "requirementLowercase": "Uma letra minúscula",
+    "requirementNumber": "Um número",
+    "requirementSpecial": "Um caráter especial (@$!%*?&#)"
+  }
+}

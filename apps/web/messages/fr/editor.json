@@ -1,0 +1,363 @@
+{
+  "page": {
+    "loadingApplication": "Chargement des données de la candidature...",
+    "backToApplications": "Retour aux candidatures",
+    "backToOverview": "Retour à l'aperçu",
+    "unavailableTitle": "Éditeur indisponible",
+    "unavailableDescription": "La candidature n'a pas pu être chargée.",
+    "fallbackTitle": "Candidature",
+    "readyBadge": "Prête",
+    "tabs": {
+      "ariaLabel": "Onglets de l'éditeur",
+      "resume": "CV",
+      "coverLetter": "Lettre de motivation",
+      "optimize": "Optimiser"
+    },
+    "upgrade": {
+      "title": "Passer à Premium",
+      "description": "Passez à Premium pour utiliser cette fonctionnalité."
+    },
+    "created": {
+      "today": "aujourd'hui",
+      "onDate": "le {date}",
+      "label": "créée {value}"
+    },
+    "ai": {
+      "title": "Instructions pour l'IA",
+      "coverLetterPlaceholder": "Ex. : Mettre davantage en avant mon expérience en gestion de projet...",
+      "coverLetterDescription": "Décrivez comment la lettre de motivation doit être ajustée."
+    },
+    "editHint": {
+      "resume": "Cliquez sur n'importe quel texte pour le modifier.",
+      "coverLetter": "Cliquez dans la lettre de motivation pour modifier le texte, la formule d'appel ou les paragraphes."
+    },
+    "saveStatus": {
+      "saving": "Enregistrement…",
+      "dirty": "Modifications non enregistrées",
+      "saved": "Modifications enregistrées automatiquement"
+    },
+    "export": {
+      "button": "Exporter",
+      "tooltip": "Exporter les PDF",
+      "translationTitle": "Le contenu sera traduit automatiquement",
+      "translationDescription": "L'export sera traduit en {language} – merci de vérifier le résultat.",
+      "disabled": {
+        "generating": "Un export est déjà en cours. Veuillez attendre qu'il se termine.",
+        "savingChanges": "Les modifications sont en cours d'enregistrement …",
+        "missingResume": "Le CV est manquant.",
+        "missingCoverLetter": "La lettre de motivation est manquante."
+      }
+    },
+    "toasts": {
+      "resumeSaveFailed": "Le CV n'a pas pu être enregistré",
+      "coverLetterSaveFailed": "La lettre de motivation n'a pas pu être enregistrée",
+      "coverLetterGenerateFailed": "La lettre de motivation n'a pas pu être générée : {message}",
+      "instructionsRequired": "Veuillez saisir des instructions pour l'IA",
+      "aiChangesApplied": "Modifications de l'IA appliquées",
+      "aiGenerationFailed": "Échec de la génération par l'IA : {message}",
+      "exportStarted": "Export démarré ! Vous allez être redirigé vers la page de détail..."
+    },
+    "errors": {
+      "emptyServerResponse": "Aucune réponse reçue du serveur"
+    }
+  },
+  "coverLetter": {
+    "cta": {
+      "title": "Pas encore de lettre de motivation",
+      "description": "Une lettre de motivation sur mesure fait ressortir votre candidature et améliore votre taux de réponse. Elle est créée à partir de votre profil et de cette offre en environ 20 secondes.",
+      "generating": "Génération en cours…",
+      "generate": "Générer la lettre de motivation maintenant"
+    },
+    "benefits": {
+      "tailored": "Adaptée à l'offre",
+      "aiWritten": "Rédigée avec l'aide de l'IA",
+      "editable": "Entièrement modifiable après création"
+    }
+  },
+  "resume": {
+    "moveUp": "Déplacer vers le haut",
+    "moveDown": "Déplacer vers le bas",
+    "moveLeft": "Déplacer vers la gauche",
+    "moveRight": "Déplacer vers la droite",
+    "categoryMoveUp": "Déplacer la catégorie vers le haut",
+    "categoryMoveDown": "Déplacer la catégorie vers le bas",
+    "sectionMoveUp": "Déplacer {label} vers le haut",
+    "sectionMoveDown": "Déplacer {label} vers le bas",
+    "sectionRemove": "Supprimer {label}",
+    "addSection": "Ajouter une section :",
+    "photoAlt": "Photo de candidature",
+    "sections": {
+      "profile": "Profil",
+      "experience": "Expérience",
+      "education": "Formation",
+      "projects": "Projets",
+      "skills": "Compétences",
+      "languages": "Langues",
+      "certs": "Certificats"
+    },
+    "contact": {
+      "button": "Coordonnées",
+      "edit": "Modifier les coordonnées",
+      "street": "Rue",
+      "city": "Ville",
+      "country": "Pays",
+      "sectionTitle": "Contact",
+      "postalCode": "Code postal"
+    },
+    "ai": {
+      "profileTitle": "IA : Profil",
+      "profileDescription": "Décrivez comment votre profil doit être ajusté.",
+      "profilePlaceholder": "Ex. : Mettre davantage en avant mon expérience en management...",
+      "profileApply": "Ajuster le profil",
+      "descriptionTitle": "IA : Description",
+      "experienceDescription": "Décrivez comment ce poste doit être ajusté.",
+      "experiencePlaceholder": "Ex. : Résultats plus mesurables, plus court...",
+      "descriptionApply": "Ajuster la description",
+      "projectTitle": "IA : Projet",
+      "projectDescription": "Décrivez comment ce projet doit être ajusté.",
+      "projectPlaceholder": "Ex. : Mettre l'accent sur l'impact...",
+      "projectApply": "Ajuster le projet"
+    },
+    "placeholders": {
+      "summary": "Brève présentation de vous …",
+      "position": "Poste",
+      "dateRange": "Période",
+      "company": "Entreprise",
+      "achievement": "Qu'avez-vous accompli ?",
+      "degree": "Diplôme",
+      "year": "Année",
+      "institution": "Établissement",
+      "projectName": "Nom du projet",
+      "projectBullet": "Qu'avez-vous fait ?",
+      "category": "Catégorie",
+      "skill": "Compétence",
+      "addSkill": "Ajouter une compétence…",
+      "language": "Langue",
+      "level": "Niveau",
+      "certificate": "Certificat",
+      "date": "Date",
+      "issuer": "Organisme émetteur",
+      "name": "Votre nom",
+      "role": "Poste visé"
+    },
+    "remove": {
+      "station": "Supprimer le poste",
+      "entry": "Supprimer l'entrée",
+      "bullet": "Supprimer la puce",
+      "project": "Supprimer le projet",
+      "generic": "Supprimer"
+    },
+    "add": {
+      "bullet": "Puce",
+      "station": "Ajouter un poste",
+      "entry": "Ajouter une entrée",
+      "project": "Ajouter un projet",
+      "category": "Catégorie",
+      "language": "Langue",
+      "certificate": "Ajouter un certificat",
+      "generic": "Ajouter"
+    }
+  },
+  "resumeForm": {
+    "optional": "(facultatif)",
+    "description": "Description",
+    "sectionSelector": {
+      "label": "Modifier la section :"
+    },
+    "sections": {
+      "personal": "Informations personnelles",
+      "jobDetails": "Détails du poste",
+      "skills": "Compétences",
+      "experience": "Expérience",
+      "projects": "Projets",
+      "education": "Formation",
+      "certifications": "Certificats"
+    },
+    "personal": {
+      "name": "Nom *",
+      "namePlaceholder": "Prénom et nom",
+      "phone": "Téléphone",
+      "street": "Rue et numéro",
+      "streetPlaceholder": "123 Rue de l'Exemple",
+      "postalCode": "Code postal",
+      "city": "Ville",
+      "country": "Pays",
+      "countryPlaceholder": "p. ex. France",
+      "summary": "Résumé",
+      "summaryPlaceholder": "Bref résumé de vos qualifications et compétences les plus importantes. Utilisez - + espace pour créer des puces."
+    },
+    "jobDetails": {
+      "targetJobTitle": "Poste visé *",
+      "targetJobTitlePlaceholder": "p. ex. Ingénieur logiciel senior",
+      "targetJobTitleHelp": "L'intitulé de poste qui apparaît sur votre CV",
+      "company": "Entreprise",
+      "companyHelp": "L'entreprise de l'offre d'emploi (non modifiable)"
+    },
+    "skills": {
+      "addCategory": "Ajouter une catégorie",
+      "categoryPlaceholder": "Catégorie (facultatif, p. ex. langages de programmation)",
+      "skillsPlaceholder": "Séparez les compétences par des virgules (p. ex. TypeScript, React, Node.js)",
+      "empty": "Aucune compétence ajoutée pour le moment"
+    },
+    "experience": {
+      "add": "Ajouter une expérience",
+      "positionPlaceholder": "Poste *",
+      "companyPlaceholder": "Entreprise *",
+      "locationPlaceholder": "Lieu",
+      "dateRangePlaceholder": "Période (p. ex. janv. 2020 - déc. 2023)",
+      "descriptionPlaceholder": "Décrivez vos tâches, responsabilités et réalisations pour ce poste. Utilisez - + espace pour créer des puces.",
+      "empty": "Aucune expérience professionnelle ajoutée pour le moment"
+    },
+    "projects": {
+      "add": "Ajouter un projet",
+      "namePlaceholder": "Nom du projet *",
+      "datePlaceholder": "Période",
+      "descriptionPlaceholder": "Décrivez le projet, votre rôle et les résultats obtenus. Utilisez - + espace pour créer des puces.",
+      "highlightsPlaceholder": "Points forts (un par ligne)",
+      "empty": "Aucun projet ajouté pour le moment"
+    },
+    "education": {
+      "add": "Ajouter une formation",
+      "degreePlaceholder": "Diplôme *",
+      "institutionPlaceholder": "Établissement *",
+      "yearPlaceholder": "Année *",
+      "fieldPlaceholder": "Domaine d'études",
+      "gpaPlaceholder": "Note/Moyenne",
+      "descriptionPlaceholder": "Détails supplémentaires tels que spécialisations, cours pertinents ou distinctions. Utilisez - + espace pour créer des puces.",
+      "empty": "Aucune formation ajoutée pour le moment"
+    },
+    "certifications": {
+      "add": "Ajouter un certificat",
+      "namePlaceholder": "Certificat *",
+      "issuerPlaceholder": "Organisme émetteur *",
+      "datePlaceholder": "Date",
+      "empty": "Aucun certificat ajouté pour le moment"
+    },
+    "ai": {
+      "summaryPlaceholder": "Ex. : Mettre davantage en avant mon expérience en gestion de projet et mes compétences en management...",
+      "summaryTitle": "Optimiser le résumé",
+      "summaryDescription": "Décrivez comment le résumé doit être ajusté (3 à 5 phrases).",
+      "summaryWarning": "L'IA génère un nouveau résumé. Vous devrez ensuite l'enregistrer manuellement.",
+      "experiencePlaceholder": "p. ex. Mettre l'accent sur les résultats mesurables et le leadership d'équipe",
+      "projectPlaceholder": "p. ex. Mettre l'accent sur les méthodes utilisées et l'impact sur l'activité",
+      "descriptionTitle": "Améliorer la description avec l'IA",
+      "experienceDescription": "L'IA génère des puces percutantes avec des verbes d'action et des résultats quantifiables.",
+      "projectDescription": "L'IA génère des puces percutantes avec les axes de travail et les résultats mesurables.",
+      "descriptionWarning": "Saisissez des instructions pour générer la description."
+    }
+  },
+  "designPanel": {
+    "tooltip": "Ajuster la taille de police, la densité, la police et la couleur d'accent",
+    "title": "Ajuster le design",
+    "description": "Affecte les PDF exportés. L'aperçu dans l'éditeur est une approximation.",
+    "fontScale": {
+      "label": "Taille de police",
+      "sm": {
+        "label": "S",
+        "hint": "Plus petite (−8 %)"
+      },
+      "md": {
+        "label": "M",
+        "hint": "Originale"
+      },
+      "lg": {
+        "label": "L",
+        "hint": "Plus grande (+8 %)"
+      }
+    },
+    "density": {
+      "label": "Densité",
+      "compact": {
+        "label": "Compacte",
+        "hint": "Espacement plus serré — plus de contenu par page"
+      },
+      "normal": {
+        "label": "Normale",
+        "hint": "Espacement d'origine du design"
+      },
+      "relaxed": {
+        "label": "Aérée",
+        "hint": "Espacement plus généreux"
+      }
+    },
+    "fontFamily": {
+      "label": "Police",
+      "default": "Par défaut (police du design)",
+      "lato": "Lato (sans-serif)",
+      "sourceSans": "Source Sans 3 (sans-serif)",
+      "merriweather": "Merriweather (serif)"
+    },
+    "accent": {
+      "label": "Couleur d'accent",
+      "reset": "Réinitialiser",
+      "ariaPreset": "Couleur d'accent {name}",
+      "customTitle": "Choisir une couleur personnalisée",
+      "customAria": "Choisir une couleur d'accent personnalisée",
+      "presets": {
+        "navy": "Bleu marine",
+        "anthracite": "Anthracite",
+        "carmine": "Rouge carmin",
+        "teal": "Bleu sarcelle",
+        "forestGreen": "Vert forêt",
+        "brown": "Marron"
+      }
+    },
+    "photo": {
+      "label": "Photo",
+      "uploadPrefix": "Téléversez d'abord une photo dans votre",
+      "profileLink": "profil",
+      "uploadSuffix": ".",
+      "aria": "Afficher la photo sur le CV",
+      "atsWarning": "Recommandé pour les systèmes ATS et les candidatures hors de la région DACH : pas de photo."
+    }
+  },
+  "fontSize": {
+    "ariaLabel": "Taille de police",
+    "placeholder": "Taille"
+  },
+  "pdfPreview": {
+    "loading": "Chargement du PDF...",
+    "loadingShort": "Chargement...",
+    "errorTitle": "Le PDF n'a pas pu être chargé",
+    "errorDescription": "Le lien de téléchargement a peut-être expiré.",
+    "previousPage": "Page précédente",
+    "nextPage": "Page suivante",
+    "zoomOut": "Zoom arrière",
+    "zoomIn": "Zoom avant",
+    "pageCount": "Page {page} / {pages}",
+    "download": "Télécharger",
+    "downloadWait": "Téléchargement dans {seconds}s"
+  },
+  "richText": {
+    "bold": "Gras",
+    "italic": "Italique",
+    "bulletList": "Liste à puces",
+    "orderedList": "Liste numérotée",
+    "quote": "Citation",
+    "defaultPlaceholder": "Commencez à écrire..."
+  },
+  "aiAssistant": {
+    "trigger": "Assistant IA",
+    "defaultPlaceholder": "Ex. : Mettre davantage en avant mon expérience en gestion des parties prenantes...",
+    "title": "Instructions pour l'IA",
+    "description": "Décrivez comment le contenu doit être ajusté.",
+    "loading": "L'IA travaille...",
+    "warning": "L'IA ajuste le contenu. Les modifications sont enregistrées automatiquement.",
+    "apply": "Appliquer"
+  },
+  "description": {
+    "defaultPlaceholder": "Décrivez vos tâches, responsabilités et réalisations..."
+  },
+  "templatePreview": {
+    "loadingTemplate": "Chargement du modèle...",
+    "loadFailed": "Le modèle n'a pas pu être chargé",
+    "templateLabel": "Modèle :",
+    "defaultBadge": "(Par défaut)",
+    "resumeTitle": "Aperçu du CV",
+    "coverLetterTitle": "Aperçu de la lettre de motivation",
+    "noCoverLetter": "Pas encore de lettre de motivation"
+  },
+  "resumePreview": {
+    "footer": "Aperçu · Le PDF final est généré lors du téléchargement"
+  }
+}

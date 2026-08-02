@@ -1,0 +1,84 @@
+{
+  "list": {
+    "title": "Annunci di lavoro",
+    "description": "Gestisci i tuoi annunci di lavoro salvati e crea candidature a partire da essi.",
+    "toasts": {
+      "saved": "Annuncio di lavoro salvato",
+      "created": "Annuncio di lavoro creato",
+      "deleted": "Annuncio di lavoro eliminato"
+    },
+    "actions": {
+      "close": "Chiudi",
+      "add": "Aggiungi nuovo lavoro",
+      "openOriginal": "Apri originale",
+      "showDetails": "Mostra dettagli",
+      "apply": "Candidati",
+      "delete": "Elimina"
+    },
+    "input": {
+      "title": "Aggiungi nuovo annuncio di lavoro",
+      "description": "Aggiungi un URL oppure copia il testo per salvare l'annuncio.",
+      "tabs": {
+        "link": "Tramite link",
+        "manual": "Manuale"
+      }
+    },
+    "moreRequirements": "+{count} altro/i",
+    "empty": {
+      "title": "Nessun annuncio di lavoro",
+      "description": "Non hai ancora salvato annunci di lavoro. Aggiungi il tuo primo lavoro per iniziare.",
+      "action": "Aggiungi il primo lavoro"
+    },
+    "workflow": {
+      "title": "Come funziona il flusso di lavoro di Applo",
+      "step1": {
+        "title": "1 · Salva l'annuncio",
+        "description": "Aggiungi un URL da LinkedIn/Indeed o copia il testo dell'annuncio."
+      },
+      "step2": {
+        "title": "2 · Analizza",
+        "description": "La nostra IA estrae automaticamente tutti i requisiti e le competenze importanti."
+      },
+      "step3": {
+        "title": "3 · Candidati",
+        "description": "Crea con un clic una candidatura su misura per questo lavoro."
+      }
+    },
+    "deleteDialog": {
+      "title": "Eliminare l'annuncio di lavoro?",
+      "description": "Vuoi davvero eliminare l'annuncio di lavoro <strong>{title}</strong>?",
+      "cancel": "Annulla",
+      "confirm": "Elimina",
+      "deleting": "Eliminazione in corso..."
+    }
+  },
+  "detail": {
+    "loading": "Caricamento annuncio di lavoro...",
+    "back": "Indietro",
+    "notFound": {
+      "title": "Annuncio di lavoro non trovato",
+      "description": "L'annuncio di lavoro richiesto non esiste oppure non hai i permessi necessari.",
+      "toApplications": "Alle candidature"
+    },
+    "source": "Fonte",
+    "sections": {
+      "description": "Descrizione del lavoro",
+      "requirements": "Requisiti",
+      "responsibilities": "Compiti e responsabilità",
+      "niceToHave": "Titoli preferenziali",
+      "rawText": "Testo originale"
+    },
+    "showFullText": "Mostra testo completo"
+  },
+  "hooks": {
+    "createError": "Impossibile creare l'annuncio di lavoro",
+    "createSuccess": "Annuncio di lavoro creato con successo",
+    "loadingTitle": "Caricamento...",
+    "analyzingTitle": "Analisi in corso...",
+    "unknownCompany": "Sconosciuta",
+    "parseError": "Impossibile analizzare l'annuncio di lavoro",
+    "parseSuccess": "Annuncio di lavoro analizzato con successo",
+    "deleteError": "Impossibile eliminare l'annuncio di lavoro",
+    "deleteSuccess": "Annuncio di lavoro eliminato con successo"
+  }
+}

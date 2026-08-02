@@ -1,0 +1,356 @@
+{
+  "status": {
+    "all": "Toutes",
+    "created": "Créée",
+    "draft": "Brouillon",
+    "applied": "Envoyée",
+    "interview": "Entretien",
+    "accepted": "Acceptée",
+    "rejected": "Refusée"
+  },
+  "list": {
+    "title": "Candidatures",
+    "description": "Gérez et suivez le statut de vos candidatures.",
+    "refresh": "Actualiser",
+    "newApplication": "Nouvelle candidature",
+    "searchPlaceholder": "Rechercher des candidatures...",
+    "clearSearch": "Effacer la recherche",
+    "tableView": "Vue tableau",
+    "tableViewShort": "Tableau",
+    "cardView": "Vue cartes",
+    "cardViewShort": "Cartes",
+    "fallbackTitle": "Candidature",
+    "numberedFallbackTitle": "Candidature n° {id}",
+    "results": "{count, plural, =0 {aucune candidature} one {# candidature} other {# candidatures}}",
+    "resultsWithStatus": "{count, plural, =0 {aucune candidature} one {# candidature} other {# candidatures}} au statut « {status} »",
+    "pageInfo": "Page {current} sur {total}",
+    "selectedCount": "{count} sélectionnée(s)",
+    "clearSelection": "Effacer la sélection",
+    "setStatus": "Définir le statut…",
+    "delete": "Supprimer",
+    "actions": "Actions",
+    "showDetails": "Afficher les détails",
+    "edit": "Modifier",
+    "openCoverLetter": "Ouvrir la lettre de motivation",
+    "openResume": "Ouvrir le CV",
+    "selectApplication": "Sélectionner la candidature",
+    "selectAllPage": "Tout sélectionner sur cette page",
+    "open": "Ouvrir",
+    "emptyFilteredTitle": "Aucune candidature trouvée",
+    "emptyFilteredDescription": "Il n'y a aucune candidature avec le statut « {status} ».",
+    "showAll": "Tout afficher",
+    "createFirst": "Créer la première candidature",
+    "paginationOf": "sur {total}",
+    "firstPage": "Première page",
+    "previousPage": "Page précédente",
+    "nextPage": "Page suivante",
+    "lastPage": "Dernière page",
+    "emptyTitle": "Pas encore de candidature",
+    "emptyDescription": "Créez votre première candidature assistée par IA et suivez votre processus de candidature.",
+    "cancel": "Annuler",
+    "deleting": "Suppression...",
+    "sort": {
+      "label": "Trier",
+      "placeholder": "Trier",
+      "newest": "Plus récentes d'abord",
+      "oldest": "Plus anciennes d'abord",
+      "titleAsc": "Intitulé du poste A–Z",
+      "companyAsc": "Entreprise A–Z"
+    },
+    "table": {
+      "jobAndCompany": "Poste et entreprise",
+      "status": "Statut",
+      "created": "Créée",
+      "actions": "Actions"
+    },
+    "deleteDialog": {
+      "title": "Supprimer la candidature ?",
+      "description": "Voulez-vous vraiment supprimer la candidature pour <titleText>{title}</titleText> ? Cette action est irréversible."
+    },
+    "bulkDeleteDialog": {
+      "title": "Supprimer {count} candidatures ?",
+      "description": "Voulez-vous vraiment supprimer <countText>{count, plural, one {# candidature} other {# candidatures}}</countText> ? Cette action est irréversible."
+    },
+    "toasts": {
+      "readyTitle": "Candidature prête ! 🎉",
+      "readyDescription": "{title} est prête à être téléchargée.",
+      "failedTitle": "Échec de la génération",
+      "failedDescription": "{title} n'a pas pu être créée.",
+      "generatingTitle": "Génération lancée",
+      "generatingDescription": "{title} est en cours de création...",
+      "deleted": "Candidature supprimée",
+      "bulkDeleteSuccess": "{count, plural, one {# candidature supprimée} other {# candidatures supprimées}}",
+      "bulkDeletePartial": "{succeeded} supprimée(s), {failed} échec(s)",
+      "bulkStatusSuccess": "Statut mis à jour pour {count, plural, one {# candidature} other {# candidatures}}",
+      "bulkStatusPartial": "{succeeded} mise(s) à jour, {failed} échec(s)"
+    }
+  },
+  "detail": {
+    "fallbackTitle": "Candidature",
+    "loading": "Chargement de la candidature...",
+    "notFoundTitle": "Candidature introuvable",
+    "notFoundDescription": "La candidature demandée n'existe pas ou vous n'avez pas les autorisations nécessaires.",
+    "toApplications": "Vers les candidatures",
+    "autoTrackingTitle": "Le statut a été mis à jour automatiquement par le suivi des e-mails",
+    "noStatus": "Aucun statut (veuillez recharger la page)",
+    "backToApplications": "Retour aux candidatures",
+    "toasts": {
+      "readyTitle": "Candidature prête ! 🎉",
+      "readyDescription": "{title} est prête à être téléchargée.",
+      "translationFallbackTitle": "Traduction indisponible",
+      "translationFallbackDescription": "Les PDF ont été créés dans la langue d'origine. Veuillez réessayer l'export plus tard.",
+      "failedTitle": "Échec de la génération",
+      "failedDescription": "{title} n'a pas pu être créée.",
+      "generatingTitle": "Génération lancée",
+      "generatingDescription": "{title} est en cours de création...",
+      "markedAppliedTitle": "Marquée comme « Envoyée »",
+      "markedAppliedDescription": "Bonne chance ! 🤞",
+      "updateError": "Erreur lors de la mise à jour : {message}",
+      "previewError": "Erreur lors du chargement de l'aperçu",
+      "invalidJobUrl": "URL d'offre d'emploi invalide"
+    },
+    "celebration": {
+      "readyToSend": "Prête à envoyer",
+      "title": "Terminé !",
+      "titleWithName": "Terminé, {firstName} !",
+      "description": "Votre <coverLetter>lettre de motivation</coverLetter> et votre <resume>CV</resume> sont prêts — téléchargez-les et postulez.",
+      "descriptionWithCompany": "Votre <coverLetter>lettre de motivation</coverLetter> et votre <resume>CV</resume> sont prêts — téléchargez-les et postulez chez {company}."
+    },
+    "documents": {
+      "title": "Documents de candidature",
+      "bothAsZip": "Les deux en ZIP",
+      "edit": "Modifier",
+      "editResume": "Modifier le CV",
+      "coverLetter": "Lettre de motivation",
+      "resume": "CV",
+      "noCoverLetter": "Aucune lettre de motivation n'a été générée pour cette candidature",
+      "downloadLinksLimited": "Les liens de téléchargement sont valables pour une durée limitée, pour des raisons de sécurité",
+      "expiresAt": " (jusqu'à {time})",
+      "pdfDocument": "Document PDF",
+      "preview": "Aperçu",
+      "download": "Télécharger",
+      "freeDownloadWait": "Avec Free, le téléchargement avec publicité démarre après {seconds} secondes.",
+      "missing": "Non disponible"
+    },
+    "nextStep": {
+      "appliedBadge": "Envoyée ✓",
+      "appliedTitle": "Parfait — candidature envoyée !",
+      "appliedDescription": "Bonne chance. Préparez l'entretien avec le coach d'entretien.",
+      "appliedDescriptionWithCompany": "Bonne chance chez {company}. Préparez l'entretien avec le coach d'entretien.",
+      "toInterviewCoach": "Vers le coach d'entretien",
+      "title": "Prochaine étape",
+      "applyAtCompany": "Postuler chez {company}",
+      "applyNow": "Postuler maintenant",
+      "description": "Envoyez vos documents sur la page carrière de l'entreprise, puis marquez la candidature comme « Envoyée » pour qu'Applo puisse suivre le statut à votre place.",
+      "markApplied": "Marquer comme envoyée",
+      "toJobPosting": "Vers l'offre d'emploi"
+    },
+    "ats": {
+      "title": "Analyse ATS",
+      "description": "Dans quelle mesure vos documents correspondent au poste — mots-clés et optimisations.",
+      "upgradeDescription": "Passez à Premium dès maintenant pour utiliser cette fonctionnalité."
+    },
+    "jobPosting": {
+      "title": "Offre d'emploi",
+      "description": "Description",
+      "requirements": "Exigences"
+    },
+    "meta": {
+      "created": "Créée le <b>{date}</b>",
+      "updated": "Mise à jour le <b>{date}</b>"
+    },
+    "generating": {
+      "title": "Votre candidature est en cours de création …",
+      "description": "L'IA rédige votre lettre de motivation et votre CV en adaptant tout au poste. Cela prend généralement moins d'une minute.",
+      "preparing": "Préparation …"
+    },
+    "pending": {
+      "title": "Votre candidature a été créée",
+      "description": "Vérifiez le CV et la lettre de motivation, ajustez-les si besoin, puis lancez l'export.",
+      "startExport": "Ajuster les documents et lancer l'export"
+    },
+    "failed": {
+      "status": "Échec",
+      "title": "Un problème est survenu",
+      "description": "Une erreur s'est produite lors de la création de vos documents. Réessayez — cela fonctionne généralement à la deuxième tentative.",
+      "retry": "Réessayer"
+    }
+  },
+  "atsPanel": {
+    "startTitle": "Démarrer l'analyse ATS",
+    "startDescription": "Laissez l'IA analyser votre candidature et obtenez des suggestions d'amélioration personnalisées basées sur l'offre d'emploi.",
+    "analyzing": "Analyse en cours...",
+    "analyzeNow": "Analyser maintenant",
+    "title": "Analyse ATS",
+    "tooltip": "ATS (Applicant Tracking System) = système de gestion des candidatures. De nombreuses entreprises filtrent automatiquement les candidatures par mots-clés.",
+    "analyzedAt": "Analysée le {date}",
+    "reanalyze": "Analyser à nouveau",
+    "lowScoreTitle": "Correspondance faible",
+    "lowScoreDescription": "Votre profil ne correspond peut-être pas idéalement à ce poste. Vérifiez les mots-clés manquants et mettez à jour votre profil pour améliorer vos chances."
+  },
+  "matchScore": {
+    "title": "Analyse de correspondance du profil",
+    "profileMatch": "Correspondance du profil"
+  },
+  "atsScoreBadge": {
+    "excellent": "Excellent",
+    "good": "Bon",
+    "needsWork": "À améliorer",
+    "low": "Faible"
+  },
+  "atsScoreCell": {
+    "unavailable": "Vérification de candidature indisponible",
+    "categoryScores": "Scores par catégorie :",
+    "coreScore": "Compétences clés : {score} %",
+    "experienceScore": "Expérience : {score} %",
+    "industryScore": "Secteur : {score} %"
+  },
+  "atsScoreSidebar": {
+    "startTitle": "Démarrer l'analyse ATS",
+    "startDescription": "Découvrez quels mots-clés sont manquants",
+    "analyzing": "Analyse en cours...",
+    "analyze": "Analyser",
+    "title": "Score ATS",
+    "jobMatch": "Correspondance avec le poste",
+    "core": "Compétences clés",
+    "matchedKeywords": "Mots-clés trouvés ({count})",
+    "missingKeywords": "Mots-clés manquants ({count})",
+    "missingHint": "Ajoutez ces mots-clés à votre CV pour améliorer votre score",
+    "matchedLabel": "Mots-clés trouvés",
+    "lowScore": "Le score doit être amélioré. Ajoutez les mots-clés manquants à votre profil.",
+    "goodScore": "Excellente correspondance ! Votre profil correspond très bien."
+  },
+  "keywords": {
+    "title": "Mots-clés",
+    "foundIn": "Trouvé dans :",
+    "tabs": {
+      "all": "Tous ({count})",
+      "matched": "Trouvés ({count})",
+      "missing": "Manquants ({count})"
+    },
+    "categories": {
+      "core": "Compétences clés",
+      "soft": "Compétences comportementales",
+      "responsibility": "Responsabilités",
+      "requirement": "Exigences",
+      "methodology": "Méthodes et outils",
+      "industry": "Secteur",
+      "seniority": "Niveau",
+      "misc": "Autre"
+    },
+    "showLess": "Réduire",
+    "more": "+{count} de plus",
+    "noMatched": "Aucun mot-clé correspondant trouvé.",
+    "showAllMissing": "Afficher les {count} mots-clés manquants",
+    "noMissing": "Tous les mots-clés pertinents figurent déjà dans votre profil ! 🎉"
+  },
+  "suggestions": {
+    "title": "Suggestions d'amélioration",
+    "perfectTitle": "Parfait !",
+    "perfectDescription": "Votre profil correspond parfaitement à ce poste.",
+    "aiRecommendations": "Recommandations de l'IA",
+    "addMissingKeywords": "Ajouter les mots-clés manquants",
+    "editProfile": "Modifier le profil",
+    "actions": {
+      "addCore": "Ajouter des compétences clés",
+      "addMethodology": "Ajouter des méthodes et outils",
+      "addSoft": "Ajouter des compétences comportementales",
+      "addResponsibility": "Ajouter des responsabilités",
+      "updateExperience": "Mettre à jour l'expérience",
+      "industryExperience": "Expérience sectorielle",
+      "addRequirement": "Ajouter une qualification",
+      "addProfile": "Ajouter au profil"
+    },
+    "generated": {
+      "addTechnical": "Ajoutez ces compétences à votre profil",
+      "describeResponsibilities": "Décrivez ces responsabilités dans votre expérience professionnelle",
+      "showSeniority": "Précisez davantage votre niveau d'expérience",
+      "highlightIndustry": "Mettez en avant votre expérience sectorielle",
+      "checkRequirements": "Vérifiez si vous remplissez ces exigences",
+      "considerKeywords": "Envisagez d'ajouter ces mots-clés à votre profil"
+    }
+  },
+  "highlightedText": {
+    "tooltipFound": "✓ Présent dans le profil",
+    "tooltipMissing": "⚠ Absent du profil",
+    "legendFound": "Présent dans le profil",
+    "legendMissing": "Absent du profil"
+  },
+  "atsOptimizer": {
+    "match": "Correspondance",
+    "categoryLabels": {
+      "core": "Compétence clé",
+      "soft": "Compétence comportementale",
+      "responsibility": "Responsabilité",
+      "requirement": "Exigence",
+      "methodology": "Méthode / outil",
+      "industry": "Secteur",
+      "seniority": "Niveau",
+      "misc": "Autre"
+    },
+    "preview": {
+      "profile": "Profil",
+      "experience": "Expérience professionnelle",
+      "education": "Formation",
+      "projects": "Projets",
+      "skills": "Compétences",
+      "new": "NOUVEAU",
+      "languages": "Langues",
+      "certificates": "Certificats",
+      "contact": "Contact"
+    },
+    "startTitle": "Démarrer l'analyse ATS",
+    "startDescription": "Découvrez quels termes du poste manquent dans votre CV.",
+    "analyzing": "Analyse en cours…",
+    "analyze": "Analyser",
+    "resumeTitle": "Votre CV",
+    "legend": "bleu = termes détectés à partir du poste",
+    "livePreview": "Aperçu en direct",
+    "title": "Optimisation ATS",
+    "subtitle": "Comment votre CV passe les filtres des recruteurs",
+    "reanalyze": "Analyser à nouveau",
+    "coach": {
+      "done": "Parfait ! Votre CV inclut désormais <b>tous les termes importants</b> — vous êtes prêt pour l'ATS. 🎉",
+      "pending": "Bravo ! Vous avez ajouté tous les termes. Cliquez sur <b>Analyser à nouveau</b> pour mettre à jour votre score.",
+      "remaining": "Continuez ! Il reste <b>{count, plural, one {# terme} other {# termes}}</b>, puis vous les aurez tous ajoutés.",
+      "initial": "Votre CV correspond à ce poste à hauteur de <b>{score} %</b>. Ajoutez les <b>{count} termes manquants</b> pour passer plus facilement les filtres."
+    },
+    "explanation": "<b>De quoi s'agit-il ?</b> Les entreprises utilisent des logiciels (ATS) pour filtrer les candidatures selon les termes de l'offre d'emploi. Plus votre CV contient de termes correspondants, plus vous avez de chances de décrocher un entretien.",
+    "coverageLabel": "Mots-clés couverts",
+    "missingTerms": "Termes manquants ({count})",
+    "addAll": "Tout ajouter",
+    "addedToSkillsHint": "sera ajouté à vos compétences",
+    "add": "Ajouter",
+    "allTermsAddedTitle": "Tous les termes ajoutés",
+    "allTermsAddedDescription": "Ils figurent désormais dans votre CV. Cliquez sur « Analyser à nouveau » pour voir le score mis à jour.",
+    "allTermsCoveredTitle": "Tous les termes couverts",
+    "allTermsCoveredDescription": "Votre CV est parfaitement adapté à ce poste. Vous pouvez l'exporter dès maintenant.",
+    "alreadyIncluded": "Déjà inclus ({count})",
+    "atsReady": "Prêt pour l'ATS",
+    "openTerms": "<b>{count}</b> termes en attente",
+    "exportResume": "Exporter le CV"
+  },
+  "hooks": {
+    "createError": "Erreur lors de la création de la candidature",
+    "createSuccess": "La candidature est en cours de création...",
+    "generateError": "Erreur lors de la génération de la candidature",
+    "deleteError": "Erreur lors de la suppression de la candidature",
+    "deleteSuccess": "La candidature a été supprimée",
+    "resumeSaved": "CV enregistré",
+    "resumeSaveError": "Le CV n'a pas pu être enregistré",
+    "coverLetterUpdated": "Lettre de motivation mise à jour",
+    "coverLetterUpdateError": "La lettre de motivation n'a pas pu être mise à jour",
+    "summaryGenerateError": "Le résumé n'a pas pu être généré",
+    "descriptionGenerateError": "La description n'a pas pu être générée",
+    "exportStarted": "Export PDF démarré",
+    "exportStartError": "L'export n'a pas pu être démarré",
+    "designSettingsError": "Les paramètres de design n'ont pas pu être enregistrés",
+    "keywordsAnalyzed": "Les mots-clés ont été analysés",
+    "keywordsAnalyzeError": "Les mots-clés n'ont pas pu être analysés",
+    "retryStarted": "La génération a été relancée",
+    "retryError": "Erreur lors de la nouvelle génération",
+    "streamStatusParseError": "Le statut n'a pas pu être traité",
+    "streamConnectionClosed": "Connexion fermée",
+    "streamConnectionRetrying": "Erreur de connexion, nouvelle tentative..."
+  }
+}

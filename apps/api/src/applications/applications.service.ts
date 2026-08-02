@@ -43,6 +43,7 @@ import { buildMatchInsights } from './match-insights.util';
 import { mapStoredResumeToTailoredProfile } from './stored-resume.util';
 import { buildSalutation, normalizeJobFacts } from './job-facts.util';
 import { resolveCoverLetterBudget } from './constants';
+import type { TranslationLanguage } from './translation/translation.service';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 import { convertCoverLetterToHtml } from './cover-letter-html.util';
 import { mapApplicationToResponseDto } from './application-response.util';
@@ -618,7 +619,7 @@ export class ApplicationsService {
   async requestExport(
     userId: string,
     applicationId: string,
-    language?: 'de' | 'en',
+    language?: TranslationLanguage,
   ): Promise<ApplicationResponseDto> {
     this.logger.log(
       `Export requested for application ${applicationId} with language: ${language || 'default'}`,

@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Statistiques",
+    "description": "Où en est votre recherche d'emploi ? Tendances, taux de conversion et performance des modèles en un coup d'œil.",
+    "updatedNow": "Mis à jour à l'instant",
+    "errorTitle": "Impossible de charger les statistiques",
+    "unknownError": "Erreur inconnue",
+    "kpis": {
+      "applied": {
+        "label": "Envoyées",
+        "tipHtml": "Le nombre de candidatures créées que vous avez réellement <b>envoyées</b>. Plus de candidatures = plus de chances."
+      },
+      "interviewRate": {
+        "label": "Taux d'entretien",
+        "tipHtml": "Part de vos candidatures envoyées ayant mené à une <b>invitation à un entretien</b>. Moyenne habituelle : 15–25 %."
+      },
+      "accepted": {
+        "label": "Acceptées",
+        "tipHtml": "Candidatures ayant abouti à une <b>offre d'emploi</b>."
+      },
+      "ats": {
+        "label": "Score ATS moyen",
+        "tipHtml": "Dans quelle mesure les systèmes de suivi des candidatures (<b>ATS</b>) peuvent lire vos CV — de 0 à 100. Objectif : 80+."
+      }
+    }
+  },
+  "upgrade": {
+    "title": "Statistiques et tendances avancées",
+    "description": "Taux de réussite, tunnel de conversion, évolution du score ATS et performance des modèles — exclusivement pour les membres Premium.",
+    "unlock": "Débloquer avec Premium",
+    "back": "Retour au tableau de bord"
+  },
+  "stages": {
+    "CREATED": "Créée",
+    "APPLIED": "Envoyée",
+    "INTERVIEW": "Entretien",
+    "ACCEPTED": "Acceptée"
+  },
+  "activity": {
+    "title": "Activité",
+    "tipHtml": "Activité quotidienne des candidatures. Activez ou désactivez les indicateurs via les puces ; survolez le graphique pour voir les valeurs exactes.",
+    "description": "Candidatures créées et envoyées par jour · {count} derniers jours",
+    "series": {
+      "created": "Créées",
+      "applied": "Envoyées",
+      "interview": "Entretien",
+      "accepted": "Acceptées"
+    }
+  },
+  "range": {
+    "ariaLabel": "Sélectionner la période",
+    "days7": "7 j",
+    "days30": "30 j",
+    "days90": "90 j"
+  },
+  "funnel": {
+    "title": "Tunnel de conversion",
+    "tipHtml": "Chaque étape indique le nombre de candidatures parvenues jusque-là. Le pourcentage correspond au <b>taux de passage</b> depuis l'étape précédente. Cliquez sur une étape pour ouvrir les candidatures filtrées.",
+    "description": "Combien de candidatures aboutissent à une offre d'emploi.",
+    "continue": "{value} % continuent",
+    "opensStatus": "Ouvre <strong>{count}</strong> {count, plural, one {candidature} other {candidatures}} au statut « {status} ».",
+    "biggestDropAt": "La plus forte baisse survient à",
+    "biggestDropValue": " : seules {value} % franchissent cette étape.",
+    "clickStage": "Cliquez sur une étape pour ouvrir les candidatures correspondantes."
+  },
+  "insight": {
+    "new": "Bon début — <strong>{applications} candidatures</strong> créées, <strong>{applied} envoyées</strong>. <muted>Créez-en encore quelques-unes pour voir émerger des tendances pertinentes.</muted>",
+    "established": "Votre taux d'entretien est de <strong>{rate} %</strong>.",
+    "establishedAboveAverage": "Votre taux d'entretien est de <strong>{rate} %</strong> — au-dessus de la moyenne.",
+    "biggestHurdle": "Le plus grand obstacle est",
+    "continue": "({value} % poursuivent).",
+    "tip": "Astuce : un score ATS plus élevé réduit nettement le taux d'abandon."
+  },
+  "scoreBuckets": {
+    "title": "Score ATS et entretiens",
+    "tipHtml": "Nous regroupons vos candidatures envoyées par <b>score ATS</b> et affichons le taux d'entretien de chaque groupe. Objectif : le plus de candidatures possible dans la zone verte (80+).",
+    "description": "Quelles tranches de score mènent le plus souvent à un entretien.",
+    "empty": "Dès que vous créez des candidatures avec un score ATS, nous afficherons ici les tranches de score qui génèrent le plus d'entretiens.",
+    "bucketTitle": "{bucket} pts · {count} candidatures · {rate} % de taux d'entretien",
+    "applicationsShort": "{count} cand.",
+    "best": "Les candidatures avec <strong>{bucket} points</strong> obtiennent le meilleur taux d'entretien ({rate} %)."
+  },
+  "topTemplates": {
+    "title": "Modèles les plus utilisés",
+    "description": "Les modèles de CV que vous utilisez le plus souvent — et leur performance.",
+    "empty": "Aucune donnée de modèle disponible pour le moment. Créez des candidatures avec différents modèles pour comparer leurs performances.",
+    "usage": "{count, plural, one {# candidature} other {# candidatures}}",
+    "interview": "Entretien"
+  }
+}

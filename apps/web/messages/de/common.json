@@ -7,7 +7,11 @@
     "label": "Sprache",
     "switchLabel": "Sprache wechseln",
     "de": "Deutsch",
-    "en": "English"
+    "en": "English",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano"
   },
   "actions": {
     "save": "Speichern",

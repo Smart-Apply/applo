@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "title": "Applo - Candidaturas de empleo con IA",
+    "description": "Crea candidaturas de empleo personalizadas con la ayuda de la IA"
+  },
+  "language": {
+    "label": "Idioma",
+    "switchLabel": "Cambiar idioma",
+    "de": "Deutsch",
+    "en": "English",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "retry": "Volver a intentar",
+    "loading": "Cargando...",
+    "understood": "Entendido"
+  },
+  "loadingMessages": {
+    "pdfPreview": "Cargando vista previa del PDF...",
+    "editor": "Cargando editor...",
+    "form": "Cargando formulario..."
+  },
+  "cookieBanner": {
+    "ariaLabel": "Aviso de cookies",
+    "text": "Solo usamos cookies estrictamente necesarias para mantener tu sesión iniciada y enviar formularios de forma segura. No se realiza ningún rastreo. Más información en nuestra <privacyLink>política de privacidad</privacyLink>.",
+    "dismiss": "Entendido"
+  },
+  "errorPage": {
+    "title": "Algo salió mal",
+    "description": "Se produjo un error al cargar esta página.",
+    "errorMessageLabel": "Mensaje de error:",
+    "retry": "Volver a intentar",
+    "toDashboard": "Ir al panel"
+  },
+  "serviceWorker": {
+    "updateTitle": "Nueva versión disponible",
+    "updateDescription": "Recarga la página para obtener la versión más reciente de Applo. Se perderán los datos no guardados en los formularios abiertos.",
+    "updateAction": "Actualizar ahora"
+  },
+  "fileUpload": {
+    "dropActive": "Suelta el archivo aquí...",
+    "dropPrompt": "Arrastra un archivo aquí o haz clic para buscarlo",
+    "defaultHint": "PDF o DOCX, máx. 10 MB",
+    "removeFile": "Quitar archivo",
+    "errorTooLarge": "El archivo es demasiado grande. El tamaño máximo es de 10 MB.",
+    "errorInvalidType": "Tipo de archivo no válido. Solo se permiten archivos PDF y DOCX.",
+    "errorGeneric": "No se ha podido subir el archivo."
+  },
+  "passwordStrength": {
+    "label": "Seguridad de la contraseña",
+    "weak": "Débil",
+    "medium": "Media",
+    "strong": "Fuerte",
+    "requirementMinLength": "Al menos 8 caracteres",
+    "requirementUppercase": "Una letra mayúscula",
+    "requirementLowercase": "Una letra minúscula",
+    "requirementNumber": "Un número",
+    "requirementSpecial": "Un carácter especial (@$!%*?&#)"
+  }
+}

@@ -19,7 +19,7 @@
     },
     "languages": {
       "q": "In welcher Sprache werden meine Bewerbungen erstellt?",
-      "a": "Wir erkennen die Sprache der Stellenanzeige automatisch (aktuell Deutsch und Englisch) und erzeugen Anschreiben und Lebenslauf in derselben Sprache. Fachbegriffe (z. B. Tool-Namen) bleiben unverändert in ihrer üblichen Schreibweise."
+      "a": "Wir erkennen die Sprache der Stellenanzeige automatisch (aktuell Deutsch und Englisch) und erzeugen Anschreiben und Lebenslauf in derselben Sprache. Beim Export kannst du die Dokumente zusätzlich auf Französisch, Spanisch, Portugiesisch oder Italienisch übersetzen lassen. Fachbegriffe (z. B. Tool-Namen) bleiben unverändert in ihrer üblichen Schreibweise."
     },
     "data": {
       "q": "Was passiert mit meinen Daten?",

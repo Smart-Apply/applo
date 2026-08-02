@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "title": "FAQ – Applo",
+    "description": "Perguntas frequentes sobre a Applo: candidaturas, currículos, cartas de apresentação, privacidade e preços."
+  },
+  "title": "Perguntas frequentes (FAQ)",
+  "intro": "Respostas às perguntas mais comuns sobre a Applo. Não encontraste a tua? Contacta-nos através do formulário de contacto na <home>página inicial</home>.",
+  "sections": {
+    "general": "Geral"
+  },
+  "items": {
+    "what": {
+      "q": "O que faz exatamente a Applo?",
+      "a": "A Applo cria, em segundos, uma carta de apresentação e um currículo em PDF otimizado a partir do teu perfil e de uma oferta de emprego — ambos adaptados à função específica. Podes editar o texto diretamente no editor antes de o transferires."
+    },
+    "industries": {
+      "q": "A Applo também funciona fora das funções de TI?",
+      "a": "Sim. A Applo é intencionalmente neutra em relação ao setor. Os modelos e instruções funcionam com funções da saúde, vendas, marketing, ofícios, administração, educação e logística — não só tecnologia."
+    },
+    "languages": {
+      "q": "Em que idioma serão escritas as minhas candidaturas?",
+      "a": "Detetamos automaticamente o idioma da oferta de emprego (atualmente alemão e inglês) e criamos a carta de apresentação e o currículo no mesmo idioma. Na exportação, podes ainda traduzir os documentos para francês, espanhol, português ou italiano. Os termos técnicos (por exemplo, nomes de ferramentas) mantêm a sua grafia habitual."
+    },
+    "data": {
+      "q": "O que acontece aos meus dados?",
+      "a": "O teu perfil e os dados das candidaturas são encriptados numa base de dados da UE (Microsoft Azure, Suécia). Não vendemos nem usamos os teus dados para publicidade ou para treinar modelos. Os detalhes estão na nossa <privacy>política de privacidade</privacy>. Podes transferir os teus dados a qualquer momento em “Definições → Exportar dados” ou eliminar completamente a tua conta."
+    },
+    "pricing": {
+      "q": "Quanto custa a Applo?",
+      "a": "O plano Free custa 0 € e inclui um perfil de currículo, 3 candidaturas com IA e 5 verificações de candidatura por mês; as transferências não têm marca de água e incluem uma espera de 15 segundos com publicidade. O Pro custa 9,95 € por mês e inclui 50 candidaturas com IA, 15 verificações e 5 entrevistas de prática. O Premium custa 19,95 € por mês e inclui 100 candidaturas com IA, 35 verificações, 45 entrevistas de prática e acompanhamento de e-mail. Estão disponíveis créditos extra permanentes em pacotes de 10, 30 ou 75 candidaturas — consulta a nossa <pricing>página de preços</pricing> para mais detalhes."
+    },
+    "editing": {
+      "q": "Como posso ajustar a minha candidatura depois de gerada?",
+      "a": "Depois da criação, abre-se automaticamente um editor onde podes editar a carta de apresentação e o currículo diretamente no navegador e exportá-los novamente em PDF — sem nova geração e sem gastar créditos."
+    },
+    "ats": {
+      "q": "Os currículos gerados são compatíveis com ATS?",
+      "a": "Sim. Todos os modelos de PDF são construídos para que os sistemas de gestão de candidaturas (ATS) mais comuns os consigam ler corretamente: esquema de coluna única, estrutura HTML simples, sem tabelas nem elementos gráficos em áreas críticas, cabeçalhos de secção claros e tipos de letra padrão."
+    },
+    "contact": {
+      "q": "Encontrei um erro ou tenho uma ideia — onde vos contacto?",
+      "a": "Contacta-nos através do formulário de contacto na <home>página inicial</home> ou diretamente em <email>support@applo.ai</email>. Normalmente respondemos dentro de 1 a 2 dias úteis."
+    }
+  },
+  "legalLayout": {
+    "backHome": "← Voltar à página inicial",
+    "home": "Início",
+    "copyright": "© {year} Applo. Todos os direitos reservados."
+  }
+}

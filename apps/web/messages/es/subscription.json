@@ -1,0 +1,26 @@
+{
+  "upgradePrompt": {
+    "defaultCta": "Actualizar a {tier}",
+    "upgradeNow": "Actualizar ahora",
+    "inlineNeeds": "{feature} requiere {tier}.",
+    "onlyWithTier": "Solo disponible con {tier}",
+    "onlyWithTierPrefix": "Esta función solo está disponible con",
+    "onlyWithTierSuffix": "."
+  },
+  "limit": {
+    "title": "Límite mensual alcanzado",
+    "description": "Has usado {used} de {limit} {action} este mes. Actualiza tu plan para tener más capacidad.",
+    "actions": {
+      "applications": "candidaturas",
+      "interviews": "sesiones de entrevista"
+    }
+  },
+  "premiumSupport": {
+    "activeTitle": "Soporte Premium activo",
+    "activeDescription": "Tus solicitudes reciben atención prioritaria — respuesta garantizada en 24 h.",
+    "contact": "Contactar con soporte",
+    "title": "Soporte Premium",
+    "description": "Con Premium obtienes soporte prioritario con respuesta garantizada en 24 h.",
+    "unlock": "Desbloquear con Premium"
+  }
+}

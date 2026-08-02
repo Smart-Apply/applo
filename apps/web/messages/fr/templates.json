@@ -1,0 +1,66 @@
+{
+  "card": {
+    "defaultBadge": "Par défaut",
+    "noDescription": "Aucune description disponible",
+    "previewAlt": "Aperçu de {name}",
+    "colorLabel": "Couleur :",
+    "selected": "Sélectionné",
+    "select": "Sélectionner"
+  },
+  "demoLoading": {
+    "title": "Démo des composants de chargement",
+    "subtitle": "Présentation de tous les états de chargement et composants squelettes",
+    "spinner": {
+      "title": "Composant Spinner",
+      "description": "Disponible en plusieurs tailles",
+      "small": "Petit",
+      "default": "Par défaut",
+      "large": "Grand",
+      "extraLarge": "Très grand"
+    },
+    "wrappers": {
+      "title": "Conteneurs de chargement",
+      "description": "États de chargement prêts à l'emploi pour les cas courants",
+      "centered": "Chargement centré",
+      "loadingData": "Chargement des données...",
+      "inline": "Chargement en ligne",
+      "processing": "Traitement en cours...",
+      "loadingContent": "Chargement du contenu...",
+      "generatingReport": "Génération du rapport...",
+      "fullPage": "Chargement pleine page",
+      "showFullPage": "Afficher le chargement pleine page",
+      "loadingApplication": "Chargement de la candidature...",
+      "hide": "Masquer"
+    },
+    "buttons": {
+      "title": "États de chargement des boutons",
+      "description": "Boutons avec indicateurs de chargement intégrés",
+      "default": "Bouton par défaut",
+      "outline": "Bouton contour",
+      "destructive": "Bouton destructif"
+    },
+    "basicSkeleton": {
+      "title": "Squelette de base",
+      "description": "Formes de squelette simples avec animation de pulsation"
+    },
+    "specialized": {
+      "title": "Squelettes spécialisés",
+      "description": "Squelettes prêts à l'emploi pour les types de contenu courants",
+      "applicationCard": "Squelette de carte de candidature",
+      "jobPostingCard": "Squelette de carte d'offre d'emploi",
+      "profileCard": "Squelette de carte de profil",
+      "formField": "Squelette de champ de formulaire",
+      "text": "Squelette de texte",
+      "table": "Squelette de tableau",
+      "avatarButtons": "Squelettes d'avatar et de boutons",
+      "image": "Squelette d'image",
+      "square": "Carré",
+      "video": "Vidéo (16:9)",
+      "portrait": "Portrait (3:4)"
+    },
+    "completeProfile": {
+      "title": "Squelette de profil complet",
+      "description": "État de chargement complet de la page de profil"
+    }
+  }
+}

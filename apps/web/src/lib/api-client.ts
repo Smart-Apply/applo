@@ -66,7 +66,7 @@ import {
 } from './errors';
 import { getCsrfToken, refreshCsrfToken, fetchCsrfToken } from './csrf';
 import { getApiBaseUrl, getApiBaseUrlSync } from './config';
-import { getActiveLocale } from './i18n-runtime';
+import { pick } from './i18n-runtime';
 
 interface RequestOptions extends RequestInit {
   retry?: boolean;
@@ -345,11 +345,20 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
 
           const { toast } = await import('sonner');
           toast.warning(
-            getActiveLocale() === 'de'
-              ? `Nur noch ${rateLimitRemaining} Aktionen verfügbar. ` +
-                `Limit wird zurückgesetzt in ${minutesUntilReset} Minute${minutesUntilReset !== 1 ? 'n' : ''}.`
-              : `Only ${rateLimitRemaining} actions remaining. ` +
-                `The limit resets in ${minutesUntilReset} minute${minutesUntilReset !== 1 ? 's' : ''}.`,
+            pick<(remaining: string, minutes: number) => string>({
+              de: (r, min) =>
+                `Nur noch ${r} Aktionen verfügbar. Limit wird zurückgesetzt in ${min} Minute${min !== 1 ? 'n' : ''}.`,
+              en: (r, min) =>
+                `Only ${r} actions remaining. The limit resets in ${min} minute${min !== 1 ? 's' : ''}.`,
+              fr: (r, min) =>
+                `Plus que ${r} actions disponibles. La limite sera réinitialisée dans ${min} minute${min !== 1 ? 's' : ''}.`,
+              es: (r, min) =>
+                `Solo quedan ${r} acciones. El límite se restablecerá en ${min} minuto${min !== 1 ? 's' : ''}.`,
+              pt: (r, min) =>
+                `Restam apenas ${r} ações. O limite será reposto em ${min} minuto${min !== 1 ? 's' : ''}.`,
+              it: (r, min) =>
+                `Solo ${r} azioni rimanenti. Il limite verrà ripristinato tra ${min} minut${min !== 1 ? 'i' : 'o'}.`,
+            })(rateLimitRemaining, minutesUntilReset),
             { id: RATE_LIMIT_TOAST_ID },
           );
         }
@@ -534,9 +543,20 @@ async function apiRequestFormData<T>(endpoint: string, options: RequestOptions =
 
           throw new ApiError(
             429,
-            getActiveLocale() === 'de'
-              ? `Zu viele Uploads. Du kannst maximal 10 Lebensläufe pro Stunde analysieren. Bitte warte ${retryMinutes} Minute${retryMinutes !== 1 ? 'n' : ''}.`
-              : `Too many uploads. You can analyze at most 10 résumés per hour. Please wait ${retryMinutes} minute${retryMinutes !== 1 ? 's' : ''}.`,
+            pick<(minutes: number) => string>({
+              de: (min) =>
+                `Zu viele Uploads. Du kannst maximal 10 Lebensläufe pro Stunde analysieren. Bitte warte ${min} Minute${min !== 1 ? 'n' : ''}.`,
+              en: (min) =>
+                `Too many uploads. You can analyze at most 10 résumés per hour. Please wait ${min} minute${min !== 1 ? 's' : ''}.`,
+              fr: (min) =>
+                `Trop de téléversements. Vous pouvez analyser au maximum 10 CV par heure. Veuillez patienter ${min} minute${min !== 1 ? 's' : ''}.`,
+              es: (min) =>
+                `Demasiadas subidas. Puedes analizar como máximo 10 currículums por hora. Espera ${min} minuto${min !== 1 ? 's' : ''}.`,
+              pt: (min) =>
+                `Demasiados carregamentos. Podes analisar no máximo 10 currículos por hora. Aguarda ${min} minuto${min !== 1 ? 's' : ''}.`,
+              it: (min) =>
+                `Troppi caricamenti. Puoi analizzare al massimo 10 curriculum all’ora. Attendi ${min} minut${min !== 1 ? 'i' : 'o'}.`,
+            })(retryMinutes),
             errorData,
           );
         }
@@ -977,7 +997,7 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
-    export: (id: string, language?: 'de' | 'en') =>
+    export: (id: string, language?: 'de' | 'en' | 'fr' | 'es' | 'pt' | 'it') =>
       apiRequest<Application>(`/applications/${id}/export`, {
         method: 'POST',
         body: language ? JSON.stringify({ language }) : undefined,

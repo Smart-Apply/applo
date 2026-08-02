@@ -113,7 +113,7 @@ export class ApplicationResponseDto {
   @ApiPropertyOptional({
     example: 'de',
     description: 'Language of the last export / generated content (ISO 639-1 code)',
-    enum: ['de', 'en', 'fr', 'es', 'it'],
+    enum: ['de', 'en', 'fr', 'es', 'pt', 'it'],
   })
   language?: string;
 

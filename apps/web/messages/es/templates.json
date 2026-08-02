@@ -1,0 +1,66 @@
+{
+  "card": {
+    "defaultBadge": "Predeterminada",
+    "noDescription": "No hay descripción disponible",
+    "previewAlt": "Vista previa de {name}",
+    "colorLabel": "Color:",
+    "selected": "Seleccionada",
+    "select": "Seleccionar"
+  },
+  "demoLoading": {
+    "title": "Demo de componentes de carga",
+    "subtitle": "Muestra de todos los estados de carga y componentes skeleton",
+    "spinner": {
+      "title": "Componente Spinner",
+      "description": "Disponible en varios tamaños",
+      "small": "Pequeño",
+      "default": "Predeterminado",
+      "large": "Grande",
+      "extraLarge": "Extra grande"
+    },
+    "wrappers": {
+      "title": "Envoltorios de carga",
+      "description": "Estados de carga predefinidos para patrones habituales",
+      "centered": "Cargador centrado",
+      "loadingData": "Cargando datos...",
+      "inline": "Cargador en línea",
+      "processing": "Procesando...",
+      "loadingContent": "Cargando contenido...",
+      "generatingReport": "Generando informe...",
+      "fullPage": "Cargador de página completa",
+      "showFullPage": "Mostrar cargador de página completa",
+      "loadingApplication": "Cargando candidatura...",
+      "hide": "Ocultar"
+    },
+    "buttons": {
+      "title": "Estados de carga de botones",
+      "description": "Botones con indicadores de carga integrados",
+      "default": "Botón predeterminado",
+      "outline": "Botón contorneado",
+      "destructive": "Botón destructivo"
+    },
+    "basicSkeleton": {
+      "title": "Skeleton básico",
+      "description": "Formas skeleton sencillas con animación de pulso"
+    },
+    "specialized": {
+      "title": "Skeletons especializados",
+      "description": "Skeletons predefinidos para tipos de contenido habituales",
+      "applicationCard": "Skeleton de tarjeta de candidatura",
+      "jobPostingCard": "Skeleton de tarjeta de oferta de empleo",
+      "profileCard": "Skeleton de tarjeta de perfil",
+      "formField": "Skeleton de campo de formulario",
+      "text": "Skeleton de texto",
+      "table": "Skeleton de tabla",
+      "avatarButtons": "Skeletons de avatar y botones",
+      "image": "Skeleton de imagen",
+      "square": "Cuadrado",
+      "video": "Vídeo (16:9)",
+      "portrait": "Retrato (3:4)"
+    },
+    "completeProfile": {
+      "title": "Skeleton de perfil completo",
+      "description": "Estado de carga de la página de perfil completa"
+    }
+  }
+}

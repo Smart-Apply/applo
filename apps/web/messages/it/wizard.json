@@ -1,0 +1,241 @@
+{
+  "page": {
+    "loading": "Caricamento...",
+    "cancel": "Annulla",
+    "next": "Avanti"
+  },
+  "steps": {
+    "job": {
+      "shortTitle": "Lavoro"
+    },
+    "configure": {
+      "shortTitle": "Configura"
+    },
+    "generate": {
+      "shortTitle": "Fatto"
+    }
+  },
+  "jobStep": {
+    "title": "Aggiungi lavoro",
+    "description": "Aggiungi l'annuncio di lavoro tramite link o incollando il testo.",
+    "tabs": {
+      "url": "Incolla link",
+      "text": "Incolla testo"
+    },
+    "success": {
+      "title": "Lavoro acquisito",
+      "description": "L'annuncio di lavoro è stato salvato con successo.",
+      "badge": "Salvato",
+      "useOther": "Usa un altro lavoro"
+    },
+    "summary": {
+      "title": "Titolo",
+      "company": "Azienda",
+      "location": "Luogo",
+      "info": "Informazioni"
+    },
+    "urlFallback": {
+      "title": "Non siamo riusciti a leggere automaticamente questo annuncio di lavoro.",
+      "descriptionTextTab": "Alcuni portali di lavoro bloccano l'estrazione. Copia il testo dell'annuncio e incollalo nella scheda \"Incolla testo\".",
+      "switchToText": "Passa alla scheda testo →"
+    },
+    "urlForm": {
+      "urlLabel": "Link all'annuncio di lavoro",
+      "urlHelp": "Supporta LinkedIn, Indeed e altri portali di lavoro.",
+      "analyzing": "Analisi in corso...",
+      "submit": "Analizza annuncio di lavoro"
+    },
+    "manualForm": {
+      "titlePlaceholder": "es. Marketing Manager, Infermiere",
+      "fullTextHelp": "Copia il testo completo dell'annuncio di lavoro e incollalo qui.",
+      "fullTextPlaceholder": "Incolla qui il testo completo dell'annuncio di lavoro...",
+      "saving": "Salvataggio...",
+      "submit": "Salva lavoro"
+    }
+  },
+  "configureStep": {
+    "title": "Configura",
+    "loadingTemplates": "Caricamento modelli...",
+    "language": {
+      "de": "Tedesco",
+      "en": "Inglese"
+    },
+    "coverLetterLength": {
+      "kurz": {
+        "label": "Compatta (~250 parole)",
+        "hint": "Diretta al punto — ideale quando l'annuncio di lavoro elenca solo pochi requisiti."
+      },
+      "standard": {
+        "label": "Standard (~350 parole)",
+        "hint": "La lunghezza classica per una pagina."
+      }
+    },
+    "options": {
+      "generateCoverLetter": "Genera lettera di presentazione",
+      "generateCoverLetterHelp": "Crea una lettera di presentazione su misura per il lavoro.",
+      "language": "Lingua"
+    },
+    "errors": {
+      "unknown": "Si è verificato un errore sconosciuto",
+      "resendEmail": "Invia di nuovo l'email",
+      "goToApplication": "Vai alla candidatura"
+    },
+    "progress": {
+      "created": "creata",
+      "doneTitle": "Fatto!",
+      "redirecting": "Candidatura creata – ti stiamo reindirizzando …",
+      "eta": "Tempo rimanente stimato: ~{seconds}s",
+      "almostDone": "Ci siamo quasi …",
+      "doNotClose": "Non chiudere questa finestra.",
+      "stepDone": "Fatto",
+      "footnote": "I passaggi completati vengono contrassegnati automaticamente come fatti al termine.",
+      "cancelButton": "Annulla",
+      "cancelledToast": "Generazione annullata. Le tue selezioni non sono cambiate.",
+      "steps": {
+        "analyze": "Analisi del profilo e dell'annuncio di lavoro",
+        "cover": "Generazione della lettera di presentazione con l'IA",
+        "resume": "Adattamento del curriculum al lavoro",
+        "save": "Salvataggio dei documenti"
+      }
+    },
+    "templates": {
+      "thumbnailAlt": "Miniatura di {name}",
+      "color": "Colore"
+    },
+    "preview": {
+      "label": "Anteprima:",
+      "live": "Live",
+      "zoomTitle": "Fai clic per ingrandire",
+      "alt": "Anteprima modello",
+      "zoom": "Ingrandisci",
+      "dialogTitle": "Anteprima: {name}",
+      "largeAlt": "Anteprima modello grande"
+    },
+    "usage": {
+      "exhausted": "Limite giornaliero raggiunto ({used}/{limit}). Torna tra 24 ore.",
+      "remaining": "{remaining} di {limit} candidature ancora possibili oggi"
+    },
+    "actions": {
+      "back": "Indietro",
+      "creating": "Creazione candidatura in corso...",
+      "create": "Crea candidatura"
+    }
+  },
+  "generateStep": {
+    "toasts": {
+      "existingApplication": "Esiste già una candidatura per questo lavoro. La apriremo per te."
+    },
+    "progress": {
+      "title": "Creazione candidatura in corso...",
+      "overdue": "Ci sta volendo più tempo del solito, solo un momento …",
+      "estimate": "Di solito richiede {seconds} secondi. Non chiudere questa finestra.",
+      "creating": "La tua candidatura è in fase di creazione con l'IA...",
+      "steps": {
+        "analyze": "Analisi del profilo e dell'annuncio di lavoro",
+        "cover": "Generazione della lettera di presentazione con l'IA",
+        "resume": "Adattamento del curriculum al lavoro",
+        "refineCover": "Revisione e perfezionamento della lettera di presentazione",
+        "save": "Salvataggio dei documenti"
+      }
+    },
+    "summary": {
+      "title": "Riepilogo",
+      "profile": "Il tuo profilo",
+      "skills": "{count, plural, one {# competenza} other {# competenze}}",
+      "experiences": "{count, plural, one {# esperienza} other {# esperienze}}",
+      "education": "{count} percorsi di istruzione",
+      "job": "Questo lavoro"
+    },
+    "options": {
+      "title": "Opzioni",
+      "languageTitle": "Lingua della candidatura",
+      "languageHelp": "Rilevata automaticamente. Puoi modificarla qui."
+    },
+    "templates": {
+      "title": "Scegli design",
+      "description": "Scegli un modello per il tuo curriculum.",
+      "coverLetterNote": "La lettera di presentazione viene creata automaticamente nel design corrispondente.",
+      "showLess": "Meno",
+      "showAll": "Mostra tutti"
+    }
+  },
+  "jobPostingForm": {
+    "title": "Crea annuncio di lavoro manualmente",
+    "description": "Compila tutti i campi rilevanti per creare un nuovo annuncio di lavoro",
+    "sections": {
+      "basicInfo": "Informazioni di base",
+      "jobDescription": "Descrizione del lavoro"
+    },
+    "fields": {
+      "title": "Titolo del lavoro",
+      "company": "Azienda",
+      "location": "Luogo",
+      "url": "URL dell'annuncio di lavoro",
+      "salary": "Stipendio",
+      "employmentType": "Tipo di contratto",
+      "description": "Descrizione",
+      "jobDescription": "Descrizione del lavoro"
+    },
+    "placeholders": {
+      "title": "es. Marketing Manager, Infermiere, Rappresentante vendite",
+      "company": "es. Esempio S.r.l.",
+      "location": "es. Milano, Italia",
+      "salary": "es. 30.000 - 40.000 EUR",
+      "employmentType": "es. Tempo pieno, part-time, freelance",
+      "description": "Descrivi il ruolo, il team e cosa rende speciale l'azienda..."
+    },
+    "help": {
+      "description": "Descrizione generale del ruolo e dell'azienda"
+    },
+    "actions": {
+      "cancel": "Annulla",
+      "create": "Crea annuncio di lavoro"
+    }
+  },
+  "jobPostingParser": {
+    "toasts": {
+      "changesSaved": "Modifiche salvate"
+    },
+    "input": {
+      "title": "Aggiungi tramite link",
+      "description": "Aggiungi un annuncio di lavoro tramite link e fallo analizzare automaticamente",
+      "urlLabel": "Link all'annuncio di lavoro",
+      "urlHelp": "Sono supportati LinkedIn, Indeed e altri portali di lavoro",
+      "submit": "Analizza annuncio di lavoro"
+    },
+    "urlFallback": {
+      "title": "Non siamo riusciti a leggere automaticamente questo annuncio di lavoro.",
+      "descriptionManualTab": "Alcuni portali di lavoro bloccano l'estrazione. Passa alla scheda \"Manuale\" e copia lì il testo dell'annuncio."
+    },
+    "result": {
+      "title": "Annuncio di lavoro analizzato",
+      "description": "Rivedi le informazioni estratte",
+      "badge": "Analizzato con successo"
+    },
+    "fields": {
+      "title": "Titolo",
+      "company": "Azienda",
+      "location": "Luogo",
+      "description": "Descrizione",
+      "requirements": "Requisiti",
+      "originalUrl": "URL originale"
+    },
+    "actions": {
+      "edit": "Modifica",
+      "analyzeAgain": "Analizza di nuovo",
+      "save": "Salva",
+      "cancel": "Annulla",
+      "saveChanges": "Salva modifiche"
+    },
+    "edit": {
+      "title": "Modifica annuncio di lavoro",
+      "description": "Modifica le informazioni se necessario",
+      "titleLabel": "Titolo *",
+      "companyLabel": "Azienda *"
+    },
+    "help": {
+      "title": "Piattaforme supportate",
+      "description": "Puoi importare annunci di lavoro da LinkedIn, Indeed e altri portali di lavoro. Se l'analisi non riesce, puoi anche inserire le informazioni manualmente."
+    }
+  }
+}

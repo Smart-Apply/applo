@@ -1,0 +1,356 @@
+{
+  "status": {
+    "all": "Todas",
+    "created": "Creada",
+    "draft": "Borrador",
+    "applied": "Enviada",
+    "interview": "Entrevista",
+    "accepted": "Aceptada",
+    "rejected": "Rechazada"
+  },
+  "list": {
+    "title": "Candidaturas",
+    "description": "Gestiona y haz seguimiento del estado de tus candidaturas.",
+    "refresh": "Actualizar",
+    "newApplication": "Nueva candidatura",
+    "searchPlaceholder": "Buscar candidaturas...",
+    "clearSearch": "Borrar búsqueda",
+    "tableView": "Vista de tabla",
+    "tableViewShort": "Tabla",
+    "cardView": "Vista de tarjetas",
+    "cardViewShort": "Tarjetas",
+    "fallbackTitle": "Candidatura",
+    "numberedFallbackTitle": "Candidatura n.º {id}",
+    "results": "{count, plural, =0 {ninguna candidatura} one {# candidatura} other {# candidaturas}}",
+    "resultsWithStatus": "{count, plural, =0 {ninguna candidatura} one {# candidatura} other {# candidaturas}} con estado \"{status}\"",
+    "pageInfo": "Página {current} de {total}",
+    "selectedCount": "{count} seleccionadas",
+    "clearSelection": "Borrar selección",
+    "setStatus": "Definir estado…",
+    "delete": "Eliminar",
+    "actions": "Acciones",
+    "showDetails": "Ver detalles",
+    "edit": "Editar",
+    "openCoverLetter": "Abrir carta de presentación",
+    "openResume": "Abrir currículum",
+    "selectApplication": "Seleccionar candidatura",
+    "selectAllPage": "Seleccionar todas las de esta página",
+    "open": "Abrir",
+    "emptyFilteredTitle": "No se encontraron candidaturas",
+    "emptyFilteredDescription": "No hay candidaturas con estado \"{status}\".",
+    "showAll": "Mostrar todas",
+    "createFirst": "Crear primera candidatura",
+    "paginationOf": "de {total}",
+    "firstPage": "Primera página",
+    "previousPage": "Página anterior",
+    "nextPage": "Página siguiente",
+    "lastPage": "Última página",
+    "emptyTitle": "Aún no hay candidaturas",
+    "emptyDescription": "Crea tu primera candidatura asistida por IA y controla todo tu proceso de búsqueda de empleo.",
+    "cancel": "Cancelar",
+    "deleting": "Eliminando...",
+    "sort": {
+      "label": "Ordenar",
+      "placeholder": "Ordenar",
+      "newest": "Más recientes primero",
+      "oldest": "Más antiguas primero",
+      "titleAsc": "Puesto A-Z",
+      "companyAsc": "Empresa A-Z"
+    },
+    "table": {
+      "jobAndCompany": "Puesto y empresa",
+      "status": "Estado",
+      "created": "Creada",
+      "actions": "Acciones"
+    },
+    "deleteDialog": {
+      "title": "¿Eliminar candidatura?",
+      "description": "¿Seguro que quieres eliminar la candidatura para <titleText>{title}</titleText>? Esta acción no se puede deshacer."
+    },
+    "bulkDeleteDialog": {
+      "title": "¿Eliminar {count} candidaturas?",
+      "description": "¿Seguro que quieres eliminar <countText>{count, plural, one {# candidatura} other {# candidaturas}}</countText>? Esta acción no se puede deshacer."
+    },
+    "toasts": {
+      "readyTitle": "¡Candidatura lista! 🎉",
+      "readyDescription": "{title} está lista para descargar.",
+      "failedTitle": "Error en la generación",
+      "failedDescription": "No se ha podido crear {title}.",
+      "generatingTitle": "Generación iniciada",
+      "generatingDescription": "{title} se está creando ahora...",
+      "deleted": "Candidatura eliminada",
+      "bulkDeleteSuccess": "{count, plural, one {# candidatura eliminada} other {# candidaturas eliminadas}}",
+      "bulkDeletePartial": "{succeeded} eliminadas, {failed} fallidas",
+      "bulkStatusSuccess": "Estado actualizado para {count, plural, one {# candidatura} other {# candidaturas}}",
+      "bulkStatusPartial": "{succeeded} actualizadas, {failed} fallidas"
+    }
+  },
+  "detail": {
+    "fallbackTitle": "Candidatura",
+    "loading": "Cargando candidatura...",
+    "notFoundTitle": "Candidatura no encontrada",
+    "notFoundDescription": "La candidatura solicitada no existe o no tienes permiso para verla.",
+    "toApplications": "A candidaturas",
+    "autoTrackingTitle": "El estado se actualizó mediante el seguimiento automático de correo",
+    "noStatus": "Sin estado (recarga la página, por favor)",
+    "backToApplications": "Volver a candidaturas",
+    "toasts": {
+      "readyTitle": "¡Candidatura lista! 🎉",
+      "readyDescription": "{title} está lista para descargar.",
+      "translationFallbackTitle": "Traducción no disponible",
+      "translationFallbackDescription": "Los PDF se crearon en el idioma original. Vuelve a intentar la exportación más tarde.",
+      "failedTitle": "Error en la generación",
+      "failedDescription": "No se ha podido crear {title}.",
+      "generatingTitle": "Generación iniciada",
+      "generatingDescription": "{title} se está creando ahora...",
+      "markedAppliedTitle": "Marcada como “Enviada”",
+      "markedAppliedDescription": "¡Mucha suerte! 🤞",
+      "updateError": "Error al actualizar: {message}",
+      "previewError": "Error al cargar la vista previa",
+      "invalidJobUrl": "URL de la oferta de empleo no válida"
+    },
+    "celebration": {
+      "readyToSend": "Lista para enviar",
+      "title": "¡Listo!",
+      "titleWithName": "¡Listo, {firstName}!",
+      "description": "Tu <coverLetter>carta de presentación</coverLetter> y tu <resume>currículum</resume> están listos — descárgalos y envía tu candidatura.",
+      "descriptionWithCompany": "Tu <coverLetter>carta de presentación</coverLetter> y tu <resume>currículum</resume> están listos — descárgalos y envía tu candidatura a {company}."
+    },
+    "documents": {
+      "title": "Documentos de la candidatura",
+      "bothAsZip": "Ambos en ZIP",
+      "edit": "Editar",
+      "editResume": "Editar currículum",
+      "coverLetter": "Carta de presentación",
+      "resume": "Currículum",
+      "noCoverLetter": "No se generó ninguna carta de presentación para esta candidatura",
+      "downloadLinksLimited": "Por motivos de seguridad, los enlaces de descarga son válidos solo durante un tiempo limitado",
+      "expiresAt": " (hasta las {time})",
+      "pdfDocument": "Documento PDF",
+      "preview": "Vista previa",
+      "download": "Descargar",
+      "freeDownloadWait": "En el plan Free, la descarga con publicidad comienza tras {seconds} segundos.",
+      "missing": "No disponible"
+    },
+    "nextStep": {
+      "appliedBadge": "Enviada ✓",
+      "appliedTitle": "¡Genial — candidatura enviada!",
+      "appliedDescription": "Mucha suerte. Prepárate para la entrevista con el coach de entrevistas.",
+      "appliedDescriptionWithCompany": "Mucha suerte en {company}. Prepárate para la entrevista con el coach de entrevistas.",
+      "toInterviewCoach": "Al coach de entrevistas",
+      "title": "Siguiente paso",
+      "applyAtCompany": "Enviar candidatura a {company}",
+      "applyNow": "Enviar candidatura ahora",
+      "description": "Envía tus documentos en la página de empleo de la empresa — luego marca la candidatura como \"Enviada\" para que Applo pueda hacer seguimiento del estado por ti.",
+      "markApplied": "Marcar como enviada",
+      "toJobPosting": "A la oferta de empleo"
+    },
+    "ats": {
+      "title": "Análisis ATS",
+      "description": "Qué tan bien encajan tus documentos con el puesto — palabras clave y optimizaciones.",
+      "upgradeDescription": "Actualiza a Premium ahora para usar esta función."
+    },
+    "jobPosting": {
+      "title": "Oferta de empleo",
+      "description": "Descripción",
+      "requirements": "Requisitos"
+    },
+    "meta": {
+      "created": "Creada el <b>{date}</b>",
+      "updated": "Actualizada el <b>{date}</b>"
+    },
+    "generating": {
+      "title": "Tu candidatura se está creando …",
+      "description": "La IA está redactando tu carta de presentación y tu currículum, adaptando todo al puesto. Esto suele tardar menos de un minuto.",
+      "preparing": "Preparando …"
+    },
+    "pending": {
+      "title": "Tu candidatura se ha creado",
+      "description": "Revisa el currículum y la carta de presentación, ajústalos si es necesario — y luego inicia la exportación.",
+      "startExport": "Ajustar documentos e iniciar exportación"
+    },
+    "failed": {
+      "status": "Fallida",
+      "title": "Algo salió mal",
+      "description": "Se produjo un error al crear tus documentos. Vuelve a intentarlo — normalmente funciona al segundo intento.",
+      "retry": "Volver a intentar"
+    }
+  },
+  "atsPanel": {
+    "startTitle": "Iniciar análisis ATS",
+    "startDescription": "Deja que la IA analice tu candidatura y obtén sugerencias de mejora personalizadas según la oferta de empleo.",
+    "analyzing": "Analizando...",
+    "analyzeNow": "Analizar ahora",
+    "title": "Análisis ATS",
+    "tooltip": "ATS (Applicant Tracking System) = sistema de gestión de candidaturas. Muchas empresas filtran automáticamente las candidaturas por palabras clave.",
+    "analyzedAt": "Analizado el {date}",
+    "reanalyze": "Analizar de nuevo",
+    "lowScoreTitle": "Coincidencia baja",
+    "lowScoreDescription": "Puede que tu perfil no encaje de forma ideal con este puesto. Revisa las palabras clave que faltan y actualiza tu perfil para mejorar tus posibilidades."
+  },
+  "matchScore": {
+    "title": "Análisis de coincidencia del perfil",
+    "profileMatch": "Coincidencia del perfil"
+  },
+  "atsScoreBadge": {
+    "excellent": "Excelente",
+    "good": "Bueno",
+    "needsWork": "Mejorable",
+    "low": "Bajo"
+  },
+  "atsScoreCell": {
+    "unavailable": "Revisión de candidatura no disponible",
+    "categoryScores": "Puntuaciones por categoría:",
+    "coreScore": "Competencias clave (hard skills): {score}%",
+    "experienceScore": "Experiencia: {score}%",
+    "industryScore": "Sector: {score}%"
+  },
+  "atsScoreSidebar": {
+    "startTitle": "Iniciar análisis ATS",
+    "startDescription": "Descubre qué palabras clave faltan",
+    "analyzing": "Analizando...",
+    "analyze": "Analizar",
+    "title": "Puntuación ATS",
+    "jobMatch": "Coincidencia con el puesto",
+    "core": "Competencias clave (hard skills)",
+    "matchedKeywords": "Palabras clave encontradas ({count})",
+    "missingKeywords": "Palabras clave que faltan ({count})",
+    "missingHint": "Añade estas palabras clave a tu currículum para mejorar tu puntuación",
+    "matchedLabel": "Palabras clave encontradas",
+    "lowScore": "La puntuación es mejorable. Añade a tu perfil las palabras clave que faltan.",
+    "goodScore": "¡Excelente coincidencia! Tu perfil encaja muy bien."
+  },
+  "keywords": {
+    "title": "Palabras clave",
+    "foundIn": "Encontrada en:",
+    "tabs": {
+      "all": "Todas ({count})",
+      "matched": "Encontradas ({count})",
+      "missing": "Faltantes ({count})"
+    },
+    "categories": {
+      "core": "Competencias clave",
+      "soft": "Habilidades blandas",
+      "responsibility": "Responsabilidades",
+      "requirement": "Requisitos",
+      "methodology": "Métodos y herramientas",
+      "industry": "Sector",
+      "seniority": "Nivel",
+      "misc": "Otros"
+    },
+    "showLess": "Menos",
+    "more": "+{count} más",
+    "noMatched": "No se encontraron palabras clave coincidentes.",
+    "showAllMissing": "Mostrar las {count} palabras clave faltantes",
+    "noMissing": "¡Todas las palabras clave relevantes ya están en tu perfil! 🎉"
+  },
+  "suggestions": {
+    "title": "Sugerencias de mejora",
+    "perfectTitle": "¡Perfecto!",
+    "perfectDescription": "Tu perfil encaja excelentemente con este puesto.",
+    "aiRecommendations": "Recomendaciones de la IA",
+    "addMissingKeywords": "Añadir palabras clave faltantes",
+    "editProfile": "Editar perfil",
+    "actions": {
+      "addCore": "Añadir competencias clave",
+      "addMethodology": "Añadir métodos y herramientas",
+      "addSoft": "Añadir habilidades blandas",
+      "addResponsibility": "Añadir responsabilidades",
+      "updateExperience": "Actualizar experiencia",
+      "industryExperience": "Experiencia en el sector",
+      "addRequirement": "Añadir cualificación",
+      "addProfile": "Añadir al perfil"
+    },
+    "generated": {
+      "addTechnical": "Añade estas habilidades a tu perfil",
+      "describeResponsibilities": "Describe estas responsabilidades en tu experiencia laboral",
+      "showSeniority": "Deja más claro tu nivel de experiencia",
+      "highlightIndustry": "Destaca tu experiencia en el sector",
+      "checkRequirements": "Comprueba si cumples estos requisitos",
+      "considerKeywords": "Considera incluir estas palabras clave en tu perfil"
+    }
+  },
+  "highlightedText": {
+    "tooltipFound": "✓ Encontrado en el perfil",
+    "tooltipMissing": "⚠ No está en el perfil",
+    "legendFound": "Presente en el perfil",
+    "legendMissing": "Falta en el perfil"
+  },
+  "atsOptimizer": {
+    "match": "Coincidencia",
+    "categoryLabels": {
+      "core": "Competencia clave",
+      "soft": "Habilidad blanda",
+      "responsibility": "Responsabilidad",
+      "requirement": "Requisito",
+      "methodology": "Método / herramienta",
+      "industry": "Sector",
+      "seniority": "Nivel",
+      "misc": "Otros"
+    },
+    "preview": {
+      "profile": "Perfil",
+      "experience": "Experiencia laboral",
+      "education": "Formación",
+      "projects": "Proyectos",
+      "skills": "Habilidades",
+      "new": "NUEVO",
+      "languages": "Idiomas",
+      "certificates": "Certificados",
+      "contact": "Contacto"
+    },
+    "startTitle": "Iniciar análisis ATS",
+    "startDescription": "Descubre qué términos del puesto faltan en tu currículum.",
+    "analyzing": "Analizando…",
+    "analyze": "Analizar",
+    "resumeTitle": "Tu currículum",
+    "legend": "azul = términos detectados del puesto",
+    "livePreview": "Vista previa en vivo",
+    "title": "Optimización ATS",
+    "subtitle": "Cómo pasa tu currículum los filtros de los sistemas de candidatos",
+    "reanalyze": "Analizar de nuevo",
+    "coach": {
+      "done": "¡Perfecto! Tu currículum ya incluye <b>todos los términos importantes</b> — estás listo para el ATS. 🎉",
+      "pending": "¡Genial! Has añadido todos los términos. Haz clic en <b>Analizar de nuevo</b> para actualizar tu puntuación.",
+      "remaining": "¡Sigue así! Faltan <b>{count, plural, one {# término} other {# términos}}</b>, y los habrás añadido todos.",
+      "initial": "Tu currículum coincide con este puesto en un <b>{score}%</b>. Añade los <b>{count} términos que faltan</b> para pasar los filtros más fácilmente."
+    },
+    "explanation": "<b>¿Qué es esto?</b> Las empresas usan software (ATS) para filtrar candidaturas según los términos de la oferta de empleo. Cuantos más términos coincidentes contenga tu currículum, más probable será que consigas una entrevista.",
+    "coverageLabel": "Palabras clave cubiertas",
+    "missingTerms": "Términos que faltan ({count})",
+    "addAll": "Añadir todo",
+    "addedToSkillsHint": "se añadirá a tus habilidades",
+    "add": "Añadir",
+    "allTermsAddedTitle": "Todos los términos añadidos",
+    "allTermsAddedDescription": "Ya están en tu currículum. Haz clic en “Analizar de nuevo” para ver la puntuación actualizada.",
+    "allTermsCoveredTitle": "Todos los términos cubiertos",
+    "allTermsCoveredDescription": "Tu currículum está óptimamente adaptado a este puesto. Ya puedes exportarlo.",
+    "alreadyIncluded": "Ya incluidos ({count})",
+    "atsReady": "Listo para ATS",
+    "openTerms": "<b>{count}</b> términos pendientes",
+    "exportResume": "Exportar currículum"
+  },
+  "hooks": {
+    "createError": "Error al crear la candidatura",
+    "createSuccess": "La candidatura se está creando...",
+    "generateError": "Error al generar la candidatura",
+    "deleteError": "Error al eliminar la candidatura",
+    "deleteSuccess": "La candidatura se ha eliminado",
+    "resumeSaved": "Currículum guardado",
+    "resumeSaveError": "No se ha podido guardar el currículum",
+    "coverLetterUpdated": "Carta de presentación actualizada",
+    "coverLetterUpdateError": "No se ha podido actualizar la carta de presentación",
+    "summaryGenerateError": "No se ha podido generar el resumen",
+    "descriptionGenerateError": "No se ha podido generar la descripción",
+    "exportStarted": "Exportación de PDF iniciada",
+    "exportStartError": "No se ha podido iniciar la exportación",
+    "designSettingsError": "No se han podido guardar los ajustes de diseño",
+    "keywordsAnalyzed": "Se analizaron las palabras clave",
+    "keywordsAnalyzeError": "No se han podido analizar las palabras clave",
+    "retryStarted": "Se reinició la generación",
+    "retryError": "Error al generar de nuevo",
+    "streamStatusParseError": "No se ha podido procesar el estado",
+    "streamConnectionClosed": "Conexión cerrada",
+    "streamConnectionRetrying": "Error de conexión, reintentando..."
+  }
+}

@@ -171,19 +171,71 @@ export function sanitizeUrl(url: string | null | undefined): string | undefined 
 
 /** Map an ISO 639-1 code onto the Intl locale used for date labels. */
 function dateLocale(language?: string): string {
-  return language === 'de' || !language ? 'de-DE' : 'en-US';
+  switch (language) {
+    case 'en':
+      return 'en-US';
+    case 'fr':
+      return 'fr-FR';
+    case 'es':
+      return 'es-ES';
+    case 'pt':
+      return 'pt-PT';
+    case 'it':
+      return 'it-IT';
+    default:
+      return 'de-DE';
+  }
 }
 
 /** Localized "ongoing" label for open-ended date ranges. */
 export function presentLabel(language?: string): string {
-  return language === 'de' || !language ? 'Heute' : 'Present';
+  switch (language) {
+    case 'en':
+      return 'Present';
+    case 'fr':
+      return 'Aujourd’hui';
+    case 'es':
+      return 'Actualidad';
+    case 'pt':
+      return 'Atualmente';
+    case 'it':
+      return 'Presente';
+    default:
+      return 'Heute';
+  }
+}
+
+/**
+ * Month token exactly as `formatDate` renders it ("Okt." de, "Oct" en,
+ * "out." pt) — keeps token-mapped legacy labels identical to re-derived ones.
+ */
+export function shortMonthLabel(date: Date, language?: string): string {
+  const locale = dateLocale(language);
+  // pt-PT renders the combined month+year format numerically ("10/2023"),
+  // so the standalone month label is used there instead.
+  if (locale === 'pt-PT') {
+    return date.toLocaleDateString(locale, { month: 'short' });
+  }
+  const parts = new Intl.DateTimeFormat(locale, {
+    month: 'short',
+    year: 'numeric',
+  }).formatToParts(date);
+  return (
+    parts.find((part) => part.type === 'month')?.value ??
+    date.toLocaleDateString(locale, { month: 'short' })
+  );
 }
 
 export function formatDate(date: Date | null | undefined, language?: string): string {
   if (!date || isNaN(date.getTime())) {
     return '';
   }
-  return date.toLocaleDateString(dateLocale(language), {
+  const locale = dateLocale(language);
+  // pt-PT: the combined format is numeric ("10/2023") — compose "out. 2023".
+  if (locale === 'pt-PT') {
+    return `${date.toLocaleDateString(locale, { month: 'short' })} ${date.getFullYear()}`;
+  }
+  return date.toLocaleDateString(locale, {
     month: 'short',
     year: 'numeric',
   });

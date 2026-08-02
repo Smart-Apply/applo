@@ -1,0 +1,241 @@
+{
+  "page": {
+    "loading": "Chargement...",
+    "cancel": "Annuler",
+    "next": "Suivant"
+  },
+  "steps": {
+    "job": {
+      "shortTitle": "Offre"
+    },
+    "configure": {
+      "shortTitle": "Configurer"
+    },
+    "generate": {
+      "shortTitle": "Terminé"
+    }
+  },
+  "jobStep": {
+    "title": "Ajouter une offre",
+    "description": "Ajoutez l'offre d'emploi par lien ou en collant le texte.",
+    "tabs": {
+      "url": "Coller un lien",
+      "text": "Coller le texte"
+    },
+    "success": {
+      "title": "Offre récupérée",
+      "description": "L'offre d'emploi a été enregistrée avec succès.",
+      "badge": "Enregistrée",
+      "useOther": "Utiliser une autre offre"
+    },
+    "summary": {
+      "title": "Titre",
+      "company": "Entreprise",
+      "location": "Lieu",
+      "info": "Infos"
+    },
+    "urlFallback": {
+      "title": "Nous n'avons pas pu lire cette offre d'emploi automatiquement.",
+      "descriptionTextTab": "Certains portails d'emploi bloquent l'extraction. Veuillez copier le texte de l'offre et le coller dans l'onglet « Coller le texte ».",
+      "switchToText": "Passer à l'onglet texte →"
+    },
+    "urlForm": {
+      "urlLabel": "Lien vers l'offre d'emploi",
+      "urlHelp": "Compatible avec LinkedIn, Indeed et d'autres portails d'emploi.",
+      "analyzing": "Analyse en cours...",
+      "submit": "Analyser l'offre d'emploi"
+    },
+    "manualForm": {
+      "titlePlaceholder": "p. ex. Responsable marketing, Infirmier",
+      "fullTextHelp": "Copiez le texte intégral de l'offre d'emploi et collez-le ici.",
+      "fullTextPlaceholder": "Collez ici le texte intégral de l'offre d'emploi...",
+      "saving": "Enregistrement...",
+      "submit": "Enregistrer l'offre"
+    }
+  },
+  "configureStep": {
+    "title": "Configurer",
+    "loadingTemplates": "Chargement des modèles...",
+    "language": {
+      "de": "Allemand",
+      "en": "Anglais"
+    },
+    "coverLetterLength": {
+      "kurz": {
+        "label": "Compacte (~250 mots)",
+        "hint": "Droit au but — idéal quand l'offre d'emploi ne liste que peu d'exigences."
+      },
+      "standard": {
+        "label": "Standard (~350 mots)",
+        "hint": "La longueur classique pour tenir sur une page."
+      }
+    },
+    "options": {
+      "generateCoverLetter": "Générer une lettre de motivation",
+      "generateCoverLetterHelp": "Crée une lettre de motivation adaptée à l'offre.",
+      "language": "Langue"
+    },
+    "errors": {
+      "unknown": "Une erreur inconnue est survenue",
+      "resendEmail": "Renvoyer l'e-mail",
+      "goToApplication": "Aller à la candidature"
+    },
+    "progress": {
+      "created": "créée",
+      "doneTitle": "Terminé !",
+      "redirecting": "Candidature créée – redirection en cours …",
+      "eta": "Temps restant estimé : ~{seconds} s",
+      "almostDone": "Presque terminé …",
+      "doNotClose": "Veuillez ne pas fermer cette fenêtre.",
+      "stepDone": "Terminé",
+      "footnote": "Les étapes terminées sont automatiquement marquées comme faites une fois achevées.",
+      "cancelButton": "Annuler",
+      "cancelledToast": "Génération annulée. Vos sélections restent inchangées.",
+      "steps": {
+        "analyze": "Analyse du profil et de l'offre d'emploi",
+        "cover": "Génération de la lettre de motivation par l'IA",
+        "resume": "Adaptation du CV à l'offre",
+        "save": "Enregistrement des documents"
+      }
+    },
+    "templates": {
+      "thumbnailAlt": "Vignette de {name}",
+      "color": "Couleur"
+    },
+    "preview": {
+      "label": "Aperçu :",
+      "live": "En direct",
+      "zoomTitle": "Cliquez pour agrandir",
+      "alt": "Aperçu du modèle",
+      "zoom": "Agrandir",
+      "dialogTitle": "Aperçu : {name}",
+      "largeAlt": "Grand aperçu du modèle"
+    },
+    "usage": {
+      "exhausted": "Limite quotidienne atteinte ({used}/{limit}). Veuillez revenir dans 24 heures.",
+      "remaining": "{remaining} candidatures sur {limit} encore possibles aujourd'hui"
+    },
+    "actions": {
+      "back": "Retour",
+      "creating": "Création de la candidature...",
+      "create": "Créer la candidature"
+    }
+  },
+  "generateStep": {
+    "toasts": {
+      "existingApplication": "Une candidature existe déjà pour cette offre. Nous allons l'ouvrir pour vous."
+    },
+    "progress": {
+      "title": "Création de la candidature...",
+      "overdue": "Cela prend plus de temps que prévu, encore un instant …",
+      "estimate": "Cela prend généralement {seconds} secondes. Veuillez ne pas fermer cette fenêtre.",
+      "creating": "Votre candidature est en cours de création par l'IA...",
+      "steps": {
+        "analyze": "Analyse du profil et de l'offre d'emploi",
+        "cover": "Génération de la lettre de motivation par l'IA",
+        "resume": "Adaptation du CV à l'offre",
+        "refineCover": "Relecture et amélioration de la lettre de motivation",
+        "save": "Enregistrement des documents"
+      }
+    },
+    "summary": {
+      "title": "Récapitulatif",
+      "profile": "Votre profil",
+      "skills": "{count, plural, one {# compétence} other {# compétences}}",
+      "experiences": "{count, plural, one {# expérience} other {# expériences}}",
+      "education": "{count} formations",
+      "job": "Cette offre"
+    },
+    "options": {
+      "title": "Options",
+      "languageTitle": "Langue de la candidature",
+      "languageHelp": "Détectée automatiquement. Vous pouvez l'ajuster ici."
+    },
+    "templates": {
+      "title": "Choisir le design",
+      "description": "Choisissez un modèle pour votre CV.",
+      "coverLetterNote": "La lettre de motivation est automatiquement créée dans le design correspondant.",
+      "showLess": "Réduire",
+      "showAll": "Tout afficher"
+    }
+  },
+  "jobPostingForm": {
+    "title": "Créer une offre d'emploi manuellement",
+    "description": "Remplissez tous les champs pertinents pour créer une nouvelle offre d'emploi",
+    "sections": {
+      "basicInfo": "Informations de base",
+      "jobDescription": "Description du poste"
+    },
+    "fields": {
+      "title": "Intitulé du poste",
+      "company": "Entreprise",
+      "location": "Lieu",
+      "url": "URL de l'offre d'emploi",
+      "salary": "Salaire",
+      "employmentType": "Type de contrat",
+      "description": "Description",
+      "jobDescription": "Description du poste"
+    },
+    "placeholders": {
+      "title": "p. ex. Responsable marketing, Infirmier, Représentant commercial",
+      "company": "p. ex. Exemple SARL",
+      "location": "p. ex. Paris, France",
+      "salary": "p. ex. 40 000 - 55 000 EUR",
+      "employmentType": "p. ex. Temps plein, temps partiel, freelance",
+      "description": "Décrivez le poste, l'équipe et ce qui rend l'entreprise unique..."
+    },
+    "help": {
+      "description": "Description générale du poste et de l'entreprise"
+    },
+    "actions": {
+      "cancel": "Annuler",
+      "create": "Créer l'offre d'emploi"
+    }
+  },
+  "jobPostingParser": {
+    "toasts": {
+      "changesSaved": "Modifications enregistrées"
+    },
+    "input": {
+      "title": "Ajouter par lien",
+      "description": "Ajoutez une offre d'emploi par lien pour qu'elle soit analysée automatiquement",
+      "urlLabel": "Lien vers l'offre d'emploi",
+      "urlHelp": "LinkedIn, Indeed et d'autres portails d'emploi sont pris en charge",
+      "submit": "Analyser l'offre d'emploi"
+    },
+    "urlFallback": {
+      "title": "Nous n'avons pas pu lire cette offre d'emploi automatiquement.",
+      "descriptionManualTab": "Certains portails d'emploi bloquent l'extraction. Veuillez passer à l'onglet « Manuel » et y copier le texte de l'offre."
+    },
+    "result": {
+      "title": "Offre d'emploi analysée",
+      "description": "Vérifiez les informations extraites",
+      "badge": "Analysée avec succès"
+    },
+    "fields": {
+      "title": "Titre",
+      "company": "Entreprise",
+      "location": "Lieu",
+      "description": "Description",
+      "requirements": "Exigences",
+      "originalUrl": "URL d'origine"
+    },
+    "actions": {
+      "edit": "Modifier",
+      "analyzeAgain": "Analyser à nouveau",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "saveChanges": "Enregistrer les modifications"
+    },
+    "edit": {
+      "title": "Modifier l'offre d'emploi",
+      "description": "Ajustez les informations si nécessaire",
+      "titleLabel": "Titre *",
+      "companyLabel": "Entreprise *"
+    },
+    "help": {
+      "title": "Plateformes prises en charge",
+      "description": "Vous pouvez importer des offres d'emploi depuis LinkedIn, Indeed et d'autres portails d'emploi. Si l'analyse échoue, vous pouvez également saisir les informations manuellement."
+    }
+  }
+}

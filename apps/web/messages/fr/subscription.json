@@ -1,0 +1,26 @@
+{
+  "upgradePrompt": {
+    "defaultCta": "Passer à {tier}",
+    "upgradeNow": "Passer à la version supérieure",
+    "inlineNeeds": "{feature} nécessite {tier}.",
+    "onlyWithTier": "Disponible uniquement avec {tier}",
+    "onlyWithTierPrefix": "Cette fonctionnalité est disponible uniquement avec",
+    "onlyWithTierSuffix": "."
+  },
+  "limit": {
+    "title": "Limite mensuelle atteinte",
+    "description": "Vous avez utilisé {used} sur {limit} {action} ce mois-ci. Passez à un forfait supérieur pour plus de capacité.",
+    "actions": {
+      "applications": "candidatures",
+      "interviews": "sessions d'entretien"
+    }
+  },
+  "premiumSupport": {
+    "activeTitle": "Assistance Premium active",
+    "activeDescription": "Vos demandes sont traitées en priorité — réponse garantie sous 24 h.",
+    "contact": "Contacter l'assistance",
+    "title": "Assistance Premium",
+    "description": "Avec Premium, bénéficiez d'une assistance prioritaire avec une réponse garantie sous 24 h.",
+    "unlock": "Débloquer avec Premium"
+  }
+}
