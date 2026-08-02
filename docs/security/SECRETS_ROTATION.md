@@ -37,6 +37,7 @@
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Fly Secrets ← Cloudflare R2 | API (PDF storage)             |
 | `AZURE_OPENAI_API_KEY`          | Fly Secrets ← Azure      | API (cover letter / resume gen)      |
 | `AZURE_OPENAI_REALTIME_API_KEY` (optional) | Fly Secrets ← Azure (Sweden Central) | API (voice interview realtime token mint; falls back to `AZURE_OPENAI_API_KEY`) |
+| `MISTRAL_API_KEY`               | Fly Secrets ← Mistral La Plateforme console | API (extraction fast lane — `LLM_FAST_PROVIDER=mistral`; missing/invalid key degrades to the main provider, never breaks generation) |
 | `QSTASH_TOKEN` + signing keys   | Fly Secrets ← Upstash    | API (background job queue)           |
 | `RESEND_API_KEY`                | Fly Secrets ← Resend     | API (transactional email)            |
 | OAuth client secrets (Google / Microsoft / Azure AD) | Fly Secrets ← provider console | API (OAuth flows)        |
