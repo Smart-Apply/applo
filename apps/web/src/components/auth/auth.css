@@ -1,9 +1,10 @@
 /* ============================================================
    Applo — Auth screens (login / register / forgot).
-   "Sharp + soft" redesign: navy brand pane with 4px blue rule,
-   mono field labels, square 3px-radius inputs/buttons. The Applo
-   password-shy state machine below is ported verbatim from the
-   design handoff and driven by --lid/--cover/--coverShow vars.
+   "Sharp + soft" redesign: light-blue brand pane with a printed-
+   circuit texture, mono field labels, square 3px-radius inputs/
+   buttons. The Applo state machine below — a robot that switches
+   his face-camera OFF for your password — is ported from the
+   design handoff and driven by the --cover/--coverShow vars.
    ============================================================ */
 .applo-auth { --aa-bg:        #F5F6F8;
   --aa-surface:   #ffffff;
@@ -52,24 +53,29 @@
 /* register: Applo slides to the right, the form to the left */
 .applo-auth .auth.swapped .brand-pane { transform: translateX(100%); }
 .applo-auth .auth.swapped .form-pane { transform: translateX(-100%); }
-/* ---- brand pane (navy, 4px blue left rule) ------------------ */
+/* ---- brand pane (light blue, dark ink, printed-circuit texture) ---- */
 .applo-auth .brand-pane { position: relative;
   overflow: hidden;
-  color: #fff;
+  color: var(--aa-ink);
   display: flex;
   flex-direction: column;
   padding: 40px 44px;
   z-index: 2;
-  border-left: 4px solid var(--aa-accent);
-  background: #1B2A49; }
-/* soft accent glows behind the mascot */
+  /* base tint + a soft white glow pooling behind the mascot */
+  background: radial-gradient(760px 640px at 50% 70%, rgba(255,255,255,.72) 0%, rgba(255,255,255,0) 70%), #AFC4E4; }
+/* dot-grid, fading out toward the lower edge */
 .applo-auth .brand-pane::before { content: "";
-  position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: radial-gradient(90% 70% at 50% 8%, rgba(85,129,199,.14) 0%, rgba(85,129,199,0) 62%); }
+  position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .2;
+  background-image: radial-gradient(#1B2A49 1px, transparent 1.2px);
+  background-size: 6px 6px; background-position: 0 0;
+  -webkit-mask-image: radial-gradient(120% 78% at 50% 6%, #000 0%, #000 42%, transparent 78%);
+  mask-image: radial-gradient(120% 78% at 50% 6%, #000 0%, #000 42%, transparent 78%); }
+/* faint horizontal scanlines over the top half */
 .applo-auth .brand-pane::after { content: "";
-  position: absolute; left: 50%; top: 46%; z-index: 1; pointer-events: none;
-  width: 560px; height: 560px; transform: translate(-50%,-50%);
-  background: radial-gradient(circle, rgba(85,129,199,.22) 0%, rgba(85,129,199,0) 62%); }
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(27,42,73,.06) 0 2px, rgba(255,255,255,0) 2px 5px);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 48%, transparent 76%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 48%, transparent 76%); }
 .applo-auth .brand-top { position: relative; z-index: 2; display: flex; justify-content: flex-start; }
 .applo-auth .brand-lockup { display: inline-flex; align-items: center; gap: 15px; }
 .applo-auth .brand-stage { position: relative; z-index: 2;
@@ -78,21 +84,20 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 12px;
   text-align: center; }
-.applo-auth .brand-applo { filter: drop-shadow(0 24px 40px rgba(0,0,0,.35)); }
-.applo-auth .brand-speech { min-height: 24px;
+.applo-auth .brand-applo { filter: drop-shadow(0 18px 30px rgba(27,42,73,.18)); }
+.applo-auth .brand-speech { min-height: 22px;
   font-family: var(--aa-mono);
-  font-size: 14px; font-weight: 500; color: #fff;
+  font-size: 13.5px; font-weight: 600; color: var(--aa-ink);
   letter-spacing: .01em;
   transition: opacity .25s; }
-.applo-auth .brand-tagline { font-size: 16px; line-height: 1.55; color: rgba(229,233,242,.72); max-width: 340px; }
-.applo-auth .brand-hint { margin-top: 8px;
+.applo-auth .brand-tagline { font-size: 14.5px; line-height: 1.55; color: rgba(27,42,73,.78); max-width: 300px; text-wrap: pretty; }
+.applo-auth .brand-hint { margin-top: 2px;
   font-family: var(--aa-mono);
-  font-size: 10.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
-  color: rgba(229,233,242,.4);
-  border-top: 1px solid rgba(255,255,255,.14);
-  padding-top: 14px; }
+  font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(27,42,73,.8);
+  max-width: 300px; }
 /* ---- form pane --------------------------------------------- */
 .applo-auth .form-pane { display: flex; align-items: safe center; justify-content: center;
   padding: 40px 28px; overflow-y: auto;
@@ -195,9 +200,9 @@
   .applo-auth .form-anim { animation: none; }
 }
 /* ============================================================
-   Applo state machine
+   Applo state machine — robot with a face-camera he can switch OFF
    ============================================================ */
-.applo-auth .aApplo .aArmUp, .applo-auth .aApplo .aArmCover, .applo-auth .aApplo .aArmPeek, .applo-auth .aApplo .aEyesHappy, .applo-auth .aApplo .aBrows, .applo-auth .aApplo .aMoHappy, .applo-auth .aApplo .aMoO, .applo-auth .aApplo .aConfetti, .applo-auth .aApplo .aLidLine { opacity: 0; pointer-events: none; }
+.applo-auth .aApplo .aArmUp, .applo-auth .aApplo .aEyesHappy, .applo-auth .aApplo .aBrows, .applo-auth .aApplo .aMoHappy, .applo-auth .aApplo .aMoO, .applo-auth .aApplo .aConfetti, .applo-auth .aApplo .aLidLine { opacity: 0; pointer-events: none; }
 .applo-auth .aApplo .aCheck { opacity: 0; }
 .applo-auth .aApplo .aMoHappy, .applo-auth .aApplo .aEyesHappy { transition: opacity .18s; }
 .applo-auth .aFloat { animation: aa_aFloat 4.2s ease-in-out infinite; transform-origin: 120px 300px; }
@@ -212,33 +217,49 @@
 @keyframes aa_aBlink { 0%,92%,100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
 /* look — eyes drift toward the form (down + toward pane edge) */
 .applo-auth .s-look .aEyesOpen { transform: translate(4px, 4px); animation-play-state: paused; }
-.applo-auth .s-look .aMoSmile { d: path("M106 132 Q120 142 134 132"); }
-/* cover & peek hands use TRANSITIONS (they interpolate once to the target and
-   never restart when React re-renders on every keystroke) */
 .applo-auth .aArmDown { transition: opacity .2s ease; }
-.applo-auth .aArmCover { transform: translateY(24px); transition: transform .36s cubic-bezier(.34,1.45,.5,1), opacity .22s ease; }
-.applo-auth .aArmPeek { transform: translateY(-30px); transition: transform .34s cubic-bezier(.34,1.35,.5,1), opacity .22s ease; }
-.applo-auth .aCoverArm { transform: scaleY(.9); transform-origin: 120px 178px; transition: transform .44s cubic-bezier(.3,1.55,.55,1); }
-/* cover — hands rise into place, arms give a subtle buckle */
-.applo-auth .s-cover .aArmDown { opacity: 0; }
-.applo-auth .s-cover .aArmCover { opacity: 1; transform: none; }
-.applo-auth .s-cover .aCoverArm { transform: scaleY(1); }
-/* peek — hands slide down to the cheeks, eyes aa_pop open and glance down */
-.applo-auth .s-peek .aArmDown { opacity: 0; }
-.applo-auth .s-peek .aArmPeek { opacity: 1; transform: none; }
-.applo-auth .s-peek .aSquint { transform: translate(2px, 4px) scale(1.07); transform-origin: 120px 110px; }
-.applo-auth .s-peek .aEyesOpen { animation-play-state: paused; }
-/* squint — during sign-up, eyelids lower the stronger the password gets.
-   --lid runs 1 (wide open) → ~0.08 (squeezed shut), set from JS by strength. */
+/* status readout dots on the chest — light up while the camera is off */
+.applo-auth .aDots { opacity: 0; transition: opacity .25s ease; }
+.applo-auth .dt { animation: aa_dot 1.15s ease-in-out infinite; }
+.applo-auth .dt2 { animation-delay: .16s; }
+.applo-auth .dt3 { animation-delay: .32s; }
+@keyframes aa_dot { 0%,100% { opacity: .3; transform: translateY(0); } 45% { opacity: 1; transform: translateY(-3px); } }
+.applo-auth .aRig { transition: transform .5s cubic-bezier(.34,1.3,.5,1); }
 .applo-auth .aSquint { transform-origin: 120px 110px; transition: transform .3s cubic-bezier(.45,0,.25,1); }
 .applo-auth .aLidLine { transition: opacity .3s ease; }
-/* squint (sign-up) — Applo raises his hands to cover his eyes, further the
-   stronger the password gets. --cover runs 0 (hands down) → 1 (fully covering).
-   Hands stay fully opaque; only their height changes. */
-.applo-auth .s-squint .aArmDown { opacity: calc(1 - var(--coverShow, 0)); }
-.applo-auth .s-squint .aArmCover { opacity: var(--coverShow, 0); transform: translateY(calc((1 - var(--cover, 0)) * 52px)); }
-.applo-auth .s-squint .aCoverArm { transform: scaleY(1); }
-/* load — concentrating: brows + look up, faster bob */
+/* the dark "camera off" display, LED eye-bars, scanline + loading dots */
+.applo-auth .aOff { opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+.applo-auth .aScan { transform: translateY(0); opacity: 0; }
+.applo-auth .od { animation: aa_dot 1.15s ease-in-out infinite; }
+.applo-auth .od2 { animation-delay: .16s; }
+.applo-auth .od3 { animation-delay: .32s; }
+@keyframes aa_scan { 0% { transform: translateY(-10px); } 100% { transform: translateY(80px); } }
+@keyframes aa_ledPulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes aa_ledBlink { 0%,60% { opacity: 1; } 61%,100% { opacity: .35; } }
+/* cover — camera fully off: display darkens, LED bars pulse, scanline sweeps,
+   antenna tips blink like status LEDs. Uses opacity toggles only, so keystroke
+   re-renders never restart the fade. */
+.applo-auth .s-cover .aOff { opacity: 1; }
+.applo-auth .s-cover .aEyesOpen, .applo-auth .s-cover .aMoSmile, .applo-auth .s-cover .aCheeks { opacity: 0; }
+.applo-auth .s-cover .aOffEyes { animation: aa_ledPulse 2.4s ease-in-out infinite; }
+.applo-auth .s-cover .aScan { opacity: 1; animation: aa_scan 2.6s linear infinite; }
+.applo-auth .s-cover .aAntL circle, .applo-auth .s-cover .aAntR circle { fill: var(--aa-accent); animation: aa_ledBlink 1.6s steps(1) infinite; }
+.applo-auth .s-cover .aDots { opacity: 1; }
+.applo-auth .s-cover .aFloat { animation-duration: 3.2s; }
+/* peek — camera back on, eyes glance down at the field */
+.applo-auth .s-peek .aOff { opacity: 0; }
+.applo-auth .s-peek .aEyesOpen { transform: translate(3px, 5px) scale(1.06); animation-play-state: paused; }
+.applo-auth .s-peek .aCheeks { opacity: .26; }
+.applo-auth .s-peek .aDots { opacity: 1; }
+/* squint (sign-up) — the camera dims progressively with password strength.
+   --cover runs 0 (fully on) → 1 (fully off), set from JS by strength. */
+.applo-auth .s-squint .aOff { opacity: var(--cover, 0); }
+.applo-auth .s-squint .aOffEyes { animation: aa_ledPulse 2.4s ease-in-out infinite; }
+.applo-auth .s-squint .aScan { opacity: 1; animation: aa_scan 2.6s linear infinite; }
+.applo-auth .s-squint .aEyesOpen, .applo-auth .s-squint .aMoSmile, .applo-auth .s-squint .aCheeks { opacity: calc(1 - var(--cover, 0)); }
+.applo-auth .s-squint .aEyesOpen { animation-play-state: paused; }
+.applo-auth .s-squint .aDots { opacity: 1; }
+/* load — concentrating: look up, faster bob */
 .applo-auth .s-load .aFloat { animation-duration: 2.2s; }
 .applo-auth .s-load .aEyesOpen { transform: translateY(-2px); animation-play-state: paused; }
 /* success — arms up, happy, check + confetti */
@@ -266,7 +287,7 @@
 .applo-auth .s-error .aRig { animation: aa_aShake .42s ease; transform-origin: 120px 200px; }
 @keyframes aa_aShake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px) rotate(-2deg); } 40% { transform: translateX(7px) rotate(2deg); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
 @media (prefers-reduced-motion: reduce) {
-  .applo-auth .aFloat, .applo-auth .aShadow, .applo-auth .aAntL, .applo-auth .aAntR, .applo-auth .aEyesOpen, .applo-auth .s-success .aArmUp, .applo-auth .s-success .cf, .applo-auth .s-success .aRig, .applo-auth .s-error .aRig { animation: none !important; }
+  .applo-auth .aFloat, .applo-auth .aShadow, .applo-auth .aAntL, .applo-auth .aAntR, .applo-auth .aEyesOpen, .applo-auth .dt, .applo-auth .od, .applo-auth .aScan, .applo-auth .aOffEyes, .applo-auth .s-cover .aAntL circle, .applo-auth .s-cover .aAntR circle, .applo-auth .s-success .aArmUp, .applo-auth .s-success .cf, .applo-auth .s-success .aRig, .applo-auth .s-error .aRig { animation: none !important; }
 }
 /* ============================================================
    Responsive — collapse brand pane into a compact top band
@@ -287,6 +308,7 @@
 }
 
 /* ---- app integration: we render <AppLogo>, not the prototype LogoMark ---- */
-.applo-auth .brand-top .aa-logo { height: 40px; width: auto; filter: brightness(0) invert(1); }
+/* light pane → the logo keeps its native navy (no invert) */
+.applo-auth .brand-top .aa-logo { height: 42px; width: auto; }
 .applo-auth .form-mobilebrand { align-items: center; }
 .applo-auth .form-mobilebrand .aa-logo { height: 34px; width: auto; }
