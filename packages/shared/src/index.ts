@@ -1111,6 +1111,21 @@ export interface StartVoiceSessionPayload {
 export interface SubmitVoiceTranscriptPayload {
   durationSeconds: number;
   turns: VoiceTranscriptTurn[];
+  /** Client-summed token usage from the realtime `response.done` events. */
+  usage?: VoiceUsagePayload;
+}
+
+/**
+ * Token usage accumulated in the browser across the realtime session's
+ * `response.done` events. Telemetry only — the minute cap stays the
+ * authoritative quota; these numbers are never used for enforcement.
+ */
+export interface VoiceUsagePayload {
+  textInputTokens: number;
+  audioInputTokens: number;
+  cachedInputTokens: number;
+  textOutputTokens: number;
+  audioOutputTokens: number;
 }
 
 // ============================================
