@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.14.0](https://github.com/Smart-Apply/applo/compare/v4.13.0...v4.14.0) (2026-08-03)
+
+
+### Features
+
+* **interviews:** capture voice token usage via the transcript endpoint ([#736](https://github.com/Smart-Apply/applo/issues/736)) ([abe06c1](https://github.com/Smart-Apply/applo/commit/abe06c10cdf4bb2c73b0679ce9dcfcfb86645c76))
+* **interviews:** route interview scoring to the fast lane ([#734](https://github.com/Smart-Apply/applo/issues/734)) ([697a836](https://github.com/Smart-Apply/applo/commit/697a836b89aec614feab1fb327cd68120e6d65f9))
+* **interviews:** tier-scoped voice minute caps (Pro 60 / Premium 120) ([#735](https://github.com/Smart-Apply/applo/issues/735)) ([6037d1b](https://github.com/Smart-Apply/applo/commit/6037d1b398ad61170829dbb718de8775a8d22b15))
+* **subscription:** final tier contract — Free 3 checks, Premium 20 interviews, trimmed bullets ([#733](https://github.com/Smart-Apply/applo/issues/733)) ([e98b882](https://github.com/Smart-Apply/applo/commit/e98b8820ecd95addd992ddb495007392d7c33935))
+
 ## [4.13.0](https://github.com/Smart-Apply/applo/compare/v4.12.0...v4.13.0) (2026-08-02)
 
 

@@ -168,7 +168,7 @@
   "pricing": {
     "eyebrow": "04 · Preise",
     "title": "Fair und ohne Überraschungen",
-    "lead": "Klare monatliche Limits, keine Wasserzeichen und Extra-Credits, die nicht verfallen. Jederzeit kündbar.",
+    "lead": "Klare monatliche Limits und Extra-Credits, die nicht verfallen. Jederzeit kündbar.",
     "plans": {
       "free": {
         "name": "Free",
@@ -177,10 +177,8 @@
         "period": "/ Monat",
         "tagline": "Zum Ausprobieren",
         "features": {
-          "profile": "1 Lebenslauf-Profil",
           "applications": "3 KI-Bewerbungen / Monat",
-          "validations": "5 Bewerbungs-Checks / Monat",
-          "noWatermark": "Kein Wasserzeichen",
+          "validations": "3 Bewerbungs-Checks / Monat",
           "adDownload": "Download mit 15 Sek. Werbe-Wartezeit"
         },
         "cta": "Kostenlos starten"
@@ -197,9 +195,7 @@
           "applications": "50 Bewerbungen / Monat",
           "interviews": "5 Mock-Interviews / Monat",
           "validations": "15 Bewerbungs-Checks / Monat",
-          "ingestion": "Stellenanzeigen einlesen (Text, Link oder Datei)",
-          "pipeline": "Live-Status deiner Bewerbungen",
-          "export": "Werbefrei & Export in 6 Sprachen"
+          "adFree": "Werbefrei"
         },
         "cta": "Pro wählen"
       },
@@ -212,7 +208,7 @@
         "features": {
           "includedPro": "Alles aus Pro",
           "applications": "100 Bewerbungen / Monat",
-          "interviews": "45 Mock-Interviews (Gespräch & Text)",
+          "interviews": "20 Mock-Interviews (Gespräch & Text)",
           "validations": "35 Bewerbungs-Checks / Monat",
           "tracking": "E-Mail-Tracking (Outlook / Microsoft 365)"
         },

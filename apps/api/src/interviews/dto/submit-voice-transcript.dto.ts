@@ -16,6 +16,46 @@ import { AI_PROMPT_HARD_CEILING_CHARS } from '@applo/shared';
 import type { VoiceTranscriptRole } from '@applo/shared';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 
+/** Upper sanity bound per token counter — far above any real session. */
+const MAX_TOKENS_PER_COUNTER = 10_000_000;
+
+/**
+ * Client-summed token usage from the realtime `response.done` events.
+ * Telemetry only: never used for quota enforcement (the clamped duration
+ * against the tier minute cap stays authoritative).
+ */
+export class VoiceUsageDto {
+  @ApiProperty({ description: 'Text input tokens across the session.' })
+  @IsInt()
+  @Min(0)
+  @Max(MAX_TOKENS_PER_COUNTER)
+  textInputTokens: number;
+
+  @ApiProperty({ description: 'Audio input tokens across the session.' })
+  @IsInt()
+  @Min(0)
+  @Max(MAX_TOKENS_PER_COUNTER)
+  audioInputTokens: number;
+
+  @ApiProperty({ description: 'Cached input tokens across the session.' })
+  @IsInt()
+  @Min(0)
+  @Max(MAX_TOKENS_PER_COUNTER)
+  cachedInputTokens: number;
+
+  @ApiProperty({ description: 'Text output tokens across the session.' })
+  @IsInt()
+  @Min(0)
+  @Max(MAX_TOKENS_PER_COUNTER)
+  textOutputTokens: number;
+
+  @ApiProperty({ description: 'Audio output tokens across the session.' })
+  @IsInt()
+  @Min(0)
+  @Max(MAX_TOKENS_PER_COUNTER)
+  audioOutputTokens: number;
+}
+
 /** A single turn of the spoken interview transcript. */
 export class VoiceTranscriptTurnDto {
   @ApiProperty({ enum: ['interviewer', 'candidate'] })
@@ -53,4 +93,14 @@ export class SubmitVoiceTranscriptDto {
   @ValidateNested({ each: true })
   @Type(() => VoiceTranscriptTurnDto)
   turns: VoiceTranscriptTurnDto[];
+
+  @ApiPropertyOptional({
+    type: VoiceUsageDto,
+    description:
+      'Token usage summed client-side from the realtime response.done events (telemetry only).',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => VoiceUsageDto)
+  usage?: VoiceUsageDto;
 }

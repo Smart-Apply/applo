@@ -153,7 +153,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - **opossum** circuit breaker around LLM calls
   - **Structured outputs (#8):** `callJson` resolves an Azure `response_format` by template path (`llm/schemas/v1-schemas.ts`) — strict `json_schema` for the union-free `ats-keywords` + `resume-rewrite` + `job-facts`, `json_object` (JSON mode) for `skill-selector` + other json prompts. The regex/fence repair in `parseJsonResponse` is now a fallback only. Runs on the v1 Foundry API: `AZURE_OPENAI_API_VERSION` is the v1 channel (`preview` default | `v1`); legacy dated values auto-map to `preview` (`azure-v1-url.util.ts`).
   - **Mistral (fast lane only):** `MistralProvider` (`llm/providers/mistral.provider.ts`) calls the OpenAI-wire-compatible `/chat/completions` on **La Plateforme** (`MISTRAL_ENDPOINT=https://api.mistral.ai/v1`, no api-version) or **Azure AI Foundry** (`https://<res>.services.ai.azure.com/models`, set `MISTRAL_API_VERSION`). **Eval verdict 2026-08-02 (24-fixture A/B, judge pinned to gpt-4.1): REJECTED for prose** — Small/Large fabricated 10/22 impact numbers (gpt-4.1: 0) and wrote half-length cover letters (157/183 words vs 240–247 on a 350 budget). Kept for the extraction fast lane — see [docs/guides/LLM_MODEL_SELECTION.md](../docs/guides/LLM_MODEL_SELECTION.md).
-  - **Per-task model routing (opt-in, `LLM_FAST_MODEL` + `LLM_FAST_PROVIDER`):** `LLMService.resolveTaskModel()` routes the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector` — the `FAST_MODEL_TEMPLATES` set) to a cheaper model while candidate-facing writing stays on the default. `LLM_FAST_PROVIDER` hosts that model on a **different provider** (second DI instance `LLM_FAST_PROVIDER_INSTANCE` with its **own opossum breaker**; a fast-lane failure falls back to the main provider on its default model — the fast lane is an optimization, the main lane is the floor). An explicit per-call `model` override wins over routing (used by the skill-selector escalation). No-op when `LLM_FAST_MODEL` is unset. The `skill-selector` hand-off is guarded (`tailored-profile.util.ts`: `isValidTailoredProfile` + `isDegradedTailoredProfile`, escalate-once in `selectTailoredProfile`).
+  - **Per-task model routing (opt-in, `LLM_FAST_MODEL` + `LLM_FAST_PROVIDER`):** `LLMService.resolveTaskModel()` routes the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector`) **and the mock-interview scoring templates** (`interview-question`/`interview-answer-analyzer`/`interview-feedback` — internal structured scores; every consumer clamps + has a heuristic fallback) to a cheaper model while candidate-facing writing stays on the default. `LLM_FAST_PROVIDER` hosts that model on a **different provider** (second DI instance `LLM_FAST_PROVIDER_INSTANCE` with its **own opossum breaker**; a fast-lane failure falls back to the main provider on its default model — the fast lane is an optimization, the main lane is the floor). An explicit per-call `model` override wins over routing (used by the skill-selector escalation). No-op when `LLM_FAST_MODEL` is unset. The `skill-selector` hand-off is guarded (`tailored-profile.util.ts`: `isValidTailoredProfile` + `isDegradedTailoredProfile`, escalate-once in `selectTailoredProfile`).
 - **PDF:**
   - `@react-pdf/renderer` 4.5 (TSX templates under `src/pdf-v2/templates/*`) — the **sole** PDF renderer. ESM-only; loaded lazily via `react-pdf-loader.ts` because the api package is CommonJS. Puppeteer + Handlebars were removed in v1.16.
   - Template **PNG previews** via `pdfjs-dist` 4.10 + `@napi-rs/canvas` 0.1 in `pdf-v2/preview-renderer.service.ts` — renders sample data through react-pdf, then rasterises page 1 with pdfjs onto a napi-rs canvas. No browser, no Chromium dependency.
@@ -195,7 +195,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `contact` — contact form
 - `email` — Resend transactional email
 - `health` — Terminus health checks
-- `interviews` — AI mock interviews in **two modes**: typed text Q&A and a spoken **voice interview** (`voice/` sub-folder — pluggable `VOICE_PROVIDER` = `azure-realtime` | `mock`; Azure OpenAI Realtime API over browser-direct WebRTC, Sweden Central/EU). The backend only mints a short-lived ephemeral token (`POST /openai/v1/realtime/client_secrets`) and finalizes the transcript; the browser talks WebRTC to Azure directly (`?webrtcfilter=on` keeps the interviewer instructions private). Both modes reuse the same answer-analyzer/feedback-generator scoring. The voice interviewer opens with a persona-led introduction and asks questions grounded in a bounded plain-text dossier of the candidate's profile (built server-side in `buildInstructions`). The voice call length is a user-chosen 5/10/15-minute target (clamped by `VOICE_INTERVIEW_MAX_SESSION_MINUTES` and the monthly budget); the client sends data-channel time cues so the interviewer wraps up in the final minute and speaks a closing at time-up. Pro/Premium-gated (`interviewCoach`) with monthly session limits (Pro 5, Premium 45), plus a per-user monthly voice-minute cap computed on the fly from `InterviewSession.voiceDurationSeconds`. No audio is persisted — transcript + scores only.
+- `interviews` — AI mock interviews in **two modes**: typed text Q&A and a spoken **voice interview** (`voice/` sub-folder — pluggable `VOICE_PROVIDER` = `azure-realtime` | `mock`; Azure OpenAI Realtime API over browser-direct WebRTC, Sweden Central/EU). The backend only mints a short-lived ephemeral token (`POST /openai/v1/realtime/client_secrets`) and finalizes the transcript; the browser talks WebRTC to Azure directly (`?webrtcfilter=on` keeps the interviewer instructions private). Both modes reuse the same answer-analyzer/feedback-generator scoring. The voice interviewer opens with a persona-led introduction and asks questions grounded in a bounded plain-text dossier of the candidate's profile (built server-side in `buildInstructions`). The voice call length is a user-chosen 5/10/15-minute target (clamped by `VOICE_INTERVIEW_MAX_SESSION_MINUTES` and the monthly budget); the client sends data-channel time cues so the interviewer wraps up in the final minute and speaks a closing at time-up. Pro/Premium-gated (`interviewCoach`) with monthly session limits (Pro 5, Premium 20), plus a **tier-scoped monthly voice-minute cap** (`TIER_LIMITS.voiceMinutesPerMonth`: Free 0 / Pro 60 / Premium 120; `VOICE_INTERVIEW_MINUTES_PER_MONTH` is only an emergency global clamp) computed on the fly from `InterviewSession.voiceDurationSeconds`. No audio is persisted — transcript + scores + client-reported token usage (`InterviewSession.voiceUsage`, telemetry only — never quota) only.
 - `job-postings` — parse text/URL/file → normalized JobPosting
 - `jobs` — pluggable queue providers (`in-memory` | `qstash`)
 - `keywords` — ATS keyword extraction & matching with language detection
@@ -212,7 +212,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `templates` — template catalog. Read paths are registry-filtered: `findAll`, `findByCategoryAndLanguage` and `findDefault` only return rows whose design resolves to a registered react-pdf factory (`pdf-v2/template-registry.ts#isRenderableTemplate`), so the wizard can never offer a template that would crash generation. Rows are seeded by `prisma/seed-react-pdf-templates.ts` (the canonical source; deactivates unresolvable active rows).
 - `uploads` — file uploads
 - `user-preferences` — per-user settings
-- `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Applo. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 5/month, Pro 15/month, Premium 35/month); quota is reserved atomically before the LLM call and refunded when the request fails. Each successful check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
+- `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Applo. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 3/month, Pro 15/month, Premium 35/month); quota is reserved atomically before the LLM call and refunded when the request fails. Each successful check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`).
 
 ## Frontend Structure
 - `messages/` - next-intl message catalogs (`{de,en,fr,es,pt,it}/*.json`, one file per namespace: common, auth, twoFactor, applications, editor, wizard, profile, dashboard, settings, analytics, subscription, jobs, interviews, validation, templates, landing, faq). All six key trees must stay identical.
@@ -249,7 +249,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Validation** (Bewerbungs-Check — standalone AI check of an external application; inputs + cached result, scoped to user)
 - **RefreshToken**, **Session** (auth/security)
 - **InviteCode** (RETIRED — the closed-beta gate was removed; the model + `User.inviteCodeRedeemed` stay in the schema only until a follow-up release drops them, per the expand→contract rule)
-- **Subscription** (plans & usage) — monthly hard limits for applications (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95), Bewerbungs-Checks (5/15/35), and mock interviews (0/5/45), with `Subscription.addonCreditsRemaining` holding purchased add-on credits (packages of 10/30/75) that persist until used and are consumed after the tier allowance
+- **Subscription** (plans & usage) — monthly hard limits for applications (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95), Bewerbungs-Checks (3/15/35), and mock interviews (0/5/20), with `Subscription.addonCreditsRemaining` holding purchased add-on credits (packages of 10/30/75) that persist until used and are consumed after the tier allowance
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
 
@@ -316,7 +316,7 @@ All endpoints are prefixed with `/api/v1` and documented at `http://localhost:30
 ### Subscription
 
 **GET /api/v1/subscription** — current plan + usage counters (protected)
-**GET /api/v1/subscription/tiers** — public final tier contract and add-on packages (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95; checks 5/15/35; interviews 0/5/45; persistent add-ons 10 @ €2.99 / 30 @ €6.99 / 75 @ €14.99)
+**GET /api/v1/subscription/tiers** — public final tier contract and add-on packages (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95; checks 3/15/35; interviews 0/5/20; persistent add-ons 10 @ €2.99 / 30 @ €6.99 / 75 @ €14.99)
 
 ### Admin (Protected, allow-listed)
 
@@ -338,12 +338,12 @@ Gated by `ADMIN_EMAILS` (comma-separated, case-insensitive). Returns 403 when th
 
 ### Interviews (Protected, Pro/Premium — `@RequiresFeature('interviewCoach')`)
 
-**POST /api/v1/interviews/start** — start a session (text mode by default; Pro 5/month, Premium 45/month). Text flow: **POST /:id/questions/:questionId/answer**, **/:id/next**, **/:id/complete**, **/:id/abandon**; **GET /interviews**, **/interviews/:id**, **/interviews/stats**.
+**POST /api/v1/interviews/start** — start a session (text mode by default; Pro 5/month, Premium 20/month). Text flow: **POST /:id/questions/:questionId/answer**, **/:id/next**, **/:id/complete**, **/:id/abandon**; **GET /interviews**, **/interviews/:id**, **/interviews/stats**.
 
 Voice interview (Azure OpenAI Realtime API via browser-direct WebRTC):
 **GET /api/v1/interviews/voice/config** — availability + remaining monthly voice minutes. Returns `available:false` when `VOICE_PROVIDER=mock`, so the frontend hides the voice toggle cleanly.
 **POST /api/v1/interviews/:id/voice/session** — mint a short-lived ephemeral realtime token (never the standing Azure key); the browser runs the WebRTC SDP exchange directly with Azure. Throttled 10/min.
-**POST /api/v1/interviews/:id/voice/transcript** — submit the spoken transcript + duration; the server pairs it into Q&A, scores it with the shared feedback engine, records the call length against the monthly voice-minute cap, and completes the session. Throttled 20/min.
+**POST /api/v1/interviews/:id/voice/transcript** — submit the spoken transcript + duration (+ optional client-summed `usage` token telemetry from the realtime `response.done` events); the server pairs it into Q&A, scores it with the shared feedback engine, records the call length against the monthly voice-minute cap, persists the usage (`voiceUsage`, telemetry only), and completes the session. Throttled 20/min.
 
 ### Email Tracking — Inbox Sync (Premium)
 
@@ -475,7 +475,7 @@ Standalone AI quality + ATS check of an application the user created **outside**
 **POST /api/v1/validation**
 - Body: `{ resumeText (required), coverLetterText?, jobContext?, language?, title? }` — all `@Sanitize()`d, DTO length-capped (résumé ≤ 24k, cover letter ≤ 12k, jobContext ≤ 24k chars).
 - Runs `v1/application-validation.md` (strict `json_schema`); returns a `Validation` record (inputs + `ApplicationValidationResult`).
-- Metered via `UsageLimitGuard` + `@CheckUsage('validation')`: **Free = 5/month, Pro = 15/month, Premium = 35/month** (`validationsPerMonth`). Quota is reserved atomically before work and refunded on request failure.
+- Metered via `UsageLimitGuard` + `@CheckUsage('validation')`: **Free = 3/month, Pro = 15/month, Premium = 35/month** (`validationsPerMonth`). Quota is reserved atomically before work and refunded on request failure.
 
 **GET /api/v1/validation** — history (newest first, lightweight `ValidationSummary[]`).
 **GET /api/v1/validation/:id** — a single check (inputs + result), ownership-scoped.
@@ -714,10 +714,14 @@ MISTRAL_MODEL=mistral-large-latest
 VOICE_PROVIDER=mock          # azure-realtime | mock (mock hides the voice mode)
 AZURE_OPENAI_REALTIME_ENDPOINT=<sweden-central-resource>
 AZURE_OPENAI_REALTIME_API_KEY=<key>
-AZURE_OPENAI_REALTIME_DEPLOYMENT=gpt-realtime
+# Deployment name, not model name. One per env: gpt-realtime-mini (prod) /
+# gpt-realtime-mini-staging / gpt-realtime-mini-local.
+AZURE_OPENAI_REALTIME_DEPLOYMENT=gpt-realtime-mini
 AZURE_OPENAI_REALTIME_VOICE=alloy
 VOICE_INTERVIEW_MAX_SESSION_MINUTES=15
-VOICE_INTERVIEW_MINUTES_PER_MONTH=60
+# Emergency global clamp only — per-user cap is TIER_LIMITS.voiceMinutesPerMonth
+# (Free 0 / Pro 60 / Premium 120). -1 = off.
+VOICE_INTERVIEW_MINUTES_PER_MONTH=-1
 
 # Azure AI Foundry (URL parsing agents)
 AZURE_AI_FOUNDRY_ENDPOINT=<endpoint>
@@ -878,7 +882,7 @@ Four workflows, each with a single purpose. **Never propose adding a fifth that 
   - Plus DNS zone `applo.ai`, two R2 buckets (`smart-apply-prod` + `smart-apply-staging`, both EU jurisdiction), Universal SSL
 - **Neon**: one Postgres project (EU/Frankfurt) with two branches — `main` (prod) + `staging` (cow off `main`). Each branch has its own pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) URLs.
 - **Upstash**: QStash (queue, shared between envs — staging gets its own webhook URL) + Redis (prod throttler only; staging uses `THROTTLER_STORAGE=memory` since it runs single-instance)
-- **Azure**: OpenAI resource with three deployments — `gpt-4.1` (prod, 200K TPM), `gpt-4.1-staging` (staging), `gpt-4.1-local` (your laptop)
+- **Azure**: OpenAI resource (West Europe) with three chat deployments — `gpt-4.1` (prod, 200K TPM), `gpt-4.1-staging` (staging), `gpt-4.1-local` (your laptop). Plus a **separate Sweden Central** resource for the voice interview, because realtime models only exist in East US 2 + Sweden Central: `gpt-realtime-mini` (prod), `gpt-realtime-mini-staging`, `gpt-realtime-mini-local`. `gpt-realtime-2.1-mini` was not deployable in the subscription, so the `gpt-realtime-mini` line is what runs; it is ~3.2× cheaper than the full `gpt-realtime` on audio tokens ($10/$20 vs $32/$64 per 1M).
 - **Third-party**: Resend (email), Sentry (monitoring)
 
 ## Tests

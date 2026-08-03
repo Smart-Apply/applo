@@ -26,6 +26,11 @@ export interface TierLimits {
   jobParsingPerMonth: number; // URL parsing limit
   interviewSessionsPerMonth: number;
 
+  // Voice-interview minutes per month (spoken realtime sessions). Replaces the
+  // old global VOICE_INTERVIEW_MINUTES_PER_MONTH env parity between tiers; the
+  // env var remains only as an emergency global clamp. -1 = unlimited.
+  voiceMinutesPerMonth: number;
+
   // Application validation (KI quality + ATS check of an existing application).
   // Every tier has a monthly hard limit. -1 = unlimited.
   validationsPerMonth: number;
@@ -76,7 +81,8 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: 3,
     jobParsingPerMonth: 10,
     interviewSessionsPerMonth: 0,
-    validationsPerMonth: 5,
+    voiceMinutesPerMonth: 0,
+    validationsPerMonth: 3,
     applicationsPerDay: 5,
     priority: 'low',
     features: {
@@ -104,6 +110,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: 50,
     jobParsingPerMonth: -1, // Unlimited
     interviewSessionsPerMonth: 5,
+    voiceMinutesPerMonth: 60,
     validationsPerMonth: 15,
     applicationsPerDay: -1,
     priority: 'normal',
@@ -131,7 +138,8 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     coverLettersPerMonth: -1, // Unlimited
     resumesPerMonth: -1, // Unlimited
     jobParsingPerMonth: -1, // Unlimited
-    interviewSessionsPerMonth: 45,
+    interviewSessionsPerMonth: 20,
+    voiceMinutesPerMonth: 120,
     validationsPerMonth: 35,
     applicationsPerDay: -1,
     priority: 'high',

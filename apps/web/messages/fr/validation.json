@@ -8,7 +8,7 @@
     "limitReachedTitle": "Vous avez atteint votre limite mensuelle de {limit} vérifications.",
     "limitReachedDescription": "Comparez les <pricing>forfaits</pricing> pour un quota mensuel plus élevé.",
     "historyTitle": "Vérifications précédentes",
-    "freeHistoryDescription": "Le forfait Free inclut 5 vérifications par mois.",
+    "freeHistoryDescription": "Le forfait Free inclut 3 vérifications par mois.",
     "savedHistoryDescription": "Vos vérifications enregistrées.",
     "noHistory": "Aucune vérification pour le moment.",
     "open": "Ouvrir",

@@ -8,7 +8,7 @@
     "limitReachedTitle": "Hai raggiunto il tuo limite mensile di {limit} verifiche.",
     "limitReachedDescription": "Confronta i <pricing>piani</pricing> per una quota mensile più alta.",
     "historyTitle": "Verifiche precedenti",
-    "freeHistoryDescription": "Il piano Free include 5 verifiche al mese.",
+    "freeHistoryDescription": "Il piano Free include 3 verifiche al mese.",
     "savedHistoryDescription": "Le tue verifiche salvate.",
     "noHistory": "Ancora nessuna verifica.",
     "open": "Apri",

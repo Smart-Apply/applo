@@ -12,7 +12,7 @@ describe('final subscription contract', () => {
     expect(TIER_LIMITS[SubscriptionTier.FREE]).toMatchObject({
       applicationsPerMonth: 3,
       interviewSessionsPerMonth: 0,
-      validationsPerMonth: 5,
+      validationsPerMonth: 3,
     });
     expect(TIER_LIMITS[SubscriptionTier.PRO]).toMatchObject({
       applicationsPerMonth: 50,
@@ -21,9 +21,15 @@ describe('final subscription contract', () => {
     });
     expect(TIER_LIMITS[SubscriptionTier.PREMIUM]).toMatchObject({
       applicationsPerMonth: 100,
-      interviewSessionsPerMonth: 45,
+      interviewSessionsPerMonth: 20,
       validationsPerMonth: 35,
     });
+  });
+
+  it('scopes voice-interview minutes per tier', () => {
+    expect(TIER_LIMITS[SubscriptionTier.FREE].voiceMinutesPerMonth).toBe(0);
+    expect(TIER_LIMITS[SubscriptionTier.PRO].voiceMinutesPerMonth).toBe(60);
+    expect(TIER_LIMITS[SubscriptionTier.PREMIUM].voiceMinutesPerMonth).toBe(120);
   });
 
   it('matches the advertised paid feature gates', () => {

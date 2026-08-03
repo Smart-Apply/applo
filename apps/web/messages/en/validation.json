@@ -8,7 +8,7 @@
     "limitReachedTitle": "You have reached your monthly limit of {limit} checks.",
     "limitReachedDescription": "Compare <pricing>plans</pricing> for a higher monthly allowance.",
     "historyTitle": "Previous checks",
-    "freeHistoryDescription": "The Free plan includes 5 checks per month.",
+    "freeHistoryDescription": "The Free plan includes 3 checks per month.",
     "savedHistoryDescription": "Your saved checks.",
     "noHistory": "No checks yet.",
     "open": "Open",

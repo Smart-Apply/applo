@@ -168,7 +168,7 @@
   "pricing": {
     "eyebrow": "04 · Pricing",
     "title": "Fair and without surprises",
-    "lead": "Clear monthly limits, no watermarks, and extra credits that never expire. Cancel anytime.",
+    "lead": "Clear monthly limits and extra credits that never expire. Cancel anytime.",
     "plans": {
       "free": {
         "name": "Free",
@@ -177,10 +177,8 @@
         "period": "/ month",
         "tagline": "For trying it out",
         "features": {
-          "profile": "1 résumé profile",
           "applications": "3 AI applications / month",
-          "validations": "5 application checks / month",
-          "noWatermark": "No watermark",
+          "validations": "3 application checks / month",
           "adDownload": "Ad-supported download (15s wait time)"
         },
         "cta": "Start free"
@@ -197,9 +195,7 @@
           "applications": "50 applications / month",
           "interviews": "5 mock interviews / month",
           "validations": "15 application checks / month",
-          "ingestion": "Import job postings (text, link, or file)",
-          "pipeline": "Live status of your applications",
-          "export": "Ad-free & export in 6 languages"
+          "adFree": "Ad-free"
         },
         "cta": "Choose Pro"
       },
@@ -212,7 +208,7 @@
         "features": {
           "includedPro": "Includes all Pro features",
           "applications": "100 applications / month",
-          "interviews": "45 mock interviews (voice & text)",
+          "interviews": "20 mock interviews (voice & text)",
           "validations": "35 application checks / month",
           "tracking": "Email tracking (Outlook / Microsoft 365)"
         },

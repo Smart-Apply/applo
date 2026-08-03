@@ -14,6 +14,7 @@ import type {
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConfigService } from '../../config/config.service';
 import { InterviewsService } from '../interviews.service';
+import { SubscriptionService } from '../../subscription/subscription.service';
 import { InterviewSessionStatus, Prisma } from '../../generated/prisma/client';
 import { REALTIME_VOICES, VOICE_PROVIDER, VoiceProvider } from './voice-provider.interface';
 
@@ -45,6 +46,7 @@ export class VoiceInterviewService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly interviews: InterviewsService,
+    private readonly subscriptions: SubscriptionService,
     @Inject(VOICE_PROVIDER) private readonly provider: VoiceProvider,
   ) {}
 
@@ -56,7 +58,7 @@ export class VoiceInterviewService {
       defaultVoice: this.resolveVoice(),
       voices: REALTIME_VOICES,
       maxSessionMinutes: this.config.voiceInterviewMaxSessionMinutes,
-      minutesPerMonth: this.config.voiceInterviewMinutesPerMonth,
+      minutesPerMonth: capSeconds < 0 ? -1 : Math.floor(capSeconds / 60),
       remainingMinutes: capSeconds < 0 ? -1 : Math.floor(remainingSeconds / 60),
     };
   }
@@ -83,7 +85,7 @@ export class VoiceInterviewService {
         message: 'Dein monatliches Sprach-Kontingent ist aufgebraucht.',
         error: 'VOICE_LIMIT_EXCEEDED',
         remaining: 0,
-        limit: this.config.voiceInterviewMinutesPerMonth,
+        limit: Math.floor(capSeconds / 60),
         upgradeUrl: '/#preise',
       });
     }
@@ -132,11 +134,18 @@ export class VoiceInterviewService {
   /**
    * Voice seconds consumed this billing period vs. the tier cap. Computed on
    * the fly from `InterviewSession.voiceDurationSeconds` — no separate counter.
+   * The cap comes from the user's tier (`TIER_LIMITS.voiceMinutesPerMonth`);
+   * the VOICE_INTERVIEW_MINUTES_PER_MONTH env var survives only as an
+   * emergency global clamp (effective cap = min of both when the env is ≥ 0).
    */
   private async getBudget(
     userId: string,
   ): Promise<{ usedSeconds: number; capSeconds: number; remainingSeconds: number }> {
-    const cap = this.config.voiceInterviewMinutesPerMonth;
+    const tier = await this.subscriptions.getUserTier(userId);
+    const tierCap = this.subscriptions.getTierLimits(tier).voiceMinutesPerMonth;
+    const envClamp = this.config.voiceInterviewMinutesPerMonth;
+    const cap =
+      tierCap < 0 ? envClamp : envClamp < 0 ? tierCap : Math.min(tierCap, envClamp);
     if (cap < 0) {
       return { usedSeconds: 0, capSeconds: -1, remainingSeconds: Number.MAX_SAFE_INTEGER };
     }

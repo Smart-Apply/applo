@@ -163,7 +163,7 @@ export class ConfigService {
 
   get voiceInterviewMinutesPerMonth(): number {
     return parseInt(
-      this.nestConfig.get('VOICE_INTERVIEW_MINUTES_PER_MONTH', { infer: true }) ?? '60',
+      this.nestConfig.get('VOICE_INTERVIEW_MINUTES_PER_MONTH', { infer: true }) ?? '-1',
       10,
     );
   }
