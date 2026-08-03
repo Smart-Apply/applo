@@ -289,10 +289,14 @@ MISTRAL_API_VERSION=2024-05-01-preview   # Foundry requires an api-version
 ## Mixed routing — cheap model for extraction (opt-in)
 
 Not every step needs the flagship. The pipeline's **mechanical extraction /
-classification** steps — `ats-keywords`, `job-facts`, `skill-selector` — emit small,
-schema-constrained JSON and carry no candidate-facing prose, so they can run on a much
+classification** steps — `ats-keywords`, `job-facts`, `skill-selector` — and the
+**mock-interview scoring** templates — `interview-question`,
+`interview-answer-analyzer`, `interview-feedback` (added 2026-08-03) — emit small,
+structured JSON and carry no candidate-facing prose, so they can run on a much
 cheaper model while the **writing** steps (cover letter, résumé rewrite, the
-editor/style/translation passes, validation) stay on the flagship.
+editor/style/translation passes, validation) stay on the flagship. The interview
+consumers all clamp score ranges and fall back to heuristics on malformed output,
+so a weaker model can only degrade a score — never fail a session.
 
 `LLMService.resolveTaskModel()` implements this centrally by template path — **no call
 site changes** — and it's **opt-in + provider-agnostic** via a single env var:
@@ -338,6 +342,14 @@ output. To widen the routed set later, add template basenames to
 ---
 
 ## Changelog
+
+- **2026-08-03** — Routed the three **mock-interview scoring** templates
+  (`interview-question` / `interview-answer-analyzer` / `interview-feedback`) to the
+  fast lane via the `interview-` prefix in `FAST_MODEL_TEMPLATES`. Guard audit:
+  all three consumers already clamp scores and fall back to heuristics on parse
+  failure. Effect at Small rates: ~$0.26 → ~$0.02 per 20-question text interview;
+  Premium worst case (20 sessions) ~$5.20 → ~$0.40. Branch
+  `feat/interview-fast-lane`.
 
 - **2026-08-02** — **DECISION: prose stays on `gpt-4.1`; Mistral rejected for
   writing, adopted for extraction.** Ran the full gate: 24-fixture A/B (Small +
