@@ -77,6 +77,15 @@ export function InterviewVoice({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const remoteStreamRef = useRef<MediaStream | null>(null);
   const turnsRef = useRef<VoiceTranscriptTurn[]>([]);
+  // Token usage summed across the session's `response.done` events — telemetry
+  // the server logs/persists; quota stays duration-based.
+  const usageRef = useRef({
+    textInputTokens: 0,
+    audioInputTokens: 0,
+    cachedInputTokens: 0,
+    textOutputTokens: 0,
+    audioOutputTokens: 0,
+  });
   const startedAtRef = useRef<number | null>(null);
   const endTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -166,7 +175,20 @@ export function InterviewVoice({
 
   const handleRealtimeEvent = useCallback(
     (raw: string) => {
-      let event: { type?: string; transcript?: string };
+      let event: {
+        type?: string;
+        transcript?: string;
+        response?: {
+          usage?: {
+            input_token_details?: {
+              text_tokens?: number;
+              audio_tokens?: number;
+              cached_tokens?: number;
+            };
+            output_token_details?: { text_tokens?: number; audio_tokens?: number };
+          };
+        };
+      };
       try {
         event = JSON.parse(raw);
       } catch {
@@ -197,6 +219,18 @@ export function InterviewVoice({
         case 'response.output_audio_transcript.done':
           if (event.transcript?.trim()) addTurn('interviewer', event.transcript.trim());
           break;
+        case 'response.done': {
+          const usage = event.response?.usage;
+          if (usage) {
+            const acc = usageRef.current;
+            acc.textInputTokens += usage.input_token_details?.text_tokens ?? 0;
+            acc.audioInputTokens += usage.input_token_details?.audio_tokens ?? 0;
+            acc.cachedInputTokens += usage.input_token_details?.cached_tokens ?? 0;
+            acc.textOutputTokens += usage.output_token_details?.text_tokens ?? 0;
+            acc.audioOutputTokens += usage.output_token_details?.audio_tokens ?? 0;
+          }
+          break;
+        }
         default:
           break;
       }
@@ -224,7 +258,13 @@ export function InterviewVoice({
 
     setPhase('ending');
     try {
-      await submitMutation.mutateAsync({ durationSeconds, turns });
+      const acc = usageRef.current;
+      const hasUsage = Object.values(acc).some((v) => v > 0);
+      await submitMutation.mutateAsync({
+        durationSeconds,
+        turns,
+        ...(hasUsage ? { usage: { ...acc } } : {}),
+      });
     } finally {
       setPhase('ended');
       onComplete();

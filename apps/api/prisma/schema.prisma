@@ -873,6 +873,7 @@ model InterviewSession {
   voice                String? // chosen TTS voice (e.g. "alloy")
   realtimeModel        String? // realtime deployment used (e.g. "gpt-realtime")
   voiceDurationSeconds Int? // recorded spoken-call length (for the monthly minute cap)
+  voiceUsage           Json? // client-reported realtime token usage (telemetry only, never quota)
   transcript           Json? // [{ role: "interviewer"|"candidate", text, atSeconds }]
 
   // Relations
