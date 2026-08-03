@@ -27,7 +27,7 @@
     },
     "pricing": {
       "q": "Quanto custa a Applo?",
-      "a": "O plano Free custa 0 € e inclui um perfil de currículo, 3 candidaturas com IA e 5 verificações de candidatura por mês; as transferências não têm marca de água e incluem uma espera de 15 segundos com publicidade. O Pro custa 9,95 € por mês e inclui 50 candidaturas com IA, 15 verificações e 5 entrevistas de prática. O Premium custa 19,95 € por mês e inclui 100 candidaturas com IA, 35 verificações, 45 entrevistas de prática e acompanhamento de e-mail. Estão disponíveis créditos extra permanentes em pacotes de 10, 30 ou 75 candidaturas — consulta a nossa <pricing>página de preços</pricing> para mais detalhes."
+      "a": "O plano Free custa 0 € e inclui 3 candidaturas com IA e 3 verificações de candidatura por mês; as transferências começam após uma espera de 15 segundos com publicidade. O Pro custa 9,95 € por mês, não tem publicidade e inclui 50 candidaturas com IA, 15 verificações e 5 entrevistas de prática. O Premium custa 19,95 € por mês e inclui 100 candidaturas com IA, 35 verificações, 20 entrevistas de prática e acompanhamento de e-mail. Estão disponíveis créditos extra permanentes em pacotes de 10, 30 ou 75 candidaturas — consulta a nossa <pricing>página de preços</pricing> para mais detalhes."
     },
     "editing": {
       "q": "Como posso ajustar a minha candidatura depois de gerada?",

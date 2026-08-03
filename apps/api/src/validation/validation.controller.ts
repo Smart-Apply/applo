@@ -78,7 +78,7 @@ export class ValidationController {
     description:
       "Runs an AI quality + ATS review of the user's own résumé (+ optional cover letter and job " +
       'context) created outside Applo, and returns actionable feedback. Metered: Free tier gets ' +
-      '5 checks/month, Pro gets 15, and Premium gets 35. The result is persisted so it can be revisited.',
+      '3 checks/month, Pro gets 15, and Premium gets 35. The result is persisted so it can be revisited.',
   })
   @ApiResponse({ status: 201, description: 'Validation completed and stored' })
   @ApiResponse({ status: 400, description: 'Invalid input' })

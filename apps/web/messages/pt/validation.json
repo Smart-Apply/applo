@@ -8,7 +8,7 @@
     "limitReachedTitle": "Atingiste o teu limite mensal de {limit} verificações.",
     "limitReachedDescription": "Compara <pricing>planos</pricing> para uma quota mensal mais alta.",
     "historyTitle": "Verificações anteriores",
-    "freeHistoryDescription": "O plano Free inclui 5 verificações por mês.",
+    "freeHistoryDescription": "O plano Free inclui 3 verificações por mês.",
     "savedHistoryDescription": "As tuas verificações guardadas.",
     "noHistory": "Ainda sem verificações.",
     "open": "Abrir",

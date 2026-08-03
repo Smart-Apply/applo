@@ -51,7 +51,7 @@ export class ValidationService {
    * OUTSIDE Applo (their own résumé + optional cover letter + optional
    * job context), persist it, and return the record.
    *
-  * Metered: the controller atomically reserves monthly quota (Free: 5,
+  * Metered: the controller atomically reserves monthly quota (Free: 3,
   * Pro: 15, Premium: 35) before this runs and refunds it if this method throws.
    */
   async create(userId: string, dto: CreateValidationDto): Promise<ValidationRecord> {

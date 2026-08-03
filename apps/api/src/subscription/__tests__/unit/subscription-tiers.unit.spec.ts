@@ -12,7 +12,7 @@ describe('final subscription contract', () => {
     expect(TIER_LIMITS[SubscriptionTier.FREE]).toMatchObject({
       applicationsPerMonth: 3,
       interviewSessionsPerMonth: 0,
-      validationsPerMonth: 5,
+      validationsPerMonth: 3,
     });
     expect(TIER_LIMITS[SubscriptionTier.PRO]).toMatchObject({
       applicationsPerMonth: 50,
@@ -21,7 +21,7 @@ describe('final subscription contract', () => {
     });
     expect(TIER_LIMITS[SubscriptionTier.PREMIUM]).toMatchObject({
       applicationsPerMonth: 100,
-      interviewSessionsPerMonth: 45,
+      interviewSessionsPerMonth: 20,
       validationsPerMonth: 35,
     });
   });

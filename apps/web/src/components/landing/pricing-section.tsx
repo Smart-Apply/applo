@@ -28,10 +28,8 @@ export function PricingSection() {
       tagline: t('pricing.plans.free.tagline'),
       cta: t('pricing.plans.free.cta'),
       features: [
-        { label: t('pricing.plans.free.features.profile'), included: true },
         { label: t('pricing.plans.free.features.applications'), included: true },
         { label: t('pricing.plans.free.features.validations'), included: true },
-        { label: t('pricing.plans.free.features.noWatermark'), included: true },
         { label: t('pricing.plans.free.features.adDownload'), included: true },
       ],
     },
@@ -50,9 +48,7 @@ export function PricingSection() {
         { label: t('pricing.plans.pro.features.applications'), included: true },
         { label: t('pricing.plans.pro.features.interviews'), included: true },
         { label: t('pricing.plans.pro.features.validations'), included: true },
-        { label: t('pricing.plans.pro.features.ingestion'), included: true },
-        { label: t('pricing.plans.pro.features.pipeline'), included: true },
-        { label: t('pricing.plans.pro.features.export'), included: true },
+        { label: t('pricing.plans.pro.features.adFree'), included: true },
       ],
     },
     {

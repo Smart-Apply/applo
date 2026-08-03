@@ -27,7 +27,7 @@
     },
     "pricing": {
       "q": "Combien coûte Applo ?",
-      "a": "Free coûte 0 € et inclut un profil CV, 3 candidatures IA et 5 vérifications de candidature par mois ; les téléchargements sont sans filigrane avec un délai publicitaire de 15 secondes. Pro coûte 9,95 € par mois et inclut 50 candidatures IA, 15 vérifications et 5 entretiens d'entraînement. Premium coûte 19,95 € par mois et inclut 100 candidatures IA, 35 vérifications, 45 entretiens d'entraînement et le suivi des e-mails. Des crédits supplémentaires permanents sont disponibles par lots de 10, 30 ou 75 candidatures — voir notre <pricing>page tarifaire</pricing> pour plus de détails."
+      "a": "Free coûte 0 € et inclut 3 candidatures IA et 3 vérifications de candidature par mois ; les téléchargements démarrent après un délai publicitaire de 15 secondes. Pro coûte 9,95 € par mois, est sans publicité et inclut 50 candidatures IA, 15 vérifications et 5 entretiens d'entraînement. Premium coûte 19,95 € par mois et inclut 100 candidatures IA, 35 vérifications, 20 entretiens d'entraînement et le suivi des e-mails. Des crédits supplémentaires permanents sont disponibles par lots de 10, 30 ou 75 candidatures — voir notre <pricing>page tarifaire</pricing> pour plus de détails."
     },
     "editing": {
       "q": "Comment puis-je ajuster ma candidature après la génération ?",

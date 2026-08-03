@@ -8,7 +8,7 @@
     "limitReachedTitle": "Has alcanzado tu límite mensual de {limit} revisiones.",
     "limitReachedDescription": "Compara los <pricing>planes</pricing> para conseguir una cuota mensual mayor.",
     "historyTitle": "Revisiones anteriores",
-    "freeHistoryDescription": "El plan Free incluye 5 revisiones al mes.",
+    "freeHistoryDescription": "El plan Free incluye 3 revisiones al mes.",
     "savedHistoryDescription": "Tus revisiones guardadas.",
     "noHistory": "Aún no hay revisiones.",
     "open": "Abrir",

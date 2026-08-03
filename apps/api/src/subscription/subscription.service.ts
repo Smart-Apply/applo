@@ -76,7 +76,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     resumesPerMonth: 3,
     jobParsingPerMonth: 10,
     interviewSessionsPerMonth: 0,
-    validationsPerMonth: 5,
+    validationsPerMonth: 3,
     applicationsPerDay: 5,
     priority: 'low',
     features: {
@@ -131,7 +131,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     coverLettersPerMonth: -1, // Unlimited
     resumesPerMonth: -1, // Unlimited
     jobParsingPerMonth: -1, // Unlimited
-    interviewSessionsPerMonth: 45,
+    interviewSessionsPerMonth: 20,
     validationsPerMonth: 35,
     applicationsPerDay: -1,
     priority: 'high',
