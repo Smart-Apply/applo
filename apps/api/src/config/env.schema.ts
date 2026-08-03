@@ -96,8 +96,9 @@ const envSchema = z.object({
   AZURE_OPENAI_REALTIME_VOICE: z.string().default('alloy'),
   // Per-session hard ceiling (minutes). Azure caps a realtime session at 60.
   VOICE_INTERVIEW_MAX_SESSION_MINUTES: z.string().default('15'),
-  // Monthly voice budget per user (minutes); -1 = unlimited.
-  VOICE_INTERVIEW_MINUTES_PER_MONTH: z.string().default('60'),
+  // Emergency GLOBAL clamp on monthly voice minutes; the per-user cap comes
+  // from TIER_LIMITS.voiceMinutesPerMonth. -1 = no clamp (tier value applies).
+  VOICE_INTERVIEW_MINUTES_PER_MONTH: z.string().default('-1'),
 
   // LLM Configuration (reuses AZURE_OPENAI_DEPLOYMENT_NAME for model)
   LLM_TEMPERATURE_DEFAULT: z.string().optional(),

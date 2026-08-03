@@ -26,6 +26,12 @@ describe('final subscription contract', () => {
     });
   });
 
+  it('scopes voice-interview minutes per tier', () => {
+    expect(TIER_LIMITS[SubscriptionTier.FREE].voiceMinutesPerMonth).toBe(0);
+    expect(TIER_LIMITS[SubscriptionTier.PRO].voiceMinutesPerMonth).toBe(60);
+    expect(TIER_LIMITS[SubscriptionTier.PREMIUM].voiceMinutesPerMonth).toBe(120);
+  });
+
   it('matches the advertised paid feature gates', () => {
     expect(TIER_LIMITS[SubscriptionTier.FREE].features).toMatchObject({
       pdfExport: true,

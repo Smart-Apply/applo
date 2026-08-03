@@ -195,7 +195,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `contact` — contact form
 - `email` — Resend transactional email
 - `health` — Terminus health checks
-- `interviews` — AI mock interviews in **two modes**: typed text Q&A and a spoken **voice interview** (`voice/` sub-folder — pluggable `VOICE_PROVIDER` = `azure-realtime` | `mock`; Azure OpenAI Realtime API over browser-direct WebRTC, Sweden Central/EU). The backend only mints a short-lived ephemeral token (`POST /openai/v1/realtime/client_secrets`) and finalizes the transcript; the browser talks WebRTC to Azure directly (`?webrtcfilter=on` keeps the interviewer instructions private). Both modes reuse the same answer-analyzer/feedback-generator scoring. The voice interviewer opens with a persona-led introduction and asks questions grounded in a bounded plain-text dossier of the candidate's profile (built server-side in `buildInstructions`). The voice call length is a user-chosen 5/10/15-minute target (clamped by `VOICE_INTERVIEW_MAX_SESSION_MINUTES` and the monthly budget); the client sends data-channel time cues so the interviewer wraps up in the final minute and speaks a closing at time-up. Pro/Premium-gated (`interviewCoach`) with monthly session limits (Pro 5, Premium 20), plus a per-user monthly voice-minute cap computed on the fly from `InterviewSession.voiceDurationSeconds`. No audio is persisted — transcript + scores only.
+- `interviews` — AI mock interviews in **two modes**: typed text Q&A and a spoken **voice interview** (`voice/` sub-folder — pluggable `VOICE_PROVIDER` = `azure-realtime` | `mock`; Azure OpenAI Realtime API over browser-direct WebRTC, Sweden Central/EU). The backend only mints a short-lived ephemeral token (`POST /openai/v1/realtime/client_secrets`) and finalizes the transcript; the browser talks WebRTC to Azure directly (`?webrtcfilter=on` keeps the interviewer instructions private). Both modes reuse the same answer-analyzer/feedback-generator scoring. The voice interviewer opens with a persona-led introduction and asks questions grounded in a bounded plain-text dossier of the candidate's profile (built server-side in `buildInstructions`). The voice call length is a user-chosen 5/10/15-minute target (clamped by `VOICE_INTERVIEW_MAX_SESSION_MINUTES` and the monthly budget); the client sends data-channel time cues so the interviewer wraps up in the final minute and speaks a closing at time-up. Pro/Premium-gated (`interviewCoach`) with monthly session limits (Pro 5, Premium 20), plus a **tier-scoped monthly voice-minute cap** (`TIER_LIMITS.voiceMinutesPerMonth`: Free 0 / Pro 60 / Premium 120; `VOICE_INTERVIEW_MINUTES_PER_MONTH` is only an emergency global clamp) computed on the fly from `InterviewSession.voiceDurationSeconds`. No audio is persisted — transcript + scores only.
 - `job-postings` — parse text/URL/file → normalized JobPosting
 - `jobs` — pluggable queue providers (`in-memory` | `qstash`)
 - `keywords` — ATS keyword extraction & matching with language detection
@@ -719,7 +719,9 @@ AZURE_OPENAI_REALTIME_API_KEY=<key>
 AZURE_OPENAI_REALTIME_DEPLOYMENT=gpt-realtime-mini
 AZURE_OPENAI_REALTIME_VOICE=alloy
 VOICE_INTERVIEW_MAX_SESSION_MINUTES=15
-VOICE_INTERVIEW_MINUTES_PER_MONTH=60
+# Emergency global clamp only — per-user cap is TIER_LIMITS.voiceMinutesPerMonth
+# (Free 0 / Pro 60 / Premium 120). -1 = off.
+VOICE_INTERVIEW_MINUTES_PER_MONTH=-1
 
 # Azure AI Foundry (URL parsing agents)
 AZURE_AI_FOUNDRY_ENDPOINT=<endpoint>
