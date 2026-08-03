@@ -168,7 +168,7 @@
   "pricing": {
     "eyebrow": "04 · Tarifs",
     "title": "Juste et sans surprise",
-    "lead": "Des limites mensuelles claires, aucun filigrane, et des crédits supplémentaires qui n'expirent jamais. Résiliable à tout moment.",
+    "lead": "Des limites mensuelles claires et des crédits supplémentaires qui n'expirent jamais. Résiliable à tout moment.",
     "plans": {
       "free": {
         "name": "Free",
@@ -177,10 +177,8 @@
         "period": "/ mois",
         "tagline": "Pour découvrir",
         "features": {
-          "profile": "1 profil CV",
           "applications": "3 candidatures IA / mois",
-          "validations": "5 vérifications de candidature / mois",
-          "noWatermark": "Aucun filigrane",
+          "validations": "3 vérifications de candidature / mois",
           "adDownload": "Téléchargement avec publicité (délai de 15 s)"
         },
         "cta": "Démarrer gratuitement"
@@ -197,9 +195,7 @@
           "applications": "50 candidatures / mois",
           "interviews": "5 entretiens d'entraînement / mois",
           "validations": "15 vérifications de candidature / mois",
-          "ingestion": "Import d'offres d'emploi (texte, lien ou fichier)",
-          "pipeline": "Statut en direct de vos candidatures",
-          "export": "Sans publicité et export dans 6 langues"
+          "adFree": "Sans publicité"
         },
         "cta": "Choisir Pro"
       },
@@ -212,7 +208,7 @@
         "features": {
           "includedPro": "Inclut toutes les fonctionnalités Pro",
           "applications": "100 candidatures / mois",
-          "interviews": "45 entretiens d'entraînement (voix et texte)",
+          "interviews": "20 entretiens d'entraînement (voix et texte)",
           "validations": "35 vérifications de candidature / mois",
           "tracking": "Suivi des e-mails (Outlook / Microsoft 365)"
         },

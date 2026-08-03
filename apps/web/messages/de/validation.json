@@ -8,7 +8,7 @@
     "limitReachedTitle": "Du hast dein monatliches Limit von {limit} Checks erreicht.",
     "limitReachedDescription": "Vergleiche die <pricing>Tarife</pricing> für ein höheres monatliches Kontingent.",
     "historyTitle": "Frühere Checks",
-    "freeHistoryDescription": "Im Free-Tarif sind 5 Checks pro Monat enthalten.",
+    "freeHistoryDescription": "Im Free-Tarif sind 3 Checks pro Monat enthalten.",
     "savedHistoryDescription": "Deine gespeicherten Prüfungen.",
     "noHistory": "Noch keine Prüfungen vorhanden.",
     "open": "Öffnen",

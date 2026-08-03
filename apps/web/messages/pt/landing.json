@@ -168,7 +168,7 @@
   "pricing": {
     "eyebrow": "04 · Preços",
     "title": "Justo e sem surpresas",
-    "lead": "Limites mensais claros, sem marcas de água e créditos extra que nunca expiram. Cancela quando quiseres.",
+    "lead": "Limites mensais claros e créditos extra que nunca expiram. Cancela quando quiseres.",
     "plans": {
       "free": {
         "name": "Free",
@@ -177,10 +177,8 @@
         "period": "/ mês",
         "tagline": "Para experimentar",
         "features": {
-          "profile": "1 perfil de currículo",
           "applications": "3 candidaturas com IA / mês",
-          "validations": "5 verificações de candidatura / mês",
-          "noWatermark": "Sem marca de água",
+          "validations": "3 verificações de candidatura / mês",
           "adDownload": "Transferência com publicidade (15s de espera)"
         },
         "cta": "Começar grátis"
@@ -197,9 +195,7 @@
           "applications": "50 candidaturas / mês",
           "interviews": "5 entrevistas de prática / mês",
           "validations": "15 verificações de candidatura / mês",
-          "ingestion": "Importar ofertas de emprego (texto, link ou ficheiro)",
-          "pipeline": "Estado em direto das tuas candidaturas",
-          "export": "Sem publicidade e exportação em 6 línguas"
+          "adFree": "Sem publicidade"
         },
         "cta": "Escolher o Pro"
       },
@@ -212,7 +208,7 @@
         "features": {
           "includedPro": "Inclui todas as funcionalidades do Pro",
           "applications": "100 candidaturas / mês",
-          "interviews": "45 entrevistas de prática (voz e texto)",
+          "interviews": "20 entrevistas de prática (voz e texto)",
           "validations": "35 verificações de candidatura / mês",
           "tracking": "Acompanhamento de e-mail (Outlook / Microsoft 365)"
         },

@@ -168,7 +168,7 @@
   "pricing": {
     "eyebrow": "04 · Prezzi",
     "title": "Equo e senza sorprese",
-    "lead": "Limiti mensili chiari, nessuna filigrana e crediti extra che non scadono mai. Annulla in qualsiasi momento.",
+    "lead": "Limiti mensili chiari e crediti extra che non scadono mai. Annulla in qualsiasi momento.",
     "plans": {
       "free": {
         "name": "Free",
@@ -177,10 +177,8 @@
         "period": "/ mese",
         "tagline": "Per provare",
         "features": {
-          "profile": "1 profilo curriculum",
           "applications": "3 candidature IA / mese",
-          "validations": "5 verifiche della candidatura / mese",
-          "noWatermark": "Nessuna filigrana",
+          "validations": "3 verifiche della candidatura / mese",
           "adDownload": "Download supportato da pubblicità (15s di attesa)"
         },
         "cta": "Inizia gratis"
@@ -197,9 +195,7 @@
           "applications": "50 candidature / mese",
           "interviews": "5 colloqui di prova / mese",
           "validations": "15 verifiche della candidatura / mese",
-          "ingestion": "Importa annunci di lavoro (testo, link o file)",
-          "pipeline": "Stato live delle tue candidature",
-          "export": "Senza pubblicità ed esportazione in 6 lingue"
+          "adFree": "Senza pubblicità"
         },
         "cta": "Scegli Pro"
       },
@@ -212,7 +208,7 @@
         "features": {
           "includedPro": "Include tutte le funzionalità di Pro",
           "applications": "100 candidature / mese",
-          "interviews": "45 colloqui di prova (voce e testo)",
+          "interviews": "20 colloqui di prova (voce e testo)",
           "validations": "35 verifiche della candidatura / mese",
           "tracking": "Tracciamento email (Outlook / Microsoft 365)"
         },
