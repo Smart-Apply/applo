@@ -447,8 +447,19 @@ Translated text in ${targetLangName}:`;
    * (cover letter, résumé rewrite, editor/style/translation passes) always uses
    * the default flagship model. Matched with `includes()`, so the `v1/` prefix
    * and `.md` suffix don't matter (this also covers `ats-keywords-extract`).
+   *
+   * `interview-` covers the three mock-interview scoring templates
+   * (interview-question / interview-answer-analyzer / interview-feedback):
+   * internal structured scores, every consumer clamps ranges and has a
+   * heuristic fallback on malformed output, so a weaker model degrades a
+   * score — never a session.
    */
-  private static readonly FAST_MODEL_TEMPLATES = ['ats-keywords', 'job-facts', 'skill-selector'];
+  private static readonly FAST_MODEL_TEMPLATES = [
+    'ats-keywords',
+    'job-facts',
+    'skill-selector',
+    'interview-',
+  ];
 
   /** True when `templatePath` would be routed to the fast model right now. */
   isFastRouted(templatePath: string): boolean {
