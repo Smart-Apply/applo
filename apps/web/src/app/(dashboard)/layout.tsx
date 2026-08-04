@@ -175,10 +175,11 @@ function DashboardLayoutInner({
       {!isEditMode && (
         <aside className="sticky top-0 hidden h-screen w-[290px] flex-none bg-[#1B2A49] md:block z-20">
           <div className="flex h-full flex-col">
-            <div className="flex h-16 items-center px-4 border-b border-white/10">
+            <div className="flex h-16 items-center justify-between gap-2 px-4 border-b border-white/10">
               <Link href="/dashboard" className="flex items-center">
-                <AppLogo className="w-[180px] h-auto brightness-0 invert" />
+                <AppLogo className="w-[150px] h-auto brightness-0 invert" />
               </Link>
+              <LanguageSwitcher variant="code" className="-mr-1 text-[rgba(229,233,242,.6)] hover:bg-white/10 hover:text-white" />
             </div>
 
             <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
@@ -229,9 +230,6 @@ function DashboardLayoutInner({
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="mt-3 flex justify-end">
-                <LanguageSwitcher className="text-[rgba(229,233,242,.72)] hover:bg-white/10 hover:text-white" />
-              </div>
             </div>
           </div>
         </aside>
@@ -279,10 +277,11 @@ function DashboardLayoutInner({
                 {t('nav.sheetDescription')}
               </SheetDescription>
               <div className="flex h-full flex-col">
-                <div className="flex h-16 items-center px-4 border-b border-white/10">
+                <div className="flex h-16 items-center justify-between gap-2 px-4 border-b border-white/10">
                   <Link href="/dashboard" className="flex items-center">
-                    <AppLogo className="w-[220px] h-auto brightness-0 invert" />
+                    <AppLogo className="w-[180px] h-auto brightness-0 invert" />
                   </Link>
+                  <LanguageSwitcher variant="code" className="-mr-1 text-[rgba(229,233,242,.6)] hover:bg-white/10 hover:text-white" />
                 </div>
 
                 <nav className="flex-1 space-y-0.5 px-4 py-6">
@@ -329,9 +328,6 @@ function DashboardLayoutInner({
                     >
                       <LogOut className="h-4 w-4" />
                     </Button>
-                  </div>
-                  <div className="mt-3 flex justify-end">
-                    <LanguageSwitcher className="text-[rgba(229,233,242,.72)] hover:bg-white/10 hover:text-white" />
                   </div>
                 </div>
               </div>

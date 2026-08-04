@@ -3,7 +3,7 @@
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Globe, Check } from 'lucide-react';
+import { Globe, Check, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,12 +37,16 @@ export function useLocaleSwitch() {
 }
 
 interface LanguageSwitcherProps {
-  /** 'icon' = globe-only trigger (headers); 'labeled' = globe + language name. */
-  variant?: 'icon' | 'labeled';
+  /**
+   * 'icon' = globe-only trigger (headers); 'labeled' = globe + language
+   * name; 'code' = compact locale-code chip with a chevron, no globe
+   * (sidebar footer).
+   */
+  variant?: 'icon' | 'labeled' | 'code';
   className?: string;
 }
 
-/** Compact language dropdown (DE/EN) for headers and auth pages. */
+/** Compact language dropdown for headers, sidebar and auth pages. */
 export function LanguageSwitcher({ variant = 'icon', className }: LanguageSwitcherProps) {
   const t = useTranslations('common.language');
   const { switchLocale, activeLocale } = useLocaleSwitch();
@@ -57,8 +61,19 @@ export function LanguageSwitcher({ variant = 'icon', className }: LanguageSwitch
           className={cn('text-muted-foreground hover:text-foreground', className)}
           aria-label={t('switchLabel')}
         >
-          <Globe className="h-4 w-4" />
-          {variant === 'labeled' && <span>{t(activeLocale as Locale)}</span>}
+          {variant === 'code' ? (
+            <>
+              <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em]">
+                {activeLocale}
+              </span>
+              <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+            </>
+          ) : (
+            <>
+              <Globe className="h-4 w-4" />
+              {variant === 'labeled' && <span>{t(activeLocale as Locale)}</span>}
+            </>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

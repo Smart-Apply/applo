@@ -22,6 +22,11 @@ import { StatusChip, TRACKING_STATUS_CHIP } from '@/components/ui/status-chip';
 import { HairlineGrid } from '@/components/ui/hairline-grid';
 import { SectionLabel } from '@/components/ui/section-label';
 import { ApploFlyer } from '@/components/ui/applo-rig';
+
+// Landing poses for the dashboard mascot — one is picked at random on each
+// touchdown. Each maps to a `.pose-*` CSS class on the `.dash-flyer` wrapper.
+const APPLO_POSES = ['wave', 'celebrate', 'search', 'love', 'done'] as const;
+type ApploPose = (typeof APPLO_POSES)[number];
 import {
   Plus,
   FileText,
@@ -52,34 +57,43 @@ export default function DashboardPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mascot fly-in state machine: flying → landed (wave ~3s) → rested.
-  // `.rested` is additive on top of `.landed` — the CSS relies on both
-  // classes being present. Replay = remount the flyer via `flyKey`.
-  const [flyPhase, setFlyPhase] = useState<'flying' | 'landed' | 'rested'>('flying');
+  // Mascot fly-in state machine: flying → landed. On landing Applo strikes
+  // one of five poses (never the same twice in a row); the pose maps to a
+  // `.pose-*` class the CSS animates. Replay = remount the flyer via `flyKey`.
+  const [flyPhase, setFlyPhase] = useState<'flying' | 'landed'>('flying');
+  const [pose, setPose] = useState<ApploPose>(APPLO_POSES[0]);
   const [flyKey, setFlyKey] = useState(0);
-  const restTimer = useRef<number>(0);
   const prefersReducedMotion = useRef(false);
+  const poseRef = useRef<ApploPose>(APPLO_POSES[0]);
+
+  // Pick a fresh pose, never repeating the current one.
+  const nextPose = () => {
+    const rest = APPLO_POSES.filter((p) => p !== poseRef.current);
+    const chosen = rest[Math.floor(Math.random() * rest.length)];
+    poseRef.current = chosen;
+    return chosen;
+  };
 
   useEffect(() => {
-    // Full reduced-motion fallback: no flight, mascot resting at the end
-    // position (CSS pins the flyer), calm face, no wave.
+    // Full reduced-motion fallback: no flight, mascot pinned at the end
+    // position (CSS) in its first pose, calm face, no looping animation.
     prefersReducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion.current) {
-      setFlyPhase('rested');
+      setFlyPhase('landed');
     }
-    return () => window.clearTimeout(restTimer.current);
   }, []);
 
   const handleFlyerAnimationEnd = (e: React.AnimationEvent<HTMLDivElement>) => {
     if (e.animationName !== 'dashFly' || prefersReducedMotion.current) return;
+    setPose(nextPose());
     setFlyPhase('landed');
-    window.clearTimeout(restTimer.current);
-    restTimer.current = window.setTimeout(() => setFlyPhase('rested'), 3200);
   };
 
   const replayFlyIn = () => {
-    if (prefersReducedMotion.current) return;
-    window.clearTimeout(restTimer.current);
+    if (prefersReducedMotion.current) {
+      setPose(nextPose());
+      return;
+    }
     setFlyPhase('flying');
     setFlyKey((k) => k + 1);
   };
@@ -135,28 +149,61 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Welcome hero — navy glow band with the Applo fly-in. Click to replay. */}
+      {/* Welcome hero — soft blue band with the Applo fly-in. Click to replay. */}
       <div
-        className="bg-brand-glow relative cursor-pointer overflow-hidden rounded-[4px] p-7 sm:p-9"
+        className="relative cursor-pointer overflow-hidden rounded-[4px]"
+        style={{
+          background: '#AFC4E4',
+          color: '#1B2A49',
+          minHeight: 262,
+          padding: '36px clamp(36px,34%,232px) 36px 36px',
+        }}
         onClick={replayFlyIn}
         title={t('page.heroReplayTitle')}
       >
+        {/* Decorative overlays: dotted grid, faint scanlines, corner glow */}
+        <div
+          className="pointer-events-none absolute inset-0 z-[1]"
+          style={{
+            opacity: 0.2,
+            backgroundImage: 'radial-gradient(#1B2A49 1px, transparent 1.2px)',
+            backgroundSize: '6px 6px',
+            maskImage: 'radial-gradient(120% 90% at 30% 8%, #000 0%, #000 44%, transparent 82%)',
+            WebkitMaskImage: 'radial-gradient(120% 90% at 30% 8%, #000 0%, #000 44%, transparent 82%)',
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0 z-[1]"
+          style={{
+            background: 'repeating-linear-gradient(180deg, rgba(27,42,73,.06) 0 2px, rgba(255,255,255,0) 2px 5px)',
+            maskImage: 'linear-gradient(180deg, #000 0%, #000 52%, transparent 84%)',
+            WebkitMaskImage: 'linear-gradient(180deg, #000 0%, #000 52%, transparent 84%)',
+          }}
+        />
+        <div
+          className="pointer-events-none absolute z-[1] h-[520px] w-[760px] -translate-x-1/2 -translate-y-1/2"
+          style={{
+            left: '26%',
+            top: '60%',
+            background: 'radial-gradient(closest-side, rgba(255,255,255,.7) 0%, rgba(255,255,255,0) 100%)',
+          }}
+        />
         <div className="relative z-10">
-          <p className="font-mono text-[11.5px] font-medium uppercase tracking-[.14em] text-brand">
+          <p className="font-mono text-[11.5px] font-medium uppercase tracking-[.14em] text-[#40639C]">
             {t('page.eyebrow', { month: monthLabel })}
           </p>
-          <h1 className="font-heading mt-3 text-[clamp(28px,3.4vw,38px)] font-extrabold tracking-[-.03em] text-white">
+          <h1 className="font-heading mt-3 text-[clamp(28px,3.4vw,38px)] font-extrabold leading-[1.05] tracking-[-.03em] text-[#1B2A49]">
             {t('page.welcome', { greeting: getGreeting(), name: user?.firstName || t('page.fallbackUser') })}
           </h1>
-          <p className="mt-2.5 max-w-[600px] text-base leading-relaxed text-[rgba(229,233,242,.75)]">
+          <p className="mt-2.5 max-w-[600px] text-base leading-relaxed text-[#3A4F76]">
             {t.rich('page.summary', {
               count: stats.active,
-              strong: (chunks) => <span className="font-bold text-white">{chunks}</span>,
+              strong: (chunks) => <span className="font-bold text-[#1B2A49]">{chunks}</span>,
             })}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
-              className="rounded-[3px] bg-white text-[#1B2A49] hover:bg-[#E5E9F2]"
+              className="rounded-[3px] bg-[#1B2A49] text-white hover:bg-[#15233f]"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push('/applications/new');
@@ -167,7 +214,7 @@ export default function DashboardPage() {
             </Button>
             <Button
               variant="outline"
-              className="rounded-[3px] border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+              className="rounded-[3px] border-[#1B2A49] bg-white/70 text-[#1B2A49] hover:bg-white hover:text-[#1B2A49]"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push('/jobs');
@@ -179,11 +226,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Applo “Superman” fly-in layer (hidden ≤820px via CSS) */}
-        <div className="dash-applo-layer pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[196px]" aria-hidden>
+        {/* Applo “Superman” fly-in layer (hidden ≤860px via CSS) */}
+        <div className="dash-applo-layer pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[210px]" aria-hidden>
           <div
             key={flyKey}
-            className={`dash-flyer${flyPhase !== 'flying' ? ' landed' : ''}${flyPhase === 'rested' ? ' rested' : ''}`}
+            className={`dash-flyer${flyPhase === 'landed' ? ` landed pose-${pose}` : ''}`}
             onAnimationEnd={handleFlyerAnimationEnd}
           >
             <ApploFlyer />
