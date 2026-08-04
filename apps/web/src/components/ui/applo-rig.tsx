@@ -308,13 +308,18 @@ export function ApploRig({
 const FLY_NAVY = '#15233f';
 const FLY_ANT = '#26395c';
 const FLY_ACCENT = '#5581C7';
+const FLY_STREAK = '#40639C';
+const FLY_CHEEK = '#C3D3F0';
+const FLY_LENS = '#4A7BE0';
+const FLY_HEART = '#F94E63';
 
 /**
  * Flying Applo for the dashboard-hero "Superman" entrance. Renders the
- * fly-in rig (motion streaks, swept antennas, reach + wave arms, and the
- * fly/happy face pair). All animation lives in globals.css (`.dash-flyer`,
- * `dashFly`/`dashWave`/`dashBob`) and is driven by `.landed`/`.rested`
- * classes on the wrapping `.dash-flyer` element.
+ * fly-in rig (motion streaks, swept antennas, reach + wave arms) plus the
+ * per-pose extras (search magnifier, cradled heart, smile mouth). All
+ * animation lives in globals.css (`.dash-flyer`, `dashFly`/`dashLand`/…)
+ * and is driven by `.landed` + a random `.pose-*` class (wave · celebrate ·
+ * search · love · done) on the wrapping `.dash-flyer` element.
  */
 export function ApploFlyer() {
   return (
@@ -327,67 +332,61 @@ export function ApploFlyer() {
         width: '100%',
         height: '100%',
         overflow: 'visible',
-        filter: 'drop-shadow(0 12px 20px rgba(0,0,0,.35))',
+        filter: 'drop-shadow(0 10px 18px rgba(27,42,73,.28))',
       }}
       aria-hidden
     >
       {/* motion streaks — faded + stopped once .landed */}
-      <g stroke={FLY_ACCENT} strokeWidth="5" strokeLinecap="round">
+      <g stroke={FLY_STREAK} strokeWidth="5" strokeLinecap="round">
         <line className="dstreak d1" x1="-46" y1="150" x2="46" y2="150" />
         <line className="dstreak d2" x1="-58" y1="186" x2="34" y2="186" />
         <line className="dstreak d3" x1="-40" y1="216" x2="40" y2="216" />
       </g>
       <g>
-        {/* antennas swept back in the airstream */}
-        <g>
-          <path d="M108 62 Q92 44 80 40" fill="none" stroke={FLY_ANT} strokeWidth="7" strokeLinecap="round" />
-          <circle cx="77" cy="39" r="8" fill={FLY_ANT} />
+        {/* antennas — swept back in flight, stand up after landing */}
+        <g className="dash-ant-l">
+          <path d="M108 62 Q98 48 88 44" fill="none" stroke={FLY_ANT} strokeWidth="7" strokeLinecap="round" />
+          <circle cx="86" cy="43" r="7" fill={FLY_ANT} />
         </g>
-        <g>
-          <path d="M132 62 Q120 40 108 34" fill="none" stroke={FLY_ANT} strokeWidth="7" strokeLinecap="round" />
-          <circle cx="105" cy="33" r="8" fill={FLY_ANT} />
+        <g className="dash-ant-r">
+          <path d="M132 62 Q124 46 114 41" fill="none" stroke={FLY_ANT} strokeWidth="7" strokeLinecap="round" />
+          <circle cx="112" cy="40" r="7" fill={FLY_ANT} />
         </g>
         <rect x="42" y="96" width="16" height="34" rx="8" fill={FLY_ANT} />
         <rect x="182" y="96" width="16" height="34" rx="8" fill={FLY_ANT} />
-        {/* trailing legs */}
-        <path d="M104 240 L92 276" fill="none" stroke={FLY_NAVY} strokeWidth="16" strokeLinecap="round" />
-        <path d="M138 240 L156 274" fill="none" stroke={FLY_NAVY} strokeWidth="16" strokeLinecap="round" />
-        <circle cx="90" cy="279" r="9" fill={HAND} />
-        <circle cx="158" cy="277" r="9" fill={HAND} />
-        {/* left arm reaching forward */}
-        <g>
-          <path d="M86 176 L60 202" fill="none" stroke={FLY_NAVY} strokeWidth="20" strokeLinecap="round" />
-          <circle cx="56" cy="206" r="13" fill={HAND} />
+        {/* stubby feet */}
+        <g className="dash-feet">
+          <rect x="90" y="236" width="30" height="22" rx="11" fill={FLY_NAVY} />
+          <rect x="122" y="236" width="30" height="22" rx="11" fill={FLY_NAVY} />
+        </g>
+        {/* left reach arm */}
+        <g className="dash-reach-arm">
+          <path d="M92 164 L56 186 L58 206 L94 202 Z" fill={FLY_NAVY} />
+          <circle cx="54" cy="196" r="15" fill={HAND} />
         </g>
         {/* body with sparkle screen */}
-        <g>
-          <rect x="74" y="160" width="92" height="82" rx="26" fill={FLY_NAVY} stroke="rgba(255,255,255,.14)" strokeWidth="2" />
-          <rect x="96" y="182" width="48" height="32" rx="9" fill={SCREEN} stroke={BORDER} strokeWidth="1.5" />
-          <path
-            d="M120 186 C122 196 124 198 134 200 C124 202 122 204 120 214 C118 204 116 202 106 200 C116 198 118 196 120 186 Z"
-            fill={FLY_ACCENT}
-          />
-        </g>
+        <rect x="74" y="160" width="92" height="82" rx="26" fill={FLY_NAVY} stroke="rgba(255,255,255,.14)" strokeWidth="2" />
+        <rect x="96" y="182" width="48" height="32" rx="9" fill={SCREEN} stroke={BORDER} strokeWidth="1.5" />
+        <path
+          d="M120 186 C122 196 124 198 134 200 C124 202 122 204 120 214 C118 204 116 202 106 200 C116 198 118 196 120 186 Z"
+          fill={FLY_ACCENT}
+        />
         {/* head */}
         <rect x="50" y="56" width="140" height="112" rx="36" fill={FLY_NAVY} stroke="rgba(255,255,255,.14)" strokeWidth="2" />
         <rect x="66" y="74" width="108" height="80" rx="22" fill={SCREEN} stroke={BORDER} strokeWidth="1.5" />
-        <g fill={FLY_ACCENT} opacity="0.18">
-          <ellipse cx="86" cy="128" rx="8" ry="5" />
-          <ellipse cx="154" cy="128" rx="8" ry="5" />
+        <g fill={FLY_CHEEK}>
+          <ellipse cx="86" cy="127" rx="10" ry="6" />
+          <ellipse cx="154" cy="127" rx="10" ry="6" />
         </g>
         <g className="dash-brow" stroke={FLY_NAVY} strokeWidth="4" strokeLinecap="round">
           <path d="M92 96 L112 101" />
           <path d="M148 96 L128 101" />
         </g>
         <g className="dash-eyes-open">
-          <g>
-            <ellipse cx="104" cy="112" rx="8" ry="9" fill={FLY_NAVY} />
-            <circle cx="107" cy="108" r="3" fill="#fff" />
-          </g>
-          <g>
-            <ellipse cx="140" cy="112" rx="8" ry="9" fill={FLY_NAVY} />
-            <circle cx="143" cy="108" r="3" fill="#fff" />
-          </g>
+          <ellipse cx="104" cy="112" rx="8" ry="9" fill={FLY_NAVY} />
+          <circle cx="107" cy="108" r="3" fill="#fff" />
+          <ellipse cx="140" cy="112" rx="8" ry="9" fill={FLY_NAVY} />
+          <circle cx="143" cy="108" r="3" fill="#fff" />
         </g>
         <g className="dash-eyes-happy" fill="none" stroke={FLY_NAVY} strokeWidth="5" strokeLinecap="round">
           <path d="M96 115 Q104 104 112 115" />
@@ -395,10 +394,29 @@ export function ApploFlyer() {
         </g>
         <path className="dash-mouth-fly" d="M107 133 Q122 144 137 132" fill="none" stroke={FLY_NAVY} strokeWidth="5.5" strokeLinecap="round" />
         <path className="dash-mouth-happy" d="M104 130 Q122 152 140 130 Z" fill={FLY_NAVY} />
-        {/* right arm — raised in flight, waves on landing, lowers at rest */}
+        <path className="dash-mouth-smile" d="M104 130 Q122 148 140 130" fill="none" stroke={FLY_NAVY} strokeWidth="5.5" strokeLinecap="round" />
+        {/* pose: search — magnifier held up to the eye */}
+        <g className="dash-search">
+          <path d="M162 188 L172 164" fill="none" stroke={FLY_NAVY} strokeWidth="22" strokeLinecap="round" />
+          <circle cx="177" cy="157" r="13" fill={HAND} />
+          <path d="M156 132 L172 152" fill="none" stroke={FLY_NAVY} strokeWidth="8" strokeLinecap="round" />
+          <circle cx="141" cy="113" r="23" fill="#fff" stroke={FLY_NAVY} strokeWidth="6" />
+          <circle cx="141" cy="113" r="10" fill={FLY_LENS} />
+          <circle cx="145" cy="109" r="3.4" fill="#fff" />
+        </g>
+        {/* pose: love — heart cradled in both hands */}
+        <g className="dash-heart">
+          <path
+            d="M120 224 C104 212 92 204 92 193 C92 185 98 180 105 180 C111 180 116 184 120 189 C124 184 129 180 135 180 C142 180 148 185 148 193 C148 204 136 212 120 224 Z"
+            fill={FLY_HEART}
+          />
+          <circle cx="108" cy="210" r="13" fill={HAND} />
+          <circle cx="132" cy="210" r="13" fill={HAND} />
+        </g>
+        {/* right arm — raised in flight, waves/celebrates/points per pose */}
         <g className="dash-wave-arm">
-          <path d="M154 176 L188 150" fill="none" stroke={FLY_NAVY} strokeWidth="20" strokeLinecap="round" />
-          <circle cx="192" cy="146" r="14" fill={HAND} />
+          <path d="M148 164 L184 170 L186 190 L150 202 Z" fill={FLY_NAVY} />
+          <circle cx="188" cy="180" r="15" fill={HAND} />
         </g>
       </g>
     </svg>

@@ -211,6 +211,14 @@ h1, h2, h3, .font-heading {
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
+  /* Kill the macOS/trackpad overscroll rubber-band so the light root
+     background never peeks in as white bands above/below the dark
+     sidebar (and other full-height panels) when scrolling. */
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
   h1,
   h2,
   h3,
@@ -709,41 +717,69 @@ h1, h2, h3, .font-heading {
 
 /* ============ DASHBOARD HERO FLY-IN (Superman entrance) ============
    Ported from the sharp-redesign handoff (Dashboard mock). The flyer div
-   travels across the hero; `.landed` fades the streaks + swaps to the
-   happy face + waves; `.rested` (added on top of .landed) lowers the arm
-   and returns to the calm open-eyed smile. Order matters: .rested rules
-   must come after .landed so they win at equal specificity. */
+   travels across the hero; `.landed` fades the streaks, swaps to the happy
+   face and squash-lands. Each landing picks one of five poses (added as
+   `.pose-*` alongside `.landed`): wave, celebrate, search, love, done —
+   the robot's stubby servo arms/feet ease into fixed positions per pose. */
 @keyframes dashFly {
-  0% { left: -210px; transform: translateY(34px) rotate(-13deg) scale(.85); opacity: 0; }
+  0% { left: -240px; transform: translateY(30px) rotate(-12deg) scale(.85); opacity: 0; }
   12% { opacity: 1; }
-  55% { transform: translateY(-14px) rotate(-8deg) scale(1); }
-  100% { left: calc(100% - 208px); transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  55% { transform: translateY(-12px) rotate(-7deg) scale(1); }
+  100% { left: calc(100% - 222px); transform: translateY(0) rotate(0) scale(1); opacity: 1; }
 }
-.dash-flyer { position: absolute; top: 0; left: -210px; width: 186px; height: 196px; animation: dashFly 1.7s cubic-bezier(.3,.55,.4,1) .2s both; transform-origin: 55% 60%; }
 @keyframes dashStreak { 0%, 100% { opacity: .35; } 50% { opacity: .95; } }
+@keyframes dashBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes dashWave { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(-16deg); } }
+.dash-flyer { position: absolute; top: 0; left: -240px; width: 200px; height: 210px; animation: dashFly 1.7s cubic-bezier(.3,.55,.4,1) .2s both; transform-origin: 55% 60%; }
 .dstreak { animation: dashStreak .5s ease-in-out infinite; }
 .dstreak.d2 { animation-delay: .12s; }
 .dstreak.d3 { animation-delay: .24s; }
+.dash-brow, .dash-mouth-happy, .dash-eyes-happy, .dash-mouth-smile, .dash-search, .dash-heart { opacity: 0; }
 /* streaks must STOP animating on land — a running keyframe overrides the fade */
 .dash-flyer.landed .dstreak { opacity: 0; animation: none; transition: opacity .25s ease; }
-.dash-flyer.landed .dash-applo { animation: dashBob 3s ease-in-out infinite; transform-origin: 120px 200px; }
-@keyframes dashBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-.dash-brow, .dash-mouth-happy, .dash-eyes-happy { opacity: 0; }
+.dash-flyer.landed .dash-applo { animation: dashLand .5s cubic-bezier(.32,1.5,.5,1) both, dashBob 3s ease-in-out .5s infinite; transform-origin: 120px 250px; }
+@keyframes dashLand { 0% { transform: translateY(-12px) scale(1.04,.93); } 55% { transform: translateY(3px) scale(.97,1.04); } 100% { transform: none; } }
+@keyframes dashPop { 0% { opacity: 0; transform: scale(.4) translateY(12px) rotate(-14deg); } 65% { opacity: 1; transform: scale(1.12) rotate(4deg); } 100% { opacity: 1; transform: none; } }
 .dash-flyer.landed .dash-brow, .dash-flyer.landed .dash-eyes-open, .dash-flyer.landed .dash-mouth-fly { opacity: 0; }
 .dash-flyer.landed .dash-eyes-happy, .dash-flyer.landed .dash-mouth-happy { opacity: 1; }
-.dash-flyer.landed .dash-wave-arm { animation: dashWave 1s ease-in-out infinite; transform-origin: 154px 176px; }
-@keyframes dashWave { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(-16deg); } }
-.dash-flyer.rested .dash-eyes-happy, .dash-flyer.rested .dash-mouth-happy { opacity: 0; }
-.dash-flyer.rested .dash-eyes-open, .dash-flyer.rested .dash-mouth-fly { opacity: 1; }
-.dash-flyer.rested .dash-wave-arm { animation: none; transform: rotate(40deg); transform-origin: 154px 176px; transition: transform .5s ease; }
-@media (max-width: 820px) {
+/* Robot servos: stubby arms and feet snap into positions instead of dangling */
+.dash-feet, .dash-reach-arm, .dash-wave-arm { transition: transform .45s cubic-bezier(.3,.7,.3,1); }
+.dash-mouth-smile, .dash-search, .dash-heart, .dash-eyes-open, .dash-eyes-happy, .dash-mouth-happy, .dash-wave-arm, .dash-reach-arm { transition: opacity .3s ease, transform .45s cubic-bezier(.3,.7,.3,1); }
+.dash-flyer .dash-feet { transform: translate(6px,-4px) rotate(-12deg); transform-origin: 120px 240px; }
+.dash-flyer .dash-reach-arm { transform: rotate(-12deg); transform-origin: 86px 186px; }
+.dash-flyer.landed .dash-feet { transform: none; }
+.dash-flyer.landed .dash-reach-arm { transform: rotate(6deg); transform-origin: 86px 186px; }
+/* ---- Poses: each landing a different one ---- */
+.dash-flyer.landed.pose-wave .dash-wave-arm { animation: dashWave .9s ease-in-out infinite; transform-origin: 164px 190px; }
+.dash-flyer.landed.pose-celebrate .dash-wave-arm { transform: rotate(-22deg); transform-origin: 164px 190px; }
+.dash-flyer.landed.pose-celebrate .dash-reach-arm { transform: rotate(42deg); }
+.dash-flyer.landed.pose-celebrate .dash-applo { animation: dashLand .5s cubic-bezier(.32,1.5,.5,1) both, dashCheer .7s ease-in-out .5s infinite; transform-origin: 120px 250px; }
+.dash-flyer.landed.pose-done .dash-wave-arm { transform: rotate(-16deg); transform-origin: 164px 190px; }
+.dash-flyer.landed.pose-done .dash-mouth-happy { opacity: 0; }
+.dash-flyer.landed.pose-done .dash-mouth-smile { opacity: 1; }
+.dash-flyer.landed.pose-search .dash-wave-arm { opacity: 0; }
+.dash-flyer.landed.pose-search .dash-search { opacity: 1; animation: dashPop .5s cubic-bezier(.32,1.5,.5,1) .12s both; transform-origin: 150px 140px; }
+.dash-flyer.landed.pose-search .dash-eyes-happy, .dash-flyer.landed.pose-search .dash-mouth-happy { opacity: 0; }
+.dash-flyer.landed.pose-search .dash-eyes-open, .dash-flyer.landed.pose-search .dash-mouth-smile { opacity: 1; }
+.dash-flyer.landed.pose-love .dash-wave-arm, .dash-flyer.landed.pose-love .dash-reach-arm { opacity: 0; }
+.dash-flyer.landed.pose-love .dash-heart { opacity: 1; animation: dashPop .5s cubic-bezier(.32,1.5,.5,1) .12s both, dashPulse 1.4s ease-in-out .62s infinite; transform-origin: 120px 202px; }
+@keyframes dashCheer { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@keyframes dashPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+/* Antennas stand upright after landing (they lie back in the airstream during flight) */
+.dash-ant-l { transform-origin: 108px 62px; transition: transform .5s cubic-bezier(.3,.7,.3,1); }
+.dash-ant-r { transform-origin: 132px 62px; transition: transform .5s cubic-bezier(.3,.7,.3,1); }
+.dash-flyer.landed .dash-ant-l { animation: dashAntL 3.2s ease-in-out infinite; }
+.dash-flyer.landed .dash-ant-r { animation: dashAntR 3.6s ease-in-out infinite; }
+@keyframes dashAntL { 0%, 100% { transform: rotate(34deg); } 50% { transform: rotate(29deg); } }
+@keyframes dashAntR { 0%, 100% { transform: rotate(70deg); } 50% { transform: rotate(75deg); } }
+.dash-applo * { transform-box: view-box; }
+@media (max-width: 860px) {
   .dash-applo-layer { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dash-flyer { animation-duration: .01s; left: calc(100% - 208px) !important; }
+  .dash-flyer { animation-duration: .01s; left: calc(100% - 222px) !important; }
   .dstreak { animation: none !important; opacity: 0; }
-  .dash-flyer.landed .dash-applo { animation: none; }
-  .dash-flyer.landed .dash-wave-arm { animation: none; }
+  .dash-flyer.landed .dash-applo, .dash-flyer.landed .dash-wave-arm { animation: none; }
 }
 
 /* ============ APPLO STATE MACHINE ============ */
