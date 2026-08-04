@@ -4,12 +4,16 @@ import './home.css';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Instagram, Linkedin, X as XIcon } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { PricingSection } from '@/components/landing/pricing-section';
 import { ApploRig, type ApploState } from '@/components/ui/applo-rig';
+import { SOCIAL_LINKS } from '@/lib/social-links';
 
 /** Inline reveal-delay helper (drives the CSS `--d` custom property). */
 const d = (delay: string): CSSProperties => ({ ['--d']: delay }) as CSSProperties;
+
+const hasSocialLinks = Object.values(SOCIAL_LINKS).some(Boolean);
 
 /** Applo wordmark/logo. `light` flips it for the dark footer. */
 function BrandMark({ light = false }: { light?: boolean }) {
@@ -37,6 +41,15 @@ function Check({ color = '#16A34A' }: { color?: string }) {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** TikTok glyph — lucide-react ships no brand icon for it. */
+function TikTokIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" />
     </svg>
   );
 }
@@ -687,6 +700,30 @@ export default function Home() {
             <p style={{ maxWidth: 240, lineHeight: 1.6, marginTop: 4 }}>
               {t('footer.tagline')}
             </p>
+            {hasSocialLinks && (
+              <div className="fsocial">
+                {SOCIAL_LINKS.x && (
+                  <a href={SOCIAL_LINKS.x} target="_blank" rel="noopener noreferrer" aria-label={t('footer.social.x')}>
+                    <XIcon size={18} />
+                  </a>
+                )}
+                {SOCIAL_LINKS.linkedin && (
+                  <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label={t('footer.social.linkedin')}>
+                    <Linkedin size={18} />
+                  </a>
+                )}
+                {SOCIAL_LINKS.instagram && (
+                  <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" aria-label={t('footer.social.instagram')}>
+                    <Instagram size={18} />
+                  </a>
+                )}
+                {SOCIAL_LINKS.tiktok && (
+                  <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" aria-label={t('footer.social.tiktok')}>
+                    <TikTokIcon size={18} />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
           <div className="fcol">
             <Link href="/impressum">Impressum</Link>

@@ -281,6 +281,12 @@
   "footer": {
     "tagline": "Des candidatures à partir de votre profil réel : honnêtes, optimisées ATS, hébergées dans l'UE.",
     "compliance": "UE · RGPD",
-    "license": "Source ouverte · BSL 1.1"
+    "license": "Source ouverte · BSL 1.1",
+    "social": {
+      "x": "Applo sur X",
+      "linkedin": "Applo sur LinkedIn",
+      "instagram": "Applo sur Instagram",
+      "tiktok": "Applo sur TikTok"
+    }
   }
 }

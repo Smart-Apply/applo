@@ -9,6 +9,7 @@ import { ServiceWorkerRegistration } from "@/components/service-worker-registrat
 import { CookieBanner } from "@/components/cookie-banner";
 import { LocaleRuntimeSync } from "@/components/i18n/locale-runtime-sync";
 import type { Locale } from "@/i18n/config";
+import { X_HANDLE } from "@/lib/social-links";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -73,6 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: t('title'),
       description: t('description'),
       images: ['/Logo/Full Logo.png'],
+      site: X_HANDLE ? `@${X_HANDLE}` : undefined,
     },
   };
 }

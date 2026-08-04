@@ -281,6 +281,12 @@
   "footer": {
     "tagline": "Candidaturas a partir do teu perfil real: honestas, otimizadas para ATS, alojadas na UE.",
     "compliance": "UE · RGPD",
-    "license": "Código disponível · BSL 1.1"
+    "license": "Código disponível · BSL 1.1",
+    "social": {
+      "x": "Applo no X",
+      "linkedin": "Applo no LinkedIn",
+      "instagram": "Applo no Instagram",
+      "tiktok": "Applo no TikTok"
+    }
   }
 }
