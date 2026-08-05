@@ -68,6 +68,31 @@
       "title": "Tendances du marché",
       "tipLabel": "Astuce",
       "tip": "Les infirmiers et les chefs de projet sont actuellement très recherchés. Mettez à jour vos compétences !"
+    },
+    "calendar": {
+      "title": "Calendrier d'entretiens",
+      "subtitle": "{month} · {count, plural, =0 {aucun rendez-vous} one {# rendez-vous} other {# rendez-vous}}",
+      "open": "Ouvrir le calendrier",
+      "upcoming": "À venir",
+      "noUpcoming": "Aucun rendez-vous à venir",
+      "modalTitle": "Rendez-vous",
+      "prevMonth": "Mois précédent",
+      "nextMonth": "Mois suivant",
+      "appointmentOn": "Rendez-vous le {date}",
+      "time": "Heure",
+      "note": "Note",
+      "notePlaceholder": "p. ex. interlocuteur, préparation, lien visio …",
+      "emailReminder": "Rappel par e-mail",
+      "save": "Enregistrer le rendez-vous",
+      "update": "Mettre à jour le rendez-vous",
+      "allAppointments": "Tous les rendez-vous",
+      "emailReminderActive": "Rappel par e-mail activé",
+      "delete": "Supprimer",
+      "empty": "Aucun rendez-vous pour l'instant",
+      "toast": {
+        "saveError": "Le rendez-vous n'a pas pu être enregistré.",
+        "deleteError": "Le rendez-vous n'a pas pu être supprimé."
+      }
     }
   },
   "guide": {

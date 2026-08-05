@@ -722,15 +722,15 @@ h1, h2, h3, .font-heading {
    `.pose-*` alongside `.landed`): wave, celebrate, search, love, done —
    the robot's stubby servo arms/feet ease into fixed positions per pose. */
 @keyframes dashFly {
-  0% { left: -240px; transform: translateY(30px) rotate(-12deg) scale(.85); opacity: 0; }
+  0% { left: -190px; transform: translateY(30px) rotate(-12deg) scale(.85); opacity: 0; }
   12% { opacity: 1; }
   55% { transform: translateY(-12px) rotate(-7deg) scale(1); }
-  100% { left: calc(100% - 222px); transform: translateY(0) rotate(0) scale(1); opacity: 1; }
+  100% { left: calc(100% - 178px); transform: translateY(0) rotate(0) scale(1); opacity: 1; }
 }
 @keyframes dashStreak { 0%, 100% { opacity: .35; } 50% { opacity: .95; } }
 @keyframes dashBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 @keyframes dashWave { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(-16deg); } }
-.dash-flyer { position: absolute; top: 0; left: -240px; width: 200px; height: 210px; animation: dashFly 1.7s cubic-bezier(.3,.55,.4,1) .2s both; transform-origin: 55% 60%; }
+.dash-flyer { position: absolute; top: 0; left: -190px; width: 158px; height: 166px; animation: dashFly 1.7s cubic-bezier(.3,.55,.4,1) .2s both; transform-origin: 55% 60%; }
 .dstreak { animation: dashStreak .5s ease-in-out infinite; }
 .dstreak.d2 { animation-delay: .12s; }
 .dstreak.d3 { animation-delay: .24s; }
@@ -777,7 +777,7 @@ h1, h2, h3, .font-heading {
   .dash-applo-layer { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dash-flyer { animation-duration: .01s; left: calc(100% - 222px) !important; }
+  .dash-flyer { animation-duration: .01s; left: calc(100% - 178px) !important; }
   .dstreak { animation: none !important; opacity: 0; }
   .dash-flyer.landed .dash-applo, .dash-flyer.landed .dash-wave-arm { animation: none; }
 }

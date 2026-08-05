@@ -22,6 +22,7 @@ import { StatusChip, TRACKING_STATUS_CHIP } from '@/components/ui/status-chip';
 import { HairlineGrid } from '@/components/ui/hairline-grid';
 import { SectionLabel } from '@/components/ui/section-label';
 import { ApploFlyer } from '@/components/ui/applo-rig';
+import { CalendarCard } from '@/components/dashboard/calendar-card';
 
 // Landing poses for the dashboard mascot — one is picked at random on each
 // touchdown. Each maps to a `.pose-*` CSS class on the `.dash-flyer` wrapper.
@@ -65,6 +66,16 @@ export default function DashboardPage() {
   const [flyKey, setFlyKey] = useState(0);
   const prefersReducedMotion = useRef(false);
   const poseRef = useRef<ApploPose>(APPLO_POSES[0]);
+
+  // Fit-to-viewport: keep the whole dashboard on ONE screen (no page scroll)
+  // by gently scaling down on desktop when the content is taller than the
+  // window. The content is already compact, so this is usually 0.9–1.0 (often
+  // a no-op on tall screens); a floor keeps it readable on short windows.
+  // CSS `zoom` reflows layout (parent reserves the scaled height, no overflow
+  // hack); we measure via getBoundingClientRect and divide out the applied
+  // zoom to recover the natural height, re-fitting each frame.
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [fitScale, setFitScale] = useState(1);
 
   // Pick a fresh pose, never repeating the current one.
   const nextPose = () => {
@@ -130,6 +141,78 @@ export default function DashboardPage() {
     loadDashboardData();
   }, []);
 
+  useEffect(() => {
+    // Only fit on desktop (md+); mobile stays a natural, scrollable column.
+    const GAP = 8; // small safety margin below the content
+    let raf = 0;
+    let current = 1;
+    const tick = () => {
+      const el = contentRef.current;
+      if (el && window.innerWidth >= 768) {
+        const rect = el.getBoundingClientRect();
+        const natural = rect.height / current; // divide out the applied zoom
+        // Fit into the VISIBLE viewport. Subtleties:
+        //  1) Measure the visual viewport, NOT <main>: with `md:h-screen` +
+        //     `flex-1` (default `min-height:auto`) <main> grows to its own
+        //     content height once the page overflows, so its clientHeight
+        //     yields no constraint and the scale would stick at 1.
+        //  2) topOffset is scroll-INDEPENDENT: rect.top + scrollY recovers the
+        //     constant chrome ABOVE the content (header + verification banner +
+        //     padding). Raw viewport-relative rect.top would let a scroll feed
+        //     back into the scale and resize every tile while scrolling.
+        //  3) Subtract the chrome BELOW the content too: the shared layout
+        //     wrapper (md:p-8) and <main> add bottom padding that isn't part of
+        //     `el`. Without it the content overflows by that padding and the
+        //     page keeps a few scroll pixels (which the scroll lock would clip).
+        const wrapperCS = el.parentElement ? getComputedStyle(el.parentElement) : null;
+        const mainEl = el.closest('main');
+        const mainCS = mainEl ? getComputedStyle(mainEl) : null;
+        const bottomChrome =
+          (wrapperCS ? parseFloat(wrapperCS.paddingBottom) || 0 : 0) +
+          (mainCS ? parseFloat(mainCS.paddingBottom) || 0 : 0);
+        const viewportH = window.visualViewport?.height ?? window.innerHeight;
+        const topOffset = rect.top + window.scrollY;
+        const available = viewportH - topOffset - bottomChrome - GAP;
+        if (natural > 0 && available > 0) {
+          const next = Math.max(0.5, Math.min(1, available / natural));
+          if (Math.abs(next - current) > 0.004) {
+            current = next;
+            setFitScale(next);
+          }
+        }
+      } else if (current !== 1) {
+        current = 1;
+        setFitScale(1);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Lock the dashboard to a single screen on desktop. The content is
+  // zoom-fitted to exactly the viewport (see above), so a scrollbar is never
+  // needed; hiding overflow guarantees it and also stops a stray scroll from
+  // feeding back into the fit. Mobile keeps its natural, scrollable column.
+  // Both the page and <main> are unlocked again on unmount so every OTHER
+  // dashboard route scrolls normally.
+  useEffect(() => {
+    const html = document.documentElement;
+    const main = document.querySelector('main') as HTMLElement | null;
+    const apply = () => {
+      const lock = window.innerWidth >= 768;
+      html.style.overflow = lock ? 'hidden' : '';
+      if (main) main.style.overflow = lock ? 'hidden' : '';
+    };
+    apply();
+    window.addEventListener('resize', apply);
+    return () => {
+      window.removeEventListener('resize', apply);
+      html.style.overflow = '';
+      if (main) main.style.overflow = '';
+    };
+  }, []);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return t('page.greeting.morning');
@@ -148,15 +231,16 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Welcome hero — soft blue band with the Applo fly-in. Click to replay. */}
+    <div ref={contentRef} style={{ zoom: fitScale }} className="space-y-2 animate-fade-in">
+      {/* Welcome hero — soft blue band with the Applo fly-in. Click to replay.
+          Compact density ported from the Dashboard.dc mock (min-height 172). */}
       <div
         className="relative cursor-pointer overflow-hidden rounded-[4px]"
         style={{
           background: '#AFC4E4',
           color: '#1B2A49',
-          minHeight: 262,
-          padding: '36px clamp(36px,34%,232px) 36px 36px',
+          minHeight: 172,
+          padding: '14px clamp(24px,26%,200px) 14px 24px',
         }}
         onClick={replayFlyIn}
         title={t('page.heroReplayTitle')}
@@ -189,21 +273,21 @@ export default function DashboardPage() {
           }}
         />
         <div className="relative z-10">
-          <p className="font-mono text-[11.5px] font-medium uppercase tracking-[.14em] text-[#40639C]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[.14em] text-[#40639C]">
             {t('page.eyebrow', { month: monthLabel })}
           </p>
-          <h1 className="font-heading mt-3 text-[clamp(28px,3.4vw,38px)] font-extrabold leading-[1.05] tracking-[-.03em] text-[#1B2A49]">
+          <h1 className="font-heading mt-1.5 text-[clamp(22px,2.4vw,27px)] font-extrabold leading-[1.05] tracking-[-.03em] text-[#1B2A49]">
             {t('page.welcome', { greeting: getGreeting(), name: user?.firstName || t('page.fallbackUser') })}
           </h1>
-          <p className="mt-2.5 max-w-[600px] text-base leading-relaxed text-[#3A4F76]">
+          <p className="mt-1.5 max-w-[420px] text-[13.5px] leading-relaxed text-[#3A4F76]">
             {t.rich('page.summary', {
               count: stats.active,
               strong: (chunks) => <span className="font-bold text-[#1B2A49]">{chunks}</span>,
             })}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-3 flex flex-wrap gap-2">
             <Button
-              className="rounded-[3px] bg-[#1B2A49] text-white hover:bg-[#15233f]"
+              className="h-9 rounded-[3px] px-3.5 text-[13.5px] bg-[#1B2A49] text-white hover:bg-[#15233f]"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push('/applications/new');
@@ -214,7 +298,7 @@ export default function DashboardPage() {
             </Button>
             <Button
               variant="outline"
-              className="rounded-[3px] border-[#1B2A49] bg-white/70 text-[#1B2A49] hover:bg-white hover:text-[#1B2A49]"
+              className="h-9 rounded-[3px] px-3.5 text-[13.5px] border-[#1B2A49] bg-white/70 text-[#1B2A49] hover:bg-white hover:text-[#1B2A49]"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push('/jobs');
@@ -227,7 +311,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Applo “Superman” fly-in layer (hidden ≤860px via CSS) */}
-        <div className="dash-applo-layer pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[210px]" aria-hidden>
+        <div className="dash-applo-layer pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[166px]" aria-hidden>
           <div
             key={flyKey}
             className={`dash-flyer${flyPhase === 'landed' ? ` landed pose-${pose}` : ''}`}
@@ -249,15 +333,15 @@ export default function DashboardPage() {
       {/* grid-cols-1 (minmax(0,1fr)) is required: without it the implicit
           `auto` track sizes to the widest nowrap row content and the whole
           page overflows horizontally on mobile. */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
         {/* Main Content Area */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="flex flex-col gap-2 lg:col-span-2">
           {/* Recent Applications */}
           <Card className="gap-0 overflow-hidden py-0">
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b px-5 py-5">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b px-4 py-1.5 pb-1.5!">
               <div>
-                <CardTitle className="font-heading text-lg font-bold tracking-[-.01em]">{t('page.recent.title')}</CardTitle>
-                <CardDescription className="mt-0.5 text-[13px]">{t('page.recent.description')}</CardDescription>
+                <CardTitle className="font-heading text-base font-bold tracking-[-.01em]">{t('page.recent.title')}</CardTitle>
+                <CardDescription className="mt-0.5 text-[12.5px]">{t('page.recent.description')}</CardDescription>
               </div>
               <Button
                 variant="outline"
@@ -281,27 +365,29 @@ export default function DashboardPage() {
                 />
               ) : (
                 <>
-                  <div className="grid grid-cols-[24px_1fr] border-b bg-muted/50 px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-muted-foreground/70">
+                  <div className="grid grid-cols-[24px_1fr] border-b bg-muted/50 px-4 py-1 font-mono text-[10px] font-medium uppercase tracking-[.12em] text-muted-foreground/70">
                     <span>#</span>
                     <span>{t('page.recent.positionCompany')}</span>
                   </div>
-                  <div>
-                    {applications.slice(0, 5).map((app, i) => {
+                  {/* Fixed height reserving exactly 5 rows: fewer keeps the space,
+                      more scrolls within the card (desktop). Mobile stays natural. */}
+                  <div className="sm:h-[220px] sm:overflow-y-auto">
+                    {applications.map((app, i) => {
                       const chip = TRACKING_STATUS_CHIP[app.applicationStatus] ?? TRACKING_STATUS_CHIP.CREATED;
                       return (
                         <div
                           key={app.id}
-                          className="group flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3.5 transition-colors last:border-b-0 hover:bg-muted/50 sm:gap-4 sm:px-5"
+                          className="group flex items-center justify-between gap-3 border-b border-border/60 px-4 py-2 transition-colors last:border-b-0 hover:bg-muted/50 sm:h-[44px] sm:gap-4"
                         >
                           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                             <span className="w-5 flex-none font-mono text-xs text-muted-foreground/70">
                               {String(i + 1).padStart(2, '0')}
                             </span>
                             <div className="min-w-0">
-                              <h4 className="truncate text-[15px] font-semibold text-foreground">
+                              <h4 className="truncate text-[13.5px] font-semibold text-foreground">
                                 {app.title || t('page.recent.untitledApplication')}
                               </h4>
-                              <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                              <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
                                 {app.jobPosting?.company || app.jobPosting?.location || t('page.recent.noDetails')}
                               </p>
                               <StatusChip tone={chip.tone} className="mt-1.5 sm:hidden">
@@ -337,25 +423,29 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Interview calendar — fills the column so it lines up with the
+              compact sidebar (no dead space); its body centres the content. */}
+          <CalendarCard className="flex-1" />
         </div>
 
         {/* Sidebar Content */}
-        <div className="space-y-6">
+        <div className="space-y-2">
           {/* Profile Completion */}
           <Card className="gap-0 py-0">
-            <CardHeader className="border-b px-5 py-4">
-              <CardTitle className="font-heading text-base font-bold">{t('page.profile.title')}</CardTitle>
-              <CardDescription className="text-[13px]">{t('page.profile.description')}</CardDescription>
+            <CardHeader className="border-b px-4 py-1.5 pb-1.5!">
+              <CardTitle className="font-heading text-sm font-bold">{t('page.profile.title')}</CardTitle>
+              <CardDescription className="text-[12px]">{t('page.profile.description')}</CardDescription>
             </CardHeader>
-            <CardContent className="p-5">
+            <CardContent className="px-3.5 py-2">
               {isProfileLoading ? (
-                <div className="flex h-32 items-center justify-center">
+                <div className="flex h-24 items-center justify-center">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                 </div>
               ) : (
-                <div className="space-y-3.5">
+                <div className="space-y-1.5">
                   <div className="flex items-end justify-between">
-                    <span className="font-mono text-3xl font-semibold leading-none text-foreground">
+                    <span className="font-mono text-2xl font-semibold leading-none text-foreground">
                       {profileStrength.score}
                       <span className="text-base text-muted-foreground/70">%</span>
                     </span>
@@ -363,27 +453,27 @@ export default function DashboardPage() {
                       {profileStrength.score === 100 ? t('page.profile.perfect') : t('page.profile.almostDone')}
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden bg-primary-soft dark:bg-slate-700">
+                  <div className="h-1.5 w-full overflow-hidden bg-primary-soft dark:bg-slate-700">
                     <div
                       className="h-full bg-brand transition-all duration-500 ease-out"
                       style={{ width: `${profileStrength.score}%` }}
                     />
                   </div>
-                  <div className="space-y-2 pt-1.5">
+                  <div className="space-y-0.5">
                     {profileStrength.suggestions.slice(0, 3).map((suggestion, index) => (
                       <div
                         key={index}
-                        className={`flex items-center gap-2.5 text-[13.5px] ${
+                        className={`flex items-center gap-1.5 text-[11.5px] ${
                           suggestion.completed ? 'text-muted-foreground' : 'font-medium text-foreground'
                         }`}
                       >
                         {suggestion.completed ? (
-                          <svg width="15" height="15" viewBox="0 0 24 24" className="flex-none" aria-hidden>
+                          <svg width="14" height="14" viewBox="0 0 24 24" className="flex-none" aria-hidden>
                             <rect x="1" y="1" width="22" height="22" className="fill-success" />
                             <path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" />
                           </svg>
                         ) : (
-                          <span className="box-border h-[15px] w-[15px] flex-none border-2 border-muted-foreground/50" />
+                          <span className="box-border h-[14px] w-[14px] flex-none border-2 border-muted-foreground/50" />
                         )}
                         <span>{suggestion.text}</span>
                       </div>
@@ -391,7 +481,7 @@ export default function DashboardPage() {
                   </div>
                   <Button
                     variant="outline"
-                    className="mt-1.5 w-full rounded-[3px] border-primary font-semibold hover:bg-primary-soft"
+                    className="mt-0.5 h-7 w-full rounded-[3px] border-primary text-[12.5px] font-semibold hover:bg-primary-soft"
                     onClick={() => router.push('/profile')}
                   >
                     {t('page.profile.edit')}
@@ -403,30 +493,30 @@ export default function DashboardPage() {
 
           {/* Usage Summary */}
           <Card className="gap-0 py-0">
-            <CardHeader className="border-b px-5 py-4">
-              <CardTitle className="font-heading flex items-center gap-2 text-base font-bold">
+            <CardHeader className="border-b px-4 py-1.5 pb-1.5!">
+              <CardTitle className="font-heading flex items-center gap-2 text-sm font-bold">
                 <Zap className="h-4 w-4 text-brand" />
                 {t('page.usage.title')}
               </CardTitle>
-              <CardDescription className="text-[13px]">{t('page.usage.description')}</CardDescription>
+              <CardDescription className="text-[12px]">{t('page.usage.description')}</CardDescription>
             </CardHeader>
-            <CardContent className="p-5">
-              <UsageSummary showPeriod />
+            <CardContent className="px-3.5 py-2">
+              <UsageSummary showPeriod className="space-y-1.5" />
             </CardContent>
           </Card>
 
           {/* Activity Notice */}
           <Card className="gap-0 py-0">
-            <CardHeader className="border-b px-5 py-4">
-              <CardTitle className="font-heading flex items-center gap-2 text-base font-bold">
+            <CardHeader className="border-b px-4 py-1.5 pb-1.5!">
+              <CardTitle className="font-heading flex items-center gap-2 text-sm font-bold">
                 <TrendingUp className="h-4 w-4 text-brand" />
                 {t('page.trends.title')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-5">
-              <div className="border-l-[3px] border-brand bg-muted px-4 py-3.5">
-                <p className="text-[13.5px] leading-relaxed text-foreground">
-                  <span className="mb-1 block font-mono text-[11px] font-semibold uppercase tracking-[.08em] text-brand">
+            <CardContent className="px-3.5 py-2">
+              <div className="border-l-[3px] border-brand bg-muted px-3 py-2">
+                <p className="text-[12.5px] leading-relaxed text-foreground">
+                  <span className="mb-0.5 block font-mono text-[10.5px] font-semibold uppercase tracking-[.08em] text-brand">
                     {t('page.trends.tipLabel')}
                   </span>
                   {t('page.trends.tip')}
@@ -450,14 +540,14 @@ function StatsCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 bg-card p-5 transition-colors hover:bg-muted/60">
+    <div className="flex items-start justify-between gap-2.5 bg-card p-2.5 transition-colors hover:bg-muted/60">
       <div>
-        <SectionLabel>{title}</SectionLabel>
-        <span className="mt-2.5 block font-mono text-[32px] font-semibold leading-none tracking-[-.02em] text-foreground">
+        <SectionLabel className="text-[11px]">{title}</SectionLabel>
+        <span className="mt-1 block font-mono text-[21px] font-semibold leading-none tracking-[-.02em] text-foreground">
           {value}
         </span>
       </div>
-      <div className="grid h-10 w-10 flex-none place-items-center border border-border bg-muted text-primary">
+      <div className="grid h-7 w-7 flex-none place-items-center border border-border bg-muted text-primary">
         <Icon className="h-5 w-5" />
       </div>
     </div>

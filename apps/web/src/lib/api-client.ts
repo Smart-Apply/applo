@@ -32,6 +32,9 @@ import type {
   TierLimits,
   TiersResponse,
   CanPerformActionResult,
+  Appointment,
+  CreateAppointmentInput,
+  UpdateAppointmentInput,
   InterviewSession,
   InterviewSessionDetail,
   InterviewSessionsResponse,
@@ -1181,6 +1184,28 @@ export const api = {
       apiRequest<InterviewSessionDetail>(`/interviews/${sessionId}/voice/transcript`, {
         method: 'POST',
         body: JSON.stringify(data),
+      }),
+  },
+
+  // Interview calendar appointments
+  appointments: {
+    list: () => apiRequest<Appointment[]>('/appointments'),
+
+    create: (data: CreateAppointmentInput) =>
+      apiRequest<Appointment>('/appointments', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    update: (id: string, data: UpdateAppointmentInput) =>
+      apiRequest<Appointment>(`/appointments/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+
+    delete: (id: string) =>
+      apiRequest<void>(`/appointments/${id}`, {
+        method: 'DELETE',
       }),
   },
 

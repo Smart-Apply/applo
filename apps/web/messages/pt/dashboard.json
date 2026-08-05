@@ -68,6 +68,31 @@
       "title": "Tendências de mercado",
       "tipLabel": "Dica",
       "tip": "Enfermeiros e gestores de projeto estão atualmente muito procurados. Atualiza as tuas competências!"
+    },
+    "calendar": {
+      "title": "Calendário de entrevistas",
+      "subtitle": "{month} · {count, plural, =0 {sem compromissos} one {# compromisso} other {# compromissos}}",
+      "open": "Abrir calendário",
+      "upcoming": "Próximos",
+      "noUpcoming": "Sem compromissos futuros",
+      "modalTitle": "Compromissos",
+      "prevMonth": "Mês anterior",
+      "nextMonth": "Mês seguinte",
+      "appointmentOn": "Compromisso em {date}",
+      "time": "Hora",
+      "note": "Nota",
+      "notePlaceholder": "ex. pessoa de contacto, preparação, link da videochamada …",
+      "emailReminder": "Lembrete por e-mail",
+      "save": "Guardar compromisso",
+      "update": "Atualizar compromisso",
+      "allAppointments": "Todos os compromissos",
+      "emailReminderActive": "Lembrete por e-mail ativo",
+      "delete": "Eliminar",
+      "empty": "Ainda sem compromissos",
+      "toast": {
+        "saveError": "Não foi possível guardar o compromisso.",
+        "deleteError": "Não foi possível eliminar o compromisso."
+      }
     }
   },
   "guide": {

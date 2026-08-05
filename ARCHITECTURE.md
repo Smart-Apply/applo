@@ -61,6 +61,7 @@ applo/
 │   │   │   ├── admin/             # Allow-listed admin endpoints (ADMIN_EMAILS)
 │   │   │   ├── agents/            # Azure AI Foundry agents
 │   │   │   ├── applications/      # Generation pipeline
+│   │   │   ├── appointments/      # Interview-calendar CRUD (date/time, note)
 │   │   │   ├── auth/              # JWT, OAuth, 2FA, sessions, refresh tokens
 │   │   │   ├── common/            # Guards, filters, decorators (@Sanitize)
 │   │   │   ├── config/            # Zod env schema
@@ -267,6 +268,7 @@ recorded baselines live in
 | **JobPosting**     | Parsed job listings                            |
 | **Application**    | Generated applications + PDFs (+ per-language translation cache in `translations` Json) |
 | **Validation**     | Standalone AI check of an external application |
+| **Appointment**    | Dashboard interview-calendar entry (date + optional time, note, email-reminder flag) |
 | **ResumeTemplate** | PDF templates (6 designs × colors × 2 types)   |
 | **Interview**      | AI-generated interview Q&A                     |
 | **RefreshToken**   | Rotated refresh tokens                         |
@@ -280,7 +282,7 @@ recorded baselines live in
 ```text
 User 1:1 Profile
 Profile 1:N Skills, Experiences, Education, Certificates, Projects, Languages
-User 1:N JobPostings, Applications, RefreshTokens, Sessions, Interviews
+User 1:N JobPostings, Applications, RefreshTokens, Sessions, Interviews, Appointments
 Application N:1 JobPosting
 Application N:1 ResumeTemplate
 User 1:1 Subscription
@@ -414,6 +416,8 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | POST     | `/interviews`                      | Generate mock interview                                                     |
 | POST     | `/interviews/:id/voice/session`    | Mint voice session (Pro 5/mo, Premium 45/mo; 5/10/15 min, persona-led, CV-grounded) |
 | POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Pro/Premium)                              |
+| GET/POST | `/appointments`                    | List / create interview-calendar appointments                              |
+| PATCH/DELETE | `/appointments/:id`            | Update / delete an appointment (user-scoped)                               |
 | GET      | `/mailbox-sync/connections`        | List connected mailboxes (Premium)                                          |
 | GET      | `/mailbox-sync/microsoft/connect`  | Start MS Graph OAuth (Premium)                                              |
 | GET      | `/mailbox-sync/microsoft/callback` | OAuth redirect target (public)                                              |

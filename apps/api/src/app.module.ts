@@ -27,6 +27,7 @@ import { CSPViolationController } from './common/csp/csp-violation.controller';
 import { TimeoutMiddleware, RequestIdMiddleware } from './common/middleware';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { InterviewsModule } from './interviews/interviews.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 import { EmailModule } from './email/email.module';
 import { ContactModule } from './contact/contact.module';
 import { UpstashThrottlerStorage } from './common/throttler/upstash-throttler-storage';
@@ -119,6 +120,7 @@ import { MailboxSyncModule } from './mailbox-sync/mailbox-sync.module';
     TemplatesModule,
     UserPreferencesModule,
     InterviewsModule,
+    AppointmentsModule,
     EmailModule,
     ContactModule,
     AdminModule,

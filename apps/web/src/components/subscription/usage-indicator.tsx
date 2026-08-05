@@ -23,8 +23,8 @@ const sizeConfig = {
     icon: 'h-3 w-3',
   },
   md: {
-    text: 'text-sm',
-    progress: 'h-2',
+    text: 'text-[13px]',
+    progress: 'h-1.5',
     icon: 'h-4 w-4',
   },
   lg: {
@@ -92,7 +92,7 @@ export function UsageIndicator({
   }
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-1', className)}>
       {/* Header with label and count */}
       <div className={cn('flex items-center justify-between', config.text)}>
         <span className="text-muted-foreground">{label}</span>

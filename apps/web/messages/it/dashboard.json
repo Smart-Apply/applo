@@ -68,6 +68,31 @@
       "title": "Tendenze di mercato",
       "tipLabel": "Suggerimento",
       "tip": "Infermieri e project manager sono attualmente molto richiesti. Aggiorna le tue competenze!"
+    },
+    "calendar": {
+      "title": "Calendario colloqui",
+      "subtitle": "{month} · {count, plural, =0 {nessun appuntamento} one {# appuntamento} other {# appuntamenti}}",
+      "open": "Apri calendario",
+      "upcoming": "Prossimi",
+      "noUpcoming": "Nessun appuntamento in arrivo",
+      "modalTitle": "Appuntamenti",
+      "prevMonth": "Mese precedente",
+      "nextMonth": "Mese successivo",
+      "appointmentOn": "Appuntamento il {date}",
+      "time": "Orario",
+      "note": "Nota",
+      "notePlaceholder": "es. referente, preparazione, link alla videochiamata …",
+      "emailReminder": "Promemoria via e-mail",
+      "save": "Salva appuntamento",
+      "update": "Aggiorna appuntamento",
+      "allAppointments": "Tutti gli appuntamenti",
+      "emailReminderActive": "Promemoria e-mail attivo",
+      "delete": "Elimina",
+      "empty": "Ancora nessun appuntamento",
+      "toast": {
+        "saveError": "Impossibile salvare l'appuntamento.",
+        "deleteError": "Impossibile eliminare l'appuntamento."
+      }
     }
   },
   "guide": {
