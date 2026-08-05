@@ -425,7 +425,7 @@ export default function OnboardingPage() {
       {/* Bottom links */}
       <div className="flex flex-col items-center gap-2 text-sm">
         <button
-          onClick={() => router.push('/profile/edit')}
+          onClick={() => router.push('/profile')}
           className="text-brand hover:underline transition-colors"
         >
           {t('onboarding.editFull')}
