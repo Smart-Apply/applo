@@ -48,6 +48,7 @@ Anleitungen
 - **TEMPLATE_GUIDE.md** - Template System Guide
 - **TESTING_GUIDE.md** - Testing Best Practices
 - **DOMAIN_CLOUDFLARE_SETUP.md** - Cloudflare + Fly.io domain setup (postmortem)
+- **SOCIAL_MEDIA_SETUP.md** - `social@applo.ai` mailbox + social account creation runbook
 - **DOCKER_OPTIMIZATION.md** - Docker Optimierung
 - **MONOREPO_WORKSPACE.md** - Workspace Architektur
 

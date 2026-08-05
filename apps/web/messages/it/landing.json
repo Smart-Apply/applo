@@ -281,6 +281,12 @@
   "footer": {
     "tagline": "Candidature dal tuo profilo reale: oneste, ottimizzate per l'ATS, ospitate nell'UE.",
     "compliance": "UE · GDPR",
-    "license": "Source-available · BSL 1.1"
+    "license": "Source-available · BSL 1.1",
+    "social": {
+      "x": "Applo su X",
+      "linkedin": "Applo su LinkedIn",
+      "instagram": "Applo su Instagram",
+      "tiktok": "Applo su TikTok"
+    }
   }
 }

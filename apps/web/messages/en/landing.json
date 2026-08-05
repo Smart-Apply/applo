@@ -281,6 +281,12 @@
   "footer": {
     "tagline": "Applications from your real profile: honest, ATS-optimized, hosted in the EU.",
     "compliance": "EU · GDPR",
-    "license": "Source-available · BSL 1.1"
+    "license": "Source-available · BSL 1.1",
+    "social": {
+      "x": "Applo on X",
+      "linkedin": "Applo on LinkedIn",
+      "instagram": "Applo on Instagram",
+      "tiktok": "Applo on TikTok"
+    }
   }
 }

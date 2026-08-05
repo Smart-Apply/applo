@@ -284,6 +284,8 @@ html { scroll-behavior: smooth; }
 .applo-home .footer .wrap { display:flex; flex-wrap:wrap; gap:28px 48px; align-items:flex-start; }
 .applo-home .footer .brand { color:#fff; }
 .applo-home .footer .fcol { display:flex; flex-direction:column; gap:11px; }
+.applo-home .footer .fsocial { display:flex; gap:16px; margin-top:6px; }
+.applo-home .footer .fsocial a { display:inline-flex; }
 .applo-home .footer a:hover { color:#fff; }
 .applo-home .footer .fmeta { margin-left:auto; text-align:right; line-height:1.7; align-items:flex-end; font-family:var(--mono); font-size:12px; letter-spacing:.1em; }
 .applo-home .footer .pill { display:inline-block; border:1px solid rgba(255,255,255,.25);

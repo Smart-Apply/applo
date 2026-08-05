@@ -281,6 +281,12 @@
   "footer": {
     "tagline": "Bewerbungen aus deinem echten Profil: ehrlich, ATS-optimiert, in der EU gehostet.",
     "compliance": "EU · DSGVO",
-    "license": "Source-available · BSL 1.1"
+    "license": "Source-available · BSL 1.1",
+    "social": {
+      "x": "Applo auf X",
+      "linkedin": "Applo auf LinkedIn",
+      "instagram": "Applo auf Instagram",
+      "tiktok": "Applo auf TikTok"
+    }
   }
 }
