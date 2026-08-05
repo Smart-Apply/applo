@@ -36,10 +36,10 @@ import {
   HelpCircle,
   Zap,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/format-date';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useParseResume } from '@/hooks/use-parse-resume';
 import {
@@ -50,7 +50,19 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { FileUpload } from '@/components/ui/file-upload';
-import type { UpdateProfileDto, EducationDto } from '@/types';
+import { ExperienceEditorDialog } from '@/components/profile/experience-editor-dialog';
+import { EducationEditorDialog } from '@/components/profile/education-editor-dialog';
+import { ProjectEditorDialog } from '@/components/profile/project-editor-dialog';
+import { CertificateEditorDialog } from '@/components/profile/certificate-editor-dialog';
+import { ContactEditorDialog, type ContactValues } from '@/components/profile/contact-editor-dialog';
+import type {
+  UpdateProfileDto,
+  EducationDto,
+  Experience,
+  Education,
+  Project,
+  Certificate,
+} from '@/types';
 import { useTranslations } from 'next-intl';
 
 function InlineSkillInput({
@@ -576,14 +588,55 @@ interface Criterion {
   hint: string;
 }
 
+/**
+ * Normalize an education year to a 4-digit number. The API serializes the year
+ * as a full ISO date string, while the inline editor produces a plain year, so
+ * accept both shapes here.
+ */
+function eduYear(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
+  const asDate = new Date(value as string);
+  if (!Number.isNaN(asDate.getTime())) return asDate.getFullYear();
+  const asNumber = parseInt(String(value), 10);
+  return Number.isNaN(asNumber) ? undefined : asNumber;
+}
+
+/** Map the education read model (mixed year shapes) to the write DTO (YYYY-01-01). */
+function educationToDto(list: Education[]): EducationDto[] {
+  return list.map((e) => {
+    const sy = eduYear(e.startYear);
+    const ey = eduYear(e.endYear);
+    return {
+      ...(e.id && { id: e.id }),
+      degree: e.degree,
+      institution: e.institution,
+      fieldOfStudy: e.fieldOfStudy,
+      startYear: sy ? `${sy}-01-01` : undefined,
+      endYear: ey ? `${ey}-01-01` : undefined,
+      gpa: e.gpa,
+      description: e.description,
+    };
+  });
+}
+
 export default function ProfilePage() {
   const t = useTranslations('profile');
-  const router = useRouter();
   const { data: profile, isLoading, error } = useProfile();
   const updateProfile = useUpdateProfile();
   const user = useAuthStore((state) => state.user);
   const [cvDialogOpen, setCvDialogOpen] = useState(false);
   const parseResume = useParseResume();
+
+  // ── Inline editing state (replaces the former /profile/edit route) ──────
+  const [contactOpen, setContactOpen] = useState(false);
+  const [aboutEditing, setAboutEditing] = useState(false);
+  const [aboutDraft, setAboutDraft] = useState('');
+  type EditorState = { open: boolean; index: number | null };
+  const closedEditor: EditorState = { open: false, index: null };
+  const [expEditor, setExpEditor] = useState<EditorState>(closedEditor);
+  const [eduEditor, setEduEditor] = useState<EditorState>(closedEditor);
+  const [projEditor, setProjEditor] = useState<EditorState>(closedEditor);
+  const [certEditor, setCertEditor] = useState<EditorState>(closedEditor);
 
   // ── Applo coach state ──────────────────────────────────────────────────
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -703,21 +756,8 @@ export default function ProfilePage() {
 
   const handleRemoveEducation = useCallback(
     (index: number) => {
-      // Map the read model (numeric years) back to the write DTO (string years),
-      // mirroring how the edit page persists education.
-      const updated: EducationDto[] = (profile?.education ?? [])
-        .filter((_, i) => i !== index)
-        .map((e) => ({
-          id: e.id,
-          degree: e.degree,
-          institution: e.institution,
-          fieldOfStudy: e.fieldOfStudy,
-          startYear: e.startYear ? `${e.startYear}-01-01` : undefined,
-          endYear: e.endYear ? `${e.endYear}-01-01` : undefined,
-          gpa: e.gpa,
-          description: e.description,
-        }));
-      updateProfile.mutate({ education: updated });
+      const updated = (profile?.education ?? []).filter((_, i) => i !== index);
+      updateProfile.mutate({ education: educationToDto(updated) });
     },
     [profile?.education, updateProfile],
   );
@@ -738,6 +778,80 @@ export default function ProfilePage() {
     },
     [profile?.languages, updateProfile],
   );
+
+  // ── Inline add/edit handlers — each persists its section immediately ─────
+  const handleSaveExperience = useCallback(
+    (exp: Experience) => {
+      const list = [...(profile?.experiences ?? [])];
+      if (expEditor.index !== null) list[expEditor.index] = exp;
+      else list.push(exp);
+      updateProfile.mutate({ experiences: list });
+    },
+    [profile?.experiences, expEditor.index, updateProfile],
+  );
+
+  const handleSaveEducation = useCallback(
+    (edu: Education) => {
+      const list = [...(profile?.education ?? [])];
+      if (eduEditor.index !== null) list[eduEditor.index] = edu;
+      else list.push(edu);
+      updateProfile.mutate({ education: educationToDto(list) });
+    },
+    [profile?.education, eduEditor.index, updateProfile],
+  );
+
+  const handleSaveProject = useCallback(
+    (proj: Project) => {
+      const list = [...(profile?.projects ?? [])];
+      if (projEditor.index !== null) list[projEditor.index] = proj;
+      else list.push(proj);
+      updateProfile.mutate({ projects: list });
+    },
+    [profile?.projects, projEditor.index, updateProfile],
+  );
+
+  const handleSaveCertificate = useCallback(
+    (cert: Certificate) => {
+      const list = [...(profile?.certificates ?? [])];
+      if (certEditor.index !== null) list[certEditor.index] = cert;
+      else list.push(cert);
+      updateProfile.mutate({ certificates: list });
+    },
+    [profile?.certificates, certEditor.index, updateProfile],
+  );
+
+  const handleSaveContact = useCallback(
+    async (values: ContactValues) => {
+      try {
+        await updateProfile.mutateAsync({
+          firstName: values.firstName?.trim() || undefined,
+          lastName: values.lastName?.trim() || undefined,
+          phone: values.phone?.trim() || undefined,
+          street: values.street?.trim() || undefined,
+          postalCode: values.postalCode?.trim() || undefined,
+          city: values.city?.trim() || undefined,
+          country: values.country?.trim() || undefined,
+          linkedinUrl: values.linkedinUrl?.trim() || undefined,
+          githubUrl: values.githubUrl?.trim() || undefined,
+          portfolioUrl: values.portfolioUrl?.trim() || undefined,
+        });
+        setContactOpen(false);
+      } catch {
+        // Errors surface through the mutation's toast; keep the dialog open.
+      }
+    },
+    [updateProfile],
+  );
+
+  const startAboutEdit = useCallback(() => {
+    setAboutDraft(profile?.summary ?? '');
+    setAboutEditing(true);
+  }, [profile?.summary]);
+
+  const handleSaveAbout = useCallback(() => {
+    updateProfile.mutate({ summary: aboutDraft.trim() || undefined });
+    setAboutEditing(false);
+  }, [aboutDraft, updateProfile]);
 
   // ── Transparent, weighted profile-check (mirrors calculateProfileStrength) ──
   const criteria: Criterion[] = useMemo(() => {
@@ -899,6 +1013,36 @@ export default function ProfilePage() {
     ?.replace(/^https?:\/\/(www\.)?/, '')
     .replace(/\/$/, '');
 
+  const contactDefaults: ContactValues = {
+    firstName: user?.firstName ?? '',
+    lastName: user?.lastName ?? '',
+    phone: profile?.phone ?? '',
+    street: profile?.street ?? '',
+    postalCode: profile?.postalCode ?? '',
+    city: profile?.city ?? '',
+    country: profile?.country ?? '',
+    linkedinUrl: profile?.linkedinUrl ?? '',
+    githubUrl: profile?.githubUrl ?? '',
+    portfolioUrl: profile?.portfolioUrl ?? '',
+  };
+
+  // Seed the education editor with normalized numeric years so the year inputs
+  // don't show raw ISO strings coming from the API.
+  const eduInitial =
+    eduEditor.index !== null && profile?.education?.[eduEditor.index]
+      ? {
+          ...profile.education[eduEditor.index],
+          startYear: eduYear(profile.education[eduEditor.index].startYear),
+          endYear: eduYear(profile.education[eduEditor.index].endYear) ?? null,
+        }
+      : null;
+  const expInitial =
+    expEditor.index !== null ? (profile?.experiences?.[expEditor.index] ?? null) : null;
+  const projInitial =
+    projEditor.index !== null ? (profile?.projects?.[projEditor.index] ?? null) : null;
+  const certInitial =
+    certEditor.index !== null ? (profile?.certificates?.[certEditor.index] ?? null) : null;
+
   const sectionCard = (id: string) =>
     cn(
       'scroll-mt-24 rounded-[4px] border bg-card p-6 transition-colors duration-200',
@@ -1013,7 +1157,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <h1 className="font-heading text-xl font-bold text-foreground">{fullName}</h1>
                   <button
-                    onClick={() => router.push('/profile/edit')}
+                    onClick={() => setContactOpen(true)}
                     className="text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -1065,7 +1209,7 @@ export default function ProfilePage() {
                   <>
                     <span className="flex-1" />
                     <button
-                      onClick={() => router.push('/profile/edit')}
+                      onClick={() => setContactOpen(true)}
                       className="border border-[#F3E3B3] bg-[#FDF6E7] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-[#A16207] transition-colors hover:bg-[#FBEECB] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20"
                     >
                       {t('page.missing')}
@@ -1098,7 +1242,7 @@ export default function ProfilePage() {
                   <>
                     <span className="flex-1" />
                     <button
-                      onClick={() => router.push('/profile/edit')}
+                      onClick={() => setContactOpen(true)}
                       className="border border-[#F3E3B3] bg-[#FDF6E7] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-[#A16207] transition-colors hover:bg-[#FBEECB] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20"
                     >
                       {t('page.missing')}
@@ -1121,19 +1265,42 @@ export default function ProfilePage() {
             collapsible={false}
             onAsk={() => setActiveSection('about')}
             action={
-              <button
-                onClick={() => router.push('/profile/edit')}
-                className="text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
+              !aboutEditing && (
+                <button
+                  onClick={startAboutEdit}
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              )
             }
           >
-            {profile?.summary ? (
+            {aboutEditing ? (
+              <div className="space-y-3">
+                <Textarea
+                  autoFocus
+                  value={aboutDraft}
+                  onChange={(e) => setAboutDraft(e.target.value)}
+                  placeholder={t('edit.basic.summaryPlaceholder')}
+                  className="min-h-[140px] resize-none"
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">{t('edit.basic.summaryDescription')}</p>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => setAboutEditing(false)}>
+                      {t('actions.cancel')}
+                    </Button>
+                    <Button size="sm" onClick={handleSaveAbout}>
+                      {t('actions.save')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : profile?.summary ? (
               <p className="text-sm leading-relaxed text-muted-foreground">{profile.summary}</p>
             ) : (
               <button
-                onClick={() => router.push('/profile/edit')}
+                onClick={startAboutEdit}
                 className="flex w-full items-center justify-center gap-1.5 rounded-[3px] border border-dashed border-border py-4 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -1169,6 +1336,12 @@ export default function ProfilePage() {
                             {formatDate(exp.startDate, 'MMM yyyy')}
                           </span>
                           <button
+                            onClick={() => setExpEditor({ open: true, index: i })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/exp:opacity-100"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleRemoveExperience(i)}
                             className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/exp:opacity-100"
                           >
@@ -1193,7 +1366,7 @@ export default function ProfilePage() {
             )}
 
             <button
-              onClick={() => router.push('/profile/edit?tab=experience')}
+              onClick={() => setExpEditor({ open: true, index: null })}
               className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -1270,9 +1443,17 @@ export default function ProfilePage() {
                         <div className="flex shrink-0 items-center gap-2">
                           {(edu.startYear || edu.endYear) && (
                             <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                              {[edu.startYear, edu.endYear ?? t('labels.emptyCurrent')].filter(Boolean).join(' – ')}
+                              {[eduYear(edu.startYear), eduYear(edu.endYear) ?? t('labels.emptyCurrent')]
+                                .filter(Boolean)
+                                .join(' – ')}
                             </span>
                           )}
+                          <button
+                            onClick={() => setEduEditor({ open: true, index: i })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/edu:opacity-100"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
                           <button
                             onClick={() => handleRemoveEducation(i)}
                             className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/edu:opacity-100"
@@ -1297,7 +1478,7 @@ export default function ProfilePage() {
             )}
 
             <button
-              onClick={() => router.push('/profile/edit?tab=education')}
+              onClick={() => setEduEditor({ open: true, index: null })}
               className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -1346,12 +1527,20 @@ export default function ProfilePage() {
                             </p>
                           )}
                         </div>
-                        <button
-                          onClick={() => handleRemoveProject(i)}
-                          className="shrink-0 rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/proj:opacity-100"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <button
+                            onClick={() => setProjEditor({ open: true, index: i })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/proj:opacity-100"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleRemoveProject(i)}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/proj:opacity-100"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                       {proj.technologies && proj.technologies.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1376,7 +1565,7 @@ export default function ProfilePage() {
             )}
 
             <button
-              onClick={() => router.push('/profile/edit?tab=projects')}
+              onClick={() => setProjEditor({ open: true, index: null })}
               className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -1416,6 +1605,12 @@ export default function ProfilePage() {
                             </span>
                           )}
                           <button
+                            onClick={() => setCertEditor({ open: true, index: i })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/cert:opacity-100"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleRemoveCertificate(i)}
                             className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/cert:opacity-100"
                           >
@@ -1439,7 +1634,7 @@ export default function ProfilePage() {
             )}
 
             <button
-              onClick={() => router.push('/profile/edit?tab=certificates')}
+              onClick={() => setCertEditor({ open: true, index: null })}
               className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -1571,6 +1766,40 @@ export default function ProfilePage() {
         <ChevronDown className="h-4 w-4 rotate-180" />
         {t('page.backToTop')}
       </button>
+
+      {/* ── Inline section editors ── */}
+      <ContactEditorDialog
+        open={contactOpen}
+        onOpenChange={setContactOpen}
+        email={user?.email}
+        defaultValues={contactDefaults}
+        onSubmit={handleSaveContact}
+        pending={updateProfile.isPending}
+      />
+      <ExperienceEditorDialog
+        open={expEditor.open}
+        onOpenChange={(open) => setExpEditor((prev) => ({ ...prev, open }))}
+        initial={expInitial}
+        onSubmit={handleSaveExperience}
+      />
+      <EducationEditorDialog
+        open={eduEditor.open}
+        onOpenChange={(open) => setEduEditor((prev) => ({ ...prev, open }))}
+        initial={eduInitial}
+        onSubmit={handleSaveEducation}
+      />
+      <ProjectEditorDialog
+        open={projEditor.open}
+        onOpenChange={(open) => setProjEditor((prev) => ({ ...prev, open }))}
+        initial={projInitial}
+        onSubmit={handleSaveProject}
+      />
+      <CertificateEditorDialog
+        open={certEditor.open}
+        onOpenChange={(open) => setCertEditor((prev) => ({ ...prev, open }))}
+        initial={certInitial}
+        onSubmit={handleSaveCertificate}
+      />
 
       {/* ── CV Upload Dialog ── */}
       <Dialog
