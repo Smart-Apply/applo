@@ -354,6 +354,31 @@ export interface JobPosting {
 }
 
 // ============================================
+// Appointment Types (Interview calendar)
+// ============================================
+
+export interface Appointment {
+  id: string;
+  /** Calendar day, ISO "YYYY-MM-DD" (date-only). */
+  date: string;
+  /** Optional start time in 24h "HH:mm". Absent = all-day entry / deadline. */
+  startTime?: string;
+  note: string;
+  emailReminder: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateAppointmentInput {
+  date: string;
+  startTime?: string;
+  note: string;
+  emailReminder?: boolean;
+}
+
+export type UpdateAppointmentInput = Partial<CreateAppointmentInput>;
+
+// ============================================
 // Template Types
 // ============================================
 

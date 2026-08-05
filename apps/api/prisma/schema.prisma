@@ -45,6 +45,7 @@ model User {
   auditLogs            AuditLog[]
   subscription         Subscription?
   interviewSessions    InterviewSession[]
+  appointments         Appointment[] // Interview-calendar entries the user schedules
   oauthProviders       OAuthProvider[] // OAuth providers linked to this user
 
   // Email tracking (Premium feature) — connected mailbox(es) we sync via OAuth
@@ -1184,4 +1185,29 @@ enum EmailClassification {
   REJECTION
   REQUEST_FOR_INFO
   OTHER
+}
+
+/// Interview calendar entry a user schedules on their dashboard.
+/// A date-only appointment (deadline) has no `startTime`; a timed one carries
+/// an "HH:mm" wall-clock string. `emailReminder` records the user's intent —
+/// actual reminder delivery is a follow-up (cron/job), not wired here.
+model Appointment {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Calendar day (date-only; the wall-clock time of day lives in startTime).
+  date DateTime @db.Date
+  // Optional start time in 24h "HH:mm". Null = all-day entry / deadline.
+  startTime String?
+  // Free-text note describing the appointment (what it is about).
+  note String
+  // Whether the user asked for an email reminder (delivery not implemented yet).
+  emailReminder Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, date])
+  @@map("appointments")
 }

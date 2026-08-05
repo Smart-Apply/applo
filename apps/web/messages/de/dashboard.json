@@ -68,6 +68,31 @@
       "title": "Markttrends",
       "tipLabel": "Tipp",
       "tip": "Pflegekräfte und Projektmanager werden aktuell stark gesucht. Aktualisiere deine Fähigkeiten!"
+    },
+    "calendar": {
+      "title": "Interview-Kalender",
+      "subtitle": "{month} · {count, plural, =0 {keine Termine} one {# Termin} other {# Termine}} eingetragen",
+      "open": "Kalender öffnen",
+      "upcoming": "Nächste Termine",
+      "noUpcoming": "Keine anstehenden Termine",
+      "modalTitle": "Termine",
+      "prevMonth": "Vorheriger Monat",
+      "nextMonth": "Nächster Monat",
+      "appointmentOn": "Termin am {date}",
+      "time": "Uhrzeit",
+      "note": "Notiz",
+      "notePlaceholder": "z.B. Ansprechpartner, Vorbereitung, Link zum Videocall …",
+      "emailReminder": "Erinnerung per E-Mail",
+      "save": "Termin speichern",
+      "update": "Termin aktualisieren",
+      "allAppointments": "Alle Termine",
+      "emailReminderActive": "E-Mail-Erinnerung aktiv",
+      "delete": "Löschen",
+      "empty": "Noch keine Termine",
+      "toast": {
+        "saveError": "Termin konnte nicht gespeichert werden.",
+        "deleteError": "Termin konnte nicht gelöscht werden."
+      }
     }
   },
   "guide": {
