@@ -237,8 +237,8 @@ export function CalendarCard({ className }: { className?: string }) {
               {weekdays.map((wd, i) => (
                 <span
                   key={i}
-                  className="text-center font-mono text-[8px] font-semibold text-muted-foreground/70"
-                  style={{ width: 19 }}
+                  className="text-center font-mono text-[9px] font-semibold text-muted-foreground/70"
+                  style={{ width: 22 }}
                 >
                   {wd.slice(0, 2)}
                 </span>
@@ -251,18 +251,18 @@ export function CalendarCard({ className }: { className?: string }) {
                 return (
                   <div
                     key={cell.key}
-                    className={`relative flex items-center justify-center border font-mono text-[8.5px] font-semibold ${
+                    className={`relative flex items-center justify-center border font-mono text-[10px] font-semibold ${
                       cell.muted
                         ? 'border-border/50 text-muted-foreground/40'
                         : isToday
                           ? 'border-brand text-foreground'
                           : 'border-border text-foreground'
                     } ${hasAppt ? 'bg-brand/10' : 'bg-card'}`}
-                    style={{ width: 19, height: 19 }}
+                    style={{ width: 22, height: 22 }}
                   >
                     {cell.day}
                     {hasAppt && (
-                      <span className="absolute -right-0.5 -top-0.5 h-[7px] w-[7px] rounded-full bg-primary" />
+                      <span className="absolute -right-0.5 -top-0.5 h-[8px] w-[8px] rounded-full bg-primary" />
                     )}
                   </div>
                 );
@@ -479,11 +479,19 @@ export function CalendarCard({ className }: { className?: string }) {
   );
 }
 
-/** Tiny Applo-face marker on days that have an appointment. */
+/** Tiny Applo-head marker (with antennas) on days that have an appointment.
+ *  The viewBox reserves space above the head (negative y) for the two
+ *  antennas, mirroring the full mascot in applo-rig.tsx. */
 function ApptMarker() {
   return (
-    <span className="block h-3.5 w-3.5 drop-shadow-sm">
-      <svg viewBox="0 0 48 40" width="14" height="14" aria-hidden>
+    <span className="block h-[18px] w-[18px] drop-shadow-sm">
+      <svg viewBox="-1 -12 48 48" width="18" height="18" aria-hidden>
+        {/* Antennas — drawn first so their bases tuck behind the head */}
+        <path d="M19 3 Q15 -4 12 -8" fill="none" stroke="#15233f" strokeWidth="2.8" strokeLinecap="round" />
+        <circle cx="11" cy="-9" r="3" fill="#15233f" />
+        <path d="M29 3 Q33 -4 36 -8" fill="none" stroke="#15233f" strokeWidth="2.8" strokeLinecap="round" />
+        <circle cx="37" cy="-9" r="3" fill="#15233f" />
+        {/* Head */}
         <rect x="2" y="2" width="44" height="32" rx="10" fill="#15233f" />
         <rect x="9" y="9" width="30" height="20" rx="6" fill="#eef3fb" />
         <circle cx="18" cy="19" r="2.6" fill="#15233f" />

@@ -143,7 +143,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // Only fit on desktop (md+); mobile stays a natural, scrollable column.
-    const GAP = 16; // small breathing room below the content
+    const GAP = 8; // small safety margin below the content
     let raf = 0;
     let current = 1;
     const tick = () => {
@@ -151,9 +151,30 @@ export default function DashboardPage() {
       if (el && window.innerWidth >= 768) {
         const rect = el.getBoundingClientRect();
         const natural = rect.height / current; // divide out the applied zoom
-        const available = window.innerHeight - rect.top - GAP;
+        // Fit into the VISIBLE viewport. Subtleties:
+        //  1) Measure the visual viewport, NOT <main>: with `md:h-screen` +
+        //     `flex-1` (default `min-height:auto`) <main> grows to its own
+        //     content height once the page overflows, so its clientHeight
+        //     yields no constraint and the scale would stick at 1.
+        //  2) topOffset is scroll-INDEPENDENT: rect.top + scrollY recovers the
+        //     constant chrome ABOVE the content (header + verification banner +
+        //     padding). Raw viewport-relative rect.top would let a scroll feed
+        //     back into the scale and resize every tile while scrolling.
+        //  3) Subtract the chrome BELOW the content too: the shared layout
+        //     wrapper (md:p-8) and <main> add bottom padding that isn't part of
+        //     `el`. Without it the content overflows by that padding and the
+        //     page keeps a few scroll pixels (which the scroll lock would clip).
+        const wrapperCS = el.parentElement ? getComputedStyle(el.parentElement) : null;
+        const mainEl = el.closest('main');
+        const mainCS = mainEl ? getComputedStyle(mainEl) : null;
+        const bottomChrome =
+          (wrapperCS ? parseFloat(wrapperCS.paddingBottom) || 0 : 0) +
+          (mainCS ? parseFloat(mainCS.paddingBottom) || 0 : 0);
+        const viewportH = window.visualViewport?.height ?? window.innerHeight;
+        const topOffset = rect.top + window.scrollY;
+        const available = viewportH - topOffset - bottomChrome - GAP;
         if (natural > 0 && available > 0) {
-          const next = Math.max(0.7, Math.min(1, available / natural));
+          const next = Math.max(0.5, Math.min(1, available / natural));
           if (Math.abs(next - current) > 0.004) {
             current = next;
             setFitScale(next);
@@ -167,6 +188,29 @@ export default function DashboardPage() {
     };
     tick();
     return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Lock the dashboard to a single screen on desktop. The content is
+  // zoom-fitted to exactly the viewport (see above), so a scrollbar is never
+  // needed; hiding overflow guarantees it and also stops a stray scroll from
+  // feeding back into the fit. Mobile keeps its natural, scrollable column.
+  // Both the page and <main> are unlocked again on unmount so every OTHER
+  // dashboard route scrolls normally.
+  useEffect(() => {
+    const html = document.documentElement;
+    const main = document.querySelector('main') as HTMLElement | null;
+    const apply = () => {
+      const lock = window.innerWidth >= 768;
+      html.style.overflow = lock ? 'hidden' : '';
+      if (main) main.style.overflow = lock ? 'hidden' : '';
+    };
+    apply();
+    window.addEventListener('resize', apply);
+    return () => {
+      window.removeEventListener('resize', apply);
+      html.style.overflow = '';
+      if (main) main.style.overflow = '';
+    };
   }, []);
 
   const getGreeting = () => {
@@ -294,7 +338,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-2 lg:col-span-2">
           {/* Recent Applications */}
           <Card className="gap-0 overflow-hidden py-0">
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b px-4 py-1.5">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b px-4 py-1.5 pb-1.5!">
               <div>
                 <CardTitle className="font-heading text-base font-bold tracking-[-.01em]">{t('page.recent.title')}</CardTitle>
                 <CardDescription className="mt-0.5 text-[12.5px]">{t('page.recent.description')}</CardDescription>
@@ -389,7 +433,7 @@ export default function DashboardPage() {
         <div className="space-y-2">
           {/* Profile Completion */}
           <Card className="gap-0 py-0">
-            <CardHeader className="border-b px-4 py-1.5">
+            <CardHeader className="border-b px-4 py-1.5 pb-1.5!">
               <CardTitle className="font-heading text-sm font-bold">{t('page.profile.title')}</CardTitle>
               <CardDescription className="text-[12px]">{t('page.profile.description')}</CardDescription>
             </CardHeader>
@@ -449,7 +493,7 @@ export default function DashboardPage() {
 
           {/* Usage Summary */}
           <Card className="gap-0 py-0">
-            <CardHeader className="border-b px-4 py-1.5">
+            <CardHeader className="border-b px-4 py-1.5 pb-1.5!">
               <CardTitle className="font-heading flex items-center gap-2 text-sm font-bold">
                 <Zap className="h-4 w-4 text-brand" />
                 {t('page.usage.title')}
@@ -463,7 +507,7 @@ export default function DashboardPage() {
 
           {/* Activity Notice */}
           <Card className="gap-0 py-0">
-            <CardHeader className="border-b px-4 py-1.5">
+            <CardHeader className="border-b px-4 py-1.5 pb-1.5!">
               <CardTitle className="font-heading flex items-center gap-2 text-sm font-bold">
                 <TrendingUp className="h-4 w-4 text-brand" />
                 {t('page.trends.title')}
