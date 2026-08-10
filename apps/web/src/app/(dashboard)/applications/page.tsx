@@ -520,6 +520,7 @@ export default function ApplicationsPage() {
           <div className="inline-flex shrink-0 flex-wrap items-center gap-px self-start overflow-hidden rounded-[4px] border border-border bg-border">
             {trackingStatusTabs.map((tab) => {
               const isActive = selectedTab === tab.value;
+              const TabIcon = tab.icon;
               return (
                 <button
                   key={tab.value}
@@ -532,6 +533,11 @@ export default function ApplicationsPage() {
                   }`}
                   aria-pressed={isActive}
                 >
+                  <TabIcon
+                    className={`h-4 w-4 ${
+                      isActive ? 'text-primary-foreground/80' : 'text-muted-foreground/70'
+                    }`}
+                  />
                   <span>{tab.label}</span>
                   <span
                     className={`font-mono text-[11px] font-medium ${
@@ -616,26 +622,26 @@ export default function ApplicationsPage() {
               toggle, then a body that hugs its content and scrolls internally
               once it would exceed the page height. */}
           {displayedApplications.length > 0 ? (
-            <div className="flex min-h-0 flex-col overflow-hidden rounded-[4px] border bg-card">
-              {/* Card header — matches the dashboard's Card headers. */}
-              <div className="flex flex-none flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b px-4 py-2">
+            <div className="flex min-h-0 flex-col overflow-hidden rounded-[4px] border border-[#33456b] bg-card">
+              {/* Card header — navy band matching the dashboard's Card headers. */}
+              <div className="flex flex-none flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-[#33456b] bg-[#1B2A49] px-4 py-2.5">
                 <div className="flex items-baseline gap-2">
-                  <h2 className="font-heading text-[15px] font-bold tracking-[-.01em] text-foreground">
+                  <h2 className="font-heading text-[15px] font-bold tracking-[-.01em] text-white">
                     {trackingStatusTabs.find((tab) => tab.value === selectedTab)?.label ?? t('status.all')}
                   </h2>
-                  <span className="font-mono text-[11px] font-medium text-muted-foreground/70">
+                  <span className="font-mono text-[11px] font-medium text-white/50">
                     {filteredApplications.length}
                   </span>
                 </div>
-                {/* View toggle (table | cards) — desktop only */}
-                <div className="hidden items-center gap-px overflow-hidden rounded-[3px] border border-border bg-border md:inline-flex">
+                {/* View toggle (table | cards) — desktop only. Styled to read on the navy header. */}
+                <div className="hidden items-center gap-px overflow-hidden rounded-[3px] border border-white/20 bg-white/10 md:inline-flex">
                   <button
                     type="button"
                     onClick={() => setViewMode('table')}
                     className={`inline-flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium transition-colors ${
                       viewMode === 'table'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+                        ? 'bg-white text-[#1B2A49]'
+                        : 'bg-transparent text-white/70 hover:bg-white/15 hover:text-white'
                     }`}
                     aria-pressed={viewMode === 'table'}
                     aria-label={t('list.tableView')}
@@ -648,8 +654,8 @@ export default function ApplicationsPage() {
                     onClick={() => setViewMode('cards')}
                     className={`inline-flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium transition-colors ${
                       viewMode === 'cards'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+                        ? 'bg-white text-[#1B2A49]'
+                        : 'bg-transparent text-white/70 hover:bg-white/15 hover:text-white'
                     }`}
                     aria-pressed={viewMode === 'cards'}
                     aria-label={t('list.cardView')}
