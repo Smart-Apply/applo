@@ -117,8 +117,10 @@ export function UsageIndicator({
         value={percentage}
         className={cn(
           config.progress,
-          isExhausted && '[&>div]:bg-destructive',
-          isLow && !isExhausted && '[&>div]:bg-warning'
+          // Usage bars in transparent warning (amber) colours — a light amber
+          // track with a stronger amber fill — instead of the solid grey track
+          // and navy fill.
+          'bg-warning/20 [&>div]:bg-warning/60'
         )}
       />
 

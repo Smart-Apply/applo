@@ -216,12 +216,12 @@ export function CalendarCard({ className }: { className?: string }) {
           className
         )}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#33456b] bg-[#1B2A49] px-4 py-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#33456b] bg-[#1B2A49] px-4 py-2.5">
           <div>
             <h2 className="font-heading text-base font-bold tracking-[-.01em] text-white">
               {t('page.calendar.title')}
             </h2>
-            <p className="mt-0.5 text-[12.5px] text-white/60">
+            <p className="mt-2 text-[12.5px] text-white/60">
               {t('page.calendar.subtitle', { month: monthTitle, count: appointments.length })}
             </p>
           </div>
@@ -253,11 +253,11 @@ export function CalendarCard({ className }: { className?: string }) {
                     key={cell.key}
                     className={`relative flex items-center justify-center border font-mono text-[10px] font-semibold ${
                       cell.muted
-                        ? 'border-border/50 text-[#33456b]/80'
+                        ? 'border-[#1B2A49]/25 bg-[#1B2A49]/15 text-[#1B2A49]'
                         : isToday
                           ? 'border-brand text-foreground'
                           : 'border-border text-foreground'
-                    } ${hasAppt ? 'bg-brand/10' : 'bg-card'}`}
+                    } ${cell.muted ? '' : hasAppt ? 'bg-brand/10' : 'bg-card'}`}
                     style={{ width: 22, height: 22 }}
                   >
                     {cell.day}
@@ -347,7 +347,7 @@ export function CalendarCard({ className }: { className?: string }) {
                     return (
                       <div
                         key={cell.key}
-                        className="flex aspect-square items-center justify-center font-mono text-xs font-semibold text-[#33456b]"
+                        className="flex aspect-square items-center justify-center rounded-[3px] border border-[#1B2A49]/25 bg-[#1B2A49]/15 font-mono text-xs font-semibold text-[#1B2A49]"
                       >
                         {cell.day}
                       </div>

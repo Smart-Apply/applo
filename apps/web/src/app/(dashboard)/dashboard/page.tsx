@@ -37,7 +37,6 @@ import {
   ArrowRight,
   Calendar,
   ChevronRight,
-  Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { formatDateSmart } from '@/lib/format-date';
@@ -490,13 +489,11 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Usage Summary — row 2, top-aligned with the calendar but only as
-              tall as its own content (self-start) instead of stretching to the
-              taller calendar card. */}
-          <Card className="gap-0 overflow-hidden border-[#33456b] py-0 lg:col-start-3 lg:row-start-2 lg:self-start">
+          {/* Usage Summary — row 2, stretches to the calendar's height so both
+              cards are the same size and bottom-aligned. */}
+          <Card className="gap-0 overflow-hidden border-[#33456b] py-0 lg:col-start-3 lg:row-start-2">
             <CardHeader className="border-b border-[#33456b] bg-[#1B2A49] px-4 py-2.5 pb-2.5!">
-              <CardTitle className="font-heading flex items-center gap-2 text-base font-bold text-white">
-                <Zap className="h-4 w-4 text-[#9db8e6]" />
+              <CardTitle className="font-heading text-base font-bold text-white">
                 {t('page.usage.title')}
               </CardTitle>
               <CardDescription className="text-[13px] text-white/60">{t('page.usage.description')}</CardDescription>
