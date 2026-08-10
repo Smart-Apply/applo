@@ -43,10 +43,6 @@ import {
   FileText,
   XCircle,
   RefreshCw,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   Briefcase,
   Send,
   Users,
@@ -79,8 +75,6 @@ import {
 // ============================================================================
 // Constants & Types
 // ============================================================================
-
-const ITEMS_PER_PAGE = 10;
 
 type SortOption = 'newest' | 'oldest' | 'title-asc' | 'company-asc';
 type ViewMode = 'table' | 'cards';
@@ -116,6 +110,26 @@ const BULK_STATUS_OPTIONS: { value: ApplicationTrackingStatus; labelKey: string 
   { value: 'REJECTED', labelKey: 'status.rejected' },
 ];
 
+// Status accent colours — the solid tone that matches each StatusChip. Used
+// for the card top-bar and the table row left-edge so the list is
+// colour-coded (livelier, more scannable) using only the existing palette.
+const STATUS_BAR: Record<string, string> = {
+  neutral: 'bg-[#94A3B8] dark:bg-slate-400/80',
+  info: 'bg-[#5581C7] dark:bg-blue-400/80',
+  violet: 'bg-[#7C3AED] dark:bg-violet-400/80',
+  success: 'bg-[#16A34A] dark:bg-green-400/80',
+  warning: 'bg-[#EAB308] dark:bg-amber-400/80',
+  destructive: 'bg-[#DC2626] dark:bg-red-400/80',
+};
+const STATUS_BORDER: Record<string, string> = {
+  neutral: 'border-l-[#94A3B8] dark:border-l-slate-400/70',
+  info: 'border-l-[#5581C7] dark:border-l-blue-400/70',
+  violet: 'border-l-[#7C3AED] dark:border-l-violet-400/70',
+  success: 'border-l-[#16A34A] dark:border-l-green-400/70',
+  warning: 'border-l-[#EAB308] dark:border-l-amber-400/70',
+  destructive: 'border-l-[#DC2626] dark:border-l-red-400/70',
+};
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -142,21 +156,6 @@ function sortApplications(applications: Application[], sortBy: SortOption): Appl
   });
 }
 
-// Build a compact page list with ellipsis, e.g. [1, '…', 4, 5, 6, '…', 12].
-function getPageItems(current: number, total: number): (number | 'ellipsis')[] {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-  const items: (number | 'ellipsis')[] = [1];
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  if (start > 2) items.push('ellipsis');
-  for (let p = start; p <= end; p++) items.push(p);
-  if (end < total - 1) items.push('ellipsis');
-  items.push(total);
-  return items;
-}
-
 // ============================================================================
 // Component
 // ============================================================================
@@ -170,11 +169,9 @@ export default function ApplicationsPage() {
   // Get initial values from URL query params
   const initialTab = (searchParams.get('status') as ApplicationTrackingStatus | 'all') || 'all';
   const initialSort = (searchParams.get('sort') as SortOption) || 'newest';
-  const initialPage = parseInt(searchParams.get('page') || '1', 10);
 
   const [selectedTab, setSelectedTab] = useState<ApplicationTrackingStatus | 'all'>(initialTab);
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
-  const [currentPage, setCurrentPage] = useState(initialPage);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [applicationToDelete, setApplicationToDelete] = useState<{ id: string; title: string } | null>(null);
@@ -225,14 +222,13 @@ export default function ApplicationsPage() {
     if (selectedTab !== 'all') params.set('status', selectedTab);
     if (sortBy !== 'newest') params.set('sort', sortBy);
     if (viewMode !== 'table') params.set('view', viewMode);
-    if (currentPage > 1) params.set('page', currentPage.toString());
 
     const queryString = params.toString();
     const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
     // Use replaceState to avoid adding to history on every filter change
     window.history.replaceState(null, '', newUrl);
-  }, [selectedTab, sortBy, viewMode, currentPage, pathname]);
+  }, [selectedTab, sortBy, viewMode, pathname]);
 
   // Detect status changes and show toast notifications
   useEffect(() => {
@@ -305,28 +301,24 @@ export default function ApplicationsPage() {
     return sortApplications(filteredApplications, debouncedSort);
   }, [filteredApplications, debouncedSort]);
 
-  // Pagination
-  const totalPages = Math.ceil(sortedApplications.length / ITEMS_PER_PAGE);
-  const paginatedApplications = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return sortedApplications.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [sortedApplications, currentPage]);
+  // No pagination — the full filtered/sorted list is rendered and the
+  // table/card region scrolls internally, so everything stays on one screen.
+  const displayedApplications = sortedApplications;
 
-  // Reset to page 1 when filter, sort, or search changes
+  // Clear the selection whenever filter, sort, or search changes.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCurrentPage(1);
     setSelectedIds(new Set());
   }, [debouncedTab, debouncedSort, debouncedSearchTerm]);
 
-  // IDs visible on the current page (used for select-all logic).
-  const pageIds = useMemo(
-    () => paginatedApplications.map((app) => app.id),
-    [paginatedApplications]
+  // IDs currently visible (used for select-all logic).
+  const visibleIds = useMemo(
+    () => displayedApplications.map((app) => app.id),
+    [displayedApplications]
   );
   const selectedCount = selectedIds.size;
-  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
-  const somePageSelected = pageIds.some((id) => selectedIds.has(id));
+  const allPageSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+  const somePageSelected = visibleIds.some((id) => selectedIds.has(id));
 
   // Count applications by tracking status
   const statusCounts = useMemo(() => ({
@@ -353,15 +345,6 @@ export default function ApplicationsPage() {
   // Sort change handler
   const handleSortChange = (value: string) => {
     setSortBy(value as SortOption);
-  };
-
-  // Pagination handlers
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
   // Delete handlers
@@ -397,11 +380,11 @@ export default function ApplicationsPage() {
   const toggleSelectAllOnPage = () => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      const everySelected = pageIds.every((id) => next.has(id));
+      const everySelected = visibleIds.every((id) => next.has(id));
       if (everySelected) {
-        pageIds.forEach((id) => next.delete(id));
+        visibleIds.forEach((id) => next.delete(id));
       } else {
-        pageIds.forEach((id) => next.add(id));
+        visibleIds.forEach((id) => next.add(id));
       }
       return next;
     });
@@ -458,10 +441,13 @@ export default function ApplicationsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    // Desktop: fill the viewport (minus the layout padding) and never let the
+    // page itself scroll — the table/card region below owns the scroll instead,
+    // keeping the header + filters permanently in view on one screen.
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 md:h-[calc(100vh-5rem)] md:overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      <div className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="border-l-[3px] border-brand pl-3.5">
           <h1 className="font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">
             {t('list.title')}
           </h1>
@@ -490,7 +476,7 @@ export default function ApplicationsPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2 lg:grid-cols-3">
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
@@ -499,9 +485,9 @@ export default function ApplicationsPage() {
           <ApplicationCardSkeleton />
         </div>
       ) : applications && applications.length > 0 ? (
-        <div className="space-y-6">
+        <div className="flex min-h-0 flex-1 flex-col gap-5">
           {/* Search Input */}
-          <div className="relative w-full max-w-md">
+          <div className="relative w-full max-w-md shrink-0">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
@@ -527,8 +513,11 @@ export default function ApplicationsPage() {
             )}
           </div>
           
-          {/* Status filter — boxed segmented control with mono counts */}
-          <div className="inline-flex flex-wrap items-center gap-px overflow-hidden rounded-[4px] border border-border bg-border">
+          {/* Status filter — boxed segmented control with mono counts.
+              self-start stops the flex-column's default align stretch from
+              pulling the bar to full width (which would expose the grey
+              bg-border track to the right of the tabs). */}
+          <div className="inline-flex shrink-0 flex-wrap items-center gap-px self-start overflow-hidden rounded-[4px] border border-border bg-border">
             {trackingStatusTabs.map((tab) => {
               const isActive = selectedTab === tab.value;
               return (
@@ -556,79 +545,28 @@ export default function ApplicationsPage() {
             })}
           </div>
 
-          {/* Controls: Sort & view toggle */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="hidden whitespace-nowrap font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground sm:inline-block">
-                {t('list.sort.label')}
-              </span>
-              <Select value={sortBy} onValueChange={handleSortChange}>
-                <SelectTrigger className="w-full sm:w-[200px] bg-background">
-                  <SelectValue placeholder={t('list.sort.placeholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* View toggle (table | cards) — desktop only */}
-            <div className="hidden items-center gap-px overflow-hidden rounded-[4px] border border-border bg-border md:inline-flex">
-              <button
-                type="button"
-                onClick={() => setViewMode('table')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
-                  viewMode === 'table'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-                aria-pressed={viewMode === 'table'}
-                aria-label={t('list.tableView')}
-              >
-                <List className="h-4 w-4" />
-                {t('list.tableViewShort')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('cards')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
-                  viewMode === 'cards'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-                aria-pressed={viewMode === 'cards'}
-                aria-label={t('list.cardView')}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                {t('list.cardViewShort')}
-              </button>
-            </div>
-          </div>
-
-          {/* Results Info */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground px-1">
-            <span>
-              {selectedTab !== 'all'
-                ? t('list.resultsWithStatus', {
-                    count: filteredApplications.length,
-                    status: trackingStatusTabs.find((tab) => tab.value === selectedTab)?.label ?? t('status.draft'),
-                  })
-                : t('list.results', { count: filteredApplications.length })}
+          {/* Controls: sort (the view toggle lives in the list-card header). */}
+          <div className="flex shrink-0 items-center gap-2.5">
+            <span className="hidden whitespace-nowrap font-mono text-[10.5px] font-medium uppercase tracking-[.12em] text-muted-foreground sm:inline-block">
+              {t('list.sort.label')}
             </span>
-            {totalPages > 1 && (
-              <span>
-                {t('list.pageInfo', { current: currentPage, total: totalPages })}
-              </span>
-            )}
+            <Select value={sortBy} onValueChange={handleSortChange}>
+              <SelectTrigger className="w-full sm:w-[200px] bg-background">
+                <SelectValue placeholder={t('list.sort.placeholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Bulk action bar */}
           {selectedCount > 0 && (
-            <div className="sticky top-2 z-20 flex flex-col gap-3 rounded-[4px] border border-primary/40 bg-primary-soft/80 p-3 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="z-20 flex shrink-0 flex-col gap-3 rounded-[4px] border border-primary/40 bg-primary-soft/80 p-3 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-foreground">
                   {t('list.selectedCount', { count: selectedCount })}
@@ -673,16 +611,64 @@ export default function ApplicationsPage() {
             </div>
           )}
 
-          {/* Application List — card view (mobile always; desktop when viewMode=cards) */}
-          {paginatedApplications.length > 0 && (
-            <div
-              className={
-                viewMode === 'cards'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4'
-                  : 'space-y-3 md:hidden'
-              }
-            >
-              {paginatedApplications.map((application) => {
+          {/* Application list — one carded section (dashboard-consistent):
+              a bordered header carrying the section title + count and the view
+              toggle, then a body that hugs its content and scrolls internally
+              once it would exceed the page height. */}
+          {displayedApplications.length > 0 ? (
+            <div className="flex min-h-0 flex-col overflow-hidden rounded-[4px] border bg-card">
+              {/* Card header — matches the dashboard's Card headers. */}
+              <div className="flex flex-none flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b px-4 py-2">
+                <div className="flex items-baseline gap-2">
+                  <h2 className="font-heading text-[15px] font-bold tracking-[-.01em] text-foreground">
+                    {trackingStatusTabs.find((tab) => tab.value === selectedTab)?.label ?? t('status.all')}
+                  </h2>
+                  <span className="font-mono text-[11px] font-medium text-muted-foreground/70">
+                    {filteredApplications.length}
+                  </span>
+                </div>
+                {/* View toggle (table | cards) — desktop only */}
+                <div className="hidden items-center gap-px overflow-hidden rounded-[3px] border border-border bg-border md:inline-flex">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('table')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium transition-colors ${
+                      viewMode === 'table'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
+                    aria-pressed={viewMode === 'table'}
+                    aria-label={t('list.tableView')}
+                  >
+                    <List className="h-4 w-4" />
+                    {t('list.tableViewShort')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('cards')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium transition-colors ${
+                      viewMode === 'cards'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
+                    aria-pressed={viewMode === 'cards'}
+                    aria-label={t('list.cardView')}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    {t('list.cardViewShort')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Card body — card grid (mobile always; desktop cards mode). */}
+              <div
+                className={
+                  viewMode === 'cards'
+                    ? 'grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 xl:grid-cols-3 md:min-h-0 md:flex-1 md:content-start md:gap-4 md:overflow-y-auto md:bg-muted/20 md:p-4'
+                    : 'space-y-3 p-3 md:hidden'
+                }
+              >
+              {displayedApplications.map((application) => {
                 const jobTitle =
                   application.title ||
                   application.jobPosting?.title ||
@@ -706,10 +692,12 @@ export default function ApplicationsPage() {
                         router.push(`/applications/${application.id}`);
                       }
                     }}
-                    className={`w-full text-left rounded-[4px] border bg-card p-4 transition-colors active:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer ${
-                      isSelected ? 'border-primary ring-1 ring-primary/40' : 'border-border'
+                    className={`group w-full rounded-[4px] border bg-card p-4 text-left transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer ${
+                      isSelected ? 'border-primary ring-1 ring-primary/40' : 'border-border hover:border-brand/60'
                     }`}
                   >
+                    {/* Status accent bar — colour-codes the card by tracking status. */}
+                    <div className={`-mx-4 -mt-4 mb-3.5 h-1.5 rounded-t-[3px] ${STATUS_BAR[cardChip.tone]}`} aria-hidden />
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex min-w-0 flex-1 items-start gap-3">
                         <div onClick={(e) => e.stopPropagation()} className="pt-0.5">
@@ -720,7 +708,7 @@ export default function ApplicationsPage() {
                           />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-foreground line-clamp-2 break-words">
+                          <p className="font-semibold text-foreground line-clamp-2 break-words transition-colors group-hover:text-brand">
                             {jobTitle}
                           </p>
                           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -799,14 +787,15 @@ export default function ApplicationsPage() {
                   </div>
                 );
               })}
-            </div>
-          )}
+              </div>
 
-          {/* Application List — desktop table (md+, viewMode=table) */}
-          {paginatedApplications.length > 0 && viewMode === 'table' && (
-            <div className="hidden md:block overflow-hidden rounded-[4px] border bg-card">
-              <Table>
-                <TableHeader className="bg-muted/50">
+              {/* Card body — desktop table (viewMode=table). The inner
+                  table-container ([&>div]) owns the vertical scroll; rows scroll
+                  under a sticky column header while the card header stays put. */}
+              {viewMode === 'table' && (
+                <div className="hidden md:flex md:min-h-0 md:flex-1 md:flex-col [&>div]:min-h-0 [&>div]:flex-1 [&>div]:overflow-y-auto">
+                  <Table>
+                <TableHeader className="sticky top-0 z-10 bg-muted">
                   <TableRow className="[&_th]:font-mono [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-[.12em] [&_th]:text-muted-foreground/70">
                     <TableHead className="w-[44px]">
                       <Checkbox
@@ -823,13 +812,14 @@ export default function ApplicationsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedApplications.map((application) => {
+                  {displayedApplications.map((application) => {
                     const jobTitle = application.title || application.jobPosting?.title || t('list.numberedFallbackTitle', { id: application.id.substring(0, APPLICATION_ID_DISPLAY_LENGTH) });
                     const company = application.jobPosting?.company;
                     const location = application.jobPosting?.location;
                     const timeAgo = formatDateSmart(application.createdAt);
                     const fullTimestamp = formatTooltipTimestamp(application.createdAt);
                     const isSelected = selectedIds.has(application.id);
+                    const rowChip = TRACKING_STATUS_CHIP[application.applicationStatus] ?? TRACKING_STATUS_CHIP.CREATED;
 
                     return (
                       <TableRow
@@ -838,7 +828,11 @@ export default function ApplicationsPage() {
                         className="group hover:bg-muted/30 data-[state=selected]:bg-primary/5 transition-colors cursor-pointer"
                         onClick={() => router.push(`/applications/${application.id}`)}
                       >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
+                        {/* Status-coloured left edge — colour-codes each row. */}
+                        <TableCell
+                          onClick={(e) => e.stopPropagation()}
+                          className={`border-l-2 ${STATUS_BORDER[rowChip.tone]}`}
+                        >
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleSelect(application.id)}
@@ -847,7 +841,7 @@ export default function ApplicationsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
-                            <span className="font-semibold text-foreground line-clamp-1" title={jobTitle}>
+                            <span className="font-semibold text-foreground line-clamp-1 transition-colors group-hover:text-brand" title={jobTitle}>
                               {jobTitle}
                             </span>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -938,12 +932,13 @@ export default function ApplicationsPage() {
                   })}
                 </TableBody>
               </Table>
+                </div>
+              )}
             </div>
-          )}
-
-          {/* Empty state */}
-          {paginatedApplications.length === 0 && (
-            <div className="rounded-[4px] border border-dashed border-border bg-muted/10 animate-in fade-in duration-500">
+          ) : (
+            /* Empty state — fills the remaining height so the dashed frame
+               stays centered on the single-screen layout. */
+            <div className="flex min-h-0 flex-1 items-center justify-center rounded-[4px] border border-dashed border-border bg-muted/10 animate-in fade-in duration-500">
               <EmptyState
                 icon={FileText}
                 title={t('list.emptyFilteredTitle')}
@@ -964,86 +959,9 @@ export default function ApplicationsPage() {
               />
             </div>
           )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex flex-col items-center justify-between gap-3 pt-8 sm:flex-row">
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">
-                  {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
-                  {Math.min(currentPage * ITEMS_PER_PAGE, sortedApplications.length)}
-                </span>{' '}
-                {t('list.paginationOf', { total: sortedApplications.length })}
-              </p>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className="h-8 w-8 p-0"
-                  aria-label={t('list.firstPage')}
-                >
-                  <ChevronsLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 1}
-                  className="h-8 w-8 p-0"
-                  aria-label={t('list.previousPage')}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-
-                {getPageItems(currentPage, totalPages).map((item, idx) =>
-                  item === 'ellipsis' ? (
-                    <span
-                      key={`ellipsis-${idx}`}
-                      className="px-1.5 text-sm text-muted-foreground select-none"
-                    >
-                      …
-                    </span>
-                  ) : (
-                    <Button
-                      key={item}
-                      variant={item === currentPage ? 'default' : 'ghost'}
-                      size="sm"
-                      className={`h-8 w-8 p-0 ${item === currentPage ? 'pointer-events-none' : ''}`}
-                      onClick={() => setCurrentPage(item)}
-                    >
-                      {item}
-                    </Button>
-                  )
-                )}
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                  className="h-8 w-8 p-0"
-                  aria-label={t('list.nextPage')}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="h-8 w-8 p-0"
-                  aria-label={t('list.lastPage')}
-                >
-                  <ChevronsRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center rounded-[4px] border border-dashed border-border bg-muted/10 animate-in fade-in duration-500">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center py-20 text-center rounded-[4px] border border-dashed border-border bg-muted/10 animate-in fade-in duration-500">
           <div className="mb-6 grid h-20 w-20 place-items-center rounded-[4px] border border-border bg-muted">
             <FileText className="h-10 w-10 text-primary" />
           </div>

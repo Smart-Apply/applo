@@ -212,20 +212,20 @@ export function CalendarCard({ className }: { className?: string }) {
           }
         }}
         className={cn(
-          'group flex cursor-pointer flex-col rounded-[4px] border bg-card outline-none ring-brand/40 transition-colors hover:bg-muted/50 focus-visible:ring-2',
+          'group flex cursor-pointer flex-col overflow-hidden rounded-[4px] border border-[#33456b] bg-card outline-none ring-brand/40 transition-colors hover:bg-muted/50 focus-visible:ring-2',
           className
         )}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#33456b] bg-[#1B2A49] px-4 py-1.5">
           <div>
-            <h2 className="font-heading text-base font-bold tracking-[-.01em]">
+            <h2 className="font-heading text-base font-bold tracking-[-.01em] text-white">
               {t('page.calendar.title')}
             </h2>
-            <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+            <p className="mt-0.5 text-[12.5px] text-white/60">
               {t('page.calendar.subtitle', { month: monthTitle, count: appointments.length })}
             </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border px-2.5 py-1.5 text-[12.5px] font-semibold text-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-white bg-white px-2.5 py-1.5 text-[12.5px] font-semibold text-[#1B2A49]">
             {t('page.calendar.open')} <ArrowRight className="h-3.5 w-3.5" />
           </span>
         </div>
@@ -253,7 +253,7 @@ export function CalendarCard({ className }: { className?: string }) {
                     key={cell.key}
                     className={`relative flex items-center justify-center border font-mono text-[10px] font-semibold ${
                       cell.muted
-                        ? 'border-border/50 text-muted-foreground/40'
+                        ? 'border-border/50 text-[#33456b]/80'
                         : isToday
                           ? 'border-brand text-foreground'
                           : 'border-border text-foreground'
@@ -347,7 +347,7 @@ export function CalendarCard({ className }: { className?: string }) {
                     return (
                       <div
                         key={cell.key}
-                        className="flex aspect-square items-center justify-center font-mono text-xs font-semibold text-muted-foreground/30"
+                        className="flex aspect-square items-center justify-center font-mono text-xs font-semibold text-[#33456b]"
                       >
                         {cell.day}
                       </div>
@@ -485,18 +485,26 @@ export function CalendarCard({ className }: { className?: string }) {
 function ApptMarker() {
   return (
     <span className="block h-[18px] w-[18px] drop-shadow-sm">
-      <svg viewBox="-1 -12 48 48" width="18" height="18" aria-hidden>
-        {/* Antennas — drawn first so their bases tuck behind the head */}
-        <path d="M19 3 Q15 -4 12 -8" fill="none" stroke="#15233f" strokeWidth="2.8" strokeLinecap="round" />
-        <circle cx="11" cy="-9" r="3" fill="#15233f" />
-        <path d="M29 3 Q33 -4 36 -8" fill="none" stroke="#15233f" strokeWidth="2.8" strokeLinecap="round" />
-        <circle cx="37" cy="-9" r="3" fill="#15233f" />
-        {/* Head */}
-        <rect x="2" y="2" width="44" height="32" rx="10" fill="#15233f" />
-        <rect x="9" y="9" width="30" height="20" rx="6" fill="#eef3fb" />
-        <circle cx="18" cy="19" r="2.6" fill="#15233f" />
-        <circle cx="30" cy="19" r="2.6" fill="#15233f" />
-        <path d="M18 24 Q24 29 30 24" stroke="#15233f" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <svg viewBox="0 -6 48 48" width="18" height="18" aria-hidden>
+        {/* Antennas — short + close to the head, scaled from the real mascot's
+            proportions (ball ~26% of head height up, ~43% of half-width out). */}
+        <path d="M21 10 Q18.5 4 16 1" fill="none" stroke="#15233f" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="16" cy="0.5" r="2.6" fill="#15233f" />
+        <path d="M27 10 Q29.5 4 32 1" fill="none" stroke="#15233f" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="32" cy="0.5" r="2.6" fill="#15233f" />
+        {/* Head + inset screen face — rounder, matching the full mascot */}
+        <rect x="5" y="8" width="38" height="32" rx="11" fill="#15233f" />
+        <rect x="11" y="14" width="26" height="19" rx="6" fill="#eef3fb" />
+        {/* Cheeks */}
+        <ellipse cx="16.5" cy="27" rx="2" ry="1.3" fill="#40639C" opacity="0.2" />
+        <ellipse cx="31.5" cy="27" rx="2" ry="1.3" fill="#40639C" opacity="0.2" />
+        {/* Eyes — vertical ellipses with a highlight, like the mascot */}
+        <ellipse cx="19.5" cy="22" rx="2.1" ry="2.7" fill="#15233f" />
+        <ellipse cx="28.5" cy="22" rx="2.1" ry="2.7" fill="#15233f" />
+        <circle cx="20.3" cy="20.9" r="0.85" fill="#fff" />
+        <circle cx="29.3" cy="20.9" r="0.85" fill="#fff" />
+        {/* Gentle smile */}
+        <path d="M19.5 27.5 Q24 31 28.5 27.5" fill="none" stroke="#15233f" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     </span>
   );
