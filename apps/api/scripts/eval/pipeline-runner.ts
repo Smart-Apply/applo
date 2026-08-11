@@ -30,7 +30,7 @@ import {
   normalizeJobFacts,
   type JobFactsDto,
 } from '../../src/applications/job-facts.util';
-import { GENERATION_SYSTEM_ANCHOR, resolveCoverLetterBudget } from '../../src/applications/constants';
+import { GENERATION_SYSTEM_ANCHOR, resolveCoverLetterBudget, resolveCoverLetterTargetMin } from '../../src/applications/constants';
 import {
   lintGeneratedStyle,
   evaluateStyleRewrite,
@@ -197,7 +197,7 @@ async function runEditorPass(
   try {
     const edited = await llm.callText(
       'v1/editor-cover-letter.md',
-      { draft, job, tailoredProfile, language, lengthBudget, userId: fixtureId, jobPostingId: fixtureId },
+      { draft, job, tailoredProfile, language, lengthBudget, lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget), userId: fixtureId, jobPostingId: fixtureId },
       { temperature: 0.4, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     if (!edited || edited.trim().length < draft.trim().length * 0.5) {
@@ -227,7 +227,7 @@ async function runWeavePass(
   try {
     const woven = await llm.callText(
       'v1/keyword-weave.md',
-      { draft, keywords, job, language, lengthBudget, userId: fixtureId, jobPostingId: fixtureId },
+      { draft, keywords, job, language, lengthBudget, lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget), userId: fixtureId, jobPostingId: fixtureId },
       { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     if (!woven || woven.trim().length < draft.trim().length * 0.6) {
@@ -302,6 +302,7 @@ async function runLengthGovernor(
       {
         draft,
         lengthBudget,
+        lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
         currentWords: lint.words,
         job,
         language,
@@ -496,6 +497,7 @@ export async function generateForFixture(
       salutation: buildSalutation(jobFacts, language),
       language,
       lengthBudget,
+      lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
       userId: fixture.id,
       jobPostingId: fixture.id,
     },

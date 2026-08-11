@@ -141,8 +141,11 @@ Sincerely,
 
 ### Length
 
-- **Max {{lengthBudget}} words** (excluding greeting/closing) — this budget is measured
-  after generation; exceeding it is a defect
+- **Target {{lengthTargetMin}}–{{lengthBudget}} words** (excluding greeting/closing) — the
+  finished letter is measured against this band and **both edges are defects**: under
+  {{lengthTargetMin}} reads thin and leaves your strongest evidence unsaid, over
+  {{lengthBudget}} gets cut.
+- Aim for the **upper half** of that band. A short letter is not a safer letter.
 - **3-4 paragraphs** of body content
 - Concise and impactful
 
@@ -235,7 +238,7 @@ Before generating, ensure:
 - [ ] At least one concrete, company-specific reference (not interchangeable filler)
 - [ ] Named contact used as salutation if present in the posting
 - [ ] Salary / start date addressed ONLY if the posting explicitly asks
-- [ ] Length: at most {{lengthBudget}} words (excluding greeting/closing)
+- [ ] Length: {{lengthTargetMin}}–{{lengthBudget}} words (excluding greeting/closing) — too short counts as a defect
 - [ ] Correct language (German vs. English)
 - [ ] No clichés, no Konjunktiv/hedging, no over-enthusiasm
 - [ ] Shows clear connection between candidate and role

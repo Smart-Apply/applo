@@ -51,6 +51,7 @@ import {
   DEFAULT_COVER_LETTER_LENGTH,
   GENERATION_SYSTEM_ANCHOR,
   resolveCoverLetterBudget,
+  resolveCoverLetterTargetMin,
 } from './constants';
 import { convertCoverLetterToHtml } from './cover-letter-html.util';
 import { mapApplicationToResponseDto } from './application-response.util';
@@ -656,6 +657,7 @@ export class GenerationService {
               salutation: buildSalutation(jobFacts, detectedLanguage),
               language: detectedLanguage,
               lengthBudget: coverLetterBudget,
+              lengthTargetMin: resolveCoverLetterTargetMin(coverLetterBudget),
               userId,
               jobPostingId: jobPosting.id,
             },
@@ -1000,6 +1002,7 @@ export class GenerationService {
           salutation: buildSalutation(jobFacts, language),
           language,
           lengthBudget: coverLetterBudget,
+          lengthTargetMin: resolveCoverLetterTargetMin(coverLetterBudget),
           userId,
           jobPostingId: jobPosting.id,
         });
@@ -1413,6 +1416,7 @@ export class GenerationService {
           tailoredProfile,
           language,
           lengthBudget,
+          lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
           userId,
           jobPostingId: jobPosting.id,
         },
@@ -1476,6 +1480,7 @@ export class GenerationService {
           job: this.serializeJobPosting(jobPosting),
           language,
           lengthBudget,
+          lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
           userId,
           jobPostingId: jobPosting.id,
         },
@@ -1616,6 +1621,7 @@ export class GenerationService {
         {
           draft,
           lengthBudget,
+          lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
           currentWords: lint.words,
           job: this.serializeJobPosting(jobPosting),
           language,

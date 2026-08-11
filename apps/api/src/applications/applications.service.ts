@@ -42,7 +42,7 @@ import { serializeJobPostingForLlm } from './serialize.util';
 import { buildMatchInsights } from './match-insights.util';
 import { mapStoredResumeToTailoredProfile } from './stored-resume.util';
 import { buildSalutation, normalizeJobFacts } from './job-facts.util';
-import { resolveCoverLetterBudget } from './constants';
+import { resolveCoverLetterBudget, resolveCoverLetterTargetMin } from './constants';
 import type { TranslationLanguage } from './translation/translation.service';
 import { sanitizeRichText, stripLLMPlaceholders } from '../common/services/html-sanitizer';
 import { convertCoverLetterToHtml } from './cover-letter-html.util';
@@ -406,6 +406,7 @@ export class ApplicationsService {
         salutation: buildSalutation(jobFacts, language),
         language,
         lengthBudget,
+        lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
         userId,
         jobPostingId: jobPosting.id,
       });
