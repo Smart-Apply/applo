@@ -54,6 +54,24 @@ export const COVER_LETTER_CRITICAL_FACTOR = 1.5;
 export const COVER_LETTER_FLOOR_FACTOR = 0.6;
 
 /**
+ * Lower edge of the band the prompts ask for, as a fraction of the budget.
+ * Deliberately well above `COVER_LETTER_FLOOR_FACTOR`: the floor is the defect
+ * threshold, this is the target, and the gap is the margin a model is allowed
+ * to undershoot by without producing a defect.
+ */
+export const COVER_LETTER_TARGET_MIN_FACTOR = 0.85;
+
+/**
+ * Lower edge of the requested length band. Stating a band matters: with a bare
+ * "max N words" ceiling nothing pushes back on a short letter, so models settle
+ * well under budget — measured 70% of budget on gpt-4.1 and 61% on
+ * gpt-5.4-mini, the latter tripping the underrun floor on 58% of eval fixtures.
+ */
+export function resolveCoverLetterTargetMin(budget: number): number {
+  return Math.round(budget * COVER_LETTER_TARGET_MIN_FACTOR);
+}
+
+/**
  * Resolve a stored/user-supplied length preference to its word budget,
  * defaulting unknown or missing values to the standard budget.
  */

@@ -50,7 +50,8 @@ already there so a keyword fits where the candidate's real experience already im
    re-cliché the letter.
 5. **Never exceed {{lengthBudget}} words** (body, excluding greeting/closing). Weaving is
    NOT an excuse to grow the letter — prefer enriching or replacing filler in an existing
-   sentence over adding a new one.
+   sentence over adding a new one. If the draft sits under {{lengthTargetMin}} words, do not
+   shorten it while weaving.
 6. **Same language as the draft / `{{language}}`.** Never switch languages.
 7. **No new numbers or metrics.** Do not introduce figures that are not already in the
    draft.

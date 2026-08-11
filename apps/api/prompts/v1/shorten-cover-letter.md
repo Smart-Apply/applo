@@ -32,7 +32,8 @@ author wrote it, minus the fat.
 
 ## ⚠️ Absolute constraints
 
-1. **Cut to at most {{lengthBudget}} body words.** Remove redundancy, repeated ideas and
+1. **Cut to at most {{lengthBudget}} body words — and never below {{lengthTargetMin}}.**
+   Remove redundancy, repeated ideas and
    generic filler sentences ONLY.
 2. **Keep the first line (the salutation) VERBATIM.** Character for character — do not
    rephrase, translate or re-derive it.
