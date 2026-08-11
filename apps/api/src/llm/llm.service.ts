@@ -461,10 +461,20 @@ Translated text in ${targetLangName}:`;
     'interview-',
   ];
 
+  private canUseConfiguredFastModel(): boolean {
+    const fastProvider = this.configService.llmFastProvider;
+    return (
+      !fastProvider ||
+      fastProvider === this.configService.llmProvider ||
+      Boolean(this.fastCircuitBreaker)
+    );
+  }
+
   /** True when `templatePath` would be routed to the fast model right now. */
   isFastRouted(templatePath: string): boolean {
     return (
       Boolean(this.configService.llmFastModel) &&
+      this.canUseConfiguredFastModel() &&
       LLMService.FAST_MODEL_TEMPLATES.some((t) => templatePath.includes(t))
     );
   }
@@ -488,7 +498,7 @@ Translated text in ${targetLangName}:`;
    */
   private resolveTaskModel(templatePath: string): string | undefined {
     const fastModel = this.configService.llmFastModel;
-    if (!fastModel) return undefined;
+    if (!fastModel || !this.canUseConfiguredFastModel()) return undefined;
     const isFastTask = LLMService.FAST_MODEL_TEMPLATES.some((t) => templatePath.includes(t));
     if (!isFastTask) return undefined;
     this.logger.debug(`Per-task routing: ${templatePath} → fast model (${fastModel})`);

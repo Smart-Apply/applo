@@ -37,6 +37,7 @@
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Fly Secrets ← Cloudflare R2 | API (PDF storage)             |
 | `AZURE_OPENAI_API_KEY`          | Fly Secrets ← Azure      | API (cover letter / resume gen)      |
 | `AZURE_OPENAI_REALTIME_API_KEY` (optional) | Fly Secrets ← Azure (Sweden Central) | API (voice interview realtime token mint; falls back to `AZURE_OPENAI_API_KEY`) |
+| `MISTRAL_API_KEY`               | Fly Secrets ← Mistral La Plateforme or Azure AI Foundry | API (Mistral main provider or extraction fast lane; a missing key degrades only a separately configured fast lane to the main provider) |
 | `QSTASH_TOKEN` + signing keys   | Fly Secrets ← Upstash    | API (background job queue)           |
 | `RESEND_API_KEY`                | Fly Secrets ← Resend     | API (transactional email)            |
 | OAuth client secrets (Google / Microsoft / Azure AD) | Fly Secrets ← provider console | API (OAuth flows)        |
@@ -281,7 +282,46 @@ unset NEW_AZURE_KEY
 
 ---
 
-## 6. Upstash QStash (token + signing keys)
+## 6. Mistral API key
+
+**Blast radius:** When Mistral is a separate extraction fast lane, a missing or
+invalid key falls back to the main LLM provider; extraction becomes slower and
+more expensive but generation remains available. When `LLM_PROVIDER=mistral`,
+a missing key prevents API startup; an invalid key allows startup but all LLM
+calls fail until rotation completes.
+
+**Cadence:** Annually, OR immediately on suspected leak.
+
+```bash
+# ── Step 1: Create a replacement key ──
+# La Plateforme: console.mistral.ai → API keys → Create new key
+# Azure AI Foundry: Foundry resource → Keys and Endpoint → rotate the inactive key
+# Store the replacement in the password manager before continuing.
+
+NEW_MISTRAL_KEY='<new Mistral key>'
+
+# ── Step 2: Push to both Fly apps ──
+fly secrets set --app smart-apply-api          MISTRAL_API_KEY="$NEW_MISTRAL_KEY"
+fly secrets set --app smart-apply-api-staging  MISTRAL_API_KEY="$NEW_MISTRAL_KEY"
+
+# ── Step 3: Run one extraction-backed generation in each environment ──
+# /health checks the main provider only, so it cannot prove a separate fast
+# lane accepted the rotated key. Confirm the logs show the fast provider call
+# succeeding without the "falling back to the main provider" warning.
+fly logs --app smart-apply-api
+fly logs --app smart-apply-api-staging
+
+# ── Step 4: Invalidate the old key ──
+# La Plateforme: delete the old key in console.mistral.ai.
+# Azure AI Foundry: regenerate the formerly active key slot after the rollout
+# is verified. This invalidates the old value while preserving the new slot.
+# Update local apps/api/.env when local development uses Mistral.
+unset NEW_MISTRAL_KEY
+```
+
+---
+
+## 7. Upstash QStash (token + signing keys)
 
 **Blast radius:** New job enqueue fails until rotation completes (~30 sec).
 QStash supports key overlap during signing-key rotation — old signature
@@ -318,7 +358,7 @@ unset NEW_TOKEN NEW_CURRENT NEW_NEXT
 
 ---
 
-## 7. Resend API key
+## 8. Resend API key
 
 **Blast radius:** All transactional email (password reset, verification)
 fails until rotation completes. Users in the middle of password reset
@@ -348,7 +388,7 @@ unset NEW_RESEND
 
 ---
 
-## 8. OAuth client secrets (Google, Microsoft, Azure AD)
+## 9. OAuth client secrets (Google, Microsoft, Azure AD)
 
 **Blast radius:** OAuth login flows fail until rotation completes. Users
 who already have a session keep their JWTs (no impact) — only NEW logins
@@ -381,7 +421,7 @@ fly secrets set --app smart-apply-api \
 
 ---
 
-## 9. Fly deploy tokens (CI)
+## 10. Fly deploy tokens (CI)
 
 **Blast radius:** GitHub Actions deploys fail until the new token is in
 the repo/Environment secrets. Doesn't affect the running app.
@@ -417,7 +457,7 @@ fly tokens revoke <old-token-id>
 
 ---
 
-## 10. Cloudflare API token (CI)
+## 11. Cloudflare API token (CI)
 
 **Blast radius:** GitHub Actions deploys of the Worker fail. Doesn't
 affect the running Worker.
@@ -451,6 +491,7 @@ affect the running Worker.
 | Neon `neondb_owner` password    | 12 months     | Suspected leak, contributor leaves         |
 | R2 token                        | 6 months      | Suspected leak                             |
 | Azure OpenAI API key            | 12 months     | Per Microsoft WAF guidance                 |
+| Mistral API key                 | 12 months     | Suspected leak                             |
 | QStash token + signing keys     | 12 months     | Suspected leak                             |
 | Resend API key                  | 12 months     | Suspected leak                             |
 | Google / MS / Azure AD OAuth    | Per provider  | Provider expiration warning email          |

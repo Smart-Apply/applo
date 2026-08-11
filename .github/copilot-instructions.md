@@ -84,7 +84,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Never** commit secrets. `.env`, `.env.local`, `*-secrets.env`, and `*.bak` are all gitignored.
 - Local development reads from `apps/api/.env` (gitignored) and `apps/web/.env` (gitignored).
 - Staging + prod read secrets from **Fly Secrets** (`flyctl secrets set --app <app>`) and **Cloudflare Worker secrets** (`wrangler secret put`) — never from a committed file.
-- See [docs/security/SECRETS_ROTATION.md](../docs/security/SECRETS_ROTATION.md) for rotation procedures (10 secret types covered).
+- See [docs/security/SECRETS_ROTATION.md](../docs/security/SECRETS_ROTATION.md) for rotation procedures (11 secret types covered).
 
 ### Code style
 - TypeScript strict mode is on. **Never** use `any` to silence the compiler — use `unknown` + a type guard.
