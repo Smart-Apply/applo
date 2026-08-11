@@ -347,6 +347,16 @@ positives). **Decision: flag + log** (non-destructive) — stripping a number ou
 would mangle the sentence, so we log a warning for telemetry instead. Not persisted to the
 DB yet (no schema change). The report is the foundation for a future editor feedback loop.
 
+**Update 2026-08-11 — detection is no longer the end of the line for the cover letter.**
+[#772](https://github.com/Smart-Apply/applo/pull/772) added a *guarded repair* pass
+(`prompts/v1/fix-unsupported-numbers.md` + `grounding/grounding-repair.util.ts`): the
+validator still never strips anything itself, but a flagged cover letter now gets one
+guarded LLM pass that rewrites the offending figures qualitatively, accepted only when
+deterministically **strictly cleaner** and rejected on any of 8 conditions. The résumé is
+still detection-only, and the eval's fixture-level grounding metric was measured to have a
+**±14pp 95% CI** — too coarse to resolve the effects being tested. Both gaps are planned in
+**[GROUNDING_HARDENING.md](./GROUNDING_HARDENING.md)**.
+
 **Acceptance.**
 - [x] Validator detects fabricated numbers in tests (7 unit tests, DE/EN, JSON + HTML).
 - [x] Wired into both pipelines; unsupported claims flagged + logged (decision: flag, not strip).
