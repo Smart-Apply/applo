@@ -392,18 +392,44 @@ _Newest first. Add an entry per PR/branch with the files touched and the measure
   `resume-style-rewrite` was **deliberately left alone**: it genuinely reads `tailoredProfile` to
   validate facts, because its `rewrittenProfile` input is ID-keyed prose fragments with no employer,
   title, dates or skills.
-  **Effect:** removes ~2,600 input tokens per generation on a real profile (~1,100 on eval fixtures)
-  per pass that fires. `keyword-weave` fires on most generations; `style-rewrite` ~3/24 fixtures;
-  `shorten-cover-letter` ~0/24.
+  **Effect (MEASURED — same-session 24-fixture A/B on real Azure gpt-4.1, 2026-08-11):**
+  runs `eval-pre-trim` (main) vs `eval-post-trim` (this branch), back-to-back.
+
+  | Metric | pre (main) | post | Δ |
+  |---|---|---|---|
+  | coverage AFTER weave | 97.37% | **100%** | +2.63 |
+  | grounding pass rate | 88% | 96% | +8 |
+  | grounding mean score | 94.83 | 97.21 | +2.38 |
+  | style clean rate | 100% | 96% | −4 (1 violation) |
+  | length overrun / underrun | 0% / 4% | 0% / 0% | −4 underrun |
+  | judge overall | 5.00 | 5.00 | 0 (saturated) |
+  | mean LLM calls | 7.2 | 7.4 | +0.2 |
+  | mean input tokens | 23,521 | 23,703 | +182 |
+  | **input tokens / call** | **3,267** | **3,203** | **−64 (−2%)** |
+  | cached input share | 9% | 7% | −2 |
+
+  **Read this carefully — the raw `mean input tokens` comparison is confounded.** The two runs
+  fired a different number of conditional passes (weave 5× vs 7×; `style-rewrite` and
+  `shorten-cover-letter` fired **0× in both**), so total tokens went *up* purely because more calls
+  ran. Normalising per call is the valid comparison: **−64 input tokens/call (−2%)**.
+
+  **The saving is real but far smaller than first projected**, because the firing rates are much
+  lower than assumed: only `keyword-weave` fires with any regularity (~25% of fixtures), and the
+  other two edited prompts never fired at all across 48 generations. Scaled to a real profile
+  (~2.6k-token `tailoredProfile` vs ~1.1k in fixtures), expect **~1,100 input tokens/generation
+  ≈ €0.002/gen (~5%)** — not the 8–25% first estimated.
+
+  **Quality: no regression.** Coverage — the scorer that directly exercises the reworded
+  `keyword-weave` constraint 2 — went *up*, and the one outright weave failure in the baseline
+  (`skilled-trades-de`, 50%→50%) did not recur. Treat the grounding and style deltas as **noise**:
+  they move 1–3 fixtures on n=24, and this tracker has previously documented run-to-run grounding
+  swings of ±13 points. The rubric means moved ≤0.13 in both directions.
+
   ⚠️ **This splits the shared prefix group.** The identical `## Input Data → tailoredProfile → Job
   Posting` header now spans **5** prompts, not 8; the three edited prompts share a reduced prefix
-  with each other (`job` block only), which may fall under Azure's **1,024-token cache floor** and
-  therefore cache nothing. Phase 1b measured `keyword-weave` caching ~1,024 tokens on every
-  fixture — those cached tokens *were* this block, billed at $0.50/M not $2.00/M. So the honest
-  dollar saving is bounded: **floor ~$0.0013/gen (~2%) if the block was fully cached, ceiling
-  ~$0.0052/gen (~8%) if it was not.** The raw token reduction is certain; the net cost delta is
-  **not yet measured**. Re-run the eval cost block against the `$0.0624/gen` cold baseline and
-  record the cached-% here before treating this as a win.
+  with each other (`job` block only), which may fall under Azure's **1,024-token cache floor**.
+  Measured cached share did drop **9% → 7%**, consistent with that. It does not make the change
+  cost-negative: removed tokens are not billed at all, whereas cached tokens still cost $0.50/M.
 
 - **2026-08-02** — `feat/mistral-provider-eval` (cold-start correction): a **clean cold
   baseline** (first run of the day, 24 fixtures, real Azure gpt-4.1) measured **9% cached
