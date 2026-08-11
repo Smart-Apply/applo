@@ -490,6 +490,22 @@ Translated text in ${targetLangName}:`;
   }
 
   /**
+   * The configured fast model when it is reachable as an explicit per-call
+   * `model` override — i.e. hosted on the main provider. Undefined when
+   * LLM_FAST_MODEL is unset, or when LLM_FAST_PROVIDER points at a different
+   * provider (that model name is meaningless to the main provider; only
+   * per-task routing can reach it, via the fast-lane breaker). Callers that
+   * get undefined simply run on the default model.
+   */
+  get fastModelOnMainProvider(): string | undefined {
+    const fastModel = this.configService.llmFastModel;
+    if (!fastModel) return undefined;
+    const fastProvider = this.configService.llmFastProvider;
+    if (fastProvider && fastProvider !== this.configService.llmProvider) return undefined;
+    return fastModel;
+  }
+
+  /**
    * Resolve the model for a task. Returns the configured fast model for the
    * mechanical extraction steps when LLM_FAST_MODEL is set, otherwise undefined
    * (the provider then uses its own default model). Provider-agnostic — the value

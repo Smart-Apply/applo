@@ -88,6 +88,14 @@ export class ValidationController {
     @CurrentUser('id') userId: string,
     @Body() dto: CreateValidationDto,
   ): Promise<Validation> {
+    // Re-submitting identical inputs replays the stored result, so no quota is
+    // reserved for it. Checked before reserveUsage to keep the reservation
+    // atomic with the work it pays for.
+    const cached = await this.validationService.findCachedResult(userId, dto);
+    if (cached) {
+      return cached;
+    }
+
     const reservation = await this.subscriptionService.reserveUsage(userId, 'validation');
     try {
       return await this.validationService.create(userId, dto);
