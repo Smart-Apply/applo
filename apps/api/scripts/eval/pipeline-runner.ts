@@ -133,6 +133,55 @@ export interface GenerateOptions {
 }
 
 /**
+ * Template markers for the candidate-facing writing + revision calls. Extraction
+ * (`skill-selector`, `job-facts`, `ats-keywords`) is deliberately absent — it
+ * stays on the fast lane — and so is the judge rubric, which must keep grading
+ * on the main model.
+ */
+const PROSE_TEMPLATE_MARKERS = [
+  'cover-letter',
+  'resume-rewrite',
+  'editor-',
+  'style-rewrite',
+  'keyword-weave',
+];
+
+/**
+ * Route every prose + revision call through the mid lane (`LLM_MID_MODEL`) for a
+ * model A/B. Wrapping the service instead of threading a flag through each
+ * helper guarantees no call site is missed — one missed site would silently
+ * invalidate the comparison.
+ */
+export function withProseMidLane(llm: LLMService): LLMService {
+  const routesToMid = (templatePath: string): boolean =>
+    PROSE_TEMPLATE_MARKERS.some((marker) => templatePath.includes(marker));
+
+  return new Proxy(llm, {
+    get(target, prop, receiver) {
+      if (prop !== 'callText' && prop !== 'callJson') {
+        return Reflect.get(target, prop, receiver) as unknown;
+      }
+      const original = Reflect.get(target, prop, receiver) as (
+        templatePath: string,
+        variables: Record<string, unknown>,
+        options?: Record<string, unknown>,
+      ) => Promise<unknown>;
+      return (
+        templatePath: string,
+        variables: Record<string, unknown>,
+        options?: Record<string, unknown>,
+      ) =>
+        original.call(
+          target,
+          templatePath,
+          variables,
+          routesToMid(templatePath) ? { ...options, midLane: true } : options,
+        );
+    },
+  });
+}
+
+/**
  * Replicates `runCoverLetterEditorPass` (#1) including its guard: keep the
  * original draft if the editor returns empty or less than half its length.
  */

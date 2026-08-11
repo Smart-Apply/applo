@@ -23,7 +23,7 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigModule } from '../../src/config/config.module';
 import { LLMModule } from '../../src/llm/llm.module';
 import { LLMService } from '../../src/llm/llm.service';
-import { generateForFixture } from './pipeline-runner';
+import { generateForFixture, withProseMidLane } from './pipeline-runner';
 import { judgeDocuments } from './judge';
 import { groundDocuments } from './grounding';
 import { styleCheckDocuments } from './style';
@@ -53,6 +53,7 @@ interface CliArgs {
   applyAnchor: boolean;
   applyStyleRewrite: boolean;
   applyLengthGovernor: boolean;
+  proseMid: boolean;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -66,6 +67,7 @@ function parseArgs(argv: string[]): CliArgs {
     applyAnchor: true,
     applyStyleRewrite: true,
     applyLengthGovernor: true,
+    proseMid: false,
   };
   for (const arg of argv) {
     const [key, value] = arg.replace(/^--/, '').split('=');
@@ -81,6 +83,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (key === 'no-anchor') args.applyAnchor = false;
     else if (key === 'no-style-rewrite') args.applyStyleRewrite = false;
     else if (key === 'no-length-governor') args.applyLengthGovernor = false;
+    else if (key === 'prose-mid') args.proseMid = true;
   }
   return args;
 }
@@ -368,9 +371,27 @@ async function main(): Promise<void> {
   try {
     const llm = app.get(LLMService);
     const judgeLlm = judgeApp ? judgeApp.get(LLMService) : llm;
-    const results = await runPool(llm, judgeLlm, fixtures, args);
-    const model =
-      provider === 'mistral'
+    // The judge rubric matches no prose marker, so it keeps grading on the main
+    // model even when judgeLlm and llm are the same instance.
+    const generationLlm = args.proseMid ? withProseMidLane(llm) : llm;
+    if (args.proseMid) {
+      // Without a configured mid lane the calls would silently fall through to
+      // the main model and both A/B arms would be identical — fail loudly.
+      if (!process.env.LLM_MID_MODEL) {
+        throw new Error(
+          '--prose-mid requires LLM_MID_MODEL (plus AZURE_OPENAI_MID_ENDPOINT / _API_KEY when the ' +
+            'model lives in another Azure resource). Without it every call falls back to the main ' +
+            'model and the A/B measures nothing.',
+        );
+      }
+      console.log(
+        `   🧪 prose + revision calls routed to the mid lane (${process.env.LLM_MID_MODEL})\n`,
+      );
+    }
+    const results = await runPool(generationLlm, judgeLlm, fixtures, args);
+    const model = args.proseMid
+      ? process.env.LLM_MID_MODEL
+      : provider === 'mistral'
         ? process.env.MISTRAL_MODEL
         : process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
     const summary = summarize(results, {
