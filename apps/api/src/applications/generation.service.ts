@@ -769,7 +769,6 @@ export class GenerationService {
             editedCoverLetterMarkdown,
             atsKeywords,
             jobPosting,
-            tailoredProfile,
             detectedLanguage,
             coverLetterBudget,
             userId,
@@ -783,7 +782,6 @@ export class GenerationService {
       const polishedCoverLetterMarkdown = shouldGenerateCoverLetter
         ? await this.runStyleRewritePass(
             wovenCoverLetterMarkdown,
-            tailoredProfile,
             detectedLanguage,
             userId,
             jobPosting,
@@ -1086,7 +1084,6 @@ export class GenerationService {
             editedCoverLetter,
             atsKeywords,
             jobPosting,
-            tailoredProfile,
             language,
             coverLetterBudget,
             userId,
@@ -1456,7 +1453,6 @@ export class GenerationService {
     draft: string | null,
     atsKeywords: any,
     jobPosting: JobPosting,
-    tailoredProfile: TailoredProfileDto,
     language: string,
     lengthBudget: number,
     userId: string,
@@ -1477,7 +1473,6 @@ export class GenerationService {
         {
           draft,
           keywords,
-          tailoredProfile,
           job: this.serializeJobPosting(jobPosting),
           language,
           lengthBudget,
@@ -1519,7 +1514,6 @@ export class GenerationService {
    */
   private async runStyleRewritePass(
     draft: string | null,
-    tailoredProfile: TailoredProfileDto,
     language: string,
     userId: string,
     jobPosting: JobPosting,
@@ -1536,7 +1530,7 @@ export class GenerationService {
     try {
       const rewritten = await this.llmService.callText(
         'v1/style-rewrite.md',
-        { draft, violations, tailoredProfile, job: this.serializeJobPosting(jobPosting), language, userId, jobPostingId: jobPosting.id },
+        { draft, violations, job: this.serializeJobPosting(jobPosting), language, userId, jobPostingId: jobPosting.id },
         { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
       );
 
@@ -1578,7 +1572,8 @@ export class GenerationService {
   async runLengthGovernorPass(
     draft: string | null,
     atsKeywords: unknown,
-    tailoredProfile: TailoredProfileDto,
+    // Retained for the ApplicationsService call site; the shorten pass no longer sends the profile.
+    _tailoredProfile: TailoredProfileDto,
     language: string,
     lengthBudget: number,
     userId: string,
@@ -1622,7 +1617,6 @@ export class GenerationService {
           draft,
           lengthBudget,
           currentWords: lint.words,
-          tailoredProfile,
           job: this.serializeJobPosting(jobPosting),
           language,
           userId,

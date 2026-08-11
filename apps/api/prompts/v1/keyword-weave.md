@@ -2,12 +2,6 @@
 
 <!-- STABLE PREFIX — do not edit or reorder. Kept byte-identical across the pipeline prompts so prompt caching (Azure/Mistral) reuses it. See docs/implementation/PROMPT_CACHING.md. -->
 
-**Tailored Profile (the ONLY source of facts):**
-
-```json
-{{json tailoredProfile}}
-```
-
 **Job Posting:**
 
 ```json
@@ -45,9 +39,10 @@ already there so a keyword fits where the candidate's real experience already im
 ## ⚠️ Absolute constraints
 
 1. **Only weave the listed keywords.** Do not add any other keywords, skills or claims.
-2. **No fabrication.** Weave a keyword **only** where the candidate's real experience in
-   `tailoredProfile` already supports it. If a keyword cannot be placed truthfully and
-   naturally, **leave it out** — a missing keyword is far better than an invented claim.
+2. **No fabrication.** Every listed keyword is already verified against the candidate's
+   profile, so weave each one **only** where the draft's existing experience makes it read
+   truthfully. If a keyword cannot be placed truthfully and naturally, **leave it out** — a
+   missing keyword is far better than an invented claim.
 3. **No keyword stuffing.** Each keyword appears **at most once**. Never list keywords
    together ("Ich beherrsche X, Y und Z"). Each must sit inside a real, meaningful sentence.
 4. **Preserve everything else.** Keep the structure, paragraph count, salutation, tone,
@@ -58,7 +53,7 @@ already there so a keyword fits where the candidate's real experience already im
    sentence over adding a new one.
 6. **Same language as the draft / `{{language}}`.** Never switch languages.
 7. **No new numbers or metrics.** Do not introduce figures that are not already in the
-   draft or `tailoredProfile`.
+   draft.
 8. **No closing phrase and NO name.** End with the last content paragraph — the template
    appends the sign-off and name automatically.
 9. **Output ONLY the finished letter** as Markdown (salutation → body → final paragraph).
@@ -70,7 +65,7 @@ already there so a keyword fits where the candidate's real experience already im
 
 - Prefer **enriching an existing sentence** over adding a new one. Example: a sentence about
   leading a ward becomes a sentence about leading a ward **with a focus on `{{keyword}}`** —
-  but only if the profile shows that focus.
+  but only if the draft already shows that focus.
 - Place a keyword next to the concrete experience that proves it, so it reads as evidence,
   not as a label.
 - If two keywords belong to the same experience, you may place them in separate sentences of

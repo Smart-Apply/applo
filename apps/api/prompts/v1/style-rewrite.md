@@ -2,12 +2,6 @@
 
 <!-- STABLE PREFIX — do not edit or reorder. Kept byte-identical across the pipeline prompts so prompt caching (Azure/Mistral) reuses it. See docs/implementation/PROMPT_CACHING.md. -->
 
-**Tailored Profile (the ONLY source of facts):**
-
-```json
-{{json tailoredProfile}}
-```
-
 **Job Posting:**
 
 ```json
@@ -46,7 +40,7 @@ flagged phrase. Everything else stays byte-for-byte.
 
 1. **Only touch the flagged phrases.** Leave every other sentence exactly as it is.
 2. **No fabrication.** Never invent a number, metric, date, employer, tool or achievement to
-   replace a cliché. If a flagged claim has no concrete support in `tailoredProfile`, simply
+   replace a cliché. If a flagged claim has no concrete support elsewhere in the draft, simply
    **drop the empty phrase** and keep the real sentence around it intact.
 3. **Preserve everything else.** Keep the structure, paragraph count, salutation, tone,
    length (±1 sentence) and every existing fact and number. Do not delete real content.
@@ -68,8 +62,9 @@ flagged phrase. Everything else stays byte-for-byte.
   statements.
 - **Empty enthusiasm clichés → concrete evidence.** "Ich bin begeistert von der Möglichkeit"
   or "I am passionate about this role" carries no information. Replace it with the real reason
-  the candidate fits, drawn from `tailoredProfile` — a responsibility they held, a setting they
-  worked in. If no specific fact supports it, delete the phrase rather than restate the cliché.
+  the candidate fits, drawn from what the draft already states — a responsibility they held, a
+  setting they worked in. If no specific fact supports it, delete the phrase rather than restate
+  the cliché.
 - **Self-praise clichés → let the facts speak.** "proven track record", "maßgeblich
   beigetragen", "erfolgreich umgesetzt" should become the concrete thing that was actually
   done ("… verantwortete die Umstellung auf …"), or be removed. Never assert impact the

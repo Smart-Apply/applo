@@ -2,12 +2,6 @@
 
 <!-- STABLE PREFIX — do not edit or reorder. Kept byte-identical across the pipeline prompts so prompt caching (Azure/Mistral) reuses it. See docs/implementation/PROMPT_CACHING.md. -->
 
-**Tailored Profile (the ONLY source of facts):**
-
-```json
-{{json tailoredProfile}}
-```
-
 **Job Posting:**
 
 ```json
