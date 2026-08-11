@@ -61,6 +61,8 @@ export interface FixtureGroundingSummary {
   totalChecked: number;
   unsupportedCount: number;
   unsupportedValues: string[];
+  /** True when the guarded grounding-repair pass replaced the letter. */
+  repairApplied?: boolean;
 }
 
 export interface FixtureCoverageSummary {
@@ -165,6 +167,8 @@ export interface EvalSummary {
     passRate: number;
     meanScore: number;
     fixturesWithUnsupported: number;
+    /** Fixtures where the guarded grounding-repair pass replaced the letter. */
+    repairAppliedCount: number;
   };
   coverage: {
     /** Fixtures that had at least one priority-1 profile-supported keyword. */
@@ -263,6 +267,7 @@ export function summarize(
       : Math.round((ok.filter((r) => r.grounding!.grounded).length / ok.length) * 100);
   const groundingMeanScore = mean(ok.map((r) => r.grounding!.score));
   const fixturesWithUnsupported = ok.filter((r) => r.grounding!.unsupportedCount > 0).length;
+  const groundingRepairAppliedCount = ok.filter((r) => r.grounding!.repairApplied).length;
 
   // Coverage (#6) — only over fixtures that actually had priority-1 supported keywords.
   const withWanted = ok.filter((r) => r.coverage && r.coverage.wanted > 0);
@@ -384,6 +389,7 @@ export function summarize(
       passRate: groundingPassRate,
       meanScore: groundingMeanScore,
       fixturesWithUnsupported,
+      repairAppliedCount: groundingRepairAppliedCount,
     },
     coverage,
     style,
@@ -421,6 +427,7 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    pass rate (fully grounded)     ${summary.grounding.passRate}%`);
   lines.push(`    mean grounding score           ${summary.grounding.meanScore.toFixed(2)}`);
   lines.push(`    fixtures with unsupported #s   ${summary.grounding.fixturesWithUnsupported}`);
+  lines.push(`    grounding repair applied       ${summary.grounding.repairAppliedCount} fixtures`);
   lines.push('');
   lines.push('  Priority-1 keyword coverage (#6, deterministic):');
   lines.push(`    fixtures with supported gaps   ${summary.coverage.fixturesWithWanted}`);
@@ -490,6 +497,7 @@ export function formatReport(summary: EvalSummary): string {
       r.coverage?.weaveApplied ? `weave:${r.coverage.weaveKeywords.join('/')}` : '',
       r.styleRewriteApplied ? 'cl-style-fixed' : '',
       r.resumeStyleRewriteApplied ? 'cv-style-fixed' : '',
+      r.grounding?.repairApplied ? 'grounding-fixed' : '',
       r.resumeRewriteSucceeded ? '' : 'rewrite-degraded',
       r.grounding && r.grounding.unsupportedCount > 0
         ? `unsupported:${r.grounding.unsupportedValues.join('/')}`
