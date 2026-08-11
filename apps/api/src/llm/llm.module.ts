@@ -7,6 +7,31 @@ import { MistralProvider } from './providers/mistral.provider';
 import { MockLLMProvider } from './providers/mock.provider';
 import { ConfigService } from '../config/config.service';
 
+export function createFastProvider(
+  configService: ConfigService,
+  httpService: HttpService,
+): MistralProvider | AzureOpenAIProvider | null {
+  const fastProvider = configService.llmFastProvider;
+  if (!fastProvider || fastProvider === configService.llmProvider) {
+    return null;
+  }
+  // The fast lane is an optimization — a misconfigured fast provider
+  // (e.g. LLM_FAST_PROVIDER=mistral without MISTRAL_API_KEY) must
+  // degrade to main-lane routing, never crash boot.
+  try {
+    if (fastProvider === 'mistral') {
+      return new MistralProvider(httpService, configService);
+    }
+    return new AzureOpenAIProvider(httpService, configService);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    new Logger('LLMModule').warn(
+      `Fast-lane provider "${fastProvider}" unavailable (${message}); fast tasks stay on the main provider`,
+    );
+    return null;
+  }
+}
+
 @Module({
   imports: [HttpModule],
   providers: [
@@ -44,27 +69,7 @@ import { ConfigService } from '../config/config.service';
     // routes fast tasks through the main provider as before.
     {
       provide: 'LLM_FAST_PROVIDER_INSTANCE',
-      useFactory: (configService: ConfigService, httpService: HttpService) => {
-        const fastProvider = configService.llmFastProvider;
-        if (!fastProvider || fastProvider === configService.llmProvider) {
-          return null;
-        }
-        // The fast lane is an optimization — a misconfigured fast provider
-        // (e.g. LLM_FAST_PROVIDER=mistral without MISTRAL_API_KEY) must
-        // degrade to main-lane routing, never crash boot.
-        try {
-          if (fastProvider === 'mistral') {
-            return new MistralProvider(httpService, configService);
-          }
-          return new AzureOpenAIProvider(httpService, configService);
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          new Logger('LLMModule').warn(
-            `Fast-lane provider "${fastProvider}" unavailable (${message}); fast tasks stay on the main provider`,
-          );
-          return null;
-        }
-      },
+      useFactory: createFastProvider,
       inject: [ConfigService, HttpService],
     },
     LLMService,
