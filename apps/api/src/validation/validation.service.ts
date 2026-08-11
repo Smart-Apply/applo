@@ -1,5 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { Prisma } from '../generated/prisma/client';
+import { Prisma, SubscriptionTier } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { LLMService } from '../llm/llm.service';
 import { SubscriptionService } from '../subscription/subscription.service';
@@ -7,6 +7,7 @@ import { PdfParser } from '../job-postings/parsers/pdf.parser';
 import { DocxParser } from '../job-postings/parsers/docx.parser';
 import { ErrorCode } from '../common/constants/error-codes';
 import { NotFoundWithCode } from '../common/exceptions/coded-http.exception';
+import { hashContentParts } from '../common/utils/content-hash.util';
 import { CreateValidationDto } from './dto/create-validation.dto';
 import type {
   ApplicationValidationResult,
@@ -47,6 +48,28 @@ export class ValidationService {
   }
 
   /**
+   * Look up a previous check by this user with byte-identical inputs. A hit is
+   * served without an LLM call, so the controller skips the quota reservation
+   * entirely. Scoped to `userId` — one user's result is never served to another.
+   */
+  async findCachedResult(
+    userId: string,
+    dto: CreateValidationDto,
+  ): Promise<ValidationRecord | null> {
+    const contentHash = await this.buildContentHash(dto);
+
+    const cached = await this.prisma.validation.findFirst({
+      where: { userId, contentHash },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!cached) return null;
+
+    this.logger.log(`Validation cache hit ${cached.id} for user ${userId} (no LLM call, no quota)`);
+    return this.toRecord(cached);
+  }
+
+  /**
    * Run a standalone AI quality + ATS check on an application the user created
    * OUTSIDE Applo (their own résumé + optional cover letter + optional
    * job context), persist it, and return the record.
@@ -56,6 +79,8 @@ export class ValidationService {
    */
   async create(userId: string, dto: CreateValidationDto): Promise<ValidationRecord> {
     const language = dto.language?.trim() || '';
+    const contentHash = await this.buildContentHash(dto);
+    const model = await this.resolveModel(userId);
 
     const raw = await this.llmService.callJson<ApplicationValidationResult>(
       'v1/application-validation.md',
@@ -65,7 +90,7 @@ export class ValidationService {
         jobContext: dto.jobContext ?? '',
         language,
       },
-      { temperature: 0.2, maxTokens: 2000 },
+      { temperature: 0.2, maxTokens: 2000, ...(model ? { model } : {}) },
     );
 
     const result = this.normalizeValidationResult(raw);
@@ -78,6 +103,7 @@ export class ValidationService {
         coverLetterText: dto.coverLetterText ?? null,
         jobContext: dto.jobContext ?? null,
         language: language || null,
+        contentHash,
         result: result as unknown as Prisma.InputJsonValue,
         score: result.overallScore,
       },
@@ -88,6 +114,39 @@ export class ValidationService {
     );
 
     return this.toRecord(record);
+  }
+
+  /**
+   * Free-tier checks run on the configured fast model; PRO/PREMIUM keep the
+   * flagship default as a paid quality differentiator. Returns undefined (=
+   * provider default) when no fast model is configured, so an unset
+   * LLM_FAST_MODEL behaves exactly as before.
+   */
+  private async resolveModel(userId: string): Promise<string | undefined> {
+    const tier = await this.subscriptionService.getUserTier(userId);
+    if (tier !== SubscriptionTier.FREE) return undefined;
+
+    const fastModel = this.llmService.fastModelOnMainProvider;
+    if (fastModel) {
+      this.logger.debug(`Free-tier validation → fast model (${fastModel})`);
+    }
+    return fastModel;
+  }
+
+  /**
+   * xxHash-64 over the normalized inputs. `title` is excluded: relabelling the
+   * same documents must still hit the cache.
+   */
+  private async buildContentHash(dto: CreateValidationDto): Promise<string> {
+    const normalize = (value: string | undefined): string =>
+      (value ?? '').replace(/\r\n/g, '\n').trim();
+
+    return hashContentParts([
+      normalize(dto.resumeText),
+      normalize(dto.coverLetterText),
+      normalize(dto.jobContext),
+      normalize(dto.language).toLowerCase(),
+    ]);
   }
 
   /** History list (lightweight summaries, newest first). */

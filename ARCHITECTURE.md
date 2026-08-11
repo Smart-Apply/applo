@@ -267,7 +267,7 @@ recorded baselines live in
 | **Language**       | Language proficiency                           |
 | **JobPosting**     | Parsed job listings                            |
 | **Application**    | Generated applications + PDFs (+ per-language translation cache in `translations` Json) |
-| **Validation**     | Standalone AI check of an external application |
+| **Validation**     | Standalone AI check of an external application (+ `contentHash` dedupe cache — an exact re-submit replays the stored result with no LLM call and no quota spend) |
 | **Appointment**    | Dashboard interview-calendar entry (date + optional time, note, email-reminder flag) |
 | **ResumeTemplate** | PDF templates (6 designs × colors × 2 types)   |
 | **Interview**      | AI-generated interview Q&A                     |
@@ -411,10 +411,10 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/applications/:id/files`          | SAS download URLs                                                           |
 | PATCH    | `/applications/:id/template-settings` | Per-application design tuning (font scale, density, accent override)    |
 | GET      | `/applications/:id/stream`         | SSE status stream                                                           |
-| POST     | `/validation`                      | Check an external application (AI quality + ATS; Free 5/mo, Pro 15/mo, Premium 35/mo) |
+| POST     | `/validation`                      | Check an external application (AI quality + ATS; Free 3/mo, Pro 15/mo, Premium 35/mo; identical re-submit served from cache, no quota) |
 | GET      | `/validation`                      | Validation history                                                          |
 | POST     | `/interviews`                      | Generate mock interview                                                     |
-| POST     | `/interviews/:id/voice/session`    | Mint voice session (Pro 5/mo, Premium 45/mo; 5/10/15 min, persona-led, CV-grounded) |
+| POST     | `/interviews/:id/voice/session`    | Mint voice session (Pro 5/mo, Premium 20/mo; 5/10/15 min, persona-led, CV-grounded) |
 | POST     | `/interviews/:id/voice/transcript` | Finalize + score voice interview (Pro/Premium)                              |
 | GET/POST | `/appointments`                    | List / create interview-calendar appointments                              |
 | PATCH/DELETE | `/appointments/:id`            | Update / delete an appointment (user-scoped)                               |

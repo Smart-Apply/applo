@@ -450,6 +450,11 @@ model Validation {
   jobContext      String? @db.Text // pasted job description and/or target role
   language        String? // Detected/selected language (ISO 639-1)
 
+  // xxHash-64 of the normalized inputs. An exact re-submit is served from the
+  // matching row: no LLM call, no quota spend. Nullable — rows written before
+  // the dedupe cache shipped simply never match.
+  contentHash String?
+
   // Result
   result Json // ApplicationValidationResult (scores, categories, blockers, recommendations, strengths)
   score  Float // Overall score 0-100 (denormalized for list/sorting)
@@ -458,6 +463,7 @@ model Validation {
 
   @@index([userId])
   @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, contentHash])
   @@map("validations")
 }
 
