@@ -726,9 +726,9 @@ MISTRAL_MODEL=mistral-large-latest
 VOICE_PROVIDER=mock          # azure-realtime | mock (mock hides the voice mode)
 AZURE_OPENAI_REALTIME_ENDPOINT=<sweden-central-resource>
 AZURE_OPENAI_REALTIME_API_KEY=<key>
-# Deployment name, not model name. One per env: gpt-realtime-mini (prod) /
-# gpt-realtime-mini-staging / gpt-realtime-mini-local.
-AZURE_OPENAI_REALTIME_DEPLOYMENT=gpt-realtime-mini
+# Deployment name, not model name. One per env: gpt-realtime-2.1-mini (prod) /
+# gpt-realtime-2.1-mini-staging / gpt-realtime-2.1-mini-local.
+AZURE_OPENAI_REALTIME_DEPLOYMENT=gpt-realtime-2.1-mini
 AZURE_OPENAI_REALTIME_VOICE=alloy
 VOICE_INTERVIEW_MAX_SESSION_MINUTES=15
 # Emergency global clamp only — per-user cap is TIER_LIMITS.voiceMinutesPerMonth
@@ -894,7 +894,7 @@ Four workflows, each with a single purpose. **Never propose adding a fifth that 
   - Plus DNS zone `applo.ai`, two R2 buckets (`smart-apply-prod` + `smart-apply-staging`, both EU jurisdiction), Universal SSL
 - **Neon**: one Postgres project (EU/Frankfurt) with two branches — `main` (prod) + `staging` (cow off `main`). Each branch has its own pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) URLs.
 - **Upstash**: QStash (queue, shared between envs — staging gets its own webhook URL) + Redis (prod throttler only; staging uses `THROTTLER_STORAGE=memory` since it runs single-instance)
-- **Azure**: OpenAI resource (West Europe) with three chat deployments — `gpt-4.1` (prod, 200K TPM), `gpt-4.1-staging` (staging), `gpt-4.1-local` (your laptop). Plus a **separate Sweden Central** resource for the voice interview, because realtime models only exist in East US 2 + Sweden Central: `gpt-realtime-mini` (prod), `gpt-realtime-mini-staging`, `gpt-realtime-mini-local`. `gpt-realtime-2.1-mini` was not deployable in the subscription, so the `gpt-realtime-mini` line is what runs; it is ~3.2× cheaper than the full `gpt-realtime` on audio tokens ($10/$20 vs $32/$64 per 1M).
+- **Azure**: OpenAI resource (West Europe) with three chat deployments — `gpt-4.1` (prod, 200K TPM), `gpt-4.1-staging` (staging), `gpt-4.1-local` (your laptop). Plus a **separate Sweden Central** resource for the voice interview, because realtime models only exist in East US 2 + Sweden Central: `gpt-realtime-2.1-mini` (prod), `gpt-realtime-2.1-mini-staging`, `gpt-realtime-2.1-mini-local` (Foundry resource `smartapply-ai-prod-resource`). The older `gpt-realtime-mini` line it replaced was ~3.2× cheaper than the full `gpt-realtime` on audio; 2.1-mini is a further ~5% cheaper (audio €8.79 in / €17.58 out per 1M, text €0.53/€2.11, cached €0.27 audio / €0.06 text).
 - **Third-party**: Resend (email), Sentry (monitoring)
 
 ## Tests
