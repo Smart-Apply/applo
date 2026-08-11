@@ -71,6 +71,18 @@ interface ChatCompletionResponse {
   };
 }
 
+/**
+ * Per-instance overrides so a second instance can target a different Azure
+ * resource/deployment than the AZURE_OPENAI_* defaults (see the mid lane in
+ * llm.module.ts). Omitted fields fall back to config.
+ */
+export interface AzureOpenAIProviderOverrides {
+  endpoint?: string;
+  apiKey?: string;
+  deploymentName?: string;
+  apiVersion?: string;
+}
+
 @Injectable()
 export class AzureOpenAIProvider implements LLMProvider {
   private readonly logger = new Logger(AzureOpenAIProvider.name);
@@ -82,11 +94,13 @@ export class AzureOpenAIProvider implements LLMProvider {
   constructor(
     private httpService: HttpService,
     private configService: ConfigService,
+    overrides?: AzureOpenAIProviderOverrides,
   ) {
-    this.endpoint = this.configService.azureOpenAIEndpoint || '';
-    this.apiKey = this.configService.azureOpenAIApiKey || '';
-    this.deploymentName = this.configService.azureOpenAIDeploymentName;
-    this.apiVersion = this.configService.azureOpenAIApiVersion;
+    this.endpoint = overrides?.endpoint || this.configService.azureOpenAIEndpoint || '';
+    this.apiKey = overrides?.apiKey || this.configService.azureOpenAIApiKey || '';
+    this.deploymentName =
+      overrides?.deploymentName || this.configService.azureOpenAIDeploymentName;
+    this.apiVersion = overrides?.apiVersion || this.configService.azureOpenAIApiVersion;
 
     if (!this.endpoint || !this.apiKey) {
       throw new Error('Azure OpenAI configuration missing');
