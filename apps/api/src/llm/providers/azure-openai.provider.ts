@@ -46,8 +46,7 @@ function describeAxiosError(error: unknown): string {
   return parts.join(' | ');
 }
 
-/** `Retry-After` is seconds (or an HTTP date) per RFC 9110. Returns ms. */
-function parseRetryAfterMs(header: unknown): number | undefined {
+/** `Retry-After` is seconds (or an HTTP date) per RFC 9110. Returns ms. */function parseRetryAfterMs(header: unknown): number | undefined {
   if (header === undefined || header === null) return undefined;
   const raw = Array.isArray(header) ? header[0] : header;
   const seconds = Number(raw);
@@ -69,6 +68,17 @@ interface ChatCompletionResponse {
     completion_tokens?: number;
     prompt_tokens_details?: { cached_tokens?: number };
   };
+}
+
+/**
+ * Reasoning models (o-series, GPT-5 family incl. gpt-5.4-mini) reject
+ * `temperature`, `top_p`, penalties, logprobs and `max_tokens`; the output cap
+ * is `max_completion_tokens` instead. Sending the classic parameters returns a
+ * 400, so the request body has to be shaped per family.
+ * https://learn.microsoft.com/azure/ai-foundry/openai/how-to/reasoning
+ */
+export function isReasoningModel(model: string | undefined): boolean {
+  return /^(o\d|gpt-5)/i.test((model ?? '').trim());
 }
 
 /**
@@ -111,6 +121,7 @@ export class AzureOpenAIProvider implements LLMProvider {
     // v1 Foundry API: hit /openai/v1/chat/completions and pass the deployment
     // as `model` in the body (no legacy /openai/deployments/{name} path).
     const url = buildV1ChatCompletionsUrl(this.endpoint, this.apiVersion);
+    const model = options?.model ?? this.deploymentName;
 
     const messages: any[] = [];
 
@@ -133,10 +144,17 @@ export class AzureOpenAIProvider implements LLMProvider {
     // don't support it surface a 400 here, which the LLMService JSON-repair
     // fallback then handles on a retry path.
     const requestBody: Record<string, unknown> = {
-      model: options?.model ?? this.deploymentName,
+      model,
       messages,
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.maxTokens ?? 2000,
+      // Reasoning models reject `temperature` and `max_tokens` outright; the
+      // output cap moves to `max_completion_tokens`. Note the cap then also
+      // covers billed-but-invisible reasoning tokens.
+      ...(isReasoningModel(model)
+        ? { max_completion_tokens: options?.maxTokens ?? 2000 }
+        : {
+            temperature: options?.temperature ?? 0.7,
+            max_tokens: options?.maxTokens ?? 2000,
+          }),
     };
     if (options?.responseFormat) {
       requestBody.response_format = options.responseFormat;
@@ -254,7 +272,9 @@ export class AzureOpenAIProvider implements LLMProvider {
           {
             model: this.deploymentName,
             messages: [{ role: 'user', content: 'health check' }],
-            max_tokens: 1,
+            ...(isReasoningModel(this.deploymentName)
+              ? { max_completion_tokens: 1 }
+              : { max_tokens: 1 }),
           },
           {
             headers: {
