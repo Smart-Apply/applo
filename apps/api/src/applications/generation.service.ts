@@ -8,6 +8,7 @@ import { TitleGeneratorService } from './title-generator.service';
 import { TemplatesService } from '../templates/templates.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { GroundingValidatorService } from './grounding/grounding-validator.service';
+import { evaluateGroundingRepair } from './grounding/grounding-repair.util';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
 import { TailoredProfileDto, RewrittenProfileDto } from './dto/tailored-profile.dto';
@@ -806,10 +807,25 @@ export class GenerationService {
           )
         : polishedCoverLetterMarkdown;
 
+      // Grounding repair ("teeth"): replace impact numbers the deterministic
+      // validator can trace to neither profile nor job posting with truthful
+      // qualitative statements. Fires only on a real finding; falls back to the
+      // pre-repair draft on any guard failure (see runGroundingRepairPass).
+      const repairedCoverLetterMarkdown = shouldGenerateCoverLetter
+        ? await this.runGroundingRepairPass(
+            governedCoverLetterMarkdown,
+            profile,
+            detectedLanguage,
+            coverLetterBudget,
+            userId,
+            jobPosting,
+          )
+        : governedCoverLetterMarkdown;
+
       // Grounding check (#7): flag any fabricated impact numbers (non-destructive).
       this.runGroundingCheck(
         application.id,
-        { resume: JSON.stringify(resumeJson), coverLetter: governedCoverLetterMarkdown },
+        { resume: JSON.stringify(resumeJson), coverLetter: repairedCoverLetterMarkdown },
         profile,
         jobPosting.fullText,
       );
@@ -817,13 +833,13 @@ export class GenerationService {
       // Style check: flag forbidden AI clichés + German hedging (non-destructive).
       this.runStyleCheck(
         application.id,
-        { resume: JSON.stringify(resumeJson), coverLetter: governedCoverLetterMarkdown },
+        { resume: JSON.stringify(resumeJson), coverLetter: repairedCoverLetterMarkdown },
         detectedLanguage,
         coverLetterBudget,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = convertCoverLetterToHtml(governedCoverLetterMarkdown);
+      const coverLetterHtml = convertCoverLetterToHtml(repairedCoverLetterMarkdown);
 
       const updatedApplication = await this.prisma.application.update({
         where: { id: application.id },
@@ -1107,16 +1123,29 @@ export class GenerationService {
           )
         : wovenCoverLetter;
 
+      // Grounding repair ("teeth"): swap ungrounded impact numbers for truthful
+      // qualitative statements. Guarded; falls back to the pre-repair draft.
+      const repairedCoverLetter = shouldGenerateCoverLetter
+        ? await this.runGroundingRepairPass(
+            governedCoverLetter,
+            profile,
+            language,
+            coverLetterBudget,
+            userId,
+            jobPosting,
+          )
+        : governedCoverLetter;
+
       // Grounding check (#7): flag fabricated impact numbers (non-destructive).
       this.runGroundingCheck(
         applicationId,
-        { resume: resumeMarkdown, coverLetter: governedCoverLetter },
+        { resume: resumeMarkdown, coverLetter: repairedCoverLetter },
         profile,
         jobPosting.fullText,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = convertCoverLetterToHtml(governedCoverLetter);
+      const coverLetterHtml = convertCoverLetterToHtml(repairedCoverLetter);
 
       emitProgress(95, 'Speichere Ergebnisse...');
       const updated = await this.prisma.application.update({
@@ -1710,6 +1739,91 @@ export class GenerationService {
         `Résumé style rewrite failed; keeping pre-rewrite payload: ${error.message}`,
       );
       return rewrittenProfile;
+    }
+  }
+
+  /**
+   * Grounding repair ("teeth", cover letter only) — one guarded pass that fires
+   * ONLY when the deterministic grounding validator finds impact numbers in the
+   * finished cover letter that trace back to neither the profile nor the job
+   * posting. It replaces each unverifiable figure with a truthful qualitative
+   * statement of the same achievement, so the claim survives and the invented
+   * precision doesn't. The résumé stays detection-only: it is ID-preserving
+   * JSON and a separate, riskier surface.
+   *
+   * Runs AFTER the length governor — the governor only shortens, so a repair
+   * placed before it could be re-cut, and a repair placed after must not push
+   * the letter under its floor (the `underrun` guard).
+   *
+   * Never ships a worse letter:
+   * - Skips the LLM call entirely when every number is already grounded.
+   * - Carries the `GENERATION_SYSTEM_ANCHOR` so the repair can't fabricate.
+   * - Accepts the candidate ONLY when `evaluateGroundingRepair` confirms it
+   *   isn't gutted, keeps the salutation verbatim, strictly reduces the
+   *   unsupported count, introduces no NEW unsupported number, doesn't regress
+   *   the style-violation count and stays above the length floor; otherwise
+   *   keeps the pre-repair draft. Never throws.
+   */
+  private async runGroundingRepairPass(
+    draft: string | null,
+    profile: ProfileWithRelations,
+    language: string,
+    lengthBudget: number,
+    userId: string,
+    jobPosting: JobPosting,
+  ): Promise<string | null> {
+    if (!draft || draft.trim() === '') return draft;
+
+    const before = this.groundingValidator.validate({ coverLetter: draft }, profile, jobPosting.fullText);
+    if (before.unsupported.length === 0) {
+      this.logger.debug(
+        `Grounding repair: all ${before.totalChecked} cover-letter impact number(s) grounded; skipping`,
+      );
+      return draft;
+    }
+
+    const flagged = before.unsupported.map((finding) => finding.value);
+    try {
+      const repaired = await this.llmService.callText(
+        'v1/fix-unsupported-numbers.md',
+        {
+          draft,
+          unsupported: before.unsupported,
+          job: this.serializeJobPosting(jobPosting),
+          language,
+          userId,
+          jobPostingId: jobPosting.id,
+        },
+        { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
+      );
+
+      const after = repaired?.trim()
+        ? this.groundingValidator.validate({ coverLetter: repaired }, profile, jobPosting.fullText)
+            .unsupported
+        : [];
+
+      const decision = evaluateGroundingRepair(
+        draft,
+        repaired,
+        before.unsupported,
+        after,
+        lengthBudget,
+        language,
+      );
+      if (!decision.accept) {
+        this.logger.warn(
+          `Grounding repair rejected (${decision.reason}, ${decision.unsupportedBefore}→${decision.unsupportedAfter} unsupported); keeping pre-repair draft`,
+        );
+        return draft;
+      }
+
+      this.logger.log(
+        `Grounding repair applied (${decision.unsupportedBefore}→${decision.unsupportedAfter} unsupported: ${flagged.join(', ')})`,
+      );
+      return repaired;
+    } catch (error) {
+      this.logger.warn(`Grounding repair failed; keeping pre-repair draft: ${error.message}`);
+      return draft;
     }
   }
 

@@ -53,6 +53,7 @@ interface CliArgs {
   applyAnchor: boolean;
   applyStyleRewrite: boolean;
   applyLengthGovernor: boolean;
+  applyGroundingRepair: boolean;
   proseMid: boolean;
 }
 
@@ -67,6 +68,7 @@ function parseArgs(argv: string[]): CliArgs {
     applyAnchor: true,
     applyStyleRewrite: true,
     applyLengthGovernor: true,
+    applyGroundingRepair: true,
     proseMid: false,
   };
   for (const arg of argv) {
@@ -83,6 +85,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (key === 'no-anchor') args.applyAnchor = false;
     else if (key === 'no-style-rewrite') args.applyStyleRewrite = false;
     else if (key === 'no-length-governor') args.applyLengthGovernor = false;
+    else if (key === 'no-grounding-repair') args.applyGroundingRepair = false;
     else if (key === 'prose-mid') args.proseMid = true;
   }
   return args;
@@ -149,6 +152,7 @@ async function runOne(
     applyAnchor: boolean;
     applyStyleRewrite: boolean;
     applyLengthGovernor: boolean;
+    applyGroundingRepair: boolean;
   },
 ): Promise<FixtureResult> {
   const base = {
@@ -175,6 +179,7 @@ async function runOne(
         totalChecked: grounding.totalChecked,
         unsupportedCount: grounding.unsupported.length,
         unsupportedValues: grounding.unsupported.map((u) => u.value),
+        repairApplied: docs.groundingRepairApplied,
       },
       coverage: {
         wanted: docs.coverageAfterWeave.wanted,
@@ -250,6 +255,7 @@ async function runPool(
         applyAnchor: args.applyAnchor,
         applyStyleRewrite: args.applyStyleRewrite,
         applyLengthGovernor: args.applyLengthGovernor,
+        applyGroundingRepair: args.applyGroundingRepair,
       });
       process.stdout.write(result.error ? `ERROR\n` : `overall ${result.judge?.overall}\n`);
       results[index] = result;
@@ -348,7 +354,8 @@ async function main(): Promise<void> {
     `\n🧪 Running eval (provider=${provider}, fixtures=${fixtures.length}, ` +
       `concurrency=${args.concurrency}, weave=${args.applyWeave ? 'on' : 'off'}, ` +
       `anchor=${args.applyAnchor ? 'on' : 'off'}, ` +
-      `styleRewrite=${args.applyStyleRewrite ? 'on' : 'off'}, tag=${args.tag})\n`,
+      `styleRewrite=${args.applyStyleRewrite ? 'on' : 'off'}, ` +
+      `groundingRepair=${args.applyGroundingRepair ? 'on' : 'off'}, tag=${args.tag})\n`,
   );
 
   const app = await NestFactory.createApplicationContext(EvalHarnessModule, {

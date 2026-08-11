@@ -25,6 +25,8 @@ import {
   type CoverageReport,
 } from '../../src/applications/keyword-coverage.util';
 import { isValidResumeEdit, countResumeStyleViolations, evaluateResumeStyleRewrite } from '../../src/applications/resume-editor.util';
+import { GroundingValidatorService } from '../../src/applications/grounding/grounding-validator.service';
+import { evaluateGroundingRepair } from '../../src/applications/grounding/grounding-repair.util';
 import {
   buildSalutation,
   normalizeJobFacts,
@@ -44,7 +46,11 @@ import type {
   SelectedExperience,
   SelectedProject,
 } from '../../src/applications/dto/tailored-profile.dto';
+import type { ProfileWithRelations } from '../../src/applications/resume-template.util';
 import { hydrateProfile, type EvalFixture } from './fixture.types';
+
+/** The validator is a plain injectable with no dependencies — instantiate directly. */
+const groundingValidator = new GroundingValidatorService();
 
 export interface GeneratedExperienceView {
   title: string;
@@ -108,6 +114,8 @@ export interface GeneratedDocuments {
   lengthGovernorApplied: boolean;
   /** Body words of the cover letter BEFORE the governor pass. */
   wordsBeforeGovernor: number;
+  /** True when the guarded grounding-repair pass replaced a letter carrying ungrounded numbers. */
+  groundingRepairApplied: boolean;
   durationMs: number;
 }
 
@@ -130,6 +138,12 @@ export interface GenerateOptions {
    * overrun rate the base prompts produce).
    */
   applyLengthGovernor?: boolean;
+  /**
+   * When false, skip the guarded grounding-repair pass — for a clean A/B of
+   * the deterministic anti-fabrication enforcement (and to measure the raw
+   * unsupported-number rate the base prompts produce).
+   */
+  applyGroundingRepair?: boolean;
 }
 
 /**
@@ -144,6 +158,7 @@ const PROSE_TEMPLATE_MARKERS = [
   'editor-',
   'style-rewrite',
   'keyword-weave',
+  'fix-unsupported-numbers',
 ];
 
 /**
@@ -320,6 +335,59 @@ async function runLengthGovernor(
 }
 
 /**
+ * Replicates `runGroundingRepairPass` (the anti-fabrication "teeth"): one
+ * guarded pass that swaps cover-letter impact numbers the deterministic
+ * validator can ground in neither the profile nor the job posting for truthful
+ * qualitative statements, keeping the pre-repair draft unless
+ * `evaluateGroundingRepair` accepts the candidate (not gutted, salutation
+ * verbatim, strictly fewer unsupported numbers, no NEW fabrication, style not
+ * regressed, above the length floor). Skips the LLM call when fully grounded.
+ */
+async function runGroundingRepair(
+  llm: LLMService,
+  draft: string,
+  profile: ProfileWithRelations,
+  job: Record<string, unknown>,
+  jobPostingText: string,
+  language: string,
+  lengthBudget: number,
+  fixtureId: string,
+): Promise<{ text: string; applied: boolean }> {
+  const before = groundingValidator.validate({ coverLetter: draft }, profile, jobPostingText);
+  if (before.unsupported.length === 0) return { text: draft, applied: false };
+
+  try {
+    const repaired = await llm.callText(
+      'v1/fix-unsupported-numbers.md',
+      {
+        draft,
+        unsupported: before.unsupported,
+        job,
+        language,
+        userId: fixtureId,
+        jobPostingId: fixtureId,
+      },
+      { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
+    );
+    const after = repaired?.trim()
+      ? groundingValidator.validate({ coverLetter: repaired }, profile, jobPostingText).unsupported
+      : [];
+    const decision = evaluateGroundingRepair(
+      draft,
+      repaired,
+      before.unsupported,
+      after,
+      lengthBudget,
+      language,
+    );
+    if (!decision.accept) return { text: draft, applied: false };
+    return { text: repaired, applied: true };
+  } catch {
+    return { text: draft, applied: false };
+  }
+}
+
+/**
  * Assemble a judge-readable resume view from the rewritten profile, falling back
  * to the tailored profile's selected summaries when the rewrite call degraded.
  */
@@ -454,6 +522,7 @@ export async function generateForFixture(
   const applyWeave = options.applyWeave !== false;
   const applyStyleRewrite = options.applyStyleRewrite !== false;
   const applyLengthGovernor = options.applyLengthGovernor !== false;
+  const applyGroundingRepair = options.applyGroundingRepair !== false;
   const systemMessage = options.applyAnchor === false ? undefined : GENERATION_SYSTEM_ANCHOR;
   const start = Date.now();
   const profile = hydrateProfile(fixture);
@@ -587,7 +656,26 @@ export async function generateForFixture(
             ? lintCoverLetterLength(styleRewrite.text, lengthBudget, language).words
             : 0,
         };
-  const finalCoverLetter = postWeave ? governor.text : null;
+  const governedCoverLetter = postWeave ? governor.text : null;
+
+  // Grounding repair — guarded swap of ungrounded impact numbers for truthful
+  // qualitative statements. Runs after the governor (as in prod), so the repair
+  // cannot be re-cut and its own `underrun` guard protects the length floor.
+  const repair =
+    governedCoverLetter && applyGroundingRepair
+      ? await runGroundingRepair(
+          llm,
+          governedCoverLetter,
+          profile,
+          serializedJob,
+          fixture.jobPosting.fullText,
+          language,
+          lengthBudget,
+          fixture.id,
+        )
+      : { text: governedCoverLetter ?? '', applied: false };
+
+  const finalCoverLetter = governedCoverLetter ? repair.text : null;
   const lengthLint = finalCoverLetter
     ? lintCoverLetterLength(finalCoverLetter, lengthBudget, language)
     : null;
@@ -642,6 +730,7 @@ export async function generateForFixture(
     lengthLint,
     lengthGovernorApplied: governor.applied,
     wordsBeforeGovernor: governor.wordsBefore,
+    groundingRepairApplied: repair.applied,
     durationMs: Date.now() - start,
   };
 }
