@@ -154,6 +154,10 @@ semantic content unchanged — only **position** moves.
   all 8 downstream prompts (`cover-letter`, `resume-rewrite`, `editor-cover-letter`,
   `editor-resume`, `resume-style-rewrite`, `keyword-weave`, `style-rewrite`,
   `shorten-cover-letter`); per-call `{{...}}` vars follow the prefix.
+  > ⚠️ **Superseded 2026-08-11** (`feat/trim-revision-payloads`): the `tailoredProfile` block was
+  > removed from `keyword-weave`, `style-rewrite` and `shorten-cover-letter` as a token-cost cut,
+  > so this full prefix now spans **5** prompts. Those three share a reduced `job`-only prefix that
+  > may sit below the 1,024-token floor. See the Changelog entry.
 - [ ] Strategy-A trio (`skill-selector`, `job-facts`, `ats-keywords`) reordered — **deferred**:
   first/parallel calls with only a speculative cross-user win; `job-facts` is likely below the
   1,024-token floor, and `skill-selector` feeds the whole pipeline (hold for the Phase 3 eval).
@@ -374,6 +378,58 @@ branch. No migration, no state.
 ## Changelog
 
 _Newest first. Add an entry per PR/branch with the files touched and the measured effect._
+
+- **2026-08-11** — `feat/trim-revision-payloads`: **removed the `tailoredProfile` block from the
+  three pure-prose revision passes** — [style-rewrite.md](../../apps/api/prompts/v1/style-rewrite.md),
+  [keyword-weave.md](../../apps/api/prompts/v1/keyword-weave.md),
+  [shorten-cover-letter.md](../../apps/api/prompts/v1/shorten-cover-letter.md) — plus their call
+  sites in [generation.service.ts](../../apps/api/src/applications/generation.service.ts) and
+  [pipeline-runner.ts](../../apps/api/scripts/eval/pipeline-runner.ts). These passes edit existing
+  prose and add no facts; `keyword-weave` looked like an exception but
+  [keyword-coverage.util.ts](../../apps/api/src/applications/keyword-coverage.util.ts)
+  (`selectKeywordsToWeave`) already filters to `source: 'both'` — i.e. profile-verified — before the
+  call, so the prompt only needed to be told that. In-prose references were re-pointed at the draft.
+  `resume-style-rewrite` was **deliberately left alone**: it genuinely reads `tailoredProfile` to
+  validate facts, because its `rewrittenProfile` input is ID-keyed prose fragments with no employer,
+  title, dates or skills.
+  **Effect (MEASURED — same-session 24-fixture A/B on real Azure gpt-4.1, 2026-08-11):**
+  runs `eval-pre-trim` (main) vs `eval-post-trim` (this branch), back-to-back.
+
+  | Metric | pre (main) | post | Δ |
+  |---|---|---|---|
+  | coverage AFTER weave | 97.37% | **100%** | +2.63 |
+  | grounding pass rate | 88% | 96% | +8 |
+  | grounding mean score | 94.83 | 97.21 | +2.38 |
+  | style clean rate | 100% | 96% | −4 (1 violation) |
+  | length overrun / underrun | 0% / 4% | 0% / 0% | −4 underrun |
+  | judge overall | 5.00 | 5.00 | 0 (saturated) |
+  | mean LLM calls | 7.2 | 7.4 | +0.2 |
+  | mean input tokens | 23,521 | 23,703 | +182 |
+  | **input tokens / call** | **3,267** | **3,203** | **−64 (−2%)** |
+  | cached input share | 9% | 7% | −2 |
+
+  **Read this carefully — the raw `mean input tokens` comparison is confounded.** The two runs
+  fired a different number of conditional passes (weave 5× vs 7×; `style-rewrite` and
+  `shorten-cover-letter` fired **0× in both**), so total tokens went *up* purely because more calls
+  ran. Normalising per call is the valid comparison: **−64 input tokens/call (−2%)**.
+
+  **The saving is real but far smaller than first projected**, because the firing rates are much
+  lower than assumed: only `keyword-weave` fires with any regularity (~25% of fixtures), and the
+  other two edited prompts never fired at all across 48 generations. Scaled to a real profile
+  (~2.6k-token `tailoredProfile` vs ~1.1k in fixtures), expect **~1,100 input tokens/generation
+  ≈ €0.002/gen (~5%)** — not the 8–25% first estimated.
+
+  **Quality: no regression.** Coverage — the scorer that directly exercises the reworded
+  `keyword-weave` constraint 2 — went *up*, and the one outright weave failure in the baseline
+  (`skilled-trades-de`, 50%→50%) did not recur. Treat the grounding and style deltas as **noise**:
+  they move 1–3 fixtures on n=24, and this tracker has previously documented run-to-run grounding
+  swings of ±13 points. The rubric means moved ≤0.13 in both directions.
+
+  ⚠️ **This splits the shared prefix group.** The identical `## Input Data → tailoredProfile → Job
+  Posting` header now spans **5** prompts, not 8; the three edited prompts share a reduced prefix
+  with each other (`job` block only), which may fall under Azure's **1,024-token cache floor**.
+  Measured cached share did drop **9% → 7%**, consistent with that. It does not make the change
+  cost-negative: removed tokens are not billed at all, whereas cached tokens still cost $0.50/M.
 
 - **2026-08-02** — `feat/mistral-provider-eval` (cold-start correction): a **clean cold
   baseline** (first run of the day, 24 fixtures, real Azure gpt-4.1) measured **9% cached

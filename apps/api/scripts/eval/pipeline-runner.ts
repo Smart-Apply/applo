@@ -169,7 +169,6 @@ async function runWeavePass(
   llm: LLMService,
   draft: string,
   keywords: string[],
-  tailoredProfile: TailoredProfileDto,
   job: Record<string, unknown>,
   language: string,
   lengthBudget: number,
@@ -179,7 +178,7 @@ async function runWeavePass(
   try {
     const woven = await llm.callText(
       'v1/keyword-weave.md',
-      { draft, keywords, tailoredProfile, job, language, lengthBudget, userId: fixtureId, jobPostingId: fixtureId },
+      { draft, keywords, job, language, lengthBudget, userId: fixtureId, jobPostingId: fixtureId },
       { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     if (!woven || woven.trim().length < draft.trim().length * 0.6) {
@@ -200,7 +199,6 @@ async function runWeavePass(
 async function runStyleRewrite(
   llm: LLMService,
   draft: string,
-  tailoredProfile: TailoredProfileDto,
   job: Record<string, unknown>,
   language: string,
   fixtureId: string,
@@ -211,7 +209,7 @@ async function runStyleRewrite(
   try {
     const rewritten = await llm.callText(
       'v1/style-rewrite.md',
-      { draft, violations, tailoredProfile, job, language, userId: fixtureId, jobPostingId: fixtureId },
+      { draft, violations, job, language, userId: fixtureId, jobPostingId: fixtureId },
       { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
     );
     const decision = evaluateStyleRewrite(draft, rewritten, language);
@@ -235,7 +233,6 @@ async function runLengthGovernor(
   llm: LLMService,
   draft: string,
   atsKeywords: MatchedAtsKeywords,
-  tailoredProfile: TailoredProfileDto,
   job: Record<string, unknown>,
   language: string,
   lengthBudget: number,
@@ -257,7 +254,6 @@ async function runLengthGovernor(
         draft,
         lengthBudget,
         currentWords: lint.words,
-        tailoredProfile,
         job,
         language,
         userId: fixtureId,
@@ -499,7 +495,7 @@ export async function generateForFixture(
   const weaveKeywords = applyWeave ? selectKeywordsToWeave(atsKeywords, editor.text) : [];
   const weave =
     coverLetterDraft && weaveKeywords.length > 0
-      ? await runWeavePass(llm, editor.text, weaveKeywords, tailoredProfile, serializedJob, language, lengthBudget, fixture.id)
+      ? await runWeavePass(llm, editor.text, weaveKeywords, serializedJob, language, lengthBudget, fixture.id)
       : { text: editor.text, applied: false };
 
   // Coverage is measured on the post-weave letter (the weave's own effect),
@@ -512,7 +508,7 @@ export async function generateForFixture(
   const styleViolationsBefore = postWeave ? lintGeneratedStyle(postWeave, language).total : 0;
   const styleRewrite =
     postWeave && applyStyleRewrite
-      ? await runStyleRewrite(llm, postWeave, tailoredProfile, serializedJob, language, fixture.id)
+      ? await runStyleRewrite(llm, postWeave, serializedJob, language, fixture.id)
       : {
           text: postWeave ?? '',
           applied: false,
@@ -528,7 +524,6 @@ export async function generateForFixture(
           llm,
           styleRewrite.text,
           atsKeywords,
-          tailoredProfile,
           serializedJob,
           language,
           lengthBudget,
