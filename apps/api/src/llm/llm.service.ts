@@ -22,11 +22,18 @@ interface UsageAccumulator {
   cachedTokens: number;
 }
 
+/** Side lanes are optimizations; `main` is always the floor. */
+type LlmLane = 'main' | 'fast' | 'mid';
+
+/** Breaker wrapping a side-lane provider, dispatched from callRouted. */
+type LaneBreaker = CircuitBreaker<[string, GenerateOptions?], string>;
+
 @Injectable()
 export class LLMService {
   private readonly logger = new Logger(LLMService.name);
   private readonly circuitBreaker: CircuitBreaker<[string, any?], string>;
-  private readonly fastCircuitBreaker: CircuitBreaker<[string, any?], string> | null = null;
+  private readonly fastCircuitBreaker: LaneBreaker | null = null;
+  private readonly midCircuitBreaker: LaneBreaker | null = null;
   private readonly usageContext = new AsyncLocalStorage<UsageAccumulator>();
 
   constructor(
@@ -36,6 +43,9 @@ export class LLMService {
     @Optional()
     @Inject('LLM_FAST_PROVIDER_INSTANCE')
     private readonly fastProvider: LLMProvider | null = null,
+    @Optional()
+    @Inject('LLM_MID_PROVIDER_INSTANCE')
+    private readonly midProvider: LLMProvider | null = null,
   ) {
     // Initialize circuit breaker for LLM provider calls
     this.circuitBreaker = new CircuitBreaker(
@@ -100,7 +110,7 @@ export class LLMService {
     // breaker only means "skip the optimization".
     if (this.fastProvider) {
       this.fastCircuitBreaker = new CircuitBreaker(
-        async (prompt: string, options?: any) =>
+        async (prompt: string, options?: GenerateOptions) =>
           await this.fastProvider!.generateText(prompt, options),
         {
           timeout: this.configService.llmCircuitBreakerTimeout,
@@ -120,6 +130,35 @@ export class LLMService {
       });
       this.logger.log(
         `🛡️  Fast-lane provider active (${this.configService.llmFastProvider}, model: ${this.configService.llmFastModel ?? '(default)'})`,
+      );
+    }
+
+    // Independent breaker for the mid lane: it targets a different Azure
+    // resource than the main deployment, so its failures must not open the main
+    // or fast breaker (and vice versa). Failures fall back to the main provider
+    // in callRouted, so an open mid breaker only means "skip the optimization".
+    if (this.midProvider) {
+      this.midCircuitBreaker = new CircuitBreaker(
+        async (prompt: string, options?: GenerateOptions) =>
+          await this.midProvider!.generateText(prompt, options),
+        {
+          timeout: this.configService.llmCircuitBreakerTimeout,
+          errorThresholdPercentage: this.configService.llmCircuitBreakerErrorThreshold,
+          resetTimeout: this.configService.llmCircuitBreakerResetTimeout,
+          rollingCountTimeout: this.configService.llmCircuitBreakerRollingCountTimeout,
+          rollingCountBuckets: this.configService.llmCircuitBreakerRollingCountBuckets,
+          name: 'LLM-Mid-Provider',
+          errorFilter: (error: unknown) => isRateLimitError(error),
+        },
+      );
+      this.midCircuitBreaker.on('open', () => {
+        this.logger.error('🔴 Mid-lane circuit breaker OPEN — mid tasks fall back to the main provider.');
+      });
+      this.midCircuitBreaker.on('close', () => {
+        this.logger.log('🟢 Mid-lane circuit breaker CLOSED — mid provider recovered.');
+      });
+      this.logger.log(
+        `🛡️  Mid-lane provider active (model: ${this.configService.llmMidModel})`,
       );
     }
   }
@@ -158,23 +197,27 @@ export class LLMService {
   }
 
   /**
-   * Dispatch to the fast-lane provider (own breaker) or the main provider. A
-   * fast-lane failure falls back to the main provider WITHOUT the model
-   * override — the fast model's name is meaningless there; the task simply
-   * runs on the default model. The fast lane is an optimization, the main
+   * Dispatch to a side-lane provider (each with its own breaker) or the main
+   * provider. A side-lane failure falls back to the main provider WITHOUT the
+   * model override — that model's name is meaningless there; the task simply
+   * runs on the default model. The side lanes are an optimization, the main
    * lane is the floor.
    */
   private async callRouted(
     prompt: string,
     options: GenerateOptions,
-    useFastLane: boolean,
+    lane: LlmLane,
   ): Promise<string> {
-    if (useFastLane && this.fastCircuitBreaker) {
+    const breaker =
+      lane === 'fast' ? this.fastCircuitBreaker : lane === 'mid' ? this.midCircuitBreaker : null;
+    if (breaker) {
       try {
-        return await this.fastCircuitBreaker.fire(prompt, options);
+        return await breaker.fire(prompt, options);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        this.logger.warn(`Fast-lane call failed (${message}); falling back to the main provider`);
+        this.logger.warn(
+          `${lane}-lane call failed (${message}); falling back to the main provider`,
+        );
         const { model: _model, ...withoutModel } = options;
         return this.callProvider(prompt, withoutModel);
       }
@@ -489,20 +532,32 @@ Translated text in ${targetLangName}:`;
       : this.configService.azureOpenAIDeploymentName;
   }
 
+  /** True when the mid lane is configured and reachable. */
+  get midLaneAvailable(): boolean {
+    return this.midCircuitBreaker !== null;
+  }
+
   /**
-   * The configured fast model when it is reachable as an explicit per-call
-   * `model` override — i.e. hosted on the main provider. Undefined when
-   * LLM_FAST_MODEL is unset, or when LLM_FAST_PROVIDER points at a different
-   * provider (that model name is meaningless to the main provider; only
-   * per-task routing can reach it, via the fast-lane breaker). Callers that
-   * get undefined simply run on the default model.
+   * Resolve the model + lane for a call. An explicit per-call `model` always
+   * wins and runs on the main provider. An opt-in `midLane` request takes
+   * precedence over fast-task routing; both degrade to the main provider on its
+   * default model when their lane isn't configured.
    */
-  get fastModelOnMainProvider(): string | undefined {
-    const fastModel = this.configService.llmFastModel;
-    if (!fastModel) return undefined;
-    const fastProvider = this.configService.llmFastProvider;
-    if (fastProvider && fastProvider !== this.configService.llmProvider) return undefined;
-    return fastModel;
+  private resolveRouting(
+    templatePath: string,
+    options?: { model?: string; midLane?: boolean },
+  ): { model: string | undefined; lane: LlmLane } {
+    if (options?.model) return { model: options.model, lane: 'main' };
+
+    const midModel = this.configService.llmMidModel;
+    if (options?.midLane && this.midCircuitBreaker && midModel) {
+      this.logger.debug(`Mid-lane routing: ${templatePath} → ${midModel}`);
+      return { model: midModel, lane: 'mid' };
+    }
+
+    const fastModel = this.resolveTaskModel(templatePath);
+    if (!fastModel) return { model: undefined, lane: 'main' };
+    return { model: fastModel, lane: this.fastCircuitBreaker ? 'fast' : 'main' };
   }
 
   /**
@@ -533,7 +588,13 @@ Translated text in ${targetLangName}:`;
   async callText(
     templatePath: string,
     variables: Record<string, any>,
-    options?: { temperature?: number; maxTokens?: number; systemMessage?: string; model?: string },
+    options?: {
+      temperature?: number;
+      maxTokens?: number;
+      systemMessage?: string;
+      model?: string;
+      midLane?: boolean;
+    },
   ): Promise<string> {
     const startTime = Date.now();
     const template = await this.loadTemplate(templatePath);
@@ -548,10 +609,11 @@ Translated text in ${targetLangName}:`;
       });
     }
 
+    const { midLane: _midLane, ...callOptions } = options ?? {};
     const defaultOptions = {
       temperature: 0.5,
       maxTokens: 3000,
-      ...options,
+      ...callOptions,
     };
 
     // Prompt caching (Phase 2): a stable per-generation `prompt_cache_key`
@@ -561,14 +623,10 @@ Translated text in ${targetLangName}:`;
     // is on. See docs/implementation/PROMPT_CACHING.md.
     const promptCacheKey = this.derivePromptCacheKey(variables);
     const capturing = this.usageContext.getStore() !== undefined;
-    // Per-task model routing: mechanical extraction steps run on the cheaper
-    // LLM_FAST_MODEL when it's set (no-op otherwise). An explicit per-call
-    // `model` wins, so a caller can escalate a failed fast call to the default.
-    // When LLM_FAST_PROVIDER differs from the main provider, fast tasks go
-    // through the fast-lane breaker (fallback to main inside callRouted).
-    const routedFastModel = options?.model ? undefined : this.resolveTaskModel(templatePath);
-    const useFastLane = Boolean(routedFastModel && this.fastCircuitBreaker);
-    const taskModel = options?.model ?? routedFastModel;
+    // Lane routing: an explicit per-call `model` wins, then the opt-in mid lane,
+    // then per-task fast routing. Each side lane has its own breaker and falls
+    // back to the main provider's default model inside callRouted.
+    const { model: taskModel, lane } = this.resolveRouting(templatePath, options);
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(promptCacheKey ? { promptCacheKey } : {}),
@@ -579,7 +637,7 @@ Translated text in ${targetLangName}:`;
     };
 
     try {
-      let response = await this.callRouted(prompt, providerOptions, useFastLane);
+      let response = await this.callRouted(prompt, providerOptions, lane);
       const duration = Date.now() - startTime;
 
       // Post-process to remove LLM placeholder patterns (e.g., "[Your Name]")
@@ -609,7 +667,13 @@ Translated text in ${targetLangName}:`;
   async callJson<T>(
     templatePath: string,
     variables: Record<string, any>,
-    options?: { temperature?: number; maxTokens?: number; systemMessage?: string; model?: string },
+    options?: {
+      temperature?: number;
+      maxTokens?: number;
+      systemMessage?: string;
+      model?: string;
+      midLane?: boolean;
+    },
   ): Promise<T> {
     const startTime = Date.now();
     const template = await this.loadTemplate(templatePath);
@@ -624,10 +688,11 @@ Translated text in ${targetLangName}:`;
       });
     }
 
+    const { midLane: _midLane, ...callOptions } = options ?? {};
     const defaultOptions = {
       temperature: 0.5,
       maxTokens: 3000,
-      ...options,
+      ...callOptions,
     };
 
     // Structured outputs (#8): constrain the response by construction. A strict
@@ -640,14 +705,10 @@ Translated text in ${targetLangName}:`;
     // LOG_LLM_CALLS is on. See docs/implementation/PROMPT_CACHING.md.
     const promptCacheKey = this.derivePromptCacheKey(variables);
     const capturing = this.usageContext.getStore() !== undefined;
-    // Per-task model routing: mechanical extraction steps run on the cheaper
-    // LLM_FAST_MODEL when it's set (no-op otherwise). An explicit per-call
-    // `model` wins, so a caller can escalate a failed fast call to the default.
-    // When LLM_FAST_PROVIDER differs from the main provider, fast tasks go
-    // through the fast-lane breaker (fallback to main inside callRouted).
-    const routedFastModel = options?.model ? undefined : this.resolveTaskModel(templatePath);
-    const useFastLane = Boolean(routedFastModel && this.fastCircuitBreaker);
-    const taskModel = options?.model ?? routedFastModel;
+    // Lane routing: an explicit per-call `model` wins, then the opt-in mid lane,
+    // then per-task fast routing. Each side lane has its own breaker and falls
+    // back to the main provider's default model inside callRouted.
+    const { model: taskModel, lane } = this.resolveRouting(templatePath, options);
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(responseFormat ? { responseFormat } : {}),
@@ -659,7 +720,7 @@ Translated text in ${targetLangName}:`;
     };
 
     try {
-      const response = await this.callRouted(prompt, providerOptions, useFastLane);
+      const response = await this.callRouted(prompt, providerOptions, lane);
       const parsed = this.parseJsonResponse<T>(response, templatePath);
       const duration = Date.now() - startTime;
 

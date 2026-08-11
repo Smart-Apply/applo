@@ -80,7 +80,7 @@ export class ValidationService {
   async create(userId: string, dto: CreateValidationDto): Promise<ValidationRecord> {
     const language = dto.language?.trim() || '';
     const contentHash = await this.buildContentHash(dto);
-    const model = await this.resolveModel(userId);
+    const midLane = await this.prefersMidLane(userId);
 
     const raw = await this.llmService.callJson<ApplicationValidationResult>(
       'v1/application-validation.md',
@@ -90,7 +90,7 @@ export class ValidationService {
         jobContext: dto.jobContext ?? '',
         language,
       },
-      { temperature: 0.2, maxTokens: 2000, ...(model ? { model } : {}) },
+      { temperature: 0.2, maxTokens: 2000, ...(midLane ? { midLane: true } : {}) },
     );
 
     const result = this.normalizeValidationResult(raw);
@@ -117,20 +117,19 @@ export class ValidationService {
   }
 
   /**
-   * Free-tier checks run on the configured fast model; PRO/PREMIUM keep the
-   * flagship default as a paid quality differentiator. Returns undefined (=
-   * provider default) when no fast model is configured, so an unset
-   * LLM_FAST_MODEL behaves exactly as before.
+   * Free-tier checks run on the cheaper mid-lane model (native strict
+   * json_schema support, which this template relies on); PRO/PREMIUM keep the
+   * flagship default as a paid quality differentiator. A no-op when the mid
+   * lane isn't configured — LLMService then uses the provider default.
    */
-  private async resolveModel(userId: string): Promise<string | undefined> {
+  private async prefersMidLane(userId: string): Promise<boolean> {
     const tier = await this.subscriptionService.getUserTier(userId);
-    if (tier !== SubscriptionTier.FREE) return undefined;
+    if (tier !== SubscriptionTier.FREE) return false;
 
-    const fastModel = this.llmService.fastModelOnMainProvider;
-    if (fastModel) {
-      this.logger.debug(`Free-tier validation → fast model (${fastModel})`);
+    if (this.llmService.midLaneAvailable) {
+      this.logger.debug('Free-tier validation → mid lane');
     }
-    return fastModel;
+    return true;
   }
 
   /**

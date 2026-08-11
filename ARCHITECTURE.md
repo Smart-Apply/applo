@@ -37,7 +37,12 @@
 
 > **Pluggable providers:** Storage (Cloudflare R2 / disk), Queue (QStash / in-memory),
 > LLM (Azure OpenAI / Azure AI Foundry / Mistral / mock), and Cache (Upstash Redis / node-cache) are all selected via env.
-> Optional **per-task model routing** (`LLM_FAST_MODEL` + `LLM_FAST_PROVIDER`) sends the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector`) to a cheaper model — optionally on a **different provider** (second instance + own circuit breaker; fast-lane failures fall back to the main provider). Candidate-facing writing stays on the default model: the 2026-08-02 A/B eval rejected Mistral Small/Large for prose (fabricated metrics, half-length letters) while clearing them for extraction ([details](docs/guides/LLM_MODEL_SELECTION.md)).
+> **Three routing lanes**, each with its own circuit breaker and its own fallback to the main lane (precedence: explicit `model` → mid → fast → main):
+> - **main** (`LLM_PROVIDER` + `AZURE_OPENAI_*`, `gpt-4.1`) — candidate-facing writing, and always the floor. A side-lane failure re-dispatches here *without* the model override.
+> - **fast** (`LLM_FAST_MODEL` + optional `LLM_FAST_PROVIDER`) — per-**task** routing that sends the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector`, `interview-*`) to a cheaper model, optionally on a different provider (second instance + own breaker). The 2026-08-02 A/B eval rejected Mistral Small/Large for prose (fabricated metrics, half-length letters) while clearing them for extraction ([details](docs/guides/LLM_MODEL_SELECTION.md)).
+> - **mid** (`LLM_MID_MODEL` + optional `AZURE_OPENAI_MID_ENDPOINT`/`_API_KEY`, today `gpt-5.4-mini` in a second Azure Foundry resource) — opt-in **per call** via `{ midLane: true }` rather than by template list, because it is tier-dependent rather than task-dependent. Today: Free-tier Bewerbungs-Checks, which need native strict `json_schema` support.
+>
+> Each lane is a no-op when its model env var is unset, and a misconfigured side lane degrades to the main provider instead of crashing boot.
 
 ### Production hostnames
 

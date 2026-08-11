@@ -25,6 +25,9 @@ const PRICING_TABLE: Record<
   'gpt-4.1': { inputPerM: 2.0, cachedInputPerM: 0.5, outputPerM: 8.0 },
   'gpt-4.1-mini': { inputPerM: 0.4, cachedInputPerM: 0.1, outputPerM: 1.6 },
   'gpt-5-mini': { inputPerM: 0.25, cachedInputPerM: 0.03, outputPerM: 2.0 },
+  // Azure Foundry publishes gpt-5.4-mini in EUR (in €0.66 / cached €0.07 /
+  // out €3.96); converted at €1 = $1.08 to keep this table single-currency.
+  'gpt-5.4-mini': { inputPerM: 0.713, cachedInputPerM: 0.076, outputPerM: 4.277 },
   'mistral-small-latest': { inputPerM: 0.15, cachedInputPerM: 0.15, outputPerM: 0.6 },
   'mistral-large-latest': { inputPerM: 0.5, cachedInputPerM: 0.5, outputPerM: 1.5 },
   'mistral-medium-latest': { inputPerM: 1.5, cachedInputPerM: 1.5, outputPerM: 7.5 },

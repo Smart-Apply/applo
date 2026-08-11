@@ -203,6 +203,31 @@ export class ConfigService {
     return this.nestConfig.get('LLM_FAST_PROVIDER', { infer: true });
   }
 
+  /**
+   * Optional Azure deployment for the "mid" lane — cheaper than the flagship
+   * but with native strict json_schema support. Unset = no mid lane at all.
+   */
+  get llmMidModel(): string | undefined {
+    return this.nestConfig.get('LLM_MID_MODEL', { infer: true });
+  }
+
+  /**
+   * Azure resource ROOT hosting LLM_MID_MODEL. Must NOT be a project-scoped URL
+   * (`.../api/projects/<name>`) — that is the Agents SDK form and 404s on the
+   * `/openai/v1` path the provider builds.
+   */
+  get azureOpenAIMidEndpoint(): string | undefined {
+    return (
+      this.nestConfig.get('AZURE_OPENAI_MID_ENDPOINT', { infer: true }) ?? this.azureOpenAIEndpoint
+    );
+  }
+
+  get azureOpenAIMidApiKey(): string | undefined {
+    return (
+      this.nestConfig.get('AZURE_OPENAI_MID_API_KEY', { infer: true }) ?? this.azureOpenAIApiKey
+    );
+  }
+
   // Mistral (used when LLM_PROVIDER=mistral) — La Plateforme or Azure Foundry
   get mistralEndpoint(): string | undefined {
     return this.nestConfig.get('MISTRAL_ENDPOINT', { infer: true });

@@ -115,6 +115,17 @@ const envSchema = z.object({
   // La Plateforme). Unset = fast model runs on the main provider.
   LLM_FAST_PROVIDER: z.enum(['azure-openai', 'mistral']).optional(),
 
+  // Optional Azure deployment for the "mid" lane — cheaper than the flagship
+  // but with native strict json_schema support (e.g. gpt-5.4-mini / -staging /
+  // -local). Unset = no mid lane; every caller keeps the default model.
+  LLM_MID_MODEL: z.string().optional(),
+  // Azure resource ROOT hosting LLM_MID_MODEL, e.g.
+  // https://foundry-applo-prod.services.ai.azure.com — NOT a project-scoped URL
+  // (.../api/projects/<name>), which is the Agents SDK form and 404s on
+  // /openai/v1. Unset = the mid model lives in the AZURE_OPENAI_* resource.
+  AZURE_OPENAI_MID_ENDPOINT: z.string().optional(),
+  AZURE_OPENAI_MID_API_KEY: z.string().optional(),
+
   // Mistral (used when LLM_PROVIDER=mistral) — La Plateforme or Azure Foundry.
   MISTRAL_ENDPOINT: z.string().default('https://api.mistral.ai/v1'),
   MISTRAL_API_KEY: z.string().optional(),

@@ -32,6 +32,37 @@ export function createFastProvider(
   }
 }
 
+/**
+ * Second Azure instance for the mid lane (LLM_MID_MODEL), which may live in a
+ * different Azure resource than the main deployment. Endpoint and key fall back
+ * to AZURE_OPENAI_* so deploying the mid model into the main resource only
+ * needs LLM_MID_MODEL. Null when unset.
+ */
+export function createMidProvider(
+  configService: ConfigService,
+  httpService: HttpService,
+): AzureOpenAIProvider | null {
+  const midModel = configService.llmMidModel;
+  if (!midModel) {
+    return null;
+  }
+  // Same contract as the fast lane: a misconfigured mid lane (e.g. no endpoint
+  // or key) must degrade to main-lane routing, never crash boot.
+  try {
+    return new AzureOpenAIProvider(httpService, configService, {
+      endpoint: configService.azureOpenAIMidEndpoint,
+      apiKey: configService.azureOpenAIMidApiKey,
+      deploymentName: midModel,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    new Logger('LLMModule').warn(
+      `Mid-lane model "${midModel}" unavailable (${message}); mid tasks stay on the main provider`,
+    );
+    return null;
+  }
+}
+
 @Module({
   imports: [HttpModule],
   providers: [
@@ -70,6 +101,14 @@ export function createFastProvider(
     {
       provide: 'LLM_FAST_PROVIDER_INSTANCE',
       useFactory: createFastProvider,
+      inject: [ConfigService, HttpService],
+    },
+    // Second Azure instance for LLM_MID_MODEL, which may live in a different
+    // Azure resource than the main deployment. Null when LLM_MID_MODEL is unset
+    // — LLMService then keeps every caller on the main provider as before.
+    {
+      provide: 'LLM_MID_PROVIDER_INSTANCE',
+      useFactory: createMidProvider,
       inject: [ConfigService, HttpService],
     },
     LLMService,
