@@ -145,7 +145,15 @@ Sincerely,
   finished letter is measured against this band and **both edges are defects**: under
   {{lengthTargetMin}} reads thin and leaves your strongest evidence unsaid, over
   {{lengthBudget}} gets cut.
-- Aim for the **upper half** of that band. A short letter is not a safer letter.
+- Aim for the **upper half** of that band — but reach it with **more evidence, never more
+  words about the same thing**. In order of preference:
+  1. another concrete responsibility, setting or result from `tailoredProfile`
+  2. a sharper link between a real experience and a stated requirement of the posting
+  3. a second company-specific reference taken from the posting
+- **Never pad to hit the minimum.** Do not invent numbers, metrics, employers, tools or
+  dates, and do not stretch with adverbs, restatement or filler transitions. If the profile
+  genuinely runs out of material, stop short of the band — the band is a target, never a
+  licence to fabricate.
 - **3-4 paragraphs** of body content
 - Concise and impactful
 
@@ -223,7 +231,8 @@ These patterns sound robotic and unnatural. **NEVER use them:**
 1. If no relevant projects exist → focus body paragraph 2 on additional experiences instead
 2. If experience lacks specific achievements → describe responsibilities without inventing metrics
 3. **NEVER generate placeholder content** like "various projects" or "multiple achievements"
-4. Better to have a shorter, genuine letter than a longer fabricated one
+4. Better to have a shorter, genuine letter than a longer fabricated one — the length band
+   never overrides this rule
 
 ---
 

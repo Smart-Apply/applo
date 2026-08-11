@@ -78,7 +78,9 @@ Silently check the draft against each point and fix what fails:
 10. **Salary / start date:** Keep them ONLY if the posting explicitly asks. Otherwise remove.
 11. **Tone & length:** Professional, confident, specific. Keep the letter inside
     {{lengthTargetMin}}–{{lengthBudget}} words; cut filler sentences that add no information,
-    but never trim a letter that is already at or below {{lengthTargetMin}}.
+    but never trim a letter that is already at or below {{lengthTargetMin}}. Never pad a short
+    letter to reach the band — you may only lengthen by surfacing evidence already present in
+    `tailoredProfile`, never by inventing detail or adding filler.
 
 ---
 
