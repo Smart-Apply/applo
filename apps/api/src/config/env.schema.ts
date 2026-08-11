@@ -91,8 +91,8 @@ const envSchema = z.object({
   AZURE_OPENAI_REALTIME_ENDPOINT: z.string().optional(),
   AZURE_OPENAI_REALTIME_API_KEY: z.string().optional(),
   // Deployment name, not model name — one per environment
-  // (gpt-realtime-mini / -staging / -local).
-  AZURE_OPENAI_REALTIME_DEPLOYMENT: z.string().default('gpt-realtime-mini'),
+  // (gpt-realtime-2.1-mini / -staging / -local).
+  AZURE_OPENAI_REALTIME_DEPLOYMENT: z.string().default('gpt-realtime-2.1-mini'),
   AZURE_OPENAI_REALTIME_VOICE: z.string().default('alloy'),
   // Per-session hard ceiling (minutes). Azure caps a realtime session at 60.
   VOICE_INTERVIEW_MAX_SESSION_MINUTES: z.string().default('15'),

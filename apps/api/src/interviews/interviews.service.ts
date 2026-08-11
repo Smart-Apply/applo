@@ -422,19 +422,21 @@ export class InterviewsService {
     });
 
     if (dto.usage) {
-      // gpt-realtime-mini list rates (USD/1M): audio $10 in / $20 out,
-      // text $0.60 in / $2.40 out, cached $0.30. Telemetry to replace the
-      // assumed $/min figure with measured cost; never quota enforcement.
+      // gpt-realtime-2.1-mini rates, converted from the EUR/1M price list at
+      // EUR 1 = USD 1.08: audio $9.49 in / $18.99 out, text $0.57 in / $2.28
+      // out. `cachedInputTokens` is a single bucket, so it takes the audio
+      // cached rate ($0.29) — audio dominates a voice session; text cached is
+      // $0.06. Telemetry only; never quota enforcement.
       const u = dto.usage;
       const estUsd =
-        (u.audioInputTokens * 10 +
-          u.audioOutputTokens * 20 +
-          u.textInputTokens * 0.6 +
-          u.textOutputTokens * 2.4 +
-          u.cachedInputTokens * 0.3) /
+        (u.audioInputTokens * 9.49 +
+          u.audioOutputTokens * 18.99 +
+          u.textInputTokens * 0.57 +
+          u.textOutputTokens * 2.28 +
+          u.cachedInputTokens * 0.29) /
         1_000_000;
       this.logger.log(
-        `Voice usage (session ${sessionId}): ${duration}s, audio ${u.audioInputTokens}/${u.audioOutputTokens}, text ${u.textInputTokens}/${u.textOutputTokens}, cached ${u.cachedInputTokens} — est. $${estUsd.toFixed(4)} (gpt-realtime-mini rates)`,
+        `Voice usage (session ${sessionId}): ${duration}s, audio ${u.audioInputTokens}/${u.audioOutputTokens}, text ${u.textInputTokens}/${u.textOutputTokens}, cached ${u.cachedInputTokens} — est. $${estUsd.toFixed(4)} (gpt-realtime-2.1-mini rates)`,
       );
     }
 
