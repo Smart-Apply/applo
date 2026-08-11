@@ -57,6 +57,7 @@ With `LLM_PROVIDER=mock` (or unset) the harness **skips gracefully** (exit 0).
 | `--no-anchor` | off | Omit the shared `GENERATION_SYSTEM_ANCHOR` system message from the cover-letter + resume-rewrite calls. Use for a clean A/B of the system/user split. |
 | `--no-style-rewrite` | off | Skip BOTH style-rewrite "teeth" passes (cover letter + résumé). Use for an A/B of the deterministic-linter enforcement step. |
 | `--no-length-governor` | off | Skip the guarded length-governor shorten pass. Use to measure the raw overrun rate the base prompts produce. |
+| `--prose-mid` | off | Route the candidate-facing **writing + revision** calls (`cover-letter`, `resume-rewrite`, `editor-*`, `keyword-weave`, `style-rewrite`, `resume-style-rewrite`, `shorten-cover-letter`) through the **mid lane** (`LLM_MID_MODEL`) for a prose-model A/B. Extraction stays on the fast lane and the **judge stays on the main model**, so the challenger never grades itself. Errors out when `LLM_MID_MODEL` is unset — otherwise both arms would silently be identical. |
 | `--out=PATH` | `results/eval-<tag>-<ts>.json` | Override the output path. |
 
 ## What it measures
