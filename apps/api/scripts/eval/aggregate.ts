@@ -63,6 +63,16 @@ export interface FixtureGroundingSummary {
   unsupportedValues: string[];
   /** True when the guarded grounding-repair pass replaced the letter. */
   repairApplied?: boolean;
+  /** True when unsupported cover-letter figures caused the repair call to run. */
+  repairAttempted?: boolean;
+  /** True when the cover-letter repair call failed and fallback kept the draft. */
+  repairFailed?: boolean;
+  /** True when the guarded grounding-repair pass replaced the résumé payload. */
+  resumeRepairApplied?: boolean;
+  /** True when unsupported résumé figures caused the repair call to run. */
+  resumeRepairAttempted?: boolean;
+  /** True when the résumé repair call failed and fallback kept the payload. */
+  resumeRepairFailed?: boolean;
 }
 
 export interface FixtureCoverageSummary {
@@ -119,6 +129,10 @@ export interface FixtureResult {
   id: string;
   profession: string;
   language: EvalLanguage;
+  /** One-based repeat number when --repeat is used. */
+  repeat?: number;
+  /** Stable repeat tag, e.g. "candidate-r2". */
+  repeatTag?: string;
   judge?: JudgeResult;
   grounding?: FixtureGroundingSummary;
   coverage?: FixtureCoverageSummary;
@@ -152,6 +166,28 @@ export interface LanguageBreakdown {
   groundingPassRate: number;
 }
 
+export interface EvalRepeatSummary {
+  tag: string;
+  fixtureCount: number;
+  okCount: number;
+  errorCount: number;
+  overallMean: number;
+  grounding: {
+    totalClaims: number;
+    unsupportedClaims: number;
+    claimRate: number | null;
+    claimRateCi95: { lower: number; upper: number } | null;
+    passRate: number;
+    meanScore: number;
+  };
+  meanWords: number;
+}
+
+export interface MetricRange {
+  min: number;
+  max: number;
+}
+
 export interface EvalSummary {
   generatedAt: string;
   provider: string;
@@ -164,11 +200,29 @@ export interface EvalSummary {
   rubricMeans: Record<RubricDimension, number>;
   overallMean: number;
   grounding: {
+    /** Numeric claims checked across all successful fixtures. */
+    totalClaims: number;
+    /** Unsupported numeric claims across all successful fixtures. */
+    unsupportedClaims: number;
+    /** Unsupported claims as a percentage of all checked claims. */
+    claimRate: number | null;
+    /** Wilson score interval for claimRate, expressed as percentages. */
+    claimRateCi95: { lower: number; upper: number } | null;
     passRate: number;
     meanScore: number;
     fixturesWithUnsupported: number;
     /** Fixtures where the guarded grounding-repair pass replaced the letter. */
     repairAppliedCount: number;
+    /** Fixtures where unsupported cover-letter figures caused the repair call to run. */
+    repairAttemptedCount: number;
+    /** Fixtures where the cover-letter repair provider call failed. */
+    repairFailedCount: number;
+    /** Fixtures where the guarded grounding-repair pass replaced the résumé payload. */
+    resumeRepairAppliedCount: number;
+    /** Fixtures where unsupported résumé figures caused the repair call to run. */
+    resumeRepairAttemptedCount: number;
+    /** Fixtures where the résumé repair provider call failed. */
+    resumeRepairFailedCount: number;
   };
   coverage: {
     /** Fixtures that had at least one priority-1 profile-supported keyword. */
@@ -240,6 +294,17 @@ export interface EvalSummary {
       fastModel?: string;
     };
   };
+  repeats?: {
+    count: number;
+    summaries: EvalRepeatSummary[];
+    spread: {
+      overallMean: MetricRange;
+      groundingClaimRate: MetricRange | null;
+      groundingPassRate: MetricRange;
+      groundingMeanScore: MetricRange;
+      meanWords: MetricRange;
+    };
+  };
   byLanguage: Record<string, LanguageBreakdown>;
   results: FixtureResult[];
 }
@@ -247,6 +312,36 @@ export interface EvalSummary {
 function mean(values: number[]): number {
   if (values.length === 0) return 0;
   return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
+}
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function metricRange(values: number[]): MetricRange {
+  if (values.length === 0) return { min: 0, max: 0 };
+  return { min: Math.min(...values), max: Math.max(...values) };
+}
+
+/** Wilson score interval for a binomial proportion, returned as percentages. */
+export function wilsonInterval95(successes: number, trials: number): {
+  lower: number;
+  upper: number;
+} | null {
+  if (trials === 0) return null;
+
+  const z = 1.959963984540054;
+  const proportion = successes / trials;
+  const zSquared = z ** 2;
+  const denominator = 1 + zSquared / trials;
+  const centre = proportion + zSquared / (2 * trials);
+  const margin =
+    z * Math.sqrt((proportion * (1 - proportion) + zSquared / (4 * trials)) / trials);
+
+  return {
+    lower: round2(((centre - margin) / denominator) * 100),
+    upper: round2(((centre + margin) / denominator) * 100),
+  };
 }
 
 export function summarize(
@@ -268,6 +363,24 @@ export function summarize(
   const groundingMeanScore = mean(ok.map((r) => r.grounding!.score));
   const fixturesWithUnsupported = ok.filter((r) => r.grounding!.unsupportedCount > 0).length;
   const groundingRepairAppliedCount = ok.filter((r) => r.grounding!.repairApplied).length;
+  const groundingRepairAttemptedCount = ok.filter(
+    (r) => r.grounding!.repairAttempted,
+  ).length;
+  const groundingRepairFailedCount = ok.filter((r) => r.grounding!.repairFailed).length;
+  const resumeGroundingRepairAppliedCount = ok.filter(
+    (r) => r.grounding!.resumeRepairApplied,
+  ).length;
+  const resumeGroundingRepairAttemptedCount = ok.filter(
+    (r) => r.grounding!.resumeRepairAttempted,
+  ).length;
+  const resumeGroundingRepairFailedCount = ok.filter(
+    (r) => r.grounding!.resumeRepairFailed,
+  ).length;
+  const totalClaims = ok.reduce((sum, r) => sum + r.grounding!.totalChecked, 0);
+  const unsupportedClaims = ok.reduce((sum, r) => sum + r.grounding!.unsupportedCount, 0);
+  const claimRate =
+    totalClaims === 0 ? null : round2((unsupportedClaims / totalClaims) * 100);
+  const claimRateCi95 = wilsonInterval95(unsupportedClaims, totalClaims);
 
   // Coverage (#6) — only over fixtures that actually had priority-1 supported keywords.
   const withWanted = ok.filter((r) => r.coverage && r.coverage.wanted > 0);
@@ -386,10 +499,19 @@ export function summarize(
     rubricMeans,
     overallMean,
     grounding: {
+      totalClaims,
+      unsupportedClaims,
+      claimRate,
+      claimRateCi95,
       passRate: groundingPassRate,
       meanScore: groundingMeanScore,
       fixturesWithUnsupported,
       repairAppliedCount: groundingRepairAppliedCount,
+      repairAttemptedCount: groundingRepairAttemptedCount,
+      repairFailedCount: groundingRepairFailedCount,
+      resumeRepairAppliedCount: resumeGroundingRepairAppliedCount,
+      resumeRepairAttemptedCount: resumeGroundingRepairAttemptedCount,
+      resumeRepairFailedCount: resumeGroundingRepairFailedCount,
     },
     coverage,
     style,
@@ -398,6 +520,67 @@ export function summarize(
     byLanguage,
     results,
   };
+}
+
+/** Pool repeated runs while retaining compact per-repeat figures and spread. */
+export function summarizeRepeats(
+  repeatResults: FixtureResult[][],
+  meta: { provider: string; tag: string; judgeProvider: string; model?: string; fastModel?: string },
+): EvalSummary {
+  const summaries = repeatResults.map((results, index): EvalRepeatSummary => {
+    const repeatSummary = summarize(results, { ...meta, tag: `${meta.tag}-r${index + 1}` });
+    return {
+      tag: repeatSummary.tag,
+      fixtureCount: repeatSummary.fixtureCount,
+      okCount: repeatSummary.okCount,
+      errorCount: repeatSummary.errorCount,
+      overallMean: repeatSummary.overallMean,
+      grounding: {
+        totalClaims: repeatSummary.grounding.totalClaims,
+        unsupportedClaims: repeatSummary.grounding.unsupportedClaims,
+        claimRate: repeatSummary.grounding.claimRate,
+        claimRateCi95: repeatSummary.grounding.claimRateCi95,
+        passRate: repeatSummary.grounding.passRate,
+        meanScore: repeatSummary.grounding.meanScore,
+      },
+      meanWords: repeatSummary.length.meanWords,
+    };
+  });
+  const failedRepeat = summaries.find((summary) => summary.okCount === 0);
+  if (failedRepeat) {
+    throw new Error(
+      `${failedRepeat.tag} produced no successful fixtures ` +
+        `(${failedRepeat.errorCount}/${failedRepeat.fixtureCount} errored)`,
+    );
+  }
+
+  const taggedResults = repeatResults.flatMap((results, index) => {
+    const repeat = index + 1;
+    const repeatTag = `${meta.tag}-r${repeat}`;
+    return results.map((result) => ({ ...result, repeat, repeatTag }));
+  });
+  const pooled = summarize(taggedResults, meta);
+
+  pooled.repeats = {
+    count: summaries.length,
+    summaries,
+    spread: {
+      overallMean: metricRange(summaries.map((summary) => summary.overallMean)),
+      groundingClaimRate: (() => {
+        const rates = summaries.flatMap((summary) =>
+          summary.grounding.claimRate === null ? [] : [summary.grounding.claimRate],
+        );
+        return rates.length === 0 ? null : metricRange(rates);
+      })(),
+      groundingPassRate: metricRange(summaries.map((summary) => summary.grounding.passRate)),
+      groundingMeanScore: metricRange(
+        summaries.map((summary) => summary.grounding.meanScore),
+      ),
+      meanWords: metricRange(summaries.map((summary) => summary.meanWords)),
+    },
+  };
+
+  return pooled;
 }
 
 /** Render a human-readable console report. */
@@ -424,10 +607,66 @@ export function formatReport(summary: EvalSummary): string {
   lines.push(`    ${'OVERALL'.padEnd(30)} ${summary.overallMean.toFixed(2)}`);
   lines.push('');
   lines.push('  Grounding (#7, deterministic):');
-  lines.push(`    pass rate (fully grounded)     ${summary.grounding.passRate}%`);
+  const claimRate = summary.grounding.claimRate;
+  const claimRateCi95 = summary.grounding.claimRateCi95;
+  lines.push(
+    claimRate === null || claimRateCi95 === null
+      ? '    unsupported claim rate        n/a (no impact numbers checked)'
+      : `    unsupported claim rate        ${claimRate.toFixed(2)}% ` +
+          `(95% CI ${claimRateCi95.lower.toFixed(2)}–${claimRateCi95.upper.toFixed(2)}%)`,
+  );
+  lines.push(
+    `    unsupported claims            ${summary.grounding.unsupportedClaims} / ` +
+      `${summary.grounding.totalClaims}`,
+  );
+  lines.push(`    fixture pass rate (secondary)  ${summary.grounding.passRate}%`);
   lines.push(`    mean grounding score           ${summary.grounding.meanScore.toFixed(2)}`);
   lines.push(`    fixtures with unsupported #s   ${summary.grounding.fixturesWithUnsupported}`);
-  lines.push(`    grounding repair applied       ${summary.grounding.repairAppliedCount} fixtures`);
+  lines.push(
+    `    cover repair attempted         ${summary.grounding.repairAttemptedCount} fixtures`,
+  );
+  lines.push(`    cover repair accepted          ${summary.grounding.repairAppliedCount} fixtures`);
+  lines.push(`    cover repair failed            ${summary.grounding.repairFailedCount} fixtures`);
+  lines.push(
+    `    résumé repair attempted        ${summary.grounding.resumeRepairAttemptedCount} fixtures`,
+  );
+  lines.push(
+    `    résumé repair accepted         ${summary.grounding.resumeRepairAppliedCount} fixtures`,
+  );
+  lines.push(
+    `    résumé repair failed           ${summary.grounding.resumeRepairFailedCount} fixtures`,
+  );
+  if (summary.repeats && summary.repeats.count > 1) {
+    lines.push('');
+    lines.push(`  Repeat stability (${summary.repeats.count} runs, pooled above):`);
+    for (const repeat of summary.repeats.summaries) {
+      const repeatClaimRate =
+        repeat.grounding.claimRate === null
+          ? 'n/a'
+          : `${repeat.grounding.claimRate.toFixed(2)}%`;
+      lines.push(
+        `    ${repeat.tag.padEnd(24)} claims=${repeat.grounding.unsupportedClaims}/` +
+          `${repeat.grounding.totalClaims} (${repeatClaimRate})  ` +
+          `fixture=${repeat.grounding.passRate}%  overall=${repeat.overallMean.toFixed(2)}  ` +
+          `words=${repeat.meanWords.toFixed(0)}  errors=${repeat.errorCount}`,
+      );
+    }
+    const spread = summary.repeats.spread;
+    lines.push(
+      spread.groundingClaimRate === null
+        ? '    claim-rate spread             n/a'
+        : `    claim-rate spread             ${spread.groundingClaimRate.min.toFixed(2)}–` +
+            `${spread.groundingClaimRate.max.toFixed(2)}%`,
+    );
+    lines.push(
+      `    fixture-pass spread           ${spread.groundingPassRate.min.toFixed(0)}–` +
+        `${spread.groundingPassRate.max.toFixed(0)}%`,
+    );
+    lines.push(
+      `    overall-mean spread           ${spread.overallMean.min.toFixed(2)}–` +
+        `${spread.overallMean.max.toFixed(2)}`,
+    );
+  }
   lines.push('');
   lines.push('  Priority-1 keyword coverage (#6, deterministic):');
   lines.push(`    fixtures with supported gaps   ${summary.coverage.fixturesWithWanted}`);
@@ -487,8 +726,9 @@ export function formatReport(summary: EvalSummary): string {
   lines.push('');
   lines.push('  Per fixture (overall | grounding | flags):');
   for (const r of summary.results) {
+    const fixtureLabel = r.repeat === undefined ? r.id : `${r.id}[r${r.repeat}]`;
     if (r.error) {
-      lines.push(`    ✖ ${r.id.padEnd(22)} ERROR: ${r.error}`);
+      lines.push(`    ✖ ${fixtureLabel.padEnd(22)} ERROR: ${r.error}`);
       continue;
     }
     const flags = [
@@ -497,7 +737,8 @@ export function formatReport(summary: EvalSummary): string {
       r.coverage?.weaveApplied ? `weave:${r.coverage.weaveKeywords.join('/')}` : '',
       r.styleRewriteApplied ? 'cl-style-fixed' : '',
       r.resumeStyleRewriteApplied ? 'cv-style-fixed' : '',
-      r.grounding?.repairApplied ? 'grounding-fixed' : '',
+      r.grounding?.repairApplied ? 'cl-grounding-fixed' : '',
+      r.grounding?.resumeRepairApplied ? 'cv-grounding-fixed' : '',
       r.resumeRewriteSucceeded ? '' : 'rewrite-degraded',
       r.grounding && r.grounding.unsupportedCount > 0
         ? `unsupported:${r.grounding.unsupportedValues.join('/')}`
@@ -515,7 +756,7 @@ export function formatReport(summary: EvalSummary): string {
       ? `C=${r.coverage.beforeRate}→${r.coverage.afterRate}% `
       : '';
     lines.push(
-      `    ✓ ${r.id.padEnd(22)} ` +
+      `    ✓ ${fixtureLabel.padEnd(22)} ` +
         `O=${r.judge!.overall} ` +
         `G=${r.grounding!.score}% ` +
         `${cov}` +

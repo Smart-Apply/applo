@@ -24,9 +24,17 @@ import {
   type MatchedAtsKeywords,
   type CoverageReport,
 } from '../../src/applications/keyword-coverage.util';
-import { isValidResumeEdit, countResumeStyleViolations, evaluateResumeStyleRewrite } from '../../src/applications/resume-editor.util';
+import {
+  isValidResumeEdit,
+  countResumeStyleViolations,
+  evaluateResumeStyleRewrite,
+  extractResumeProse,
+} from '../../src/applications/resume-editor.util';
 import { GroundingValidatorService } from '../../src/applications/grounding/grounding-validator.service';
-import { evaluateGroundingRepair } from '../../src/applications/grounding/grounding-repair.util';
+import {
+  evaluateGroundingRepair,
+  evaluateResumeGroundingRepair,
+} from '../../src/applications/grounding/grounding-repair.util';
 import {
   buildSalutation,
   normalizeJobFacts,
@@ -116,6 +124,16 @@ export interface GeneratedDocuments {
   wordsBeforeGovernor: number;
   /** True when the guarded grounding-repair pass replaced a letter carrying ungrounded numbers. */
   groundingRepairApplied: boolean;
+  /** True when unsupported cover-letter numbers caused the repair LLM call to fire. */
+  groundingRepairAttempted: boolean;
+  /** True when the cover-letter repair call failed and production fallback kept the draft. */
+  groundingRepairFailed: boolean;
+  /** True when the guarded grounding-repair pass replaced a résumé carrying ungrounded numbers. */
+  resumeGroundingRepairApplied: boolean;
+  /** True when unsupported résumé numbers caused the repair LLM call to fire. */
+  resumeGroundingRepairAttempted: boolean;
+  /** True when the résumé repair call failed and production fallback kept the payload. */
+  resumeGroundingRepairFailed: boolean;
   durationMs: number;
 }
 
@@ -139,9 +157,9 @@ export interface GenerateOptions {
    */
   applyLengthGovernor?: boolean;
   /**
-   * When false, skip the guarded grounding-repair pass — for a clean A/B of
-   * the deterministic anti-fabrication enforcement (and to measure the raw
-   * unsupported-number rate the base prompts produce).
+  * When false, skip both guarded grounding-repair passes — for a clean A/B of
+  * the deterministic anti-fabrication enforcement (and to measure the raw
+  * unsupported-number rate the base prompts produce).
    */
   applyGroundingRepair?: boolean;
 }
@@ -158,7 +176,8 @@ const PROSE_TEMPLATE_MARKERS = [
   'editor-',
   'style-rewrite',
   'keyword-weave',
-  'fix-unsupported-numbers',
+  'fix-unsupported-numbers.md',
+  'fix-unsupported-numbers-resume.md',
 ];
 
 /**
@@ -341,7 +360,9 @@ async function runLengthGovernor(
  * qualitative statements, keeping the pre-repair draft unless
  * `evaluateGroundingRepair` accepts the candidate (not gutted, salutation
  * verbatim, strictly fewer unsupported numbers, no NEW fabrication, style not
- * regressed, above the length floor). Skips the LLM call when fully grounded.
+ * regressed, above the length floor). Skips the LLM call when fully grounded;
+ * provider failures mirror production by keeping the draft and setting failure
+ * telemetry rather than resampling the whole stochastic generation chain.
  */
 async function runGroundingRepair(
   llm: LLMService,
@@ -352,9 +373,11 @@ async function runGroundingRepair(
   language: string,
   lengthBudget: number,
   fixtureId: string,
-): Promise<{ text: string; applied: boolean }> {
+): Promise<{ text: string; attempted: boolean; applied: boolean; failed: boolean }> {
   const before = groundingValidator.validate({ coverLetter: draft }, profile, jobPostingText);
-  if (before.unsupported.length === 0) return { text: draft, applied: false };
+  if (before.unsupported.length === 0) {
+    return { text: draft, attempted: false, applied: false, failed: false };
+  }
 
   try {
     const repaired = await llm.callText(
@@ -380,10 +403,12 @@ async function runGroundingRepair(
       lengthBudget,
       language,
     );
-    if (!decision.accept) return { text: draft, applied: false };
-    return { text: repaired, applied: true };
+    if (!decision.accept) {
+      return { text: draft, attempted: true, applied: false, failed: false };
+    }
+    return { text: repaired, attempted: true, applied: true, failed: false };
   } catch {
-    return { text: draft, applied: false };
+    return { text: draft, attempted: true, applied: false, failed: true };
   }
 }
 
@@ -508,6 +533,66 @@ async function runResumeStyleRewrite(
     return { profile: edited, applied: true, before: decision.before, after: decision.after };
   } catch {
     return { profile: rewritten, applied: false, before: before.total, after: before.total };
+  }
+}
+
+/**
+ * Replicates `runResumeGroundingRepairPass`: repair unsupported résumé figures
+ * with an ID-preserving JSON candidate, keeping the pre-repair payload unless
+ * the deterministic guard accepts it. Skips the LLM call when already clean;
+ * provider failures mirror production fallback and remain visible in telemetry.
+ */
+async function runResumeGroundingRepair(
+  llm: LLMService,
+  rewritten: RewrittenProfileDto,
+  tailoredProfile: TailoredProfileDto,
+  profile: ProfileWithRelations,
+  job: Record<string, unknown>,
+  language: string,
+  fixtureId: string,
+): Promise<{
+  profile: RewrittenProfileDto;
+  attempted: boolean;
+  applied: boolean;
+  failed: boolean;
+}> {
+  const before = groundingValidator.validate({ resume: extractResumeProse(rewritten) }, profile);
+  if (before.unsupported.length === 0) {
+    return { profile: rewritten, attempted: false, applied: false, failed: false };
+  }
+
+  try {
+    const repaired = await llm.callJson<unknown>(
+      'v1/fix-unsupported-numbers-resume.md',
+      {
+        rewrittenProfile: rewritten,
+        tailoredProfile,
+        job,
+        unsupported: before.unsupported,
+        language,
+        userId: fixtureId,
+        jobPostingId: fixtureId,
+      },
+      { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
+    );
+    const validCandidate = isValidResumeEdit(rewritten, repaired) ? repaired : null;
+    const after = validCandidate
+      ? groundingValidator.validate({ resume: extractResumeProse(validCandidate) }, profile)
+          .unsupported
+      : [];
+    const decision = evaluateResumeGroundingRepair(
+      rewritten,
+      repaired,
+      before.unsupported,
+      after,
+      language,
+    );
+    if (!decision.accept || !validCandidate) {
+      return { profile: rewritten, attempted: true, applied: false, failed: false };
+    }
+    return { profile: validCandidate, attempted: true, applied: true, failed: false };
+  } catch {
+    return { profile: rewritten, attempted: true, applied: false, failed: true };
   }
 }
 
@@ -673,7 +758,12 @@ export async function generateForFixture(
           lengthBudget,
           fixture.id,
         )
-      : { text: governedCoverLetter ?? '', applied: false };
+      : {
+          text: governedCoverLetter ?? '',
+          attempted: false,
+          applied: false,
+          failed: false,
+        };
 
   const finalCoverLetter = governedCoverLetter ? repair.text : null;
   const lengthLint = finalCoverLetter
@@ -691,9 +781,29 @@ export async function generateForFixture(
       ? await runResumeStyleRewrite(llm, resumeEditor.profile, tailoredProfile, serializedJob, language, fixture.id)
       : { profile: resumeEditor.profile, applied: false, before: 0, after: 0 };
 
+  // Résumé grounding repair — runs after résumé style rewrite and before the
+  // final grounding input is assembled, matching both production paths.
+  const resumeRepair =
+    resumeStyle.profile && applyGroundingRepair
+      ? await runResumeGroundingRepair(
+          llm,
+          resumeStyle.profile,
+          tailoredProfile,
+          profile,
+          serializedJob,
+          language,
+          fixture.id,
+        )
+      : {
+          profile: resumeStyle.profile,
+          attempted: false,
+          applied: false,
+          failed: false,
+        };
+
   const resumeView = assembleResumeView(
     tailoredProfile,
-    resumeStyle.profile,
+    resumeRepair.profile,
     fixture.profile.summary,
   );
 
@@ -731,6 +841,11 @@ export async function generateForFixture(
     lengthGovernorApplied: governor.applied,
     wordsBeforeGovernor: governor.wordsBefore,
     groundingRepairApplied: repair.applied,
+    groundingRepairAttempted: repair.attempted,
+    groundingRepairFailed: repair.failed,
+    resumeGroundingRepairApplied: resumeRepair.applied,
+    resumeGroundingRepairAttempted: resumeRepair.attempted,
+    resumeGroundingRepairFailed: resumeRepair.failed,
     durationMs: Date.now() - start,
   };
 }

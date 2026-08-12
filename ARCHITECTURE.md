@@ -166,9 +166,11 @@ User → Frontend (Next.js)
 │    clichés/hedging (guarded, teeth)  │
 │ 6. Length governor: shorten pass     │
 │    when over word budget (guarded)   │
-│ 7. Grounding check: flag fabricated  │
-│    impact numbers vs. the profile    │
-│ 8. Style + length check: flag AI     │
+│ 7. Grounding repair: guarded local   │
+│    fixes for unsupported figures in  │
+│    the cover letter AND résumé       │
+│ 8. Grounding + style/length checks:  │
+│    flag any residual unsupported #s, │
 │    clichés, hedging, word-budget     │
 │    overruns; log-only                │
 └──────────────────────────────────────┘
@@ -251,10 +253,18 @@ profession-diverse German + English golden fixtures, scores each output with an
 **LLM-as-judge** rubric (action-verb bullets, quantified achievements, targeted
 summary, cover-letter personalization, no clichés/Konjunktiv, language
 correctness) and the deterministic **grounding validator**, and writes a
-timestamped report. Run `pnpm --filter @applo/api eval:llm` to capture a
-baseline before a prompt change and re-run after to prove the lift. The roadmap +
-recorded baselines live in
-[docs/implementation/LLM_OUTPUT_QUALITY.md](docs/implementation/LLM_OUTPUT_QUALITY.md).
+timestamped report. Unsupported claims are pooled across fixtures and reported
+with a descriptive Wilson 95% interval over distinct checked values; runs with
+no checked values report `n/a`, and fixture pass-rate remains a secondary
+historical metric. `--repeat=N` pools stochastic repeats while retaining their
+spread. `pnpm --filter @applo/api eval:compare path/to/a.json path/to/b.json`
+matches generated observations and clusters repeats by fixture for inference
+(exact McNemar for all-repeats-clean grounding plus paired continuous intervals
+over per-fixture means). Run `pnpm --filter @applo/api eval:llm` to capture a baseline before
+a prompt change and re-run after to prove the lift. The roadmap + recorded
+baselines live in [docs/implementation/LLM_OUTPUT_QUALITY.md](docs/implementation/LLM_OUTPUT_QUALITY.md);
+grounding-specific decisions live in
+[docs/implementation/GROUNDING_HARDENING.md](docs/implementation/GROUNDING_HARDENING.md).
 
 ## 🗄️ Database Schema (Prisma 6)
 

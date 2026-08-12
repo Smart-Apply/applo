@@ -18,6 +18,12 @@ import {
   lintCoverLetterLength,
   lintGeneratedStyle,
 } from '../style-lint.util';
+import type { RewrittenProfileDto } from '../dto/tailored-profile.dto';
+import {
+  countResumeStyleViolations,
+  extractResumeProse,
+  isValidResumeEdit,
+} from '../resume-editor.util';
 import type { GroundingFinding } from './grounding-validator.service';
 
 /** Verdict of the guarded grounding-repair pass. */
@@ -38,6 +44,123 @@ export interface GroundingRepairEvaluation {
   unsupportedBefore: number;
   /** Unsupported impact numbers in the candidate (equals `unsupportedBefore` when empty). */
   unsupportedAfter: number;
+}
+
+/** Verdict of the guarded résumé grounding-repair pass. */
+export interface ResumeGroundingRepairEvaluation {
+  /** Whether the repaired payload may replace the pre-repair résumé. */
+  accept: boolean;
+  /** Why the candidate was accepted or rejected. */
+  reason:
+    | 'invalid'
+    | 'scope-expanded'
+    | 'gutted'
+    | 'not-cleaner'
+    | 'new-fabrication'
+    | 'style-regressed'
+    | 'repaired';
+  /** Unsupported impact numbers in the pre-repair résumé. */
+  unsupportedBefore: number;
+  /** Unsupported impact numbers in the candidate. */
+  unsupportedAfter: number;
+}
+
+type ResumeRepairScopeFailure = 'scope-expanded' | 'gutted' | 'new-fabrication';
+
+function normalizedNumericValues(text: string): Set<string> {
+  return new Set(
+    (text.match(/\d[\d.,]*(?:\s*[%+])?/g) ?? [])
+      .map((token) => token.replace(/\D/g, ''))
+      .filter(Boolean),
+  );
+}
+
+function containsUnsupportedValue(
+  text: string,
+  findings: readonly GroundingFinding[],
+): boolean {
+  const numericValues = normalizedNumericValues(text);
+  return findings.some((finding) => numericValues.has(finding.normalized));
+}
+
+function validateChangedResumeField(
+  original: string,
+  repaired: string,
+  findings: readonly GroundingFinding[],
+): ResumeRepairScopeFailure | null {
+  if (repaired === original) return null;
+  if (!containsUnsupportedValue(original, findings)) return 'scope-expanded';
+  if (repaired.trim().length < original.trim().length * 0.5) return 'gutted';
+  const originalValues = normalizedNumericValues(original);
+  const repairedValues = normalizedNumericValues(repaired);
+  if ([...repairedValues].some((value) => !originalValues.has(value))) {
+    return 'new-fabrication';
+  }
+  return null;
+}
+
+/** Enforce the prompt's surgical-edit contract beyond structural JSON validity. */
+function validateResumeRepairScope(
+  original: RewrittenProfileDto,
+  repaired: RewrittenProfileDto,
+  findings: readonly GroundingFinding[],
+): ResumeRepairScopeFailure | null {
+  let failure = validateChangedResumeField(
+    original.rewritten_summary,
+    repaired.rewritten_summary,
+    findings,
+  );
+  if (failure) return failure;
+
+  const repairedExperiences = new Map(
+    repaired.rewritten_experiences.map((experience) => [experience.profileExperienceId, experience]),
+  );
+  for (const experience of original.rewritten_experiences) {
+    const candidate = repairedExperiences.get(experience.profileExperienceId)!;
+    if (candidate.rewritten_achievements.length !== experience.rewritten_achievements.length) {
+      return 'scope-expanded';
+    }
+    failure = validateChangedResumeField(
+      experience.rewritten_description,
+      candidate.rewritten_description,
+      findings,
+    );
+    if (failure) return failure;
+    for (let index = 0; index < experience.rewritten_achievements.length; index++) {
+      failure = validateChangedResumeField(
+        experience.rewritten_achievements[index],
+        candidate.rewritten_achievements[index],
+        findings,
+      );
+      if (failure) return failure;
+    }
+  }
+
+  const repairedProjects = new Map(
+    repaired.rewritten_projects.map((project) => [project.profileProjectId, project]),
+  );
+  for (const project of original.rewritten_projects) {
+    const candidate = repairedProjects.get(project.profileProjectId)!;
+    if (candidate.rewritten_highlights.length !== project.rewritten_highlights.length) {
+      return 'scope-expanded';
+    }
+    failure = validateChangedResumeField(
+      project.rewritten_description,
+      candidate.rewritten_description,
+      findings,
+    );
+    if (failure) return failure;
+    for (let index = 0; index < project.rewritten_highlights.length; index++) {
+      failure = validateChangedResumeField(
+        project.rewritten_highlights[index],
+        candidate.rewritten_highlights[index],
+        findings,
+      );
+      if (failure) return failure;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -111,6 +234,61 @@ export function evaluateGroundingRepair(
   const underrunAfter = lintCoverLetterLength(repaired, budget, language).underrun;
   if (underrunAfter && !lintCoverLetterLength(draft, budget, language).underrun) {
     return { accept: false, reason: 'underrun', ...counts };
+  }
+
+  return { accept: true, reason: 'repaired', ...counts };
+}
+
+/**
+ * Decide whether a résumé grounding-repair candidate may replace the original
+ * payload. The candidate must preserve the full rewritten-profile structure,
+ * strictly reduce unsupported numeric claims, introduce no new unsupported
+ * value, and avoid increasing deterministic résumé style violations.
+ */
+export function evaluateResumeGroundingRepair(
+  original: RewrittenProfileDto,
+  repaired: unknown,
+  unsupportedBefore: readonly GroundingFinding[],
+  unsupportedAfter: readonly GroundingFinding[],
+  language = 'de',
+): ResumeGroundingRepairEvaluation {
+  const countBefore = unsupportedBefore.length;
+
+  if (!isValidResumeEdit(original, repaired)) {
+    return {
+      accept: false,
+      reason: 'invalid',
+      unsupportedBefore: countBefore,
+      unsupportedAfter: countBefore,
+    };
+  }
+
+  const countAfter = unsupportedAfter.length;
+  const counts = { unsupportedBefore: countBefore, unsupportedAfter: countAfter };
+  const scopeFailure = validateResumeRepairScope(original, repaired, unsupportedBefore);
+  if (scopeFailure) {
+    return { accept: false, reason: scopeFailure, ...counts };
+  }
+
+  if (countAfter >= countBefore) {
+    return { accept: false, reason: 'not-cleaner', ...counts };
+  }
+
+  const originalValues = normalizedNumericValues(extractResumeProse(original));
+  const repairedValues = normalizedNumericValues(extractResumeProse(repaired));
+  if ([...repairedValues].some((value) => !originalValues.has(value))) {
+    return { accept: false, reason: 'new-fabrication', ...counts };
+  }
+
+  const knownValues = new Set(unsupportedBefore.map((finding) => finding.normalized));
+  if (unsupportedAfter.some((finding) => !knownValues.has(finding.normalized))) {
+    return { accept: false, reason: 'new-fabrication', ...counts };
+  }
+
+  const styleBefore = countResumeStyleViolations(original, language).total;
+  const styleAfter = countResumeStyleViolations(repaired, language).total;
+  if (styleAfter > styleBefore) {
+    return { accept: false, reason: 'style-regressed', ...counts };
   }
 
   return { accept: true, reason: 'repaired', ...counts };

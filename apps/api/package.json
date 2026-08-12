@@ -13,7 +13,7 @@
     "start:dev": "nest start --watch --preserveWatchOutput",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node ../../dist/apps/api/main",
-    "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+    "lint": "eslint \"{src,test}/**/*.ts\" \"scripts/eval/**/*.ts\" --fix",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
@@ -39,6 +39,7 @@
     "templates:regenerate-previews": "dotenv -e .env -- ts-node -r tsconfig-paths/register scripts/generate-template-previews.ts --force",
     "templates:seed-with-previews": "pnpm run prisma:seed:templates && pnpm run templates:generate-previews",
     "eval:llm": "dotenv -e .env -- ts-node -r tsconfig-paths/register scripts/eval/run-eval.ts",
+    "eval:compare": "ts-node -r tsconfig-paths/register scripts/eval/compare.ts",
     "eval:validate": "ts-node -r tsconfig-paths/register scripts/eval/run-eval.ts --validate"
   },
   "dependencies": {

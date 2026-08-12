@@ -164,7 +164,8 @@ semantic content unchanged — only **position** moves.
 - [x] Preamble is byte-identical across the cluster — verified with `shasum`: `head -9` (through
   the `tailoredProfile` fence) matches across all 8, and `head -15` (through the `job` block)
   matches across the 3 cluster-1 prompts. `resume.md` left untouched (not on the live
-  `createWithGeneration` path).
+  `createWithGeneration` path at the time); it was retired on 2026-08-12 when the remaining
+  testing path moved to the structured `resume-rewrite.md` chain.
 - [ ] `cached_tokens > 0` on calls 2–9 of a single generation. **Measured 2026-07-24: still 0**
   on every call across all 24 fixtures. The *user-message* prefix was aligned, but Azure keys
   the cache on the FULL request prefix (`response_format` schema → system message → user
@@ -331,13 +332,14 @@ ats-keywords) remains deferred.
 | P1 | [`v1/keyword-weave.md`](../../apps/api/prompts/v1/keyword-weave.md) | `callText` | Conditional. |
 | P1 | [`v1/style-rewrite.md`](../../apps/api/prompts/v1/style-rewrite.md) | `callText` | Conditional. |
 | P1 | [`v1/shorten-cover-letter.md`](../../apps/api/prompts/v1/shorten-cover-letter.md) | `callText` | Conditional (length governor). |
+| P1 | [`v1/fix-unsupported-numbers.md`](../../apps/api/prompts/v1/fix-unsupported-numbers.md) | `callText` | Conditional (cover-letter grounding repair). |
+| P1 | [`v1/fix-unsupported-numbers-resume.md`](../../apps/api/prompts/v1/fix-unsupported-numbers-resume.md) | `callJson` | Conditional (ID-preserving résumé grounding repair). |
 | P2 | [`v1/application-validation.md`](../../apps/api/prompts/v1/application-validation.md) | `callJson` | Standalone Bewerbungs-Check — good Strategy-A candidate (large static rubric). |
 | P2 | [`v1/translate-resume.md`](../../apps/api/prompts/v1/translate-resume.md) | `callJson` | On export. |
 | P2 | [`v1/translate-cover-letter.md`](../../apps/api/prompts/v1/translate-cover-letter.md) | `callText` | On export. |
 | P2 | [`v1/extract-resume.md`](../../apps/api/prompts/v1/extract-resume.md) | `callJson` | Resume parser bootstrap. |
 | P2 | [`v1/profile-keywords.md`](../../apps/api/prompts/v1/profile-keywords.md) | `callJson` | — |
 | P2 | [`v1/ats-keywords-extract.md`](../../apps/api/prompts/v1/ats-keywords-extract.md) | `callJson` | — |
-| P2 | [`v1/resume.md`](../../apps/api/prompts/v1/resume.md) | — | Verify still on a live path before touching. |
 
 ---
 
@@ -504,7 +506,8 @@ _Newest first. Add an entry per PR/branch with the files touched and the measure
   the Phase 3 Finding table). The Phase 1/2 reorder + `prompt_cache_key` are necessary but **not
   sufficient**; a **Phase 1b full-prefix alignment** is required before any saving materializes.
   No prod behaviour change — `runWithUsageCapture` is measurement-only; the mock provider
-  ignores it; the eval harness lives under `scripts/` (out of the nest build + eslint scope).
+  ignores it; the eval harness lives under `scripts/` (outside the Nest build, but inside the
+  API workspace's ESLint scope since 2026-08-12).
 - **2026-07-24** — `feat/prompt-caching-phase2-cache-key`: **Phase 2 `prompt_cache_key`
   (provider request shape).** Added an optional `promptCacheKey` to `GenerateOptions`
   ([`llm/llm.interface.ts`](../../apps/api/src/llm/llm.interface.ts)); both real providers now

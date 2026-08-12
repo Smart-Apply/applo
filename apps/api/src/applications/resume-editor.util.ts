@@ -15,16 +15,18 @@ import { detectGermanVerbFirstBullets, lintGeneratedStyle } from './style-lint.u
  * booting Nest/Prisma or calling an LLM.
  */
 
-/** Multiset of ids → sorted array, for order-insensitive comparison. */
-function idMultiset(ids: (string | null | undefined)[]): string[] {
-  return ids.filter((id): id is string => typeof id === 'string' && id.length > 0).sort();
-}
+function hasExactIds(originalIds: string[], editedIds: unknown[]): editedIds is string[] {
+  if (
+    editedIds.length !== originalIds.length ||
+    editedIds.some((id) => typeof id !== 'string' || id.length === 0) ||
+    new Set(editedIds).size !== editedIds.length
+  ) {
+    return false;
+  }
 
-function sameIdSet(a: (string | null | undefined)[], b: (string | null | undefined)[]): boolean {
-  const sa = idMultiset(a);
-  const sb = idMultiset(b);
-  if (sa.length !== sb.length) return false;
-  return sa.every((id, i) => id === sb[i]);
+  const originalSorted = [...originalIds].sort();
+  const editedSorted = [...editedIds].sort();
+  return originalSorted.every((id, index) => id === editedSorted[index]);
 }
 
 /**
@@ -50,9 +52,29 @@ export function isValidResumeEdit(
     return false;
   }
 
+  const experiencesAreValid = e.rewritten_experiences.every(
+    (experience) =>
+      experience !== null &&
+      typeof experience === 'object' &&
+      typeof experience.profileExperienceId === 'string' &&
+      typeof experience.rewritten_description === 'string' &&
+      Array.isArray(experience.rewritten_achievements) &&
+      experience.rewritten_achievements.every((achievement) => typeof achievement === 'string'),
+  );
+  const projectsAreValid = e.rewritten_projects.every(
+    (project) =>
+      project !== null &&
+      typeof project === 'object' &&
+      typeof project.profileProjectId === 'string' &&
+      typeof project.rewritten_description === 'string' &&
+      Array.isArray(project.rewritten_highlights) &&
+      project.rewritten_highlights.every((highlight) => typeof highlight === 'string'),
+  );
+  if (!experiencesAreValid || !projectsAreValid) return false;
+
   // IDs must match the original exactly (no add / drop / rename).
   if (
-    !sameIdSet(
+    !hasExactIds(
       original.rewritten_experiences.map((x) => x.profileExperienceId),
       e.rewritten_experiences.map((x) => x?.profileExperienceId),
     )
@@ -60,7 +82,7 @@ export function isValidResumeEdit(
     return false;
   }
   if (
-    !sameIdSet(
+    !hasExactIds(
       original.rewritten_projects.map((x) => x.profileProjectId),
       e.rewritten_projects.map((x) => x?.profileProjectId),
     )
