@@ -66,6 +66,25 @@ describe('isValidResumeEdit (Unit, #1)', () => {
     expect(isValidResumeEdit(original, edited)).toBe(false);
   });
 
+  it('rejects an added experience with an empty id', () => {
+    const original = base();
+    const edited = base();
+    edited.rewritten_experiences.push({
+      profileExperienceId: '',
+      rewritten_description: 'Erfundene Stelle.',
+      rewritten_achievements: ['Erfunden.'],
+    });
+    expect(isValidResumeEdit(original, edited)).toBe(false);
+  });
+
+  it('rejects malformed prose fields', () => {
+    const original = base();
+    const edited = base() as unknown as Record<string, unknown>;
+    const experiences = edited.rewritten_experiences as Record<string, unknown>[];
+    experiences[0].rewritten_achievements = [42];
+    expect(isValidResumeEdit(original, edited)).toBe(false);
+  });
+
   it('rejects a dropped project id', () => {
     const original = base();
     const edited = base();

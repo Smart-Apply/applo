@@ -10,6 +10,7 @@
  *   pnpm eval:llm -- --limit=4         # first 4 fixtures (cheap smoke run)
  *   pnpm eval:llm -- --only=healthcare-de,sales-en
  *   pnpm eval:llm -- --tag=after-phase3
+ *   pnpm eval:llm -- --repeat=3 --tag=ship-candidate
  *
  * Requires real LLM creds: LLM_PROVIDER=azure-openai (+ Azure vars) in
  * apps/api/.env. With LLM_PROVIDER=mock it skips gracefully (exit 0) because the
@@ -27,7 +28,7 @@ import { generateForFixture, withProseMidLane } from './pipeline-runner';
 import { judgeDocuments } from './judge';
 import { groundDocuments } from './grounding';
 import { styleCheckDocuments } from './style';
-import { summarize, formatReport, type FixtureResult } from './aggregate';
+import { summarizeRepeats, formatReport, type FixtureResult } from './aggregate';
 import { hydrateProfile, type EvalFixture } from './fixture.types';
 import {
   serializeProfileForLlm,
@@ -47,6 +48,7 @@ interface CliArgs {
   concurrency: number;
   delayMs: number;
   retries: number;
+  repeat: number;
   out?: string;
   validate: boolean;
   applyWeave: boolean;
@@ -63,6 +65,7 @@ function parseArgs(argv: string[]): CliArgs {
     concurrency: 1,
     delayMs: 1500,
     retries: 5,
+    repeat: 1,
     validate: false,
     applyWeave: true,
     applyAnchor: true,
@@ -79,6 +82,13 @@ function parseArgs(argv: string[]): CliArgs {
     else if (key === 'concurrency' && value) args.concurrency = Math.max(1, Number(value));
     else if (key === 'delay' && value) args.delayMs = Math.max(0, Number(value));
     else if (key === 'retries' && value) args.retries = Math.max(0, Number(value));
+    else if (key === 'repeat' && value) {
+      const repeat = Number(value);
+      if (!Number.isInteger(repeat) || repeat < 1) {
+        throw new Error('--repeat must be a positive integer');
+      }
+      args.repeat = repeat;
+    }
     else if (key === 'out' && value) args.out = value;
     else if (key === 'validate') args.validate = true;
     else if (key === 'no-weave') args.applyWeave = false;
@@ -180,6 +190,11 @@ async function runOne(
         unsupportedCount: grounding.unsupported.length,
         unsupportedValues: grounding.unsupported.map((u) => u.value),
         repairApplied: docs.groundingRepairApplied,
+        repairAttempted: docs.groundingRepairAttempted,
+        repairFailed: docs.groundingRepairFailed,
+        resumeRepairApplied: docs.resumeGroundingRepairApplied,
+        resumeRepairAttempted: docs.resumeGroundingRepairAttempted,
+        resumeRepairFailed: docs.resumeGroundingRepairFailed,
       },
       coverage: {
         wanted: docs.coverageAfterWeave.wanted,
@@ -352,7 +367,8 @@ async function main(): Promise<void> {
 
   console.log(
     `\n🧪 Running eval (provider=${provider}, fixtures=${fixtures.length}, ` +
-      `concurrency=${args.concurrency}, weave=${args.applyWeave ? 'on' : 'off'}, ` +
+      `repeats=${args.repeat}, concurrency=${args.concurrency}, ` +
+      `weave=${args.applyWeave ? 'on' : 'off'}, ` +
       `anchor=${args.applyAnchor ? 'on' : 'off'}, ` +
       `styleRewrite=${args.applyStyleRewrite ? 'on' : 'off'}, ` +
       `groundingRepair=${args.applyGroundingRepair ? 'on' : 'off'}, tag=${args.tag})\n`,
@@ -395,13 +411,19 @@ async function main(): Promise<void> {
         `   🧪 prose + revision calls routed to the mid lane (${process.env.LLM_MID_MODEL})\n`,
       );
     }
-    const results = await runPool(generationLlm, judgeLlm, fixtures, args);
+    const repeatResults: FixtureResult[][] = [];
+    for (let repeat = 1; repeat <= args.repeat; repeat++) {
+      if (args.repeat > 1) {
+        console.log(`\n   Repeat ${repeat}/${args.repeat} (${args.tag}-r${repeat})\n`);
+      }
+      repeatResults.push(await runPool(generationLlm, judgeLlm, fixtures, args));
+    }
     const model = args.proseMid
       ? process.env.LLM_MID_MODEL
       : provider === 'mistral'
         ? process.env.MISTRAL_MODEL
         : process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
-    const summary = summarize(results, {
+    const summary = summarizeRepeats(repeatResults, {
       provider,
       tag: args.tag,
       judgeProvider,

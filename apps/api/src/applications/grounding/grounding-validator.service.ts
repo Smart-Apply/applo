@@ -52,8 +52,8 @@ export interface GroundingReport {
  *   ONLY: a job-ad KPI appearing as a candidate achievement IS a fabrication.
  * - **Standard designations** (ISO 9001, DIN 14675 …) are certification names,
  *   not impact metrics, and are excluded everywhere.
- * - Handles both resume shapes: JSON (the `createWithGeneration` path) and
- *   Markdown/plain text (the `generateWithSinglePipeline` path).
+ * - Handles both resume shapes: structured JSON from current generation paths
+ *   and Markdown/plain text retained on legacy application rows.
  */
 @Injectable()
 export class GroundingValidatorService {

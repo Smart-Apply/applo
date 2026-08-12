@@ -11,7 +11,8 @@ the lift (or catch a regression). It is the measurement backbone for the
 [LLM output-quality roadmap](../../../../docs/implementation/LLM_OUTPUT_QUALITY.md).
 
 > This harness is **never** run in production. It is excluded from the nest build
-> and the eslint scope (it lives under `scripts/`, not `src/`).
+> This harness is **never** run in production and is excluded from the Nest build.
+> It is included in the API workspace's ESLint scope.
 
 ## Quick start
 
@@ -26,6 +27,10 @@ pnpm eval:llm                       # all fixtures, tag "baseline"
 pnpm eval:llm -- --limit=3          # cheap smoke run (first 3 fixtures)
 pnpm eval:llm -- --only=healthcare-de,sales-en
 pnpm eval:llm -- --tag=after-phase3 # name the run so results files don't clash
+pnpm eval:llm -- --repeat=3 --tag=ship-candidate
+
+# Pair two result files by fixture (+ repeat) and test their deltas:
+pnpm eval:compare results/control.json results/candidate.json
 ```
 
 ### Requirements for a real run
@@ -53,17 +58,18 @@ With `LLM_PROVIDER=mock` (or unset) the harness **skips gracefully** (exit 0).
 | `--concurrency=N` | `1` | Fixtures in flight at once. **Keep at 1** on small Azure deployments — higher values trip the rate limit + circuit breaker. |
 | `--delay=MS` | `1500` | Pause between fixtures. |
 | `--retries=N` | `5` | Retries on transient throttling (429/503/breaker-open) with exponential backoff (4s→64s, long enough to clear the 30s breaker reset). |
+| `--repeat=N` | `1` | Run the selected fixture pool N times, persist one pooled summary, and retain per-repeat figures + spread under `<tag>-rN`. |
 | `--no-weave` | off | Skip the #6 keyword weave pass. Use for an A/B run: compare coverage with vs. without the loop. |
 | `--no-anchor` | off | Omit the shared `GENERATION_SYSTEM_ANCHOR` system message from the cover-letter + resume-rewrite calls. Use for a clean A/B of the system/user split. |
 | `--no-style-rewrite` | off | Skip BOTH style-rewrite "teeth" passes (cover letter + résumé). Use for an A/B of the deterministic-linter enforcement step. |
 | `--no-length-governor` | off | Skip the guarded length-governor shorten pass. Use to measure the raw overrun rate the base prompts produce. |
-| `--no-grounding-repair` | off | Skip the guarded grounding-repair pass. Use to measure the raw unsupported-number rate the base prompts produce (the grounding pass rate before enforcement). |
-| `--prose-mid` | off | Route the candidate-facing **writing + revision** calls (`cover-letter`, `resume-rewrite`, `editor-*`, `keyword-weave`, `style-rewrite`, `resume-style-rewrite`, `shorten-cover-letter`, `fix-unsupported-numbers`) through the **mid lane** (`LLM_MID_MODEL`) for a prose-model A/B. Extraction stays on the fast lane and the **judge stays on the main model**, so the challenger never grades itself. Errors out when `LLM_MID_MODEL` is unset — otherwise both arms would silently be identical. |
+| `--no-grounding-repair` | off | Skip BOTH guarded grounding-repair passes (cover letter + résumé). Use to measure the raw unsupported-number rate before enforcement. |
+| `--prose-mid` | off | Route the candidate-facing **writing + revision** calls (`cover-letter`, `resume-rewrite`, `editor-*`, `keyword-weave`, `style-rewrite`, `resume-style-rewrite`, `shorten-cover-letter`, `fix-unsupported-numbers`, `fix-unsupported-numbers-resume`) through the **mid lane** (`LLM_MID_MODEL`) for a prose-model A/B. Extraction stays on the fast lane and the **judge stays on the main model**, so the challenger never grades itself. Errors out when `LLM_MID_MODEL` is unset — otherwise both arms would silently be identical. |
 | `--out=PATH` | `results/eval-<tag>-<ts>.json` | Override the output path. |
 
 ## What it measures
 
-For each fixture the runner mirrors `ApplicationsService.createWithGeneration`:
+For each fixture the runner mirrors `GenerationService.createWithGeneration`:
 
 1. `v1/skill-selector.md` (temp 0.2) → tailored profile
 2. parallel `v1/cover-letter.md` + `v1/resume-rewrite.md` (temp 0.35) + `v1/ats-keywords.md`
@@ -77,8 +83,12 @@ For each fixture the runner mirrors `ApplicationsService.createWithGeneration`:
    `--no-length-governor`, or when the letter is within its word budget)
 7. `v1/fix-unsupported-numbers.md` (temp 0.3) — the guarded grounding-repair pass (skipped
    with `--no-grounding-repair`, or when every cover-letter impact number is grounded)
-8. `v1/resume-style-rewrite.md` (temp 0.3) — the résumé style-rewrite "teeth" pass (JSON→JSON,
+8. `v1/editor-resume.md` (temp 0.35) — the résumé editor pass (JSON→JSON, ID-preserving)
+9. `v1/resume-style-rewrite.md` (temp 0.3) — the résumé style-rewrite "teeth" pass (JSON→JSON,
    ID-preserving; skipped with `--no-style-rewrite`, or when the résumé prose is already clean)
+10. `v1/fix-unsupported-numbers-resume.md` (temp 0.3) — the résumé grounding-repair pass
+  (strict JSON→JSON, ID-preserving; skipped with `--no-grounding-repair`, or when every
+  résumé impact number is grounded against the profile)
 
 It then scores the output as follows:
 
@@ -86,11 +96,23 @@ It then scores the output as follows:
   scored 1–5: `action_verb_bullets`, `quantified_or_qualitative`,
   `summary_targeting`, `cover_letter_personalization`, `style_no_cliches`,
   `language_correctness`, plus a holistic `overall`.
-- **Grounding** (`GroundingValidatorService`, #7) — deterministic share of
-  impact numbers in the output that trace back to the candidate profile.
-  Measured on the FINAL documents, i.e. after the guarded grounding-repair pass;
-  the report also counts how many fixtures that pass repaired, so "nothing was
-  fabricated" is distinguishable from "the repair never fired".
+- **Grounding** (`GroundingValidatorService`, #7) — deterministic unsupported-value
+  rate pooled over every distinct checked impact number, with a descriptive Wilson
+  95% interval. Values are de-duplicated within each fixture, so the interval is a
+  compact stability signal rather than an independence-based power claim. Runs with
+  no checked impact numbers report `n/a`, never a perfect zero-width interval. The
+  historical fixture pass-rate remains as a secondary line. Résumé claims must
+  trace to the profile; cover-letter claims may also quote the job posting.
+  Metrics use the FINAL documents after both guarded repair passes. Separate
+  attempted/accepted/failed counts for each document distinguish clean skips,
+  guard rejections, accepted repairs, and provider fallback.
+- **Repeat stability + paired comparison** — `--repeat=N` pools claims while
+  printing each repeat's rate/spread. `pnpm eval:compare <a> <b>` joins by fixture
+  and repeat, then clusters repeats by fixture for inference. Exact McNemar treats
+  a fixture as grounded only when all of its repeats are grounded; continuous
+  metrics average repeats within each fixture before computing paired 95%
+  Student-t intervals. The report distinguishes generated observation pairs from
+  independent fixture clusters and prints metric-specific exclusions.
 - **Priority-1 keyword coverage** (#6, deterministic) — of the priority-1 ATS
   keywords the profile supports, the share that appear in the cover letter, both
   **before** and **after** the weave pass (so the lift is visible).
@@ -125,9 +147,9 @@ It then scores the output as follows:
 > quality). The keyword weave shares `keyword-coverage.util.ts` with the live
 > service, so the harness measures the real loop.
 
-> **Grounding caveat:** the validator checks the **profile only**, not the job
-> posting. A number the model legitimately quotes from the posting (e.g. company
-> size) is reported as `unsupported`. Read flagged values in that light.
+> **Grounding corpus:** résumé claims use the **profile only**; a job-ad KPI in a
+> candidate achievement is unsupported. Cover-letter claims use profile + job
+> posting, so legitimate company-size or salary references are not flagged.
 
 > **Coverage caveat:** the improved Phase 1 cover-letter prompt already includes
 > most priority-1 profile-supported keywords, so mean coverage starts high
@@ -138,8 +160,9 @@ It then scores the output as follows:
 
 ## Output
 
-A console report (rubric means, grounding pass-rate, per-language breakdown,
-per-fixture lines) plus a full JSON at `results/eval-<tag>-<timestamp>.json`
+A console report (rubric means, pooled grounding claim-rate + Wilson interval,
+fixture pass-rate, repeat spread, per-language breakdown, per-fixture lines) plus
+a full JSON at `results/eval-<tag>-<timestamp>.json`
 (git-ignored). Record headline numbers in the
 [tracker changelog](../../../../docs/implementation/LLM_OUTPUT_QUALITY.md#changelog).
 

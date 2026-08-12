@@ -22,7 +22,7 @@ export default defineConfig([
 
   // TypeScript source files.
   {
-    files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}', 'scripts/eval/**/*.ts'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {

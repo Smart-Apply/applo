@@ -8,7 +8,10 @@ import { TitleGeneratorService } from './title-generator.service';
 import { TemplatesService } from '../templates/templates.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { GroundingValidatorService } from './grounding/grounding-validator.service';
-import { evaluateGroundingRepair } from './grounding/grounding-repair.util';
+import {
+  evaluateGroundingRepair,
+  evaluateResumeGroundingRepair,
+} from './grounding/grounding-repair.util';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
 import { TailoredProfileDto, RewrittenProfileDto } from './dto/tailored-profile.dto';
@@ -33,6 +36,7 @@ import { matchAtsKeywordsToProfile, selectKeywordsToWeave, isKeywordPresent } fr
 import {
   countResumeStyleViolations,
   evaluateResumeStyleRewrite,
+  extractResumeProse,
   isValidResumeEdit,
 } from './resume-editor.util';
 import {
@@ -732,12 +736,23 @@ export class GenerationService {
         jobPosting,
       );
 
+      // Grounding repair (résumé): remove unsupported impact figures from the
+      // post-style payload. Guarded JSON→JSON with exact ID preservation.
+      const groundedRewrittenProfile = await this.runResumeGroundingRepairPass(
+        styledRewrittenProfile,
+        tailoredProfile,
+        profile,
+        detectedLanguage,
+        userId,
+        jobPosting,
+      );
+
       // Step 3: Convert tailoredProfile to JSON format for frontend editor
       this.logger.log('Step 3: Converting resume to JSON format for editor...');
       const resumeJson = this.convertTailoredProfileToResumeJson(
         profile,
         tailoredProfile,
-        styledRewrittenProfile,
+        groundedRewrittenProfile,
         detectedLanguage,
       );
 
@@ -995,16 +1010,51 @@ export class GenerationService {
         `Profile tailored: ${tailoredProfile.selected_hard_skills.length} hard skills, ${tailoredProfile.selected_experiences.length} experiences`,
       );
 
-      // 4. Generate resume (uses tailored profile)
+      // 4. Generate the structured résumé, then apply the same ID-preserving
+      // editor, style, and grounding guards as the canonical generation path.
       emitProgress(40, 'Generiere Lebenslauf mit KI...');
       this.logger.log('Step 2: Generating resume...');
-      const resumeMarkdown = await this.llmService.callText('v1/resume.md', {
-        job: this.serializeJobPosting(jobPosting),
+      const rewrittenProfile = await this.llmService.callJson<RewrittenProfileDto>(
+        'v1/resume-rewrite.md',
+        {
+          job: this.serializeJobPosting(jobPosting),
+          tailoredProfile,
+          language,
+          userId,
+          jobPostingId: jobPosting.id,
+        },
+        { temperature: 0.35, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
+      );
+      const editedRewrittenProfile = await this.runResumeEditorPass(
+        rewrittenProfile,
         tailoredProfile,
         language,
         userId,
-        jobPostingId: jobPosting.id,
-      });
+        jobPosting,
+      );
+      const styledRewrittenProfile = await this.runResumeStyleRewritePass(
+        editedRewrittenProfile,
+        tailoredProfile,
+        language,
+        userId,
+        jobPosting,
+      );
+      const groundedRewrittenProfile = await this.runResumeGroundingRepairPass(
+        styledRewrittenProfile,
+        tailoredProfile,
+        profile,
+        language,
+        userId,
+        jobPosting,
+      );
+      const resumeText = JSON.stringify(
+        this.convertTailoredProfileToResumeJson(
+          profile,
+          tailoredProfile,
+          groundedRewrittenProfile,
+          language,
+        ),
+      );
 
       // 5. Generate cover letter (if enabled)
       let coverLetterMarkdown: string | null = null;
@@ -1139,7 +1189,7 @@ export class GenerationService {
       // Grounding check (#7): flag fabricated impact numbers (non-destructive).
       this.runGroundingCheck(
         applicationId,
-        { resume: resumeMarkdown, coverLetter: repairedCoverLetter },
+        { resume: resumeText, coverLetter: repairedCoverLetter },
         profile,
         jobPosting.fullText,
       );
@@ -1151,7 +1201,7 @@ export class GenerationService {
       const updated = await this.prisma.application.update({
         where: { id: applicationId },
         data: {
-          resumeText: resumeMarkdown,
+          resumeText,
           coverLetterText: coverLetterHtml,
           atsKeywords: atsKeywords as any,
           tailoredProfile: tailoredProfile as any,
@@ -1743,13 +1793,88 @@ export class GenerationService {
   }
 
   /**
-   * Grounding repair ("teeth", cover letter only) — one guarded pass that fires
+   * Résumé grounding repair (JSON→JSON) — replaces unsupported impact figures
+   * with truthful qualitative wording while preserving every profile ID.
+   * Résumé claims are validated against the profile only; job-ad figures never
+   * count as evidence of a candidate achievement.
+   */
+  private async runResumeGroundingRepairPass(
+    rewrittenProfile: RewrittenProfileDto | null,
+    tailoredProfile: TailoredProfileDto,
+    profile: ProfileWithRelations,
+    language: string,
+    userId: string,
+    jobPosting: JobPosting,
+  ): Promise<RewrittenProfileDto | null> {
+    if (!rewrittenProfile) return rewrittenProfile;
+
+    const before = this.groundingValidator.validate(
+      { resume: extractResumeProse(rewrittenProfile) },
+      profile,
+    );
+    if (before.unsupported.length === 0) {
+      this.logger.debug(
+        `Résumé grounding repair: all ${before.totalChecked} impact number(s) grounded; skipping`,
+      );
+      return rewrittenProfile;
+    }
+
+    const flagged = before.unsupported.map((finding) => finding.value);
+    try {
+      const repaired = await this.llmService.callJson<unknown>(
+        'v1/fix-unsupported-numbers-resume.md',
+        {
+          rewrittenProfile,
+          tailoredProfile,
+          job: this.serializeJobPosting(jobPosting),
+          unsupported: before.unsupported,
+          language,
+          userId,
+          jobPostingId: jobPosting.id,
+        },
+        { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
+      );
+
+      const validCandidate = isValidResumeEdit(rewrittenProfile, repaired) ? repaired : null;
+      const after = validCandidate
+        ? this.groundingValidator.validate(
+            { resume: extractResumeProse(validCandidate) },
+            profile,
+          ).unsupported
+        : [];
+      const decision = evaluateResumeGroundingRepair(
+        rewrittenProfile,
+        repaired,
+        before.unsupported,
+        after,
+        language,
+      );
+      if (!decision.accept || !validCandidate) {
+        this.logger.warn(
+          `Résumé grounding repair rejected (${decision.reason}, ${decision.unsupportedBefore}→${decision.unsupportedAfter} unsupported); keeping pre-repair payload`,
+        );
+        return rewrittenProfile;
+      }
+
+      this.logger.log(
+        `Résumé grounding repair applied (${decision.unsupportedBefore}→${decision.unsupportedAfter} unsupported: ${flagged.join(', ')})`,
+      );
+      return validCandidate;
+    } catch (error) {
+      this.logger.warn(
+        `Résumé grounding repair failed; keeping pre-repair payload: ${error.message}`,
+      );
+      return rewrittenProfile;
+    }
+  }
+
+  /**
+   * Cover-letter grounding repair ("teeth") — one guarded pass that fires
    * ONLY when the deterministic grounding validator finds impact numbers in the
    * finished cover letter that trace back to neither the profile nor the job
    * posting. It replaces each unverifiable figure with a truthful qualitative
    * statement of the same achievement, so the claim survives and the invented
-   * precision doesn't. The résumé stays detection-only: it is ID-preserving
-   * JSON and a separate, riskier surface.
+  * precision doesn't.
    *
    * Runs AFTER the length governor — the governor only shortens, so a repair
    * placed before it could be re-cut, and a repair placed after must not push

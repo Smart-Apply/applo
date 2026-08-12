@@ -20,6 +20,16 @@ describe('resolveResponseFormat (Unit, #8)', () => {
     }
   });
 
+  it('uses the resume-rewrite schema for résumé grounding repair', () => {
+    const rf = resolveResponseFormat('v1/fix-unsupported-numbers-resume.md', 'irrelevant');
+    expect(rf?.type).toBe('json_schema');
+    if (rf?.type === 'json_schema') {
+      expect(rf.json_schema.name).toBe('resume_rewrite');
+      expect(rf.json_schema.strict).toBe(true);
+      expect(rf.json_schema.schema).toBe(__testSchemas.resumeRewriteSchema);
+    }
+  });
+
   it('falls back to json_object for skill-selector when the prompt mentions json', () => {
     const rf = resolveResponseFormat('v1/skill-selector.md', 'Return ONLY valid JSON.');
     expect(rf).toEqual({ type: 'json_object' });
@@ -67,4 +77,22 @@ describe('strict JSON schemas (Unit, #8)', () => {
       });
     });
   }
+
+  it('avoids Azure-unsupported type-specific schema keywords', () => {
+    const serialized = JSON.stringify(__testSchemas.resumeRewriteSchema);
+    for (const keyword of [
+      'minLength',
+      'maxLength',
+      'pattern',
+      'format',
+      'minimum',
+      'maximum',
+      'multipleOf',
+      'minItems',
+      'maxItems',
+      'uniqueItems',
+    ]) {
+      expect(serialized).not.toContain(`"${keyword}"`);
+    }
+  });
 });

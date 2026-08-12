@@ -83,7 +83,7 @@ Translated (en): "Experienced Full-Stack Developer with 5+ years of experience i
    - The detected `language` is passed into the v1 prompt calls in `generation.service.ts`
 
 4. **LLM Prompts**
-   - Files: `apps/api/prompts/v1/*.md` (e.g. `cover-letter.md`, `resume.md`, `resume-rewrite.md`)
+  - Files: `apps/api/prompts/v1/*.md` (e.g. `cover-letter.md`, `resume-rewrite.md`)
    - Variables: `{{language}}`
 
 5. **Summary Translation**
