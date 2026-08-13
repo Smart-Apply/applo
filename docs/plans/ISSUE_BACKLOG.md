@@ -236,9 +236,16 @@ cover-letter structure), then writing prioritised follow-ups into
 **Why P3 despite being the core product.** Quality work needs a metric that can
 resolve the effect, otherwise the conclusion is noise. A per-item pass/fail over
 ~24 fixtures has a 95 % CI of roughly ±14 pp — wide enough to "detect"
-improvements that did not happen. Do this once there is a harness that pools the
-underlying findings rather than collapsing them to per-item verdicts; #623's
-enabler is that harness.
+improvements that did not happen. It needs a harness that pools the underlying
+findings rather than collapsing them to per-item verdicts.
+
+**That harness now exists** — see [#623](#12--623--evaluation-platform).
+`applo-eval` already carries 31 fixtures across 14+ professions in DE and EN and
+scores them with the product's own deterministic validators (grounding,
+style-lint, ATS coverage, guard-fallback rate). Running #572 by hand would
+re-do, worse, what is already built. **Promote this to P2 the moment the
+headless seam is merged** — at that point it stops being a manual review and
+becomes a matrix run with a report.
 
 **Plan:** [10](./10-issue-572-llm-output-review.md).
 
@@ -310,19 +317,53 @@ reasoning effort, params, pipeline toggles — and scores each on quality, cost
 and latency against a baseline. Its one in-repo enabler is a headless,
 config-driven `generate(profileJson, jobJson, config)` with no persistence.
 
-**Why P4 — and why the urgency argument in the issue does not hold.** The issue
-justifies "why now" with `gpt-4.1` being retired on **2026-10-14**. That date
-belongs to `gpt-4.1-nano`. Per Microsoft's
+**It is not "not started" — it is largely built, and unbacked up.** The repo
+exists at `/Users/arian/VS-Projects/applo-eval` (branch `master`, 2 commits,
+359 files) with milestones M2–M4 already done: 31 fixtures (15 DE / 16 EN, 14+
+professions, 7 edge cases, PII-linted), 6 model-per-call variants, the matrix
+runner with immutable run artifacts, and a Next.js insights dashboard
+(leaderboard, Pareto trade-off, side-by-side content inspector). Quality signals
+are deterministic and come from the product's own validators — grounding,
+style-lint, ATS coverage, guard-fallback rate — composited per ADR-0006.
+
+**The enabler is also built, and also unbacked up.** `generate:headless` exists
+in `apps/api/package.json` on `feat/headless-generation`, together with a
+deterministic fake provider and model-aware tuning for GPT-5 reasoning
+deployments. The single seam between the repos is a JSON-in/JSON-out process
+call — no product TypeScript is imported, so the scorer version always equals
+the generator version.
+
+**Two risks worth acting on before any more feature work:**
+
+| Risk | Verified state |
+|---|---|
+| `applo-eval` has **no git remote** | `git remote -v` → empty. 359 files exist on one laptop only. |
+| `feat/headless-generation` was **never pushed** | 4 commits ahead of `origin/main`, `git ls-remote` → 0 refs. |
+
+Both are one `git push` away from safe and unrecoverable if the disk dies.
+That is the actual next action on #623 — not more platform work.
+
+**Two smaller defects found while checking:**
+
+- The runner defaults `SMART_APPLY_DIR` to `../smart-apply`
+  (`runner/src/run-matrix.ts:44`), but the product checkout is now
+  `../applo`. Every run needs the env var until that default is fixed.
+- `applo-eval/README.md` repeats the retirement error below as the project's
+  stated motivation.
+
+**The urgency argument in the issue does not hold.** #623 justifies "why now"
+with `gpt-4.1` being retired on **2026-10-14**. That date belongs to
+`gpt-4.1-nano`. Per Microsoft's
 [model retirement schedule](https://learn.microsoft.com/azure/foundry/openai/concepts/model-retirement-schedule),
 `gpt-4.1` (version `2025-04-14`) is Deprecated with retirement on
 **2027-04-14**, replacement `gpt-5.1`. Applo's main lane runs `gpt-4.1`, so the
-forcing function is roughly twenty months out, not two.
+forcing function is roughly twenty months out, not two. The platform is still
+worth having — it is what makes #572 measurable — but it is not a deadline.
 
-**But split the enabler out.** The headless entrypoint is worth having on its
-own — it is what makes #572 measurable, and a branch already exists
-(`feat/headless-generation`, worktree at
-`…/smart-apply.worktrees/headless-generation`). Consider filing the enabler as
-its own issue at **P3** and leaving #623 as the umbrella for the separate repo.
+**Why it stays P4 in this repo.** Almost all remaining work lives in the other
+repo. What belongs *here* is merging the headless seam, which is worth its own
+issue at **P3**: it unblocks #572 and it is the piece that would otherwise
+rot on an unpushed branch.
 
 **Reference:** [EVAL_PLATFORM_FABLE5_PROMPT.md](../implementation/EVAL_PLATFORM_FABLE5_PROMPT.md).
 
@@ -397,12 +438,13 @@ graph TD
 
 ## Corrections found while ordering
 
-Four claims in issue bodies did not survive verification. They are recorded
+Five claims in issue bodies did not survive verification. They are recorded
 here rather than silently fixed, because each one changes a decision.
 
 | Issue | Claim | What is actually true |
 |---|---|---|
-| #623 | `gpt-4.1` retires **2026-10-14**, so model migration is urgent | That is `gpt-4.1-nano`'s date. `gpt-4.1` (`2025-04-14`) retires **2027-04-14** per [Microsoft's schedule](https://learn.microsoft.com/azure/foundry/openai/concepts/model-retirement-schedule). Removes the deadline pressure that justified "why now". |
+| #623 | `gpt-4.1` retires **2026-10-14**, so model migration is urgent | That is `gpt-4.1-nano`'s date. `gpt-4.1` (`2025-04-14`) retires **2027-04-14** per [Microsoft's schedule](https://learn.microsoft.com/azure/foundry/openai/concepts/model-retirement-schedule). Removes the deadline pressure that justified "why now" — and the same wrong date is repeated in `applo-eval/README.md` as the platform's stated motivation. |
+| #623 | The platform is unbuilt | It exists at `/Users/arian/VS-Projects/applo-eval` with M2–M4 done, and the in-repo enabler exists on `feat/headless-generation`. **Neither has a remote.** |
 | #523 | The `LlmUsageEvent` dataset is anonymous | It is **pseudonymous**. Finding F11 of the 13 Aug audit shows `actorHash` + neighbouring timestamped tables re-identify a user without the salt. Erasure + retention were added for this reason. |
 | #525 | Blocked on #522 | #522 merged in PR #781 — **unblocked**. |
 | #133 | Configure dark mode in `tailwind.config.ts` | The app runs **Tailwind v4**, config-less by default. The issue's technical section predates the upgrade. |
@@ -415,9 +457,20 @@ and #761's "data loss when navigating away from `/profile`" does not happen.
 
 ## Not on this list
 
-Three categories of real work carry **no GitHub issue**, so they are invisible
+Four categories of real work carry **no GitHub issue**, so they are invisible
 to anyone reading the tracker. Ordering the issues alone will therefore
 under-serve them.
+
+**Built but unpushed** — the highest-risk item on this page, because it is the
+only one where the work already exists and can still be lost:
+
+| Where | State |
+|---|---|
+| `/Users/arian/VS-Projects/applo-eval` | Eval platform, M2–M4 done, 359 files, branch `master`, **0 git remotes**. |
+| `applo` → `feat/headless-generation` | The headless seam + fake provider + GPT-5 tuning. 4 commits ahead of `origin/main`, **0 remote refs**. |
+
+Neither survives a disk failure. Pushing both is minutes of work and is the
+real next action on #623.
 
 **Carried past a closed issue** — see
 [Closed since this file was written](#closed-since-this-file-was-written):
