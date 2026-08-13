@@ -1,9 +1,10 @@
 # Open-issue backlog — order and priority
 
-> **Written:** 13 Aug 2026 · **Basis:** all **16** open issues in
-> `Smart-Apply/applo`, read in full via `gh issue list --state open`.
-> **Verified against:** `main` @ `b0f60c5d` (`feat: security audit remediation
-> F9–F19`, PR #791).
+> **Written:** 13 Aug 2026 · **Last updated:** 13 Aug 2026, after #790 and #780
+> closed. · **Basis:** all **14** open issues in `Smart-Apply/applo`, read in
+> full via `gh issue list --state open`.
+> **Verified against:** `main` @ `cf91b658` (`feat(web): Löschen im Profil
+> umkehrbar machen`, PR #793).
 >
 > Every "current state" line below was re-checked against the code on `main`,
 > not copied from the issue body. Where an issue disagrees with the code — or
@@ -40,57 +41,66 @@
 
 | # | Issue | Title | Prio | Size | Blocked by |
 |---:|---|---|---|---|---|
-| 1 | [#790](https://github.com/Smart-Apply/applo/issues/790) | a11y: extend the #765 ARIA/focus work to dashboard, applications, settings | **P1** | S | — |
-| 2 | [#764](https://github.com/Smart-Apply/applo/issues/764) | Eingabe-Validierung für Profilfelder bauen | **P1** | M | — |
-| 3 | [#763](https://github.com/Smart-Apply/applo/issues/763) | Profil-Check sortieren und Abschlusszustand bauen | **P1** | S | — |
-| 4 | [#571](https://github.com/Smart-Apply/applo/issues/571) | Übergänge neu designen + Lade-Animationen | **P2** | M | — *(keystone)* |
-| 5 | [#746](https://github.com/Smart-Apply/applo/issues/746) | Loading State für die Seite bauen | **P2** | S | #571 |
-| 6 | [#780](https://github.com/Smart-Apply/applo/issues/780) | Löschen im Profil umkehrbar machen (Soft-Delete + Undo) | **P2** | S | #571 *(soft)* |
-| 7 | [#761](https://github.com/Smart-Apply/applo/issues/761) | Speicher-Modell vereinheitlichen und Erfolgs-Feedback bauen | **P2** | L | #571 + a decision |
-| 8 | [#573](https://github.com/Smart-Apply/applo/issues/573) | Mobiles Design (Android/iOS) überarbeiten | **P2** | L | #571 |
-| 9 | [#572](https://github.com/Smart-Apply/applo/issues/572) | Generierungs-Output prüfen & Verbesserungspotenziale identifizieren | **P3** | M | measurement |
-| 10 | [#570](https://github.com/Smart-Apply/applo/issues/570) | Onboarding-Guide für alle Features | **P3** | L | #571, #573 |
-| 11 | [#332](https://github.com/Smart-Apply/applo/issues/332) | Add SSR to public pages (landing, marketing) for SEO | **P3** | M | plan 03 |
-| 12 | [#525](https://github.com/Smart-Apply/applo/issues/525) | LLM token-usage analytics aggregation endpoints | **P3** | M | — *(unblocked)* |
-| 13 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | re-scope first |
-| 14 | [#623](https://github.com/Smart-Apply/applo/issues/623) | Evaluation platform for application generation — separate repo | **P4** | XL | — |
-| 15 | [#133](https://github.com/Smart-Apply/applo/issues/133) | 🌙 Dark Mode — Theme Switcher | **P4** | M | #571, #573 |
-| 16 | [#524](https://github.com/Smart-Apply/applo/issues/524) | Model trained on anonymized AI-usage dataset (discovery) | **P4** | XL | #523 + data volume |
+| 1 | [#764](https://github.com/Smart-Apply/applo/issues/764) | Eingabe-Validierung für Profilfelder bauen | **P1** | M | — |
+| 2 | [#763](https://github.com/Smart-Apply/applo/issues/763) | Profil-Check sortieren und Abschlusszustand bauen | **P1** | S | — |
+| 3 | [#571](https://github.com/Smart-Apply/applo/issues/571) | Übergänge neu designen + Lade-Animationen | **P2** | M | — *(keystone)* |
+| 4 | [#746](https://github.com/Smart-Apply/applo/issues/746) | Loading State für die Seite bauen | **P2** | S | #571 |
+| 5 | [#761](https://github.com/Smart-Apply/applo/issues/761) | Speicher-Modell vereinheitlichen und Erfolgs-Feedback bauen | **P2** | L | #571 + a decision |
+| 6 | [#573](https://github.com/Smart-Apply/applo/issues/573) | Mobiles Design (Android/iOS) überarbeiten | **P2** | L | #571 |
+| 7 | [#572](https://github.com/Smart-Apply/applo/issues/572) | Generierungs-Output prüfen & Verbesserungspotenziale identifizieren | **P3** | M | measurement |
+| 8 | [#570](https://github.com/Smart-Apply/applo/issues/570) | Onboarding-Guide für alle Features | **P3** | L | #571, #573 |
+| 9 | [#332](https://github.com/Smart-Apply/applo/issues/332) | Add SSR to public pages (landing, marketing) for SEO | **P3** | M | plan 03 |
+| 10 | [#525](https://github.com/Smart-Apply/applo/issues/525) | LLM token-usage analytics aggregation endpoints | **P3** | M | — *(unblocked)* |
+| 11 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | re-scope first |
+| 12 | [#623](https://github.com/Smart-Apply/applo/issues/623) | Evaluation platform for application generation — separate repo | **P4** | XL | — |
+| 13 | [#133](https://github.com/Smart-Apply/applo/issues/133) | 🌙 Dark Mode — Theme Switcher | **P4** | M | #571, #573 |
+| 14 | [#524](https://github.com/Smart-Apply/applo/issues/524) | Model trained on anonymized AI-usage dataset (discovery) | **P4** | XL | #523 + data volume |
 
 **Ordering principle:** finish what is already open before starting what is
-not. Ranks 1–3 are unblocked, small, and each one closes a defect that is live
-in production today. Rank 4 is a keystone — three later issues explicitly say
+not. Ranks 1–2 are unblocked, small, and each one closes a defect that is live
+in production today. Rank 3 is a keystone — three later issues explicitly say
 they should build on it — so it comes before its dependents rather than after,
 even though nothing forces that order technically.
 
 ---
 
+## Closed since this file was written
+
+| Issue | Closed by | Carried over |
+|---|---|---|
+| **#790** a11y: dashboard, applications, settings | PR [#792](https://github.com/Smart-Apply/applo/pull/792) | **two items — see below** |
+| **#780** Löschen im Profil umkehrbar machen | PR [#793](https://github.com/Smart-Apply/applo/pull/793) | none |
+
+Both were rank 1 and rank 6. Their removal is why the numbering above starts at
+#764.
+
+**#790 left two things unticked, and closing the issue removed their home.**
+Neither is covered by another open issue, so they will be lost unless filed:
+
+1. **The VoiceOver pass has still never been done.** It carried from #765 to
+   #790 and is now carried past #790. Every accessibility check to date is
+   automated. A human listening pass is what catches reading order that is
+   technically valid but nonsensical, over-verbose labels, and whether the
+   German announcements actually sound right. PR #792 says explicitly that it
+   should happen before WCAG conformance is claimed publicly.
+2. **The 0-violation result was measured against DOM fixtures, not the running
+   app.** `next build` could not run in the authoring sandbox (Google Fonts
+   fetch), so axe-core 4.12 ran against reproductions of each affected region.
+   The before arm reproduces the issue's counts exactly, which is good evidence
+   — but `/settings`' `aria-hidden-focus` went *incomplete → pass* only because
+   jsdom has no layout for axe to resolve focusability against. That is not the
+   same as a pass. PR #792 itself flags it as "worth re-measuring against a
+   running stack".
+
+Both are small. Suggested: one issue, **P1**, "verify the a11y result on a
+running stack + VoiceOver pass" — re-run the harness against `pnpm dev` on all
+five audited routes, then listen to them.
+
+---
+
 ## P1 — next up
 
-### 1 · #790 — finish the accessibility pass
-
-**What it does.** #765 (PR #784) took `/profile` and the app shell to 0 axe
-violations; #759 and #786 cleared contrast everywhere. #790 applies the same
-naming-and-structure work to the three routes plan 06 scoped out. The issue
-carries the measured baseline: 10 violation nodes — 7 × `button-name`
-(critical) across `/dashboard` and `/applications`, 1 × `aria-hidden-focus`
-(serious) on `/settings`, plus `aria-allowed-role` and `heading-order`.
-
-**Why P1.** It is the direct continuation of work that merged today, so the
-patterns, the harness and the two measurement traps are all written down in the
-issue. `button-name` means icon-only controls announce as "button" with no
-name; `aria-hidden-focus` means keyboard focus lands on an element the screen
-reader has been told does not exist. The BFSG argument from
-[plan 06](./06-issue-765-accessibility.md) applies unchanged. Highest value per
-unit of work in the whole backlog.
-
-**Note.** The issue records that a **VoiceOver pass has never been done** —
-every check so far has been automated. That should happen before anyone claims
-WCAG conformance publicly. Fold it in or split it out, but do not lose it.
-
-**Depends on:** nothing. **Plan:** extends [06](./06-issue-765-accessibility.md).
-
-### 2 · #764 — validate the profile editor dialogs
+### 1 · #764 — validate the profile editor dialogs
 
 **What it does.** Adds `react-hook-form` + Zod validation to the four profile
 editor dialogs that have none: date plausibility (end not before start,
@@ -98,7 +108,7 @@ editor dialogs that have none: date plausibility (end not before start,
 email and phone format, inline errors that name the next step, and a blocked
 save on an invalid required field.
 
-**Re-verified on `b0f60c5d`** — the issue's table still holds exactly:
+**Re-verified on `cf91b658`** — the issue's table still holds exactly:
 
 | Dialog | `useForm` / `zodResolver` / `zod` refs |
 |---|---:|
@@ -116,15 +126,15 @@ a new one.
 
 **Depends on:** nothing. New strings need all six locale trees.
 
-### 3 · #763 — one source of truth for the profile check
+### 2 · #763 — one source of truth for the profile check
 
 **What it does.** Points `/profile` at `calculateProfileStrength` instead of
 recomputing the score, returns the criteria (label, hint, weight) from that one
 function, sorts open items to the top, and defines a 100 % completion state.
 
-**Re-verified on `b0f60c5d`** — the duplication is still live:
-`dashboard/page.tsx:111` calls `calculateProfileStrength`, while
-`profile/page.tsx:865` carries a comment reading *"mirrors
+**Re-verified on `cf91b658`** — the duplication is still live:
+`dashboard/page.tsx:110` calls `calculateProfileStrength`, while
+`profile/page.tsx:939` carries a comment reading *"mirrors
 calculateProfileStrength"* above its own criteria array and `reduce`.
 
 **Why P1.** The weights agree *today*, by hand. The next edit to
@@ -139,17 +149,25 @@ remaining gain, show a finished state) rides along for free.
 
 ## P2 — scheduled
 
-### 4 · #571 — motion and loading foundation *(keystone)*
+### 3 · #571 — motion and loading foundation *(keystone)*
 
 **What it does.** Route transitions, a reusable skeleton/loading component set,
 a progress animation bound to the SSE generation status, unified
 micro-interactions, `prefers-reduced-motion` support.
 
 **Why here, and why before its dependents.** #746 and #573 both say in their own
-acceptance criteria that they must be consistent with #571; #780 and #761 both
-need a toast/feedback primitive that #571 defines. Landing it first means one
-set of primitives instead of four ad-hoc ones. It is the single highest-leverage
+acceptance criteria that they must be consistent with #571; #761 needs a
+feedback primitive that #571 defines. Landing it first means one set of
+primitives instead of several ad-hoc ones. It is the single highest-leverage
 scheduling decision in this list.
+
+**One job just got bigger, not smaller.** #780 shipped its undo toast as a
+page-local `removeWithUndo` `useCallback` inside
+`app/(dashboard)/profile/page.tsx` — reused by all six profile sections, but
+not promoted to `lib/toast.ts`, where `toastErrorWithRetry` and
+`toastNetworkError` already live. So #571 now has an existing implementation to
+lift and generalise rather than a blank slate. Lift it; do not write a second
+one beside it.
 
 **Watch:** `apps/web` ships to Cloudflare Workers and the Sentry SDK already
 costs ~519 KiB gzipped of the script budget. Any animation dependency needs a
@@ -157,7 +175,7 @@ bundle check before merge — see [plan 01](./01-error-monitoring.md).
 
 **Plan:** [07](./07-issue-571-motion-foundation.md).
 
-### 5 · #746 — page loading states
+### 4 · #746 — page loading states
 
 **What it does.** A visible loading state on initial page load and for
 data-dependent regions, a reusable skeleton, an error state, and no layout shift
@@ -168,25 +186,7 @@ says so. Doing it first would mean inventing the primitive twice.
 
 **Depends on:** #571. **Plan:** [08](./08-issue-746-loading-states.md).
 
-### 6 · #780 — make profile deletion reversible
-
-**What it does.** An undo toast after deleting a profile entry (station, skill,
-language, certificate, project), with the deletion held client-side long enough
-to restore without a round trip; a confirmation dialog where undo is not
-possible.
-
-**Verified premise.** Editing is already reversible — the dialogs have explicit
-save/cancel. Deletion is not: the backend's differential update means an entry
-missing from the array is removed, and there is no trash or undo anywhere.
-
-**Why P2 rather than P1.** It is a genuine data-loss path on hand-typed data
-that feeds generation, which argues for P1. It sits at P2 only because the issue
-says it should consume #571's feedback primitives rather than build its own — if
-#571 slips, promote this and build the toast locally.
-
-**Depends on:** #571 (soft). Pairs naturally with #761.
-
-### 7 · #761 — unify the save model
+### 5 · #761 — unify the save model
 
 **What it does.** Picks *one* save model for the product and justifies it, adds
 an "all changes saved" indicator wherever autosave applies, unifies success
@@ -201,12 +201,13 @@ The issue's original claim of data loss when navigating away from `/profile` is
 **not** true — the dialog holds the change until saved or cancelled.
 
 **Why P2 and last of the profile group.** The code is not the hard part; the
-product decision is. Making it after #780 and #746 means the decision is taken
-with the new feedback primitives already in hand.
+product decision is. Making it after #746 means the decision is taken with the
+new feedback primitives already in hand — and it now also inherits #780's
+shipped undo toast as a fourth behaviour to reconcile, not a third.
 
 **Depends on:** #571 + an explicit decision.
 
-### 8 · #573 — mobile design pass
+### 6 · #573 — mobile design pass
 
 **What it does.** Touch-sized targets, mobile navigation, mobile-usable profile
 and application forms, a PDF preview/editor that works on a small screen, iOS
@@ -224,7 +225,7 @@ dashboard shell **already has a drawer and a bottom nav**. Audit first against
 
 ## P3 — planned, not scheduled
 
-### 9 · #572 — review generation output quality
+### 7 · #572 — review generation output quality
 
 **What it does.** A structured review of the shipped generation output across
 several professions (healthcare, sales, trades, marketing, IT) in DE and EN,
@@ -241,7 +242,7 @@ enabler is that harness.
 
 **Plan:** [10](./10-issue-572-llm-output-review.md).
 
-### 10 · #570 — onboarding guide
+### 8 · #570 — onboarding guide
 
 **What it does.** A guided first-login tour across profile/résumé import, job
 ingestion, generation, the PDF editor, the interview coach and email tracking,
@@ -252,7 +253,7 @@ are about to change. Building it now guarantees rework. It also still has two
 open design questions in the issue (interactive tour vs. static checklist; a
 library vs. existing primitives) — decide those before planning.
 
-### 11 · #332 — SSR for public pages
+### 9 · #332 — SSR for public pages
 
 **What it does.** Converts the landing/marketing pages from client rendering to
 Server Components with real `metadata`/OpenGraph, for indexability and FCP.
@@ -261,7 +262,7 @@ Server Components with real `metadata`/OpenGraph, for indexability and FCP.
 share assets and is cheaper. Fold #332 in only if plan 03 shows the landing
 page's CSR is actually hurting indexing — measure before rewriting.
 
-### 12 · #525 — admin LLM usage analytics endpoints
+### 10 · #525 — admin LLM usage analytics endpoints
 
 **What it does.** Read-only, admin-gated aggregation over `LlmUsageEvent` —
 tokens, cost, call counts and success rate grouped by feature, tier, language
@@ -278,7 +279,7 @@ argument for doing it later, not sooner.
 **Constraint to carry over:** aggregates only. No drill-down that could resolve
 an `actorHash` back to a user.
 
-### 13 · #523 — usage dataset export
+### 11 · #523 — usage dataset export
 
 **What it does.** An admin-only export of `LlmUsageEvent` to CSV/Parquet/JSONL,
 with the schema and its anonymity guarantees documented for due diligence.
@@ -300,7 +301,7 @@ pseudonymous and handle it as personal data.
 
 ## P4 — icebox
 
-### 14 · #623 — evaluation platform
+### 12 · #623 — evaluation platform
 
 **What it does.** A standalone repo that runs a versioned fixture set
 (profile × job posting, DE/EN, across professions and edge cases) through the
@@ -325,7 +326,7 @@ its own issue at **P3** and leaving #623 as the umbrella for the separate repo.
 
 **Reference:** [EVAL_PLATFORM_FABLE5_PROMPT.md](../implementation/EVAL_PLATFORM_FABLE5_PROMPT.md).
 
-### 15 · #133 — dark mode
+### 13 · #133 — dark mode
 
 **What it does.** Light/dark/system themes, persisted preference, a toggle,
 Tailwind class-based dark mode.
@@ -337,7 +338,7 @@ references `tailwind.config.ts` — the app is on **Tailwind v4**, which is
 config-less by default, so the technical plan in the issue needs rewriting
 regardless.
 
-### 16 · #524 — ML on the usage dataset
+### 14 · #524 — ML on the usage dataset
 
 **What it does.** A discovery umbrella: token-cost forecasting, per-`actorHash`
 sequence modelling, tier-upgrade propensity, anomaly detection — trained only on
@@ -355,7 +356,6 @@ that is the correct state; leave it there.
 ```mermaid
 graph TD
   subgraph P1["P1 — next up"]
-    I790["#790 a11y finish"]
     I764["#764 profile validation"]
     I763["#763 profile-check SSOT"]
   end
@@ -363,7 +363,6 @@ graph TD
   subgraph P2["P2 — scheduled"]
     I571["#571 motion + loading<br/><b>keystone</b>"]
     I746["#746 page loading states"]
-    I780["#780 undo delete"]
     I761["#761 unify save model"]
     I573["#573 mobile pass"]
   end
@@ -383,7 +382,6 @@ graph TD
   end
 
   I571 --> I746
-  I571 --> I780
   I571 --> I761
   I571 --> I573
   I571 --> I570
@@ -417,9 +415,17 @@ and #761's "data loss when navigating away from `/profile`" does not happen.
 
 ## Not on this list
 
-Two categories of real work carry **no GitHub issue**, so they are invisible to
-anyone reading the tracker. Ordering the issues alone will therefore under-serve
-them.
+Three categories of real work carry **no GitHub issue**, so they are invisible
+to anyone reading the tracker. Ordering the issues alone will therefore
+under-serve them.
+
+**Carried past a closed issue** — see
+[Closed since this file was written](#closed-since-this-file-was-written):
+
+| Item | Status |
+|---|---|
+| VoiceOver / screen-reader pass | Never done. Carried #765 → #790 → nowhere. |
+| Re-measure the a11y result on a running stack | PR #792 measured against DOM fixtures; `/settings` passed only because jsdom has no layout. |
 
 **Plans without issues** — from
 [PUBLIC_LAUNCH_PLAN.md](../guides/PUBLIC_LAUNCH_PLAN.md) via
