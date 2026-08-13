@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import path from "path";
 import bundleAnalyzer from "@next/bundle-analyzer";
 import createNextIntlPlugin from "next-intl/plugin";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Cookie-based i18n (de/en) without URL routing — per-request config
 // lives in src/i18n/request.ts (the plugin's default lookup path).
@@ -114,10 +115,48 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Sentry was removed from the frontend to keep the Cloudflare Workers
-// bundle under the 3 MB free-tier script-size limit. Backend Sentry on the
-// NestJS API is unaffected and continues to capture server-side errors.
-// To re-enable: `git log --diff-filter=D -- apps/web/src/sentry*.ts`
-// and revert the removing commit, then `npm install @sentry/nextjs`.
-export default withBundleAnalyzer(withNextIntl(nextConfig));
+// Sentry build-time wiring. The runtime SDK is initialised in
+// src/instrumentation-client.ts; this wrapper only handles source-map upload,
+// without which every stack trace in Sentry points at minified chunk offsets.
+//
+// org/project/authToken come from the environment so no slug or credential is
+// committed. Upload is skipped when SENTRY_AUTH_TOKEN is unset, so local and
+// contributor builds are unaffected.
+//
+// Bundle-size note: the frontend SDK was once removed to keep the Cloudflare
+// Workers script under the 3 MB free-tier limit. `disableLogger` strips
+// Sentry's own logging code, and source maps are deleted after upload so they
+// are never served (both a size and a source-disclosure concern).
+export default withSentryConfig(withBundleAnalyzer(withNextIntl(nextConfig)), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  disableLogger: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
+
+  // Associates the release (NEXT_PUBLIC_SENTRY_RELEASE = the deploy SHA) with
+  // its commits, which is what powers suspect commits in the Sentry UI. Needs
+  // full git history: the deploy workflows check out with fetch-depth: 0 for
+  // this reason — with the default shallow clone it warns and skips.
+  release: {
+    setCommits: {
+      auto: true,
+    },
+  },
+
+  // Client-only integration. There is no sentry.server.config.ts, because the
+  // Worker runtime would need the separate @sentry/cloudflare adapter and the
+  // NestJS API already reports server errors via @sentry/node. These flags
+  // stop the build wrapping server functions and middleware with an SDK that
+  // can never initialise — the middleware sets the CSP, so leaving it
+  // unwrapped is the safer default. Measured size effect: negligible (~0.06
+  // KiB); the SDK's real cost is entering the module graph at all.
+  autoInstrumentServerFunctions: false,
+  autoInstrumentMiddleware: false,
+  autoInstrumentAppDirectory: false,
+});
 

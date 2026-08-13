@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
@@ -20,12 +21,11 @@ export default function Error({
   const t = useTranslations('common.errorPage');
 
   useEffect(() => {
-    // Log error in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Next.js Error Boundary:', error);
     }
-    
-    // In production, log to error tracking service
+
+    Sentry.captureException(error);
   }, [error]);
 
   return (
