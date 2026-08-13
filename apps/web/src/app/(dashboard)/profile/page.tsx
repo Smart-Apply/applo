@@ -62,6 +62,7 @@ import type {
   Education,
   Project,
   Certificate,
+  Profile,
 } from '@/types';
 import { useTranslations } from 'next-intl';
 
@@ -660,6 +661,13 @@ export default function ProfilePage() {
 
   const cvUploading = parseResume.isPending || updateProfile.isPending;
 
+  // Latest profile snapshot for callbacks that run after a mutation settled
+  // (e.g. the "Undo" action of a delete toast).
+  const profileRef = useRef<Profile | undefined>(profile);
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
   const [scrolled, setScrolled] = useState(false);
   // The dashboard layout's <main> grows to fit its content (the md:h-screen is
   // overridden by the surrounding flex column), so the window is what actually
@@ -729,54 +737,120 @@ export default function ProfilePage() {
     [profile?.skills, updateProfile],
   );
 
+  /**
+   * Deleting a profile entry is reversible: the removed item is kept in the
+   * toast's closure, so "Undo" restores it at its original position without a
+   * round trip to fetch it back. The restored entry is created fresh (its old
+   * row is already gone server-side), so its `id` is dropped.
+   */
+  const removeWithUndo = useCallback(
+    <T extends { id?: string }>(
+      index: number,
+      message: string,
+      select: (p: Profile | undefined) => T[] | undefined,
+      persist: (list: T[]) => void,
+    ) => {
+      const list = select(profileRef.current) ?? [];
+      const removed = list[index];
+      if (!removed) return;
+      persist(list.filter((_, i) => i !== index));
+      toast.success(message, {
+        duration: 10000,
+        action: {
+          label: t('page.removed.undo'),
+          onClick: () => {
+            // Defensive: if the optimistic cache still holds the deleted row
+            // (mutation not yet applied), drop it so undo can't duplicate it.
+            const current = (select(profileRef.current) ?? []).filter(
+              (item) => item !== removed && (!removed.id || item.id !== removed.id),
+            );
+            const { id: _id, ...rest } = removed;
+            current.splice(Math.min(index, current.length), 0, rest as T);
+            persist(current);
+          },
+        },
+      });
+    },
+    [t],
+  );
+
   const handleRemoveSkill = useCallback(
     (name: string) => {
-      const updatedSkills = (profile?.skills ?? []).filter(
-        (s) => s.name.toLowerCase() !== name.toLowerCase(),
+      const list = profileRef.current?.skills ?? [];
+      const index = list.findIndex((s) => s.name.toLowerCase() === name.toLowerCase());
+      if (index === -1) return;
+      removeWithUndo(
+        index,
+        t('page.removed.skill', { name: list[index].name }),
+        (p) => p?.skills,
+        (skills) => updateProfile.mutate({ skills }),
       );
-      updateProfile.mutate({ skills: updatedSkills });
     },
-    [profile?.skills, updateProfile],
+    [removeWithUndo, t, updateProfile],
   );
 
   const handleRemoveExperience = useCallback(
     (index: number) => {
-      const updated = (profile?.experiences ?? []).filter((_, i) => i !== index);
-      updateProfile.mutate({ experiences: updated });
+      removeWithUndo(
+        index,
+        t('page.removed.experience', {
+          name: profileRef.current?.experiences?.[index]?.title ?? '',
+        }),
+        (p) => p?.experiences,
+        (experiences) => updateProfile.mutate({ experiences }),
+      );
     },
-    [profile?.experiences, updateProfile],
+    [removeWithUndo, t, updateProfile],
   );
 
   const handleRemoveProject = useCallback(
     (index: number) => {
-      const updated = (profile?.projects ?? []).filter((_, i) => i !== index);
-      updateProfile.mutate({ projects: updated });
+      removeWithUndo(
+        index,
+        t('page.removed.project', { name: profileRef.current?.projects?.[index]?.name ?? '' }),
+        (p) => p?.projects,
+        (projects) => updateProfile.mutate({ projects }),
+      );
     },
-    [profile?.projects, updateProfile],
+    [removeWithUndo, t, updateProfile],
   );
 
   const handleRemoveCertificate = useCallback(
     (index: number) => {
-      const updated = (profile?.certificates ?? []).filter((_, i) => i !== index);
-      updateProfile.mutate({ certificates: updated });
+      removeWithUndo(
+        index,
+        t('page.removed.certificate', {
+          name: profileRef.current?.certificates?.[index]?.name ?? '',
+        }),
+        (p) => p?.certificates,
+        (certificates) => updateProfile.mutate({ certificates }),
+      );
     },
-    [profile?.certificates, updateProfile],
+    [removeWithUndo, t, updateProfile],
   );
 
   const handleRemoveEducation = useCallback(
     (index: number) => {
-      const updated = (profile?.education ?? []).filter((_, i) => i !== index);
-      updateProfile.mutate({ education: educationToDto(updated) });
+      removeWithUndo(
+        index,
+        t('page.removed.education', { name: profileRef.current?.education?.[index]?.degree ?? '' }),
+        (p) => p?.education,
+        (education) => updateProfile.mutate({ education: educationToDto(education) }),
+      );
     },
-    [profile?.education, updateProfile],
+    [removeWithUndo, t, updateProfile],
   );
 
   const handleRemoveLanguage = useCallback(
     (index: number) => {
-      const updated = (profile?.languages ?? []).filter((_, i) => i !== index);
-      updateProfile.mutate({ languages: updated });
+      removeWithUndo(
+        index,
+        t('page.removed.language', { name: profileRef.current?.languages?.[index]?.name ?? '' }),
+        (p) => p?.languages,
+        (languages) => updateProfile.mutate({ languages }),
+      );
     },
-    [profile?.languages, updateProfile],
+    [removeWithUndo, t, updateProfile],
   );
 
   const handleAddLanguage = useCallback(

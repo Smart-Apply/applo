@@ -186,6 +186,15 @@
       "chooseLevel": "Choisir un niveau",
       "askLanguageLevel": " — Quel est votre niveau dans cette langue ?"
     },
+    "removed": {
+      "undo": "Annuler",
+      "experience": "Poste « {name} » supprimé",
+      "skill": "Compétence « {name} » supprimée",
+      "education": "Formation « {name} » supprimée",
+      "project": "Projet « {name} » supprimé",
+      "certificate": "Certificat « {name} » supprimé",
+      "language": "Langue « {name} » supprimée"
+    },
     "skillSuggestions": [
       "Gestion de projet",
       "Soins aux patients",
@@ -502,6 +511,10 @@
     "replace": "Remplacer la photo de candidature",
     "upload": "Importer une photo de candidature",
     "remove": "Supprimer la photo de candidature",
+    "removeTitle": "Supprimer la photo de candidature ?",
+    "removeDescription": "La photo sera définitivement supprimée. Vous pouvez en téléverser une nouvelle à tout moment.",
+    "removeCancel": "Annuler",
+    "removeConfirm": "Supprimer",
     "hint": "JPEG/PNG, 2 Mo max. N'apparaît que sur les CV où vous l'activez dans l'éditeur.",
     "saved": "Photo de candidature enregistrée",
     "uploadError": "La photo n'a pas pu être téléversée",

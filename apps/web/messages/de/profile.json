@@ -186,6 +186,15 @@
       "chooseLevel": "Einstufung wählen",
       "askLanguageLevel": " — Wie gut sprichst du diese Sprache?"
     },
+    "removed": {
+      "undo": "Rückgängig",
+      "experience": "Berufsstation „{name}“ gelöscht",
+      "skill": "Fähigkeit „{name}“ gelöscht",
+      "education": "Ausbildung „{name}“ gelöscht",
+      "project": "Projekt „{name}“ gelöscht",
+      "certificate": "Zertifikat „{name}“ gelöscht",
+      "language": "Sprache „{name}“ gelöscht"
+    },
     "skillSuggestions": [
       "JavaScript",
       "TypeScript",
@@ -551,6 +560,10 @@
     "replace": "Bewerbungsfoto ersetzen",
     "upload": "Bewerbungsfoto hochladen",
     "remove": "Bewerbungsfoto entfernen",
+    "removeTitle": "Bewerbungsfoto entfernen?",
+    "removeDescription": "Das Foto wird endgültig gelöscht. Du kannst jederzeit ein neues hochladen.",
+    "removeCancel": "Abbrechen",
+    "removeConfirm": "Entfernen",
     "hint": "JPEG/PNG, max. 2 MB. Erscheint nur in Lebensläufen, bei denen du es im Editor aktivierst.",
     "saved": "Bewerbungsfoto gespeichert",
     "uploadError": "Foto konnte nicht hochgeladen werden",

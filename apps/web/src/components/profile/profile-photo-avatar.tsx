@@ -4,6 +4,17 @@ import { useRef } from 'react';
 import { Camera, Loader2, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   useDeleteProfilePhoto,
   useProfilePhoto,
   useUploadProfilePhoto,
@@ -101,20 +112,37 @@ export function ProfilePhotoAvatar({ initials, hasPhoto }: ProfilePhotoAvatarPro
       </Tooltip>
 
       {shownPhoto && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => deletePhoto.mutate()}
-              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background shadow-sm transition-colors hover:bg-destructive hover:text-destructive-foreground"
-              aria-label={t('photo.remove')}
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="top">{t('photo.remove')}</TooltipContent>
-        </Tooltip>
+        <AlertDialog>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background shadow-sm transition-colors hover:bg-destructive hover:text-destructive-foreground"
+                  aria-label={t('photo.remove')}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </AlertDialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top">{t('photo.remove')}</TooltipContent>
+          </Tooltip>
+          {/* Deleting the photo cannot be undone (the file is gone), so this
+              destructive action asks for confirmation instead of offering undo. */}
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('photo.removeTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('photo.removeDescription')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('photo.removeCancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={() => deletePhoto.mutate()}>
+                {t('photo.removeConfirm')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );
