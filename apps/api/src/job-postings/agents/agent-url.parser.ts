@@ -57,13 +57,38 @@ const AGENT_PARSE_HARD_TIMEOUT_MS = 90_000; // 90s
 const AZURE_OPENAI_FETCH_TIMEOUT_MS = 45_000; // 45s
 
 /**
- * Keep the launched Chromium warm between parses to skip the ~1–2s cold
- * launch every request would otherwise pay. Parses are already single-flighted
- * (see `inFlightParse`), so at most one warm browser is alive. Evict it after
- * this idle window so an idle worker doesn't pin ~120MB Chromium RSS on the
- * 1GB Fly VM indefinitely.
+ * Default idle window before the warm Chromium is evicted.
+ *
+ * Deliberately 60s rather than the 5 min suggested in #533: staging still runs
+ * on a 1GB shared-cpu-1x VM (fly.staging.toml), and an idle Chromium holds
+ * ~150-250MB RSS. Override per-environment with AGENT_BROWSER_IDLE_MS.
  */
-const BROWSER_IDLE_EVICTION_MS = 60_000; // 60s
+const DEFAULT_BROWSER_IDLE_MS = 60_000;
+
+/** Upper bound for AGENT_BROWSER_IDLE_MS — stops a typo pinning Chromium for a day. */
+const MAX_BROWSER_IDLE_MS = 600_000;
+
+/**
+ * Lower bound. A sub-second window would evict the browser before the next
+ * parse could ever reuse it, silently turning the warm pool back off.
+ */
+const MIN_BROWSER_IDLE_MS = 1_000;
+
+/**
+ * Parse AGENT_BROWSER_IDLE_MS. Anything that is not a plain run of digits
+ * falls back to the default — deliberately stricter than `Number()`, which
+ * would otherwise accept `0x10` (16) and `1e3` (1000) and quietly apply a
+ * value the operator did not intend. In-range values are clamped to
+ * [MIN, MAX]. Exported for unit testing.
+ */
+export function resolveBrowserIdleMs(raw: string | undefined): number {
+  if (raw === undefined) return DEFAULT_BROWSER_IDLE_MS;
+  const trimmed = raw.trim();
+  if (!/^\d+$/.test(trimmed)) return DEFAULT_BROWSER_IDLE_MS;
+  const parsed = Number(trimmed);
+  if (parsed <= 0) return DEFAULT_BROWSER_IDLE_MS;
+  return Math.min(Math.max(parsed, MIN_BROWSER_IDLE_MS), MAX_BROWSER_IDLE_MS);
+}
 
 /**
  * Concurrency gate. The agent parser launches a fresh Chromium via Playwright
@@ -84,8 +109,11 @@ export class AgentUrlParser {
   private readonly logger = new Logger(AgentUrlParser.name);
   private browser: Browser | null = null;
   private idleTimer: NodeJS.Timeout | null = null;
+  /** Set by shutdown(); guards against a launch completing after teardown. */
+  private disposed = false;
   private readonly maxSteps: number;
   private readonly timeout: number;
+  private readonly browserIdleMs: number;
 
   // Azure OpenAI config (read from env, same vars as AzureOpenAIProvider)
   private readonly azureEndpoint: string;
@@ -96,6 +124,7 @@ export class AgentUrlParser {
   constructor() {
     this.maxSteps = parseInt(process.env.AGENT_MAX_STEPS || '10', 10);
     this.timeout = parseInt(process.env.AGENT_TIMEOUT || '30000', 10);
+    this.browserIdleMs = resolveBrowserIdleMs(process.env.AGENT_BROWSER_IDLE_MS);
 
     this.azureEndpoint = process.env.AZURE_OPENAI_ENDPOINT || '';
     this.azureApiKey = process.env.AZURE_OPENAI_API_KEY || '';
@@ -108,7 +137,10 @@ export class AgentUrlParser {
       );
     }
 
-    this.logger.log('AgentUrlParser initialized with Azure OpenAI (direct HTTP)');
+    this.logger.log(
+      `AgentUrlParser initialized with Azure OpenAI (direct HTTP), ` +
+        `browser idle eviction ${this.browserIdleMs}ms`,
+    );
   }
 
   /**
@@ -314,7 +346,7 @@ export class AgentUrlParser {
     // driving a mismatched Chrome over CDP is unsupported and flaky.
     const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH || undefined;
 
-    this.browser = await chromium.launch({
+    const launched = await chromium.launch({
       headless: true,
       ...(executablePath ? { executablePath } : {}),
       args: [
@@ -324,6 +356,16 @@ export class AgentUrlParser {
         '--disable-gpu',
       ],
     });
+
+    // A shutdown() that landed while the launch above was in flight saw
+    // `this.browser === null` and closed nothing. Re-check here so we never
+    // install a browser that no one is left to close.
+    if (this.disposed) {
+      await launched.close().catch(() => undefined);
+      throw new Error('AgentUrlParser was shut down while the browser was launching');
+    }
+
+    this.browser = launched;
   }
 
   /**
@@ -929,8 +971,13 @@ export class AgentUrlParser {
 
   /**
    * Arm (or re-arm) the idle-eviction timer that closes the warm browser once
-   * no parse has run for BROWSER_IDLE_EVICTION_MS. Single-flighting guarantees
-   * this never fires mid-parse (initBrowser clears it on the next parse start).
+   * no parse has run for `this.browserIdleMs`.
+   *
+   * Only `parseInternal`'s `finally` may call this. That is what keeps the
+   * invariant "no timer is armed while a parse is in flight" true: initBrowser()
+   * clears the timer when a parse starts, and only the end of a parse re-arms
+   * it. Arming from anywhere that is not behind the `inFlightParse` gate (a
+   * health check, say) would schedule an eviction during a live parse.
    */
   private scheduleBrowserEviction(): void {
     if (this.idleTimer) {
@@ -939,22 +986,47 @@ export class AgentUrlParser {
     this.idleTimer = setTimeout(() => {
       this.idleTimer = null;
       void this.closeBrowser();
-    }, BROWSER_IDLE_EVICTION_MS);
+    }, this.browserIdleMs);
     this.idleTimer.unref?.();
   }
 
   /**
-   * Health check — verifies the browser can launch.
+   * Close the warm browser and cancel the idle timer.
+   *
+   * Public because this class is constructed with `new` from UrlParser, not by
+   * the Nest container (its constructor throws without Azure config, and
+   * UrlParser degrades gracefully on that). Nest lifecycle hooks therefore never
+   * fire on this instance — UrlParser.onModuleDestroy() calls this instead.
+   *
+   * One-way: after this resolves, a concurrent initBrowser() that was mid-launch
+   * discards its browser rather than installing an unowned one.
+   */
+  async shutdown(): Promise<void> {
+    this.disposed = true;
+    await this.closeBrowser();
+  }
+
+  /**
+   * Health check — reports on the warm browser without touching it.
+   *
+   * Pure observation by design: it never launches, never closes, and never
+   * touches the idle timer. Each of those would be a bug here, because this
+   * method is NOT behind the `inFlightParse` gate and so can run concurrently
+   * with a parse:
+   *
+   *   - Closing would abort the in-flight parse outright.
+   *   - Arming the idle timer would schedule an eviction *during* that parse.
+   *     `initBrowser()` deliberately leaves no timer armed while a parse runs,
+   *     and the parse hard timeout (90s) is longer than the default idle window
+   *     (60s), so such a timer could fire and close the browser mid-parse.
+   *   - Launching would make a liveness probe allocate ~150-250MB of Chromium,
+   *     and a probe interval shorter than the idle window would keep cancelling
+   *     eviction, pinning the browser forever.
+   *
+   * A worker with no warm browser is healthy — one launches on the next parse.
    */
   async healthCheck(): Promise<boolean> {
-    try {
-      await this.initBrowser();
-      await this.closeBrowser();
-      return true;
-    } catch (error) {
-      this.logger.error(`Health check failed: ${error.message}`);
-      return false;
-    }
+    return this.browser ? this.browser.isConnected() : true;
   }
 }
 

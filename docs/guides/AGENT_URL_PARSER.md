@@ -56,6 +56,7 @@ ENABLE_AGENT_PARSER=true
 # Agent behavior
 AGENT_MAX_STEPS=10
 AGENT_TIMEOUT=30000
+AGENT_BROWSER_IDLE_MS=60000
 
 # LLM Configuration (choose one)
 
@@ -76,6 +77,7 @@ OPENAI_API_KEY=sk-your-openai-api-key
 | `ENABLE_AGENT_PARSER` | `true`  | Enable agent-based fallback     |
 | `AGENT_MAX_STEPS`     | `10`    | Maximum agent workflow steps    |
 | `AGENT_TIMEOUT`       | `30000` | Browser navigation timeout (ms) |
+| `AGENT_BROWSER_IDLE_MS` | `60000` | Warm-browser idle eviction (ms, digits only, clamped to 1000–600000) |
 
 ## Usage
 
