@@ -103,6 +103,8 @@ export interface PerCallTelemetry {
   step: PipelineStep;
   template: string;
   model: string;
+  /** Lane that ACTUALLY served the call — 'main' after a side-lane fallback. */
+  lane?: 'main' | 'fast' | 'mid';
   latencyMs: number;
   promptTokens: number;
   completionTokens: number;
@@ -186,6 +188,7 @@ function record(
     step,
     template: meta.templatePath,
     model: meta.model || ctx.config.models?.[step]?.deployment || '',
+    lane: meta.lane,
     latencyMs: meta.latencyMs,
     promptTokens: meta.promptTokens,
     completionTokens: meta.completionTokens,

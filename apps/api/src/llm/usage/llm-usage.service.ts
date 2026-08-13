@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { createHmac } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -56,12 +56,15 @@ export class LlmUsageService {
   private readonly actor = new AsyncLocalStorage<ActorStore>();
 
   constructor(
-    private readonly prisma: PrismaService,
+    // Optional so a persistence-free Nest context can still resolve LLMModule.
+    // The headless generation seam (#797) boots ConfigModule + LLMModule with no
+    // database on purpose; without this the whole module graph fails to load.
+    @Optional() private readonly prisma: PrismaService | null,
     private readonly config: ConfigService,
   ) {}
 
   get enabled(): boolean {
-    return Boolean(this.config.llmUsageHashSalt);
+    return Boolean(this.config.llmUsageHashSalt) && this.prisma !== null;
   }
 
   /** Establish the actor scope for an async unit of work (HTTP request, queue job). */
@@ -94,10 +97,12 @@ export class LlmUsageService {
     const actorHash = store ? this.hashActor(store.userId, salt) : undefined;
     const language = input.language ?? store?.language;
     const tierPromise = store ? this.resolveTier(store) : Promise.resolve(null);
+    const prisma = this.prisma;
+    if (!prisma) return;
 
     void tierPromise
       .then((tier) =>
-        this.prisma.llmUsageEvent.create({
+        prisma.llmUsageEvent.create({
           data: {
             actorHash: actorHash ?? null,
             feature: input.feature,
@@ -139,7 +144,7 @@ export class LlmUsageService {
    */
   async deleteEventsForActor(userId: string): Promise<number> {
     const salt = this.config.llmUsageHashSalt;
-    if (!salt) {
+    if (!salt || !this.prisma) {
       return 0;
     }
     const { count } = await this.prisma.llmUsageEvent.deleteMany({
@@ -165,8 +170,10 @@ export class LlmUsageService {
   }
 
   private resolveTier(store: ActorStore): Promise<SubscriptionTier | null> {
+    const prisma = this.prisma;
+    if (!prisma) return Promise.resolve(null);
     if (!store.tier) {
-      store.tier = this.prisma.subscription
+      store.tier = prisma.subscription
         .findUnique({ where: { userId: store.userId }, select: { tier: true } })
         .then((row) => row?.tier ?? null)
         .catch((error: unknown) => {

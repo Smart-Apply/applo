@@ -229,18 +229,33 @@ function detectLanguage(prompt: string): 'de' | 'en' {
   return /[äöüß]|Sehr geehrte/.test(prompt) ? 'de' : 'en';
 }
 
+/**
+ * Every v1 prompt declares its identity on a `# Role: …` line. Keying off that
+ * heading anywhere in the prompt — rather than a fixed-size window at the top —
+ * survives changes to what precedes it. Prompt caching (Phase 1) prepended a
+ * byte-identical STABLE PREFIX to each pipeline prompt, which pushed the role
+ * line to roughly char 595 and silently broke a 200-char window: every step
+ * misdetected as `unknown`, every offline run produced `{}` while exiting 0.
+ */
+const ROLE_TO_STEP: ReadonlyArray<readonly [string, StepId]> = [
+  ['Resume Strategist and Profile Selector', 'skill-selector'],
+  ['Job Posting Fact Extractor', 'job-facts'],
+  ['Professional Resume Content Rewriter', 'resume-rewrite'],
+  ['Senior Resume Content Editor', 'editor-resume'],
+  ['Surgical Résumé Style Fixer', 'resume-style-rewrite'],
+  ['Professional Cover Letter Writer', 'cover-letter'],
+  ['Senior Cover Letter Editor', 'editor-cover-letter'],
+  ['Surgical Keyword Weaver', 'keyword-weave'],
+  ['ATS Keyword Extractor', 'ats-keywords'],
+  ['Surgical Style Fixer', 'style-rewrite'],
+];
+
 function detectStep(prompt: string): StepId {
-  const head = prompt.slice(0, 200);
-  if (head.includes('Resume Strategist and Profile Selector')) return 'skill-selector';
-  if (head.includes('Job Posting Fact Extractor')) return 'job-facts';
-  if (head.includes('Professional Resume Content Rewriter')) return 'resume-rewrite';
-  if (head.includes('Senior Resume Content Editor')) return 'editor-resume';
-  if (head.includes('Surgical Résumé Style Fixer')) return 'resume-style-rewrite';
-  if (head.includes('Professional Cover Letter Writer')) return 'cover-letter';
-  if (head.includes('Senior Cover Letter Editor')) return 'editor-cover-letter';
-  if (head.includes('Surgical Keyword Weaver')) return 'keyword-weave';
-  if (head.includes('ATS Keyword Extractor')) return 'ats-keywords';
-  if (head.includes('Surgical Style Fixer')) return 'style-rewrite';
+  const role = /^# Role:\s*(.+)$/m.exec(prompt)?.[1]?.trim();
+  if (!role) return 'unknown';
+  for (const [needle, step] of ROLE_TO_STEP) {
+    if (role.startsWith(needle)) return step;
+  }
   return 'unknown';
 }
 

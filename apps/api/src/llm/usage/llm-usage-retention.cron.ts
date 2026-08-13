@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConfigService } from '../../config/config.service';
@@ -18,12 +18,16 @@ export class LlmUsageRetentionCron {
   private readonly logger = new Logger(LlmUsageRetentionCron.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    // Optional for the same reason as in LlmUsageService: the headless
+    // generation seam (#797) resolves LLMModule without a database.
+    @Optional() private readonly prisma: PrismaService | null,
     private readonly configService: ConfigService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_4AM)
   async sweepExpiredUsageEvents(): Promise<void> {
+    if (!this.prisma) return;
+
     // Skip if cron jobs are disabled (e.g., in local development)
     if (!this.configService.enableCronJobs) {
       this.logger.debug('LLM usage retention sweep skipped (ENABLE_CRON_JOBS=false)');
