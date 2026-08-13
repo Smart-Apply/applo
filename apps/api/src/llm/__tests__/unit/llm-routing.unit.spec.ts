@@ -3,8 +3,14 @@ import type { ConfigService } from '../../../config/config.service';
 import type { GenerateOptions, LLMProvider } from '../../llm.interface';
 import { createFastProvider } from '../../llm.module';
 import { LLMService } from '../../llm.service';
+import type { LlmUsageService } from '../../usage/llm-usage.service';
 
 const VALID_TAILORED_PROFILE = '{"target_role":"Nurse","target_company":"Clinic"}';
+
+// LLMService only ever calls `.record()` on its usage collaborator — a
+// no-op stub is enough to unit-test lane routing without a real Prisma-backed
+// LlmUsageService (issue #522).
+const usageStub = { record: vi.fn() } as unknown as LlmUsageService;
 
 function createConfig(overrides: Partial<ConfigService> = {}): ConfigService {
   return {
@@ -35,7 +41,7 @@ describe('LLMService fast-model routing', () => {
     const mainProvider = createProvider(VALID_TAILORED_PROFILE);
     const config = createConfig();
     const fastProvider = createFastProvider(config, {} as HttpService);
-    const service = new LLMService(mainProvider, config, fastProvider);
+    const service = new LLMService(mainProvider, config, fastProvider, null, usageStub);
 
     expect(fastProvider).toBeNull();
     expect(service.isFastRouted('v1/skill-selector.md')).toBe(false);
@@ -51,6 +57,8 @@ describe('LLMService fast-model routing', () => {
       mainProvider,
       createConfig({ llmFastProvider: 'azure-openai' }),
       null,
+      null,
+      usageStub,
     );
 
     expect(service.isFastRouted('v1/skill-selector.md')).toBe(true);
@@ -66,7 +74,7 @@ describe('LLMService fast-model routing', () => {
     const mainProvider = createProvider(VALID_TAILORED_PROFILE);
     const fastProvider = createProvider(VALID_TAILORED_PROFILE);
     fastProvider.generateText.mockRejectedValueOnce(new Error('fast provider unavailable'));
-    const service = new LLMService(mainProvider, createConfig(), fastProvider);
+    const service = new LLMService(mainProvider, createConfig(), fastProvider, null, usageStub);
 
     expect(service.isFastRouted('v1/skill-selector.md')).toBe(true);
     await service.callJson('v1/skill-selector.md', {});

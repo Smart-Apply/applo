@@ -4,7 +4,7 @@ import { DefaultAzureCredential } from '@azure/identity';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '../../config/config.service';
-import { LLMProvider, GenerateOptions } from '../llm.interface';
+import { LLMProvider, GenerateOptions, LlmCallUsage } from '../llm.interface';
 import { buildV1ChatCompletionsUrl } from './azure-v1-url.util';
 
 /**
@@ -242,6 +242,21 @@ export class AzureAIFoundryProvider implements LLMProvider, OnModuleInit {
 
       if (!content) {
         throw new Error('No content in Azure OpenAI fallback response');
+      }
+
+      // Report normalized token usage for the anonymous usage-tracking layer
+      // (issue #522), mirroring azure-openai.provider.ts. Only this HTTP
+      // fallback path reports usage — the Agents SDK path in callAgent()
+      // doesn't expose token counts, so those rows get null tokens rather
+      // than a fabricated estimate.
+      if (options?.onUsage && response.data.usage) {
+        const usage = response.data.usage;
+        const normalized: LlmCallUsage = {
+          promptTokens: usage.prompt_tokens ?? 0,
+          completionTokens: usage.completion_tokens ?? 0,
+          cachedTokens: usage.prompt_tokens_details?.cached_tokens ?? 0,
+        };
+        options.onUsage(normalized);
       }
 
       this.logger.log('Successfully generated text with Azure OpenAI fallback');

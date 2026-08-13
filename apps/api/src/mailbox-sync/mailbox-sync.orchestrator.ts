@@ -14,6 +14,7 @@ import {
 } from './email-classifier.service';
 import { MailboxMatcherService } from './mailbox-matcher.service';
 import { MicrosoftGraphService } from './providers/microsoft-graph.service';
+import { LlmUsageService } from '../llm/usage/llm-usage.service';
 
 /**
  * End-to-end pipeline for one inbound email notification:
@@ -41,6 +42,7 @@ export class MailboxSyncOrchestrator {
     private readonly classifier: EmailClassifierService,
     private readonly matcher: MailboxMatcherService,
     private readonly email: EmailService,
+    private readonly llmUsage: LlmUsageService,
   ) {}
 
   /**
@@ -93,11 +95,17 @@ export class MailboxSyncOrchestrator {
       const accessToken = await this.connections.getFreshAccessToken(conn);
       const message = await this.graph.fetchMessage({ accessToken, messageId });
 
-      const classification = await this.classifier.classify({
-        subject: message.subject,
-        fromAddress: message.fromAddress,
-        bodyText: message.bodyText,
-      });
+      // Establish the usage-tracking actor scope (issue #522). This path is
+      // reached from the public Graph webhook, so there is no JWT and the
+      // global LlmUsageContextInterceptor no-ops — without this the
+      // MAILBOX_CLASSIFICATION rows would always land with a null actorHash.
+      const classification = await this.llmUsage.runWithActor({ userId: conn.userId }, () =>
+        this.classifier.classify({
+          subject: message.subject,
+          fromAddress: message.fromAddress,
+          bodyText: message.bodyText,
+        }),
+      );
 
       const match = await this.matcher.match(conn.userId, {
         subject: message.subject,

@@ -207,6 +207,10 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - **mid** — `LLM_MID_MODEL` (+ optional `AZURE_OPENAI_MID_ENDPOINT` / `AZURE_OPENAI_MID_API_KEY`, which fall back to the main Azure values; today `gpt-5.4-mini` in the separate `foundry-applo-prod` resource). Opt-in **per call** via `{ midLane: true }` rather than by template list, because it is tier-dependent, not task-dependent. Today: Free-tier Bewerbungs-Checks. No-op when unset.
 
   ⚠️ **Reasoning models need a different request shape.** The GPT-5 family (incl. `gpt-5.4-mini`) and the o-series reject `temperature`, `top_p`, penalties, logprobs **and `max_tokens`** — the output cap is `max_completion_tokens` instead. `azure-openai.provider.ts#isReasoningModel` shapes the body per family; sending the classic parameters returns `400 Unsupported parameter`. Two consequences when pointing a lane at one: the pipeline's tuned per-call temperatures (0.2 skill-selector, 0.35 resume-rewrite, 0.3 revision passes) are **silently ignored**, and hidden reasoning tokens are **billed as output** and count against `max_completion_tokens` — so a reasoning model's real output cost can far exceed its visible completion length.
+
+  **Usage tracking (issue #522, `llm/usage/`):** every `callText`/`callJson`/`generateText`/`translateSummary` call — regardless of lane, provider, or success/failure — records one `LlmUsageEvent` row (`LlmUsageService.record`, fire-and-forget, never throws). Rows record the lane/model that **actually served** the call, so a side-lane fallback is attributed to `main`, not to the lane that failed. `feature` is derived from the exact template path (`usage/llm-feature.map.ts`, exact-key lookup — deliberately NOT `includes()`, unlike `FAST_MODEL_TEMPLATES` above). `userId` reaches the recorder only via an `AsyncLocalStorage` actor scope — `LlmUsageContextInterceptor` (global `APP_INTERCEPTOR`) seeds it from the JWT-authenticated request for every HTTP call; the two non-HTTP paths seed it explicitly (`ApplicationProcessor.process` for queued generation jobs, `MailboxSyncOrchestrator` for the public Graph webhook). No-op entirely when `LLM_USAGE_HASH_SALT` is unset.
+
+  ⚠️ **The dataset is pseudonymous, not anonymous** — despite the issue title. `actorHash` is stable per user, and the table sits beside `applications`/`validations`/`interview_sessions`, which carry `userId` + millisecond `createdAt`; a usage burst time-correlates back to the triggering row, recovering the `userId` **without** the salt. So GDPR erasure obligations still apply, and there is currently **no** retention sweep and **no** deletion hook on the account-deletion path. `LlmUsageEvent.language` is a structural field normalized against a fixed allow-list at the sink — never let free text into this table.
 - `logger` — Pino + Winston audit logger
 - `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification.
 - `pdf` — thin façade over `pdf-v2/ReactPdfRendererService`. Kept so external callers (`application.processor.ts`, tests) preserve the `PdfService` API surface. Throws when a template has no react-pdf factory registered.
@@ -250,7 +254,9 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - `index.ts` - TypeScript types (User, Profile, JobPosting, Application)
 
 ## Data Model (Prisma 6)
-17 models in `apps/api/prisma/schema.prisma`:
+31 models in `apps/api/prisma/schema.prisma` (the highlights below are a
+selection, not the full list — `grep "^model " apps/api/prisma/schema.prisma`
+is authoritative):
 - **User**, **Profile** (incl. `photoKey` — storage key of the optional Bewerbungsfoto; uploaded via `POST /profile/photo`, rendered only when an application enables `templateSettings.showPhoto`, storage object deleted with the account), **Skill**, **Experience**, **Education**, **Certificate**, **Project**, **Language**
 - **JobPosting**, **Application** (incl. `translations` Json — per-language translation cache for cross-language exports, invalidated by content xxhash — `coverLetterLength` — the persisted length preference `kurz` ~250 / `standard` ~350 body words that all cover-letter generation/regeneration paths resolve to a word budget — `templateSettings` Json — per-application design tuning: `fontScale` sm/md/lg (±8 %), `density` compact/normal/relaxed, free `accentColor` hex override, curated `fontFamily`; see the shared `TemplateSettings` type — and `generationProgress`/`generationMessage` — persisted pipeline progress served by the SSE poll, cross-machine safe), **ResumeTemplate**, **Interview**
 - **Validation** (Bewerbungs-Check — standalone AI check of an external application; inputs + cached result, scoped to user; `contentHash` xxHash-64 of the normalized inputs backs a per-user dedupe cache)
@@ -260,6 +266,8 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Subscription** (plans & usage) — monthly hard limits for applications (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95), Bewerbungs-Checks (3/15/35), and mock interviews (0/5/20), with `Subscription.addonCreditsRemaining` holding purchased add-on credits (packages of 10/30/75) that persist until used and are consumed after the tier allowance
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
+- **LlmUsageEvent** (issue #522 — per-feature LLM token-usage event; NO `User` FK, keyed by an HMAC-SHA256 `actorHash` derived from `LLM_USAGE_HASH_SALT`; never stores prompt/response content; unset salt disables tracking entirely. **Pseudonymous, not anonymous** — see the `llm` module notes)
+- Also present, not detailed above: **UserPreferences**, **SubscriptionUsage**, **BackgroundJob**, **TwoFactorAuth**, **TwoFactorBackupCode**, **TrustedDevice**, **OAuthProvider**, and the interview trio **InterviewSession**/**InterviewQuestion**/**InterviewFeedback** (the "Interview" shorthand above), plus **Template** (the "ResumeTemplate" shorthand)
 
 ## API Endpoints (v1)
 
@@ -704,6 +712,9 @@ UPSTASH_REDIS_REST_TOKEN=<token>
 
 # LLM (pluggable)
 LLM_PROVIDER=mock            # azure-openai | azure-ai-foundry | mistral | mock
+# Anonymous per-feature LLM usage tracking (issue #522). Salt for the
+# irreversible actorHash in llm_usage_events. Unset = tracking OFF entirely.
+# LLM_USAGE_HASH_SALT=<openssl rand -hex 32>
 # Optional per-task routing: the extraction steps (ats-keywords/job-facts/
 # skill-selector) use this cheaper model; writing stays on the default.
 # LLM_FAST_PROVIDER hosts it on a different provider (fast-lane failures fall

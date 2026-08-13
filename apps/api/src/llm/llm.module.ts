@@ -6,6 +6,7 @@ import { AzureAIFoundryProvider } from './providers/azure-ai-foundry.provider';
 import { MistralProvider } from './providers/mistral.provider';
 import { MockLLMProvider } from './providers/mock.provider';
 import { ConfigService } from '../config/config.service';
+import { LlmUsageService } from './usage/llm-usage.service';
 
 export function createFastProvider(
   configService: ConfigService,
@@ -112,8 +113,9 @@ export function createMidProvider(
       inject: [ConfigService, HttpService],
     },
     LLMService,
+    LlmUsageService,
   ],
-  exports: [LLMService, 'AZURE_OPENAI_PROVIDER'],
+  exports: [LLMService, 'AZURE_OPENAI_PROVIDER', LlmUsageService],
 })
 export class LLMModule {}
 

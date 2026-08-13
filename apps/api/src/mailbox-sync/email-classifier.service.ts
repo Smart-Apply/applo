@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EmailClassification } from '../generated/prisma/client';
+import { EmailClassification, LlmFeature } from '../generated/prisma/client';
 import { LLMService } from '../llm/llm.service';
 
 export interface ClassifierInput {
@@ -86,6 +86,7 @@ ${input.bodyText}
         maxTokens: 150,
         systemMessage:
           'You return ONLY a single valid JSON object matching the requested shape. No prose.',
+        feature: LlmFeature.MAILBOX_CLASSIFICATION,
       });
     } catch (err) {
       // Circuit-breaker open / timeout / provider error. Fall back to OTHER

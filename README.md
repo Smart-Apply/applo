@@ -180,6 +180,7 @@ pnpm typecheck
 - Rate limiting (5/15min auth · 100/15min standard)
 - Input sanitization (`@Sanitize()` + DOMPurify)
 - AI prompt guardrails — per-surface character + token limits on every AI input, enforced live in the UI and authoritatively on the server (cost & abuse control)
+- Per-feature LLM usage telemetry — no prompt/response content, no `User` FK, actor keyed by an HMAC-SHA256 pseudonym (pseudonymous, not anonymous — still personal data under GDPR)
 - Winston audit logs (daily rotation, 90-day retention)
 - Sentry error & performance monitoring
 

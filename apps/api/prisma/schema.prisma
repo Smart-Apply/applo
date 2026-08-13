@@ -1217,3 +1217,109 @@ model Appointment {
   @@index([userId, date])
   @@map("appointments")
 }
+
+/// Per-feature LLM token-usage event (issue #522).
+/// Deliberately has NO relation to `User`: rows are keyed by an HMAC-SHA256
+/// `actorHash` so per-actor behavioural sequences stay analysable without
+/// storing an identifier that is directly joinable to `users`.
+/// NEVER store prompt or completion text in this table.
+///
+/// ⚠️ PSEUDONYMOUS, NOT ANONYMOUS. `actorHash` is a stable pseudonym, and this
+/// table lives in the same database as `applications`/`validations`/
+/// `interview_sessions`, which carry `userId` + a millisecond `createdAt`.
+/// A burst of rows here can be time-correlated back to the row that triggered
+/// it, yielding the `userId` — WITHOUT the salt. Treat this as personal data
+/// under GDPR (Recital 26): erasure obligations still apply. There is
+/// currently no retention sweep and no deletion hook on the account-deletion
+/// path — both are open follow-ups, not solved problems.
+model LlmUsageEvent {
+  id String @id @default(cuid())
+
+  /// HMAC-SHA256(key = LLM_USAGE_HASH_SALT, msg = userId). Null when the call
+  /// ran outside any user context. No foreign key — not directly joinable to
+  /// `users`, but see the pseudonymity warning above.
+  actorHash String?
+
+  feature  LlmFeature
+  provider LlmProviderKind
+  /// Deployment/model name that actually served the call (after lane fallback).
+  model String
+  /// Routing lane that actually served the call.
+  lane LlmRoutingLane
+
+  /// Null when the provider did not report usage (Foundry agent path, failures).
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  /// Portion of promptTokens served from the provider's automatic prompt cache.
+  cachedTokens Int?
+
+  /// Tier at time of call. Null when unresolvable.
+  tier     SubscriptionTier?
+  language String?
+
+  latencyMs    Int
+  success      Boolean
+  circuitState LlmCircuitState
+  /// Error CLASS name only — never a message (messages can echo prompt text).
+  errorKind String?
+
+  /// (prompt − cached)×in + cached×cachedIn + completion×out, per llm-pricing.ts.
+  /// Null when the model has no price entry or usage was not reported.
+  estimatedCostUsd Float?
+
+  createdAt DateTime @default(now())
+
+  @@index([feature, createdAt])
+  @@index([actorHash, createdAt])
+  @@map("llm_usage_events")
+}
+
+enum LlmProviderKind {
+  AZURE_OPENAI
+  AZURE_AI_FOUNDRY
+  MISTRAL
+  MOCK
+}
+
+/// Named LlmRoutingLane, not LlmLane — `LlmLane` is already a TS type in
+/// llm.service.ts and the collision would force awkward import aliasing.
+enum LlmRoutingLane {
+  MAIN
+  FAST
+  MID
+}
+
+enum LlmCircuitState {
+  CLOSED
+  OPEN
+  HALF_OPEN
+}
+
+enum LlmFeature {
+  APPLICATION_COVER_LETTER
+  APPLICATION_COVER_LETTER_EDIT
+  APPLICATION_COVER_LETTER_KEYWORD_WEAVE
+  APPLICATION_COVER_LETTER_STYLE
+  APPLICATION_COVER_LETTER_LENGTH
+  APPLICATION_COVER_LETTER_GROUNDING
+  APPLICATION_RESUME
+  APPLICATION_RESUME_EDIT
+  APPLICATION_RESUME_STYLE
+  APPLICATION_RESUME_GROUNDING
+  APPLICATION_PROFILE_TAILOR
+  APPLICATION_JOB_FACTS
+  APPLICATION_ATS_KEYWORDS
+  APPLICATION_TRANSLATION_RESUME
+  APPLICATION_TRANSLATION_COVER_LETTER
+  APPLICATION_SUMMARY_TRANSLATION
+  KEYWORDS_EXTRACTION
+  KEYWORDS_PROFILE
+  INTERVIEW_QUESTIONS
+  INTERVIEW_ANALYSIS
+  INTERVIEW_FEEDBACK
+  RESUME_PARSER
+  VALIDATION_CHECK
+  MAILBOX_CLASSIFICATION
+  OTHER
+}
