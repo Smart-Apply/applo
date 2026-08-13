@@ -47,18 +47,33 @@ For each of #758–#765:
 4. Close outright anything fully resolved, with a comment explaining which file
    made it moot — so the history stays intelligible.
 
-## Expected disposition
+## Actual outcome — completed 13 Aug 2026
 
-| Issue | Likely outcome |
-|---|---|
-| #758 Sidebar/responsive | Re-scope to whatever mobile gaps genuinely remain; much is done. Overlaps #573 — consider merging |
-| #759 Contrast | Re-verify against the real token set, then keep. Contrast work is probably still needed, just not on `--ink-400` |
-| #760 Fonts | **Close.** `next/font/google` already self-hosts |
-| #761 Save model | Verify against the real profile page — does it use a save button or autosave? Keep if the inconsistency is real |
-| #762 Inline edit | Re-scope to the actual editing pattern, or close if the profile page doesn't use inline edit |
-| #763 Profile check | Verify the displayed weights against `calculateProfileStrength`; the mismatch may be prototype-only |
-| #764 Field validation | Likely still valid — check whether the profile form already uses Zod |
-| #765 ARIA | **Keep as-is.** Confirmed real. Proceed to [plan 06](./06-issue-765-accessibility.md) |
+Verified against `main` @ `aaa4562b`. Every claim was checked in code; none was
+taken from an issue body. **3 closed, 4 re-scoped, 1 confirmed unchanged.**
+
+| Issue | Outcome | What verification found |
+|---|---|---|
+| #758 Sidebar/responsive | **closed** (dup of #573) | Shell already has `Sheet` + `MobileBottomNav` + hamburger, with the drawer controlled so it auto-closes on navigation. Remaining mobile work belongs to #573 |
+| #759 Contrast | **re-scoped** | Confirmed real. The issue's *number* was right and its *token* wrong: shipped token is `--muted-2` `#94A3B8`, measured **2.56:1** (issue said ~2.6:1), 24 usages. Also found: `--muted-2` is defined twice with different values — `#94a3b8` in `globals.css`, `#A0A0A0` in `home.css` |
+| #760 Fonts | **closed** | `next/font/google` self-hosts at build time; zero `fonts.googleapis` references. The CSP failure it describes cannot occur |
+| #761 Save model | **re-scoped** | Inconsistency real but differently shaped — **three** models, not two: per-dialog save on `/profile`, sticky `ProfileSaveBar` in `/settings`, silent autosave in the application editor. The claimed header Save button and inline edit don't exist |
+| #762 Inline edit | **closed** | No `contentEditable` anywhere in profile. Editing is Dialog-based, which already gives discoverability, Cancel, and `Esc`. One valid leftover was split out as #780: soft-delete + undo toast |
+| #763 Profile check | **re-scoped** | The claimed weight mismatch **does not exist** — both use 10/10/10/15/15/15/15/10 = 100. The real risk is duplication: `/profile` re-derives the score with its own `criteria` array instead of calling `calculateProfileStrength`, so the two agree by manual discipline rather than construction |
+| #764 Field validation | **re-scoped** | Broader than reported. `contact-editor-dialog.tsx` is the **only** one of five profile dialogs with Zod/react-hook-form; `experience`, `education`, `project`, `certificate` have none. The profile feeds the generation pipeline, so unvalidated input reaches the produced PDF |
+| #765 ARIA | **unchanged** | Confirmed exactly as written: 0 `aria-label`/`role` in the 1845-line profile page, `role="progressbar"` absent from all of `apps/web/src` |
+
+### What this cost, and the lesson
+
+One of eight issues described shipped code accurately. The rest were generated
+by reading [docs/design/](../design/) rather than `apps/web`, so their premises
+described a prototype. Two would have sent someone to fix a problem that does
+not exist (#760, #762); one would have had them chase a mismatch that isn't
+there (#763); one understated its own scope by 4× (#764).
+
+**Rule going forward:** any issue batch generated from design files needs a
+verification pass against the code before it enters the backlog — and
+especially before an agent is handed the body as a spec.
 
 ## Acceptance criteria
 
