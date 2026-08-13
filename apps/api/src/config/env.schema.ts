@@ -81,7 +81,18 @@ const envSchema = z.object({
   // or 'v1' (latest GA). Legacy dated values (e.g. 2025-01-01-preview) are
   // auto-mapped to 'preview' at call time (see llm/providers/azure-v1-url.util.ts).
   AZURE_OPENAI_API_VERSION: z.string().default('preview'),
-  LLM_PROVIDER: z.enum(['azure-openai', 'azure-ai-foundry', 'mistral', 'mock']).default('mock'),
+  // Reasoning effort for GPT-5-family/o-series deployments (ignored for classic
+  // models like gpt-4.1). 'minimal' behaves closest to a non-reasoning model —
+  // lowest latency/cost for the generation pipeline.
+  AZURE_OPENAI_REASONING_EFFORT: z
+    .enum(['minimal', 'low', 'medium', 'high'])
+    .default('minimal'),
+  // 'fake' = deterministic v1-chain-aware offline provider (eval/CI/dev; no
+  // network, no cost). Unlike 'mock' it satisfies the callJson steps, so the
+  // FULL generation chain runs. See llm/providers/fake-v1.provider.ts.
+  LLM_PROVIDER: z
+    .enum(['azure-openai', 'azure-ai-foundry', 'mistral', 'mock', 'fake'])
+    .default('mock'),
 
   // Voice Interview (Azure OpenAI Realtime API via WebRTC)
   VOICE_PROVIDER: z.enum(['azure-realtime', 'mock']).default('mock'),

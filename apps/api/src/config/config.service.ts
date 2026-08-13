@@ -127,6 +127,10 @@ export class ConfigService {
     return this.nestConfig.get('AZURE_OPENAI_API_VERSION', { infer: true });
   }
 
+  get azureOpenAIReasoningEffort(): 'minimal' | 'low' | 'medium' | 'high' {
+    return this.nestConfig.get('AZURE_OPENAI_REASONING_EFFORT', { infer: true });
+  }
+
   // Voice Interview (Azure OpenAI Realtime API)
   get voiceProvider(): 'azure-realtime' | 'mock' {
     return this.nestConfig.get('VOICE_PROVIDER', { infer: true });
@@ -168,7 +172,7 @@ export class ConfigService {
     );
   }
 
-  get llmProvider(): 'azure-openai' | 'azure-ai-foundry' | 'mistral' | 'mock' {
+  get llmProvider(): 'azure-openai' | 'azure-ai-foundry' | 'mistral' | 'mock' | 'fake' {
     return this.nestConfig.get('LLM_PROVIDER', { infer: true });
   }
 

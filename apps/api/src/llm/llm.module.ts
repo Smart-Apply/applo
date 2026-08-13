@@ -4,6 +4,7 @@ import { LLMService } from './llm.service';
 import { AzureOpenAIProvider } from './providers/azure-openai.provider';
 import { AzureAIFoundryProvider } from './providers/azure-ai-foundry.provider';
 import { MistralProvider } from './providers/mistral.provider';
+import { FakeV1Provider } from './providers/fake-v1.provider';
 import { MockLLMProvider } from './providers/mock.provider';
 import { ConfigService } from '../config/config.service';
 import { LlmUsageService } from './usage/llm-usage.service';
@@ -13,6 +14,14 @@ export function createFastProvider(
   configService: ConfigService,
   httpService: HttpService,
 ): MistralProvider | AzureOpenAIProvider | null {
+  // A fake main provider means "no network, no cost" — an offline eval or CI
+  // run. The side lanes must honour that too, otherwise LLM_PROVIDER=fake
+  // still bills real Mistral/Azure calls for every fast-routed template and
+  // the run stops being deterministic. This was live: an "offline" matrix run
+  // hit the real Mistral API for ats-keywords/job-facts/skill-selector.
+  if (configService.llmProvider === 'fake') {
+    return null;
+  }
   const fastProvider = configService.llmFastProvider;
   if (!fastProvider || fastProvider === configService.llmProvider) {
     return null;
@@ -44,6 +53,10 @@ export function createMidProvider(
   configService: ConfigService,
   httpService: HttpService,
 ): AzureOpenAIProvider | null {
+  // Same offline contract as the fast lane — see createFastProvider.
+  if (configService.llmProvider === 'fake') {
+    return null;
+  }
   const midModel = configService.llmMidModel;
   if (!midModel) {
     return null;
@@ -80,6 +93,9 @@ export function createMidProvider(
         }
         if (provider === 'mistral') {
           return new MistralProvider(httpService, configService);
+        }
+        if (provider === 'fake') {
+          return new FakeV1Provider();
         }
         return new MockLLMProvider();
       },

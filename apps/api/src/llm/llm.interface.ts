@@ -1,3 +1,5 @@
+import type { ReasoningEffort } from './providers/model-tuning.util';
+
 export interface LLMProvider {
   /**
    * Generate text completion from a prompt
@@ -53,6 +55,13 @@ export interface GenerateOptions {
    * docs/implementation/PROMPT_CACHING.md (Phase 0).
    */
   onUsage?: (usage: LlmCallUsage) => void;
+  /**
+   * Per-call reasoning-effort override for GPT-5-family/o-series deployments.
+   * Falls back to `AZURE_OPENAI_REASONING_EFFORT`; ignored for classic models.
+   * The eval matrix sweeps this, so it has to be settable per call rather than
+   * only per deployment.
+   */
+  reasoningEffort?: ReasoningEffort;
 }
 
 export type ResponseFormat =
