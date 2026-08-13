@@ -79,7 +79,7 @@ Working them as written means building against a spec that doesn't match reality
 
 | # | Plan | Issue | Depends on |
 |---|---|---|---|
-| 06 | [Accessibility: ARIA + focus](./06-issue-765-accessibility.md) | #765 | — |
+| 06 | [Accessibility: ARIA + focus](./06-issue-765-accessibility.md) — ✅ **done**, PR #784 | #765 | — |
 | 07 | [Motion + loading foundation](./07-issue-571-motion-foundation.md) | #571 | — |
 | 08 | [Page loading states](./08-issue-746-loading-states.md) | #746 | 07 |
 | 09 | [Mobile design pass](./09-issue-573-mobile.md) | #573 | 05, 07 |
@@ -88,6 +88,28 @@ Working them as written means building against a spec that doesn't match reality
 #571, so #571 lands first and defines the shared primitives. #765 is
 independent — different concern, different files — and can run in parallel with
 any of them.
+
+**Plan 06 outcome (13 Aug 2026):** `/profile` went from **38 axe violation
+nodes to 0**, measured with the same procedure on both arms. #784 cleared the
+naming and landmark failures (29 × `button-name`, 2 × `link-name`,
+`landmark-unique`, `region`); the 5 remaining `color-contrast` nodes were
+[#759](https://github.com/Smart-Apply/applo/issues/759), fixed separately in
+PR #785 — plan 06 scoped contrast out, and one PR per concern. Keyboard walk:
+70 tab stops, all named, all visible when focused, all with a focus indicator.
+
+Two measurement notes worth reusing, because both nearly produced a wrong
+answer:
+
+- A fresh page load only exposes **3 of the 29** `button-name` failures — the
+  profile sections are collapsed by default, so most controls aren't in the
+  DOM. Expand every section before scanning.
+- Reading `getComputedStyle().opacity` immediately after `Tab` reports `0` for
+  every hover-revealed control, because `transition-opacity` is mid-flight.
+  Wait >150 ms, or you will chase 27 focus bugs that don't exist.
+
+The contrast work was scoped to `/profile` and the shared primitives. What it
+deliberately left behind is measured and tracked in
+[#786](https://github.com/Smart-Apply/applo/issues/786).
 
 ### Deferred — planned, not scheduled
 

@@ -71,17 +71,64 @@ assumption — but the engineering work is justified either way.
 
 ## Acceptance criteria
 
-- [ ] Automated axe scan of `/profile` and the dashboard shell reports **0
+- [x] Automated axe scan of `/profile` and the dashboard shell reports **0
       violations**. Before/after counts in the PR body.
-- [ ] Every interactive element on `/profile` is reachable and operable by
+- [x] Every interactive element on `/profile` is reachable and operable by
       keyboard alone, with a visible focus indicator.
-- [ ] The profile-strength ring exposes `role="progressbar"` and a correct
+- [x] The profile-strength ring exposes `role="progressbar"` and a correct
       `aria-valuenow` that updates as the profile changes.
-- [ ] No icon-only button lacks an accessible name — verify in the browser
+- [x] No icon-only button lacks an accessible name — verify in the browser
       accessibility tree, not by grepping for `aria-label`.
-- [ ] A save action is announced via a live region.
-- [ ] VoiceOver walkthrough documented in the PR.
-- [ ] `pnpm --filter @applo/web lint` exits clean — 0 errors, 0 warnings.
+- [x] A save action is announced via a live region.
+- [ ] VoiceOver walkthrough documented in the PR. **Not done** — the keyboard
+      and accessibility-tree passes were automated (axe + a scripted tab walk).
+      A human listening pass would still catch things a checker cannot: reading
+      order that is technically valid but nonsensical, over-verbose labels, and
+      whether the German announcements actually sound right. Worth doing before
+      claiming WCAG conformance publicly.
+- [x] `pnpm --filter @applo/web lint` exits clean — 0 errors, 0 warnings.
+
+## Actual outcome (13 Aug 2026) — PR #784, plus #759 in PR #785
+
+axe-core 4.12 in Chromium against a running stack, logged in, 1440×1000, all
+six collapsible sections expanded. Same procedure on both arms.
+
+| Rule | Impact | `main` | after #784 | after #785 |
+|---|---|---:|---:|---:|
+| `button-name` | critical | 29 | 0 | 0 |
+| `link-name` | serious | 2 | 0 | 0 |
+| `landmark-unique` | moderate | 1 | 0 | 0 |
+| `region` | moderate | 1 | 0 | 0 |
+| `color-contrast` | serious | 5 | 5 | 0 |
+| **total nodes** | | **38** | **5** | **0** |
+
+`role="progressbar"`: 0 → 2. Keyboard walk: 70 tab stops, 0 unnamed, 0
+invisible while focused, 0 without a focus indicator.
+
+Four findings that changed what the work actually was:
+
+- **The scan procedure decides the number.** A fresh page load reports only 3
+  of the 29 `button-name` failures, because the profile's sections are
+  collapsed by default and their controls aren't rendered at all. Expand
+  everything first.
+- **`transition-opacity` fakes a focus failure.** Reading
+  `getComputedStyle().opacity` right after `Tab` returns `0` for all 27
+  hover-revealed row actions. Waiting >150 ms leaves exactly one real bug — the
+  floating "Nach oben" button, which was genuinely focusable while invisible.
+- **Three scope items were already satisfied.** Checklist rows were already
+  `<button>` (no click-handled `<div>` exists anywhere in the page), the photo
+  avatar was already labelled, and saves were already announced — sonner
+  renders `aria-live="polite"`. Verified before touching them.
+- **The app's CSP blocks a CDN `<script>`.** axe has to be injected from a
+  local file (`addScriptTag({ path })`); inline is permitted, remote is not.
+
+## Follow-up
+
+Contrast beyond `/profile` is measured and tracked in
+[#786](https://github.com/Smart-Apply/applo/issues/786): 16 nodes on
+`/dashboard`, 8 on `/applications`, 2 on the landing page, 1 on `/settings`.
+The dominant cause is the `text-muted-foreground/70` opacity modifier — the
+token passes at full opacity, only the modifier breaks it.
 
 ## Risks and landmines
 
