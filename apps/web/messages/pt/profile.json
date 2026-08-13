@@ -186,6 +186,15 @@
       "chooseLevel": "Escolher nível",
       "askLanguageLevel": " — Que nível tens neste idioma?"
     },
+    "removed": {
+      "undo": "Anular",
+      "experience": "Posição «{name}» eliminada",
+      "skill": "Competência «{name}» eliminada",
+      "education": "Formação «{name}» eliminada",
+      "project": "Projeto «{name}» eliminado",
+      "certificate": "Certificado «{name}» eliminado",
+      "language": "Idioma «{name}» eliminado"
+    },
     "skillSuggestions": [
       "Gestão de projetos",
       "Cuidados ao paciente",
@@ -502,6 +511,10 @@
     "replace": "Substituir foto da candidatura",
     "upload": "Carregar foto da candidatura",
     "remove": "Remover foto da candidatura",
+    "removeTitle": "Remover a fotografia de candidatura?",
+    "removeDescription": "A fotografia será eliminada definitivamente. Podes carregar uma nova a qualquer momento.",
+    "removeCancel": "Cancelar",
+    "removeConfirm": "Remover",
     "hint": "JPEG/PNG, máx. 2 MB. Aparece apenas nos currículos onde a ativares no editor.",
     "saved": "Foto da candidatura guardada",
     "uploadError": "Não foi possível carregar a foto",

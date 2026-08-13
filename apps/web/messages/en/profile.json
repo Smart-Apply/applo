@@ -186,6 +186,15 @@
       "chooseLevel": "Choose level",
       "askLanguageLevel": " — How well do you speak this language?"
     },
+    "removed": {
+      "undo": "Undo",
+      "experience": "Deleted position “{name}”",
+      "skill": "Deleted skill “{name}”",
+      "education": "Deleted education “{name}”",
+      "project": "Deleted project “{name}”",
+      "certificate": "Deleted certificate “{name}”",
+      "language": "Deleted language “{name}”"
+    },
     "skillSuggestions": [
       "Project management",
       "Patient care",
@@ -502,6 +511,10 @@
     "replace": "Replace application photo",
     "upload": "Upload application photo",
     "remove": "Remove application photo",
+    "removeTitle": "Remove application photo?",
+    "removeDescription": "The photo will be deleted permanently. You can upload a new one at any time.",
+    "removeCancel": "Cancel",
+    "removeConfirm": "Remove",
     "hint": "JPEG/PNG, max. 2 MB. Appears only in résumés where you enable it in the editor.",
     "saved": "Application photo saved",
     "uploadError": "Photo could not be uploaded",
