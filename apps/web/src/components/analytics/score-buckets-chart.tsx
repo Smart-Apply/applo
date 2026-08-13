@@ -42,7 +42,7 @@ export function ScoreBucketsChart({ buckets }: Props) {
       <CardContent className="flex flex-col flex-1 pb-4">
         {isEmpty ? (
           <div className="flex items-center gap-3 py-6 text-sm text-muted-foreground">
-            <BarChart2 size={20} className="text-muted-foreground/40 flex-none" />
+            <BarChart2 size={20} className="text-muted-foreground flex-none" />
             {t('scoreBuckets.empty')}
           </div>
         ) : (
@@ -74,7 +74,7 @@ export function ScoreBucketsChart({ buckets }: Props) {
                       />
                     </div>
                     <span className="text-[11.5px] font-semibold text-muted-foreground tabular-nums">{b.bucket}</span>
-                    <span className="text-[10.5px] text-muted-foreground/70 tabular-nums">{t('scoreBuckets.applicationsShort', { count: b.applications })}</span>
+                    <span className="text-[10.5px] text-muted-foreground tabular-nums">{t('scoreBuckets.applicationsShort', { count: b.applications })}</span>
                   </div>
                 );
               })}

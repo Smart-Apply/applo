@@ -237,7 +237,7 @@ export function CalendarCard({ className }: { className?: string }) {
               {weekdays.map((wd, i) => (
                 <span
                   key={i}
-                  className="text-center font-mono text-[9px] font-semibold text-muted-foreground/70"
+                  className="text-center font-mono text-[9px] font-semibold text-muted-foreground"
                   style={{ width: 22 }}
                 >
                   {wd.slice(0, 2)}
@@ -272,7 +272,7 @@ export function CalendarCard({ className }: { className?: string }) {
 
           {/* Upcoming list */}
           <div className="flex min-w-[180px] flex-1 flex-col gap-2">
-            <SectionLabel className="text-[10px] tracking-[.1em] text-muted-foreground/70">
+            <SectionLabel className="text-[10px] tracking-[.1em] text-muted-foreground">
               {t('page.calendar.upcoming')}
             </SectionLabel>
             {upcoming.length === 0 ? (
@@ -335,7 +335,7 @@ export function CalendarCard({ className }: { className?: string }) {
                 {weekdays.map((wd, i) => (
                   <span
                     key={i}
-                    className="text-center font-mono text-[10px] font-semibold uppercase tracking-[.06em] text-muted-foreground/70"
+                    className="text-center font-mono text-[10px] font-semibold uppercase tracking-[.06em] text-muted-foreground"
                   >
                     {wd}
                   </span>
@@ -432,7 +432,7 @@ export function CalendarCard({ className }: { className?: string }) {
               </div>
 
               <div className="flex flex-col gap-2 border-t pt-3">
-                <SectionLabel className="text-[10px] tracking-[.1em] text-muted-foreground/70">
+                <SectionLabel className="text-[10px] tracking-[.1em] text-muted-foreground">
                   {t('page.calendar.allAppointments')}
                 </SectionLabel>
                 {appointments.length === 0 ? (
@@ -463,7 +463,7 @@ export function CalendarCard({ className }: { className?: string }) {
                         type="button"
                         onClick={() => handleDelete(a.id)}
                         aria-label={t('page.calendar.delete')}
-                        className="flex-none text-muted-foreground/70 transition-colors hover:text-destructive"
+                        className="flex-none text-muted-foreground transition-colors hover:text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

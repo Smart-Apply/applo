@@ -535,13 +535,13 @@ export default function ApplicationsPage() {
                 >
                   <TabIcon
                     className={`h-4 w-4 ${
-                      isActive ? 'text-primary-foreground/80' : 'text-muted-foreground/70'
+                      isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'
                     }`}
                   />
                   <span>{tab.label}</span>
                   <span
                     className={`font-mono text-[11px] font-medium ${
-                      isActive ? 'text-primary-foreground/70' : 'text-muted-foreground/70'
+                      isActive ? 'text-primary-foreground/70' : 'text-muted-foreground'
                     }`}
                   >
                     {statusCounts[tab.value]}
@@ -802,7 +802,7 @@ export default function ApplicationsPage() {
                 <div className="hidden md:flex md:min-h-0 md:flex-1 md:flex-col [&>div]:min-h-0 [&>div]:flex-1 [&>div]:overflow-y-auto">
                   <Table>
                 <TableHeader className="sticky top-0 z-10 bg-muted">
-                  <TableRow className="[&_th]:font-mono [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-[.12em] [&_th]:text-muted-foreground/70">
+                  <TableRow className="[&_th]:font-mono [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-[.12em] [&_th]:text-muted-foreground">
                     <TableHead className="w-[44px]">
                       <Checkbox
                         checked={allPageSelected ? true : somePageSelected ? 'indeterminate' : false}
@@ -890,7 +890,7 @@ export default function ApplicationsPage() {
                         <TableCell>
                           <div>
                             <div className="text-[13.5px] font-semibold text-foreground/80">{timeAgo}</div>
-                            <div className="text-xs text-muted-foreground/60 mt-0.5">{fullTimestamp}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">{fullTimestamp}</div>
                           </div>
                         </TableCell>
                         <TableCell className="text-right">

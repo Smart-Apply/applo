@@ -365,7 +365,7 @@ export default function DashboardPage() {
                 />
               ) : (
                 <>
-                  <div className="grid grid-cols-[28px_1fr] border-b border-[#33456b] bg-muted/50 px-4 py-1.5 font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground/70">
+                  <div className="grid grid-cols-[28px_1fr] border-b border-[#33456b] bg-muted/50 px-4 py-1.5 font-mono text-[11px] font-medium uppercase tracking-[.12em] text-muted-foreground">
                     <span>#</span>
                     <span>{t('page.recent.positionCompany')}</span>
                   </div>
@@ -382,7 +382,7 @@ export default function DashboardPage() {
                           className="group flex items-center justify-between gap-3 border-b border-[#33456b]/40 px-4 py-2.5 transition-colors last:border-b-0 hover:bg-muted/50 sm:h-[52px] sm:gap-4"
                         >
                           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                            <span className="w-6 flex-none font-mono text-[13px] text-muted-foreground/70">
+                            <span className="w-6 flex-none font-mono text-[13px] text-muted-foreground">
                               {String(i + 1).padStart(2, '0')}
                             </span>
                             <div className="min-w-0">
@@ -403,7 +403,7 @@ export default function DashboardPage() {
                               {chip.label}
                             </StatusChip>
                             <div className="hidden min-w-[80px] text-right sm:block">
-                              <SectionLabel className="text-[10.5px] tracking-[.1em] text-muted-foreground/70">{t('page.recent.updated')}</SectionLabel>
+                              <SectionLabel className="text-[10.5px] tracking-[.1em] text-muted-foreground">{t('page.recent.updated')}</SectionLabel>
                               <p className="mt-0.5 text-[13.5px] font-medium text-foreground">
                                 {formatDateSmart(app.updatedAt)}
                               </p>
@@ -445,9 +445,9 @@ export default function DashboardPage() {
                   <div className="flex items-end justify-between">
                     <span className="font-mono text-3xl font-semibold leading-none text-foreground">
                       {profileStrength.score}
-                      <span className="text-lg text-muted-foreground/70">%</span>
+                      <span className="text-lg text-muted-foreground">%</span>
                     </span>
-                    <span className="font-mono text-[12px] uppercase tracking-[.08em] text-brand">
+                    <span className="font-mono text-[12px] uppercase tracking-[.08em] text-brand-strong">
                       {profileStrength.score === 100 ? t('page.profile.perfect') : t('page.profile.almostDone')}
                     </span>
                   </div>

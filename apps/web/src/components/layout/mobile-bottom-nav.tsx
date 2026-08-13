@@ -131,7 +131,7 @@ function BottomNavLink({
         <Icon className="h-5 w-5" aria-hidden />
         {isLocked && (
           <Lock
-            className="absolute -right-1.5 -top-1 h-2.5 w-2.5 text-muted-foreground/70"
+            className="absolute -right-1.5 -top-1 h-2.5 w-2.5 text-muted-foreground"
             aria-hidden
           />
         )}

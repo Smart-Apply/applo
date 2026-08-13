@@ -723,8 +723,8 @@ function DocCardEmpty({ name, note }: { name: string; note: string }) {
       </div>
       <div className="min-w-0">
         <p className="font-heading text-[16.5px] font-bold tracking-tight text-muted-foreground">{name}</p>
-        <p className="mt-0.5 text-[13px] text-muted-foreground/80">{t('detail.documents.missing')}</p>
-        <p className="mt-1 text-[12px] text-muted-foreground/70">{note}</p>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">{t('detail.documents.missing')}</p>
+        <p className="mt-1 text-[12px] text-muted-foreground">{note}</p>
       </div>
     </div>
   );

@@ -139,7 +139,7 @@ export function ActivityChart({ timeseries, range, onRangeChange }: Props) {
               >
                 <span className="w-2.5 h-2.5 rounded-[3px] flex-none" style={{ background: s.color, opacity: on ? 1 : 0.3 }} />
                 <span className={on ? 'text-foreground' : 'text-muted-foreground'}>{t(s.labelKey)}</span>
-                <span className={cn('font-bold tabular-nums', on ? 'text-foreground' : 'text-muted-foreground/50')}>
+                <span className={cn('font-bold tabular-nums', on ? 'text-foreground' : 'text-muted-foreground')}>
                   {totals[s.key]}
                 </span>
               </button>

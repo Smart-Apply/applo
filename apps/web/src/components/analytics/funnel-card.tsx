@@ -108,7 +108,7 @@ export function FunnelCard({ funnel, onStageClick }: Props) {
                 {/* Step connector */}
                 {i < funnel.length - 1 && (
                   <div className="flex items-center gap-1.5 px-4 py-1 text-[11.5px] text-muted-foreground">
-                    <ArrowDown size={12} className="text-muted-foreground/50" />
+                    <ArrowDown size={12} className="text-muted-foreground" />
                     {(() => {
                       const nextConversion = funnel[i + 1].conv;
                       return nextConversion == null ? null : (

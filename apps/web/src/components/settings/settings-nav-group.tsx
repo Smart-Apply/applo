@@ -44,7 +44,7 @@ export function SettingsNavGroup({ item }: { item: NavItemLike }) {
         href="/settings"
         className={`group flex items-center justify-between border-l-[3px] px-3 py-2.5 text-sm transition-colors duration-150 ${
           onSettings
-            ? 'border-white bg-[#5581C7] font-semibold text-white'
+            ? 'border-white bg-brand-strong font-semibold text-white'
             : 'border-transparent font-medium text-[rgba(229,233,242,.72)] hover:bg-white/5 hover:text-white'
         }`}
       >
