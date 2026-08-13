@@ -39,6 +39,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
   --color-primary-soft: var(--primary-soft);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
@@ -131,6 +132,9 @@
 
   /* Brand blue — constant across themes (logo/accent color) */
   --brand: #5581C7;
+  /* Darker brand tone for surfaces that carry white text — --brand itself is
+     only 3.92:1 against white, which passes for accents but not for text. */
+  --brand-strong: #40639C;
 }
 
 .dark {
@@ -181,6 +185,7 @@
 
   /* Brand blue — constant across themes (logo/accent color) */
   --brand: #5581C7;
+  --brand-strong: #40639C;
 }
 
 /* Applo type system: Inter body, Archivo headings, IBM Plex Mono for labels/numbers */
@@ -411,7 +416,7 @@ h1, h2, h3, .font-heading {
   --ink: #1b2a49;
   --ink-soft: #334155;
   --muted: #6b6969;
-  --muted-2: #94a3b8;
+  --muted-2: #64748b;
   --green: #16a34a;
   --green-bg: #ecfaf0;
   --green-ink: #15803d;

@@ -12,7 +12,7 @@ html { scroll-behavior: smooth; }
 .applo-home {
   --navy:#1B2A49; --navy-hover:#22345A; --blue:#5581C7; --blue2:#40639C;
   --soft:#E5E9F2; --screen:#eef3fb; --green:#16A34A; --red:#DC2626;
-  --ink:#1B2A49; --muted:#6B6969; --muted-2:#A0A0A0;
+  --ink:#1B2A49; --muted:#6B6969; --muted-2:#6E6E6E;
   --surface:#FAFAFA; --border:#E0E0E0;
   --mono:var(--font-mono-plex),"IBM Plex Mono",ui-monospace,monospace;
   --heading:var(--font-archivo),"Archivo",system-ui,sans-serif;

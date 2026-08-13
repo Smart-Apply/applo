@@ -183,7 +183,7 @@ function DashboardLayoutInner({
             </div>
 
             <nav aria-label={t('nav.mainNavigation')} className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
-              <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.45)]">
+              <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.6)]">
                 {t('nav.menu')}
               </div>
               {navigation.map((item) =>
@@ -201,7 +201,7 @@ function DashboardLayoutInner({
 
             <div className="p-4 border-t border-white/10">
               <div className="flex items-center gap-3 border border-white/15 bg-white/5 p-3 transition-colors hover:bg-white/10 cursor-pointer group">
-                <div className="font-heading flex h-9 w-9 flex-none items-center justify-center bg-[#5581C7] text-sm font-bold text-white">
+                <div className="font-heading flex h-9 w-9 flex-none items-center justify-center bg-brand-strong text-sm font-bold text-white">
                   {(user?.firstName || user?.email)?.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -216,7 +216,7 @@ function DashboardLayoutInner({
                       className="rounded-none bg-white/10 font-mono text-[10px] font-semibold uppercase tracking-[.08em] text-white/85"
                     />
                   </div>
-                  <p className="truncate text-xs text-[rgba(229,233,242,.55)]">{user?.email}</p>
+                  <p className="truncate text-xs text-[rgba(229,233,242,.65)]">{user?.email}</p>
                 </div>
                 <Button
                   variant="ghost"
@@ -286,7 +286,7 @@ function DashboardLayoutInner({
                 </div>
 
                 <nav aria-label={t('nav.mainNavigation')} className="flex-1 space-y-0.5 px-4 py-6">
-                  <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.45)]">
+                  <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.6)]">
                     {t('nav.menu')}
                   </div>
                   {navigation.map((item) =>
@@ -304,7 +304,7 @@ function DashboardLayoutInner({
 
                 <div className="p-4 border-t border-white/10">
                   <div className="flex items-center gap-3 border border-white/15 bg-white/5 p-3">
-                    <div className="font-heading flex h-9 w-9 flex-none items-center justify-center bg-[#5581C7] text-sm font-bold text-white">
+                    <div className="font-heading flex h-9 w-9 flex-none items-center justify-center bg-brand-strong text-sm font-bold text-white">
                       {(user?.firstName || user?.email)?.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -319,7 +319,7 @@ function DashboardLayoutInner({
                           className="rounded-none bg-white/10 font-mono text-[10px] font-semibold uppercase tracking-[.08em] text-white/85"
                         />
                       </div>
-                      <p className="truncate text-xs text-[rgba(229,233,242,.55)]">{user?.email}</p>
+                      <p className="truncate text-xs text-[rgba(229,233,242,.65)]">{user?.email}</p>
                     </div>
                     <Button
                       variant="ghost"
@@ -390,7 +390,7 @@ function NavLink({
       href={item.href}
       className={`group flex items-center justify-between border-l-[3px] px-3 py-2.5 text-sm transition-colors duration-150 ${
         isActive
-          ? 'border-white bg-[#5581C7] font-semibold text-white'
+          ? 'border-white bg-brand-strong font-semibold text-white'
           : 'border-transparent font-medium text-[rgba(229,233,242,.72)] hover:bg-white/5 hover:text-white'
       }`}
     >
@@ -431,7 +431,7 @@ function NavLinkGated({
         href={item.href}
         className={`group flex items-center justify-between border-l-[3px] px-3 py-2.5 text-sm transition-colors duration-150 ${
           isActive
-            ? 'border-white bg-[#5581C7] font-semibold text-white'
+            ? 'border-white bg-brand-strong font-semibold text-white'
             : 'border-transparent font-medium text-[rgba(229,233,242,.72)] hover:bg-white/5 hover:text-white'
         }`}
       >

@@ -83,7 +83,7 @@ export function EmailVerificationBanner() {
             <span className="font-medium text-[#854D0E] dark:text-amber-200">
               {t('emailVerificationBanner.title')}
             </span>
-            <span className="text-[#854D0E]/80 dark:text-amber-300/80 ml-1">
+            <span className="text-[#854D0E] dark:text-amber-300 ml-1">
               {t('emailVerificationBanner.description', { email: user.email })}
             </span>
           </div>
