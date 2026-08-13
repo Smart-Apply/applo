@@ -5,6 +5,12 @@ import { ConfigService } from '../../config/config.service';
 import { LLMProvider, GenerateOptions, LlmCallUsage } from '../llm.interface';
 import { LlmRateLimitError } from '../llm-errors';
 import { buildV1ChatCompletionsUrl } from './azure-v1-url.util';
+import {
+  buildModelTuningParams,
+  isReasoningModel,
+  normalizeReasoningEffort,
+  type ReasoningEffort,
+} from './model-tuning.util';
 
 /** Bounded in-call retries for HTTP 429. Must stay well inside the circuit
  *  breaker's request timeout, which wraps the whole `generateText` call. */
@@ -76,10 +82,13 @@ interface ChatCompletionResponse {
  * is `max_completion_tokens` instead. Sending the classic parameters returns a
  * 400, so the request body has to be shaped per family.
  * https://learn.microsoft.com/azure/ai-foundry/openai/how-to/reasoning
+ *
+ * Detection and body shaping live in `model-tuning.util.ts`, which additionally
+ * sends `reasoning_effort` and the `max_completion_tokens` headroom that hidden
+ * reasoning tokens need — without it a reasoning model returns empty content
+ * with `finish_reason: 'length'`.
  */
-export function isReasoningModel(model: string | undefined): boolean {
-  return /^(o\d|gpt-5)/i.test((model ?? '').trim());
-}
+export { isReasoningModel } from './model-tuning.util';
 
 /**
  * Per-instance overrides so a second instance can target a different Azure
@@ -91,6 +100,7 @@ export interface AzureOpenAIProviderOverrides {
   apiKey?: string;
   deploymentName?: string;
   apiVersion?: string;
+  reasoningEffort?: ReasoningEffort;
 }
 
 @Injectable()
@@ -100,6 +110,7 @@ export class AzureOpenAIProvider implements LLMProvider {
   private readonly apiKey: string;
   private readonly deploymentName: string;
   private readonly apiVersion: string;
+  private readonly reasoningEffort: ReasoningEffort;
 
   constructor(
     private httpService: HttpService,
@@ -111,6 +122,9 @@ export class AzureOpenAIProvider implements LLMProvider {
     this.deploymentName =
       overrides?.deploymentName || this.configService.azureOpenAIDeploymentName;
     this.apiVersion = overrides?.apiVersion || this.configService.azureOpenAIApiVersion;
+    this.reasoningEffort =
+      overrides?.reasoningEffort ??
+      normalizeReasoningEffort(this.configService.azureOpenAIReasoningEffort);
 
     if (!this.endpoint || !this.apiKey) {
       throw new Error('Azure OpenAI configuration missing');
@@ -148,13 +162,12 @@ export class AzureOpenAIProvider implements LLMProvider {
       messages,
       // Reasoning models reject `temperature` and `max_tokens` outright; the
       // output cap moves to `max_completion_tokens`. Note the cap then also
-      // covers billed-but-invisible reasoning tokens.
-      ...(isReasoningModel(model)
-        ? { max_completion_tokens: options?.maxTokens ?? 2000 }
-        : {
-            temperature: options?.temperature ?? 0.7,
-            max_tokens: options?.maxTokens ?? 2000,
-          }),
+      // covers billed-but-invisible reasoning tokens, so the util adds headroom.
+      ...buildModelTuningParams(
+        model,
+        { temperature: options?.temperature ?? 0.7, maxTokens: options?.maxTokens ?? 2000 },
+        options?.reasoningEffort ?? this.reasoningEffort,
+      ),
     };
     if (options?.responseFormat) {
       requestBody.response_format = options.responseFormat;

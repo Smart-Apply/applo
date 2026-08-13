@@ -4,6 +4,7 @@ import { LLMService } from './llm.service';
 import { AzureOpenAIProvider } from './providers/azure-openai.provider';
 import { AzureAIFoundryProvider } from './providers/azure-ai-foundry.provider';
 import { MistralProvider } from './providers/mistral.provider';
+import { FakeV1Provider } from './providers/fake-v1.provider';
 import { MockLLMProvider } from './providers/mock.provider';
 import { ConfigService } from '../config/config.service';
 import { LlmUsageService } from './usage/llm-usage.service';
@@ -80,6 +81,9 @@ export function createMidProvider(
         }
         if (provider === 'mistral') {
           return new MistralProvider(httpService, configService);
+        }
+        if (provider === 'fake') {
+          return new FakeV1Provider();
         }
         return new MockLLMProvider();
       },
