@@ -7,6 +7,7 @@ import { MistralProvider } from './providers/mistral.provider';
 import { MockLLMProvider } from './providers/mock.provider';
 import { ConfigService } from '../config/config.service';
 import { LlmUsageService } from './usage/llm-usage.service';
+import { LlmUsageRetentionCron } from './usage/llm-usage-retention.cron';
 
 export function createFastProvider(
   configService: ConfigService,
@@ -114,6 +115,7 @@ export function createMidProvider(
     },
     LLMService,
     LlmUsageService,
+    LlmUsageRetentionCron,
   ],
   exports: [LLMService, 'AZURE_OPENAI_PROVIDER', LlmUsageService],
 })

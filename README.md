@@ -175,12 +175,13 @@ pnpm typecheck
 - JWT in HttpOnly cookies (XSS-protected) + refresh-token rotation
 - Multi-device session tracking with remote logout (max 5/user)
 - OAuth (Google, Microsoft, Azure AD) and TOTP-based 2FA
-- argon2 password hashing, password-strength enforcement
+- argon2 password hashing, password-strength enforcement, compromised-password check against HIBP Pwned Passwords (k-anonymity range query, fail-open)
 - Helmet, restrictive CORS whitelist, optional CSRF (csrf-csrf)
-- Rate limiting (5/15min auth · 100/15min standard)
+- Rate limiting (5/15min auth · 100/15min standard) — keyed by verified JWT subject or the proxy-derived client IP; client-suppliable headers are never trusted
 - Input sanitization (`@Sanitize()` + DOMPurify)
+- SSRF protection on job-posting URL parsing — public-address allow-list, DNS pinning on the axios path, and a loopback egress proxy that enforces the policy at connect time for the headless-Chromium path (WebSockets blocked)
 - AI prompt guardrails — per-surface character + token limits on every AI input, enforced live in the UI and authoritatively on the server (cost & abuse control)
-- Per-feature LLM usage telemetry — no prompt/response content, no `User` FK, actor keyed by an HMAC-SHA256 pseudonym (pseudonymous, not anonymous — still personal data under GDPR)
+- Per-feature LLM usage telemetry — no prompt/response content, no `User` FK, actor keyed by an HMAC-SHA256 pseudonym (pseudonymous, not anonymous — still personal data under GDPR: erased on account deletion, aged out after `LLM_USAGE_RETENTION_DAYS`, default 90)
 - Winston audit logs (daily rotation, 90-day retention)
 - Sentry error & performance monitoring
 

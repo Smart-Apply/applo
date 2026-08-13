@@ -20,6 +20,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { SubscriptionTier } from '../generated/prisma/client';
+import { LlmUsageService } from '../llm/usage/llm-usage.service';
 import { AdminGuard } from './admin.guard';
 
 class SetTierDto {
@@ -51,6 +52,7 @@ export class AdminController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly subscriptions: SubscriptionService,
+    private readonly llmUsage: LlmUsageService,
   ) {}
 
   /**
@@ -162,6 +164,12 @@ export class AdminController {
     if (!user) {
       throw new NotFoundException(`User not found: ${email}`);
     }
+
+    // GDPR erasure for llm_usage_events (audit F11): the table has no User
+    // FK, so the cascade below cannot reach it. Runs BEFORE the delete and
+    // is allowed to throw — an orphaned pseudonymous trail is worse than a
+    // retried deletion.
+    await this.llmUsage.deleteEventsForActor(user.id);
 
     await this.prisma.user.delete({ where: { id: user.id } });
 

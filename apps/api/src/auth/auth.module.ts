@@ -13,10 +13,12 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { MicrosoftStrategy } from './strategies/microsoft.strategy';
 import { CloudflareTurnstileService } from './services/cloudflare-turnstile.service';
+import { PwnedPasswordService } from './services/pwned-password.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '../config/config.service';
 import { ConfigModule } from '../config/config.module';
 import { StorageModule } from '../storage/storage.module';
+import { LLMModule } from '../llm/llm.module';
 
 /**
  * OAuth strategies (Google, Microsoft) crash on instantiation when their
@@ -67,6 +69,9 @@ const microsoftStrategyProvider: Provider = {
     ScheduleModule.forRoot(),
     ConfigModule,
     StorageModule,
+    // LlmUsageService for the GDPR erasure hook in deleteAccount (audit F11).
+    // No cycle: LLMModule imports only HttpModule.
+    LLMModule,
   ],
   controllers: [AuthController, SessionsController, TwoFactorController],
   providers: [
@@ -78,6 +83,7 @@ const microsoftStrategyProvider: Provider = {
     googleStrategyProvider,
     microsoftStrategyProvider,
     CloudflareTurnstileService,
+    PwnedPasswordService,
     PrismaService,
     ConfigService,
   ],

@@ -190,6 +190,14 @@ const envSchema = z.object({
   RATE_LIMIT_AUTH_TTL: z.string().default('900'), // 15 minutes in seconds
   RATE_LIMIT_AUTH_MAX: z.string().default('15'),
 
+  // Compromised-password check (HIBP k-anonymity range API) on registration,
+  // password change and password reset. Fail-open on outages; this flag only
+  // exists for air-gapped/dev environments. Audit 2026-08-13, F10.
+  PWNED_PASSWORD_CHECK_ENABLED: z
+    .string()
+    .default('true')
+    .transform((val) => val === 'true'),
+
   // Cron Jobs
   ENABLE_CRON_JOBS: z
     .string()
@@ -273,6 +281,12 @@ const envSchema = z.object({
   // Changing it re-anonymises every future row — old and new rows will no
   // longer correlate to the same actor. Treat as append-only in practice.
   LLM_USAGE_HASH_SALT: z.string().min(32).optional(),
+
+  // Retention (days) for `llm_usage_events`. A daily cron hard-deletes rows
+  // older than this. The table is pseudonymous personal data under GDPR (see
+  // prisma/schema.prisma), so it must not grow unbounded; 0 disables the
+  // sweep (not recommended). Audit 2026-08-13, F11.
+  LLM_USAGE_RETENTION_DAYS: z.string().default('90'),
 
   // -------------------------------------------------------------------------
   // Email Tracking (Premium feature) — OAuth Inbox Sync

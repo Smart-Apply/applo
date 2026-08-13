@@ -1,6 +1,7 @@
 import { Controller, Get, Param, NotFoundException, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ConfigService } from '../config/config.service';
 import { JobsService } from './jobs.service';
 
@@ -53,8 +54,12 @@ export class JobsController {
     status: 404,
     description: 'Job not found',
   })
-  async getJobStatus(@Param('id') id: string): Promise<JobStatusDto> {
-    const job = await this.jobsService.getJobStatus(id);
+  async getJobStatus(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<JobStatusDto> {
+    // Scoped by owner: a job id belonging to another user 404s (audit F17).
+    const job = await this.jobsService.getJobStatus(id, userId);
 
     if (!job) {
       throw new NotFoundException(`Job with ID ${id} not found`);

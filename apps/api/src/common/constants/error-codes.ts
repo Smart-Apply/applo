@@ -51,6 +51,7 @@ export enum ErrorCode {
   PASSWORD_INCORRECT = 'PASSWORD_INCORRECT',
   PASSWORD_SAME_AS_CURRENT = 'PASSWORD_SAME_AS_CURRENT',
   PASSWORD_CHANGE_OAUTH = 'PASSWORD_CHANGE_OAUTH',
+  PASSWORD_COMPROMISED = 'PASSWORD_COMPROMISED',
 
   // Email verification errors
   EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED',
@@ -135,6 +136,8 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.PASSWORD_SAME_AS_CURRENT]:
     'Das neue Passwort muss sich vom aktuellen Passwort unterscheiden.',
   [ErrorCode.PASSWORD_CHANGE_OAUTH]: 'Passwort kann für OAuth-Konten nicht geändert werden.',
+  [ErrorCode.PASSWORD_COMPROMISED]:
+    'Dieses Passwort ist aus einem bekannten Datenleck bekannt. Bitte wähle ein anderes Passwort.',
 
   // Email verification errors
   [ErrorCode.EMAIL_ALREADY_VERIFIED]: 'Deine E-Mail-Adresse wurde bereits verifiziert.',

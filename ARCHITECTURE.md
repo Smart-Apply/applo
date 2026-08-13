@@ -291,7 +291,7 @@ grounding-specific decisions live in
 | **InviteCode**     | RETIRED — beta gate removed; schema row kept until a follow-up release drops it (expand→contract) |
 | **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`) |
 | **AuditLog**       | Security event log                             |
-| **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure still applies |
+| **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure applies — both account-deletion paths erase by recomputed hash, and a daily cron deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90) |
 
 ### Key Relations
 
@@ -327,11 +327,12 @@ User 1:1 Subscription
 | **Headers**       | Helmet, CSP, X-Frame-Options, X-Content-Type-Opts                                                             |
 | **Auth**          | JWT (HttpOnly cookies) + refresh rotation + 2FA                                                               |
 | **OAuth**         | Google, Microsoft, Azure AD (passport) — email-match auto-linking & signup only for provider-verified emails (nOAuth guard: Google `email_verified`, Microsoft MSA tenant or `xms_edov`) |
-| **Rate Limit**    | 5/15min auth · 100/15min standard (`@nestjs/throttler`)                                                       |
+| **Rate Limit**    | 5/15min auth · 100/15min standard (`@nestjs/throttler`) — tracker = verified JWT subject, else proxy-derived `req.ip`; `CF-Connecting-IP`/`X-Forwarded-For` are never read (forgeable). Only `/health/live` + `/health/ready` are exempt |
 | **Input**         | class-validator DTOs, `@Sanitize()` + DOMPurify                                                               |
+| **SSRF**          | URL parsing: public-address allow-list (`url-safety.util`), DNS pinning on the axios path, loopback egress proxy at connect time for the Playwright path (`ssrf-egress-proxy`), WebSockets refused (`routeWebSocket`) |
 | **AI Guardrails** | per-surface char + token limits on AI prompt inputs (`@applo/shared` + `gpt-tokenizer` model `gpt-4.1`) |
 | **CSRF**          | csrf-csrf (Double Submit Cookie, optional)                                                                    |
-| **Passwords**     | argon2id, strength regex                                                                                      |
+| **Passwords**     | argon2id, strength regex, HIBP Pwned-Passwords check (k-anonymity, fail-open, `PWNED_PASSWORD_CHECK_ENABLED`) |
 | **Audit**         | Winston daily-rotated logs (90-day retention)                                                                 |
 | **Monitoring**    | Sentry (errors + performance)                                                                                 |
 
@@ -406,7 +407,8 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET    | `/auth/oauth/google`    | OAuth (Google)                                                               |
 | GET    | `/auth/oauth/microsoft` | OAuth (Microsoft)                                                            |
 | GET    | `/auth/csrf-token`      | CSRF token (optional)                                                        |
-| GET    | `/health`               | Health check                                                                 |
+| GET    | `/health`               | Health check (infra deps only — DB, storage, queue, templates; no LLM probe) |
+| GET    | `/health/live` · `/health/ready` | Liveness/readiness probes (throttle-exempt; used by Fly checks)     |
 | POST   | `/contact`              | Contact form                                                                 |
 
 ### Protected

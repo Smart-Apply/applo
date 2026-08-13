@@ -31,6 +31,8 @@ import {
 } from '../common/exceptions/coded-http.exception';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { StorageService } from '../storage/storage.service';
+import { LlmUsageService } from '../llm/usage/llm-usage.service';
+import { PwnedPasswordService } from './services/pwned-password.service';
 
 interface TokenPair {
   accessToken: string;
@@ -68,6 +70,8 @@ export class AuthService {
     private twoFactorService: TwoFactorService,
     private emailService: EmailService,
     private storageService: StorageService,
+    private llmUsageService: LlmUsageService,
+    private pwnedPasswordService: PwnedPasswordService,
   ) {}
 
   async register(dto: RegisterDto, userAgent?: string, ipAddress?: string, req?: Request) {
@@ -78,6 +82,12 @@ export class AuthService {
 
     if (existing) {
       throw new ConflictWithCode(ErrorCode.USER_EXISTS);
+    }
+
+    // Breach-corpus check (audit F10) — regex strength alone lets through
+    // passwords that appear verbatim in credential-stuffing lists.
+    if (await this.pwnedPasswordService.isCompromised(dto.password)) {
+      throw new BadRequestWithCode(ErrorCode.PASSWORD_COMPROMISED);
     }
 
     // Hash password
@@ -547,6 +557,11 @@ export class AuthService {
       throw new BadRequestWithCode(ErrorCode.PASSWORD_SAME_AS_CURRENT);
     }
 
+    // Breach-corpus check (audit F10)
+    if (await this.pwnedPasswordService.isCompromised(dto.newPassword)) {
+      throw new BadRequestWithCode(ErrorCode.PASSWORD_COMPROMISED);
+    }
+
     // Hash new password
     const hashedPassword = await argon2.hash(dto.newPassword);
 
@@ -632,6 +647,12 @@ export class AuthService {
         filesDeleted: fileKeysToDelete.length,
       });
     }
+
+    // GDPR erasure for llm_usage_events (audit F11): keyed by actorHash with
+    // no User FK, so the cascade delete below cannot reach it. Runs BEFORE
+    // the delete and is allowed to throw — the user can retry the deletion,
+    // whereas a silently orphaned pseudonymous trail could never be erased.
+    await this.llmUsageService.deleteEventsForActor(userId);
 
     // Delete user (cascade will delete Profile, Applications, JobPostings, Sessions, RefreshTokens, UserPreferences)
     await this.prisma.user.delete({
@@ -813,6 +834,11 @@ export class AuthService {
 
     if (!user) {
       throw new BadRequestWithCode(ErrorCode.INVALID_OR_EXPIRED_TOKEN);
+    }
+
+    // Breach-corpus check (audit F10)
+    if (await this.pwnedPasswordService.isCompromised(dto.password)) {
+      throw new BadRequestWithCode(ErrorCode.PASSWORD_COMPROMISED);
     }
 
     // Hash new password

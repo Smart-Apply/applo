@@ -1,4 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { extname } from 'path';
 import { StorageService } from '../storage/storage.service';
 import { UploadResponseDto } from './dto/upload-response.dto';
 
@@ -71,9 +73,19 @@ export class UploadsService {
     return sanitized;
   }
 
+  /**
+   * Key = user namespace + timestamp + UUID + original EXTENSION only
+   * (audit 2026-08-13, F9). The original filename is itself PII
+   * ("Lebenslauf_Max_Mustermann_1990.pdf") and used to persist verbatim in
+   * the key and every URL/log derived from it; it now survives only in the
+   * response's `fileName`. The UUID also closes the silent same-user,
+   * same-millisecond overwrite edge the old `${timestamp}-${filename}` key
+   * had. The extension must survive: job-postings' `parseFromFile` picks its
+   * parser from the key's extension.
+   */
   private generateStorageKey(userId: string, filename: string): string {
-    const timestamp = Date.now();
-    return `${userId}/${timestamp}-${filename}`;
+    const extension = extname(filename).toLowerCase().slice(0, 10);
+    return `${userId}/${Date.now()}-${randomUUID()}${extension}`;
   }
 
   private generateUploadId(storageKey: string): string {

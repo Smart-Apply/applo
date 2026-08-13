@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { chromium, Browser, Page } from 'playwright';
+import { chromium, Browser, LaunchOptions, Page } from 'playwright';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { PromptService } from '../../common/services';
 import { buildV1ChatCompletionsUrl } from '../../llm/providers/azure-v1-url.util';
 import { assertUrlIsPublic, resolveAndAssertPublic } from '../../common/security/url-safety.util';
+import { SsrfEgressProxy } from '../../common/security/ssrf-egress-proxy';
 
 // Define the structured output schema for job posting extraction
 // Simplified schema: only core fields + fullText (no structured arrays)
@@ -75,6 +76,17 @@ const MAX_BROWSER_IDLE_MS = 600_000;
 const MIN_BROWSER_IDLE_MS = 1_000;
 
 /**
+ * Recycle the warm browser after this many parses or this much wall-clock
+ * age, whichever comes first (security audit 2026-08-13, F12/F13). Idle
+ * eviction alone lets a browser live indefinitely under steady traffic —
+ * accumulating anything that leaked and stretching the cross-user window of
+ * a compromised renderer. A relaunch costs ~1–2s, so recycling every ~25
+ * parses / 15 min is noise for users and a hard bound for both risks.
+ */
+const MAX_PARSES_PER_BROWSER = 25;
+const MAX_BROWSER_AGE_MS = 15 * 60_000;
+
+/**
  * Parse AGENT_BROWSER_IDLE_MS. Anything that is not a plain run of digits
  * falls back to the default — deliberately stricter than `Number()`, which
  * would otherwise accept `0x10` (16) and `1e3` (1000) and quietly apply a
@@ -111,6 +123,17 @@ export class AgentUrlParser {
   private idleTimer: NodeJS.Timeout | null = null;
   /** Set by shutdown(); guards against a launch completing after teardown. */
   private disposed = false;
+  /**
+   * Connect-time SSRF enforcement for everything the browser dials — closes
+   * the DNS-rebinding TOCTOU between the Node-side checks and Chromium's own
+   * resolver (audit F15). Started lazily with the browser, closed in
+   * shutdown().
+   */
+  private readonly egressProxy = new SsrfEgressProxy();
+  /** Parses served by the current warm browser (recycle bound, audit F12/F13). */
+  private parsesSinceLaunch = 0;
+  private browserLaunchedAt = 0;
+  private readonly forceNoSandbox: boolean;
   private readonly maxSteps: number;
   private readonly timeout: number;
   private readonly browserIdleMs: number;
@@ -125,6 +148,10 @@ export class AgentUrlParser {
     this.maxSteps = parseInt(process.env.AGENT_MAX_STEPS || '10', 10);
     this.timeout = parseInt(process.env.AGENT_TIMEOUT || '30000', 10);
     this.browserIdleMs = resolveBrowserIdleMs(process.env.AGENT_BROWSER_IDLE_MS);
+    // Escape hatch for environments that can't sandbox at all (e.g. local
+    // Docker, whose default seccomp profile blocks unprivileged user
+    // namespaces) — skips the doomed sandboxed launch attempt. See initBrowser.
+    this.forceNoSandbox = process.env.AGENT_CHROMIUM_NO_SANDBOX === 'true';
 
     this.azureEndpoint = process.env.AZURE_OPENAI_ENDPOINT || '';
     this.azureApiKey = process.env.AZURE_OPENAI_API_KEY || '';
@@ -198,8 +225,10 @@ export class AgentUrlParser {
     // Promise.race so we surface a friendly error instead of letting the
     // request hang indefinitely.
     let timeoutHandle: NodeJS.Timeout | undefined;
+    let hardTimeoutFired = false;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutHandle = setTimeout(() => {
+        hardTimeoutFired = true;
         reject(
           new Error(
             `Agent parser exceeded hard timeout of ${AGENT_PARSE_HARD_TIMEOUT_MS / 1000}s. ` +
@@ -215,11 +244,28 @@ export class AgentUrlParser {
       const work = (async () => {
         // SSRF guard (security audit F1): block private/internal/link-local
         // targets before launching the browser. `navigateToUrl`'s request
-        // interceptor re-checks every subsequent navigation/redirect too.
+        // interceptor re-checks every subsequent navigation/redirect too, and
+        // the egress proxy enforces the same policy at connect time.
         await assertUrlIsPublic(url);
         await this.initBrowser();
-        const page = await this.navigateToUrl(url);
-        const pageContent = await this.extractPageContent(page);
+        if (!this.browser) {
+          throw new Error('Browser not initialized');
+        }
+
+        // The page is owned HERE, and closed on every path that reaches this
+        // point — including exceptions thrown from the extraction tail calls,
+        // which used to strand it (audit F12). The hard-timeout path is the
+        // one case this finally can't cover (the closure may be wedged
+        // mid-await); the outer catch handles it by closing the whole browser.
+        const page = await this.browser.newPage();
+        let pageContent: string;
+        try {
+          await this.navigateToUrl(page, url);
+          pageContent = await this.extractPageContent(page);
+        } finally {
+          await page.close().catch(() => undefined);
+        }
+
         this.detectBotProtection(pageContent, url);
         const extracted = await this.extractStructuredData(pageContent, url);
         this.validateExtraction(extracted);
@@ -237,10 +283,33 @@ export class AgentUrlParser {
       throw error;
     } finally {
       if (timeoutHandle) clearTimeout(timeoutHandle);
-      // Leave the browser warm for the next parse, but arm an idle-eviction
-      // timer so it doesn't hold memory forever. Relaunching costs ~1–2s, so
-      // reuse is the single biggest latency win for back-to-back parses.
-      this.scheduleBrowserEviction();
+      this.parsesSinceLaunch += 1;
+
+      if (hardTimeoutFired) {
+        // The work closure was abandoned mid-flight — likely a wedged
+        // renderer that a page.close() may never reach. Closing the whole
+        // browser is the only reliable reaper (audit F12); the next parse
+        // relaunches in ~1–2s. Fire-and-forget so a hanging close can't
+        // stall this response; closeBrowser nulls the field synchronously.
+        this.logger.warn('Hard timeout hit — recycling the warm browser to reap the page');
+        void this.closeBrowser();
+      } else if (
+        this.browser &&
+        (this.parsesSinceLaunch >= MAX_PARSES_PER_BROWSER ||
+          Date.now() - this.browserLaunchedAt >= MAX_BROWSER_AGE_MS)
+      ) {
+        // Parse-count / absolute-age recycle bound (audit F12/F13).
+        this.logger.debug(
+          `Recycling warm browser after ${this.parsesSinceLaunch} parses / ` +
+            `${Math.round((Date.now() - this.browserLaunchedAt) / 1000)}s`,
+        );
+        void this.closeBrowser();
+      } else {
+        // Leave the browser warm for the next parse, but arm an idle-eviction
+        // timer so it doesn't hold memory forever. Relaunching costs ~1–2s, so
+        // reuse is the single biggest latency win for back-to-back parses.
+        this.scheduleBrowserEviction();
+      }
     }
   }
 
@@ -335,6 +404,42 @@ export class AgentUrlParser {
 
     this.logger.debug('Launching browser...');
 
+    // Every byte the browser sends flows through the loopback egress proxy,
+    // which re-resolves each hostname itself and dials only validated public
+    // IPs — the connect-time SSRF boundary (audit F14/F15).
+    const proxyPort = await this.egressProxy.start();
+
+    const launched = await this.launchChromium(proxyPort);
+
+    // A shutdown() that landed while the launch above was in flight saw
+    // `this.browser === null` and closed nothing. Re-check here so we never
+    // install a browser that no one is left to close.
+    if (this.disposed) {
+      await launched.close().catch(() => undefined);
+      throw new Error('AgentUrlParser was shut down while the browser was launching');
+    }
+
+    this.browser = launched;
+    this.parsesSinceLaunch = 0;
+    this.browserLaunchedAt = Date.now();
+  }
+
+  /**
+   * Launch Chromium behind the egress proxy — sandboxed when the platform
+   * allows it.
+   *
+   * `--no-sandbox` used to be unconditional, a leftover from running as root.
+   * The image runs as uid 1001 and one warm browser now serves many users'
+   * parses in sequence, so a renderer compromise without the sandbox executes
+   * as the same OS user as the API and reaches its env + the Fly private
+   * network (audit F13). We therefore try the sandboxed launch first and fall
+   * back — loudly — only where the kernel can't provide it (e.g. local Docker
+   * blocks unprivileged user namespaces via its default seccomp profile).
+   * AGENT_CHROMIUM_NO_SANDBOX=true skips the doomed first attempt in such
+   * environments. The fallback is exactly the previous behavior, still
+   * bounded by the parse-count/age recycle.
+   */
+  private async launchChromium(proxyPort: number): Promise<Browser> {
     // Only override the binary when CHROMIUM_EXECUTABLE_PATH is explicitly set
     // (the Docker image sets it to the system Chromium it bakes in). Otherwise
     // pass no executablePath so Playwright uses its OWN bundled, version-matched
@@ -346,113 +451,131 @@ export class AgentUrlParser {
     // driving a mismatched Chrome over CDP is unsupported and flaky.
     const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH || undefined;
 
-    const launched = await chromium.launch({
+    const optionsFor = (args: string[]): LaunchOptions => ({
       headless: true,
       ...(executablePath ? { executablePath } : {}),
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-      ],
+      args,
+      proxy: {
+        server: `http://127.0.0.1:${proxyPort}`,
+        // Chromium implicitly bypasses proxies for loopback targets;
+        // '<-loopback>' removes that rule so localhost URLs can't sidestep
+        // the egress policy.
+        bypass: '<-loopback>',
+      },
     });
 
-    // A shutdown() that landed while the launch above was in flight saw
-    // `this.browser === null` and closed nothing. Re-check here so we never
-    // install a browser that no one is left to close.
-    if (this.disposed) {
-      await launched.close().catch(() => undefined);
-      throw new Error('AgentUrlParser was shut down while the browser was launching');
+    const baseArgs = ['--disable-dev-shm-usage', '--disable-gpu'];
+    const noSandboxArgs = [...baseArgs, '--no-sandbox', '--disable-setuid-sandbox'];
+
+    if (this.forceNoSandbox) {
+      this.logger.warn(
+        'Chromium sandbox disabled via AGENT_CHROMIUM_NO_SANDBOX — a renderer compromise runs as the API user',
+      );
+      return chromium.launch(optionsFor(noSandboxArgs));
     }
 
-    this.browser = launched;
+    try {
+      return await chromium.launch(optionsFor(baseArgs));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `Sandboxed Chromium launch failed — falling back to --no-sandbox. ` +
+          `A renderer compromise then runs as the API user; enable unprivileged user ` +
+          `namespaces (or set AGENT_CHROMIUM_NO_SANDBOX=true to silence this attempt). ` +
+          `Launch error: ${message.slice(0, 300)}`,
+      );
+      return chromium.launch(optionsFor(noSandboxArgs));
+    }
   }
 
   /**
-   * Navigate to URL and wait for dynamic content
+   * Navigate the caller-owned page to the URL and wait for dynamic content.
+   * The page's lifecycle (close on every path) belongs to parseInternal.
    */
-  private async navigateToUrl(url: string): Promise<Page> {
-    if (!this.browser) {
-      throw new Error('Browser not initialized');
-    }
-
-    const page = await this.browser.newPage();
+  private async navigateToUrl(page: Page, url: string): Promise<void> {
     await page.setViewportSize({ width: 1920, height: 1080 });
 
-    try {
-      this.logger.debug(`Navigating to ${url}`);
+    this.logger.debug(`Navigating to ${url}`);
 
-      // Cache hostname → "is public" per navigation so a redirect chain
-      // through the same host doesn't re-resolve DNS on every request.
-      const hostSafetyCache = new Map<string, boolean>();
+    // WebSockets bypass page.route entirely — Playwright ships a separate
+    // routeWebSocket API precisely because route() cannot see the
+    // handshake. Without this, page JS could open ws:// sockets to
+    // loopback/6PN targets and read the results into the DOM (audit F14).
+    // Job postings don't need live sockets; refuse them all. (The egress
+    // proxy would also stop the handshake at connect time — this kills it
+    // earliest and cheapest.)
+    await page.routeWebSocket('**/*', (ws) => {
+      this.logger.warn(`Blocked WebSocket from parsed page: ${ws.url().slice(0, 200)}`);
+      ws.close();
+    });
 
-      // Block heavy resources we never need for text extraction. Cuts page
-      // load time and RAM by 30–60% on image-heavy job boards (LinkedIn,
-      // Indeed), which also makes the OOM risk on the 1GB Fly VM smaller.
-      //
-      // Also blocks SSRF: any top-level navigation (redirect chain) to a
-      // private/internal/link-local host is aborted here too, since a
-      // public-looking entry URL can still redirect server-side into an
-      // internal target after the initial `assertUrlIsPublic` check above.
-      await page.route('**/*', async (route) => {
-        const request = route.request();
-        const type = request.resourceType();
-        if (type === 'image' || type === 'font' || type === 'media' || type === 'stylesheet') {
+    // Cache hostname → "is public" per navigation so a redirect chain
+    // through the same host doesn't re-resolve DNS on every request.
+    const hostSafetyCache = new Map<string, boolean>();
+
+    // Block heavy resources we never need for text extraction. Cuts page
+    // load time and RAM by 30–60% on image-heavy job boards (LinkedIn,
+    // Indeed), which also makes the OOM risk on the smaller (1GB staging)
+    // Fly VMs smaller.
+    //
+    // Also blocks SSRF: any top-level navigation (redirect chain) to a
+    // private/internal/link-local host is aborted here too, since a
+    // public-looking entry URL can still redirect server-side into an
+    // internal target after the initial `assertUrlIsPublic` check above.
+    // Defense in depth — the egress proxy re-checks at connect time.
+    await page.route('**/*', async (route) => {
+      const request = route.request();
+      const type = request.resourceType();
+      if (type === 'image' || type === 'font' || type === 'media' || type === 'stylesheet') {
+        return route.abort();
+      }
+
+      // Block SSRF across ALL request types: a public document can still load JS
+      // that fetches internal URLs and writes the response into the DOM.
+      let hostname: string;
+      try {
+        const u = new URL(request.url());
+        if (u.protocol !== 'http:' && u.protocol !== 'https:') {
           return route.abort();
         }
+        hostname = u.hostname;
+      } catch {
+        return route.abort();
+      }
 
-        // Block SSRF across ALL request types: a public document can still load JS
-        // that fetches internal URLs and writes the response into the DOM.
-        let hostname: string;
+      let safe = hostSafetyCache.get(hostname);
+      if (safe === undefined) {
         try {
-          const u = new URL(request.url());
-          if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-            return route.abort();
-          }
-          hostname = u.hostname;
+          await resolveAndAssertPublic(hostname);
+          safe = true;
         } catch {
-          return route.abort();
+          safe = false;
         }
+        hostSafetyCache.set(hostname, safe);
+      }
+      if (!safe) {
+        this.logger.warn(`Blocked request to non-public host: ${hostname}`);
+        return route.abort();
+      }
 
-        let safe = hostSafetyCache.get(hostname);
-        if (safe === undefined) {
-          try {
-            await resolveAndAssertPublic(hostname);
-            safe = true;
-          } catch {
-            safe = false;
-          }
-          hostSafetyCache.set(hostname, safe);
-        }
-        if (!safe) {
-          this.logger.warn(`Blocked request to non-public host: ${hostname}`);
-          return route.abort();
-        }
+      return route.continue();
+    });
 
-        return route.continue();
+    await page.goto(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: this.timeout,
+    });
+
+    await page
+      .waitForLoadState('networkidle', { timeout: 2500 })
+      .catch(() => {
+        this.logger.debug('Network idle timeout, proceeding anyway');
       });
 
-      await page.goto(url, {
-        waitUntil: 'domcontentloaded',
-        timeout: this.timeout,
-      });
-
-      await page
-        .waitForLoadState('networkidle', { timeout: 2500 })
-        .catch(() => {
-          this.logger.debug('Network idle timeout, proceeding anyway');
-        });
-
-      await this.handlePopups(page);
-      // Brief settle for late-bound JS content. networkidle above already
-      // covered XHR-driven rendering; 400ms is enough for the final paint.
-      await page.waitForTimeout(400);
-
-      return page;
-    } catch (error) {
-      await page.close();
-      throw error;
-    }
+    await this.handlePopups(page);
+    // Brief settle for late-bound JS content. networkidle above already
+    // covered XHR-driven rendering; 400ms is enough for the final paint.
+    await page.waitForTimeout(400);
   }
 
   /**
@@ -601,9 +724,10 @@ export class AgentUrlParser {
       .replace(/\s*at\s+(?:Workwise|LinkedIn|Indeed|StepStone|Xing|Monster|Glassdoor)\s*$/gi, '')
       .trim();
 
-    const fullContent = `Page Title: ${title}\n\n${bestContent}`;
-    await page.close();
-    return fullContent;
+    // NOTE: the page is deliberately NOT closed here. parseInternal owns the
+    // page and closes it in a finally — a throw from the tail calls above
+    // (body innerText, page.title) used to strand the page forever (audit F12).
+    return `Page Title: ${title}\n\n${bestContent}`;
   }
 
   /**
@@ -1004,6 +1128,7 @@ export class AgentUrlParser {
   async shutdown(): Promise<void> {
     this.disposed = true;
     await this.closeBrowser();
+    await this.egressProxy.close();
   }
 
   /**

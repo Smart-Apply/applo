@@ -10,6 +10,10 @@ no credential use.
 > and [ARCHITECTURE_SECURITY_REVIEW_2026-07-27.md](../implementation/ARCHITECTURE_SECURITY_REVIEW_2026-07-27.md).
 > Both remain the historical record for their findings; this doc records what changed
 > since and adds the items neither covered.
+>
+> **Remediation status:** all 11 open findings (F9–F19) were fixed the same day —
+> see the [remediation addendum](#11-remediation-addendum-2026-08-13) at the end.
+> Sections 1–10 are the unmodified audit record and still describe the pre-fix code.
 
 ## 1. Executive summary
 
@@ -532,3 +536,34 @@ one genuinely unguarded route, `@Get('microsoft/callback')` (`:105`) — it is s
 an HMAC-signed state with a 10-minute expiry and a `timingSafeEqual` check (`:182-211`).
 (c) `pdfjs-dist` and `undici` look runtime-reachable from the `pnpm audit` paths alone;
 §7 shows they are not.
+
+## 11. Remediation addendum (2026-08-13)
+
+All 11 open findings were remediated in one change set (branch
+`fix/security-audit-2026-08-13-findings`), planned in
+[docs/plans/11-security-audit-remediation.md](../plans/11-security-audit-remediation.md).
+Sections 1–10 above describe the **pre-fix** code and remain unmodified.
+
+| ID | Status | What shipped | Where |
+|----|--------|--------------|-------|
+| F16 | **Fixed** | Tracker = verified JWT sub (real per-user bucketing) else proxy-derived `req.ip`; forged-header reads deleted; health exemption narrowed to `/live`+`/ready`; dead `translation` bucket removed; logging contradiction fixed | `custom-throttler.guard.ts` (+ unit spec), `app.module.ts` |
+| F18 | **Fixed** | LLM probe removed from public `GET /health`; `GET /health/details` now `JwtAuthGuard`+`AdminGuard` with a 60s-cached probe; health routes throttle under `health-check` | `health.controller.ts`, `fly.prod.toml` comment |
+| F19 | **Fixed** | Body is a validated DTO class (`@ArrayMaxSize(100)`, length caps); one connection lookup + one timing-safe `clientState` check per subscription instead of per entry | `mailbox-webhook.controller.ts`, `dto/graph-webhook.dto.ts`, `mailbox-sync.orchestrator.ts` |
+| F17 | **Fixed** | `analyzeMatch` scoped `{ id, userId, deletedAt: null }`; `GET /jobs/:id/status` takes the current user and 404s on payload-owner mismatch (fail closed) | `keywords.service.ts`, `jobs.controller.ts`, `jobs.service.ts` |
+| F11 | **Fixed** | Header corrected to pseudonymous; `deleteEventsForActor` called from both account-deletion paths before `user.delete`; daily retention cron (`LLM_USAGE_RETENTION_DAYS`, default 90) | `llm-usage.service.ts`, `llm-usage-retention.cron.ts`, `auth.service.ts`, `admin.controller.ts`, `schema.prisma` comment |
+| F12 | **Fixed** | Page owned + closed by `parseInternal` on every settled path; hard-timeout path recycles the whole browser (only reliable reaper for a wedged renderer) | `agent-url.parser.ts` |
+| F13 | **Fixed** | Sandboxed launch first with loud `--no-sandbox` fallback (`AGENT_CHROMIUM_NO_SANDBOX` escape hatch); warm browser recycled after 25 parses / 15 min | `agent-url.parser.ts` |
+| F14 | **Fixed** | `page.routeWebSocket('**/*', ws => ws.close())`; egress proxy additionally polices WS handshakes at connect time | `agent-url.parser.ts`, `ssrf-egress-proxy.ts` |
+| F15 | **Fixed** | Loopback egress proxy resolves + validates + dials every browser connection itself (no second lookup to rebind); axios path pins DNS to the vetted addresses per hop | `ssrf-egress-proxy.ts` (+ unit spec), `agent-url.parser.ts`, `url.parser.ts` |
+| F9 | **Fixed** | Storage key = `userId/timestamp-UUID.ext`; original name only in the `fileName` response field; same-millisecond collision closed | `uploads.service.ts` (+ unit spec) |
+| F10 | **Fixed** | HIBP Pwned-Passwords k-anonymity check (fail-open, `PWNED_PASSWORD_CHECK_ENABLED`) on register/change/reset; `PASSWORD_COMPROMISED` error code localized in all six web locales | `pwned-password.service.ts` (+ unit spec), `auth.service.ts`, `error-codes.ts`, `apps/web/src/lib/error-messages.ts` |
+
+Still open from §8/§9, deliberately not in this change set:
+
+- **Secret scanning + push protection** — repo-settings toggle (§9.1); attempted via
+  `gh api` alongside this change set, result recorded in the PR.
+- **Dependency hygiene (§7)** — separate PR per the one-PR-per-concern rule and the
+  `pdfjs-dist`/`react-pdf` pairing constraint; no High advisory is runtime-reachable.
+- **`apps/web` items** — `KpiCard` sink hardening and CSP posture (§9.5), owned by the
+  web agent.
+- **Prior-audit carry-overs** F5, F6, F8 — unchanged, accepted/tracked as before.
