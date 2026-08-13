@@ -36,13 +36,29 @@
 ```
 
 > **Pluggable providers:** Storage (Cloudflare R2 / disk), Queue (QStash / in-memory),
-> LLM (Azure OpenAI / Azure AI Foundry / Mistral / mock), and Cache (Upstash Redis / node-cache) are all selected via env.
+> LLM (Azure OpenAI / Azure AI Foundry / Mistral / mock / fake), and Cache (Upstash Redis / node-cache) are all selected via env.
 > **Three routing lanes**, each with its own circuit breaker and its own fallback to the main lane (precedence: explicit `model` → mid → fast → main):
 > - **main** (`LLM_PROVIDER` + `AZURE_OPENAI_*`, `gpt-4.1`) — candidate-facing writing, and always the floor. A side-lane failure re-dispatches here *without* the model override.
 > - **fast** (`LLM_FAST_MODEL` + optional `LLM_FAST_PROVIDER`) — per-**task** routing that sends the mechanical extraction steps (`ats-keywords`, `job-facts`, `skill-selector`, `interview-*`) to a cheaper model, optionally on a different provider (second instance + own breaker). The 2026-08-02 A/B eval rejected Mistral Small/Large for prose (fabricated metrics, half-length letters) while clearing them for extraction ([details](docs/guides/LLM_MODEL_SELECTION.md)).
 > - **mid** (`LLM_MID_MODEL` + optional `AZURE_OPENAI_MID_ENDPOINT`/`_API_KEY`, today `gpt-5.4-mini` in a second Azure Foundry resource) — opt-in **per call** via `{ midLane: true }` rather than by template list, because it is tier-dependent rather than task-dependent. Today: Free-tier Bewerbungs-Checks, which need native strict `json_schema` support.
 >
 > Each lane is a no-op when its model env var is unset, and a misconfigured side lane degrades to the main provider instead of crashing boot.
+> `LLM_PROVIDER=fake` selects a deterministic, chain-aware offline provider (no network, no cost) and **forces the fast and mid lanes off** — otherwise an "offline" run keeps billing real side-lane calls and stops being reproducible.
+
+### Headless generation seam (#797)
+
+`apps/api/src/applications/headless/generate.ts` is the v1 chain as a pure
+function — plain objects in, plain objects out, no persistence, auth, storage or
+metering. The eval platform ([`applo-eval`](https://github.com/Smart-Apply/applo-eval))
+drives it through a single process seam, `pnpm generate:headless` (JSON on
+stdin, one JSON document on stdout; `--score` embeds the product's own
+deterministic validators so the scorer version always equals the generator
+version). No product TypeScript is imported across the repo boundary.
+
+⚠️ `GenerationService` still carries its own copy of the chain. The two are kept
+in sync **by hand** until the follow-up to #797 lands — a pass added to one must
+be added to the other, or the eval silently measures a pipeline that is no
+longer shipped.
 
 ### Production hostnames
 
