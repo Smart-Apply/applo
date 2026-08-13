@@ -28,12 +28,10 @@
     "clearSelection": "Effacer la sélection",
     "setStatus": "Définir le statut…",
     "delete": "Supprimer",
-    "actions": "Actions",
     "showDetails": "Afficher les détails",
     "edit": "Modifier",
     "openCoverLetter": "Ouvrir la lettre de motivation",
     "openResume": "Ouvrir le CV",
-    "selectApplication": "Sélectionner la candidature",
     "selectAllPage": "Tout sélectionner sur cette page",
     "open": "Ouvrir",
     "emptyFilteredTitle": "Aucune candidature trouvée",
@@ -83,6 +81,10 @@
       "bulkDeletePartial": "{succeeded} supprimée(s), {failed} échec(s)",
       "bulkStatusSuccess": "Statut mis à jour pour {count, plural, one {# candidature} other {# candidatures}}",
       "bulkStatusPartial": "{succeeded} mise(s) à jour, {failed} échec(s)"
+    },
+    "a11y": {
+      "selectApplication": "Sélectionner la candidature : {name}",
+      "actions": "Actions : {name}"
     }
   },
   "detail": {

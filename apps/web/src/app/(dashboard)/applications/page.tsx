@@ -710,7 +710,7 @@ export default function ApplicationsPage() {
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleSelect(application.id)}
-                            aria-label={t('list.selectApplication')}
+                            aria-label={t('list.a11y.selectApplication', { name: jobTitle })}
                           />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -739,7 +739,7 @@ export default function ApplicationsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              aria-label={t('list.actions')}
+                              aria-label={t('list.a11y.actions', { name: jobTitle })}
                               className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
                             >
                               <MoreHorizontal className="h-4 w-4" />
@@ -842,7 +842,7 @@ export default function ApplicationsPage() {
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleSelect(application.id)}
-                            aria-label={t('list.selectApplication')}
+                            aria-label={t('list.a11y.selectApplication', { name: jobTitle })}
                           />
                         </TableCell>
                         <TableCell>
@@ -905,7 +905,12 @@ export default function ApplicationsPage() {
                             </Button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={t('list.a11y.actions', { name: jobTitle })}
+                                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>

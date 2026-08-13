@@ -14,7 +14,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -340,7 +339,7 @@ export default function DashboardPage() {
           <Card className="gap-0 overflow-hidden border-[#33456b] py-0 lg:col-span-2 lg:row-start-1">
             <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b border-[#33456b] bg-[#1B2A49] px-4 py-2.5 pb-2.5!">
               <div>
-                <CardTitle className="font-heading text-lg font-bold tracking-[-.01em] text-white">{t('page.recent.title')}</CardTitle>
+                <h2 className="font-heading text-lg font-bold leading-none tracking-[-.01em] text-white">{t('page.recent.title')}</h2>
                 <CardDescription className="mt-0.5 text-[13.5px] text-white/60">{t('page.recent.description')}</CardDescription>
               </div>
               <Button
@@ -376,6 +375,7 @@ export default function DashboardPage() {
                   <div className="sm:max-h-[180px] sm:overflow-y-auto">
                     {applications.map((app, i) => {
                       const chip = TRACKING_STATUS_CHIP[app.applicationStatus] ?? TRACKING_STATUS_CHIP.CREATED;
+                      const appTitle = app.title || t('page.recent.untitledApplication');
                       return (
                         <div
                           key={app.id}
@@ -386,9 +386,9 @@ export default function DashboardPage() {
                               {String(i + 1).padStart(2, '0')}
                             </span>
                             <div className="min-w-0">
-                              <h4 className="truncate text-[14.5px] font-semibold text-foreground">
-                                {app.title || t('page.recent.untitledApplication')}
-                              </h4>
+                              <h3 className="truncate text-[14.5px] font-semibold text-foreground">
+                                {appTitle}
+                              </h3>
                               <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
                                 {app.jobPosting?.company || app.jobPosting?.location || t('page.recent.noDetails')}
                               </p>
@@ -411,6 +411,7 @@ export default function DashboardPage() {
                             <Button
                               variant="outline"
                               size="icon"
+                              aria-label={t('page.a11y.openApplication', { name: appTitle })}
                               className="h-9 w-9 rounded-[3px] text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                               onClick={() => router.push(`/applications/${app.id}`)}
                             >
@@ -432,7 +433,7 @@ export default function DashboardPage() {
           {/* Profile Completion — top-right, aligned with the applications card. */}
           <Card className="gap-0 overflow-hidden border-[#33456b] py-0 lg:col-start-3 lg:row-start-1">
             <CardHeader className="border-b border-[#33456b] bg-[#1B2A49] px-4 py-2.5 pb-2.5!">
-              <CardTitle className="font-heading text-base font-bold text-white">{t('page.profile.title')}</CardTitle>
+              <h2 className="font-heading text-base font-bold leading-none text-white">{t('page.profile.title')}</h2>
               <CardDescription className="text-[13px] text-white/60">{t('page.profile.description')}</CardDescription>
             </CardHeader>
             <CardContent className="px-3.5 py-3">
@@ -451,7 +452,14 @@ export default function DashboardPage() {
                       {profileStrength.score === 100 ? t('page.profile.perfect') : t('page.profile.almostDone')}
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden bg-primary-soft dark:bg-slate-700">
+                  <div
+                    className="h-2 w-full overflow-hidden bg-primary-soft dark:bg-slate-700"
+                    role="progressbar"
+                    aria-valuenow={profileStrength.score}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={t('page.a11y.profileStrength')}
+                  >
                     <div
                       className="h-full bg-brand transition-all duration-500 ease-out"
                       style={{ width: `${profileStrength.score}%` }}
@@ -493,9 +501,9 @@ export default function DashboardPage() {
               cards are the same size and bottom-aligned. */}
           <Card className="gap-0 overflow-hidden border-[#33456b] py-0 lg:col-start-3 lg:row-start-2">
             <CardHeader className="border-b border-[#33456b] bg-[#1B2A49] px-4 py-2.5 pb-2.5!">
-              <CardTitle className="font-heading text-base font-bold text-white">
+              <h2 className="font-heading text-base font-bold leading-none text-white">
                 {t('page.usage.title')}
-              </CardTitle>
+              </h2>
               <CardDescription className="text-[13px] text-white/60">{t('page.usage.description')}</CardDescription>
             </CardHeader>
             <CardContent className="px-3.5 py-3">

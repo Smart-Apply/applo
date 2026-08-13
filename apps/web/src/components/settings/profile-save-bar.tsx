@@ -5,6 +5,11 @@
  *  Sticky bottom bar that appears only when the profile form has unsaved
  *  edits. Prevents the "did my change save?" ambiguity of the old inline
  *  button. Positioned to clear the w-80 desktop sidebar.
+ *
+ *  While hidden the bar stays in the DOM (it animates in), so its buttons are
+ *  pulled out of the tab order with tabIndex={-1}: `pointer-events-none` and
+ *  `opacity-0` do not remove focusability, and focusing something inside an
+ *  `aria-hidden` subtree is an axe `aria-hidden-focus` violation.
  * ========================================================================== */
 
 'use client';
@@ -38,6 +43,7 @@ export function ProfileSaveBar({ visible, saving, onSave, onDiscard }: ProfileSa
           size="sm"
           onClick={onDiscard}
           disabled={saving}
+          tabIndex={visible ? undefined : -1}
           className="text-primary-foreground hover:bg-white/15 hover:text-primary-foreground"
         >
           {t('saveBar.discard')}
@@ -47,6 +53,7 @@ export function ProfileSaveBar({ visible, saving, onSave, onDiscard }: ProfileSa
           size="sm"
           onClick={onSave}
           disabled={saving}
+          tabIndex={visible ? undefined : -1}
           className="gap-2"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}

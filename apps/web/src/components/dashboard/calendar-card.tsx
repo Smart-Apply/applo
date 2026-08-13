@@ -201,9 +201,14 @@ export function CalendarCard({ className }: { className?: string }) {
 
   return (
     <>
-      <section
+      {/* Card-as-button: a <div> rather than a <section>, because ARIA in HTML
+          does not allow role="button" on <section> (axe: aria-allowed-role).
+          The explicit aria-label keeps the announced name short — name-from-
+          content would read the whole card. */}
+      <div
         role="button"
         tabIndex={0}
+        aria-label={t('page.calendar.openAria')}
         onClick={openModal}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -290,7 +295,7 @@ export function CalendarCard({ className }: { className?: string }) {
             )}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
@@ -462,7 +467,7 @@ export function CalendarCard({ className }: { className?: string }) {
                       <button
                         type="button"
                         onClick={() => handleDelete(a.id)}
-                        aria-label={t('page.calendar.delete')}
+                        aria-label={t('page.calendar.deleteAria', { name: a.note })}
                         className="flex-none text-muted-foreground transition-colors hover:text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" />

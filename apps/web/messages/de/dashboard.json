@@ -88,12 +88,17 @@
       "update": "Termin aktualisieren",
       "allAppointments": "Alle Termine",
       "emailReminderActive": "E-Mail-Erinnerung aktiv",
-      "delete": "Löschen",
       "empty": "Noch keine Termine",
       "toast": {
         "saveError": "Termin konnte nicht gespeichert werden.",
         "deleteError": "Termin konnte nicht gelöscht werden."
-      }
+      },
+      "openAria": "Interview-Kalender öffnen",
+      "deleteAria": "Termin löschen: {name}"
+    },
+    "a11y": {
+      "openApplication": "Bewerbung öffnen: {name}",
+      "profileStrength": "Profilstärke"
     }
   },
   "guide": {
