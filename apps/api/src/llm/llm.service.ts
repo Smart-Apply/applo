@@ -9,6 +9,7 @@ import { isRateLimitError } from './llm-errors';
 import { ConfigService } from '../config/config.service';
 import { stripClosingPhrase } from '../common/services/html-sanitizer';
 import { resolveResponseFormat } from './schemas/v1-schemas';
+import type { ReasoningEffort } from './providers/model-tuning.util';
 import { LlmUsageService } from './usage/llm-usage.service';
 import { featureForTemplate } from './usage/llm-feature.map';
 import { LlmFeature, LlmProviderKind, LlmRoutingLane, LlmCircuitState } from '../generated/prisma/client';
@@ -41,6 +42,50 @@ interface RoutedResult {
   text: string;
   lane: LlmLane;
   model: string | undefined;
+}
+
+/**
+ * Per-call telemetry for a single `callText`/`callJson`, reported through the
+ * optional `onCallMeta` hook. Same resolved values the usage recorder gets, so
+ * a caller that needs the numbers synchronously (the headless generation seam,
+ * which returns them to the eval harness) reads exactly what gets billed —
+ * including `lane`, which tells you a side lane fell back to main.
+ */
+export interface LLMCallMeta {
+  templatePath: string;
+  /** The model that ACTUALLY served the call, not the one requested. */
+  model: string;
+  lane: LlmLane;
+  latencyMs: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  cachedTokens: number;
+  /** False when the provider reported no usage block and the counts are zeros. */
+  usageReported: boolean;
+  success: boolean;
+}
+
+function buildCallMeta(
+  templatePath: string,
+  model: string,
+  lane: LlmLane,
+  latencyMs: number,
+  usage: LlmCallUsage | undefined,
+  success: boolean,
+): LLMCallMeta {
+  return {
+    templatePath,
+    model,
+    lane,
+    latencyMs,
+    promptTokens: usage?.promptTokens ?? 0,
+    completionTokens: usage?.completionTokens ?? 0,
+    totalTokens: (usage?.promptTokens ?? 0) + (usage?.completionTokens ?? 0),
+    cachedTokens: usage?.cachedTokens ?? 0,
+    usageReported: usage !== undefined,
+    success,
+  };
 }
 
 @Injectable()
@@ -739,6 +784,8 @@ Translated text in ${targetLangName}:`;
       systemMessage?: string;
       model?: string;
       midLane?: boolean;
+      reasoningEffort?: ReasoningEffort;
+      onCallMeta?: (meta: LLMCallMeta) => void;
     },
   ): Promise<string> {
     const startTime = Date.now();
@@ -754,7 +801,7 @@ Translated text in ${targetLangName}:`;
       });
     }
 
-    const { midLane: _midLane, ...callOptions } = options ?? {};
+    const { midLane: _midLane, onCallMeta, ...callOptions } = options ?? {};
     const defaultOptions = {
       temperature: 0.5,
       maxTokens: 3000,
@@ -815,22 +862,33 @@ Translated text in ${targetLangName}:`;
         circuitState: this.currentCircuitState(served.lane),
       });
 
+      onCallMeta?.(
+        buildCallMeta(templatePath, served.model ?? this.defaultModel, served.lane, duration, callUsage, true),
+      );
+
       return response;
     } catch (error) {
       this.logger.error(`LLM callText failed: ${templatePath}`, error);
       const failedLane = served?.lane ?? lane;
+      const failedModel = served
+        ? (served.model ?? this.defaultModel)
+        : (taskModel ?? this.defaultModel);
+      const failedLatency = Date.now() - startTime;
       this.usage.record({
         feature: featureForTemplate(templatePath),
         provider: this.providerKindFor(failedLane),
-        model: served ? (served.model ?? this.defaultModel) : (taskModel ?? this.defaultModel),
+        model: failedModel,
         lane: this.usageLaneFor(failedLane),
         usage: callUsage,
         language: typeof variables.language === 'string' ? variables.language : undefined,
-        latencyMs: Date.now() - startTime,
+        latencyMs: failedLatency,
         success: false,
         circuitState: this.currentCircuitState(failedLane),
         errorKind: error instanceof Error ? error.constructor.name : 'Unknown',
       });
+      onCallMeta?.(
+        buildCallMeta(templatePath, failedModel, failedLane, failedLatency, callUsage, false),
+      );
       throw error;
     }
   }
@@ -854,6 +912,8 @@ Translated text in ${targetLangName}:`;
       systemMessage?: string;
       model?: string;
       midLane?: boolean;
+      reasoningEffort?: ReasoningEffort;
+      onCallMeta?: (meta: LLMCallMeta) => void;
     },
   ): Promise<T> {
     const startTime = Date.now();
@@ -869,7 +929,7 @@ Translated text in ${targetLangName}:`;
       });
     }
 
-    const { midLane: _midLane, ...callOptions } = options ?? {};
+    const { midLane: _midLane, onCallMeta, ...callOptions } = options ?? {};
     const defaultOptions = {
       temperature: 0.5,
       maxTokens: 3000,
@@ -932,22 +992,33 @@ Translated text in ${targetLangName}:`;
         circuitState: this.currentCircuitState(served.lane),
       });
 
+      onCallMeta?.(
+        buildCallMeta(templatePath, served.model ?? this.defaultModel, served.lane, duration, callUsage, true),
+      );
+
       return parsed;
     } catch (error) {
       this.logger.error(`LLM callJson failed: ${templatePath}`, error);
       const failedLane = served?.lane ?? lane;
+      const failedModel = served
+        ? (served.model ?? this.defaultModel)
+        : (taskModel ?? this.defaultModel);
+      const failedLatency = Date.now() - startTime;
       this.usage.record({
         feature: featureForTemplate(templatePath),
         provider: this.providerKindFor(failedLane),
-        model: served ? (served.model ?? this.defaultModel) : (taskModel ?? this.defaultModel),
+        model: failedModel,
         lane: this.usageLaneFor(failedLane),
         usage: callUsage,
         language: typeof variables.language === 'string' ? variables.language : undefined,
-        latencyMs: Date.now() - startTime,
+        latencyMs: failedLatency,
         success: false,
         circuitState: this.currentCircuitState(failedLane),
         errorKind: error instanceof Error ? error.constructor.name : 'Unknown',
       });
+      onCallMeta?.(
+        buildCallMeta(templatePath, failedModel, failedLane, failedLatency, callUsage, false),
+      );
       throw error;
     }
   }
