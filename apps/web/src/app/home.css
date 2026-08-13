@@ -11,7 +11,9 @@ html { scroll-behavior: smooth; }
 
 .applo-home {
   --navy:#1B2A49; --navy-hover:#22345A; --blue:#5581C7; --blue2:#40639C;
-  --soft:#E5E9F2; --screen:#eef3fb; --green:#16A34A; --red:#DC2626;
+  /* --blue only reaches 3.63:1 on --navy, so text on the dark receipt uses this. */
+  --blue-on-dark:#7FA3D9;
+  --soft:#E5E9F2; --screen:#eef3fb; --green:#16A34A; --green-ink:#15803D; --red:#DC2626;
   --ink:#1B2A49; --muted:#6B6969; --muted-2:#6E6E6E;
   --surface:#FAFAFA; --border:#E0E0E0;
   --mono:var(--font-mono-plex),"IBM Plex Mono",ui-monospace,monospace;
@@ -90,7 +92,7 @@ html { scroll-behavior: smooth; }
 .applo-home .receipt { width:min(460px,100%); background:#fff; border:1px solid var(--navy); box-shadow:10px 10px 0 var(--soft); margin-right:clamp(0px,5vw,64px); }
 .applo-home .receipt .r-top { display:flex; align-items:center; justify-content:space-between; background:var(--navy); padding:10px 16px; }
 .applo-home .receipt .r-file { font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.05em; color:#fff; }
-.applo-home .receipt .r-lang { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.1em; color:var(--blue); border:1px solid var(--blue); padding:2px 6px; }
+.applo-home .receipt .r-lang { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.1em; color:var(--blue-on-dark); border:1px solid var(--blue-on-dark); padding:2px 6px; }
 .applo-home .receipt .r-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; border-bottom:1px solid var(--border); }
 .applo-home .receipt .r-field { display:flex; flex-direction:column; gap:2px; }
 .applo-home .receipt .r-label { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.12em; color:var(--muted-2); }
@@ -103,7 +105,7 @@ html { scroll-behavior: smooth; }
 .applo-home .receipt .r-bar { height:8px; background:var(--soft); position:relative; }
 .applo-home .receipt .r-bar span { position:absolute; inset:0 13% 0 0; background:var(--blue); }
 .applo-home .receipt .r-meta { display:flex; justify-content:space-between; font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; color:var(--muted-2); }
-.applo-home .receipt .r-meta .ok { color:var(--green); }
+.applo-home .receipt .r-meta .ok { color:var(--green-ink); }
 .applo-home .receipt .r-foot { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; }
 .applo-home .receipt .r-export { display:inline-flex; align-items:center; gap:8px; background:var(--navy); color:#fff; font-size:12.5px; font-weight:600; padding:9px 14px; }
 .applo-home .receipt .r-hint { font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--muted-2); }

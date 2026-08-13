@@ -29,7 +29,7 @@ export function MetricTip({ content, align = 'center' }: Props) {
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+        className="text-muted-foreground hover:text-foreground transition-colors"
       >
         <Info size={13} strokeWidth={2.2} />
       </button>

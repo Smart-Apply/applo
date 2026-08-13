@@ -1716,7 +1716,7 @@ export default function ProfilePage() {
                     )}
                   </span>
                   <span className="flex-1 text-[13px] font-medium text-foreground">{c.label}</span>
-                  <span className={cn('font-mono text-[11px] font-bold tabular-nums', c.done ? 'text-muted-foreground/60' : 'text-brand')}>
+                  <span className={cn('font-mono text-[11px] font-bold tabular-nums', c.done ? 'text-muted-foreground' : 'text-brand-strong')}>
                     +{c.weight}%
                   </span>
                 </button>
