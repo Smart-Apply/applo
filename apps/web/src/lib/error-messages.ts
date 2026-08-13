@@ -54,6 +54,7 @@ export enum ErrorCode {
   PASSWORD_INCORRECT = 'PASSWORD_INCORRECT',
   PASSWORD_SAME_AS_CURRENT = 'PASSWORD_SAME_AS_CURRENT',
   PASSWORD_CHANGE_OAUTH = 'PASSWORD_CHANGE_OAUTH',
+  PASSWORD_COMPROMISED = 'PASSWORD_COMPROMISED',
   
   // Rate limiting
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
@@ -121,6 +122,7 @@ export const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     [ErrorCode.PASSWORD_INCORRECT]: 'Das aktuelle Passwort ist falsch. Bitte versuche es erneut.',
     [ErrorCode.PASSWORD_SAME_AS_CURRENT]: 'Das neue Passwort muss sich vom aktuellen Passwort unterscheiden.',
     [ErrorCode.PASSWORD_CHANGE_OAUTH]: 'Passwort kann für Konten mit externem Login (z.B. Google) nicht geändert werden.',
+    [ErrorCode.PASSWORD_COMPROMISED]: 'Dieses Passwort ist aus einem bekannten Datenleck bekannt. Bitte wähle ein anderes Passwort.',
 
     // Rate limiting
     [ErrorCode.RATE_LIMIT_EXCEEDED]: 'Zu viele Aktionen. Bitte warte einen Moment und versuche es erneut.',
@@ -183,6 +185,7 @@ export const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     [ErrorCode.PASSWORD_INCORRECT]: 'The current password is incorrect. Please try again.',
     [ErrorCode.PASSWORD_SAME_AS_CURRENT]: 'The new password must be different from the current password.',
     [ErrorCode.PASSWORD_CHANGE_OAUTH]: 'The password cannot be changed for accounts using an external login (e.g. Google).',
+    [ErrorCode.PASSWORD_COMPROMISED]: 'This password has appeared in a known data breach. Please choose a different password.',
 
     // Rate limiting
     [ErrorCode.RATE_LIMIT_EXCEEDED]: 'Too many actions. Please wait a moment and try again.',
@@ -237,6 +240,7 @@ export const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     [ErrorCode.PASSWORD_INCORRECT]: 'Le mot de passe actuel est incorrect. Veuillez réessayer.',
     [ErrorCode.PASSWORD_SAME_AS_CURRENT]: 'Le nouveau mot de passe doit être différent du mot de passe actuel.',
     [ErrorCode.PASSWORD_CHANGE_OAUTH]: 'Le mot de passe ne peut pas être modifié pour les comptes utilisant une connexion externe (p. ex. Google).',
+    [ErrorCode.PASSWORD_COMPROMISED]: 'Ce mot de passe figure dans une fuite de données connue. Veuillez en choisir un autre.',
 
     [ErrorCode.RATE_LIMIT_EXCEEDED]: 'Trop d’actions. Veuillez patienter un instant et réessayer.',
 
@@ -287,6 +291,7 @@ export const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     [ErrorCode.PASSWORD_INCORRECT]: 'La contraseña actual es incorrecta. Inténtalo de nuevo.',
     [ErrorCode.PASSWORD_SAME_AS_CURRENT]: 'La nueva contraseña debe ser diferente de la contraseña actual.',
     [ErrorCode.PASSWORD_CHANGE_OAUTH]: 'La contraseña no se puede cambiar en cuentas con inicio de sesión externo (p. ej., Google).',
+    [ErrorCode.PASSWORD_COMPROMISED]: 'Esta contraseña apareció en una filtración de datos conocida. Elige otra contraseña.',
 
     [ErrorCode.RATE_LIMIT_EXCEEDED]: 'Demasiadas acciones. Espera un momento e inténtalo de nuevo.',
 
@@ -337,6 +342,7 @@ export const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     [ErrorCode.PASSWORD_INCORRECT]: 'A palavra-passe atual está incorreta. Tenta novamente.',
     [ErrorCode.PASSWORD_SAME_AS_CURRENT]: 'A nova palavra-passe tem de ser diferente da palavra-passe atual.',
     [ErrorCode.PASSWORD_CHANGE_OAUTH]: 'A palavra-passe não pode ser alterada em contas com início de sessão externo (p. ex., Google).',
+    [ErrorCode.PASSWORD_COMPROMISED]: 'Esta palavra-passe apareceu numa fuga de dados conhecida. Escolha outra palavra-passe.',
 
     [ErrorCode.RATE_LIMIT_EXCEEDED]: 'Demasiadas ações. Aguarda um momento e tenta novamente.',
 
@@ -387,6 +393,7 @@ export const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     [ErrorCode.PASSWORD_INCORRECT]: 'La password attuale è errata. Riprova.',
     [ErrorCode.PASSWORD_SAME_AS_CURRENT]: 'La nuova password deve essere diversa da quella attuale.',
     [ErrorCode.PASSWORD_CHANGE_OAUTH]: 'La password non può essere modificata per gli account con accesso esterno (ad es. Google).',
+    [ErrorCode.PASSWORD_COMPROMISED]: 'Questa password è comparsa in una violazione di dati nota. Scegli un’altra password.',
 
     [ErrorCode.RATE_LIMIT_EXCEEDED]: 'Troppe azioni. Attendi un momento e riprova.',
 

@@ -177,9 +177,13 @@ export class KeywordsService {
       throw new NotFoundException('Profile not found');
     }
 
-    // Fetch job posting
-    const jobPosting = await this.prisma.jobPosting.findUnique({
-      where: { id: jobPostingId },
+    // Fetch job posting — scoped to the calling user and to live rows
+    // (security audit 2026-08-13, F17): an unscoped findUnique here let any
+    // authenticated user run LLM keyword extraction over another user's
+    // posting text and use the route as an existence oracle. A foreign or
+    // soft-deleted id must behave exactly like a missing one.
+    const jobPosting = await this.prisma.jobPosting.findFirst({
+      where: { id: jobPostingId, userId, deletedAt: null },
     });
 
     if (!jobPosting) {

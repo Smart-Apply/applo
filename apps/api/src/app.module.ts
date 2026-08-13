@@ -94,11 +94,12 @@ import { MailboxSyncModule } from './mailbox-sync/mailbox-sync.module';
               ttl: 900000, // 15 minutes
               limit: 30, // on-demand LLM/PDF actions (regenerate, editor AI, export, posting parse)
             },
-            {
-              name: 'translation',
-              ttl: 900000, // 15 minutes
-              limit: 10, // 10 translation requests per 15 minutes - LLM calls are expensive
-            },
+            // NOTE: there is deliberately no 'translation' bucket. A named
+            // throttler only enforces anything when a route opts in via
+            // @UseThrottler('name') — a definition without a decorator is dead
+            // config that reads as protection (audit 2026-08-13 F16; the same
+            // failure mode bit 'resume-parser' before #710). Translation runs
+            // on POST /applications/:id/export, which is capped by 'llm-actions'.
             {
               name: 'email',
               ttl: 3600000, // 1 hour

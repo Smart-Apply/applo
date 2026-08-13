@@ -35,10 +35,20 @@ interface ActorStore {
 }
 
 /**
- * Anonymous per-feature LLM token-usage recorder (issue #522). Writes
- * `LlmUsageEvent` rows keyed by a salted, irreversible `actorHash` — never a
- * raw `userId`, never prompt/response text. No-op entirely when
- * `LLM_USAGE_HASH_SALT` is unset, so local dev and tests stay clean by default.
+ * Pseudonymous per-feature LLM token-usage recorder (issue #522). Writes
+ * `LlmUsageEvent` rows keyed by `actorHash` — an HMAC-SHA256 keyed pseudonym
+ * of the userId; never the raw id, never prompt/response text.
+ *
+ * NOT anonymous (audit 2026-08-13, F11 — this header used to claim it was):
+ * the hash is stable per user, and the table sits beside
+ * `applications`/`validations`/`interview_sessions`, whose `userId` +
+ * millisecond timestamps let a usage burst be time-correlated back to its
+ * trigger without the salt. GDPR erasure therefore applies: account deletion
+ * calls {@link deleteEventsForActor}, and `LlmUsageRetentionCron` ages out
+ * everything else.
+ *
+ * No-op entirely when `LLM_USAGE_HASH_SALT` is unset, so local dev and tests
+ * stay clean by default.
  */
 @Injectable()
 export class LlmUsageService {
@@ -115,6 +125,30 @@ export class LlmUsageService {
         const message = error instanceof Error ? error.message : String(error);
         this.logger.warn(`Failed to record LLM usage event: ${message}`);
       });
+  }
+
+  /**
+   * GDPR erasure hook (audit 2026-08-13, F11): delete every usage event this
+   * user's calls produced, by recomputing the HMAC with the live salt. Rows
+   * written under an earlier salt (or while the salt was unset, which stores
+   * a null actorHash) cannot be matched and are left for the retention sweep.
+   *
+   * NOT fire-and-forget, unlike {@link record}: both account-deletion paths
+   * run this BEFORE `user.delete` and treat a failure as fatal to the
+   * deletion, so personal data is never silently orphaned.
+   */
+  async deleteEventsForActor(userId: string): Promise<number> {
+    const salt = this.config.llmUsageHashSalt;
+    if (!salt) {
+      return 0;
+    }
+    const { count } = await this.prisma.llmUsageEvent.deleteMany({
+      where: { actorHash: this.hashActor(userId, salt) },
+    });
+    if (count > 0) {
+      this.logger.log(`Erased ${count} LLM usage events for a deleted account`);
+    }
+    return count;
   }
 
   /**

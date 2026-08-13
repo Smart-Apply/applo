@@ -46,16 +46,22 @@ export class MailboxSyncOrchestrator {
   ) {}
 
   /**
-   * Process one Microsoft Graph notification entry. Resilient by design —
-   * if any step fails we record the failure on the connection and return.
-   * Webhook controller never gets to see exceptions (Graph would consider
-   * non-2xx responses as delivery failures and retry).
+   * Process a batch of Microsoft Graph notification entries that share one
+   * subscription. The connection lookup and the clientState verification run
+   * ONCE per batch — they used to run per entry, which handed unauthenticated
+   * callers one DB read per entry before any secret was checked (security
+   * audit 2026-08-13, F19).
+   *
+   * Resilient by design — if a step fails we record the failure on the
+   * connection and continue. The webhook controller never gets to see
+   * exceptions (Graph would consider non-2xx responses as delivery failures
+   * and retry).
    */
-  async processMicrosoftNotification(args: {
+  async processMicrosoftNotifications(args: {
     subscriptionId: string;
     clientState: string;
-    /** Graph resource path, e.g. "Users/.../Messages/AAMkAGZ..." */
-    resource: string;
+    /** Graph resource paths, e.g. "Users/.../Messages/AAMkAGZ..." */
+    resources: string[];
   }): Promise<void> {
     const conn = await this.connections.findBySubscriptionId(args.subscriptionId);
     if (!conn) {
@@ -71,9 +77,24 @@ export class MailboxSyncOrchestrator {
       return;
     }
 
-    const messageId = extractMessageId(args.resource);
+    // Sequential on purpose: the LLM and the Graph token endpoint are both
+    // globally rate-limited, and serial processing keeps backpressure sane.
+    for (const resource of args.resources) {
+      await this.processMessageResource(conn, resource);
+    }
+  }
+
+  /**
+   * Process one notification entry for a connection whose clientState has
+   * already been verified by the batch entry point above.
+   */
+  private async processMessageResource(
+    conn: NonNullable<Awaited<ReturnType<MailboxConnectionService['findBySubscriptionId']>>>,
+    resource: string,
+  ): Promise<void> {
+    const messageId = extractMessageId(resource);
     if (!messageId) {
-      this.logger.warn(`Could not extract message id from resource path: ${args.resource}`);
+      this.logger.warn(`Could not extract message id from resource path: ${resource}`);
       return;
     }
 

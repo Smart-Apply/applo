@@ -387,6 +387,11 @@ export class ConfigService {
     return this.nestConfig.get('ENABLE_CRON_JOBS', { infer: true });
   }
 
+  /** Compromised-password (HIBP) check on signup/password-change/reset (audit F10). */
+  get pwnedPasswordCheckEnabled(): boolean {
+    return this.nestConfig.get('PWNED_PASSWORD_CHECK_ENABLED', { infer: true });
+  }
+
   // Compression
   get enableCompression(): boolean {
     return this.nestConfig.get('ENABLE_COMPRESSION', { infer: true });
@@ -480,11 +485,17 @@ export class ConfigService {
   }
 
   // ---------------------------------------------------------------------------
-  // Anonymous LLM usage tracking (issue #522)
+  // Pseudonymous LLM usage tracking (issue #522)
   // ---------------------------------------------------------------------------
 
   get llmUsageHashSalt(): string | undefined {
     return this.nestConfig.get('LLM_USAGE_HASH_SALT', { infer: true });
+  }
+
+  /** Days to keep `llm_usage_events` rows; 0 disables the retention sweep. */
+  get llmUsageRetentionDays(): number {
+    const parsed = parseInt(this.nestConfig.get('LLM_USAGE_RETENTION_DAYS', { infer: true }), 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 90;
   }
 
   // ---------------------------------------------------------------------------

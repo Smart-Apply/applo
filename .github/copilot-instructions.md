@@ -162,8 +162,8 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **Email:** Resend (`resend`) for transactional mail
 - **Logging:** Pino (request logs) + Winston with daily rotation (audit, 90-day retention)
 - **Monitoring:** Sentry (`@sentry/node` + `@sentry/profiling-node`)
-- **Security:** Helmet, CORS whitelist, `@nestjs/throttler` 6.5 (dual-tier), `csrf-csrf` 4.0 (optional), `sanitize-html`, `isomorphic-dompurify`, `@Sanitize()` decorator
-- **Health:** `@nestjs/terminus` (`/health`)
+- **Security:** Helmet, CORS whitelist, `@nestjs/throttler` 6.5 (dual-tier; tracker = verified JWT sub or proxy-derived `req.ip`, never client headers), `csrf-csrf` 4.0 (optional), `sanitize-html`, `isomorphic-dompurify`, `@Sanitize()` decorator, HIBP compromised-password check (`PWNED_PASSWORD_CHECK_ENABLED`), SSRF guard + loopback egress proxy for URL parsing (`common/security/`)
+- **Health:** `@nestjs/terminus` — public `/health` (infra deps, no LLM probe), `/health/live` + `/health/ready` (throttle-exempt probes), `/health/details` (admin-only, includes the 60s-cached LLM probe)
 - **Scheduling:** `@nestjs/schedule` for cron jobs (session cleanup, etc.)
 - **Containers:** Docker (multi-stage, `infra/Dockerfile`); deploy to **Fly.io** (`smart-apply-api`, region `fra`)
 
@@ -210,7 +210,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 
   **Usage tracking (issue #522, `llm/usage/`):** every `callText`/`callJson`/`generateText`/`translateSummary` call — regardless of lane, provider, or success/failure — records one `LlmUsageEvent` row (`LlmUsageService.record`, fire-and-forget, never throws). Rows record the lane/model that **actually served** the call, so a side-lane fallback is attributed to `main`, not to the lane that failed. `feature` is derived from the exact template path (`usage/llm-feature.map.ts`, exact-key lookup — deliberately NOT `includes()`, unlike `FAST_MODEL_TEMPLATES` above). `userId` reaches the recorder only via an `AsyncLocalStorage` actor scope — `LlmUsageContextInterceptor` (global `APP_INTERCEPTOR`) seeds it from the JWT-authenticated request for every HTTP call; the two non-HTTP paths seed it explicitly (`ApplicationProcessor.process` for queued generation jobs, `MailboxSyncOrchestrator` for the public Graph webhook). No-op entirely when `LLM_USAGE_HASH_SALT` is unset.
 
-  ⚠️ **The dataset is pseudonymous, not anonymous** — despite the issue title. `actorHash` is stable per user, and the table sits beside `applications`/`validations`/`interview_sessions`, which carry `userId` + millisecond `createdAt`; a usage burst time-correlates back to the triggering row, recovering the `userId` **without** the salt. So GDPR erasure obligations still apply, and there is currently **no** retention sweep and **no** deletion hook on the account-deletion path. `LlmUsageEvent.language` is a structural field normalized against a fixed allow-list at the sink — never let free text into this table.
+  ⚠️ **The dataset is pseudonymous, not anonymous** — despite the issue title. `actorHash` is stable per user, and the table sits beside `applications`/`validations`/`interview_sessions`, which carry `userId` + millisecond `createdAt`; a usage burst time-correlates back to the triggering row, recovering the `userId` **without** the salt. GDPR erasure obligations therefore apply and are wired in (audit 2026-08-13 F11): both account-deletion paths (`AuthService.deleteAccount`, admin `DELETE /admin/users/:email`) call `LlmUsageService.deleteEventsForActor` before the user row is deleted, and `LlmUsageRetentionCron` (daily 04:00) hard-deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90; also mops up rows an erasure can't match after a salt rotation). `LlmUsageEvent.language` is a structural field normalized against a fixed allow-list at the sink — never let free text into this table.
 - `logger` — Pino + Winston audit logger
 - `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification.
 - `pdf` — thin façade over `pdf-v2/ReactPdfRendererService`. Kept so external callers (`application.processor.ts`, tests) preserve the `PdfService` API surface. Throws when a template has no react-pdf factory registered.
@@ -266,7 +266,7 @@ is authoritative):
 - **Subscription** (plans & usage) — monthly hard limits for applications (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95), Bewerbungs-Checks (3/15/35), and mock interviews (0/5/20), with `Subscription.addonCreditsRemaining` holding purchased add-on credits (packages of 10/30/75) that persist until used and are consumed after the tier allowance
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
-- **LlmUsageEvent** (issue #522 — per-feature LLM token-usage event; NO `User` FK, keyed by an HMAC-SHA256 `actorHash` derived from `LLM_USAGE_HASH_SALT`; never stores prompt/response content; unset salt disables tracking entirely. **Pseudonymous, not anonymous** — see the `llm` module notes)
+- **LlmUsageEvent** (issue #522 — per-feature LLM token-usage event; NO `User` FK, keyed by an HMAC-SHA256 `actorHash` derived from `LLM_USAGE_HASH_SALT`; never stores prompt/response content; unset salt disables tracking entirely. **Pseudonymous, not anonymous** — erased on account deletion, swept after `LLM_USAGE_RETENTION_DAYS`; see the `llm` module notes)
 - Also present, not detailed above: **UserPreferences**, **SubscriptionUsage**, **BackgroundJob**, **TwoFactorAuth**, **TwoFactorBackupCode**, **TrustedDevice**, **OAuthProvider**, and the interview trio **InterviewSession**/**InterviewQuestion**/**InterviewFeedback** (the "Interview" shorthand above), plus **Template** (the "ResumeTemplate" shorthand)
 
 ## API Endpoints (v1)
@@ -680,11 +680,16 @@ JWT_REFRESH_SECRET=REPLACE_WITH_DIFFERENT_64_CHAR_SECRET
 # CORS
 CORS_ORIGINS=http://localhost:3000,http://localhost:3001
 
-# Rate Limiting
+# Rate Limiting — tracker is the verified JWT subject (per user) or the
+# proxy-derived req.ip; client-suppliable headers are never trusted (audit F16)
 RATE_LIMIT_TTL=900           # 15 min
 RATE_LIMIT_MAX=1000          # Standard endpoints (prod: 300-500)
 RATE_LIMIT_AUTH_TTL=900
 RATE_LIMIT_AUTH_MAX=5        # Auth endpoints (STRICT)
+
+# Compromised-password check (HIBP k-anonymity range API) on register/change/
+# reset. Fail-open on outages; disable only for air-gapped dev (audit F10).
+PWNED_PASSWORD_CHECK_ENABLED=true
 
 # CSRF (optional)
 ENABLE_CSRF=false
@@ -712,9 +717,12 @@ UPSTASH_REDIS_REST_TOKEN=<token>
 
 # LLM (pluggable)
 LLM_PROVIDER=mock            # azure-openai | azure-ai-foundry | mistral | mock
-# Anonymous per-feature LLM usage tracking (issue #522). Salt for the
-# irreversible actorHash in llm_usage_events. Unset = tracking OFF entirely.
+# Pseudonymous per-feature LLM usage tracking (issue #522). Salt for the keyed
+# actorHash in llm_usage_events. Unset = tracking OFF entirely.
 # LLM_USAGE_HASH_SALT=<openssl rand -hex 32>
+# Days before llm_usage_events rows are hard-deleted by the daily cron
+# (GDPR retention, audit F11). 0 disables the sweep (not recommended).
+LLM_USAGE_RETENTION_DAYS=90
 # Optional per-task routing: the extraction steps (ats-keywords/job-facts/
 # skill-selector) use this cheaper model; writing stays on the default.
 # LLM_FAST_PROVIDER hosts it on a different provider (fast-lane failures fall

@@ -11,6 +11,8 @@ import { TwoFactorService } from '../../two-factor.service';
 import { EmailService } from '@/email/email.service';
 import { SubscriptionService } from '@/subscription/subscription.service';
 import { StorageService } from '@/storage/storage.service';
+import { LlmUsageService } from '@/llm/usage/llm-usage.service';
+import { PwnedPasswordService } from '../../services/pwned-password.service';
 import { ConflictWithCode } from '@/common/exceptions/coded-http.exception';
 import { MockHelper } from '../../../../test/helpers/mock.helper';
 
@@ -61,6 +63,14 @@ describe('AuthService.register (Unit)', () => {
           // register() never touches storage; only deleteAccount does.
           provide: StorageService,
           useValue: { delete: vi.fn() },
+        },
+        {
+          provide: LlmUsageService,
+          useValue: { deleteEventsForActor: vi.fn().mockResolvedValue(0) },
+        },
+        {
+          provide: PwnedPasswordService,
+          useValue: { isCompromised: vi.fn().mockResolvedValue(false) },
         },
       ],
     }).compile();

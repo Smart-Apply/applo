@@ -1,7 +1,16 @@
 import { Injectable, ExecutionContext, Inject, Logger } from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerException, ThrottlerRequest } from '@nestjs/throttler';
+import { JwtService } from '@nestjs/jwt';
 import { THROTTLER_NAME_KEY } from '../decorators/throttle.decorator';
 import { AuditLoggerService } from '../audit-logger';
+
+/** The slice of the Express request the tracker derivation reads. */
+interface TrackerRequest {
+  ip?: string;
+  headers?: { authorization?: string };
+  cookies?: Record<string, string | undefined>;
+  socket?: { remoteAddress?: string };
+}
 
 /**
  * Custom ThrottlerGuard that:
@@ -38,10 +47,16 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
   @Inject(AuditLoggerService)
   private readonly auditLogger: AuditLoggerService;
 
+  // Resolvable here because AuthModule exports JwtModule and AppModule (which
+  // provides this guard) imports AuthModule. Same secret the auth stack signs
+  // with — see getTracker for why this guard verifies tokens itself.
+  @Inject(JwtService)
+  private readonly jwtService: JwtService;
+
   /**
    * Override canActivate to:
    * 1. Skip rate limiting in development
-   * 2. Skip for health checks
+   * 2. Skip for the liveness/readiness probes only
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Skip rate limiting entirely in development for easier testing
@@ -51,9 +66,15 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
 
     const request = context.switchToHttp().getRequest();
 
-    // Skip rate limiting for health check endpoints (needed for Container Apps probes)
-    // Match both /api/v1/health and /api/v1/health/* paths
-    if (request.url?.startsWith('/api/v1/health')) {
+    // Exempt ONLY the liveness/readiness probes: Fly polls them continuously
+    // and they must never depend on the throttler storage (a down Upstash
+    // would otherwise 500 the probe and get the machine pulled from the load
+    // balancer). The blanket `/api/v1/health` prefix exemption used to also
+    // cover the expensive public aggregate and /health/details — those now
+    // throttle under the 'health-check' bucket instead (security audit
+    // 2026-08-13, F16/F18).
+    const path = typeof request.url === 'string' ? request.url.split('?')[0] : '';
+    if (path === '/api/v1/health/live' || path === '/api/v1/health/ready') {
       return true;
     }
 
@@ -106,16 +127,19 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
 
       // Check if limit exceeded
       if (totalHits > limit) {
-        const user = request.user;
+        // The tracker is the source of truth for who exceeded the limit —
+        // request.user is never populated here (this guard runs before the
+        // per-controller auth guards).
+        const trackedUserId = tracker.startsWith('user:') ? tracker.slice(5) : undefined;
 
         // Log rate limit violation
         this.logger.warn(
           `Rate limit exceeded - endpoint: ${request.url}, method: ${request.method}, ` +
             `throttler: ${currentName}, limit: ${limit}, ttl: ${ttlMs}ms, ` +
-            `tracker: ${tracker}, userId: ${user?.userId || 'anonymous'}, totalHits: ${totalHits}`,
+            `tracker: ${tracker}, totalHits: ${totalHits}`,
         );
 
-        this.auditLogger.logRateLimitViolation(user?.id, request.url, request);
+        this.auditLogger.logRateLimitViolation(trackedUserId, request.url, request);
 
         // Set rate limit headers for exceeded limit
         response.setHeader('X-RateLimit-Limit', limit.toString());
@@ -148,39 +172,57 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
   }
 
   /**
-   * Get tracker identifier (user ID for authenticated routes, real client IP otherwise).
+   * Get tracker identifier: the authenticated user when the request carries a
+   * valid access token, the socket-derived client IP otherwise.
    *
-   * IMPORTANT: behind nginx + Cloudflare, `req.ip` only equals the real
-   * client IP if `app.set('trust proxy', ...)` is enabled in main.ts.
-   * Without that, every connection looks like it comes from the proxy IP
-   * and ALL anonymous users would share one bucket.
+   * Trust model (security audit 2026-08-13, F16): `req.ip` is derived under
+   * `app.set('trust proxy', 1)` in main.ts — i.e. from the X-Forwarded-For
+   * entry appended by our own edge, which a client cannot influence. This
+   * method must NEVER read client-supplied headers (CF-Connecting-IP,
+   * X-Forwarded-For) directly: honouring them lets any client pick its own
+   * rate-limit bucket per request, which defeats every bucket including
+   * `auth` (login brute-force) and `email`.
    *
-   * As a defense in depth, this method also reads the forwarded headers
-   * directly so a misconfiguration of `trust proxy` doesn't immediately
-   * collapse all visitors into one rate-limit bucket.
+   * Per-user bucketing cannot come from `req.user`: this guard is a global
+   * APP_GUARD and runs before the per-controller JwtAuthGuard populates it.
+   * So we verify the access token ourselves — same extraction order and
+   * secret as JwtStrategy. One HS256 verify per request is cheap, and any
+   * failure falls through to IP bucketing; this path never throws.
    */
-  protected async getTracker(req: Record<string, any>): Promise<string> {
-    // For authenticated requests, bucket per user (independent of IP).
-    if (req.user?.userId) {
-      return `user:${req.user.userId}`;
+  protected async getTracker(req: TrackerRequest): Promise<string> {
+    const userId = this.verifiedUserId(req);
+    if (userId) {
+      return `user:${userId}`;
+    }
+    return req.ip || req.socket?.remoteAddress || 'unknown';
+  }
+
+  /**
+   * Extract + verify the JWT the auth stack would use (access_token cookie
+   * first, Authorization bearer as fallback) and return its subject. Returns
+   * null — never throws — for missing, expired, malformed, or refresh tokens.
+   */
+  private verifiedUserId(req: TrackerRequest): string | null {
+    const authHeader = req.headers?.authorization;
+    const bearer =
+      typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+        ? authHeader.slice('Bearer '.length)
+        : undefined;
+    const token = req.cookies?.access_token || bearer;
+    if (typeof token !== 'string' || token.length === 0) {
+      return null;
     }
 
-    // Prefer Cloudflare's real-client header (nginx already trusts CF and
-    // sets req.ip from it via real_ip_header CF-Connecting-IP, but be safe).
-    const cfIp = req.headers?.['cf-connecting-ip'];
-    if (typeof cfIp === 'string' && cfIp.length > 0) {
-      return cfIp;
+    try {
+      const payload = this.jwtService.verify<{ sub?: unknown; type?: unknown }>(token);
+      // A refresh token must not buy its own (fresh) rate-limit bucket.
+      if (payload.type === 'refresh') {
+        return null;
+      }
+      return typeof payload.sub === 'string' && payload.sub.length > 0 ? payload.sub : null;
+    } catch {
+      return null;
     }
-
-    // Fall back to the leftmost entry of X-Forwarded-For (the original client).
-    const xff = req.headers?.['x-forwarded-for'];
-    if (typeof xff === 'string' && xff.length > 0) {
-      const first = xff.split(',')[0]?.trim();
-      if (first) return first;
-    }
-
-    // Last resort: req.ip (correct only if trust proxy is configured).
-    return req.ip || req.connection?.remoteAddress || 'unknown';
   }
 
   /**

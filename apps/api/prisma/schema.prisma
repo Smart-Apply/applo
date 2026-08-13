@@ -1229,9 +1229,12 @@ model Appointment {
 /// `interview_sessions`, which carry `userId` + a millisecond `createdAt`.
 /// A burst of rows here can be time-correlated back to the row that triggered
 /// it, yielding the `userId` — WITHOUT the salt. Treat this as personal data
-/// under GDPR (Recital 26): erasure obligations still apply. There is
-/// currently no retention sweep and no deletion hook on the account-deletion
-/// path — both are open follow-ups, not solved problems.
+/// under GDPR (Recital 26): erasure obligations apply. Both account-deletion
+/// paths call `LlmUsageService.deleteEventsForActor` before the user row is
+/// deleted, and `LlmUsageRetentionCron` hard-deletes rows older than
+/// `LLM_USAGE_RETENTION_DAYS` (default 90) daily — which also covers rows an
+/// erasure can't match (salt rotated, or null actorHash from before the salt
+/// was set). Closed as audit 2026-08-13 F11.
 model LlmUsageEvent {
   id String @id @default(cuid())
 

@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import {
   HealthCheck,
   HealthCheckService,
@@ -7,14 +7,16 @@ import {
   PrismaHealthIndicator,
 } from '@nestjs/terminus';
 import { Injectable } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { SkipThrottle } from '@nestjs/throttler';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { JobsService } from '../jobs/jobs.service';
 import { TemplatesService } from '../templates/templates.service';
 import { LLMService } from '../llm/llm.service';
 import { Public } from '../common/decorators/public.decorator';
+import { UseThrottler } from '../common/decorators/throttle.decorator';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { AdminGuard } from '../admin/admin.guard';
 
 /**
  * Custom health indicator for Storage Service
@@ -77,35 +79,26 @@ class TemplatesHealthIndicator extends HealthIndicator {
 }
 
 /**
- * Custom health indicator for LLM Service
+ * Only the liveness/readiness probes are exempt from throttling (by URL, in
+ * CustomThrottlerGuard). Everything else here runs under the generous
+ * 'health-check' bucket: /health and /health/details used to be blanket-
+ * exempt AND probe Azure OpenAI with a real chat-completions call on every
+ * anonymous request — an unauthenticated cost/quota amplifier that once
+ * opened the LLM circuit breaker via Azure 429s (audit 2026-08-13, F18;
+ * fly.prod.toml documents the incident). The LLM probe is now admin-only
+ * (/health/details), cached for 60s.
  */
-@Injectable()
-class LLMHealthIndicator extends HealthIndicator {
-  constructor(private readonly llmService: LLMService) {
-    super();
-  }
-
-  async isHealthy(): Promise<HealthIndicatorResult> {
-    const isHealthy = await this.llmService.healthCheck();
-    const result = this.getStatus('llm', isHealthy, {
-      message: isHealthy ? 'LLM provider available' : 'LLM provider unavailable',
-    });
-
-    if (isHealthy) {
-      return result;
-    }
-    throw new Error('LLM service is not healthy');
-  }
-}
-
 @ApiTags('health')
 @Controller('health')
-@SkipThrottle() // Health checks should never be rate limited
+@UseThrottler('health-check')
 export class HealthController {
+  /** TTL for the memoised LLM probe — even admin polling must not burn Azure TPM. */
+  private static readonly LLM_PROBE_CACHE_MS = 60_000;
+  private llmProbeCache: { healthy: boolean; at: number } | null = null;
+
   private storageIndicator: StorageHealthIndicator;
   private queueIndicator: QueueHealthIndicator;
   private templatesIndicator: TemplatesHealthIndicator;
-  private llmIndicator: LLMHealthIndicator;
 
   constructor(
     private health: HealthCheckService,
@@ -119,16 +112,18 @@ export class HealthController {
     this.storageIndicator = new StorageHealthIndicator(storageService);
     this.queueIndicator = new QueueHealthIndicator(jobsService);
     this.templatesIndicator = new TemplatesHealthIndicator(templatesService);
-    this.llmIndicator = new LLMHealthIndicator(llmService);
   }
 
   @Get()
   @Public()
   @HealthCheck()
-  @ApiOperation({ summary: 'Comprehensive health check for all services' })
+  @ApiOperation({ summary: 'Health check for the infrastructure dependencies' })
   @ApiResponse({ status: 200, description: 'All services are healthy' })
   @ApiResponse({ status: 503, description: 'One or more services are unhealthy' })
   async check() {
+    // Deliberately NO LLM probe here: this endpoint is public, and the LLM
+    // probe issues a real (billed, quota-consuming) Azure OpenAI request.
+    // The LLM picture lives in /health/details, which is admin-gated.
     return this.health.check([
       // Database check
       () => this.prismaHealth.pingCheck('database', this.prisma),
@@ -141,9 +136,6 @@ export class HealthController {
 
       // Templates check
       () => this.templatesIndicator.isHealthy(),
-
-      // LLM check (provider + circuit breaker health)
-      () => this.llmIndicator.isHealthy(),
     ]);
   }
 
@@ -171,10 +163,19 @@ export class HealthController {
     ]);
   }
 
+  /**
+   * Admin-gated: includes the LLM probe (a real Azure OpenAI request) and
+   * echoes raw dependency error strings (internal hostnames, provider error
+   * text) — neither belongs in an anonymous response. AdminGuard is
+   * fail-closed on an empty ADMIN_EMAILS.
+   */
   @Get('details')
-  @Public()
-  @ApiOperation({ summary: 'Detailed health status with response times for each dependency' })
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Detailed health status with response times for each dependency (admin only)' })
   @ApiResponse({ status: 200, description: 'Detailed health information' })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  @ApiResponse({ status: 403, description: 'Not an admin' })
   @ApiResponse({ status: 503, description: 'One or more services are unhealthy' })
   async checkDetails() {
     const startTime = Date.now();
@@ -242,10 +243,10 @@ export class HealthController {
       };
     }
 
-    // LLM health check with timing
+    // LLM health check with timing (memoised — see cachedLlmHealth)
     const llmStart = Date.now();
     try {
-      const isHealthy = await this.llmService.healthCheck();
+      const isHealthy = await this.cachedLlmHealth();
       details.llm = {
         status: isHealthy ? 'up' : 'down',
         responseTime: `${Date.now() - llmStart}ms`,
@@ -268,5 +269,28 @@ export class HealthController {
       timestamp: new Date().toISOString(),
       details,
     };
+  }
+
+  /**
+   * LLM probe with a 60s memo. The underlying check issues a real Azure
+   * OpenAI chat-completions request against the SAME TPM/RPM quota as the
+   * product's generation path, so it must not run per poll. A thrown probe
+   * is cached as unhealthy for the TTL too — repeated failures must not turn
+   * into repeated Azure calls — but the first error still surfaces to the
+   * caller's error field.
+   */
+  private async cachedLlmHealth(): Promise<boolean> {
+    const cached = this.llmProbeCache;
+    if (cached && Date.now() - cached.at < HealthController.LLM_PROBE_CACHE_MS) {
+      return cached.healthy;
+    }
+    try {
+      const healthy = await this.llmService.healthCheck();
+      this.llmProbeCache = { healthy, at: Date.now() };
+      return healthy;
+    } catch (error) {
+      this.llmProbeCache = { healthy: false, at: Date.now() };
+      throw error;
+    }
   }
 }

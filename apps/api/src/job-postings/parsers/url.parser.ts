@@ -1,9 +1,30 @@
 import { Injectable, Logger, BadRequestException, OnModuleDestroy } from '@nestjs/common';
 import { load } from 'cheerio';
-import axios from 'axios';
+import axios, { type AxiosRequestConfig } from 'axios';
+import * as net from 'net';
 import NodeCache from 'node-cache';
 import { AgentUrlParser, type JobPostingExtraction } from '../agents/agent-url.parser';
 import { assertUrlIsPublic } from '../../common/security/url-safety.util';
+
+/**
+ * DNS pinning for the axios fetch (audit F15): returns a `lookup` that always
+ * answers with the addresses that already passed the SSRF check, so the
+ * request cannot be re-routed by a second, attacker-timed resolution. TLS
+ * SNI/verification still run against the URL's hostname.
+ */
+function buildPinnedLookup(addresses: string[]): NonNullable<AxiosRequestConfig['lookup']> {
+  const records = addresses.map((address) => ({
+    address,
+    family: (net.isIP(address) === 6 ? 6 : 4) as 4 | 6,
+  }));
+  return (_hostname, options, callback) => {
+    if ((options as { all?: boolean })?.all) {
+      callback(null, records);
+    } else {
+      callback(null, records[0].address, records[0].family);
+    }
+  };
+}
 
 interface ParsedJobData {
   title: string;
@@ -209,9 +230,13 @@ export class UrlParser implements OnModuleDestroy {
       throw new BadRequestException('Too many redirects while fetching URL');
     }
 
-    if (hop > 0) {
-      await assertUrlIsPublic(url);
-    }
+    // Validate on EVERY hop — including hop 0, which parseUncached already
+    // checked once: resolving again HERE is what lets us pin the request to
+    // the vetted addresses. Without the pin, axios re-resolves the hostname
+    // itself, reopening the DNS-rebinding TOCTOU the check just closed
+    // (audit F15) — a TTL-0 nameserver can answer the guard's lookup with a
+    // public address and the request's lookup with a private one.
+    const { addresses } = await assertUrlIsPublic(url);
 
     this.logger.log(`Fetching job posting from URL: ${url}`);
 
@@ -222,6 +247,7 @@ export class UrlParser implements OnModuleDestroy {
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
       },
       maxRedirects: 0,
+      lookup: buildPinnedLookup(addresses),
       validateStatus: (status) => (status >= 200 && status < 300) || (status >= 300 && status < 400),
     });
 

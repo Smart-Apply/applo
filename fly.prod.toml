@@ -96,16 +96,18 @@ primary_region = 'fra'
     timeout = '5s'
     grace_period = '30s'
     method = 'get'
-    # READINESS, not the comprehensive check. `/api/v1/health` aggregates every
-    # dependency (DB, storage, queue, template catalog, LLM) and 500s if ANY of
-    # them is momentarily unhappy — which made Fly yank the machine out of the
-    # load balancer over things that don't stop us serving traffic. A single
-    # Azure OpenAI 429 opened the LLM circuit breaker, `/health` went 500, and
-    # unrelated endpoints started failing/timing out for every user.
+    # READINESS, not the comprehensive check. `/api/v1/health` aggregates the
+    # infra dependencies (DB, storage, queue, template catalog) and 500s if ANY
+    # of them is momentarily unhappy — which made Fly yank the machine out of
+    # the load balancer over things that don't stop us serving traffic. (It
+    # historically also probed the LLM: a single Azure OpenAI 429 opened the
+    # circuit breaker, `/health` went 500, and unrelated endpoints started
+    # failing for every user. Since the 2026-08-13 audit (F18) the LLM probe
+    # lives only in the admin-gated `/api/v1/health/details`, cached 60s.)
     # `/health/ready` checks only what's required to serve a request (database
     # + storage). Degraded LLM/queue/templates now fail their own feature, not
-    # the whole API. The full picture stays at /api/v1/health and
-    # /api/v1/health/details for humans + monitoring.
+    # the whole API. /health stays public for monitoring; /health/details
+    # requires an admin JWT.
     path = '/api/v1/health/ready'
 
 # VM size: shared-cpu-2x · 2 GB RAM. Required because each app process can

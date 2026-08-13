@@ -58,10 +58,18 @@ export class JobsService implements OnModuleInit {
   }
 
   /**
-   * Get job status by ID
-   * First tries database, then falls back to queue provider
+   * Get job status by ID, scoped to the requesting user.
+   * First tries database, then falls back to queue provider.
+   *
+   * `BackgroundJob` has no `userId` column — ownership lives in the payload
+   * (`data.userId`, set by every publish site). A job whose payload names a
+   * different user, or no user at all, is reported as not found (security
+   * audit 2026-08-13, F17: the route previously returned any user's job
+   * status/error/timestamps to any authenticated caller).
    */
-  async getJobStatus(jobId: string): Promise<Job | null> {
+  async getJobStatus(jobId: string, userId: string): Promise<Job | null> {
+    let job: Job | null = null;
+
     // Try database first for persistent status
     try {
       const dbJob = await this.prisma.backgroundJob.findUnique({
@@ -69,14 +77,23 @@ export class JobsService implements OnModuleInit {
       });
 
       if (dbJob) {
-        return this.convertDbJobToJob(dbJob);
+        job = this.convertDbJobToJob(dbJob);
       }
     } catch (error) {
       this.logger.warn(`Failed to query job from database: ${error}`);
     }
 
     // Fall back to queue provider
-    return this.queueProvider.getJob(jobId);
+    if (!job) {
+      job = await this.queueProvider.getJob(jobId);
+    }
+
+    if (!job) {
+      return null;
+    }
+
+    const ownerId = (job.data as { userId?: unknown } | null | undefined)?.userId;
+    return ownerId === userId ? job : null;
   }
 
   /**
