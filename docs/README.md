@@ -52,6 +52,16 @@ Anleitungen
 - **DOCKER_OPTIMIZATION.md** - Docker Optimierung
 - **MONOREPO_WORKSPACE.md** - Workspace Architektur
 
+### 🗺️ [plans/](./plans/)
+
+Ausführungspläne pro Backlog-Item (ein Plan je Issue + übergreifende Reihenfolge)
+
+- **README.md** - Reihenfolge, Phasen und Begründung für den nicht-delegierten Backlog
+- **01–04** - Launch-Blocker ohne Issue (Error-Monitoring, Analytics, SEO/OG, Payments-Entscheidung)
+- **05** - Re-Scoping der Prototyp-basierten Issues #758–#765
+- **06–09** - Produktqualität (#765 A11y, #571 Motion, #746 Loading, #573 Mobile)
+- **10** - LLM-Output-Review (#572, zurückgestellt)
+
 ---
 
 ## 🚀 Quick Links
@@ -59,6 +69,7 @@ Anleitungen
 | Kategorie      | Link                                                              | Beschreibung                |
 | -------------- | ----------------------------------------------------------------- | --------------------------- |
 | **Launch**     | [PUBLIC_LAUNCH_PLAN.md](./guides/PUBLIC_LAUNCH_PLAN.md)           | Pre-launch readiness checklist |
+| **Pläne**      | [plans/README.md](./plans/README.md)                              | Backlog-Reihenfolge + Pläne je Issue |
 | **Sicherheit** | [SECURITY.md](./security/SECURITY.md)                             | Sicherheitsübersicht        |
 | **Templates**  | [TEMPLATE_GUIDE.md](./guides/TEMPLATE_GUIDE.md)                   | Template System             |
 | **Testing**    | [TESTING_GUIDE.md](./guides/TESTING_GUIDE.md)                     | Test Anleitungen            |
