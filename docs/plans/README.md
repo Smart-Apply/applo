@@ -14,6 +14,9 @@
 ## How to use this folder
 
 - **This file** decides *what order* things happen in and why.
+- **[ISSUE_BACKLOG.md](./ISSUE_BACKLOG.md)** ranks *every* open GitHub issue by
+  priority — including the ones with no plan here — and records where an issue
+  body disagrees with the code.
 - **Each `NN-*.md`** is a self-contained plan: goal, verified current state,
   scope, steps, acceptance criteria, and the repo landmines that apply.
 - A plan is only "ready" when its acceptance criteria are mechanically
