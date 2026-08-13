@@ -1,7 +1,7 @@
 # 09 — Mobile design pass
 
 **Issue:** #573 · **Phase:** 3 · **Effort:** ~3 days · **Owner:** web
-**Depends on:** [plan 05](./05-issue-triage-758-765.md) (triage), [plan 07](./07-issue-571-motion-foundation.md) (#571)
+**Depends on:** [plan 05](./05-issue-triage-758-765.md) (triage — ✅ done, absorbed #758), [plan 07](./07-issue-571-motion-foundation.md) (#571)
 
 ---
 
@@ -94,8 +94,9 @@ Likely candidates, to be confirmed:
   no source-code footprint. This has taken down production twice. If you touch
   anything near it, run `pnpm --filter @applo/web run check:pdfjs`, and never
   bump `pdfjs-dist` independently of `react-pdf`.
-- Overlap with #758 must be resolved in plan 05 first, or the same layout work
-  gets done twice under two issue numbers.
+- Overlap with #758 is **resolved**: #758 was closed as a duplicate on 13 Aug 2026
+  and its unverified points (overflow, 44 px tap targets, stacking the right-hand
+  column) now belong to this plan's Phase A audit.
 - Viewport-unit fixes for iOS (`100vh` → `100dvh`) can regress desktop. Test
   both.
 - Any new UI string needs all six locale trees.

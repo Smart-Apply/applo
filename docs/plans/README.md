@@ -36,7 +36,7 @@ crashes or a signup funnel means you cannot tell whether any of it worked.
 
 | # | Plan | Issue | Effort |
 |---|---|---|---|
-| 01 | [Finish + verify frontend error monitoring](./01-error-monitoring.md) | *none — file one* | ~3 h |
+| 01 | [Finish + verify frontend error monitoring](./01-error-monitoring.md) — ✅ **done**, PR #779 | *none — file one* | ~3 h |
 | 02 | [Product analytics](./02-product-analytics.md) | *none — file one* | ~1–3 h |
 
 **Why first:** Sentry is half-wired today — the SDK initialises and the DSN is
@@ -58,11 +58,15 @@ two hours and currently costs you every social share. #04 is a decision, not an
 implementation — make it explicitly, because the frontend already implies a
 paid tier that has no checkout behind it.
 
-### Phase 2 — Triage before building
+### Phase 2 — Triage before building ✅ done (13 Aug 2026)
 
 | # | Plan | Issues | Effort |
 |---|---|---|---|
 | 05 | [Re-scope the profile-redesign batch](./05-issue-triage-758-765.md) | #758–#765 | ~2 h |
+
+**Outcome:** 3 closed (#758, #760, #762), 4 re-scoped (#759, #761, #763, #764),
+1 confirmed unchanged (#765). One of eight described shipped code accurately.
+See the plan's Actual outcome table for what each verification found.
 
 **Why before Phase 3:** Issues #758–#765 were written against the design
 prototype in [docs/design/](../design/), not the shipped app. Verified: `.sa-edit`
