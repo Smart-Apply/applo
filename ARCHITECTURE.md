@@ -352,7 +352,7 @@ User 1:1 Subscription
 | PDF           | `@react-pdf/renderer` 4.5 (TSX templates, bundled OFL fonts: Lato · Source Sans 3 · Merriweather) · `pdfjs-dist` + `@napi-rs/canvas` (PNG previews) · `pdf-parse` · `mammoth` (DOCX intake) |
 | Email         | Resend                                                                                                                              |
 | Logging       | Pino (req logs) + Winston (audit, daily rotation)                                                                                   |
-| Monitoring    | Sentry (`@sentry/node` + profiling)                                                                                                 |
+| Monitoring    | Sentry (`@sentry/node` + profiling). Frontend uses `@sentry/nextjs`, client-side only — see the web Tech Stack                        |
 | Validation    | class-validator · Zod · sanitize-html                                                                                               |
 | AI guardrails | `@applo/shared` (limits) · `gpt-tokenizer` (model `gpt-4.1`)                                                                  |
 | Resilience    | opossum (circuit breaker)                                                                                                           |

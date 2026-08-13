@@ -213,6 +213,12 @@ jobs:
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ vars.SENTRY_DSN_WEB }}
           NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
+          # Build-time only — never inlined into the browser bundle. Without
+          # these, the build still succeeds but uploads no source maps, so
+          # stack traces stay minified.
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: pnpm --filter @applo/web cf:deploy:staging
 
       - name: Smoke test deployed Worker
