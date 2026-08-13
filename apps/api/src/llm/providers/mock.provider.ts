@@ -5,17 +5,23 @@ import { LLMProvider, GenerateOptions } from '../llm.interface';
 export class MockLLMProvider implements LLMProvider {
   private readonly logger = new Logger(MockLLMProvider.name);
 
-  async generateText(prompt: string, _options?: GenerateOptions): Promise<string> {
+  async generateText(prompt: string, options?: GenerateOptions): Promise<string> {
     this.logger.log('Using mock LLM provider for testing');
 
     // Check if it's a cover letter or resume based on prompt content
     const isCoverLetter = prompt.toLowerCase().includes('cover letter');
 
-    if (isCoverLetter) {
-      return this.generateMockCoverLetter();
-    }
+    const content = isCoverLetter ? this.generateMockCoverLetter() : this.generateMockResume();
 
-    return this.generateMockResume();
+    // Synthesized usage (issue #522) so local dev / LLM_PROVIDER=mock runs
+    // still produce LlmUsageEvent rows with plausible counts instead of nulls.
+    options?.onUsage?.({
+      promptTokens: Math.ceil(prompt.length / 4),
+      completionTokens: Math.ceil(content.length / 4),
+      cachedTokens: 0,
+    });
+
+    return content;
   }
 
   private generateMockCoverLetter(): string {

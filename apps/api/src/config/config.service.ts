@@ -480,6 +480,14 @@ export class ConfigService {
   }
 
   // ---------------------------------------------------------------------------
+  // Anonymous LLM usage tracking (issue #522)
+  // ---------------------------------------------------------------------------
+
+  get llmUsageHashSalt(): string | undefined {
+    return this.nestConfig.get('LLM_USAGE_HASH_SALT', { infer: true });
+  }
+
+  // ---------------------------------------------------------------------------
   // Email Tracking (Premium feature) — OAuth Inbox Sync
   // ---------------------------------------------------------------------------
 

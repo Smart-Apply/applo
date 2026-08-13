@@ -38,6 +38,7 @@
 | `AZURE_OPENAI_API_KEY`          | Fly Secrets ← Azure      | API (cover letter / resume gen)      |
 | `AZURE_OPENAI_REALTIME_API_KEY` (optional) | Fly Secrets ← Azure (Sweden Central) | API (voice interview realtime token mint; falls back to `AZURE_OPENAI_API_KEY`) |
 | `MISTRAL_API_KEY`               | Fly Secrets ← Mistral La Plateforme or Azure AI Foundry | API (Mistral main provider or extraction fast lane; a missing key degrades only a separately configured fast lane to the main provider) |
+| `LLM_USAGE_HASH_SALT`           | Fly Secrets              | API (HMAC key behind the `actorHash` pseudonym in `llm_usage_events`; unset disables usage tracking entirely, no rows written) |
 | `QSTASH_TOKEN` + signing keys   | Fly Secrets ← Upstash    | API (background job queue)           |
 | `RESEND_API_KEY`                | Fly Secrets ← Resend     | API (transactional email)            |
 | OAuth client secrets (Google / Microsoft / Azure AD) | Fly Secrets ← provider console | API (OAuth flows)        |
@@ -482,6 +483,68 @@ affect the running Worker.
 
 ---
 
+## 12. LLM_USAGE_HASH_SALT
+
+**Blast radius:** LOW, but unusual — rotating this does not lock anyone out or
+break a live call path (unlike every other secret above). It **breaks actor
+continuity**: `actorHash = sha256(userId + salt)`, so a new salt means every
+future row for a given user hashes to a different `actorHash` than their past
+rows. Past and future usage events stop correlating to the same anonymous
+actor.
+
+**Prefer never rotating.** There is no legitimate operational reason to
+rotate it on a schedule — it isn't a credential presented to any external
+system, just an internal pepper. Only rotate on a **confirmed leak**. It does
+**not** grant account access, API access, or any write capability — the table
+has no `User` foreign key and stores no prompt/response content.
+
+What leaking it actually exposes, stated honestly:
+
+- With the salt **plus** a `userId` list (e.g. a DB export), an attacker
+  recomputes every `actorHash` and attributes the whole dataset.
+- With the salt **alone** that is likely still enough. `User.id` is a
+  cuid — timestamp + counter + host fingerprint + ~41 bits of
+  `Math.random()` — which is an enumerable preimage space against a single
+  fast HMAC-SHA256. Don't rely on "they'd also need the user list".
+- ⚠️ **The salt is not the only thing protecting attribution anyway.** The
+  dataset is **pseudonymous, not anonymous**: `llm_usage_events` lives in the
+  same database as `applications`/`validations`/`interview_sessions`, which
+  carry `userId` and a millisecond `createdAt`. A burst of usage rows
+  time-correlates back to the row that triggered it, recovering the `userId`
+  with **no salt at all**. Anyone with DB read access can do this. Rotating
+  the salt does not mitigate it.
+
+If the goal is genuine non-attributability rather than a speed bump, the salt
+is the wrong lever — shorten retention, drop `actorHash` after an aggregation
+window, or coarsen `createdAt`. Those are open follow-ups, not shipped
+controls.
+
+**Cadence:** Never, unless confirmed leaked.
+
+```bash
+# ── Step 1: Generate ──
+NEW_SALT=$(openssl rand -hex 32)
+echo "Length: ${#NEW_SALT} (must be >= 32 chars)"
+
+# ── Step 2: Push to both apps ──
+# Independent values per environment — same reasoning as JWT_SECRET.
+fly secrets set --app smart-apply-api          LLM_USAGE_HASH_SALT="$NEW_SALT"
+fly secrets set --app smart-apply-api-staging  LLM_USAGE_HASH_SALT="$(openssl rand -hex 32)"
+
+# ── Step 3: Update local apps/api/.env ── (optional — only if you rely on
+# local usage-tracking rows correlating with a prior local salt)
+
+# ── Step 4: Forget ──
+unset NEW_SALT
+```
+
+> **No verification step here.** Unlike every other secret, there is no
+> `/health` subcheck for this one — a wrong or missing value doesn't fail
+> any request, it just silently stops (or starts) writing `llm_usage_events`
+> rows. Confirm by checking for fresh rows after a generation, not `/health`.
+
+---
+
 ## Recommended cadence
 
 | Secret                          | Cadence       | Trigger for immediate rotation             |
@@ -492,6 +555,7 @@ affect the running Worker.
 | R2 token                        | 6 months      | Suspected leak                             |
 | Azure OpenAI API key            | 12 months     | Per Microsoft WAF guidance                 |
 | Mistral API key                 | 12 months     | Suspected leak                             |
+| `LLM_USAGE_HASH_SALT`           | Never*        | Confirmed leak only (\*breaks actor continuity) |
 | QStash token + signing keys     | 12 months     | Suspected leak                             |
 | Resend API key                  | 12 months     | Suspected leak                             |
 | Google / MS / Azure AD OAuth    | Per provider  | Provider expiration warning email          |

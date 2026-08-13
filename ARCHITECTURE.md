@@ -291,6 +291,7 @@ grounding-specific decisions live in
 | **InviteCode**     | RETIRED — beta gate removed; schema row kept until a follow-up release drops it (expand→contract) |
 | **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`) |
 | **AuditLog**       | Security event log                             |
+| **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure still applies |
 
 ### Key Relations
 

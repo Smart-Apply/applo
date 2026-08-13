@@ -5,6 +5,7 @@ import { PdfService } from '../../pdf/pdf.service';
 import { StorageService } from '../../storage/storage.service';
 import { TemplatesService } from '../../templates/templates.service';
 import { LLMService } from '../../llm/llm.service';
+import { LlmUsageService } from '../../llm/usage/llm-usage.service';
 import {
   isTranslationLanguage,
   StoredTranslationEntry,
@@ -40,9 +41,22 @@ export class ApplicationProcessor {
     private readonly templatesService: TemplatesService,
     private readonly llmService: LLMService,
     private readonly translationService: TranslationService,
+    private readonly llmUsage: LlmUsageService,
   ) {}
 
+  /**
+   * Establishes the anonymous LLM usage-tracking actor scope (issue #522) for
+   * the whole job so every LLM call made while processing it — however deep
+   * in the call chain (translation, keyword extraction, etc.) — can attribute
+   * its usage row. This is the one non-HTTP LLM entry point; the HTTP paths
+   * get their scope from LlmUsageContextInterceptor instead.
+   */
   async process(job: Job<ApplicationJobData>): Promise<void> {
+    const { userId, language } = job.data;
+    return this.llmUsage.runWithActor({ userId, language }, () => this.processInternal(job));
+  }
+
+  private async processInternal(job: Job<ApplicationJobData>): Promise<void> {
     const { applicationId, userId, jobPostingId: _jobPostingId, language } = job.data;
 
     this.logger.log(

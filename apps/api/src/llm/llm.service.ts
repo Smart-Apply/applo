@@ -9,6 +9,9 @@ import { isRateLimitError } from './llm-errors';
 import { ConfigService } from '../config/config.service';
 import { stripClosingPhrase } from '../common/services/html-sanitizer';
 import { resolveResponseFormat } from './schemas/v1-schemas';
+import { LlmUsageService } from './usage/llm-usage.service';
+import { featureForTemplate } from './usage/llm-feature.map';
+import { LlmFeature, LlmProviderKind, LlmRoutingLane, LlmCircuitState } from '../generated/prisma/client';
 
 /**
  * Per-request token-usage accumulator, populated across all LLM calls made
@@ -28,6 +31,18 @@ type LlmLane = 'main' | 'fast' | 'mid';
 /** Breaker wrapping a side-lane provider, dispatched from callRouted. */
 type LaneBreaker = CircuitBreaker<[string, GenerateOptions?], string>;
 
+/**
+ * Result of `callRouted`: the response text plus the lane/model that ACTUALLY
+ * served it — which may differ from the requested lane when a side lane failed
+ * and fell back to main (issue #522 usage recording needs the real server, not
+ * the intended one).
+ */
+interface RoutedResult {
+  text: string;
+  lane: LlmLane;
+  model: string | undefined;
+}
+
 @Injectable()
 export class LLMService {
   private readonly logger = new Logger(LLMService.name);
@@ -46,6 +61,7 @@ export class LLMService {
     @Optional()
     @Inject('LLM_MID_PROVIDER_INSTANCE')
     private readonly midProvider: LLMProvider | null = null,
+    private readonly usage: LlmUsageService,
   ) {
     // Initialize circuit breaker for LLM provider calls
     this.circuitBreaker = new CircuitBreaker(
@@ -207,22 +223,78 @@ export class LLMService {
     prompt: string,
     options: GenerateOptions,
     lane: LlmLane,
-  ): Promise<string> {
+  ): Promise<RoutedResult> {
     const breaker =
       lane === 'fast' ? this.fastCircuitBreaker : lane === 'mid' ? this.midCircuitBreaker : null;
     if (breaker) {
       try {
-        return await breaker.fire(prompt, options);
+        const text = await breaker.fire(prompt, options);
+        return { text, lane, model: options.model };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.logger.warn(
           `${lane}-lane call failed (${message}); falling back to the main provider`,
         );
         const { model: _model, ...withoutModel } = options;
-        return this.callProvider(prompt, withoutModel);
+        const text = await this.callProvider(prompt, withoutModel);
+        return { text, lane: 'main', model: undefined };
       }
     }
-    return this.callProvider(prompt, options);
+    const text = await this.callProvider(prompt, options);
+    return { text, lane: 'main', model: options.model };
+  }
+
+  /**
+   * Anonymous usage recording (issue #522): map the internal lowercase lane
+   * to the Prisma enum.
+   */
+  private usageLaneFor(lane: LlmLane): LlmRoutingLane {
+    switch (lane) {
+      case 'fast':
+        return LlmRoutingLane.FAST;
+      case 'mid':
+        return LlmRoutingLane.MID;
+      default:
+        return LlmRoutingLane.MAIN;
+    }
+  }
+
+  /**
+   * Anonymous usage recording (issue #522): which provider actually serves a
+   * given lane right now. The mid lane is always a second AzureOpenAIProvider
+   * instance (see createMidProvider in llm.module.ts). The fast lane is
+   * whichever provider LLM_FAST_PROVIDER configured — only reachable when the
+   * fast breaker exists, which requires it to differ from the main provider.
+   * The main lane (including side-lane fallback) is whatever LLM_PROVIDER
+   * resolved to at boot.
+   */
+  private providerKindFor(lane: LlmLane): LlmProviderKind {
+    if (lane === 'mid') return LlmProviderKind.AZURE_OPENAI;
+    if (lane === 'fast') {
+      return this.configService.llmFastProvider === 'mistral'
+        ? LlmProviderKind.MISTRAL
+        : LlmProviderKind.AZURE_OPENAI;
+    }
+    switch (this.configService.llmProvider) {
+      case 'azure-openai':
+        return LlmProviderKind.AZURE_OPENAI;
+      case 'azure-ai-foundry':
+        return LlmProviderKind.AZURE_AI_FOUNDRY;
+      case 'mistral':
+        return LlmProviderKind.MISTRAL;
+      default:
+        return LlmProviderKind.MOCK;
+    }
+  }
+
+  /** Anonymous usage recording (issue #522): the serving lane's breaker state. */
+  private currentCircuitState(lane: LlmLane): LlmCircuitState {
+    const breaker =
+      lane === 'fast' ? this.fastCircuitBreaker : lane === 'mid' ? this.midCircuitBreaker : this.circuitBreaker;
+    if (!breaker) return LlmCircuitState.CLOSED;
+    if (breaker.opened) return LlmCircuitState.OPEN;
+    if (breaker.halfOpen) return LlmCircuitState.HALF_OPEN;
+    return LlmCircuitState.CLOSED;
   }
 
   /**
@@ -321,9 +393,49 @@ export class LLMService {
    */
   async generateText(
     prompt: string,
-    options?: { temperature?: number; maxTokens?: number; systemMessage?: string },
+    options?: {
+      temperature?: number;
+      maxTokens?: number;
+      systemMessage?: string;
+      /** Anonymous usage-tracking label (issue #522). Defaults to OTHER. */
+      feature?: LlmFeature;
+    },
   ): Promise<string> {
-    return this.callProvider(prompt, options);
+    const { feature, ...callOptions } = options ?? {};
+    const startTime = Date.now();
+    let callUsage: LlmCallUsage | undefined;
+    try {
+      const text = await this.callProvider(prompt, {
+        ...callOptions,
+        onUsage: (usage: LlmCallUsage) => {
+          callUsage = usage;
+        },
+      });
+      this.usage.record({
+        feature: feature ?? LlmFeature.OTHER,
+        provider: this.providerKindFor('main'),
+        model: this.defaultModel,
+        lane: LlmRoutingLane.MAIN,
+        usage: callUsage,
+        latencyMs: Date.now() - startTime,
+        success: true,
+        circuitState: this.currentCircuitState('main'),
+      });
+      return text;
+    } catch (error) {
+      this.usage.record({
+        feature: feature ?? LlmFeature.OTHER,
+        provider: this.providerKindFor('main'),
+        model: this.defaultModel,
+        lane: LlmRoutingLane.MAIN,
+        usage: callUsage,
+        latencyMs: Date.now() - startTime,
+        success: false,
+        circuitState: this.currentCircuitState('main'),
+        errorKind: error instanceof Error ? error.constructor.name : 'Unknown',
+      });
+      throw error;
+    }
   }
 
   /**
@@ -367,11 +479,44 @@ ${summary}
 
 Translated text in ${targetLangName}:`;
 
-    const translated = await this.callProvider(prompt, {
-      temperature: 0.3,
-      maxTokens: 500,
-      systemMessage: `You are a professional translator specializing in career documents. Translate accurately while maintaining the professional tone.`,
-    });
+    const startTime = Date.now();
+    let callUsage: LlmCallUsage | undefined;
+    let translated: string;
+    try {
+      translated = await this.callProvider(prompt, {
+        temperature: 0.3,
+        maxTokens: 500,
+        systemMessage: `You are a professional translator specializing in career documents. Translate accurately while maintaining the professional tone.`,
+        onUsage: (usage: LlmCallUsage) => {
+          callUsage = usage;
+        },
+      });
+      this.usage.record({
+        feature: LlmFeature.APPLICATION_SUMMARY_TRANSLATION,
+        provider: this.providerKindFor('main'),
+        model: this.defaultModel,
+        lane: LlmRoutingLane.MAIN,
+        usage: callUsage,
+        language: targetLanguage,
+        latencyMs: Date.now() - startTime,
+        success: true,
+        circuitState: this.currentCircuitState('main'),
+      });
+    } catch (error) {
+      this.usage.record({
+        feature: LlmFeature.APPLICATION_SUMMARY_TRANSLATION,
+        provider: this.providerKindFor('main'),
+        model: this.defaultModel,
+        lane: LlmRoutingLane.MAIN,
+        usage: callUsage,
+        language: targetLanguage,
+        latencyMs: Date.now() - startTime,
+        success: false,
+        circuitState: this.currentCircuitState('main'),
+        errorKind: error instanceof Error ? error.constructor.name : 'Unknown',
+      });
+      throw error;
+    }
 
     return translated.trim();
   }
@@ -627,29 +772,65 @@ Translated text in ${targetLangName}:`;
     // then per-task fast routing. Each side lane has its own breaker and falls
     // back to the main provider's default model inside callRouted.
     const { model: taskModel, lane } = this.resolveRouting(templatePath, options);
+    // Token usage (issue #522): captured on every call regardless of
+    // LOG_LLM_CALLS so the anonymous usage event always has real counts when
+    // the provider reports them. reportUsage (the prompt-caching measurement)
+    // still only fires when logging or capturing — unchanged.
+    let callUsage: LlmCallUsage | undefined;
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(promptCacheKey ? { promptCacheKey } : {}),
       ...(taskModel ? { model: taskModel } : {}),
-      ...(shouldLog || capturing
-        ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
-        : {}),
+      onUsage: (usage: LlmCallUsage) => {
+        callUsage = usage;
+        if (shouldLog || capturing) this.reportUsage(templatePath, usage);
+      },
     };
 
+    // Hoisted so the failure path can attribute the row to the lane that
+    // ACTUALLY ran. A post-dispatch failure (e.g. JSON parse) after a
+    // side-lane fell back to main must not be recorded against the side lane —
+    // that would price the main lane's tokens at the side lane's rates.
+    let served: RoutedResult | undefined;
     try {
-      let response = await this.callRouted(prompt, providerOptions, lane);
+      served = await this.callRouted(prompt, providerOptions, lane);
       const duration = Date.now() - startTime;
 
       // Post-process to remove LLM placeholder patterns (e.g., "[Your Name]")
-      response = this.stripLLMPlaceholders(response);
+      const response = this.stripLLMPlaceholders(served.text);
 
       if (shouldLog) {
         this.logger.log(`LLM callText completed: ${templatePath} (${duration}ms)`);
       }
 
+      this.usage.record({
+        feature: featureForTemplate(templatePath),
+        provider: this.providerKindFor(served.lane),
+        model: served.model ?? this.defaultModel,
+        lane: this.usageLaneFor(served.lane),
+        usage: callUsage,
+        language: typeof variables.language === 'string' ? variables.language : undefined,
+        latencyMs: duration,
+        success: true,
+        circuitState: this.currentCircuitState(served.lane),
+      });
+
       return response;
     } catch (error) {
       this.logger.error(`LLM callText failed: ${templatePath}`, error);
+      const failedLane = served?.lane ?? lane;
+      this.usage.record({
+        feature: featureForTemplate(templatePath),
+        provider: this.providerKindFor(failedLane),
+        model: served ? (served.model ?? this.defaultModel) : (taskModel ?? this.defaultModel),
+        lane: this.usageLaneFor(failedLane),
+        usage: callUsage,
+        language: typeof variables.language === 'string' ? variables.language : undefined,
+        latencyMs: Date.now() - startTime,
+        success: false,
+        circuitState: this.currentCircuitState(failedLane),
+        errorKind: error instanceof Error ? error.constructor.name : 'Unknown',
+      });
       throw error;
     }
   }
@@ -709,28 +890,64 @@ Translated text in ${targetLangName}:`;
     // then per-task fast routing. Each side lane has its own breaker and falls
     // back to the main provider's default model inside callRouted.
     const { model: taskModel, lane } = this.resolveRouting(templatePath, options);
+    // Token usage (issue #522): captured on every call regardless of
+    // LOG_LLM_CALLS so the anonymous usage event always has real counts when
+    // the provider reports them. reportUsage (the prompt-caching measurement)
+    // still only fires when logging or capturing — unchanged.
+    let callUsage: LlmCallUsage | undefined;
     const providerOptions: GenerateOptions = {
       ...defaultOptions,
       ...(responseFormat ? { responseFormat } : {}),
       ...(promptCacheKey ? { promptCacheKey } : {}),
       ...(taskModel ? { model: taskModel } : {}),
-      ...(shouldLog || capturing
-        ? { onUsage: (usage: LlmCallUsage) => this.reportUsage(templatePath, usage) }
-        : {}),
+      onUsage: (usage: LlmCallUsage) => {
+        callUsage = usage;
+        if (shouldLog || capturing) this.reportUsage(templatePath, usage);
+      },
     };
 
+    // Hoisted so the failure path can attribute the row to the lane that
+    // ACTUALLY ran — `parseJsonResponse` below throws AFTER dispatch, so a
+    // side-lane fallback followed by a parse failure must be recorded against
+    // main, not against the side lane whose model never produced the tokens.
+    let served: RoutedResult | undefined;
     try {
-      const response = await this.callRouted(prompt, providerOptions, lane);
-      const parsed = this.parseJsonResponse<T>(response, templatePath);
+      served = await this.callRouted(prompt, providerOptions, lane);
+      const parsed = this.parseJsonResponse<T>(served.text, templatePath);
       const duration = Date.now() - startTime;
 
       if (shouldLog) {
         this.logger.log(`LLM callJson completed: ${templatePath} (${duration}ms)`);
       }
 
+      this.usage.record({
+        feature: featureForTemplate(templatePath),
+        provider: this.providerKindFor(served.lane),
+        model: served.model ?? this.defaultModel,
+        lane: this.usageLaneFor(served.lane),
+        usage: callUsage,
+        language: typeof variables.language === 'string' ? variables.language : undefined,
+        latencyMs: duration,
+        success: true,
+        circuitState: this.currentCircuitState(served.lane),
+      });
+
       return parsed;
     } catch (error) {
       this.logger.error(`LLM callJson failed: ${templatePath}`, error);
+      const failedLane = served?.lane ?? lane;
+      this.usage.record({
+        feature: featureForTemplate(templatePath),
+        provider: this.providerKindFor(failedLane),
+        model: served ? (served.model ?? this.defaultModel) : (taskModel ?? this.defaultModel),
+        lane: this.usageLaneFor(failedLane),
+        usage: callUsage,
+        language: typeof variables.language === 'string' ? variables.language : undefined,
+        latencyMs: Date.now() - startTime,
+        success: false,
+        circuitState: this.currentCircuitState(failedLane),
+        errorKind: error instanceof Error ? error.constructor.name : 'Unknown',
+      });
       throw error;
     }
   }

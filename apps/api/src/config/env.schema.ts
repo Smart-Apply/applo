@@ -265,6 +265,16 @@ const envSchema = z.object({
   ADMIN_EMAILS: z.string().optional(),
 
   // -------------------------------------------------------------------------
+  // Anonymous LLM usage tracking (issue #522)
+  // -------------------------------------------------------------------------
+  // Salt for the irreversible per-actor hash in `llm_usage_events`.
+  // Generate with: openssl rand -hex 32
+  // UNSET = usage tracking is OFF (no rows are written at all).
+  // Changing it re-anonymises every future row — old and new rows will no
+  // longer correlate to the same actor. Treat as append-only in practice.
+  LLM_USAGE_HASH_SALT: z.string().min(32).optional(),
+
+  // -------------------------------------------------------------------------
   // Email Tracking (Premium feature) — OAuth Inbox Sync
   // -------------------------------------------------------------------------
   // Encrypts the OAuth refresh tokens we persist in `mailbox_connections`.

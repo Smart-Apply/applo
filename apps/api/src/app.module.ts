@@ -1,5 +1,5 @@
 import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from './config/config.module';
 import { LoggerModule } from './logger/logger.module';
@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { StorageModule } from './storage/storage.module';
 import { LLMModule } from './llm/llm.module';
+import { LlmUsageContextInterceptor } from './llm/usage/llm-usage-context.interceptor';
 import { ProfileModule } from './profile/profile.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { JobPostingsModule } from './job-postings/job-postings.module';
@@ -146,6 +147,13 @@ import { MailboxSyncModule } from './mailbox-sync/mailbox-sync.module';
     {
       provide: APP_GUARD,
       useClass: CustomThrottlerGuard,
+    },
+    // Seeds the anonymous LLM usage-tracking actor scope (issue #522) from the
+    // authenticated request. A separate DI token from APP_GUARD — does not
+    // affect the guard ordering above.
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LlmUsageContextInterceptor,
     },
   ],
 })
