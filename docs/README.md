@@ -9,7 +9,8 @@
 Sicherheitsdokumentation
 
 - **SECURITY.md** - Umfassende Sicherheitsübersicht
-- **SECURITY_AUDIT_2026-07-03.md** - Statisches Security-Audit (Findings F1–F8)
+- **SECURITY_AUDIT_2026-08-13.md** - Aktuelles Security-Audit gegen die 20-Punkte-Checkliste (Findings F9–F19)
+- **SECURITY_AUDIT_2026-07-03.md** - Statisches Security-Audit (Findings F1–F8, abgelöst durch das Audit vom 2026-08-13)
 - **CORS_SECURITY.md** - CORS Konfiguration
 - **XSS_PROTECTION.md** - XSS-Schutzmaßnahmen
 - **AUDIT_LOGGING.md** - Audit-Logging System

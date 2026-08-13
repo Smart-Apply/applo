@@ -1,5 +1,10 @@
 # Security Audit — Applo (applo) — 2026-07-03
 
+> Superseded by [SECURITY_AUDIT_2026-08-13.md](SECURITY_AUDIT_2026-08-13.md), which
+> re-verifies every finding below (all four actionable ones — F1, F2, F3, F7 — are now
+> fixed) and covers the full 20-point checklist. This document remains the historical
+> record of the original findings.
+
 Read-only static audit. No code modified, no live/dynamic testing, no traffic sent to prod. Scope: `apps/api/**`, `apps/web/**`, `packages/shared/**`, Prisma schema/migrations, infra/IaC, workflows, `.env.example` files, and dependency manifests.
 
 > **Follow-up:** the 2026-07-27 combined architecture + security review and its remediation series (PRs #710–#720, incl. an IDOR fix and the CSRF rollout) are recorded in [ARCHITECTURE_SECURITY_REVIEW_2026-07-27.md](../implementation/ARCHITECTURE_SECURITY_REVIEW_2026-07-27.md).
