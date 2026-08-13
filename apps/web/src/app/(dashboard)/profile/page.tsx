@@ -448,6 +448,7 @@ function LanguageRow({
         {label ? (
           <button
             onClick={() => setPicking(true)}
+            aria-label={t('page.a11y.changeLanguageLevel', { name: lang.name })}
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
             {label}
@@ -455,6 +456,7 @@ function LanguageRow({
         ) : (
           <button
             onClick={() => setPicking(true)}
+            aria-label={t('page.a11y.changeLanguageLevel', { name: lang.name })}
             className="text-xs italic text-primary/60 transition-colors hover:text-primary"
           >
             {t('page.inline.chooseLevel')}
@@ -462,7 +464,8 @@ function LanguageRow({
         )}
         <button
           onClick={onRemove}
-          className="rounded-[3px] p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/lang:opacity-100"
+          aria-label={t('page.a11y.removeLanguage', { name: lang.name })}
+          className="rounded-[3px] p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/lang:opacity-100 focus-visible:opacity-100"
         >
           <X className="h-3 w-3" />
         </button>
@@ -486,11 +489,16 @@ function CompanyMark({ name }: { name: string }) {
 }
 
 /** Profile-strength ring — Applo-blue until complete, then green. */
-function StrengthRing({ pct }: { pct: number }) {
+function StrengthRing({ pct, labelledBy }: { pct: number; labelledBy: string }) {
   const done = pct >= 100;
   const color = done ? 'var(--success)' : 'var(--brand)';
   return (
     <div
+      role="progressbar"
+      aria-labelledby={labelledBy}
+      aria-valuenow={pct}
+      aria-valuemin={0}
+      aria-valuemax={100}
       className="grid h-[84px] w-[84px] place-items-center rounded-full"
       style={{ background: `conic-gradient(${color} ${pct * 3.6}deg, var(--muted) 0deg)` }}
     >
@@ -563,6 +571,7 @@ function CollapsibleCard({
             type="button"
             onClick={onAsk}
             title={t('page.askTitle')}
+            aria-label={t('page.a11y.explainSection', { section: title })}
             className={cn(
               'grid h-7 w-7 shrink-0 place-items-center rounded-[3px] border transition-colors',
               active
@@ -1053,7 +1062,7 @@ export default function ProfilePage() {
     <div className="space-y-5 pb-10">
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
-        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <nav aria-label={t('page.a11y.breadcrumb')} className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Link href="/dashboard" className="transition-colors hover:text-foreground">
             Applo
           </Link>
@@ -1139,8 +1148,8 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="hidden flex-col items-center gap-2 self-center border-l border-border pl-5 lg:flex">
-            <StrengthRing pct={profileStrength} />
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">{t('page.profileStrength')}</span>
+            <StrengthRing pct={profileStrength} labelledBy="profile-strength-label" />
+            <span id="profile-strength-label" className="font-mono text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">{t('page.profileStrength')}</span>
           </div>
         </div>
       </div>
@@ -1158,6 +1167,7 @@ export default function ProfilePage() {
                   <h1 className="font-heading text-xl font-bold text-foreground">{fullName}</h1>
                   <button
                     onClick={() => setContactOpen(true)}
+                    aria-label={t('page.a11y.editContact')}
                     className="text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -1210,6 +1220,7 @@ export default function ProfilePage() {
                     <span className="flex-1" />
                     <button
                       onClick={() => setContactOpen(true)}
+                      aria-label={t('page.a11y.addPhone')}
                       className="border border-[#F3E3B3] bg-[#FDF6E7] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-[#A16207] transition-colors hover:bg-[#FBEECB] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20"
                     >
                       {t('page.missing')}
@@ -1243,6 +1254,7 @@ export default function ProfilePage() {
                     <span className="flex-1" />
                     <button
                       onClick={() => setContactOpen(true)}
+                      aria-label={t('page.a11y.addLinkedin')}
                       className="border border-[#F3E3B3] bg-[#FDF6E7] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[.05em] text-[#A16207] transition-colors hover:bg-[#FBEECB] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20"
                     >
                       {t('page.missing')}
@@ -1268,6 +1280,7 @@ export default function ProfilePage() {
               !aboutEditing && (
                 <button
                   onClick={startAboutEdit}
+                  aria-label={t('page.a11y.editAbout')}
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
                   <Pencil className="h-3.5 w-3.5" />
@@ -1337,13 +1350,15 @@ export default function ProfilePage() {
                           </span>
                           <button
                             onClick={() => setExpEditor({ open: true, index: i })}
-                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/exp:opacity-100"
+                            aria-label={t('page.a11y.editExperience', { name: exp.title })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/exp:opacity-100 focus-visible:opacity-100"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => handleRemoveExperience(i)}
-                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/exp:opacity-100"
+                            aria-label={t('page.a11y.removeExperience', { name: exp.title })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/exp:opacity-100 focus-visible:opacity-100"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -1396,7 +1411,8 @@ export default function ProfilePage() {
                     {skill.name}
                     <button
                       onClick={() => handleRemoveSkill(skill.name)}
-                      className="absolute right-1.5 shrink-0 rounded-[2px] p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+                      aria-label={t('page.a11y.removeSkill', { name: skill.name })}
+                      className="absolute right-1.5 shrink-0 rounded-[2px] p-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -1450,13 +1466,15 @@ export default function ProfilePage() {
                           )}
                           <button
                             onClick={() => setEduEditor({ open: true, index: i })}
-                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/edu:opacity-100"
+                            aria-label={t('page.a11y.editEducation', { name: edu.degree })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/edu:opacity-100 focus-visible:opacity-100"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => handleRemoveEducation(i)}
-                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/edu:opacity-100"
+                            aria-label={t('page.a11y.removeEducation', { name: edu.degree })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/edu:opacity-100 focus-visible:opacity-100"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -1515,6 +1533,7 @@ export default function ProfilePage() {
                                 href={sanitizeUrl(proj.url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                aria-label={t('page.a11y.openProject', { name: proj.name })}
                                 className="text-muted-foreground transition-colors hover:text-primary"
                               >
                                 <ExternalLink className="h-3 w-3" />
@@ -1530,13 +1549,15 @@ export default function ProfilePage() {
                         <div className="flex shrink-0 items-center gap-1">
                           <button
                             onClick={() => setProjEditor({ open: true, index: i })}
-                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/proj:opacity-100"
+                            aria-label={t('page.a11y.editProject', { name: proj.name })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/proj:opacity-100 focus-visible:opacity-100"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => handleRemoveProject(i)}
-                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/proj:opacity-100"
+                            aria-label={t('page.a11y.removeProject', { name: proj.name })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/proj:opacity-100 focus-visible:opacity-100"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -1606,13 +1627,15 @@ export default function ProfilePage() {
                           )}
                           <button
                             onClick={() => setCertEditor({ open: true, index: i })}
-                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/cert:opacity-100"
+                            aria-label={t('page.a11y.editCertificate', { name: cert.name })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/cert:opacity-100 focus-visible:opacity-100"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => handleRemoveCertificate(i)}
-                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/cert:opacity-100"
+                            aria-label={t('page.a11y.removeCertificate', { name: cert.name })}
+                            className="rounded-[3px] p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/cert:opacity-100 focus-visible:opacity-100"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -1651,13 +1674,20 @@ export default function ProfilePage() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-brand" />
-                <h2 className="font-semibold text-foreground">{t('page.profileCheck.title')}</h2>
+                <h2 id="profile-check-title" className="font-semibold text-foreground">{t('page.profileCheck.title')}</h2>
               </div>
               <span className={cn('font-mono text-xl font-bold tabular-nums', isComplete ? 'text-success' : 'text-brand')}>
                 {profileStrength}%
               </span>
             </div>
-            <div className="mb-3 h-1.5 overflow-hidden bg-primary-soft dark:bg-slate-700">
+            <div
+              role="progressbar"
+              aria-labelledby="profile-check-title"
+              aria-valuenow={profileStrength}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              className="mb-3 h-1.5 overflow-hidden bg-primary-soft dark:bg-slate-700"
+            >
               <div
                 className={cn('h-full transition-all duration-500', isComplete ? 'bg-success' : 'bg-brand')}
                 style={{ width: `${profileStrength}%` }}
@@ -1758,6 +1788,10 @@ export default function ProfilePage() {
       <button
         type="button"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        // Hidden state is opacity-only (to keep the fade), so it must also be
+        // taken out of the tab order — otherwise focus lands on nothing.
+        tabIndex={scrolled ? undefined : -1}
+        aria-hidden={scrolled ? undefined : true}
         className={cn(
           'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-[4px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition-all duration-200 hover:bg-primary/90',
           scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none',

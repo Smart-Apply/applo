@@ -69,7 +69,11 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <div className="relative border-b border-[#F3E3B3] bg-[#FDF6E7] px-4 py-3 dark:border-amber-400/30 dark:bg-amber-400/10">
+    <div
+      role="region"
+      aria-label={t('emailVerificationBanner.title')}
+      className="relative border-b border-[#F3E3B3] bg-[#FDF6E7] px-4 py-3 dark:border-amber-400/30 dark:bg-amber-400/10"
+    >
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="flex-shrink-0">

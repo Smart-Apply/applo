@@ -182,7 +182,7 @@ function DashboardLayoutInner({
               <LanguageSwitcher variant="code" className="-mr-1 text-[rgba(229,233,242,.6)] hover:bg-white/10 hover:text-white" />
             </div>
 
-            <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
+            <nav aria-label={t('nav.mainNavigation')} className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
               <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.45)]">
                 {t('nav.menu')}
               </div>
@@ -221,6 +221,7 @@ function DashboardLayoutInner({
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label={t('nav.logout')}
                   className="h-8 w-8 rounded-[3px] text-[rgba(229,233,242,.6)] hover:bg-[rgba(220,38,38,.4)] hover:text-white"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -284,7 +285,7 @@ function DashboardLayoutInner({
                   <LanguageSwitcher variant="code" className="-mr-1 text-[rgba(229,233,242,.6)] hover:bg-white/10 hover:text-white" />
                 </div>
 
-                <nav className="flex-1 space-y-0.5 px-4 py-6">
+                <nav aria-label={t('nav.mainNavigation')} className="flex-1 space-y-0.5 px-4 py-6">
                   <div className="mb-4 px-2 font-mono text-[10.5px] font-semibold uppercase tracking-[.16em] text-[rgba(229,233,242,.45)]">
                     {t('nav.menu')}
                   </div>
@@ -323,6 +324,7 @@ function DashboardLayoutInner({
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label={t('nav.logout')}
                       className="h-8 w-8 rounded-[3px] text-[rgba(229,233,242,.6)] hover:bg-[rgba(220,38,38,.4)] hover:text-white"
                       onClick={handleLogout}
                     >

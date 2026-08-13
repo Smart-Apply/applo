@@ -15,6 +15,7 @@
     "openMenu": "Ouvrir le menu",
     "mainMenu": "Menu principal",
     "sheetDescription": "Navigation du tableau de bord Applo.",
+    "logout": "Se déconnecter",
     "upgradeTitle": "Passer à Premium",
     "upgradeDescription": "{feature} est réservé aux membres Premium."
   },

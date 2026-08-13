@@ -15,6 +15,7 @@
     "openMenu": "Open menu",
     "mainMenu": "Main menu",
     "sheetDescription": "Applo dashboard navigation.",
+    "logout": "Log out",
     "upgradeTitle": "Upgrade to Premium",
     "upgradeDescription": "{feature} is only available for Premium members."
   },

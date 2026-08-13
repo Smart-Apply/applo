@@ -15,6 +15,7 @@
     "openMenu": "Abrir menú",
     "mainMenu": "Menú principal",
     "sheetDescription": "Navegación del panel de Applo.",
+    "logout": "Cerrar sesión",
     "upgradeTitle": "Actualizar a Premium",
     "upgradeDescription": "{feature} solo está disponible para miembros Premium."
   },
