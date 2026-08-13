@@ -21,11 +21,11 @@ const statusChipVariants = cva(
         violet:
           'border-[#DCC9F0] bg-[#F5EEFB] text-[#7C3AED] dark:border-violet-400/30 dark:bg-violet-400/10 dark:text-violet-300',
         success:
-          'border-[#BFE9CC] bg-[#ECFAF0] text-[#16A34A] dark:border-green-400/30 dark:bg-green-400/10 dark:text-green-300',
+          'border-[#BFE9CC] bg-[#ECFAF0] text-[#15803D] dark:border-green-400/30 dark:bg-green-400/10 dark:text-green-300',
         warning:
           'border-[#F3E3B3] bg-[#FDF6E7] text-[#A16207] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300',
         destructive:
-          'border-[#F3C9C9] bg-[#FDEEEE] text-[#DC2626] dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300',
+          'border-[#F3C9C9] bg-[#FDEEEE] text-[#B91C1C] dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300',
       },
     },
     defaultVariants: {

@@ -690,7 +690,7 @@ function DocCard({
       <div className="mb-4 flex items-center gap-3.5">
         <div className="relative grid h-[60px] w-[50px] shrink-0 place-items-center border border-primary-soft bg-primary-soft/60 text-brand dark:border-slate-600 dark:bg-slate-800">
           <FileText className="h-6 w-6" />
-          <span className="absolute -bottom-[7px] left-1/2 -translate-x-1/2 bg-brand px-1.5 font-mono text-[8px] font-semibold tracking-wide text-white">
+          <span className="absolute -bottom-[7px] left-1/2 -translate-x-1/2 bg-brand-strong px-1.5 font-mono text-[8px] font-semibold tracking-wide text-white">
             PDF
           </span>
         </div>
@@ -836,7 +836,7 @@ function StatusTracker({ status }: { status: ApplicationTrackingStatus }) {
                 className={cn(
                   'grid h-[30px] w-[30px] shrink-0 place-items-center border-2 font-mono text-xs font-bold transition-all',
                   done && 'border-success bg-success text-white',
-                  current && 'border-brand bg-brand text-white ring-4 ring-primary-soft dark:ring-brand/20',
+                  current && 'border-brand-strong bg-brand-strong text-white ring-4 ring-primary-soft dark:ring-brand/20',
                   !done && !current && 'border-border bg-card text-muted-foreground',
                 )}
               >
