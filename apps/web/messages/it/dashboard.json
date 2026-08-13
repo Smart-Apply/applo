@@ -88,12 +88,17 @@
       "update": "Aggiorna appuntamento",
       "allAppointments": "Tutti gli appuntamenti",
       "emailReminderActive": "Promemoria e-mail attivo",
-      "delete": "Elimina",
       "empty": "Ancora nessun appuntamento",
       "toast": {
         "saveError": "Impossibile salvare l'appuntamento.",
         "deleteError": "Impossibile eliminare l'appuntamento."
-      }
+      },
+      "openAria": "Apri il calendario dei colloqui",
+      "deleteAria": "Elimina l'appuntamento: {name}"
+    },
+    "a11y": {
+      "openApplication": "Apri candidatura: {name}",
+      "profileStrength": "Completezza del profilo"
     }
   },
   "guide": {

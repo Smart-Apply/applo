@@ -88,12 +88,17 @@
       "update": "Atualizar compromisso",
       "allAppointments": "Todos os compromissos",
       "emailReminderActive": "Lembrete por e-mail ativo",
-      "delete": "Eliminar",
       "empty": "Ainda sem compromissos",
       "toast": {
         "saveError": "Não foi possível guardar o compromisso.",
         "deleteError": "Não foi possível eliminar o compromisso."
-      }
+      },
+      "openAria": "Abrir o calendário de entrevistas",
+      "deleteAria": "Eliminar o compromisso: {name}"
+    },
+    "a11y": {
+      "openApplication": "Abrir candidatura: {name}",
+      "profileStrength": "Força do perfil"
     }
   },
   "guide": {

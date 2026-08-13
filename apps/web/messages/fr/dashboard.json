@@ -88,12 +88,17 @@
       "update": "Mettre à jour le rendez-vous",
       "allAppointments": "Tous les rendez-vous",
       "emailReminderActive": "Rappel par e-mail activé",
-      "delete": "Supprimer",
       "empty": "Aucun rendez-vous pour l'instant",
       "toast": {
         "saveError": "Le rendez-vous n'a pas pu être enregistré.",
         "deleteError": "Le rendez-vous n'a pas pu être supprimé."
-      }
+      },
+      "openAria": "Ouvrir le calendrier d'entretiens",
+      "deleteAria": "Supprimer le rendez-vous : {name}"
+    },
+    "a11y": {
+      "openApplication": "Ouvrir la candidature : {name}",
+      "profileStrength": "Force du profil"
     }
   },
   "guide": {

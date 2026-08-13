@@ -88,12 +88,17 @@
       "update": "Actualizar cita",
       "allAppointments": "Todas las citas",
       "emailReminderActive": "Recordatorio por correo activo",
-      "delete": "Eliminar",
       "empty": "Aún no hay citas",
       "toast": {
         "saveError": "No se pudo guardar la cita.",
         "deleteError": "No se pudo eliminar la cita."
-      }
+      },
+      "openAria": "Abrir el calendario de entrevistas",
+      "deleteAria": "Eliminar la cita: {name}"
+    },
+    "a11y": {
+      "openApplication": "Abrir candidatura: {name}",
+      "profileStrength": "Fuerza del perfil"
     }
   },
   "guide": {

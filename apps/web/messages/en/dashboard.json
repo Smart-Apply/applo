@@ -88,12 +88,17 @@
       "update": "Update appointment",
       "allAppointments": "All appointments",
       "emailReminderActive": "Email reminder active",
-      "delete": "Delete",
       "empty": "No appointments yet",
       "toast": {
         "saveError": "The appointment could not be saved.",
         "deleteError": "The appointment could not be deleted."
-      }
+      },
+      "openAria": "Open interview calendar",
+      "deleteAria": "Delete appointment: {name}"
+    },
+    "a11y": {
+      "openApplication": "Open application: {name}",
+      "profileStrength": "Profile strength"
     }
   },
   "guide": {

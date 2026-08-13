@@ -28,12 +28,10 @@
     "clearSelection": "Annulla selezione",
     "setStatus": "Imposta stato…",
     "delete": "Elimina",
-    "actions": "Azioni",
     "showDetails": "Mostra dettagli",
     "edit": "Modifica",
     "openCoverLetter": "Apri lettera di presentazione",
     "openResume": "Apri curriculum",
-    "selectApplication": "Seleziona candidatura",
     "selectAllPage": "Seleziona tutte in questa pagina",
     "open": "Apri",
     "emptyFilteredTitle": "Nessuna candidatura trovata",
@@ -83,6 +81,10 @@
       "bulkDeletePartial": "{succeeded} eliminate, {failed} non riuscite",
       "bulkStatusSuccess": "Stato aggiornato per {count, plural, one {# candidatura} other {# candidature}}",
       "bulkStatusPartial": "{succeeded} aggiornate, {failed} non riuscite"
+    },
+    "a11y": {
+      "selectApplication": "Seleziona candidatura: {name}",
+      "actions": "Azioni: {name}"
     }
   },
   "detail": {

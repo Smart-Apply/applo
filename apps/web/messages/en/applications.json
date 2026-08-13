@@ -28,12 +28,10 @@
     "clearSelection": "Clear selection",
     "setStatus": "Set status…",
     "delete": "Delete",
-    "actions": "Actions",
     "showDetails": "Show details",
     "edit": "Edit",
     "openCoverLetter": "Open cover letter",
     "openResume": "Open résumé",
-    "selectApplication": "Select application",
     "selectAllPage": "Select all on this page",
     "open": "Open",
     "emptyFilteredTitle": "No applications found",
@@ -83,6 +81,10 @@
       "bulkDeletePartial": "{succeeded} deleted, {failed} failed",
       "bulkStatusSuccess": "Status updated for {count, plural, one {# application} other {# applications}}",
       "bulkStatusPartial": "{succeeded} updated, {failed} failed"
+    },
+    "a11y": {
+      "selectApplication": "Select application: {name}",
+      "actions": "Actions: {name}"
     }
   },
   "detail": {

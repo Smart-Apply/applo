@@ -130,6 +130,26 @@ Contrast beyond `/profile` is measured and tracked in
 The dominant cause is the `text-muted-foreground/70` opacity modifier — the
 token passes at full opacity, only the modifier breaks it.
 
+The naming/structure half beyond `/profile` is
+[#790](https://github.com/Smart-Apply/applo/issues/790): 10 nodes across
+`/dashboard` (3 `button-name`, 1 `aria-allowed-role`, 1 `heading-order`),
+`/applications` (4 `button-name`) and `/settings` (1 `aria-hidden-focus`).
+Fixed with the same primitives:
+
+- Icon-only row controls (dashboard "open application" chevrons, the
+  applications-list `…` menus and row checkboxes) now carry a localised
+  `aria-label` that interpolates the application's own title, so repeated
+  controls don't all announce identically.
+- The dashboard card titles are real `<h2>`s and the recent-application rows
+  `<h3>`s — previously an `h1 → h4` skip.
+- The interview-calendar card is a `<div role="button">`; ARIA in HTML does not
+  permit `role="button"` on `<section>`.
+- The settings save bar keeps its buttons out of the tab order while it is
+  `aria-hidden` — `pointer-events-none` + `opacity-0` do not remove
+  focusability.
+
+The VoiceOver pass is still outstanding and carries over to #790.
+
 ## Risks and landmines
 
 - **Accessible names must be localised.** Every `aria-label` is user-facing

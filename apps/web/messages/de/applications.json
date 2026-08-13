@@ -28,12 +28,10 @@
     "clearSelection": "Auswahl aufheben",
     "setStatus": "Status setzen…",
     "delete": "Löschen",
-    "actions": "Aktionen",
     "showDetails": "Details anzeigen",
     "edit": "Bearbeiten",
     "openCoverLetter": "Anschreiben öffnen",
     "openResume": "Lebenslauf öffnen",
-    "selectApplication": "Bewerbung auswählen",
     "selectAllPage": "Alle auf dieser Seite auswählen",
     "open": "Öffnen",
     "emptyFilteredTitle": "Keine Bewerbungen gefunden",
@@ -83,6 +81,10 @@
       "bulkDeletePartial": "{succeeded} gelöscht, {failed} fehlgeschlagen",
       "bulkStatusSuccess": "Status für {count, plural, one {# Bewerbung} other {# Bewerbungen}} aktualisiert",
       "bulkStatusPartial": "{succeeded} aktualisiert, {failed} fehlgeschlagen"
+    },
+    "a11y": {
+      "selectApplication": "Bewerbung auswählen: {name}",
+      "actions": "Aktionen: {name}"
     }
   },
   "detail": {
