@@ -1,8 +1,8 @@
 # Open-issue backlog — order and priority
 
 > **Written:** 13 Aug 2026 · **Last updated:** 13 Aug 2026, after #790 and #780
-> closed. · **Basis:** all **14** open issues in `Smart-Apply/applo`, read in
-> full via `gh issue list --state open`.
+> closed and #797 filed. · **Basis:** all **15** open issues in
+> `Smart-Apply/applo`, read in full via `gh issue list --state open`.
 > **Verified against:** `main` @ `cf91b658` (`feat(web): Löschen im Profil
 > umkehrbar machen`, PR #793).
 >
@@ -47,14 +47,15 @@
 | 4 | [#746](https://github.com/Smart-Apply/applo/issues/746) | Loading State für die Seite bauen | **P2** | S | #571 |
 | 5 | [#761](https://github.com/Smart-Apply/applo/issues/761) | Speicher-Modell vereinheitlichen und Erfolgs-Feedback bauen | **P2** | L | #571 + a decision |
 | 6 | [#573](https://github.com/Smart-Apply/applo/issues/573) | Mobiles Design (Android/iOS) überarbeiten | **P2** | L | #571 |
-| 7 | [#572](https://github.com/Smart-Apply/applo/issues/572) | Generierungs-Output prüfen & Verbesserungspotenziale identifizieren | **P3** | M | measurement |
-| 8 | [#570](https://github.com/Smart-Apply/applo/issues/570) | Onboarding-Guide für alle Features | **P3** | L | #571, #573 |
-| 9 | [#332](https://github.com/Smart-Apply/applo/issues/332) | Add SSR to public pages (landing, marketing) for SEO | **P3** | M | plan 03 |
-| 10 | [#525](https://github.com/Smart-Apply/applo/issues/525) | LLM token-usage analytics aggregation endpoints | **P3** | M | — *(unblocked)* |
-| 11 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | re-scope first |
-| 12 | [#623](https://github.com/Smart-Apply/applo/issues/623) | Evaluation platform for application generation — separate repo | **P4** | XL | — |
-| 13 | [#133](https://github.com/Smart-Apply/applo/issues/133) | 🌙 Dark Mode — Theme Switcher | **P4** | M | #571, #573 |
-| 14 | [#524](https://github.com/Smart-Apply/applo/issues/524) | Model trained on anonymized AI-usage dataset (discovery) | **P4** | XL | #523 + data volume |
+| 7 | [#797](https://github.com/Smart-Apply/applo/issues/797) | Reconcile the headless generation seam with main's pipeline | **P3** | L | — *(blocks 8)* |
+| 8 | [#572](https://github.com/Smart-Apply/applo/issues/572) | Generierungs-Output prüfen & Verbesserungspotenziale identifizieren | **P3** | M | #797 |
+| 9 | [#570](https://github.com/Smart-Apply/applo/issues/570) | Onboarding-Guide für alle Features | **P3** | L | #571, #573 |
+| 10 | [#332](https://github.com/Smart-Apply/applo/issues/332) | Add SSR to public pages (landing, marketing) for SEO | **P3** | M | plan 03 |
+| 11 | [#525](https://github.com/Smart-Apply/applo/issues/525) | LLM token-usage analytics aggregation endpoints | **P3** | M | — *(unblocked)* |
+| 12 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | re-scope first |
+| 13 | [#623](https://github.com/Smart-Apply/applo/issues/623) | Evaluation platform for application generation — separate repo | **P4** | XL | #797 |
+| 14 | [#133](https://github.com/Smart-Apply/applo/issues/133) | 🌙 Dark Mode — Theme Switcher | **P4** | M | #571, #573 |
+| 15 | [#524](https://github.com/Smart-Apply/applo/issues/524) | Model trained on anonymized AI-usage dataset (discovery) | **P4** | XL | #523 + data volume |
 
 **Ordering principle:** finish what is already open before starting what is
 not. Ranks 1–2 are unblocked, small, and each one closes a defect that is live
@@ -225,7 +226,39 @@ dashboard shell **already has a drawer and a bottom nav**. Audit first against
 
 ## P3 — planned, not scheduled
 
-### 7 · #572 — review generation output quality
+### 7 · #797 — reconcile the headless seam with main's pipeline
+
+**What it does.** Rebases `feat/headless-generation` onto `main`, resolves the
+collision between the two extractions of the generation chain, and leaves the
+product with **one** implementation that both the live path and `applo-eval`
+call.
+
+**Why it exists as its own issue.** Split out of #623 after verifying that
+almost all remaining eval work lives in the other repo — this is the part that
+belongs here. Three things depend on it: #572 (below) cannot produce a
+trustworthy number without it, `applo-eval`'s CI is pinned to a feature branch
+until it lands, and until then every eval result describes the **July**
+pipeline rather than the shipped one.
+
+**Measured, not estimated.** A trial merge
+(`git merge-tree --write-tree origin/main feat/headless-generation`) reports
+**33 conflict hunks across 14 files**, 17 of them in the LLM layer alone
+(`llm.service.ts` 10, `azure-openai.provider.ts` 5, `azure-ai-foundry.provider.ts`
+2) — both sides built there independently, so there are now two GPT-5
+body-shaping implementations and one has to win.
+
+**The expensive part is invisible to git.** In the merged tree
+`generation.service.ts` arrives byte-identical to `main` (2414 lines) and
+`headless/generate.ts` (537 lines) lands beside it, with **zero** reported
+conflict — neither side touched the other's file. Two divergent copies of the
+same pipeline, and the seam is the older one: it lacks
+`shorten-cover-letter.md`, `fix-unsupported-numbers.md` and
+`fix-unsupported-numbers-resume.md`. Merging as-is would look successful and
+silently reinstate exactly the drift the seam exists to prevent.
+
+**Depends on:** nothing. **Blocks:** #572, and the CI pin in `applo-eval`.
+
+### 8 · #572 — review generation output quality
 
 **What it does.** A structured review of the shipped generation output across
 several professions (healthcare, sales, trades, marketing, IT) in DE and EN,
@@ -239,17 +272,17 @@ resolve the effect, otherwise the conclusion is noise. A per-item pass/fail over
 improvements that did not happen. It needs a harness that pools the underlying
 findings rather than collapsing them to per-item verdicts.
 
-**That harness now exists** — see [#623](#12--623--evaluation-platform).
+**That harness now exists** — see [#623](#13--623--evaluation-platform).
 `applo-eval` already carries 31 fixtures across 14+ professions in DE and EN and
 scores them with the product's own deterministic validators (grounding,
 style-lint, ATS coverage, guard-fallback rate). Running #572 by hand would
-re-do, worse, what is already built. **Promote this to P2 the moment the
-headless seam is merged** — at that point it stops being a manual review and
-becomes a matrix run with a report.
+re-do, worse, what is already built. **Promote this to P2 the moment #797
+lands** — at that point it stops being a manual review and becomes a matrix run
+with a report.
 
-**Plan:** [10](./10-issue-572-llm-output-review.md).
+**Depends on:** #797. **Plan:** [10](./10-issue-572-llm-output-review.md).
 
-### 8 · #570 — onboarding guide
+### 9 · #570 — onboarding guide
 
 **What it does.** A guided first-login tour across profile/résumé import, job
 ingestion, generation, the PDF editor, the interview coach and email tracking,
@@ -260,7 +293,7 @@ are about to change. Building it now guarantees rework. It also still has two
 open design questions in the issue (interactive tour vs. static checklist; a
 library vs. existing primitives) — decide those before planning.
 
-### 9 · #332 — SSR for public pages
+### 10 · #332 — SSR for public pages
 
 **What it does.** Converts the landing/marketing pages from client rendering to
 Server Components with real `metadata`/OpenGraph, for indexability and FCP.
@@ -269,7 +302,7 @@ Server Components with real `metadata`/OpenGraph, for indexability and FCP.
 share assets and is cheaper. Fold #332 in only if plan 03 shows the landing
 page's CSR is actually hurting indexing — measure before rewriting.
 
-### 10 · #525 — admin LLM usage analytics endpoints
+### 11 · #525 — admin LLM usage analytics endpoints
 
 **What it does.** Read-only, admin-gated aggregation over `LlmUsageEvent` —
 tokens, cost, call counts and success rate grouped by feature, tier, language
@@ -286,7 +319,7 @@ argument for doing it later, not sooner.
 **Constraint to carry over:** aggregates only. No drill-down that could resolve
 an `actorHash` back to a user.
 
-### 11 · #523 — usage dataset export
+### 12 · #523 — usage dataset export
 
 **What it does.** An admin-only export of `LlmUsageEvent` to CSV/Parquet/JSONL,
 with the schema and its anonymity guarantees documented for due diligence.
@@ -308,7 +341,7 @@ pseudonymous and handle it as personal data.
 
 ## P4 — icebox
 
-### 12 · #623 — evaluation platform
+### 13 · #623 — evaluation platform
 
 **What it does.** A standalone repo that runs a versioned fixture set
 (profile × job posting, DE/EN, across professions and edge cases) through the
@@ -333,23 +366,21 @@ deployments. The single seam between the repos is a JSON-in/JSON-out process
 call — no product TypeScript is imported, so the scorer version always equals
 the generator version.
 
-**Two risks worth acting on before any more feature work:**
+**Both backup risks are now closed (13 Aug).** They were real when this entry
+was first written and are recorded because the shape recurs:
 
-| Risk | Verified state |
+| Was | Now |
 |---|---|
-| `applo-eval` has **no git remote** | `git remote -v` → empty. 359 files exist on one laptop only. |
-| `feat/headless-generation` was **never pushed** | 4 commits ahead of `origin/main`, `git ls-remote` → 0 refs. |
-
-Both are one `git push` away from safe and unrecoverable if the disk dies.
-That is the actual next action on #623 — not more platform work.
+| `applo-eval` had **no git remote** — 359 files on one laptop | pushed to `Smart-Apply/applo-eval` (private) |
+| `feat/headless-generation` **never pushed** — `git ls-remote` → 0 refs | pushed, `1d351d0e` |
 
 **Two smaller defects found while checking:**
 
-- The runner defaults `SMART_APPLY_DIR` to `../smart-apply`
-  (`runner/src/run-matrix.ts:44`), but the product checkout is now
-  `../applo`. Every run needs the env var until that default is fixed.
+- The runner defaulted `SMART_APPLY_DIR` to `../smart-apply`
+  (`runner/src/run-matrix.ts:44`) while the product checkout is `../applo` —
+  fixed in `applo-eval` under `chore/repoint-product-paths-to-applo`.
 - `applo-eval/README.md` repeats the retirement error below as the project's
-  stated motivation.
+  stated motivation. Still open.
 
 **The urgency argument in the issue does not hold.** #623 justifies "why now"
 with `gpt-4.1` being retired on **2026-10-14**. That date belongs to
@@ -361,13 +392,13 @@ forcing function is roughly twenty months out, not two. The platform is still
 worth having — it is what makes #572 measurable — but it is not a deadline.
 
 **Why it stays P4 in this repo.** Almost all remaining work lives in the other
-repo. What belongs *here* is merging the headless seam, which is worth its own
-issue at **P3**: it unblocks #572 and it is the piece that would otherwise
-rot on an unpushed branch.
+repo. What belonged *here* — merging the headless seam — is now tracked
+separately as [#797](#7--797--reconcile-the-headless-seam-with-mains-pipeline)
+at P3.
 
 **Reference:** [EVAL_PLATFORM_FABLE5_PROMPT.md](../implementation/EVAL_PLATFORM_FABLE5_PROMPT.md).
 
-### 13 · #133 — dark mode
+### 14 · #133 — dark mode
 
 **What it does.** Light/dark/system themes, persisted preference, a toggle,
 Tailwind class-based dark mode.
@@ -379,7 +410,7 @@ references `tailwind.config.ts` — the app is on **Tailwind v4**, which is
 config-less by default, so the technical plan in the issue needs rewriting
 regardless.
 
-### 14 · #524 — ML on the usage dataset
+### 15 · #524 — ML on the usage dataset
 
 **What it does.** A discovery umbrella: token-cost forecasting, per-`actorHash`
 sequence modelling, tier-upgrade propensity, anomaly detection — trained only on
@@ -409,6 +440,7 @@ graph TD
   end
 
   subgraph P3["P3 — planned"]
+    I797["#797 headless seam"]
     I572["#572 LLM output review"]
     I570["#570 onboarding"]
     I332["#332 SSR / SEO"]
@@ -429,7 +461,8 @@ graph TD
   I573 --> I570
   I571 --> I133
   I573 --> I133
-  I623 -.->|"headless entrypoint<br/>makes it measurable"| I572
+  I797 --> I572
+  I797 --> I623
   I523 --> I524
   I525 -.-> I523
 ```
@@ -457,20 +490,14 @@ and #761's "data loss when navigating away from `/profile`" does not happen.
 
 ## Not on this list
 
-Four categories of real work carry **no GitHub issue**, so they are invisible
+Three categories of real work carry **no GitHub issue**, so they are invisible
 to anyone reading the tracker. Ordering the issues alone will therefore
 under-serve them.
 
-**Built but unpushed** — the highest-risk item on this page, because it is the
-only one where the work already exists and can still be lost:
-
-| Where | State |
-|---|---|
-| `/Users/arian/VS-Projects/applo-eval` | Eval platform, M2–M4 done, 359 files, branch `master`, **0 git remotes**. |
-| `applo` → `feat/headless-generation` | The headless seam + fake provider + GPT-5 tuning. 4 commits ahead of `origin/main`, **0 remote refs**. |
-
-Neither survives a disk failure. Pushing both is minutes of work and is the
-real next action on #623.
+> **Resolved 13 Aug:** this section previously led with *built but unpushed* —
+> `applo-eval` had no git remote (359 files on one laptop) and
+> `feat/headless-generation` had never been pushed. Both are now on GitHub, and
+> the seam work is tracked as #797.
 
 **Carried past a closed issue** — see
 [Closed since this file was written](#closed-since-this-file-was-written):
