@@ -40,6 +40,9 @@ type StepId =
   | 'keyword-weave'
   | 'style-rewrite'
   | 'ats-keywords'
+  | 'length-governor'
+  | 'grounding-repair'
+  | 'resume-grounding-repair'
   | 'unknown';
 
 interface FakeProfileBlock {
@@ -248,6 +251,9 @@ const ROLE_TO_STEP: ReadonlyArray<readonly [string, StepId]> = [
   ['Surgical Keyword Weaver', 'keyword-weave'],
   ['ATS Keyword Extractor', 'ats-keywords'],
   ['Surgical Style Fixer', 'style-rewrite'],
+  ['Surgical Length Editor', 'length-governor'],
+  ['Surgical Résumé Fact Repairer', 'resume-grounding-repair'],
+  ['Surgical Fact Repairer', 'grounding-repair'],
 ];
 
 function detectStep(prompt: string): StepId {
@@ -389,6 +395,15 @@ export class FakeV1Provider implements LLMProvider {
         return this.renderStyleRewrite(prompt, blocks, language, rand, rates);
       case 'ats-keywords':
         return this.renderAtsKeywords(blocks);
+      // The repair/shorten passes are text-in/text-out rewrites of the draft
+      // the prompt carries. Echoing the draft makes the guards decide on
+      // deterministic grounds instead of on invented prose.
+      case 'length-governor':
+        return this.renderShortenedDraft(prompt);
+      case 'grounding-repair':
+        return this.renderRepairedDraft(prompt);
+      case 'resume-grounding-repair':
+        return this.renderResumeRepair(blocks);
       default:
         return this.renderUnknown(prompt, language);
     }
@@ -836,6 +851,74 @@ export class FakeV1Provider implements LLMProvider {
     // Tier-dependent failure: return the draft unchanged (guard rejects).
     if (rand() < rates.styleFixFails) return draft;
     return this.fixViolationsInText(draft, violations, language);
+  }
+
+  /**
+   * Length governor: return the draft trimmed to roughly the requested budget.
+   * Cutting whole sentences keeps the salutation and the keyword coverage the
+   * guard checks for, so the accept path is reachable rather than always
+   * falling back.
+   */
+  private renderShortenedDraft(prompt: string): string {
+    const draft = extractDraft(prompt);
+    if (!draft) return '';
+    const budget = Number(/"lengthBudget"\s*:\s*(\d+)/.exec(prompt)?.[1] ?? 350);
+    const paragraphs = draft.split(/\n{2,}/);
+    const out: string[] = [];
+    let words = 0;
+    for (const p of paragraphs) {
+      const n = p.trim().split(/\s+/).filter(Boolean).length;
+      if (out.length > 0 && words + n > budget) break;
+      out.push(p);
+      words += n;
+    }
+    return out.join('\n\n');
+  }
+
+  /**
+   * Cover-letter grounding repair: strip the unsupported figures the prompt
+   * lists, replacing each with a qualitative phrase. That is exactly what the
+   * real pass is asked to do, so the guard's before/after comparison is
+   * meaningful offline.
+   */
+  private renderRepairedDraft(prompt: string): string {
+    const draft = extractDraft(prompt);
+    if (!draft) return '';
+    let out = draft;
+    for (const m of prompt.matchAll(/"value"\s*:\s*"([^"]+)"/g)) {
+      out = out.split(m[1]).join('deutlich');
+    }
+    return out;
+  }
+
+  /**
+   * Résumé grounding repair: ID-preserving JSON in/JSON out. Walks the payload
+   * and rewrites impact figures only inside string leaves, so every
+   * `profileExperienceId` survives and `isValidResumeEdit` can accept.
+   */
+  private renderResumeRepair(blocks: unknown[]): string {
+    const payload = blocks.find(
+      (b) => b && typeof b === 'object' && 'rewritten_experiences' in (b as object),
+    );
+    if (!payload) return '{}';
+
+    const scrub = (node: unknown): unknown => {
+      if (typeof node === 'string') {
+        return node.replace(/\b\d+([.,]\d+)?\s?(%|€|EUR|k|K)\b/g, 'substantially');
+      }
+      if (Array.isArray(node)) return node.map(scrub);
+      if (node && typeof node === 'object') {
+        const out: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+          // Never touch identifiers — the guard rejects a mangled ID outright.
+          out[k] = k.toLowerCase().endsWith('id') ? v : scrub(v);
+        }
+        return out;
+      }
+      return node;
+    };
+
+    return JSON.stringify(scrub(payload));
   }
 
   private renderAtsKeywords(blocks: unknown[]): string {

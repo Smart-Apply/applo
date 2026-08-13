@@ -29,7 +29,19 @@ import {
   type JobFactsDto,
 } from '../job-facts.util';
 import { evaluateStyleRewrite, lintGeneratedStyle } from '../style-lint.util';
-import { GENERATION_SYSTEM_ANCHOR } from '../constants';
+import { lintCoverLetterLength, evaluateShortenRewrite } from '../style-lint.util';
+import {
+  evaluateGroundingRepair,
+  evaluateResumeGroundingRepair,
+} from '../grounding/grounding-repair.util';
+import type { GroundingValidatorService } from '../grounding/grounding-validator.service';
+import { extractResumeProse } from '../resume-editor.util';
+import { isKeywordPresent } from '../keyword-coverage.util';
+import {
+  GENERATION_SYSTEM_ANCHOR,
+  resolveCoverLetterBudget,
+  resolveCoverLetterTargetMin,
+} from '../constants';
 
 /**
  * Headless, config-driven generation entrypoint — the single implementation of
@@ -60,6 +72,9 @@ export type PipelineStep =
   | 'coverLetterEditor'
   | 'keywordWeave'
   | 'styleRewrite'
+  | 'lengthGovernor'
+  | 'groundingRepair'
+  | 'resumeGroundingRepair'
   | 'atsKeywords';
 
 /** Per-step model/params override for the variant matrix. */
@@ -79,6 +94,10 @@ export interface GenerationToggles {
   keywordWeave?: boolean;
   /** Run the style-rewrite "teeth" passes (default true). */
   styleRewrite?: boolean;
+  /** Run the deterministic cover-letter length governor (default true). */
+  lengthGovernor?: boolean;
+  /** Run the two grounding-repair passes (default true). */
+  groundingRepair?: boolean;
   /** Attach GENERATION_SYSTEM_ANCHOR to the writer calls (default true). */
   systemAnchor?: boolean;
 }
@@ -87,6 +106,8 @@ export interface GenerationConfig {
   /** Output language. 'de' | 'en' are first-class; other ISO codes pass through to the prompts. */
   language: string;
   generateCoverLetter: boolean;
+  /** Cover-letter word budget selector; drives the length governor. */
+  coverLetterLength?: string;
   /** Per-call model + params so the matrix can vary one step at a time. */
   models?: Partial<Record<PipelineStep, StepModelConfig>>;
   /** Prompt-template dir, e.g. 'v1' (default) | 'v2'. */
@@ -138,6 +159,9 @@ export interface GenerationResult {
     coverLetterEditor: GuardOutcome;
     keywordWeave: GuardOutcome;
     styleRewrite: GuardOutcome;
+    lengthGovernor: GuardOutcome;
+    groundingRepair: GuardOutcome;
+    resumeGroundingRepair: GuardOutcome;
   };
   /** Priority-1 profile-supported ATS coverage of the cover letter. */
   coverage: { beforeWeave: CoverageReport; afterWeave: CoverageReport };
@@ -149,6 +173,13 @@ export interface GenerationResult {
 
 /** The slice of `LLMService` the pipeline needs — swappable/fakeable in tests. */
 export type LlmLike = Pick<LLMService, 'callText' | 'callJson'>;
+
+/**
+ * The slice of `GroundingValidatorService` the chain needs. Passed in rather
+ * than constructed so the live path and the eval path share one validator
+ * instance — the anti-hallucination verdict must not depend on who called.
+ */
+export type GroundingLike = Pick<GroundingValidatorService, 'validate'>;
 
 interface CallOptions {
   temperature?: number;
@@ -257,7 +288,7 @@ export async function generateApplication(
   profile: ProfileWithRelations,
   job: SerializableJobPosting,
   config: GenerationConfig,
-  deps: { llm: LlmLike },
+  deps: { llm: LlmLike; grounding: GroundingLike },
 ): Promise<GenerationResult> {
   const started = Date.now();
   const language = config.language;
@@ -265,6 +296,8 @@ export async function generateApplication(
   const editorPass = toggles.editorPass !== false;
   const keywordWeave = toggles.keywordWeave !== false;
   const styleRewrite = toggles.styleRewrite !== false;
+  const lengthGovernor = toggles.lengthGovernor !== false;
+  const groundingRepair = toggles.groundingRepair !== false;
   const anchor = toggles.systemAnchor !== false ? GENERATION_SYSTEM_ANCHOR : undefined;
 
   const ctx: RunContext = {
@@ -505,9 +538,169 @@ export async function generateApplication(
     }
   }
 
+  // Step 6: deterministic length governor (guarded). Only shortens, so it must
+  // run BEFORE the grounding repair — a repair placed earlier could be re-cut.
+  const lengthBudget = resolveCoverLetterBudget(config.coverLetterLength);
+  let coverLetterGoverned = coverLetterFinal;
+  let lengthOutcome: GuardOutcome = 'skipped';
+  if (coverLetterFinal && coverLetterFinal.trim() !== '' && lengthGovernor) {
+    const lint = lintCoverLetterLength(coverLetterFinal, lengthBudget, language);
+    if (lint.overrun) {
+      // The weave's priority-1 keywords must survive the cut (#6).
+      const hardSkillsRaw =
+        atsKeywords && typeof atsKeywords === 'object'
+          ? (atsKeywords as { hard_skills?: unknown }).hard_skills
+          : undefined;
+      const mustKeepKeywords = (Array.isArray(hardSkillsRaw) ? hardSkillsRaw : [])
+        .filter((kw): kw is { keyword: string } => {
+          if (!kw || typeof kw !== 'object') return false;
+          const c = kw as { keyword?: unknown; priority?: unknown; source?: unknown };
+          return (
+            c.priority === 1 &&
+            c.source === 'both' &&
+            typeof c.keyword === 'string' &&
+            isKeywordPresent(coverLetterFinal, c.keyword)
+          );
+        })
+        .map((kw) => kw.keyword);
+
+      try {
+        const shortened = await callTextStep(
+          ctx,
+          'lengthGovernor',
+          'shorten-cover-letter.md',
+          {
+            draft: coverLetterFinal,
+            lengthBudget,
+            lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
+            currentWords: lint.words,
+            job: serializeJobPostingForLlm(job),
+            language,
+          },
+          { temperature: 0.3, maxTokens: 1500, systemMessage: anchor },
+        );
+        const decision = evaluateShortenRewrite(
+          coverLetterFinal,
+          shortened,
+          lengthBudget,
+          language,
+          mustKeepKeywords,
+        );
+        if (decision.accept) {
+          coverLetterGoverned = shortened;
+          lengthOutcome = 'applied';
+          markGuardFallback(ctx, 'lengthGovernor', false);
+        } else {
+          lengthOutcome = 'fallback';
+          markGuardFallback(ctx, 'lengthGovernor', true);
+        }
+      } catch (err) {
+        recordError(ctx, 'lengthGovernor', 'shorten-cover-letter.md', err);
+        lengthOutcome = 'error';
+      }
+    }
+  }
+
+  // Step 7a: cover-letter grounding repair (guarded). Corpus = profile + job
+  // posting; quoting the ad is legitimate personalization.
+  let coverLetterGrounded = coverLetterGoverned;
+  let groundingOutcome: GuardOutcome = 'skipped';
+  if (coverLetterGoverned && coverLetterGoverned.trim() !== '' && groundingRepair) {
+    const before = deps.grounding.validate({ coverLetter: coverLetterGoverned }, profile, job.fullText);
+    if (before.unsupported.length > 0) {
+      try {
+        const repaired = await callTextStep(
+          ctx,
+          'groundingRepair',
+          'fix-unsupported-numbers.md',
+          {
+            draft: coverLetterGoverned,
+            unsupported: before.unsupported,
+            job: serializeJobPostingForLlm(job),
+            language,
+          },
+          { temperature: 0.3, maxTokens: 1500, systemMessage: anchor },
+        );
+        const after = repaired?.trim()
+          ? deps.grounding.validate({ coverLetter: repaired }, profile, job.fullText).unsupported
+          : [];
+        const decision = evaluateGroundingRepair(
+          coverLetterGoverned,
+          repaired,
+          before.unsupported,
+          after,
+          lengthBudget,
+          language,
+        );
+        if (decision.accept) {
+          coverLetterGrounded = repaired;
+          groundingOutcome = 'applied';
+          markGuardFallback(ctx, 'groundingRepair', false);
+        } else {
+          groundingOutcome = 'fallback';
+          markGuardFallback(ctx, 'groundingRepair', true);
+        }
+      } catch (err) {
+        recordError(ctx, 'groundingRepair', 'fix-unsupported-numbers.md', err);
+        groundingOutcome = 'error';
+      }
+    }
+  }
+
+  // Step 7b: résumé grounding repair (guarded, strict JSON). Corpus = profile
+  // ONLY — a figure from the job ad is never evidence of the candidate's own
+  // achievement.
+  let resumeGrounded = resumeFinal;
+  let resumeGroundingOutcome: GuardOutcome = 'skipped';
+  if (resumeFinal && groundingRepair) {
+    const before = deps.grounding.validate({ resume: extractResumeProse(resumeFinal) }, profile);
+    if (before.unsupported.length > 0) {
+      try {
+        const repaired = await callJsonStep<unknown>(
+          ctx,
+          'resumeGroundingRepair',
+          'fix-unsupported-numbers-resume.md',
+          {
+            rewrittenProfile: resumeFinal,
+            tailoredProfile,
+            job: serializeJobPostingForLlm(job),
+            unsupported: before.unsupported,
+            language,
+          },
+          { temperature: 0.3, maxTokens: 2000, systemMessage: anchor },
+        );
+        const validCandidate = isValidResumeEdit(resumeFinal, repaired)
+          ? (repaired as RewrittenProfileDto)
+          : null;
+        const after = validCandidate
+          ? deps.grounding.validate({ resume: extractResumeProse(validCandidate) }, profile)
+              .unsupported
+          : [];
+        const decision = evaluateResumeGroundingRepair(
+          resumeFinal,
+          repaired,
+          before.unsupported,
+          after,
+          language,
+        );
+        if (decision.accept && validCandidate) {
+          resumeGrounded = validCandidate;
+          resumeGroundingOutcome = 'applied';
+          markGuardFallback(ctx, 'resumeGroundingRepair', false);
+        } else {
+          resumeGroundingOutcome = 'fallback';
+          markGuardFallback(ctx, 'resumeGroundingRepair', true);
+        }
+      } catch (err) {
+        recordError(ctx, 'resumeGroundingRepair', 'fix-unsupported-numbers-resume.md', err);
+        resumeGroundingOutcome = 'error';
+      }
+    }
+  }
+
   return {
-    coverLetter: coverLetterFinal,
-    resume: resumeFinal,
+    coverLetter: coverLetterGrounded,
+    resume: resumeGrounded,
     atsKeywords,
     tailoredProfile,
     jobFacts,
@@ -524,6 +717,9 @@ export async function generateApplication(
       coverLetterEditor: coverLetterEditorOutcome,
       keywordWeave: weaveOutcome,
       styleRewrite: styleOutcome,
+      lengthGovernor: lengthOutcome,
+      groundingRepair: groundingOutcome,
+      resumeGroundingRepair: resumeGroundingOutcome,
     },
     coverage: { beforeWeave: coverageBeforeWeave, afterWeave: coverageAfterWeave },
     telemetry: {

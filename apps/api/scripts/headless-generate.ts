@@ -267,7 +267,10 @@ async function main(): Promise<void> {
 
   try {
     const llm = app.get(LLMService);
-    const result = await generateApplication(profile, job, config, { llm });
+    // One validator for the chain's repair passes AND the scorer below, so the
+    // grounding verdict can't differ between them.
+    const grounding = new GroundingValidatorService();
+    const result = await generateApplication(profile, job, config, { llm, grounding });
     const view = buildResumeView(result.tailoredProfile, result.resume, profile.summary ?? '');
 
     const output = {
