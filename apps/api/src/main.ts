@@ -389,6 +389,21 @@ async function bootstrap() {
     );
   }
 
+  // NOTE: `app.enableShutdownHooks()` is deliberately NOT called.
+  //
+  // Nest runs `onModuleDestroy` BEFORE `dispose()` closes the HTTP server
+  // (nest-application-context.js: callDestroyHook -> ... -> dispose). Enabling
+  // hooks would therefore run `PrismaService.onModuleDestroy` — which calls
+  // `$disconnect()` + `pool.end()` — while Express is still accepting traffic,
+  // failing every in-flight DB query on each deploy. It would also register
+  // handlers for all 11 ShutdownSignals (SIGSEGV/SIGABRT included), turning
+  // hard crashes into async teardowns from a corrupted state.
+  //
+  // Nothing currently needs it: Playwright installs its own SIGINT/SIGTERM
+  // handlers that gracefully close launched browsers, and Fly's default
+  // kill_signal is SIGINT, where Playwright calls process.exit(130) and would
+  // truncate Nest's chain anyway. If you do need lifecycle hooks on signals,
+  // drain the HTTP server first and pass an explicit signal list.
   const port = configService.port;
   await app.listen(port);
 

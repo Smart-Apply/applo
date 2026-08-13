@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, OnModuleDestroy } from '@nestjs/common';
 import { load } from 'cheerio';
 import axios from 'axios';
 import NodeCache from 'node-cache';
@@ -17,7 +17,7 @@ interface ParsedJobData {
 type CachedParseResult = string | ParsedJobData;
 
 @Injectable()
-export class UrlParser {
+export class UrlParser implements OnModuleDestroy {
   private readonly logger = new Logger(UrlParser.name);
   private readonly REQUEST_TIMEOUT = 10000; // 10 seconds
   private readonly useAgentFallback: boolean;
@@ -369,6 +369,22 @@ export class UrlParser {
     }
 
     return parts.join('\n');
+  }
+
+  /**
+   * Close the warm Chromium on teardown. AgentUrlParser is constructed with
+   * `new` (see constructor), so Nest never calls lifecycle hooks on it directly
+   * — this provider owns it and must forward the signal.
+   *
+   * This covers the programmatic `app.close()` path (tests, scripts, eval
+   * runners), which is where the browser genuinely used to leak. It does NOT
+   * fire on SIGTERM, because `app.enableShutdownHooks()` is deliberately not
+   * enabled — see the note in main.ts. Playwright installs its own
+   * SIGINT/SIGTERM handlers that gracefully close every launched browser, so
+   * the signal path is already covered without it.
+   */
+  async onModuleDestroy(): Promise<void> {
+    await this.agentParser?.shutdown();
   }
 }
 
