@@ -249,6 +249,11 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Sentry's setCommits: { auto: true } needs history to resolve the
+          # previous release's commit. The default shallow clone silently
+          # skips commit association.
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v6
         with:

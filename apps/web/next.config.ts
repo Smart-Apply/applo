@@ -138,6 +138,16 @@ export default withSentryConfig(withBundleAnalyzer(withNextIntl(nextConfig)), {
     deleteSourcemapsAfterUpload: true,
   },
 
+  // Associates the release (NEXT_PUBLIC_SENTRY_RELEASE = the deploy SHA) with
+  // its commits, which is what powers suspect commits in the Sentry UI. Needs
+  // full git history: the deploy workflows check out with fetch-depth: 0 for
+  // this reason — with the default shallow clone it warns and skips.
+  release: {
+    setCommits: {
+      auto: true,
+    },
+  },
+
   // Client-only integration. There is no sentry.server.config.ts, because the
   // Worker runtime would need the separate @sentry/cloudflare adapter and the
   // NestJS API already reports server errors via @sentry/node. These flags
