@@ -60,7 +60,7 @@ The **live** path is the v1 "single-LLM pipeline" inside
 | 7 | — | code | **Grounding check (#7):** flag fabricated impact numbers vs. profile (log only, non-destructive) |
 | 8 | — | code | **Style check:** flag residual AI clichés + German Konjunktiv/hedging on the finished docs (`style-lint.util.ts`, log only, non-destructive) |
 
-¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 2e, 4, 5, and 6 run sequentially after the parallel block. The grounding check (7) and style check (8) run on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. Both live paths — `createWithGeneration` (main) and `generateWithSinglePipeline` (secondary/test) — share the editor + grounding helpers.
+¹ *Only when `generateCoverLetter !== false`.* Step 1a and 1b run in **parallel** (`Promise.all`). Steps 2a/2b/2c run in **parallel** (`Promise.all`). Steps 2d, 2e, 4, 5, and 6 run sequentially after the parallel block. The grounding check (7) and style check (8) run on the finalized documents in the background (non-blocking). Resume is persisted as structured JSON for the editor; the cover letter is persisted as HTML for the PDF. `generateWithSinglePipeline` (the regenerate path) no longer implements this chain — it calls the shared `applications/headless/generate.ts`; `createWithGeneration` (main) still carries its own copy until the second half of #797 lands.
 
 **Dead / optional code (do not confuse with the live path):**
 - ~~`apps/api/src/agents/**` (the old Azure AI Foundry agent classes)~~ **Removed (#2,
