@@ -69,7 +69,11 @@ With `LLM_PROVIDER=mock` (or unset) the harness **skips gracefully** (exit 0).
 
 ## What it measures
 
-For each fixture the runner mirrors `GenerationService.createWithGeneration`:
+For each fixture the runner reproduces a subset of the shipped v1 chain. It is a
+hand-maintained copy that predates the `applications/headless/generate.ts` seam
+— since #797 the shipped chain lives there and both service entrypoints call it,
+so prefer `pnpm generate:headless` (and the `applo-eval` platform) for anything
+that must match production exactly:
 
 1. `v1/skill-selector.md` (temp 0.2) → tailored profile
 2. parallel `v1/cover-letter.md` + `v1/resume-rewrite.md` (temp 0.35) + `v1/ats-keywords.md`

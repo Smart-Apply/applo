@@ -1,12 +1,16 @@
 /**
  * Pipeline runner for the eval harness (item #10).
  *
- * Mirrors the LIVE v1 generation chain from `ApplicationsService.createWithGeneration`
- * (skill-selector → parallel{cover-letter, resume-rewrite} → cover-letter editor
- * pass) by calling the exact same `prompts/v1/*.md` templates through the real
- * `LLMService` at the real temperatures. It deliberately reuses the extracted
- * `serializeProfileForLlm` / `serializeJobPostingForLlm` so the prompt inputs are
- * byte-for-byte identical to production.
+ * LEGACY: a hand-maintained partial copy of the v1 chain, predating the
+ * `applications/headless/generate.ts` seam. Since #797 the shipped chain lives
+ * in that one function and both service entrypoints call it, so this runner can
+ * drift from production without anything failing. Prefer
+ * `pnpm generate:headless` (and the `applo-eval` platform that drives it).
+ *
+ * It reproduces skill-selector → parallel{cover-letter, resume-rewrite} →
+ * cover-letter editor pass by calling the same `prompts/v1/*.md` templates
+ * through the real `LLMService` at the real temperatures, and reuses the
+ * extracted `serializeProfileForLlm` / `serializeJobPostingForLlm`.
  *
  * What it intentionally omits vs. the live path:
  * - PDF rendering + persistence — irrelevant to output quality.
