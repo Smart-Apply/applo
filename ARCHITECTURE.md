@@ -55,10 +55,17 @@ stdin, one JSON document on stdout; `--score` embeds the product's own
 deterministic validators so the scorer version always equals the generator
 version). No product TypeScript is imported across the repo boundary.
 
-⚠️ `GenerationService` still carries its own copy of the chain. The two are kept
-in sync **by hand** until the follow-up to #797 lands — a pass added to one must
-be added to the other, or the eval silently measures a pipeline that is no
-longer shipped.
+`GenerationService.generateWithSinglePipeline` (the regenerate path) runs this
+exact function and adds only persistence, SSE progress and the deterministic
+grounding/style reports. An offline harness proves it — `LLM_PROVIDER=fake pnpm
+--filter @applo/api run chain:equivalence` records every LLM call both paths
+make and fails on any difference in template, rendered variables or generation
+params.
+
+⚠️ `GenerationService.createWithGeneration` (the wizard's main create path)
+**still carries its own copy** of the chain. It is kept in sync **by hand**
+until the second half of #797 lands — a pass added to one must be added to the
+other, or the eval silently measures a pipeline that is no longer shipped.
 
 ### Production hostnames
 

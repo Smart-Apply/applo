@@ -30,6 +30,7 @@ import {
 } from '../job-facts.util';
 import { evaluateStyleRewrite, lintGeneratedStyle } from '../style-lint.util';
 import { lintCoverLetterLength, evaluateShortenRewrite } from '../style-lint.util';
+import { isValidTailoredProfile, isDegradedTailoredProfile } from '../tailored-profile.util';
 import {
   evaluateGroundingRepair,
   evaluateResumeGroundingRepair,
@@ -117,6 +118,21 @@ export interface GenerationConfig {
   context?: { userId?: string; jobPostingId?: string };
 }
 
+/**
+ * Coarse, completion-based progress milestones. The chain's writer steps run
+ * concurrently, so progress is reported when a *group* finishes rather than
+ * when an individual call starts — a per-step ladder would have to serialize
+ * the chain to stay truthful. Messages are user-visible (SSE → the generating
+ * view); keep them German-first and profession-neutral.
+ */
+const PROGRESS = {
+  tailored: { percent: 25, message: 'Profil auf die Stelle zugeschnitten' },
+  draftedWithCoverLetter: { percent: 55, message: 'Lebenslauf und Anschreiben entworfen' },
+  draftedResumeOnly: { percent: 55, message: 'Lebenslauf entworfen' },
+  revised: { percent: 80, message: 'Texte überarbeitet und optimiert' },
+  checked: { percent: 92, message: 'Fakten und Länge geprüft' },
+} as const;
+
 /** Outcome of a guarded pass: applied, guard-rejected (fallback), errored, or not run. */
 export type GuardOutcome = 'applied' | 'fallback' | 'error' | 'skipped';
 
@@ -172,7 +188,14 @@ export interface GenerationResult {
 }
 
 /** The slice of `LLMService` the pipeline needs — swappable/fakeable in tests. */
-export type LlmLike = Pick<LLMService, 'callText' | 'callJson'>;
+export type LlmLike = Pick<LLMService, 'callText' | 'callJson' | 'isFastRouted' | 'defaultModel'>;
+
+/**
+ * Optional progress sink. The live path forwards it to the SSE stream; the
+ * eval path passes nothing. Never awaited — a slow or throwing consumer must
+ * not be able to stall or break generation.
+ */
+export type ProgressSink = (progress: number, message: string) => void;
 
 /**
  * The slice of `GroundingValidatorService` the chain needs. Passed in rather
@@ -196,6 +219,16 @@ interface RunContext {
   promptDir: string;
   perCall: PerCallTelemetry[];
   vars: { userId: string; jobPostingId: string };
+  onProgress?: ProgressSink;
+}
+
+/** Report a milestone without letting a misbehaving consumer break the chain. */
+function emit(ctx: RunContext, milestone: { percent: number; message: string }): void {
+  try {
+    ctx.onProgress?.(milestone.percent, milestone.message);
+  } catch {
+    // Progress is cosmetic; the chain must continue.
+  }
 }
 
 function stepOptions(ctx: RunContext, step: PipelineStep, base: CallOptions): CallOptions {
@@ -280,6 +313,57 @@ function markGuardFallback(ctx: RunContext, step: PipelineStep, fallback: boolea
 }
 
 /**
+ * Run the skill selector and validate the hand-off before the prose calls
+ * consume it. This is the chain's only non-optional producer: it feeds BOTH
+ * `cover-letter` and `resume-rewrite`. It has no strict `json_schema`, so when
+ * `LLM_FAST_MODEL` routes it to a cheaper model a malformed or gutted payload
+ * is retried once on the default model — the fast model is an optimization,
+ * the default is the floor.
+ */
+async function selectTailoredProfile(
+  ctx: RunContext,
+  serializedProfile: Record<string, unknown>,
+  serializedJob: Record<string, unknown>,
+  language: string,
+  profile: ProfileWithRelations,
+): Promise<TailoredProfileDto> {
+  const variables = { profile: serializedProfile, job: serializedJob, language };
+  const sourceExperienceCount = profile.experiences?.length ?? 0;
+
+  const attempt = async (model?: string): Promise<TailoredProfileDto | string> => {
+    try {
+      const raw = await callJsonStep<TailoredProfileDto>(
+        ctx,
+        'skillSelector',
+        'skill-selector.md',
+        variables,
+        { temperature: 0.2, maxTokens: 3000, ...(model ? { model } : {}) },
+      );
+      if (!isValidTailoredProfile(raw)) return 'malformed payload';
+      if (isDegradedTailoredProfile(raw, sourceExperienceCount)) {
+        return 'no skills selected or every experience dropped';
+      }
+      return raw;
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  };
+
+  const first = await attempt();
+  if (typeof first !== 'string') return first;
+
+  if (!ctx.llm.isFastRouted(`${ctx.promptDir}/skill-selector.md`)) {
+    throw new Error(`Skill selection failed: ${first}`);
+  }
+
+  const escalated = await attempt(ctx.llm.defaultModel);
+  if (typeof escalated === 'string') {
+    throw new Error(`Skill selection failed on both models: ${escalated}`);
+  }
+  return escalated;
+}
+
+/**
  * Run the v1 generation chain headlessly. Never throws for degradable steps —
  * only a failed skill-selector (the chain's root input) propagates, matching
  * the live pipeline's behavior.
@@ -288,7 +372,7 @@ export async function generateApplication(
   profile: ProfileWithRelations,
   job: SerializableJobPosting,
   config: GenerationConfig,
-  deps: { llm: LlmLike; grounding: GroundingLike },
+  deps: { llm: LlmLike; grounding: GroundingLike; onProgress?: ProgressSink },
 ): Promise<GenerationResult> {
   const started = Date.now();
   const language = config.language;
@@ -299,6 +383,8 @@ export async function generateApplication(
   const lengthGovernor = toggles.lengthGovernor !== false;
   const groundingRepair = toggles.groundingRepair !== false;
   const anchor = toggles.systemAnchor !== false ? GENERATION_SYSTEM_ANCHOR : undefined;
+  const lengthBudget = resolveCoverLetterBudget(config.coverLetterLength);
+  const lengthTargetMin = resolveCoverLetterTargetMin(lengthBudget);
 
   const ctx: RunContext = {
     llm: deps.llm,
@@ -309,6 +395,7 @@ export async function generateApplication(
       userId: config.context?.userId ?? 'headless',
       jobPostingId: config.context?.jobPostingId ?? 'headless',
     },
+    onProgress: deps.onProgress,
   };
 
   const serializedProfile = serializeProfileForLlm(profile);
@@ -316,13 +403,7 @@ export async function generateApplication(
 
   // Step 1a ∥ 1b: skill selection + job facts (cover-letter data layer, #5).
   const [tailoredProfile, jobFacts] = await Promise.all([
-    callJsonStep<TailoredProfileDto>(
-      ctx,
-      'skillSelector',
-      'skill-selector.md',
-      { profile: serializedProfile, job: serializedJob, language },
-      { temperature: 0.2, maxTokens: 3000 },
-    ),
+    selectTailoredProfile(ctx, serializedProfile, serializedJob, language, profile),
     config.generateCoverLetter
       ? callJsonStep<JobFactsDto>(
           ctx,
@@ -340,6 +421,7 @@ export async function generateApplication(
   ]);
 
   // Step 2 ∥ 3 ∥ 6: resume rewrite + cover letter + ATS keyword extraction.
+  emit(ctx, PROGRESS.tailored);
   const coverLetterPromise: Promise<string | null> = config.generateCoverLetter
     ? callTextStep(
         ctx,
@@ -351,6 +433,8 @@ export async function generateApplication(
           jobFacts: normalizeJobFacts(jobFacts),
           salutation: buildSalutation(jobFacts, language),
           language,
+          lengthBudget,
+          lengthTargetMin,
         },
         { systemMessage: anchor },
       )
@@ -386,6 +470,10 @@ export async function generateApplication(
   ]);
 
   // Step 2.5: resume editor pass (guarded, ID-preserving).
+  emit(
+    ctx,
+    config.generateCoverLetter ? PROGRESS.draftedWithCoverLetter : PROGRESS.draftedResumeOnly,
+  );
   let resumeEdited = rewrittenProfile;
   let resumeEditorOutcome: GuardOutcome = 'skipped';
   if (rewrittenProfile && editorPass) {
@@ -394,8 +482,8 @@ export async function generateApplication(
         ctx,
         'resumeEditor',
         'editor-resume.md',
-        { rewrittenProfile, tailoredProfile, language },
-        { temperature: 0.35, maxTokens: 2000 },
+        { rewrittenProfile, tailoredProfile, job: serializedJob, language },
+        { temperature: 0.35, maxTokens: 2000, systemMessage: anchor },
       );
       if (isValidResumeEdit(rewrittenProfile, edited)) {
         resumeEdited = edited;
@@ -426,6 +514,7 @@ export async function generateApplication(
           {
             rewrittenProfile: resumeEdited,
             tailoredProfile,
+            job: serializedJob,
             violations,
             verbFirstBullets: before.verbFirstBullets,
             language,
@@ -457,8 +546,15 @@ export async function generateApplication(
         ctx,
         'coverLetterEditor',
         'editor-cover-letter.md',
-        { draft: coverLetterDraft, job: serializedJob, tailoredProfile, language },
-        { temperature: 0.4, maxTokens: 1500 },
+        {
+          draft: coverLetterDraft,
+          job: serializedJob,
+          tailoredProfile,
+          language,
+          lengthBudget,
+          lengthTargetMin,
+        },
+        { temperature: 0.4, maxTokens: 1500, systemMessage: anchor },
       );
       if (edited && edited.trim().length >= coverLetterDraft.trim().length * 0.5) {
         coverLetterEdited = edited;
@@ -487,8 +583,8 @@ export async function generateApplication(
           ctx,
           'keywordWeave',
           'keyword-weave.md',
-          { draft: coverLetterEdited, keywords, tailoredProfile, language },
-          { temperature: 0.3, maxTokens: 1500 },
+          { draft: coverLetterEdited, keywords, job: serializedJob, language, lengthBudget, lengthTargetMin },
+          { temperature: 0.3, maxTokens: 1500, systemMessage: anchor },
         );
         if (woven && woven.trim().length >= coverLetterEdited.trim().length * 0.6) {
           coverLetterWoven = woven;
@@ -519,7 +615,7 @@ export async function generateApplication(
           ctx,
           'styleRewrite',
           'style-rewrite.md',
-          { draft: coverLetterWoven, violations, tailoredProfile, language },
+          { draft: coverLetterWoven, violations, job: serializedJob, language },
           { temperature: 0.3, maxTokens: 1500, systemMessage: anchor },
         );
         const decision = evaluateStyleRewrite(coverLetterWoven, rewritten, language);
@@ -540,7 +636,7 @@ export async function generateApplication(
 
   // Step 6: deterministic length governor (guarded). Only shortens, so it must
   // run BEFORE the grounding repair — a repair placed earlier could be re-cut.
-  const lengthBudget = resolveCoverLetterBudget(config.coverLetterLength);
+  emit(ctx, PROGRESS.revised);
   let coverLetterGoverned = coverLetterFinal;
   let lengthOutcome: GuardOutcome = 'skipped';
   if (coverLetterFinal && coverLetterFinal.trim() !== '' && lengthGovernor) {
@@ -572,9 +668,9 @@ export async function generateApplication(
           {
             draft: coverLetterFinal,
             lengthBudget,
-            lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
+            lengthTargetMin,
             currentWords: lint.words,
-            job: serializeJobPostingForLlm(job),
+            job: serializedJob,
             language,
           },
           { temperature: 0.3, maxTokens: 1500, systemMessage: anchor },
@@ -616,7 +712,7 @@ export async function generateApplication(
           {
             draft: coverLetterGoverned,
             unsupported: before.unsupported,
-            job: serializeJobPostingForLlm(job),
+            job: serializedJob,
             language,
           },
           { temperature: 0.3, maxTokens: 1500, systemMessage: anchor },
@@ -663,7 +759,7 @@ export async function generateApplication(
           {
             rewrittenProfile: resumeFinal,
             tailoredProfile,
-            job: serializeJobPostingForLlm(job),
+            job: serializedJob,
             unsupported: before.unsupported,
             language,
           },
@@ -697,6 +793,8 @@ export async function generateApplication(
       }
     }
   }
+
+  emit(ctx, PROGRESS.checked);
 
   return {
     coverLetter: coverLetterGrounded,

@@ -165,6 +165,10 @@ pnpm --filter @applo/api eval:llm        # real baseline (needs Azure creds)
 pnpm --filter @applo/api eval:llm -- --repeat=3 --tag=candidate
 pnpm --filter @applo/api eval:compare path/to/control.json path/to/candidate.json
 
+# Generation chain (offline, deterministic — LLM_PROVIDER=fake: no DB, no Azure, no cost)
+LLM_PROVIDER=fake pnpm --filter @applo/api generate:headless -- --in fixture.json --score
+LLM_PROVIDER=fake pnpm --filter @applo/api chain:equivalence -- --fixture marketing-de
+
 # Lint & typecheck
 pnpm lint
 pnpm typecheck

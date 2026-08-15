@@ -47,20 +47,29 @@ starts with an awaited unconditional reset to 0. Both the inline pipeline
 
 #### Progress Emission Points
 
-The `generateWithSinglePipeline` method emits progress at 8 key milestones:
+`generateWithSinglePipeline` emits progress at 8 milestones. Four are owned by
+the service (load / save / done); four come from the shared v1 chain
+(`applications/headless/generate.ts`) through its optional `onProgress` hook.
 
-| Progress | Stage                 | Message (German)                   | Duration     |
-| -------- | --------------------- | ---------------------------------- | ------------ |
-| 0%       | Start                 | Starte Generierung...              | Instant      |
-| 10%      | Load Data             | Lade Profil und Stellenanzeige...  | <1s          |
-| 20%      | Select Profile        | Wähle relevante Profildaten aus... | 5-10s (LLM)  |
-| 40%      | Generate Resume       | Generiere Lebenslauf mit KI...     | 10-20s (LLM) |
-| 60%      | Generate Cover Letter | Generiere Anschreiben mit KI...    | 10-20s (LLM) |
-| 80%      | Extract Keywords      | Extrahiere ATS-Keywords...         | 5-10s (LLM)  |
-| 95%      | Save Results          | Speichere Ergebnisse...            | <1s          |
-| 100%     | Complete              | Fertig!                            | Instant      |
+The chain's writer steps run **concurrently** (`cover-letter ∥ resume-rewrite ∥
+ats-keywords`), so milestones are **completion-based**: they report what has
+finished, not what is currently running. A finer per-step ladder would have to
+serialize the chain to stay truthful, which would slow every generation for a
+cosmetic gain.
 
-**Note:** If cover letter generation is disabled, step 60% shows "Überspringe Anschreiben-Generierung..." and completes quickly.
+| Progress | Owner   | Stage                | Message (German)                     |
+| -------- | ------- | -------------------- | ------------------------------------ |
+| 0%       | service | Start                | Starte Generierung...                |
+| 10%      | service | Load Data            | Lade Profil und Stellenanzeige...    |
+| 25%      | chain   | Selection done       | Profil auf die Stelle zugeschnitten  |
+| 55%      | chain   | Drafts done          | Lebenslauf und Anschreiben entworfen |
+| 80%      | chain   | Revision passes done | Texte überarbeitet und optimiert     |
+| 92%      | chain   | Guards done          | Fakten und Länge geprüft             |
+| 95%      | service | Save Results         | Speichere Ergebnisse...              |
+| 100%     | service | Complete             | Fertig!                              |
+
+**Note:** With cover-letter generation disabled, the 55% milestone reads
+"Lebenslauf entworfen".
 
 #### SSE Stream Implementation
 
