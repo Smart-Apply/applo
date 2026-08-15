@@ -8,10 +8,6 @@ import { TitleGeneratorService } from './title-generator.service';
 import { TemplatesService } from '../templates/templates.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { GroundingValidatorService } from './grounding/grounding-validator.service';
-import {
-  evaluateGroundingRepair,
-  evaluateResumeGroundingRepair,
-} from './grounding/grounding-repair.util';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationResponseDto, ApplicationStatus } from './dto/application-response.dto';
 import { TailoredProfileDto, RewrittenProfileDto } from './dto/tailored-profile.dto';
@@ -30,24 +26,15 @@ import {
   formatDateRange,
   normalizeProficiencyLevel,
 } from './resume-template.util';
-import { serializeProfileForLlm, serializeJobPostingForLlm } from './serialize.util';
-import { matchAtsKeywordsToProfile, selectKeywordsToWeave, isKeywordPresent } from './keyword-coverage.util';
+import { serializeJobPostingForLlm } from './serialize.util';
+import { isKeywordPresent } from './keyword-coverage.util';
 import {
-  countResumeStyleViolations,
-  evaluateResumeStyleRewrite,
-  extractResumeProse,
-  isValidResumeEdit,
-} from './resume-editor.util';
-import {
-  buildSalutation,
   isValidJobFacts,
   normalizeJobFacts,
   type JobFactsDto,
 } from './job-facts.util';
-import { isValidTailoredProfile, isDegradedTailoredProfile } from './tailored-profile.util';
 import {
   evaluateShortenRewrite,
-  evaluateStyleRewrite,
   lintCoverLetterLength,
   lintGeneratedStyle,
 } from './style-lint.util';
@@ -558,219 +545,36 @@ export class GenerationService {
 
     this.logger.log(`Application ${application.id} created, starting generation pipeline`);
 
-    // 8. Run single-LLM pipeline to generate everything
+    // 8. Run the v1 chain. The chain itself lives in `headless/generate.ts` and
+    // is shared with the eval platform's process seam — this service owns
+    // persistence and metering, never the passes.
     try {
       const startTime = Date.now();
 
-      // Step 1: Select relevant profile data (in parallel with job-facts
-      // extraction (#5) — both only depend on the job posting, so no added
-      // critical-path latency).
-      this.logger.log('Step 1: Selecting relevant profile data...');
-      const [tailoredProfile, jobFacts] = await Promise.all([
-        this.selectTailoredProfile(profile, jobPosting, detectedLanguage, userId),
-        shouldGenerateCoverLetter
-          ? this.extractJobFacts(jobPosting, detectedLanguage, userId)
-          : Promise.resolve(null),
-      ]);
-      this.logger.log(
-        `Profile tailored: ${tailoredProfile.selected_hard_skills.length} hard skills, ${tailoredProfile.selected_experiences.length} experiences`,
-      );
-
-      // Step 2: Parallel generation - Cover letter + Resume rewrite + ATS keywords
-      this.logger.log(
-        'Step 2: Parallel generation (cover letter, resume rewrite, ATS keywords)...',
-      );
-
-      // Prepare parallel promises
-      const coverLetterPromise = shouldGenerateCoverLetter
-        ? this.llmService.callText(
-            'v1/cover-letter.md',
-            {
-              job: this.serializeJobPosting(jobPosting),
-              tailoredProfile,
-              jobFacts: normalizeJobFacts(jobFacts),
-              salutation: buildSalutation(jobFacts, detectedLanguage),
-              language: detectedLanguage,
-              lengthBudget: coverLetterBudget,
-              lengthTargetMin: resolveCoverLetterTargetMin(coverLetterBudget),
-              userId,
-              jobPostingId: jobPosting.id,
-            },
-            { systemMessage: GENERATION_SYSTEM_ANCHOR },
-          )
-        : Promise.resolve(null);
-
-      const resumeRewritePromise = this.callResumeRewrite(
-        tailoredProfile,
-        jobPosting,
-        detectedLanguage,
-        userId,
-      );
-
-      const atsKeywordsPromise = this.llmService
-        .callJson('v1/ats-keywords.md', {
-          job: this.serializeJobPosting(jobPosting),
-          userId,
-          jobPostingId: jobPosting.id,
-        })
-        .then((extractedKeywords) => {
-          this.logger.log('Step 2b: Matching keywords against profile (deterministic)...');
-          return this.matchKeywordsAgainstProfile(extractedKeywords, profile);
-        })
-        .catch((error) => {
-          this.logger.warn('Failed to extract ATS keywords, continuing without them', error);
-          return null;
-        });
-
-      // Execute all in parallel
-      const [coverLetterMarkdown, rewrittenProfile, atsKeywords] = await Promise.all([
-        coverLetterPromise,
-        resumeRewritePromise,
-        atsKeywordsPromise,
-      ]);
-
-      // Log results
-      if (rewrittenProfile) {
-        this.logger.log(
-          `Resume rewrite completed: ${rewrittenProfile.rewritten_experiences?.length || 0} experiences, ${rewrittenProfile.rewritten_projects?.length || 0} projects`,
-        );
-      }
-      if (atsKeywords) {
-        const totalKeywords =
-          (atsKeywords.hard_skills?.length || 0) + (atsKeywords.soft_skills?.length || 0);
-        const matchedCount = this.countMatchedKeywords(atsKeywords);
-        this.logger.log(
-          `Extracted ${totalKeywords} ATS keywords (${matchedCount} matched in profile)`,
-        );
-      }
-
-      // Editor pass (#1, resume): critique + revise the rewritten resume payload
-      // (summary + achievements), preserving every profile ID. Graceful fallback.
-      const editedRewrittenProfile = await this.runResumeEditorPass(
-        rewrittenProfile,
-        tailoredProfile,
-        detectedLanguage,
-        userId,
-        jobPosting,
-      );
-
-      // Style rewrite ("teeth", résumé): surgically fix the AI clichés the linter
-      // flags in the résumé prose. Guarded (JSON→JSON, ID-preserving, strictly
-      // cleaner) — the analogue of the cover-letter teeth. Falls back to the
-      // edited payload otherwise. See runResumeStyleRewritePass.
-      const styledRewrittenProfile = await this.runResumeStyleRewritePass(
-        editedRewrittenProfile,
-        tailoredProfile,
-        detectedLanguage,
-        userId,
-        jobPosting,
-      );
-
-      // Grounding repair (résumé): remove unsupported impact figures from the
-      // post-style payload. Guarded JSON→JSON with exact ID preservation.
-      const groundedRewrittenProfile = await this.runResumeGroundingRepairPass(
-        styledRewrittenProfile,
-        tailoredProfile,
+      const result = await generateApplication(
         profile,
-        detectedLanguage,
-        userId,
         jobPosting,
+        {
+          language: detectedLanguage,
+          generateCoverLetter: shouldGenerateCoverLetter,
+          coverLetterLength,
+          context: { userId, jobPostingId: jobPosting.id },
+        },
+        { llm: this.llmService, grounding: this.groundingValidator },
       );
 
-      // Step 3: Convert tailoredProfile to JSON format for frontend editor
-      this.logger.log('Step 3: Converting resume to JSON format for editor...');
+      // Convert to the JSON ResumeData shape the frontend editor consumes.
       const resumeJson = this.convertTailoredProfileToResumeJson(
         profile,
-        tailoredProfile,
-        groundedRewrittenProfile,
+        result.tailoredProfile,
+        result.resume,
         detectedLanguage,
       );
-
-      // Debug: Log the first experience achievements to verify German content is saved
-      const firstExp = resumeJson.experiences?.[0];
-      if (firstExp) {
-        this.logger.debug(
-          `Saving resumeJson - First experience "${firstExp.title}": achievements=[${firstExp.achievements
-            ?.slice(0, 2)
-            .map((a: string) => a.substring(0, 40) + '...')
-            .join(' | ')}]`,
-        );
-      }
-
-      // Step 4: Update application with generated content
-      // Note: resumeText stores JSON for editor, Markdown can be regenerated from tailoredProfile
-      // Editor pass (#1): one critique-and-revise pass over the draft cover letter.
-      const editedCoverLetterMarkdown = shouldGenerateCoverLetter
-        ? await this.runCoverLetterEditorPass(
-            coverLetterMarkdown,
-            jobPosting,
-            tailoredProfile,
-            detectedLanguage,
-            coverLetterBudget,
-            userId,
-          )
-        : coverLetterMarkdown;
-
-      // Keyword weave (#6): close profile-supported priority-1 keyword gaps.
-      const wovenCoverLetterMarkdown = shouldGenerateCoverLetter
-        ? await this.runKeywordWeavePass(
-            editedCoverLetterMarkdown,
-            atsKeywords,
-            jobPosting,
-            detectedLanguage,
-            coverLetterBudget,
-            userId,
-          )
-        : editedCoverLetterMarkdown;
-
-      // Style rewrite ("teeth"): surgically fix the AI clichés + German hedging
-      // the deterministic linter flags. Guarded — only fires on a real violation
-      // and only keeps a strictly-cleaner, non-gutted result; otherwise falls
-      // back to the woven draft. Never fabricates (see runStyleRewritePass).
-      const polishedCoverLetterMarkdown = shouldGenerateCoverLetter
-        ? await this.runStyleRewritePass(
-            wovenCoverLetterMarkdown,
-            detectedLanguage,
-            userId,
-            jobPosting,
-          )
-        : wovenCoverLetterMarkdown;
-
-      // Length governor: if the letter still overruns its word budget after the
-      // last content-modifying pass, one guarded shorten pass cuts redundancy
-      // and filler. Fires only on a measured overrun; falls back to the
-      // pre-shorten draft on any guard failure (see runLengthGovernorPass).
-      const governedCoverLetterMarkdown = shouldGenerateCoverLetter
-        ? await this.runLengthGovernorPass(
-            polishedCoverLetterMarkdown,
-            atsKeywords,
-            tailoredProfile,
-            detectedLanguage,
-            coverLetterBudget,
-            userId,
-            jobPosting,
-          )
-        : polishedCoverLetterMarkdown;
-
-      // Grounding repair ("teeth"): replace impact numbers the deterministic
-      // validator can trace to neither profile nor job posting with truthful
-      // qualitative statements. Fires only on a real finding; falls back to the
-      // pre-repair draft on any guard failure (see runGroundingRepairPass).
-      const repairedCoverLetterMarkdown = shouldGenerateCoverLetter
-        ? await this.runGroundingRepairPass(
-            governedCoverLetterMarkdown,
-            profile,
-            detectedLanguage,
-            coverLetterBudget,
-            userId,
-            jobPosting,
-          )
-        : governedCoverLetterMarkdown;
 
       // Grounding check (#7): flag any fabricated impact numbers (non-destructive).
       this.runGroundingCheck(
         application.id,
-        { resume: JSON.stringify(resumeJson), coverLetter: repairedCoverLetterMarkdown },
+        { resume: JSON.stringify(resumeJson), coverLetter: result.coverLetter },
         profile,
         jobPosting.fullText,
       );
@@ -778,21 +582,21 @@ export class GenerationService {
       // Style check: flag forbidden AI clichés + German hedging (non-destructive).
       this.runStyleCheck(
         application.id,
-        { resume: JSON.stringify(resumeJson), coverLetter: repairedCoverLetterMarkdown },
+        { resume: JSON.stringify(resumeJson), coverLetter: result.coverLetter },
         detectedLanguage,
         coverLetterBudget,
       );
 
       // Convert cover letter Markdown to HTML for proper PDF rendering
-      const coverLetterHtml = convertCoverLetterToHtml(repairedCoverLetterMarkdown);
+      const coverLetterHtml = convertCoverLetterToHtml(result.coverLetter);
 
       const updatedApplication = await this.prisma.application.update({
         where: { id: application.id },
         data: {
           resumeText: JSON.stringify(resumeJson), // Store JSON for editor
           coverLetterText: coverLetterHtml,
-          atsKeywords: atsKeywords as any,
-          tailoredProfile: tailoredProfile as any,
+          atsKeywords: result.atsKeywords as any,
+          tailoredProfile: result.tailoredProfile as any,
           status: ApplicationStatus.READY,
         },
         include: { jobPosting: true },
@@ -1010,39 +814,6 @@ export class GenerationService {
   }
 
   /**
-   * Deterministically match extracted keywords against profile data.
-   * Delegates to the shared pure matcher (`keyword-coverage.util.ts`) so the
-   * offline eval harness (#10) measures coverage with the identical matcher.
-   * Returns keywords with a "source" field: "job" (missing) or "both" (matched).
-   */
-  private matchKeywordsAgainstProfile(extractedKeywords: any, profile: ProfileWithRelations): any {
-    const matched = matchAtsKeywordsToProfile(extractedKeywords, profile);
-    this.logger.debug(
-      `Matched ${matched.hard_skills?.length || 0} hard_skills against profile ` +
-        `(${this.countMatchedKeywords(matched)} supported)`,
-    );
-    return matched;
-  }
-
-  /**
-   * Count how many keywords are matched in profile
-   * SIMPLIFIED: Only hard_skills now (soft skills removed)
-   */
-  private countMatchedKeywords(keywords: any): number {
-    const allKeywords = keywords.hard_skills || [];
-    return allKeywords.filter((kw) => kw.source === 'both').length;
-  }
-
-  /**
-   * Serialize profile data for LLM consumption.
-   * Delegates to the shared pure serializer so the offline eval harness (#10)
-   * renders identical prompt inputs. See `serialize.util.ts`.
-   */
-  private serializeProfile(profile: ProfileWithRelations): Record<string, any> {
-    return serializeProfileForLlm(profile);
-  }
-
-  /**
    * Serialize job posting for LLM consumption.
    * Delegates to the shared pure serializer so the offline eval harness (#10)
    * renders identical prompt inputs. See `serialize.util.ts`.
@@ -1058,67 +829,6 @@ export class GenerationService {
    * it writes. Graceful degradation: on any failure returns null and the prompt
    * falls back to scanning `fullText` itself.
    */
-  /**
-   * Run the skill-selector and validate the hand-off before the prose calls
-   * consume it.
-   *
-   * This is the pipeline's only non-optional producer: it runs first and feeds
-   * BOTH `cover-letter` and `resume-rewrite`. `job-facts` and `ats-keywords`
-   * degrade to null; this cannot. It also has no strict `json_schema`, so when
-   * `LLM_FAST_MODEL` routes it to a cheaper model a malformed or gutted payload
-   * is retried once on the default model — the fast model is an optimization,
-   * the default is the floor.
-   */
-  private async selectTailoredProfile(
-    profile: ProfileWithRelations,
-    jobPosting: JobPosting,
-    language: string,
-    userId: string,
-  ): Promise<TailoredProfileDto> {
-    const TEMPLATE = 'v1/skill-selector.md';
-    const variables = {
-      profile: this.serializeProfile(profile),
-      job: this.serializeJobPosting(jobPosting),
-      language,
-      userId,
-      jobPostingId: jobPosting.id,
-    };
-    const sourceExperienceCount = profile.experiences?.length ?? 0;
-
-    const attempt = async (model?: string): Promise<TailoredProfileDto | string> => {
-      try {
-        const raw = await this.llmService.callJson<TailoredProfileDto>(TEMPLATE, variables, {
-          temperature: 0.2, // deterministic skill matching
-          maxTokens: 3000,
-          ...(model ? { model } : {}),
-        });
-        if (!isValidTailoredProfile(raw)) return 'malformed payload';
-        if (isDegradedTailoredProfile(raw, sourceExperienceCount)) {
-          return 'no skills selected or every experience dropped';
-        }
-        return raw;
-      } catch (error) {
-        return error instanceof Error ? error.message : String(error);
-      }
-    };
-
-    const first = await attempt();
-    if (typeof first !== 'string') return first;
-
-    if (!this.llmService.isFastRouted(TEMPLATE)) {
-      throw new Error(`Skill selection failed: ${first}`);
-    }
-
-    this.logger.warn(
-      `Skill selection failed on the fast model (${first}); escalating to ${this.llmService.defaultModel}`,
-    );
-    const escalated = await attempt(this.llmService.defaultModel);
-    if (typeof escalated === 'string') {
-      throw new Error(`Skill selection failed on both models: ${escalated}`);
-    }
-    return escalated;
-  }
-
   /**
    * Extract the job facts (#5) used by the cover letter.
    */
@@ -1151,263 +861,6 @@ export class GenerationService {
     } catch (error) {
       this.logger.warn(`Job-facts extraction failed; continuing without it: ${error.message}`);
       return null;
-    }
-  }
-
-  /**
-   * Call resume-rewrite LLM with graceful degradation
-   * If the LLM call fails, returns null and the pipeline continues with original profile data
-   */
-  private async callResumeRewrite(
-    tailoredProfile: TailoredProfileDto,
-    jobPosting: any,
-    language: string,
-    userId: string,
-  ): Promise<RewrittenProfileDto | null> {
-    try {
-      const rewrittenProfile = await this.llmService.callJson<RewrittenProfileDto>(
-        'v1/resume-rewrite.md',
-        {
-          tailoredProfile,
-          job: this.serializeJobPosting(jobPosting),
-          language,
-          userId,
-          jobPostingId: jobPosting.id,
-        },
-        {
-          temperature: 0.35, // Balanced: consistent but creative
-          maxTokens: 2000,
-          systemMessage: GENERATION_SYSTEM_ANCHOR,
-        },
-      );
-
-      // Validate response structure
-      if (!rewrittenProfile || typeof rewrittenProfile !== 'object') {
-        this.logger.warn('Resume rewrite returned invalid structure, using original profile data');
-        return null;
-      }
-
-      return rewrittenProfile;
-    } catch (error) {
-      // Graceful degradation: log warning and continue with original data
-      this.logger.warn(
-        `Resume rewrite LLM call failed, continuing with original profile data: ${error.message}`,
-      );
-      return null;
-    }
-  }
-
-  /**
-   * Resume editor pass (#1) — one critique-and-revise pass over the rewritten
-   * resume payload (summary + achievements), mirroring the cover-letter editor.
-   * JSON → JSON. Graceful degradation: on any failure, an invalid edit, or an
-   * edit that drops/changes a `profileExperienceId` / `profileProjectId` (which
-   * would silently lose the rewritten content), we keep the pre-edit payload.
-   */
-  private async runResumeEditorPass(
-    rewrittenProfile: RewrittenProfileDto | null,
-    tailoredProfile: TailoredProfileDto,
-    language: string,
-    userId: string,
-    jobPosting: JobPosting,
-  ): Promise<RewrittenProfileDto | null> {
-    if (!rewrittenProfile) return rewrittenProfile;
-
-    try {
-      const edited = await this.llmService.callJson<RewrittenProfileDto>(
-        'v1/editor-resume.md',
-        {
-          rewrittenProfile,
-          tailoredProfile,
-          job: this.serializeJobPosting(jobPosting),
-          language,
-          userId,
-          jobPostingId: jobPosting.id,
-        },
-        { temperature: 0.35, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
-      );
-
-      // Guard: the edit MUST preserve every ID and not gut an entry. Otherwise
-      // the rewritten (often translated) content can't map back to the profile.
-      if (!isValidResumeEdit(rewrittenProfile, edited)) {
-        this.logger.warn(
-          'Resume editor pass produced an invalid or ID-dropping edit; keeping pre-edit payload',
-        );
-        return rewrittenProfile;
-      }
-
-      this.logger.log('Resume editor pass applied');
-      return edited;
-    } catch (error) {
-      this.logger.warn(`Resume editor pass failed; keeping pre-edit payload: ${error.message}`);
-      return rewrittenProfile;
-    }
-  }
-
-  /**
-   * Editor/critique pass (#1) — one LLM call that revises a draft cover letter
-   * against the editing rubric (de-cliché, concrete company reference, no
-   * Konjunktiv, honest metrics). Graceful degradation: on any failure or a
-   * suspiciously short result we keep the original draft so generation never
-   * breaks.
-   */
-  private async runCoverLetterEditorPass(
-    draft: string | null,
-    jobPosting: JobPosting,
-    tailoredProfile: TailoredProfileDto,
-    language: string,
-    lengthBudget: number,
-    userId: string,
-  ): Promise<string | null> {
-    if (!draft || draft.trim() === '') return draft;
-
-    try {
-      const edited = await this.llmService.callText(
-        'v1/editor-cover-letter.md',
-        {
-          draft,
-          job: this.serializeJobPosting(jobPosting),
-          tailoredProfile,
-          language,
-          lengthBudget,
-          lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
-          userId,
-          jobPostingId: jobPosting.id,
-        },
-        { temperature: 0.4, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
-      );
-
-      // Guard: the editor must not gut the letter. If it returns empty or less
-      // than half the draft length, treat it as a failure and keep the draft.
-      if (!edited || edited.trim().length < draft.trim().length * 0.5) {
-        this.logger.warn(
-          'Cover letter editor pass returned suspiciously short output; keeping original draft',
-        );
-        return draft;
-      }
-
-      this.logger.log('Cover letter editor pass applied');
-      return edited;
-    } catch (error) {
-      this.logger.warn(
-        `Cover letter editor pass failed; keeping original draft: ${error.message}`,
-      );
-      return draft;
-    }
-  }
-
-  /**
-   * Coverage-driven keyword weave (#6) — one guarded pass that weaves the
-   * priority-1, profile-supported keywords still MISSING from the cover letter
-   * into the existing prose. Never adds a keyword the profile doesn't support
-   * (that would be fabrication and would defeat the grounding validator), never
-   * stuffs, and never invents facts.
-   *
-   * Skips the LLM call entirely when there is no profile-supported gap. Graceful
-   * degradation: on any failure or a suspiciously short result we keep the
-   * pre-weave draft so generation never breaks.
-   */
-  private async runKeywordWeavePass(
-    draft: string | null,
-    atsKeywords: any,
-    jobPosting: JobPosting,
-    language: string,
-    lengthBudget: number,
-    userId: string,
-  ): Promise<string | null> {
-    if (!draft || draft.trim() === '') return draft;
-
-    const keywords = selectKeywordsToWeave(atsKeywords, draft);
-    if (keywords.length === 0) {
-      this.logger.debug(
-        'Keyword weave: no profile-supported priority-1 gaps in cover letter; skipping',
-      );
-      return draft;
-    }
-
-    try {
-      const woven = await this.llmService.callText(
-        'v1/keyword-weave.md',
-        {
-          draft,
-          keywords,
-          job: this.serializeJobPosting(jobPosting),
-          language,
-          lengthBudget,
-          lengthTargetMin: resolveCoverLetterTargetMin(lengthBudget),
-          userId,
-          jobPostingId: jobPosting.id,
-        },
-        { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
-      );
-
-      // Guard: a surgical weave must not gut the letter. If it returns empty or
-      // shrinks below 60% of the draft, treat it as a failure and keep the draft.
-      if (!woven || woven.trim().length < draft.trim().length * 0.6) {
-        this.logger.warn(
-          'Keyword weave returned suspiciously short output; keeping pre-weave draft',
-        );
-        return draft;
-      }
-
-      this.logger.log(`Keyword weave applied (${keywords.length}: ${keywords.join(', ')})`);
-      return woven;
-    } catch (error) {
-      this.logger.warn(`Keyword weave failed; keeping pre-weave draft: ${error.message}`);
-      return draft;
-    }
-  }
-
-  /**
-   * Style rewrite ("teeth") — one guarded pass that surgically rephrases the
-   * forbidden AI clichés + German Konjunktiv/hedging the deterministic linter
-   * flags into confident, concrete language. This is the enforcement step the
-   * `style-lint.util` deliberately left out: the linter detects, this fixes.
-   *
-   * Fully guarded so it can never ship a worse letter:
-   * - Skips the LLM call entirely when the draft is already clean.
-   * - Carries the `GENERATION_SYSTEM_ANCHOR` so the rewrite can't fabricate.
-   * - Accepts the rewrite ONLY when `evaluateStyleRewrite` confirms it both
-   *   preserves the draft's length and strictly reduces the violation count;
-   *   otherwise keeps the pre-rewrite draft. Never throws.
-   */
-  private async runStyleRewritePass(
-    draft: string | null,
-    language: string,
-    userId: string,
-    jobPosting: JobPosting,
-  ): Promise<string | null> {
-    if (!draft || draft.trim() === '') return draft;
-
-    const before = lintGeneratedStyle(draft, language);
-    if (before.total === 0) {
-      this.logger.debug('Style rewrite: cover letter already clean; skipping');
-      return draft;
-    }
-
-    const violations = [...before.aiPhrases, ...before.hedging];
-    try {
-      const rewritten = await this.llmService.callText(
-        'v1/style-rewrite.md',
-        { draft, violations, job: this.serializeJobPosting(jobPosting), language, userId, jobPostingId: jobPosting.id },
-        { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
-      );
-
-      const decision = evaluateStyleRewrite(draft, rewritten, language);
-      if (!decision.accept) {
-        this.logger.warn(
-          `Style rewrite rejected (${decision.reason}, ${decision.before}→${decision.after} violation(s)); keeping pre-rewrite draft`,
-        );
-        return draft;
-      }
-
-      this.logger.log(
-        `Style rewrite applied (${decision.before}→${decision.after} violation(s): ${violations.join(', ')})`,
-      );
-      return rewritten;
-    } catch (error) {
-      this.logger.warn(`Style rewrite failed; keeping pre-rewrite draft: ${error.message}`);
-      return draft;
     }
   }
 
@@ -1505,224 +958,6 @@ export class GenerationService {
       return shortened;
     } catch (error) {
       this.logger.warn(`Length governor failed; keeping pre-shorten draft: ${error.message}`);
-      return draft;
-    }
-  }
-
-  /**
-   * Résumé style rewrite ("teeth", JSON→JSON) — the résumé analogue of
-   * `runStyleRewritePass`. Surgically rephrases the forbidden AI clichés the
-   * deterministic linter flags in the résumé prose (summary + achievements +
-   * highlights) into concrete language, leaving every other field — and every
-   * `profileExperienceId` / `profileProjectId` — untouched.
-   *
-   * Fully guarded so it can never ship a worse or structurally-broken payload:
-   * - Skips the LLM call when the résumé prose is already clean.
-   * - Carries the `GENERATION_SYSTEM_ANCHOR` so the rewrite can't fabricate.
-   * - Accepts the rewrite ONLY when `evaluateResumeStyleRewrite` confirms it is a
-   *   valid, ID-preserving `RewrittenProfileDto` AND strictly reduces the
-   *   violation count; otherwise keeps the pre-rewrite payload. Never throws.
-   */
-  private async runResumeStyleRewritePass(
-    rewrittenProfile: RewrittenProfileDto | null,
-    tailoredProfile: TailoredProfileDto,
-    language: string,
-    userId: string,
-    jobPosting: JobPosting,
-  ): Promise<RewrittenProfileDto | null> {
-    if (!rewrittenProfile) return rewrittenProfile;
-
-    const before = countResumeStyleViolations(rewrittenProfile, language);
-    if (before.total === 0) {
-      this.logger.debug('Résumé style rewrite: prose already clean; skipping');
-      return rewrittenProfile;
-    }
-
-    const violations = [...before.aiPhrases, ...before.hedging];
-    const verbFirstBullets = before.verbFirstBullets;
-    try {
-      const edited = await this.llmService.callJson<RewrittenProfileDto>(
-        'v1/resume-style-rewrite.md',
-        { rewrittenProfile, tailoredProfile, job: this.serializeJobPosting(jobPosting), violations, verbFirstBullets, language, userId, jobPostingId: jobPosting.id },
-        { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
-      );
-
-      const decision = evaluateResumeStyleRewrite(rewrittenProfile, edited, language);
-      if (!decision.accept) {
-        this.logger.warn(
-          `Résumé style rewrite rejected (${decision.reason}, ${decision.before}→${decision.after} violation(s)); keeping pre-rewrite payload`,
-        );
-        return rewrittenProfile;
-      }
-
-      this.logger.log(
-        `Résumé style rewrite applied (${decision.before}→${decision.after} violation(s); ${violations.length} phrase(s), ${verbFirstBullets.length} verb-first bullet(s))`,
-      );
-      return edited;
-    } catch (error) {
-      this.logger.warn(
-        `Résumé style rewrite failed; keeping pre-rewrite payload: ${error.message}`,
-      );
-      return rewrittenProfile;
-    }
-  }
-
-  /**
-   * Résumé grounding repair (JSON→JSON) — replaces unsupported impact figures
-   * with truthful qualitative wording while preserving every profile ID.
-   * Résumé claims are validated against the profile only; job-ad figures never
-   * count as evidence of a candidate achievement.
-   */
-  private async runResumeGroundingRepairPass(
-    rewrittenProfile: RewrittenProfileDto | null,
-    tailoredProfile: TailoredProfileDto,
-    profile: ProfileWithRelations,
-    language: string,
-    userId: string,
-    jobPosting: JobPosting,
-  ): Promise<RewrittenProfileDto | null> {
-    if (!rewrittenProfile) return rewrittenProfile;
-
-    const before = this.groundingValidator.validate(
-      { resume: extractResumeProse(rewrittenProfile) },
-      profile,
-    );
-    if (before.unsupported.length === 0) {
-      this.logger.debug(
-        `Résumé grounding repair: all ${before.totalChecked} impact number(s) grounded; skipping`,
-      );
-      return rewrittenProfile;
-    }
-
-    const flagged = before.unsupported.map((finding) => finding.value);
-    try {
-      const repaired = await this.llmService.callJson<unknown>(
-        'v1/fix-unsupported-numbers-resume.md',
-        {
-          rewrittenProfile,
-          tailoredProfile,
-          job: this.serializeJobPosting(jobPosting),
-          unsupported: before.unsupported,
-          language,
-          userId,
-          jobPostingId: jobPosting.id,
-        },
-        { temperature: 0.3, maxTokens: 2000, systemMessage: GENERATION_SYSTEM_ANCHOR },
-      );
-
-      const validCandidate = isValidResumeEdit(rewrittenProfile, repaired) ? repaired : null;
-      const after = validCandidate
-        ? this.groundingValidator.validate(
-            { resume: extractResumeProse(validCandidate) },
-            profile,
-          ).unsupported
-        : [];
-      const decision = evaluateResumeGroundingRepair(
-        rewrittenProfile,
-        repaired,
-        before.unsupported,
-        after,
-        language,
-      );
-      if (!decision.accept || !validCandidate) {
-        this.logger.warn(
-          `Résumé grounding repair rejected (${decision.reason}, ${decision.unsupportedBefore}→${decision.unsupportedAfter} unsupported); keeping pre-repair payload`,
-        );
-        return rewrittenProfile;
-      }
-
-      this.logger.log(
-        `Résumé grounding repair applied (${decision.unsupportedBefore}→${decision.unsupportedAfter} unsupported: ${flagged.join(', ')})`,
-      );
-      return validCandidate;
-    } catch (error) {
-      this.logger.warn(
-        `Résumé grounding repair failed; keeping pre-repair payload: ${error.message}`,
-      );
-      return rewrittenProfile;
-    }
-  }
-
-  /**
-   * Cover-letter grounding repair ("teeth") — one guarded pass that fires
-   * ONLY when the deterministic grounding validator finds impact numbers in the
-   * finished cover letter that trace back to neither the profile nor the job
-   * posting. It replaces each unverifiable figure with a truthful qualitative
-   * statement of the same achievement, so the claim survives and the invented
-  * precision doesn't.
-   *
-   * Runs AFTER the length governor — the governor only shortens, so a repair
-   * placed before it could be re-cut, and a repair placed after must not push
-   * the letter under its floor (the `underrun` guard).
-   *
-   * Never ships a worse letter:
-   * - Skips the LLM call entirely when every number is already grounded.
-   * - Carries the `GENERATION_SYSTEM_ANCHOR` so the repair can't fabricate.
-   * - Accepts the candidate ONLY when `evaluateGroundingRepair` confirms it
-   *   isn't gutted, keeps the salutation verbatim, strictly reduces the
-   *   unsupported count, introduces no NEW unsupported number, doesn't regress
-   *   the style-violation count and stays above the length floor; otherwise
-   *   keeps the pre-repair draft. Never throws.
-   */
-  private async runGroundingRepairPass(
-    draft: string | null,
-    profile: ProfileWithRelations,
-    language: string,
-    lengthBudget: number,
-    userId: string,
-    jobPosting: JobPosting,
-  ): Promise<string | null> {
-    if (!draft || draft.trim() === '') return draft;
-
-    const before = this.groundingValidator.validate({ coverLetter: draft }, profile, jobPosting.fullText);
-    if (before.unsupported.length === 0) {
-      this.logger.debug(
-        `Grounding repair: all ${before.totalChecked} cover-letter impact number(s) grounded; skipping`,
-      );
-      return draft;
-    }
-
-    const flagged = before.unsupported.map((finding) => finding.value);
-    try {
-      const repaired = await this.llmService.callText(
-        'v1/fix-unsupported-numbers.md',
-        {
-          draft,
-          unsupported: before.unsupported,
-          job: this.serializeJobPosting(jobPosting),
-          language,
-          userId,
-          jobPostingId: jobPosting.id,
-        },
-        { temperature: 0.3, maxTokens: 1500, systemMessage: GENERATION_SYSTEM_ANCHOR },
-      );
-
-      const after = repaired?.trim()
-        ? this.groundingValidator.validate({ coverLetter: repaired }, profile, jobPosting.fullText)
-            .unsupported
-        : [];
-
-      const decision = evaluateGroundingRepair(
-        draft,
-        repaired,
-        before.unsupported,
-        after,
-        lengthBudget,
-        language,
-      );
-      if (!decision.accept) {
-        this.logger.warn(
-          `Grounding repair rejected (${decision.reason}, ${decision.unsupportedBefore}→${decision.unsupportedAfter} unsupported); keeping pre-repair draft`,
-        );
-        return draft;
-      }
-
-      this.logger.log(
-        `Grounding repair applied (${decision.unsupportedBefore}→${decision.unsupportedAfter} unsupported: ${flagged.join(', ')})`,
-      );
-      return repaired;
-    } catch (error) {
-      this.logger.warn(`Grounding repair failed; keeping pre-repair draft: ${error.message}`);
       return draft;
     }
   }

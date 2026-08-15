@@ -105,7 +105,11 @@ function makePrismaStub(profile: ProfileWithRelations, jobPosting: Record<string
   return {
     progress,
     application: {
-      findFirst: async () => ({ ...row, jobPosting }),
+      // `createWithGeneration`'s duplicate guard queries with `deletedAt: null`
+      // and must find nothing; `generateWithSinglePipeline` looks the row up by
+      // id and must find it.
+      findFirst: async (args?: { where?: Record<string, unknown> }) =>
+        args?.where && 'deletedAt' in args.where ? null : { ...row, jobPosting },
       findUnique: async () => ({ ...row, jobPosting }),
       updateMany: async ({ data }: { data: Record<string, unknown> }) => {
         progress.push({
