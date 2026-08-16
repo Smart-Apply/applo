@@ -157,6 +157,12 @@ export class AdminLlmUsageService {
     // One row over the cap tells us the series was cut short without a second query.
     const fetchLimit = TIMESERIES_MAX_POINTS + 1;
 
+    // `createdAt` is `timestamp(3)` WITHOUT time zone, so `date_trunc` operates
+    // on the stored (UTC) value and is independent of the session timezone.
+    // Do NOT "harden" this with `"createdAt" AT TIME ZONE 'UTC'` — that casts
+    // to `timestamptz`, which is exactly the form `date_trunc` resolves in the
+    // session timezone, i.e. it would introduce the drift it looks like it
+    // prevents. The `::text` cast types the bound interval parameter.
     const rows = query.groupBy
       ? await this.prisma.$queryRaw<RawRow[]>(Prisma.sql`
           SELECT
