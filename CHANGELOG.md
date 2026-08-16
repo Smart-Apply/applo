@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.15.0](https://github.com/Smart-Apply/applo/compare/v4.14.0...v4.15.0) (2026-08-16)
+
+
+### Features
+
+* **admin:** LLM token-usage analytics aggregation endpoints ([#816](https://github.com/Smart-Apply/applo/issues/816)) ([204a1fc](https://github.com/Smart-Apply/applo/commit/204a1fc53b62b8e9c75da0bd1745fd10d0135b69))
+* **applications:** harden grounding repair ([#774](https://github.com/Smart-Apply/applo/issues/774)) ([e830b57](https://github.com/Smart-Apply/applo/commit/e830b57404447352c7b42caee84a178337e6bc16))
+* **applications:** reconcile the headless generation seam with main's pipeline ([#799](https://github.com/Smart-Apply/applo/issues/799)) ([5c80dd0](https://github.com/Smart-Apply/applo/commit/5c80dd06d044187c648ee30e90d48a3e18f7a9eb))
+* **auth:** update mascot dialogue and improve visual feedback for password security ([#740](https://github.com/Smart-Apply/applo/issues/740)) ([8510fd5](https://github.com/Smart-Apply/applo/commit/8510fd52292c07adceb36ad5a7a85aeec5b82c58))
+* **dashboard:** enhance mascot fly-in with random poses and visual improvements ([#741](https://github.com/Smart-Apply/applo/issues/741)) ([86360e6](https://github.com/Smart-Apply/applo/commit/86360e6de3797ae83afecc9ad00bf487b53990c2))
+* **home:** enhance companion dock behavior with intro animation and visibility control ([#738](https://github.com/Smart-Apply/applo/issues/738)) ([bab5b76](https://github.com/Smart-Apply/applo/commit/bab5b763b7b976189469ab29569cd7b95d6e240e))
+* Implement security audit remediation for findings F9-F19 ([#791](https://github.com/Smart-Apply/applo/issues/791)) ([b0f60c5](https://github.com/Smart-Apply/applo/commit/b0f60c5d13eb0bbd172aa0f243320ca8ba4b41e7))
+* **llm:** add a mid routing lane and move Free-tier checks to gpt-5.4-mini ([#767](https://github.com/Smart-Apply/applo/issues/767)) ([956f351](https://github.com/Smart-Apply/applo/commit/956f351ff1b10e57822bec9b0e844ad80133929a))
+* **llm:** anonymised usage dataset export for ML/due-diligence ([#815](https://github.com/Smart-Apply/applo/issues/815)) ([48e96ed](https://github.com/Smart-Apply/applo/commit/48e96ed0f97755cc1ded03f37300b24976d93f56))
+* **llm:** anonymous per-feature token-usage tracking ([#781](https://github.com/Smart-Apply/applo/issues/781)) ([1d2de2f](https://github.com/Smart-Apply/applo/commit/1d2de2f9db004c9768a7d42ca5f852d58591e5ac))
+* **profile:** derive the profile check from one weighted source ([#817](https://github.com/Smart-Apply/applo/issues/817)) ([794e73b](https://github.com/Smart-Apply/applo/commit/794e73b7ca1fbc5b70f9eb5ca6d876cf2d7fa9c4))
+* **profile:** validate the four unchecked profile editor dialogs ([#804](https://github.com/Smart-Apply/applo/issues/804)) ([487e08c](https://github.com/Smart-Apply/applo/commit/487e08c415e64183bbddebb8e1d716bfb5d8073b)), closes [#764](https://github.com/Smart-Apply/applo/issues/764)
+* **validation:** dedupe identical Bewerbungs-Checks and add Free-tier fast-lane hook ([#757](https://github.com/Smart-Apply/applo/issues/757)) ([6fa18db](https://github.com/Smart-Apply/applo/commit/6fa18db1cb19c4ed900dd7f7e247562c2f58aa09))
+* **web:** add loading and error states across data-heavy routes ([#808](https://github.com/Smart-Apply/applo/issues/808)) ([2eed248](https://github.com/Smart-Apply/applo/commit/2eed24829f22e520dc5fa66c0dd2e57a2b8ce9ff))
+* **web:** add onboarding guide product tour ([#810](https://github.com/Smart-Apply/applo/issues/810)) ([746521e](https://github.com/Smart-Apply/applo/commit/746521e2f67e6cabbd85881bd3c0e229452587ba))
+* **web:** Löschen im Profil umkehrbar machen (Undo-Toast) ([#793](https://github.com/Smart-Apply/applo/issues/793)) ([cf91b65](https://github.com/Smart-Apply/applo/commit/cf91b6580265fe20689ad2b3091b9397c97713f8))
+* **web:** redesign route transitions and unify loading animations ([#812](https://github.com/Smart-Apply/applo/issues/812)) ([b5647b8](https://github.com/Smart-Apply/applo/commit/b5647b82fcbe09b678ed47e46771291fc51928ed))
+* **web:** server-render the landing page with SEO metadata and JSON-LD ([#814](https://github.com/Smart-Apply/applo/issues/814)) ([0fe849f](https://github.com/Smart-Apply/applo/commit/0fe849f176448d445aa80b5464d1c83b5b6aa403))
+* **web:** unify the saving model and build visible save feedback ([#807](https://github.com/Smart-Apply/applo/issues/807)) ([ac5cbc1](https://github.com/Smart-Apply/applo/commit/ac5cbc16d40e5144cb11f4ba4d68b0ba01218282))
+
+
+### Bug Fixes
+
+* **applications:** ask the cover-letter prompts for a length band, not a ceiling ([#770](https://github.com/Smart-Apply/applo/issues/770)) ([ddaa559](https://github.com/Smart-Apply/applo/commit/ddaa559efce7f8210983cc84b4451807f58401f2))
+* **llm:** complete fast-lane fallback ([#755](https://github.com/Smart-Apply/applo/issues/755)) ([aed118f](https://github.com/Smart-Apply/applo/commit/aed118f8fbc390262ffa76c88f104075623b4b4f))
+* **llm:** restore usage recording lost to a union-typed DI parameter ([#803](https://github.com/Smart-Apply/applo/issues/803)) ([eb97193](https://github.com/Smart-Apply/applo/commit/eb97193346f6774f60804640698a2c787e21e569))
+* **llm:** send reasoning-model parameters for GPT-5 / o-series deployments ([#769](https://github.com/Smart-Apply/applo/issues/769)) ([3d1be9d](https://github.com/Smart-Apply/applo/commit/3d1be9dfd5563778cc7dca989d277de4e31896a3))
+* **security:** align deletion paths and legal texts with the GDPR ([#813](https://github.com/Smart-Apply/applo/issues/813)) ([e84f8be](https://github.com/Smart-Apply/applo/commit/e84f8be7c63e99d42e220a5e804762914f22765a))
+* **web:** add ARIA semantics and keyboard focus handling to the profile page ([#784](https://github.com/Smart-Apply/applo/issues/784)) ([263d1c8](https://github.com/Smart-Apply/applo/commit/263d1c8d1275e321ce07b4c7c076d141d3e49fc9))
+* **web:** clear the remaining WCAG AA contrast failures ([#789](https://github.com/Smart-Apply/applo/issues/789)) ([5f84726](https://github.com/Smart-Apply/applo/commit/5f84726ee8335ca94eb936ded72378c78d74c1e5))
+* **web:** complete the frontend Sentry integration ([#779](https://github.com/Smart-Apply/applo/issues/779)) ([aaa4562](https://github.com/Smart-Apply/applo/commit/aaa4562bf476058274cf39e37389142ab4b52a94))
+* **web:** extend [#765](https://github.com/Smart-Apply/applo/issues/765) ARIA/focus work to dashboard, applications and settings ([#792](https://github.com/Smart-Apply/applo/issues/792)) ([75f2b2d](https://github.com/Smart-Apply/applo/commit/75f2b2dfa026848694f6efde2b3987a6ddda0049))
+* **web:** raise failing text colours to WCAG AA contrast ([#785](https://github.com/Smart-Apply/applo/issues/785)) ([98db98b](https://github.com/Smart-Apply/applo/commit/98db98bf6c30de82931c12a1a3dfdfee334e9b81))
+* **web:** rework the mobile design for Android and iOS ([#809](https://github.com/Smart-Apply/applo/issues/809)) ([9a96776](https://github.com/Smart-Apply/applo/commit/9a9677675072bffb8f15a3dbf0eb98bd59944514))
+
+
+### Performance Improvements
+
+* **applications:** drop tailoredProfile from pure-prose revision passes ([#756](https://github.com/Smart-Apply/applo/issues/756)) ([a5986f2](https://github.com/Smart-Apply/applo/commit/a5986f2d465e36feb4c8debea7628af791a41ecc))
+* **job-postings:** make the warm-Chromium idle window configurable and close it on teardown ([#783](https://github.com/Smart-Apply/applo/issues/783)) ([51b9500](https://github.com/Smart-Apply/applo/commit/51b9500ec5b971fa2aeedd92dca99800a89a9fb7)), closes [#533](https://github.com/Smart-Apply/applo/issues/533)
+
 ## [4.14.0](https://github.com/Smart-Apply/applo/compare/v4.13.0...v4.14.0) (2026-08-03)
 
 
