@@ -185,7 +185,7 @@ pnpm typecheck
 - Input sanitization (`@Sanitize()` + DOMPurify)
 - SSRF protection on job-posting URL parsing — public-address allow-list, DNS pinning on the axios path, and a loopback egress proxy that enforces the policy at connect time for the headless-Chromium path (WebSockets blocked)
 - AI prompt guardrails — per-surface character + token limits on every AI input, enforced live in the UI and authoritatively on the server (cost & abuse control)
-- Per-feature LLM usage telemetry — no prompt/response content, no `User` FK, actor keyed by an HMAC-SHA256 pseudonym (pseudonymous, not anonymous — still personal data under GDPR: erased on account deletion, aged out after `LLM_USAGE_RETENTION_DAYS`, default 90)
+- Per-feature LLM usage telemetry — no prompt/response content, no `User` FK, actor keyed by an HMAC-SHA256 pseudonym (pseudonymous, not anonymous — still personal data under GDPR: erased on account deletion, aged out after `LLM_USAGE_RETENTION_DAYS`, default 90). An admin-only export (`GET /admin/llm-usage/export`) turns it into an anonymised ML/due-diligence dataset — bucketed timestamps, per-export re-keyed or dropped actor, k-anonymity suppression, plus a manifest stating the guarantees ([docs/security/LLM_USAGE_DATASET.md](docs/security/LLM_USAGE_DATASET.md))
 - Winston audit logs (daily rotation, 90-day retention)
 - Sentry error & performance monitoring
 
