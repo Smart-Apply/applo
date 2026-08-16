@@ -4,7 +4,6 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { StatusChip, type StatusChipTone } from '@/components/ui/status-chip';
-import { cn } from '@/lib/utils';
 import type { SaveState } from '@/hooks/use-save-status';
 
 const TONE: Record<Exclude<SaveState, 'idle'>, StatusChipTone> = {
@@ -42,7 +41,7 @@ export function SaveStatus({ state, onRetry, variant = 'inline', className }: Sa
       <StatusChip
         tone={TONE[state]}
         withDot={state === 'dirty' || state === 'saved'}
-        className={cn(variant === 'floating' && 'bg-background shadow-lg', className)}
+        className={className}
       >
         {state === 'saving' && (
           <Loader2 className="h-3 w-3 animate-spin motion-reduce:animate-none" aria-hidden />
@@ -70,7 +69,11 @@ export function SaveStatus({ state, onRetry, variant = 'inline', className }: Sa
         // page underneath while the indicator is idle.
         className="pointer-events-none fixed bottom-6 left-4 z-40 md:left-[21rem]"
       >
-        <span className="pointer-events-auto inline-flex">{chip}</span>
+        {/* Opaque backdrop so the tinted chip stays legible over page content
+            (the dark-mode tones are translucent by design). */}
+        {chip && (
+          <span className="pointer-events-auto inline-flex bg-background shadow-lg">{chip}</span>
+        )}
       </div>
     );
   }
