@@ -236,10 +236,11 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `app/` (App Router with route groups)
   - `(auth)/` - Login, Register pages
   - `(dashboard)/` - Profile, Job Postings, Applications, PDF Preview
-  - `page.tsx` - Landing page
+  - `page.tsx` - Landing page (**Server Component**: `generateMetadata` + JSON-LD, sections composed from `components/landing/*`)
 - `components/`
   - `ui/` - shadcn/ui components
   - `forms/` - Custom form components
+  - `landing/` - Landing sections (server) + the three client-only drivers (`applo-companion`, `cta-mascot`, `scroll-reveal`)
   - `pdf/` - PDF preview & editing components
   - `i18n/` - LanguageSwitcher + useLocaleSwitch + LocaleRuntimeSync
 - `i18n/`
@@ -250,6 +251,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - `api-client.ts` - Typed fetch wrapper for backend API
   - `providers.tsx` - React Query & Toaster providers
   - `i18n-runtime.ts` - active-locale access for non-React modules (getActiveLocale, pick, setLocaleCookie, getIntlLocale)
+  - `site-url.ts` - public origin (`SITE_URL` / `SITE_METADATA_BASE`) for `metadataBase`, canonicals and JSON-LD
   - `utils.ts` - Helper functions (cn, formatDate, truncate)
 - `stores/`
   - `auth-store.ts` - Zustand store (user, token, isAuthenticated)

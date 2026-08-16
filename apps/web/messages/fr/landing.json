@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "title": "Applo – Des candidatures IA fondées sur votre profil réel",
+    "description": "Lettres de motivation et CV en quelques minutes : Applo transforme votre profil réel en dossiers optimisés pour les ATS, pour tous les métiers – conforme au RGPD et hébergé dans l’UE.",
+    "keywords": [
+      "candidature",
+      "lettre de motivation",
+      "générateur de CV",
+      "candidature IA",
+      "optimisé ATS",
+      "préparation entretien"
+    ]
+  },
   "mascot": {
     "wave": {
       "title": "Salut, je suis Applo !",

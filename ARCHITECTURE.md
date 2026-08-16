@@ -118,7 +118,7 @@ applo/
 │       ├── messages/              # next-intl catalogs (de/en/fr/es/pt/it, one JSON per namespace)
 │       ├── src/
 │       │   ├── app/               # App Router (route groups)
-│       │   ├── components/        # UI + shadcn/ui + pdf + analytics (recharts) + i18n
+│       │   ├── components/        # UI + shadcn/ui + landing (server sections) + pdf + analytics (recharts) + i18n
 │       │   ├── hooks/             # Custom React hooks
 │       │   ├── i18n/              # next-intl config (cookie-based de/en/fr/es/pt/it, no URL prefixes)
 │       │   ├── lib/               # api-client, providers, i18n-runtime, utils
@@ -386,6 +386,7 @@ User 1:1 Subscription
 | Category   | Technology                                              |
 | ---------- | ------------------------------------------------------- |
 | Framework  | Next.js 16.1 (App Router, React Compiler enabled)       |
+| Rendering  | Server Components by default; the public landing page (`/`) is fully server-rendered (localized metadata, OG/Twitter, JSON-LD, no-JS readable) with only the mascot + scroll-reveal drivers as client components |
 | Language   | TypeScript (strict)                                     |
 | i18n       | next-intl 4 (cookie-based de/en/fr/es/pt/it, no URL routing) |
 | UI         | React 19.2 · shadcn/ui (Radix) · Tailwind v4            |
