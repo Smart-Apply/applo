@@ -243,7 +243,7 @@ function DashboardLayoutInner({
             through and visually "hover above" the logo — the issue
             surfaced in wave-2 E2E on iOS Chrome. backdrop-blur stays for
             the frosted-glass feel when something does peek through. */}
-        <header className="md:hidden sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border/50 bg-background/95 backdrop-blur-md px-4">
+        <header className="md:hidden sticky top-0 z-10 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b border-border/50 bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur-md px-4">
           <Link href="/dashboard" className="flex items-center">
             <AppLogo className="h-10 w-auto" />
           </Link>
@@ -270,7 +270,10 @@ function DashboardLayoutInner({
               <SheetDescription className="sr-only">
                 {t('nav.sheetDescription')}
               </SheetDescription>
-              <div className="flex h-full flex-col">
+              {/* Safe-area padding lives on the inner column because
+                  SheetContent receives `p-0` (twMerge would drop padding
+                  utilities set on the primitive). */}
+              <div className="flex h-full flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
                 <div className="flex h-16 items-center justify-between gap-2 px-4 border-b border-white/10">
                   <Link href="/dashboard" className="flex items-center">
                     <AppLogo className="w-[180px] h-auto brightness-0 invert" />

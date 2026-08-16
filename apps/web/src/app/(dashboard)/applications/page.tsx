@@ -445,7 +445,7 @@ export default function ApplicationsPage() {
     // Desktop: fill the viewport (minus the layout padding) and never let the
     // page itself scroll — the table/card region below owns the scroll instead,
     // keeping the header + filters permanently in view on one screen.
-    <div className="flex flex-col gap-6 md:h-[calc(100vh-5rem)] md:overflow-hidden">
+    <div className="flex flex-col gap-6 md:h-[calc(100dvh-5rem)] md:overflow-hidden">
       {/* Header */}
       <div className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="border-l-[3px] border-brand pl-3.5">

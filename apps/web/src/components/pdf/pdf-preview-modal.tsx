@@ -180,7 +180,11 @@ export function PDFPreviewModal({
         // with rounded corners. `100dvh` (dynamic viewport height)
         // avoids the iOS Safari "URL bar pushes content out of view"
         // footgun that `100vh` has.
-        className="flex h-[100dvh] w-screen max-w-none flex-col gap-0 rounded-none border-0 p-0 sm:h-[90vh] sm:max-w-7xl sm:rounded-lg sm:border"
+        // `overflow-y-hidden` deliberately overrides DialogContent's default
+        // `overflow-y-auto`: this dialog is a fixed-height flex column whose
+        // middle pane does the scrolling, so an outer scroller would let the
+        // header and the controls bar be scrolled out of reach.
+        className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-y-hidden rounded-none border-0 p-0 sm:h-[90dvh] sm:max-h-[90dvh] sm:max-w-7xl sm:rounded-lg sm:border"
       >
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 border-b px-4 py-3 sm:px-6 sm:py-4">
           <DialogTitle className="truncate pr-2 text-base sm:text-lg">{title}</DialogTitle>

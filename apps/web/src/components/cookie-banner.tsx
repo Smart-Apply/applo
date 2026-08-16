@@ -49,9 +49,9 @@ export function CookieBanner() {
     <div
       role="region"
       aria-label={t("ariaLabel")}
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
     >
-      <div className="container mx-auto flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
+      <div className="container mx-auto flex flex-col gap-3 py-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] md:flex-row md:items-center md:justify-between md:px-8">
         <p className="text-sm text-foreground/80 md:max-w-3xl">
           {t.rich("text", {
             privacyLink: (chunks) => (
@@ -68,6 +68,9 @@ export function CookieBanner() {
           <Button
             type="button"
             onClick={dismiss}
+            // Full-width on a phone: the banner covers the bottom nav while
+            // it is up, so dismissing it must be the easiest thing on screen.
+            className="w-full sm:w-auto"
           >
             {t("dismiss")}
           </Button>

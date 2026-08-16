@@ -75,7 +75,7 @@ export function SettingsSearch() {
         onBlur={() => setTimeout(() => setFocused(false), 150)}
         placeholder={t('search.placeholder')}
         aria-label={t('search.ariaLabel')}
-        className="h-11 w-full rounded-[4px] border border-input bg-background pl-11 pr-10 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
+        className="h-11 w-full rounded-[4px] border border-input bg-background pl-11 pr-10 text-base outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 md:text-sm"
       />
       {query && (
         <button

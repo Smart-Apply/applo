@@ -132,7 +132,7 @@ export function ProjectEditorDialog({
         open={open}
         onOpenChange={(next) => (next ? onOpenChange(true) : guard.requestClose())}
       >
-        <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
+        <DialogContent className="max-h-[90dvh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
           <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>
               {isEditing ? t('projects.editTitle') : t('projects.newTitle')}
