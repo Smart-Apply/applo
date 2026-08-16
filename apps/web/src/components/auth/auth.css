@@ -43,7 +43,7 @@
 .applo-auth ::selection { background: #c9d8f5; }
 /* ---- shell -------------------------------------------------- */
 .applo-auth .auth { display: flex;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden; }
 .applo-auth .brand-pane, .applo-auth .form-pane { flex: 0 0 50%;
   width: 50%;
@@ -293,7 +293,7 @@
    Responsive — collapse brand pane into a compact top band
    ============================================================ */
 @media (max-width: 920px) {
-  .applo-auth .auth { display: block; height: auto; min-height: 100vh; overflow: visible; }
+  .applo-auth .auth { display: block; height: auto; min-height: 100dvh; overflow: visible; }
   .applo-auth .brand-pane { display: none; }
   .applo-auth .form-pane { flex: 1; width: 100%; height: auto;
     transform: none !important; transition: none; }
@@ -301,6 +301,15 @@
     margin-bottom: 22px; }
   .applo-auth .form-mobilebrand .mb-applo { margin-top: -8px; }
   .applo-auth .form-pane { padding: 32px 22px 56px; align-items: flex-start; }
+}
+/* iOS Safari zooms the whole page in when a focused field's font-size is
+   below 16px, and never zooms back out. These are the first fields every
+   mobile user touches, so they get the full 16px; the desktop sizes above
+   are untouched. The pane keeps its own padding, so the rows only grow by
+   1–2px. */
+@media (max-width: 767px) {
+  .applo-auth .input,
+  .applo-auth .input.input-mono { font-size: 16px; }
 }
 @media (max-width: 460px) {
   .applo-auth .row2 { grid-template-columns: 1fr; }

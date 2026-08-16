@@ -509,7 +509,13 @@ export default function ApplicationResumeEditorPage() {
 
         {/* Tab bar */}
         <div className="mt-5 mb-5 flex flex-wrap items-center justify-between gap-3 border border-[#e0e0e0] bg-white p-2">
-          <div role="tablist" aria-label={t('page.tabs.ariaLabel')} className="flex items-center border border-[#e0e0e0] bg-[#e0e0e0]">
+          <div
+            role="tablist"
+            aria-label={t('page.tabs.ariaLabel')}
+            // The three labels are wider than a 360px phone, so the strip
+            // scrolls horizontally instead of pushing the page sideways.
+            className="flex max-w-full items-center overflow-x-auto border border-[#e0e0e0] bg-[#e0e0e0]"
+          >
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -526,7 +532,7 @@ export default function ApplicationResumeEditorPage() {
                           aria-selected="false"
                           tabIndex={-1}
                           disabled
-                          className="inline-flex cursor-not-allowed items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-[#94a3b8]"
+                          className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-[#94a3b8]"
                         >
                           <Icon className="h-4 w-4" /> {tab.label} <Lock className="h-3 w-3" />
                         </button>
@@ -552,7 +558,7 @@ export default function ApplicationResumeEditorPage() {
                   tabIndex={active ? 0 : -1}
                   onClick={() => handleTabChange(tab.id)}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors",
+                    'inline-flex shrink-0 items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors',
                     active
                       ? 'bg-[#1b2a49] text-white'
                       : 'bg-white text-[#6b6969] hover:bg-[#f5f6f8] hover:text-[#1b2a49]',
@@ -564,7 +570,7 @@ export default function ApplicationResumeEditorPage() {
             })}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {activeTab === 'cover-letter' && hasCover && (
               <AiAssistantPopover
                 open={aiPopoverOpen}
@@ -679,7 +685,7 @@ export default function ApplicationResumeEditorPage() {
         )}
 
         {activeTab === 'ats' && parsedResume && (
-          <div id="tabpanel-ats" role="tabpanel" aria-labelledby="tab-ats" className="h-[calc(100vh-15rem)] min-h-[520px] pb-2">
+          <div id="tabpanel-ats" role="tabpanel" aria-labelledby="tab-ats" className="h-[calc(100dvh-15rem)] min-h-[520px] pb-2">
             <AtsOptimizer
               applicationId={applicationId}
               resume={parsedResume}

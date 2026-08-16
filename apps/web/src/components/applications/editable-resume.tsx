@@ -811,7 +811,7 @@ export function EditableResume({
   const field = (label: string, val: string, on: (v: string) => void, ph?: string) => (
     <div className="space-y-1">
       <Label className="text-[11px] font-medium text-muted-foreground">{label}</Label>
-      <Input value={val} placeholder={ph} onChange={(e) => on(e.target.value)} className="h-8 text-sm" />
+      <Input value={val} placeholder={ph} onChange={(e) => on(e.target.value)} className="h-9 text-base md:h-8 md:text-sm" />
     </div>
   );
   const contactPopover = (

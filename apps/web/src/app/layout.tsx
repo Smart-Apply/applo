@@ -38,6 +38,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  // Load-bearing for every `env(safe-area-inset-*)` in the app: WebKit
+  // resolves those to 0px unless the viewport meta carries
+  // `viewport-fit=cover`. Without it the bottom nav, the cookie banner and
+  // the dashboard's bottom padding all sit under the iPhone home indicator
+  // even though the CSS looks correct.
+  viewportFit: 'cover',
 };
 
 // Base URL used to resolve relative metadata (OG/Twitter images, canonicals)

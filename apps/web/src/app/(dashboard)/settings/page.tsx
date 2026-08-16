@@ -253,7 +253,7 @@ export default function SettingsPage() {
               <button
                 key={s.id}
                 onClick={() => setSection(s.id)}
-                className={`inline-flex items-center gap-2 whitespace-nowrap px-4 py-2 text-sm font-semibold transition-colors ${
+                className={`inline-flex min-h-11 items-center gap-2 whitespace-nowrap px-4 py-2 text-sm font-semibold transition-colors ${
                   active ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >

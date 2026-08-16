@@ -1867,7 +1867,10 @@ export default function ProfilePage() {
         tabIndex={scrolled ? undefined : -1}
         aria-hidden={scrolled ? undefined : true}
         className={cn(
-          'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-[4px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition-all duration-200 hover:bg-primary/90',
+          // Clears the fixed mobile bottom nav (~56px) and the iOS home
+          // indicator; falls back to the original corner offset on desktop
+          // where no bottom nav exists.
+          'fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 z-50 flex min-h-11 items-center gap-2 rounded-[4px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition-all duration-200 hover:bg-primary/90 md:bottom-6 md:right-6',
           scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none',
         )}
       >

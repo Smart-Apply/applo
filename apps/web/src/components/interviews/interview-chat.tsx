@@ -244,7 +244,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
 
   return (
     <>
-      <Card className="flex h-[calc(100vh-16rem)] max-h-[760px] min-h-[520px] flex-col overflow-hidden p-0">
+      <Card className="flex h-[calc(100dvh-16rem)] max-h-[760px] min-h-[520px] flex-col overflow-hidden p-0">
         {/* ---- Header: title + timer + prominent progress ---- */}
         <div className="flex-shrink-0 border-b px-6 py-5">
           <div className="mb-3.5 flex items-center justify-between">
@@ -403,7 +403,7 @@ export function InterviewChat({ session, onComplete, onAbandon }: InterviewChatP
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={t('chat.answerPlaceholder')}
-                  className="max-h-[200px] min-h-[84px] w-full resize-none rounded-[3px] text-[15px]"
+                  className="max-h-[200px] min-h-[84px] w-full resize-none rounded-[3px] text-base md:text-[15px]"
                   disabled={isLoading || !currentQuestion}
                   aria-invalid={usage.isOverLimit}
                 />

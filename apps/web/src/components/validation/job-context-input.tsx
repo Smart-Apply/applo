@@ -292,7 +292,7 @@ export function JobContextInput({
             placeholder={t('jobContext.titlePlaceholder')}
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
-            className="text-sm"
+            className="text-base md:text-sm"
           />
         </div>
         <div className="space-y-1.5">

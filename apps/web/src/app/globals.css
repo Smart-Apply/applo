@@ -224,6 +224,31 @@ h1, h2, h3, .font-heading {
     overscroll-behavior: none;
   }
 
+  /* ── Mobile (iOS/Android) hardening ─────────────────────────────────
+     - text-size-adjust: iOS Safari inflates text in landscape unless this
+       is pinned, which silently breaks every carefully sized layout.
+     - tap-highlight-color: removes the grey flash Safari/Chrome paint on
+       tap; every interactive element already has its own :active state.
+     - overflow-x on <body>: a belt-and-braces guard so a single wide child
+       can never turn the whole page into a sideways-scrolling one. It sits
+       on <body> (not <html>) so `position: sticky` keeps working. */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    /* Companion to `viewport-fit=cover` in layout.tsx: in landscape the
+       notch eats into the left/right edges, so inset the document. Both
+       values are 0px in portrait and on desktop, so this is a no-op there.
+       Fixed overlays are positioned against the viewport and therefore
+       carry their own inset padding. */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
   h1,
   h2,
   h3,
