@@ -7,7 +7,7 @@ import { getLanguageLevelLabel } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { StatusChip } from '@/components/ui/status-chip';
 import { ProfilePhotoAvatar } from '@/components/profile/profile-photo-avatar';
-import { ProfileSkeleton } from '@/components/shared/skeletons';
+import { ProfileSkeleton, SkeletonScreen } from '@/components/shared/skeletons';
 import { ApploRig } from '@/components/ui/applo-rig';
 import type { ApploState } from '@/components/ui/applo-rig';
 import { sanitizeUrl, sanitizeHtml } from '@/lib/sanitize';
@@ -1071,7 +1071,12 @@ export default function ProfilePage() {
   };
   const endTour = () => { setTourStep(null); setActiveSection(null); };
 
-  if (isLoading) return <ProfileSkeleton />;
+  if (isLoading)
+    return (
+      <SkeletonScreen>
+        <ProfileSkeleton />
+      </SkeletonScreen>
+    );
 
   if (error) {
     return (

@@ -33,7 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ApplicationCardSkeleton } from '@/components/shared/skeletons';
+import { ApplicationCardSkeleton, SkeletonScreen } from '@/components/shared/skeletons';
 import { ATSScoreCell } from '@/components/applications/ats-score-cell';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusChip, TRACKING_STATUS_CHIP } from '@/components/ui/status-chip';
@@ -476,16 +476,16 @@ export default function ApplicationsPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2 lg:grid-cols-3">
+        <SkeletonScreen className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2 lg:grid-cols-3">
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
-        </div>
+        </SkeletonScreen>
       ) : applications && applications.length > 0 ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-5">
+        <div className="motion-view-enter flex min-h-0 flex-1 flex-col gap-5">
           {/* Search Input */}
           <div className="relative w-full max-w-md shrink-0">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

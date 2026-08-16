@@ -91,6 +91,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - Don't add docstrings, comments, or annotations to code you didn't change.
 - Backend: validate DTOs with `class-validator` (`whitelist: true, forbidNonWhitelisted: true` on the controller pipe). Sanitize string inputs from users with the existing `@Sanitize()` decorator.
 - Frontend: App Router only (no Pages Router). Server components by default; mark client with `'use client'`. Forms use `react-hook-form` + Zod. Server state via TanStack Query with the existing `apiClient` wrapper — no raw `fetch()` in components. UI from shadcn/ui (`npx shadcn@latest add <name>`).
+- Motion & loading: reuse the motion layer in [apps/web/src/app/globals.css](../apps/web/src/app/globals.css) (`.motion-page-enter`, `.motion-view-enter`, `.motion-fade-enter`, `.motion-stagger` + `--motion-index`, `.motion-shimmer`, `.motion-progress-indeterminate`) instead of writing new keyframes. Animate **only** `opacity`/`transform` so transitions can't cause CLS, and keep `animation-fill-mode: backwards` on enter animations — a lingering `transform` turns the element into a containing block and breaks `position: fixed` descendants (modals). The global `prefers-reduced-motion` guard *fast-forwards* animations (`animation-duration: 0.01ms`) rather than removing them, because Radix `Presence` unmounts on `animationend`. For loading UI use `components/shared/skeletons.tsx`: `<Skeleton>` blocks are decorative (`aria-hidden`) and exactly one `<SkeletonScreen>` per loading area owns the localized `role="status"` live region — never add `role="status"` to individual placeholder blocks.
 
 ### Lint policy
 - **New code MUST land with 0 ESLint errors AND 0 ESLint warnings.** CI's `lint-and-typecheck` job currently fails on errors only, but warnings accumulate into untracked tech debt — historically one reached 74 warnings before a single new error tipped the build red and blocked every PR. Treat warnings as errors for anything you author.
@@ -236,12 +237,15 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `app/` (App Router with route groups)
   - `(auth)/` - Login, Register pages
   - `(dashboard)/` - Profile, Job Postings, Applications, PDF Preview
+    - `template.tsx` - zero-JS Server Component route transition (`.motion-page-enter`). Templates are keyed by **pathname only**, so `?section=`/`?status=` navigations do NOT remount and never discard in-progress form state.
+    - `<segment>/loading.tsx` - route-level skeleton fallbacks built from `components/shared/skeletons.tsx`
   - `page.tsx` - Landing page
 - `components/`
   - `ui/` - shadcn/ui components
   - `forms/` - Custom form components
   - `pdf/` - PDF preview & editing components
   - `i18n/` - LanguageSwitcher + useLocaleSwitch + LocaleRuntimeSync
+  - `shared/skeletons.tsx` - the reusable loading library (`SkeletonScreen`, `PageHeaderSkeleton`, `ListPageSkeleton`, `DashboardSkeleton`, `AppShellSkeleton`, `ProfileSkeleton`, …). Prefer these over ad-hoc spinners/`animate-pulse` blocks.
 - `i18n/`
   - `config.ts` - locales (de/en/fr/es/pt/it), cookie name, Accept-Language picker
   - `request.ts` - next-intl per-request config (cookie → header → de)

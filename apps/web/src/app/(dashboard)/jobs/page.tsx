@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
@@ -166,8 +166,8 @@ export default function JobsPage() {
                 {jobPostings.map((job, index) => (
                   <div
                     key={job.id}
-                    className="group hover:bg-muted/30 transition-colors p-4"
-                    style={{ animationDelay: `${index * 30}ms` }}
+                    className="motion-stagger group hover:bg-muted/30 transition-colors p-4"
+                    style={{ '--motion-index': Math.min(index, 8) } as CSSProperties}
                   >
                     <div className="flex items-start gap-4">
                       {/* Main Info */}
