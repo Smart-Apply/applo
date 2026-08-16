@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +13,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { experienceSchema, type ExperienceFormValues } from '@/lib/validation/schemas';
 import type { Experience } from '@/types';
 import { useTranslations } from 'next-intl';
 
@@ -73,155 +84,181 @@ function ExperienceForm({
 }) {
   const t = useTranslations('profile');
 
-  const [title, setTitle] = useState(initial?.title ?? '');
-  const [company, setCompany] = useState(initial?.company ?? '');
-  const [location, setLocation] = useState(initial?.location ?? '');
-  const [startDate, setStartDate] = useState(
-    initial?.startDate ? initial.startDate.split('T')[0] : '',
-  );
-  const [endDate, setEndDate] = useState(initial?.endDate ? initial.endDate.split('T')[0] : '');
-  const [current, setCurrent] = useState(initial ? !initial.endDate : false);
-  const [description, setDescription] = useState(initial?.description ?? '');
+  const form = useForm<ExperienceFormValues>({
+    resolver: zodResolver(experienceSchema),
+    // Surface a problem when the user leaves a field, not while they type.
+    mode: 'onTouched',
+    defaultValues: {
+      title: initial?.title ?? '',
+      company: initial?.company ?? '',
+      location: initial?.location ?? '',
+      startDate: initial?.startDate ? initial.startDate.split('T')[0] : '',
+      endDate: initial?.endDate ? initial.endDate.split('T')[0] : '',
+      current: initial ? !initial.endDate : false,
+      description: initial?.description ?? '',
+    },
+  });
 
-  const titleRef = useRef<HTMLInputElement>(null);
+  const { control, setFocus, setValue } = form;
+  const isCurrent = useWatch({ control, name: 'current' });
 
   useEffect(() => {
-    const focus = setTimeout(() => titleRef.current?.focus(), 120);
+    // Radix moves focus into the dialog on open; wait for it to settle.
+    const focus = setTimeout(() => setFocus('title'), 120);
     return () => clearTimeout(focus);
-  }, []);
+  }, [setFocus]);
 
-  const canSubmit = title.trim() && company.trim() && startDate;
-
-  const handleSubmit = () => {
-    if (!title.trim()) {
-      toast.error(t('experience.errors.title'));
-      titleRef.current?.focus();
-      return;
-    }
-    if (!company.trim()) {
-      toast.error(t('experience.errors.company'));
-      return;
-    }
-    if (!startDate) {
-      toast.error(t('experience.errors.startDate'));
-      return;
-    }
-    if (!current && endDate && new Date(endDate) < new Date(startDate)) {
-      toast.error(t('experience.errors.dateOrder'));
-      return;
-    }
-
+  const handleSubmit = (values: ExperienceFormValues) => {
     onSubmit({
       ...(initial?.id && { id: initial.id }),
-      title: title.trim(),
-      company: company.trim(),
-      location: location.trim() || undefined,
-      startDate: new Date(startDate).toISOString(),
-      endDate: current || !endDate ? null : new Date(endDate).toISOString(),
-      description: description.trim() || null,
-      current,
+      title: values.title.trim(),
+      company: values.company.trim(),
+      location: values.location?.trim() || undefined,
+      startDate: new Date(values.startDate).toISOString(),
+      endDate: values.current || !values.endDate ? null : new Date(values.endDate).toISOString(),
+      description: values.description?.trim() || null,
+      current: !!values.current,
     });
   };
 
   return (
-    <div className="space-y-5 px-6 pb-6 pt-2">
-      {/* Title */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.jobTitle')} <span className="text-destructive">*</span>
-        </label>
-        <Input
-          ref={titleRef}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={t('experience.titlePlaceholder')}
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5 px-6 pb-6 pt-2">
+        <FormField
+          control={control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.jobTitle')} <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder={t('experience.titlePlaceholder')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      {/* Company + Location */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            {t('labels.company')} <span className="text-destructive">*</span>
-          </label>
-          <Input
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            placeholder={t('experience.companyPlaceholder')}
-            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={control}
+            name="company"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('labels.company')} <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder={t('experience.companyPlaceholder')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('labels.location')}{' '}
+                  <span className="font-normal text-muted-foreground">
+                    – {t('labels.optional')}
+                  </span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder={t('experience.locationPlaceholder')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            {t('labels.location')}{' '}
-            <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-          </label>
-          <Input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder={t('experience.locationPlaceholder')}
-            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('labels.from')} <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="endDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('labels.to')}</FormLabel>
+                <FormControl>
+                  <Input type="date" disabled={isCurrent} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-      </div>
 
-      {/* Dates */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            {t('labels.from')} <span className="text-destructive">*</span>
-          </label>
-          <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">{t('labels.to')}</label>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            disabled={current}
-          />
-        </div>
-      </div>
-
-      {/* Current checkbox */}
-      <label className="flex cursor-pointer items-center gap-3 rounded-[3px] border border-border px-4 py-3">
-        <Checkbox
-          checked={current}
-          onCheckedChange={(checked) => {
-            setCurrent(!!checked);
-            if (checked) setEndDate('');
-          }}
+        <FormField
+          control={control}
+          name="current"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex cursor-pointer items-center gap-3 rounded-[3px] border border-border px-4 py-3 font-normal">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={(checked) => {
+                      field.onChange(!!checked);
+                      if (checked) setValue('endDate', '', { shouldValidate: true });
+                    }}
+                  />
+                </FormControl>
+                <span className="text-sm text-foreground">{t('experience.currentHere')}</span>
+              </FormLabel>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        <span className="text-sm text-foreground">{t('experience.currentHere')}</span>
-      </label>
 
-      {/* Description */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.description')}{' '}
-          <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-        </label>
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={t('experience.descriptionPlaceholder')}
-          rows={3}
-          className="resize-none"
+        <FormField
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.description')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder={t('experience.descriptionPlaceholder')}
+                  rows={3}
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>{t('experience.descriptionHelp')}</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        <p className="text-xs text-muted-foreground">{t('experience.descriptionHelp')}</p>
-      </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          {t('actions.cancel')}
-        </Button>
-        <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-          {isEditing ? t('actions.save') : t('actions.add')}
-        </Button>
-      </div>
-    </div>
+        <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            {t('actions.cancel')}
+          </Button>
+          <Button type="submit">{isEditing ? t('actions.save') : t('actions.add')}</Button>
+        </div>
+      </form>
+    </Form>
   );
 }

@@ -423,12 +423,6 @@
     "titlePlaceholder": "z.B. Projektmanager, Krankenpfleger, Vertriebsleiter",
     "companyPlaceholder": "z.B. Muster GmbH",
     "locationPlaceholder": "z.B. Berlin",
-    "errors": {
-      "title": "Bitte gib einen Jobtitel ein",
-      "company": "Bitte gib eine Firma ein",
-      "startDate": "Bitte gib ein Startdatum ein",
-      "dateOrder": "Enddatum muss nach dem Startdatum liegen"
-    },
     "toasts": {
       "updated": "Erfahrung aktualisiert",
       "added": "Erfahrung hinzugefügt",
@@ -452,11 +446,6 @@
     "endYearPlaceholder": "z.B. 2024",
     "ongoingHelp": "Leer = noch laufend",
     "descriptionPlaceholder": "Relevante Kurse, Projekte oder Auszeichnungen …",
-    "errors": {
-      "institution": "Bitte gib eine Institution ein",
-      "degree": "Bitte gib einen Abschluss ein",
-      "yearOrder": "Endjahr muss nach dem Startjahr liegen"
-    },
     "toasts": {
       "updated": "Bildung aktualisiert",
       "added": "Bildung hinzugefügt",
@@ -486,12 +475,6 @@
     "namePlaceholder": "z.B. AWS Solutions Architect",
     "issuerPlaceholder": "z.B. Amazon Web Services",
     "credentialPlaceholder": "z.B. ABC-123-456",
-    "errors": {
-      "name": "Bitte gib einen Zertifikatsnamen ein",
-      "issuer": "Bitte gib die ausstellende Organisation ein",
-      "url": "Bitte gib eine gültige URL ein",
-      "dateOrder": "Ablaufdatum muss nach dem Ausstellungsdatum liegen"
-    },
     "toasts": {
       "updated": "Zertifikat aktualisiert",
       "added": "Zertifikat hinzugefügt",
@@ -515,10 +498,7 @@
     "descriptionPlaceholder": "Was hast du gemacht? Was war deine Rolle?",
     "confirmWithEnter": "Eingabe mit Enter bestätigen",
     "errors": {
-      "duplicate": "Bereits vorhanden",
-      "name": "Bitte gib einen Projektnamen ein",
-      "url": "Bitte gib eine gültige URL ein",
-      "dateOrder": "Enddatum muss nach dem Startdatum liegen"
+      "duplicate": "Bereits vorhanden"
     },
     "toasts": {
       "updated": "Projekt aktualisiert",

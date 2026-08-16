@@ -374,12 +374,6 @@
     "titlePlaceholder": "es. project manager, infermiere, responsabile vendite",
     "companyPlaceholder": "es. Esempio S.r.l.",
     "locationPlaceholder": "es. Milano",
-    "errors": {
-      "title": "Inserisci una qualifica",
-      "company": "Inserisci un'azienda",
-      "startDate": "Inserisci una data di inizio",
-      "dateOrder": "La data di fine deve essere successiva alla data di inizio"
-    },
     "toasts": {
       "updated": "Esperienza aggiornata",
       "added": "Esperienza aggiunta",
@@ -403,11 +397,6 @@
     "endYearPlaceholder": "es. 2024",
     "ongoingHelp": "Vuoto = ancora in corso",
     "descriptionPlaceholder": "Corsi rilevanti, progetti o riconoscimenti …",
-    "errors": {
-      "institution": "Inserisci un istituto",
-      "degree": "Inserisci un titolo di studio",
-      "yearOrder": "L'anno di fine deve essere successivo all'anno di inizio"
-    },
     "toasts": {
       "updated": "Percorso di istruzione aggiornato",
       "added": "Percorso di istruzione aggiunto",
@@ -437,12 +426,6 @@
     "namePlaceholder": "es. Project Management Professional",
     "issuerPlaceholder": "es. Camera di Commercio, Microsoft, TÜV",
     "credentialPlaceholder": "es. ABC-123-456",
-    "errors": {
-      "name": "Inserisci un nome per il certificato",
-      "issuer": "Inserisci l'ente emittente",
-      "url": "Inserisci un URL valido",
-      "dateOrder": "La data di scadenza deve essere successiva alla data di rilascio"
-    },
     "toasts": {
       "updated": "Certificato aggiornato",
       "added": "Certificato aggiunto",
@@ -466,10 +449,7 @@
     "descriptionPlaceholder": "Cosa hai fatto? Qual era il tuo ruolo?",
     "confirmWithEnter": "Conferma con Invio",
     "errors": {
-      "duplicate": "Già aggiunto",
-      "name": "Inserisci un nome per il progetto",
-      "url": "Inserisci un URL valido",
-      "dateOrder": "La data di fine deve essere successiva alla data di inizio"
+      "duplicate": "Già aggiunto"
     },
     "toasts": {
       "updated": "Progetto aggiornato",

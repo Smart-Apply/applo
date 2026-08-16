@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +12,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { educationSchema, type EducationFormValues } from '@/lib/validation/schemas';
 import type { Education } from '@/types';
 import { useTranslations } from 'next-intl';
 
@@ -70,167 +81,193 @@ function EducationForm({
   onCancel: () => void;
 }) {
   const t = useTranslations('profile');
+  const maxYear = new Date().getFullYear() + 10;
 
-  const [institution, setInstitution] = useState(initial?.institution ?? '');
-  const [degree, setDegree] = useState(initial?.degree ?? '');
-  const [fieldOfStudy, setFieldOfStudy] = useState(initial?.fieldOfStudy ?? '');
-  const [startYear, setStartYear] = useState(initial?.startYear ? String(initial.startYear) : '');
-  const [endYear, setEndYear] = useState(initial?.endYear ? String(initial.endYear) : '');
-  const [gpa, setGpa] = useState(initial?.gpa ?? '');
-  const [description, setDescription] = useState(initial?.description ?? '');
+  const form = useForm<EducationFormValues>({
+    resolver: zodResolver(educationSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      institution: initial?.institution ?? '',
+      degree: initial?.degree ?? '',
+      fieldOfStudy: initial?.fieldOfStudy ?? '',
+      startYear: initial?.startYear ? String(initial.startYear) : '',
+      endYear: initial?.endYear ? String(initial.endYear) : '',
+      gpa: initial?.gpa ?? '',
+      description: initial?.description ?? '',
+    },
+  });
 
-  const institutionRef = useRef<HTMLInputElement>(null);
+  const { control, setFocus } = form;
 
   useEffect(() => {
-    const focus = setTimeout(() => institutionRef.current?.focus(), 120);
+    // Radix moves focus into the dialog on open; wait for it to settle.
+    const focus = setTimeout(() => setFocus('institution'), 120);
     return () => clearTimeout(focus);
-  }, []);
+  }, [setFocus]);
 
-  const canSubmit = institution.trim() && degree.trim();
-
-  const handleSubmit = () => {
-    if (!institution.trim()) {
-      toast.error(t('education.errors.institution'));
-      institutionRef.current?.focus();
-      return;
-    }
-    if (!degree.trim()) {
-      toast.error(t('education.errors.degree'));
-      return;
-    }
-    const sy = startYear ? parseInt(startYear, 10) : undefined;
-    const ey = endYear ? parseInt(endYear, 10) : null;
-    if (sy && ey && ey < sy) {
-      toast.error(t('education.errors.yearOrder'));
-      return;
-    }
-
+  const handleSubmit = (values: EducationFormValues) => {
     onSubmit({
       ...(initial?.id && { id: initial.id }),
-      institution: institution.trim(),
-      degree: degree.trim(),
-      fieldOfStudy: fieldOfStudy.trim() || undefined,
-      startYear: sy,
-      endYear: ey,
-      gpa: gpa.trim() || undefined,
-      description: description.trim() || undefined,
+      institution: values.institution.trim(),
+      degree: values.degree.trim(),
+      fieldOfStudy: values.fieldOfStudy?.trim() || undefined,
+      startYear: values.startYear ? parseInt(values.startYear, 10) : undefined,
+      endYear: values.endYear ? parseInt(values.endYear, 10) : null,
+      gpa: values.gpa?.trim() || undefined,
+      description: values.description?.trim() || undefined,
     });
   };
 
   return (
-    <div className="space-y-5 px-6 pb-6 pt-2">
-      {/* Institution */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.institution')} <span className="text-destructive">*</span>
-        </label>
-        <Input
-          ref={institutionRef}
-          value={institution}
-          onChange={(e) => setInstitution(e.target.value)}
-          placeholder={t('education.institutionPlaceholder')}
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5 px-6 pb-6 pt-2">
+        <FormField
+          control={control}
+          name="institution"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.institution')} <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder={t('education.institutionPlaceholder')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      {/* Degree */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.degree')} <span className="text-destructive">*</span>
-        </label>
-        <Input
-          value={degree}
-          onChange={(e) => setDegree(e.target.value)}
-          placeholder={t('education.degreePlaceholder')}
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+        <FormField
+          control={control}
+          name="degree"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.degree')} <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder={t('education.degreePlaceholder')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      {/* Field of study */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.fieldOfStudy')}{' '}
-          <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-        </label>
-        <Input
-          value={fieldOfStudy}
-          onChange={(e) => setFieldOfStudy(e.target.value)}
-          placeholder={t('education.fieldPlaceholder')}
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+        <FormField
+          control={control}
+          name="fieldOfStudy"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.fieldOfStudy')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder={t('education.fieldPlaceholder')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      {/* Years */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            {t('labels.from')}{' '}
-            <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-          </label>
-          <Input
-            type="number"
-            value={startYear}
-            onChange={(e) => setStartYear(e.target.value)}
-            placeholder={t('education.startYearPlaceholder')}
-            min="1900"
-            max={new Date().getFullYear() + 10}
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={control}
+            name="startYear"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('labels.from')}{' '}
+                  <span className="font-normal text-muted-foreground">
+                    – {t('labels.optional')}
+                  </span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder={t('education.startYearPlaceholder')}
+                    min={1900}
+                    max={maxYear}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="endYear"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('labels.to')}{' '}
+                  <span className="font-normal text-muted-foreground">
+                    – {t('labels.optional')}
+                  </span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder={t('education.endYearPlaceholder')}
+                    min={1900}
+                    max={maxYear}
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>{t('education.ongoingHelp')}</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            {t('labels.to')}{' '}
-            <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-          </label>
-          <Input
-            type="number"
-            value={endYear}
-            onChange={(e) => setEndYear(e.target.value)}
-            placeholder={t('education.endYearPlaceholder')}
-            min="1900"
-            max={new Date().getFullYear() + 10}
-          />
-          <p className="text-xs text-muted-foreground">{t('education.ongoingHelp')}</p>
+
+        <FormField
+          control={control}
+          name="gpa"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.grade')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder="z.B. 1.5" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.description')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder={t('education.descriptionPlaceholder')}
+                  rows={3}
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            {t('actions.cancel')}
+          </Button>
+          <Button type="submit">{isEditing ? t('actions.save') : t('actions.add')}</Button>
         </div>
-      </div>
-
-      {/* GPA */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.grade')}{' '}
-          <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-        </label>
-        <Input
-          value={gpa}
-          onChange={(e) => setGpa(e.target.value)}
-          placeholder="z.B. 1.5"
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-        />
-      </div>
-
-      {/* Description */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.description')}{' '}
-          <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-        </label>
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={t('education.descriptionPlaceholder')}
-          rows={3}
-          className="resize-none"
-        />
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          {t('actions.cancel')}
-        </Button>
-        <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-          {isEditing ? t('actions.save') : t('actions.add')}
-        </Button>
-      </div>
-    </div>
+      </form>
+    </Form>
   );
 }

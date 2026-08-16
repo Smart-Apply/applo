@@ -374,12 +374,6 @@
     "titlePlaceholder": "p. ej. jefe de proyecto, enfermero, director de ventas",
     "companyPlaceholder": "p. ej. Empresa Ejemplo S. L.",
     "locationPlaceholder": "p. ej. Madrid",
-    "errors": {
-      "title": "Introduce un puesto",
-      "company": "Introduce una empresa",
-      "startDate": "Introduce una fecha de inicio",
-      "dateOrder": "La fecha de fin debe ser posterior a la fecha de inicio"
-    },
     "toasts": {
       "updated": "Experiencia actualizada",
       "added": "Experiencia añadida",
@@ -403,11 +397,6 @@
     "endYearPlaceholder": "p. ej. 2024",
     "ongoingHelp": "Vacío = en curso actualmente",
     "descriptionPlaceholder": "Cursos relevantes, proyectos o premios…",
-    "errors": {
-      "institution": "Introduce una institución",
-      "degree": "Introduce un título",
-      "yearOrder": "El año de fin debe ser posterior al año de inicio"
-    },
     "toasts": {
       "updated": "Formación actualizada",
       "added": "Formación añadida",
@@ -437,12 +426,6 @@
     "namePlaceholder": "p. ej. Project Management Professional",
     "issuerPlaceholder": "p. ej. Cámara de Comercio, Microsoft, TÜV",
     "credentialPlaceholder": "p. ej. ABC-123-456",
-    "errors": {
-      "name": "Introduce el nombre del certificado",
-      "issuer": "Introduce la entidad emisora",
-      "url": "Introduce una URL válida",
-      "dateOrder": "La fecha de caducidad debe ser posterior a la fecha de emisión"
-    },
     "toasts": {
       "updated": "Certificado actualizado",
       "added": "Certificado añadido",
@@ -466,10 +449,7 @@
     "descriptionPlaceholder": "¿Qué hiciste? ¿Cuál fue tu papel?",
     "confirmWithEnter": "Confirma con Intro",
     "errors": {
-      "duplicate": "Ya añadido",
-      "name": "Introduce el nombre del proyecto",
-      "url": "Introduce una URL válida",
-      "dateOrder": "La fecha de fin debe ser posterior a la fecha de inicio"
+      "duplicate": "Ya añadido"
     },
     "toasts": {
       "updated": "Proyecto actualizado",

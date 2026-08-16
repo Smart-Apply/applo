@@ -374,12 +374,6 @@
     "titlePlaceholder": "ex. gestor de projeto, enfermeiro, gestor comercial",
     "companyPlaceholder": "ex. Exemplo Lda.",
     "locationPlaceholder": "ex. Lisboa",
-    "errors": {
-      "title": "Introduz um cargo",
-      "company": "Introduz uma empresa",
-      "startDate": "Introduz uma data de início",
-      "dateOrder": "A data de fim deve ser posterior à data de início"
-    },
     "toasts": {
       "updated": "Experiência atualizada",
       "added": "Experiência adicionada",
@@ -403,11 +397,6 @@
     "endYearPlaceholder": "ex. 2024",
     "ongoingHelp": "Vazio = ainda em curso",
     "descriptionPlaceholder": "Disciplinas relevantes, projetos ou prémios …",
-    "errors": {
-      "institution": "Introduz uma instituição",
-      "degree": "Introduz um grau académico",
-      "yearOrder": "O ano de fim deve ser posterior ao ano de início"
-    },
     "toasts": {
       "updated": "Formação atualizada",
       "added": "Formação adicionada",
@@ -437,12 +426,6 @@
     "namePlaceholder": "ex. Project Management Professional",
     "issuerPlaceholder": "ex. Câmara de Comércio, Microsoft, TÜV",
     "credentialPlaceholder": "ex. ABC-123-456",
-    "errors": {
-      "name": "Introduz um nome de certificado",
-      "issuer": "Introduz a entidade emissora",
-      "url": "Introduz um URL válido",
-      "dateOrder": "A data de expiração deve ser posterior à data de emissão"
-    },
     "toasts": {
       "updated": "Certificado atualizado",
       "added": "Certificado adicionado",
@@ -466,10 +449,7 @@
     "descriptionPlaceholder": "O que fizeste? Qual foi o teu papel?",
     "confirmWithEnter": "Confirmar com Enter",
     "errors": {
-      "duplicate": "Já foi adicionado",
-      "name": "Introduz um nome de projeto",
-      "url": "Introduz um URL válido",
-      "dateOrder": "A data de fim deve ser posterior à data de início"
+      "duplicate": "Já foi adicionado"
     },
     "toasts": {
       "updated": "Projeto atualizado",

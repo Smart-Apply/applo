@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,8 +12,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { X, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { projectSchema, type ProjectFormValues } from '@/lib/validation/schemas';
 import type { Project } from '@/types';
 import { useTranslations } from 'next-intl';
 
@@ -143,158 +155,166 @@ function ProjectForm({
 }) {
   const t = useTranslations('profile');
 
-  const [name, setName] = useState(initial?.name ?? '');
-  const [description, setDescription] = useState(initial?.description ?? '');
-  const [technologies, setTechnologies] = useState<string[]>(initial?.technologies ?? []);
-  const [url, setUrl] = useState(initial?.url ?? '');
-  const [startDate, setStartDate] = useState(
-    initial?.startDate ? initial.startDate.split('T')[0] : '',
-  );
-  const [endDate, setEndDate] = useState(initial?.endDate ? initial.endDate.split('T')[0] : '');
-  const [urlError, setUrlError] = useState('');
+  const form = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      name: initial?.name ?? '',
+      description: initial?.description ?? '',
+      technologies: initial?.technologies ?? [],
+      url: initial?.url ?? '',
+      startDate: initial?.startDate ? initial.startDate.split('T')[0] : '',
+      endDate: initial?.endDate ? initial.endDate.split('T')[0] : '',
+    },
+  });
 
-  const nameRef = useRef<HTMLInputElement>(null);
+  const { control, setFocus } = form;
 
   useEffect(() => {
-    const focus = setTimeout(() => nameRef.current?.focus(), 120);
+    // Radix moves focus into the dialog on open; wait for it to settle.
+    const focus = setTimeout(() => setFocus('name'), 120);
     return () => clearTimeout(focus);
-  }, []);
+  }, [setFocus]);
 
-  const validate = (): boolean => {
-    if (!name.trim()) {
-      toast.error(t('projects.errors.name'));
-      nameRef.current?.focus();
-      return false;
-    }
-    if (url.trim()) {
-      try {
-        new URL(url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`);
-      } catch {
-        setUrlError(t('projects.errors.url'));
-        return false;
-      }
-    }
-    if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
-      toast.error(t('projects.errors.dateOrder'));
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = () => {
-    if (!validate()) return;
-
-    let finalUrl = url.trim() || undefined;
-    if (finalUrl && !finalUrl.startsWith('http')) {
-      finalUrl = `https://${finalUrl}`;
-    }
-
+  const handleSubmit = (values: ProjectFormValues) => {
+    const link = values.url?.trim();
     onSubmit({
       ...(initial?.id && { id: initial.id }),
-      name: name.trim(),
-      description: description.trim() || undefined,
-      technologies: technologies.length > 0 ? technologies : undefined,
-      url: finalUrl,
-      startDate: startDate ? new Date(startDate).toISOString() : undefined,
-      endDate: endDate ? new Date(endDate).toISOString() : undefined,
+      name: values.name.trim(),
+      description: values.description?.trim() || undefined,
+      technologies: values.technologies?.length ? values.technologies : undefined,
+      url: link ? (link.startsWith('http') ? link : `https://${link}`) : undefined,
+      startDate: values.startDate ? new Date(values.startDate).toISOString() : undefined,
+      endDate: values.endDate ? new Date(values.endDate).toISOString() : undefined,
     });
   };
 
   return (
-    <div className="space-y-5 px-6 pb-6 pt-2">
-      {/* Name */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('projects.name')} <span className="text-destructive">*</span>
-        </label>
-        <Input
-          ref={nameRef}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t('projects.namePlaceholder')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') e.preventDefault();
-          }}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5 px-6 pb-6 pt-2">
+        <FormField
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('projects.name')} <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder={t('projects.namePlaceholder')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      {/* Description */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.description')}{' '}
-          <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-        </label>
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={t('projects.descriptionPlaceholder')}
-          rows={3}
-          className="resize-none"
+        <FormField
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.description')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder={t('projects.descriptionPlaceholder')}
+                  rows={3}
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      {/* Technologies */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('projects.methods')}{' '}
-          <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-        </label>
-        <TechTagInput tags={technologies} onChange={setTechnologies} />
-        <p className="text-xs text-muted-foreground">{t('projects.confirmWithEnter')}</p>
-      </div>
+        <FormField
+          control={control}
+          name="technologies"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('projects.methods')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
+              </FormLabel>
+              <FormControl>
+                <TechTagInput tags={field.value ?? []} onChange={field.onChange} />
+              </FormControl>
+              <FormDescription>{t('projects.confirmWithEnter')}</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      {/* URL */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.link')}{' '}
-          <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-        </label>
-        <div className="relative">
-          <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={url}
-            onChange={(e) => {
-              setUrl(e.target.value);
-              setUrlError('');
-            }}
-            placeholder="github.com/user/project"
-            className="pl-9"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') e.preventDefault();
-            }}
+        <FormField
+          control={control}
+          name="url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.link')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
+              </FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input placeholder="github.com/user/project" className="pl-9" {...field} />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('labels.from')}{' '}
+                  <span className="font-normal text-muted-foreground">
+                    – {t('labels.optional')}
+                  </span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="endDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('labels.to')}{' '}
+                  <span className="font-normal text-muted-foreground">
+                    – {t('labels.optional')}
+                  </span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormDescription>{t('education.ongoingHelp')}</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-        {urlError && <p className="text-xs text-destructive">{urlError}</p>}
-      </div>
 
-      {/* Dates */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            {t('labels.from')}{' '}
-            <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-          </label>
-          <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+        <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            {t('actions.cancel')}
+          </Button>
+          <Button type="submit">{isEditing ? t('actions.save') : t('actions.add')}</Button>
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            {t('labels.to')}{' '}
-            <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-          </label>
-          <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-          <p className="text-xs text-muted-foreground">{t('education.ongoingHelp')}</p>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          {t('actions.cancel')}
-        </Button>
-        <Button type="button" onClick={handleSubmit} disabled={!name.trim()}>
-          {isEditing ? t('actions.save') : t('actions.add')}
-        </Button>
-      </div>
-    </div>
+      </form>
+    </Form>
   );
 }
