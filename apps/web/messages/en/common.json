@@ -41,7 +41,9 @@
   "loadingMessages": {
     "pdfPreview": "Loading PDF preview...",
     "editor": "Loading editor...",
-    "form": "Loading form..."
+    "form": "Loading form...",
+    "content": "Loading content...",
+    "page": "Loading page..."
   },
   "cookieBanner": {
     "ariaLabel": "Cookie notice",
@@ -54,6 +56,10 @@
     "errorMessageLabel": "Error message:",
     "retry": "Try again",
     "toDashboard": "Go to dashboard"
+  },
+  "errorState": {
+    "title": "Content could not be loaded",
+    "description": "Something went wrong while loading. Please try again."
   },
   "serviceWorker": {
     "updateTitle": "New version available",

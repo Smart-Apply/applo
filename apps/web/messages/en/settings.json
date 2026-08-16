@@ -46,7 +46,8 @@
       "emailTracking": "Automatic application tracking",
       "language": "Language & region",
       "theme": "Design / Theme",
-      "privacy": "Privacy & export"
+      "privacy": "Privacy & export",
+      "onboarding": "Onboarding tour"
     },
     "keywords": {
       "name": "name profil profile vorname first name nachname last name",
@@ -60,7 +61,8 @@
       "emailTracking": "tracking postfach inbox outlook gmail automatisch automatic premium",
       "language": "sprache language region deutsch german english",
       "theme": "theme design dark mode hell light dunkel dark erscheinungsbild appearance",
-      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public"
+      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public",
+      "onboarding": "tour onboarding guide help walkthrough intro getting started"
     }
   },
   "account": {
@@ -155,6 +157,13 @@
         "title": "Anonymous usage data",
         "description": "Help us improve Applo. No personal content."
       }
+    },
+    "onboarding": {
+      "title": "Getting started",
+      "description": "Get to know what Applo can do, step by step.",
+      "tourTitle": "Onboarding tour",
+      "tourDescription": "Shows you how to get from your profile to a finished application.",
+      "start": "Start tour"
     },
     "export": {
       "title": "Export my data",

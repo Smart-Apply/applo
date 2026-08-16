@@ -91,6 +91,30 @@ different meanings for "sichern".
   helper from `@/lib/utils`.
 - Tailwind v4 — use utility classes; don't introduce a competing styling system.
 
+## Loading states & motion
+
+- Reuse the motion layer in `apps/web/src/app/globals.css` — `.motion-page-enter`,
+  `.motion-view-enter`, `.motion-fade-enter`, `.motion-stagger` (+ `--motion-index`),
+  `.motion-shimmer`, `.motion-progress-indeterminate`. Don't add new `@keyframes` for a
+  one-off.
+- Animate **only** `opacity` and `transform` so a transition can never cause CLS, and keep
+  `animation-fill-mode: backwards` on enter animations — a lingering `transform` makes the
+  element a containing block and breaks `position: fixed` descendants (modals, overlays).
+- `prefers-reduced-motion` is handled globally by *fast-forwarding* animations
+  (`animation-duration: 0.01ms`), never `animation: none` — Radix `Presence` unmounts on
+  `animationend`, so removing the animation would leave dialogs mounted forever. Loading
+  indicators are deliberately exempt and keep looping slowly.
+- Prefer **skeletons over spinners** for content that has a known shape. Build them from
+  `@/components/shared/skeletons` (`SkeletonScreen`, `PageHeaderSkeleton`,
+  `ListPageSkeleton`, `DashboardSkeleton`, `AppShellSkeleton`, …) — no ad-hoc
+  `animate-pulse bg-muted` blocks or hand-rolled border spinners.
+- A11y contract: `<Skeleton>` blocks are decorative (`aria-hidden`); exactly **one**
+  `<SkeletonScreen>` per loading area carries the localized `role="status"` live region.
+  Never put `role="status"` on individual placeholder blocks.
+- Route-level fallbacks belong in a `loading.tsx` next to the `page.tsx`; the group-level
+  `template.tsx` already owns the page-enter transition, so don't re-add
+  `animate-in fade-in …` to a page root.
+
 ## Copy & domain-neutrality (important)
 
 Applo serves **every profession**, not just tech. All user-facing copy:

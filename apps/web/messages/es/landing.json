@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "title": "Applo – Candidaturas con IA basadas en tu perfil real",
+    "description": "Cartas de presentación y currículums en minutos: Applo convierte tu perfil real en documentos optimizados para ATS, para cualquier profesión, conforme al RGPD y alojados en la UE.",
+    "keywords": [
+      "candidatura de empleo",
+      "carta de presentación",
+      "generador de currículum",
+      "candidatura con IA",
+      "optimizado para ATS",
+      "preparación de entrevistas"
+    ]
+  },
   "mascot": {
     "wave": {
       "title": "¡Hola, soy Applo!",

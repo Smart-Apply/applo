@@ -122,6 +122,9 @@
     },
     "profileCheck": {
       "title": "Revisión del perfil",
+      "completeTitle": "Perfil listo",
+      "completeBody": "Todos los datos están completos. Applo ya tiene todo lo que necesita para escribir candidaturas precisas.",
+      "biggestWin": "Mayor ganancia",
       "why": "<bold>¿Por qué?</bold> Cada campo completado hace que las candidaturas con IA de Applo sean más precisas y desbloquea empleos más adecuados."
     },
     "privacy": {

@@ -8,6 +8,7 @@ import { FakeV1Provider } from './providers/fake-v1.provider';
 import { MockLLMProvider } from './providers/mock.provider';
 import { ConfigService } from '../config/config.service';
 import { LlmUsageService } from './usage/llm-usage.service';
+import { LlmUsageExportService } from './usage/llm-usage-export.service';
 import { LlmUsageRetentionCron } from './usage/llm-usage-retention.cron';
 
 export function createFastProvider(
@@ -131,9 +132,10 @@ export function createMidProvider(
     },
     LLMService,
     LlmUsageService,
+    LlmUsageExportService,
     LlmUsageRetentionCron,
   ],
-  exports: [LLMService, 'AZURE_OPENAI_PROVIDER', LlmUsageService],
+  exports: [LLMService, 'AZURE_OPENAI_PROVIDER', LlmUsageService, LlmUsageExportService],
 })
 export class LLMModule {}
 

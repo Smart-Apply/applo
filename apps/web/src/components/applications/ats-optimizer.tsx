@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { ApploRig } from '@/components/ui/applo-rig';
 import { useKeywordsAnalysis, useAnalyzeKeywords } from '@/hooks/use-applications';
 import { cn } from '@/lib/utils';
@@ -389,10 +390,10 @@ export function AtsOptimizer({
 
   if (isLoading) {
     return (
-      <div className="opti-split">
+      <SkeletonScreen className="opti-split">
         <Skeleton className="h-[420px] w-full rounded-none" />
         <Skeleton className="h-[420px] w-full rounded-none" />
-      </div>
+      </SkeletonScreen>
     );
   }
 

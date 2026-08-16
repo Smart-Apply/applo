@@ -58,6 +58,7 @@ export class UserPreferencesService {
     if (dto.theme !== undefined) data.theme = dto.theme;
     if (dto.profilePublic !== undefined) data.profilePublic = dto.profilePublic;
     if (dto.analyticsEnabled !== undefined) data.analyticsEnabled = dto.analyticsEnabled;
+    if (dto.onboardingCompleted !== undefined) data.onboardingCompleted = dto.onboardingCompleted;
 
     return data;
   }
@@ -74,6 +75,7 @@ export class UserPreferencesService {
       theme: preferences.theme,
       profilePublic: preferences.profilePublic,
       analyticsEnabled: preferences.analyticsEnabled,
+      onboardingCompleted: preferences.onboardingCompleted,
       createdAt: preferences.createdAt,
       updatedAt: preferences.updatedAt,
     };

@@ -41,7 +41,9 @@
   "loadingMessages": {
     "pdfPreview": "Chargement de l'aperçu PDF...",
     "editor": "Chargement de l'éditeur...",
-    "form": "Chargement du formulaire..."
+    "form": "Chargement du formulaire...",
+    "content": "Chargement du contenu...",
+    "page": "Chargement de la page..."
   },
   "cookieBanner": {
     "ariaLabel": "Avis relatif aux cookies",
@@ -54,6 +56,10 @@
     "errorMessageLabel": "Message d'erreur :",
     "retry": "Réessayer",
     "toDashboard": "Aller au tableau de bord"
+  },
+  "errorState": {
+    "title": "Impossible de charger le contenu",
+    "description": "Une erreur s'est produite lors du chargement. Veuillez réessayer."
   },
   "serviceWorker": {
     "updateTitle": "Nouvelle version disponible",

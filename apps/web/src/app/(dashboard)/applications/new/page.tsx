@@ -20,7 +20,7 @@ function NewApplicationContent() {
   const waitingForPrefetch = !!jobPostingId && isLoadingJob;
 
   return (
-    <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-5xl mx-auto">
       {waitingForPrefetch ? (
         <CenteredLoader />
       ) : (

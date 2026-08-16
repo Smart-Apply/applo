@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
+import { ErrorState } from '@/components/ui/error-state';
 import {
   Tooltip,
   TooltipContent,
@@ -201,11 +203,22 @@ export default function InterviewsPage() {
   const isLocked = !isLoadingTier && !hasInterviewCoach;
 
   const statusFilter = activeTab === 'all' ? undefined : (activeTab as InterviewSessionStatus);
-  const { data: sessionsData, isLoading: sessionsLoading } = useInterviewSessions({
+  const {
+    data: sessionsData,
+    isLoading: sessionsLoading,
+    isError: sessionsError,
+    isFetching: sessionsFetching,
+    refetch: refetchSessions,
+  } = useInterviewSessions({
     status: statusFilter,
     enabled: hasInterviewCoach,
   });
-  const { data: stats } = useInterviewStats({
+  const {
+    data: stats,
+    isError: statsError,
+    isFetching: statsFetching,
+    refetch: refetchStats,
+  } = useInterviewStats({
     enabled: hasInterviewCoach,
   });
   const startInterview = useStartInterview();
@@ -270,8 +283,12 @@ export default function InterviewsPage() {
                 so they preview the experience) vs. the returning layout. */}
             {showIntro ? (
               <InterviewIntro onStart={() => setDialogOpen(true)} />
+            ) : statsError ? (
+              <ErrorState onRetry={() => refetchStats()} isRetrying={statsFetching} />
             ) : !stats ? (
-              <DashboardSkeleton />
+              <SkeletonScreen>
+                <DashboardSkeleton />
+              </SkeletonScreen>
             ) : (
               <div className="space-y-6">
                 {/* Stat strip */}
@@ -334,9 +351,15 @@ export default function InterviewsPage() {
                         </div>
                       </div>
 
-                      <div className="mt-3 divide-y">
+                      <div className="mt-3 divide-y" aria-busy={sessionsLoading}>
                         {sessionsLoading ? (
                           <SessionRowsSkeleton />
+                        ) : sessionsError ? (
+                          <ErrorState
+                            className="border-0 bg-transparent py-8 dark:bg-transparent"
+                            onRetry={() => refetchSessions()}
+                            isRetrying={sessionsFetching}
+                          />
                         ) : sessionsData?.sessions?.length ? (
                           sessionsData.sessions.map((session: InterviewSession) => (
                             <SessionRow key={session.id} session={session} />

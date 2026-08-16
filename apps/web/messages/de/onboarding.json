@@ -1,0 +1,106 @@
+{
+  "tour": {
+    "stepIndicator": "Schritt {current} von {total}",
+    "progressLabel": "Fortschritt der Einführungstour",
+    "badges": {
+      "pro": "Pro & Premium",
+      "premium": "Premium"
+    },
+    "actions": {
+      "skip": "Überspringen",
+      "back": "Zurück",
+      "next": "Weiter",
+      "finish": "Tour beenden"
+    },
+    "steps": {
+      "welcome": {
+        "title": "Willkommen bei Applo",
+        "description": "In wenigen Minuten zeigen wir dir, wie aus deinem Profil und einer Stellenanzeige eine fertige Bewerbung wird – unabhängig von Branche und Beruf.",
+        "bullets": [
+          "Profil einmal anlegen – Applo nutzt es für jede weitere Bewerbung.",
+          "Stellenanzeige einfügen und Anschreiben plus Lebenslauf erzeugen lassen.",
+          "Unterlagen im Editor anpassen und als PDF herunterladen."
+        ]
+      },
+      "profile": {
+        "title": "Profil anlegen oder Lebenslauf importieren",
+        "description": "Dein Profil ist die Grundlage für alle Bewerbungen. Am schnellsten geht es mit einem vorhandenen Lebenslauf.",
+        "bullets": [
+          "Lade deinen Lebenslauf als PDF- oder Word-Datei hoch – Stationen, Abschlüsse und Kenntnisse werden automatisch übernommen.",
+          "Ergänze Berufserfahrung, Ausbildung, Zertifikate, Projekte und Sprachen – ob Pflegefachkraft, Industriemechaniker oder Vertriebsleiterin.",
+          "Je vollständiger dein Profil, desto treffender fallen die generierten Unterlagen aus."
+        ],
+        "cta": "Profil öffnen"
+      },
+      "jobs": {
+        "title": "Stellenanzeige hinzufügen & Jobs finden",
+        "description": "Applo liest die Wunschstelle aus und erkennt Position, Unternehmen und Anforderungen.",
+        "bullets": [
+          "Anzeige als Text einfügen, Link angeben oder Datei hochladen.",
+          "Oder direkt in der integrierten Jobsuche nach passenden Stellen suchen.",
+          "Jede gespeicherte Anzeige kannst du später erneut für eine Bewerbung verwenden."
+        ],
+        "cta": "Jobs öffnen"
+      },
+      "generate": {
+        "title": "Bewerbung generieren",
+        "description": "Profil und Stellenanzeige kombinieren – Applo schreibt Anschreiben und Lebenslauf passend zur Stelle.",
+        "bullets": [
+          "Der Assistent führt dich in wenigen Schritten durch die Erstellung.",
+          "Der Status läuft automatisch von „in Warteschlange“ über „wird erstellt“ bis „fertig“ – du kannst die Seite zwischendurch verlassen.",
+          "Wichtige Begriffe aus der Anzeige fließen ein, damit deine Unterlagen auch automatische Bewerbersysteme (ATS) passieren."
+        ],
+        "cta": "Bewerbung starten"
+      },
+      "editor": {
+        "title": "PDF-Editor & Designvorlagen",
+        "description": "Feinschliff ohne Textverarbeitung: Inhalte anpassen, Design wählen, exportieren.",
+        "bullets": [
+          "Anschreiben und Lebenslauf direkt im Editor bearbeiten – mit KI-Unterstützung für einzelne Abschnitte.",
+          "Mehrere ATS-taugliche Vorlagen, dazu Akzentfarbe, Schriftart und Zeilenabstand.",
+          "Export als PDF, auf Wunsch in einer anderen Sprache."
+        ],
+        "cta": "Bewerbungen öffnen"
+      },
+      "check": {
+        "title": "Bewerbungs-Check",
+        "description": "Unterlagen, die du außerhalb von Applo erstellt hast, kannst du prüfen lassen, bevor du sie abschickst.",
+        "bullets": [
+          "Lebenslauf und optional Anschreiben einfügen – die Stellenanzeige kannst du als Kontext ergänzen.",
+          "Du erhältst eine ATS-Einschätzung, deine Stärken und konkrete Verbesserungsvorschläge."
+        ],
+        "cta": "Check starten"
+      },
+      "interviews": {
+        "title": "Interview-Coach",
+        "description": "Übe Vorstellungsgespräche – schriftlich im Chat oder im Sprachmodus mit einem KI-Interviewer.",
+        "bullets": [
+          "Die Fragen orientieren sich an deinem Profil und der Stelle.",
+          "Deine Antworten werden bewertet, du bekommst konkretes Feedback.",
+          "Im Sprachmodus führst du das Gespräch wie in einem echten Interview."
+        ],
+        "cta": "Interview-Coach öffnen"
+      },
+      "tracking": {
+        "title": "E-Mail-Tracking",
+        "description": "Applo erkennt Antworten von Unternehmen in deinem Postfach und aktualisiert den Bewerbungsstatus automatisch.",
+        "bullets": [
+          "Postfach einmalig verbinden (aktuell Microsoft/Outlook).",
+          "Eingehende Antworten werden der passenden Bewerbung zugeordnet.",
+          "Es werden keine E-Mail-Inhalte gespeichert – nur der erkannte Status."
+        ],
+        "cta": "Einstellungen öffnen"
+      },
+      "done": {
+        "title": "Alles bereit – viel Erfolg!",
+        "description": "Du kennst jetzt die wichtigsten Funktionen von Applo.",
+        "bullets": [
+          "Die Tour kannst du jederzeit über „Hilfe & Tour“ in der Seitenleiste erneut starten.",
+          "Auch in den Einstellungen unter „Präferenzen“ findest du die Einführung wieder.",
+          "Nächster Schritt: Profil vervollständigen und die erste Bewerbung erstellen."
+        ],
+        "cta": "Erste Bewerbung erstellen"
+      }
+    }
+  }
+}

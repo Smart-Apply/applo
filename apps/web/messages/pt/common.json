@@ -41,7 +41,9 @@
   "loadingMessages": {
     "pdfPreview": "A carregar pré-visualização do PDF...",
     "editor": "A carregar o editor...",
-    "form": "A carregar formulário..."
+    "form": "A carregar formulário...",
+    "content": "A carregar conteúdo...",
+    "page": "A carregar página..."
   },
   "cookieBanner": {
     "ariaLabel": "Aviso de cookies",
@@ -54,6 +56,10 @@
     "errorMessageLabel": "Mensagem de erro:",
     "retry": "Tentar novamente",
     "toDashboard": "Ir para o painel"
+  },
+  "errorState": {
+    "title": "Não foi possível carregar os conteúdos",
+    "description": "Ocorreu um erro ao carregar. Tenta novamente."
   },
   "serviceWorker": {
     "updateTitle": "Nova versão disponível",

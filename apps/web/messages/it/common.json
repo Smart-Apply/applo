@@ -41,7 +41,9 @@
   "loadingMessages": {
     "pdfPreview": "Caricamento anteprima PDF...",
     "editor": "Caricamento editor...",
-    "form": "Caricamento modulo..."
+    "form": "Caricamento modulo...",
+    "content": "Caricamento contenuti...",
+    "page": "Caricamento pagina..."
   },
   "cookieBanner": {
     "ariaLabel": "Informativa sui cookie",
@@ -54,6 +56,10 @@
     "errorMessageLabel": "Messaggio di errore:",
     "retry": "Riprova",
     "toDashboard": "Vai alla dashboard"
+  },
+  "errorState": {
+    "title": "Impossibile caricare i contenuti",
+    "description": "Si è verificato un errore durante il caricamento. Riprova."
   },
   "serviceWorker": {
     "updateTitle": "Nuova versione disponibile",

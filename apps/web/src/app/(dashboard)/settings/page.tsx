@@ -29,12 +29,14 @@ import Link from 'next/link';
 import {
   User, Shield, Bell, Palette, Trash2, ChevronRight, Loader2, Download,
   Mail, Camera, Key, Lock, FileText, Search, Monitor, BarChart3, ExternalLink,
+  Compass,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { useAuthStore } from '@/stores/auth-store';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -61,6 +63,7 @@ import { SaveStatus } from '@/components/ui/save-status';
 import { useSaveStatus, type SaveState } from '@/hooks/use-save-status';
 import { useLocaleSwitch } from '@/components/i18n/language-switcher';
 import { locales, type Locale } from '@/i18n/config';
+import { useOnboardingTourStore } from '@/stores/onboarding-store';
 
 /** Same debounce as the application editor — one auto-save rhythm product-wide. */
 const PROFILE_AUTOSAVE_MS = 800;
@@ -78,6 +81,7 @@ export default function SettingsPage() {
     router.push(`/settings?section=${id}`, { scroll: false });
 
   const { user, clearAuth, updateUser, hasHydrated } = useAuthStore();
+  const openTour = useOnboardingTourStore((state) => state.openTour);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoadingPreferences, setIsLoadingPreferences] = useState(true);
@@ -248,7 +252,7 @@ export default function SettingsPage() {
 
   const PrefLoader = () => (
     <div className="flex items-center justify-center py-4">
-      <Loader2 className="h-6 w-6 animate-spin" />
+      <Spinner size="lg" />
     </div>
   );
 
@@ -665,6 +669,27 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('preferences.onboarding.title')}</CardTitle>
+              <CardDescription>{t('preferences.onboarding.description')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-0.5">
+                  <Label>{t('preferences.onboarding.tourTitle')}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('preferences.onboarding.tourDescription')}
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={openTour} className="sm:flex-none">
+                  <Compass className="mr-2 h-4 w-4" />
+                  {t('preferences.onboarding.start')}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
