@@ -101,6 +101,38 @@ The **live** path is the v1 "single-LLM pipeline" inside
 > `.github/copilot-instructions.md` per the repo's mandatory doc-sync rule. Prompt-only
 > items (#3, #4, #5) do not.
 
+### Follow-ups from the 2026-08 output review (#572)
+
+All ten original improvements shipped. The August 2026 review
+([LLM_OUTPUT_QUALITY_REVIEW_2026-08.md](./LLM_OUTPUT_QUALITY_REVIEW_2026-08.md)) audited
+the shipped result and found that the deterministic guards largely cannot see the defects
+they were built to catch — e.g. the grounding validator inspects **28 %** (95 % CI 20–39)
+of the impact claims in our own 24 fixtures, and the exported cover letter ships with no
+closing formula, date, recipient block or Betreffzeile.
+
+| # | Improvement | Effort | Status | Acceptance criterion | Primary files |
+|---|---|---|---|---|---|
+| R1 | Complete the exported cover letter (date, closing phrase, recipient block, Betreffzeile) | S | 🔴 Planned | Probes P23–P26 flip to OK | `jobs/processors/application.processor.ts`, `pdf-v2/template-data.ts`, `pdf-v2/templates/*` |
+| R2 | Grounding validator reads numbers as humans write them (word-form %, written-out magnitudes, unit-aware, small counts) | M | 🔴 Planned | P01 recall ≥ 90 %; P03–P06 OK | `grounding/grounding-validator.service.ts` |
+| R3 | Scorer parity — headless `--score` must use the production grounding corpus | S | 🔴 Planned | P07, P08 OK | `scripts/headless-generate.ts`, `applications/headless/generate.ts` |
+| R4 | Rewrite the `cover-letter.md` few-shots (profession-diverse, no `[Company]`, no forbidden phrases, domain examples) | S | 🔴 Planned | P09, P10 OK | `prompts/v1/cover-letter.md` |
+| R5 | Expand the DE/EN cliché lists to the dominant families | S | 🔴 Planned | P02, P11, P12 OK | `applications/style-lint.util.ts` |
+| R6 | Fix keyword↔profile matching (achievements + summary, word-boundary tokens, German morphology) | M | 🔴 Planned | P15, P16, P17 OK | `applications/keyword-coverage.util.ts` |
+| R7 | Keep the contact name when gender is unknown (+ extend `SALUTATION_LINE_RE`) | S | 🔴 Planned | P22 OK, P20 still OK | `applications/job-facts.util.ts`, `applications/style-lint.util.ts` |
+| R8 | Extend deterministic guards to the fr/es/pt/it export locales | M | 🔴 Planned | P14, P21 OK | `applications/style-lint.util.ts`, `applications/translation/translation.service.ts` |
+| R9 | Make quality observable in prod (persist the `guards` record + structured counters) | M | 🔴 Planned | Guard fallback rate queryable without log scraping | `applications/generation.service.ts`, `applications/headless/generate.ts` |
+| R10 | Résumé ATS coverage metric + soft skills | M | 🔴 Planned | P18, P19 OK | `applications/keyword-coverage.util.ts` |
+
+> **Doc-sync note:** R1, R3, R6, R9 and R10 change the generation pipeline or the PDF
+> output, so they MUST update `README.md` + `ARCHITECTURE.md` +
+> `.github/copilot-instructions.md` when they ship. R4/R5/R7 (prompt + word-list only) do
+> not.
+>
+> **Regression harness:** every R above is gated on a probe in
+> [`scripts/eval/output-quality-probe.ts`](../../apps/api/scripts/eval/output-quality-probe.ts).
+> Run `pnpm --filter @applo/api run eval:probe` (offline, free); a fix PR can gate on
+> `-- --fail-on-gaps`.
+
 ---
 
 ## Phased rollout
@@ -481,16 +513,61 @@ kept) so the harness measures byte-identical prompt inputs and never drifts.
 - **Grounding strictness (#7)** — ✅ RESOLVED 2026-06-15: **flag + log** (non-destructive).
   Stripping numbers from prose mangles sentences; flagging gives telemetry now and can feed
   the editor pass later. Revisit if we want auto-correction.
-- **Betreffzeile / subject line (#5)** — ✅ RESOLVED 2026-06-15: **skip for now.** It's a
-  *template* change (no `subject` field in `CoverLetterTemplateData`; the PDF template owns
-  the header), not a prompt change — low marginal value now the salutation + company
-  reference are solid. Revisit under PDF templates if requested.
+- **Betreffzeile / subject line (#5)** — ⚠️ **RE-OPENED 2026-08-16** by the output review
+  (#572). Previously RESOLVED 2026-06-15 as *skip for now* on the grounds that it is a
+  template change of low marginal value. The review measured the rendered PDF and found
+  the letter is missing not just the Betreffzeile but the **date, recipient block and
+  closing formula** as well — so this is no longer an isolated nice-to-have but part of
+  one data-mapping defect (follow-up **R1**). See
+  [LLM_OUTPUT_QUALITY_REVIEW_2026-08.md §4–5](./LLM_OUTPUT_QUALITY_REVIEW_2026-08.md).
 
 ---
 
 ## Changelog
 
 _Newest first. Add an entry for every change that touches generation quality._
+
+### 2026-08-16 — Generation-output review (#572): the guards can't see what they measure
+
+- **What.** A structured review of the current generation output across all 24 committed
+  fixtures (15 profession families × DE/EN), written up in
+  [LLM_OUTPUT_QUALITY_REVIEW_2026-08.md](./LLM_OUTPUT_QUALITY_REVIEW_2026-08.md), plus a
+  committed offline probe
+  ([`scripts/eval/output-quality-probe.ts`](../../apps/api/scripts/eval/output-quality-probe.ts),
+  `pnpm --filter @applo/api run eval:probe`) that reproduces every number in it. **26
+  probes: 24 gaps, 2 passing positive controls.**
+- **Method + caveat.** Static audit of the 13 `prompts/v1/*` generation prompts and the
+  deterministic guards, plus a probe that feeds known-defective and known-clean inputs
+  through the production checkers, plus a real `@react-pdf/renderer` render using the
+  exact data object `application.processor.ts` builds. **No paid LLM run was performed** —
+  nothing here is a claim about *model* quality. That ordering is deliberate: the eval
+  harness's deterministic scores are produced by the very checkers this review found to be
+  under-covered, so measuring generation quality first would have bought a confidently
+  wrong baseline. A pre-specified protocol for the paid run is in §7 of the review.
+- **Headline findings.** (1) The grounding validator inspects **23/81 = 28 %** (95 % Wilson
+  CI 20–39) of the unambiguous impact claims in our own fixtures — every miss is a
+  percentage written as a *word* (`18 Prozent`, `93 percent`), because the extractor only
+  matches the `%` sign. (2) The **exported cover letter has no closing formula, date,
+  recipient block or Betreffzeile**; `stripClosingPhrase` deletes the LLM's *"Mit
+  freundlichen Grüßen"* on the premise that the template adds it, but the processor never
+  sets `closingPhrase`. (3) The style linter is well aligned with its own prompts' 19
+  forbidden phrases (18/19 detectable) but scores **0 findings** on the dominant DE and EN
+  cliché families — and on **all four** example openings shipped inside
+  `prompts/v1/cover-letter.md`, three of which are near-identical and use the `[Company]`
+  placeholder the same prompt bans. (4) Keyword↔profile matching ignores
+  `experience.achievements` + `profile.summary`, over-matches on substrings (skill `"Go"`
+  supports `"Django"`) and under-matches German compounds. (5) The headless `--score` seam
+  omits `jobPostingText`, so the same letter scores **100 in production and 0 offline**.
+- **Result.** Ten prioritised follow-ups **R1–R10** added to the status summary above,
+  each gated on a named probe flipping from `GAP` to `OK`, so a fix PR can verify itself
+  with `pnpm --filter @applo/api run eval:probe -- --fail-on-gaps`. The Betreffzeile
+  "Open decision" (resolved 2026-06-15 as *skip for now*) is **re-opened** with evidence
+  and folded into R1.
+- **Branch:** `chore/llm-output-review`. Touched: `scripts/eval/output-quality-probe.ts`
+  (new), `apps/api/package.json` (+`eval:probe`),
+  `docs/implementation/LLM_OUTPUT_QUALITY_REVIEW_2026-08.md` (new), this tracker (status
+  summary + open decisions + changelog), `docs/plans/10-issue-572-llm-output-review.md`.
+  No production code changed.
 
 ### 2026-06-27 — German Nominalstil for résumé bullets (prompt fix + deterministic enforcement)
 - **Reported defect.** German résumé bullets opened with a finite past-tense verb
