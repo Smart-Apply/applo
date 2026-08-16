@@ -190,6 +190,45 @@ const sanitizeUrl = (val: string): string => {
  */
 const GERMAN_PLZ_REGEX = /^\d{5}$/;
 
+/**
+ * `sanitizeUrl` prepends a scheme, which turns even a bare typo into a
+ * syntactically valid URL — so the host check is what actually rejects one.
+ */
+const hasWebDomain = (value: string): boolean => {
+  try {
+    const { protocol, hostname } = new URL(sanitizeUrl(value));
+    return (protocol === 'https:' || protocol === 'http:') && /\.[a-z]{2,}$/i.test(hostname);
+  } catch {
+    return false;
+  }
+};
+
+const isLinkedInUrl = (value: string): boolean => {
+  try {
+    const { hostname } = new URL(sanitizeUrl(value));
+    return hostname === 'linkedin.com' || hostname.endsWith('.linkedin.com');
+  } catch {
+    return false;
+  }
+};
+
+const webUrlInvalid = m({
+  de: 'Bitte gib eine vollständige Adresse ein, z.B. example.com/nachweis',
+  en: 'Please enter a complete address, e.g. example.com/record',
+  fr: 'Veuillez saisir une adresse complète, p. ex. example.com/justificatif',
+  es: 'Introduce una dirección completa, p. ej., example.com/certificado',
+  pt: 'Introduz um endereço completo, p. ex., example.com/comprovativo',
+  it: 'Inserisci un indirizzo completo, ad es. example.com/attestato',
+});
+const linkedinUrlInvalid = m({
+  de: 'Bitte gib eine LinkedIn-Adresse ein, z.B. linkedin.com/in/dein-profil',
+  en: 'Please enter a LinkedIn address, e.g. linkedin.com/in/your-profile',
+  fr: 'Veuillez saisir une adresse LinkedIn, p. ex. linkedin.com/in/votre-profil',
+  es: 'Introduce una dirección de LinkedIn, p. ej., linkedin.com/in/tu-perfil',
+  pt: 'Introduz um endereço do LinkedIn, p. ex., linkedin.com/in/o-teu-perfil',
+  it: 'Inserisci un indirizzo LinkedIn, ad es. linkedin.com/in/il-tuo-profilo',
+});
+
 export const profileSchema = z.object({
   firstName: z.string().min(1, { error: firstNameRequired }).optional(),
   lastName: z.string().min(1, { error: lastNameRequired }).optional(),
@@ -242,9 +281,9 @@ export const profileSchema = z.object({
     pt: 'O país pode ter no máximo 100 caracteres',
     it: 'Il paese può contenere al massimo 100 caratteri',
   }) }).optional().or(z.literal('')),
-  linkedinUrl: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
-  githubUrl: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
-  portfolioUrl: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
+  linkedinUrl: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).refine(hasWebDomain, { error: webUrlInvalid }).refine(isLinkedInUrl, { error: linkedinUrlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
+  githubUrl: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).refine(hasWebDomain, { error: webUrlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
+  portfolioUrl: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).refine(hasWebDomain, { error: webUrlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
   summary: z.string().optional(),
 });
 
@@ -261,99 +300,204 @@ export const skillSchema = z.object({
   level: z.string().optional(),
 });
 
-export const certificateSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, { error: m({
-    de: 'Name ist erforderlich',
-    en: 'Name is required',
-    fr: 'Le nom est requis',
-    es: 'El nombre es obligatorio',
-    pt: 'O nome é obrigatório',
-    it: 'Il nome è obbligatorio',
-  }) }),
-  issuer: z.string().min(1, { error: m({
-    de: 'Aussteller ist erforderlich',
-    en: 'Issuer is required',
-    fr: 'L’émetteur est requis',
-    es: 'El emisor es obligatorio',
-    pt: 'A entidade emissora é obrigatória',
-    it: 'L’ente emittente è obbligatorio',
-  }) }),
-  dateObtained: z.string().optional(),
-  url: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
+// ----------------------------------------------------------------------------
+// Profile entry schemas (the /profile editor dialogs)
+//
+// These validate the FORM shape, not the API DTO: date inputs hand back
+// `YYYY-MM-DD` strings and year inputs hand back strings. Each dialog maps to
+// the DTO on submit. The profile is the input to AI generation, so an
+// unchecked value here ends up in the generated CV and cover letter.
+// ----------------------------------------------------------------------------
+
+/** ISO `YYYY-MM-DD` sorts lexicographically, so no Date parsing is needed. */
+const isBefore = (value?: string, floor?: string): boolean => Boolean(value && floor && value < floor);
+
+const isPlausibleYear = (value?: string): boolean => {
+  if (!value?.trim()) return true;
+  const year = Number(value);
+  return Number.isInteger(year) && year >= 1900 && year <= new Date().getFullYear() + 10;
+};
+
+const isYearBefore = (value?: string, floor?: string): boolean =>
+  Boolean(value?.trim() && floor?.trim() && Number(value) < Number(floor));
+
+const endBeforeStart = m({
+  de: 'Bitte wähle ein Enddatum nach dem Startdatum',
+  en: 'Please choose an end date after the start date',
+  fr: 'Veuillez choisir une date de fin postérieure à la date de début',
+  es: 'Elige una fecha de fin posterior a la fecha de inicio',
+  pt: 'Escolhe uma data de fim posterior à data de início',
+  it: 'Scegli una data di fine successiva alla data di inizio',
+});
+const endDateWithCurrent = m({
+  de: 'Entferne das Enddatum oder deaktiviere „laufend“',
+  en: 'Remove the end date or turn off “ongoing”',
+  fr: 'Supprimez la date de fin ou désactivez « en cours »',
+  es: 'Quita la fecha de fin o desactiva «en curso»',
+  pt: 'Remove a data de fim ou desativa «em curso»',
+  it: 'Rimuovi la data di fine o disattiva «in corso»',
+});
+const expiryBeforeIssue = m({
+  de: 'Bitte wähle ein Ablaufdatum nach dem Ausstellungsdatum',
+  en: 'Please choose an expiry date after the issue date',
+  fr: 'Veuillez choisir une date d’expiration postérieure à la date de délivrance',
+  es: 'Elige una fecha de caducidad posterior a la fecha de emisión',
+  pt: 'Escolhe uma data de validade posterior à data de emissão',
+  it: 'Scegli una data di scadenza successiva alla data di rilascio',
+});
+const yearImplausible = m({
+  de: 'Bitte gib ein Jahr ab 1900 ein',
+  en: 'Please enter a year from 1900 onwards',
+  fr: 'Veuillez saisir une année à partir de 1900',
+  es: 'Introduce un año a partir de 1900',
+  pt: 'Introduz um ano a partir de 1900',
+  it: 'Inserisci un anno a partire dal 1900',
+});
+const endYearBeforeStart = m({
+  de: 'Bitte gib ein Endjahr nach dem Startjahr ein',
+  en: 'Please enter an end year after the start year',
+  fr: 'Veuillez saisir une année de fin postérieure à l’année de début',
+  es: 'Introduce un año de fin posterior al año de inicio',
+  pt: 'Introduz um ano de fim posterior ao ano de início',
+  it: 'Inserisci un anno di fine successivo all’anno di inizio',
 });
 
-export const experienceSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().min(1, { error: m({
-    de: 'Jobtitel ist erforderlich',
-    en: 'Job title is required',
-    fr: 'L’intitulé du poste est requis',
-    es: 'El título del puesto es obligatorio',
-    pt: 'O título do cargo é obrigatório',
-    it: 'Il titolo della posizione è obbligatorio',
-  }) }),
-  company: z.string().min(1, { error: m({
-    de: 'Firma ist erforderlich',
-    en: 'Company is required',
-    fr: 'L’entreprise est requise',
-    es: 'La empresa es obligatoria',
-    pt: 'A empresa é obrigatória',
-    it: 'L’azienda è obbligatoria',
-  }) }),
-  location: z.string().optional(),
-  startDate: z.string().min(1, { error: m({
-    de: 'Startdatum ist erforderlich',
-    en: 'Start date is required',
-    fr: 'La date de début est requise',
-    es: 'La fecha de inicio es obligatoria',
-    pt: 'A data de início é obrigatória',
-    it: 'La data di inizio è obbligatoria',
-  }) }),
-  endDate: z.string().optional(),
-  current: z.boolean().optional(),
-  description: z.string().optional(),
-});
+/** Optional link: empty stays empty, anything else must resolve to a real domain. */
+const optionalWebUrl = z
+  .string()
+  .optional()
+  .refine((value) => !value?.trim() || hasWebDomain(value), { error: webUrlInvalid });
 
-export const projectSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, { error: m({
-    de: 'Projektname ist erforderlich',
-    en: 'Project name is required',
-    fr: 'Le nom du projet est requis',
-    es: 'El nombre del proyecto es obligatorio',
-    pt: 'O nome do projeto é obrigatório',
-    it: 'Il nome del progetto è obbligatorio',
-  }) }),
-  description: z.string().optional(),
-  technologies: z.array(z.string()).optional(),
-  url: z.string().transform(sanitizeUrl).pipe(z.string().url({ error: urlInvalid }).or(z.literal(''))).optional().or(z.literal('')),
-});
+export const certificateSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().trim().min(1, { error: m({
+      de: 'Bitte gib einen Zertifikatsnamen ein',
+      en: 'Please enter a certificate name',
+      fr: 'Veuillez saisir un nom de certificat',
+      es: 'Introduce un nombre de certificado',
+      pt: 'Introduz um nome de certificado',
+      it: 'Inserisci un nome per il certificato',
+    }) }),
+    issuer: z.string().trim().min(1, { error: m({
+      de: 'Bitte gib die ausstellende Organisation ein',
+      en: 'Please enter the issuing organisation',
+      fr: 'Veuillez saisir l’organisme émetteur',
+      es: 'Introduce la organización emisora',
+      pt: 'Introduz a organização emissora',
+      it: 'Inserisci l’organizzazione che rilascia il certificato',
+    }) }),
+    dateObtained: z.string().optional(),
+    expiryDate: z.string().optional(),
+    credentialId: z.string().optional(),
+    url: optionalWebUrl,
+  })
+  .refine((values) => !isBefore(values.expiryDate, values.dateObtained), {
+    error: expiryBeforeIssue,
+    path: ['expiryDate'],
+  });
 
-export const educationSchema = z.object({
-  id: z.string().optional(),
-  degree: z.string().min(1, { error: m({
-    de: 'Abschluss ist erforderlich',
-    en: 'Degree is required',
-    fr: 'Le diplôme est requis',
-    es: 'La titulación es obligatoria',
-    pt: 'O grau académico é obrigatório',
-    it: 'Il titolo di studio è obbligatorio',
-  }) }),
-  institution: z.string().min(1, { error: m({
-    de: 'Institution ist erforderlich',
-    en: 'Institution is required',
-    fr: 'L’établissement est requis',
-    es: 'La institución es obligatoria',
-    pt: 'A instituição é obrigatória',
-    it: 'L’istituto è obbligatorio',
-  }) }),
-  fieldOfStudy: z.string().optional(),
-  startYear: z.string().optional(), // DateString format
-  endYear: z.string().optional(), // DateString format
-  gpa: z.string().optional(),
-  description: z.string().optional(),
-});
+export const experienceSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z.string().trim().min(1, { error: m({
+      de: 'Bitte gib einen Jobtitel ein',
+      en: 'Please enter a job title',
+      fr: 'Veuillez saisir un intitulé de poste',
+      es: 'Introduce un título de puesto',
+      pt: 'Introduz um título de cargo',
+      it: 'Inserisci un titolo di posizione',
+    }) }),
+    company: z.string().trim().min(1, { error: m({
+      de: 'Bitte gib eine Firma ein',
+      en: 'Please enter a company',
+      fr: 'Veuillez saisir une entreprise',
+      es: 'Introduce una empresa',
+      pt: 'Introduz uma empresa',
+      it: 'Inserisci un’azienda',
+    }) }),
+    location: z.string().optional(),
+    startDate: z.string().min(1, { error: m({
+      de: 'Bitte gib ein Startdatum ein',
+      en: 'Please enter a start date',
+      fr: 'Veuillez saisir une date de début',
+      es: 'Introduce una fecha de inicio',
+      pt: 'Introduz uma data de início',
+      it: 'Inserisci una data di inizio',
+    }) }),
+    endDate: z.string().optional(),
+    current: z.boolean().optional(),
+    description: z.string().optional(),
+  })
+  // An ongoing entry owns its end: it must not also carry an end date.
+  .refine((values) => !(values.current && values.endDate), {
+    error: endDateWithCurrent,
+    path: ['endDate'],
+  })
+  .refine((values) => values.current || !isBefore(values.endDate, values.startDate), {
+    error: endBeforeStart,
+    path: ['endDate'],
+  });
+
+export const projectSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().trim().min(1, { error: m({
+      de: 'Bitte gib einen Projektnamen ein',
+      en: 'Please enter a project name',
+      fr: 'Veuillez saisir un nom de projet',
+      es: 'Introduce un nombre de proyecto',
+      pt: 'Introduz um nome de projeto',
+      it: 'Inserisci un nome per il progetto',
+    }) }),
+    description: z.string().optional(),
+    technologies: z.array(z.string()).optional(),
+    url: optionalWebUrl,
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  })
+  .refine((values) => !isBefore(values.endDate, values.startDate), {
+    error: endBeforeStart,
+    path: ['endDate'],
+  });
+
+export const educationSchema = z
+  .object({
+    id: z.string().optional(),
+    degree: z.string().trim().min(1, { error: m({
+      de: 'Bitte gib einen Abschluss ein',
+      en: 'Please enter a degree',
+      fr: 'Veuillez saisir un diplôme',
+      es: 'Introduce una titulación',
+      pt: 'Introduz um grau académico',
+      it: 'Inserisci un titolo di studio',
+    }) }),
+    institution: z.string().trim().min(1, { error: m({
+      de: 'Bitte gib eine Institution ein',
+      en: 'Please enter an institution',
+      fr: 'Veuillez saisir un établissement',
+      es: 'Introduce una institución',
+      pt: 'Introduz uma instituição',
+      it: 'Inserisci un istituto',
+    }) }),
+    fieldOfStudy: z.string().optional(),
+    startYear: z.string().optional(),
+    endYear: z.string().optional(),
+    gpa: z.string().optional(),
+    description: z.string().optional(),
+  })
+  .refine((values) => isPlausibleYear(values.startYear), {
+    error: yearImplausible,
+    path: ['startYear'],
+  })
+  .refine((values) => isPlausibleYear(values.endYear), {
+    error: yearImplausible,
+    path: ['endYear'],
+  })
+  .refine((values) => !isYearBefore(values.endYear, values.startYear), {
+    error: endYearBeforeStart,
+    path: ['endYear'],
+  });
 
 export const languageSchema = z.object({
   id: z.string().optional(),

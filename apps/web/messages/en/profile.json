@@ -374,12 +374,6 @@
     "titlePlaceholder": "e.g. project manager, nurse, sales manager",
     "companyPlaceholder": "e.g. Example Ltd.",
     "locationPlaceholder": "e.g. Berlin",
-    "errors": {
-      "title": "Please enter a job title",
-      "company": "Please enter a company",
-      "startDate": "Please enter a start date",
-      "dateOrder": "End date must be after the start date"
-    },
     "toasts": {
       "updated": "Experience updated",
       "added": "Experience added",
@@ -403,11 +397,6 @@
     "endYearPlaceholder": "e.g. 2024",
     "ongoingHelp": "Empty = still ongoing",
     "descriptionPlaceholder": "Relevant courses, projects, or awards …",
-    "errors": {
-      "institution": "Please enter an institution",
-      "degree": "Please enter a degree",
-      "yearOrder": "End year must be after the start year"
-    },
     "toasts": {
       "updated": "Education updated",
       "added": "Education added",
@@ -437,12 +426,6 @@
     "namePlaceholder": "e.g. Project Management Professional",
     "issuerPlaceholder": "e.g. IHK, Microsoft, TÜV",
     "credentialPlaceholder": "e.g. ABC-123-456",
-    "errors": {
-      "name": "Please enter a certificate name",
-      "issuer": "Please enter the issuing organization",
-      "url": "Please enter a valid URL",
-      "dateOrder": "Expiry date must be after the issue date"
-    },
     "toasts": {
       "updated": "Certificate updated",
       "added": "Certificate added",
@@ -466,10 +449,7 @@
     "descriptionPlaceholder": "What did you do? What was your role?",
     "confirmWithEnter": "Confirm with Enter",
     "errors": {
-      "duplicate": "Already added",
-      "name": "Please enter a project name",
-      "url": "Please enter a valid URL",
-      "dateOrder": "End date must be after the start date"
+      "duplicate": "Already added"
     },
     "toasts": {
       "updated": "Project updated",

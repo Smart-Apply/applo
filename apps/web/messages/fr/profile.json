@@ -374,12 +374,6 @@
     "titlePlaceholder": "p. ex. chef de projet, infirmier, responsable des ventes",
     "companyPlaceholder": "p. ex. Exemple SARL",
     "locationPlaceholder": "p. ex. Paris",
-    "errors": {
-      "title": "Veuillez saisir un intitulé de poste",
-      "company": "Veuillez saisir une entreprise",
-      "startDate": "Veuillez saisir une date de début",
-      "dateOrder": "La date de fin doit être postérieure à la date de début"
-    },
     "toasts": {
       "updated": "Expérience mise à jour",
       "added": "Expérience ajoutée",
@@ -403,11 +397,6 @@
     "endYearPlaceholder": "p. ex. 2024",
     "ongoingHelp": "Vide = en cours",
     "descriptionPlaceholder": "Cours pertinents, projets ou distinctions …",
-    "errors": {
-      "institution": "Veuillez saisir un établissement",
-      "degree": "Veuillez saisir un diplôme",
-      "yearOrder": "L'année de fin doit être postérieure à l'année de début"
-    },
     "toasts": {
       "updated": "Formation mise à jour",
       "added": "Formation ajoutée",
@@ -437,12 +426,6 @@
     "namePlaceholder": "p. ex. Professionnel en gestion de projet",
     "issuerPlaceholder": "p. ex. CCI, Microsoft, AFNOR",
     "credentialPlaceholder": "p. ex. ABC-123-456",
-    "errors": {
-      "name": "Veuillez saisir un nom de certificat",
-      "issuer": "Veuillez saisir l'organisme émetteur",
-      "url": "Veuillez saisir une URL valide",
-      "dateOrder": "La date d'expiration doit être postérieure à la date de délivrance"
-    },
     "toasts": {
       "updated": "Certificat mis à jour",
       "added": "Certificat ajouté",
@@ -466,10 +449,7 @@
     "descriptionPlaceholder": "Qu'avez-vous fait ? Quel était votre rôle ?",
     "confirmWithEnter": "Confirmer avec Entrée",
     "errors": {
-      "duplicate": "Déjà ajouté",
-      "name": "Veuillez saisir un nom de projet",
-      "url": "Veuillez saisir une URL valide",
-      "dateOrder": "La date de fin doit être postérieure à la date de début"
+      "duplicate": "Déjà ajouté"
     },
     "toasts": {
       "updated": "Projet mis à jour",

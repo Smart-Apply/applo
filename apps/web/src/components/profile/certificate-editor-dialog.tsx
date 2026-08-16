@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -9,8 +11,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Link as LinkIcon } from 'lucide-react';
-import { toast } from 'sonner';
+import { certificateSchema, type CertificateFormValues } from '@/lib/validation/schemas';
 import type { Certificate } from '@/types';
 import { useTranslations } from 'next-intl';
 
@@ -67,163 +78,165 @@ function CertificateForm({
 }) {
   const t = useTranslations('profile');
 
-  const [name, setName] = useState(initial?.name ?? '');
-  const [issuer, setIssuer] = useState(initial?.issuer ?? '');
-  const [issueDate, setIssueDate] = useState(
-    initial?.dateObtained ? initial.dateObtained.split('T')[0] : '',
-  );
-  const [expiryDate, setExpiryDate] = useState(
-    initial?.expiryDate ? initial.expiryDate.split('T')[0] : '',
-  );
-  const [credentialId, setCredentialId] = useState(initial?.credentialId ?? '');
-  const [credentialUrl, setCredentialUrl] = useState(initial?.url ?? '');
-  const [urlError, setUrlError] = useState('');
+  const form = useForm<CertificateFormValues>({
+    resolver: zodResolver(certificateSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      name: initial?.name ?? '',
+      issuer: initial?.issuer ?? '',
+      dateObtained: initial?.dateObtained ? initial.dateObtained.split('T')[0] : '',
+      expiryDate: initial?.expiryDate ? initial.expiryDate.split('T')[0] : '',
+      credentialId: initial?.credentialId ?? '',
+      url: initial?.url ?? '',
+    },
+  });
 
-  const nameRef = useRef<HTMLInputElement>(null);
+  const { control, setFocus } = form;
 
   useEffect(() => {
-    const focus = setTimeout(() => nameRef.current?.focus(), 120);
+    // Radix moves focus into the dialog on open; wait for it to settle.
+    const focus = setTimeout(() => setFocus('name'), 120);
     return () => clearTimeout(focus);
-  }, []);
+  }, [setFocus]);
 
-  const canSubmit = name.trim() && issuer.trim();
-
-  const handleSubmit = () => {
-    if (!name.trim()) {
-      toast.error(t('certificates.errors.name'));
-      nameRef.current?.focus();
-      return;
-    }
-    if (!issuer.trim()) {
-      toast.error(t('certificates.errors.issuer'));
-      return;
-    }
-    if (credentialUrl.trim()) {
-      try {
-        new URL(
-          credentialUrl.trim().startsWith('http')
-            ? credentialUrl.trim()
-            : `https://${credentialUrl.trim()}`,
-        );
-      } catch {
-        setUrlError(t('certificates.errors.url'));
-        return;
-      }
-    }
-    if (issueDate && expiryDate && new Date(expiryDate) < new Date(issueDate)) {
-      toast.error(t('certificates.errors.dateOrder'));
-      return;
-    }
-
-    let finalUrl = credentialUrl.trim() || undefined;
-    if (finalUrl && !finalUrl.startsWith('http')) {
-      finalUrl = `https://${finalUrl}`;
-    }
-
+  const handleSubmit = (values: CertificateFormValues) => {
+    const link = values.url?.trim();
     onSubmit({
       ...(initial?.id && { id: initial.id }),
-      name: name.trim(),
-      issuer: issuer.trim(),
-      dateObtained: issueDate ? new Date(issueDate).toISOString() : undefined,
-      expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null,
-      credentialId: credentialId.trim() || undefined,
-      url: finalUrl,
+      name: values.name.trim(),
+      issuer: values.issuer.trim(),
+      dateObtained: values.dateObtained
+        ? new Date(values.dateObtained).toISOString()
+        : undefined,
+      expiryDate: values.expiryDate ? new Date(values.expiryDate).toISOString() : null,
+      credentialId: values.credentialId?.trim() || undefined,
+      url: link ? (link.startsWith('http') ? link : `https://${link}`) : undefined,
     });
   };
 
   return (
-    <div className="space-y-5 px-6 pb-6 pt-2">
-      {/* Name */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('certificates.name')} <span className="text-destructive">*</span>
-        </label>
-        <Input
-          ref={nameRef}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t('certificates.namePlaceholder')}
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5 px-6 pb-6 pt-2">
+        <FormField
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('certificates.name')} <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder={t('certificates.namePlaceholder')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      {/* Issuer */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('certificates.issuer')} <span className="text-destructive">*</span>
-        </label>
-        <Input
-          value={issuer}
-          onChange={(e) => setIssuer(e.target.value)}
-          placeholder={t('certificates.issuerPlaceholder')}
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+        <FormField
+          control={control}
+          name="issuer"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('certificates.issuer')} <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder={t('certificates.issuerPlaceholder')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      {/* Dates */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            {t('certificates.issuedAt')}{' '}
-            <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-          </label>
-          <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            {t('certificates.expiresAt')}{' '}
-            <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-          </label>
-          <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
-          <p className="text-xs text-muted-foreground">{t('certificates.noExpiry')}</p>
-        </div>
-      </div>
-
-      {/* Credential ID */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('certificates.credentialId')}{' '}
-          <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-        </label>
-        <Input
-          value={credentialId}
-          onChange={(e) => setCredentialId(e.target.value)}
-          placeholder={t('certificates.credentialPlaceholder')}
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-        />
-      </div>
-
-      {/* URL */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          {t('labels.link')}{' '}
-          <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
-        </label>
-        <div className="relative">
-          <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={credentialUrl}
-            onChange={(e) => {
-              setCredentialUrl(e.target.value);
-              setUrlError('');
-            }}
-            placeholder="example.com/verify/certificate"
-            className="pl-9"
-            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={control}
+            name="dateObtained"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('certificates.issuedAt')}{' '}
+                  <span className="font-normal text-muted-foreground">
+                    – {t('labels.optional')}
+                  </span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="expiryDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('certificates.expiresAt')}{' '}
+                  <span className="font-normal text-muted-foreground">
+                    – {t('labels.optional')}
+                  </span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormDescription>{t('certificates.noExpiry')}</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-        {urlError && <p className="text-xs text-destructive">{urlError}</p>}
-      </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          {t('actions.cancel')}
-        </Button>
-        <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-          {isEditing ? t('actions.save') : t('actions.add')}
-        </Button>
-      </div>
-    </div>
+        <FormField
+          control={control}
+          name="credentialId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('certificates.credentialId')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder={t('certificates.credentialPlaceholder')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('labels.link')}{' '}
+                <span className="font-normal text-muted-foreground">– {t('labels.optional')}</span>
+              </FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="example.com/verify/certificate"
+                    className="pl-9"
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            {t('actions.cancel')}
+          </Button>
+          <Button type="submit">{isEditing ? t('actions.save') : t('actions.add')}</Button>
+        </div>
+      </form>
+    </Form>
   );
 }
