@@ -4,6 +4,12 @@ import { useState, useRef, useEffect, useCallback, useMemo, type ReactNode } fro
 import { useProfile, useUpdateProfile } from '@/hooks/use-profile';
 import { useAuthStore } from '@/stores/auth-store';
 import { getLanguageLevelLabel } from '@/lib/translations';
+import {
+  calculateProfileStrength,
+  sortCriteriaByImpact,
+  type ProfileCriterion,
+  type ProfileCriterionKey,
+} from '@/lib/profile-utils';
 import { Button } from '@/components/ui/button';
 import { StatusChip } from '@/components/ui/status-chip';
 import { ProfilePhotoAvatar } from '@/components/profile/profile-photo-avatar';
@@ -590,13 +596,24 @@ function CollapsibleCard({
   );
 }
 
-interface Criterion {
-  id: string;
+interface Criterion extends ProfileCriterion {
+  /** Section the criterion is edited in — target of the row's jump-to click. */
+  sectionId: string;
   label: string;
-  weight: number;
-  done: boolean;
   hint: string;
 }
+
+/** Exhaustive by construction: a new criterion key won't compile until mapped. */
+const CRITERION_SECTION: Record<ProfileCriterionKey, string> = {
+  contact: 'identity',
+  phone: 'identity',
+  address: 'identity',
+  about: 'about',
+  skills: 'skills',
+  experience: 'experience',
+  education: 'education',
+  linkedin: 'identity',
+};
 
 /**
  * Normalize an education year to a 4-digit number. The API serializes the year
@@ -936,30 +953,22 @@ export default function ProfilePage() {
     setAboutEditing(false);
   }, [aboutDraft, updateProfile]);
 
-  // ── Transparent, weighted profile-check (mirrors calculateProfileStrength) ──
-  const criteria: Criterion[] = useMemo(() => {
-    const hasBasic = !!(user?.firstName && user?.lastName && user?.email);
-    const hasPhone = !!profile?.phone;
-    const hasAddress = !!(profile?.city || profile?.street);
-    const hasSummary = !!profile?.summary;
-    const hasSkills = (profile?.skills?.length ?? 0) > 0;
-    const hasExperience = (profile?.experiences?.length ?? 0) > 0;
-    const hasEducation = (profile?.education?.length ?? 0) > 0;
-    const hasLinkedin = !!profile?.linkedinUrl;
-    return [
-      { id: 'identity', label: t('page.criteria.contact'), weight: 10, done: hasBasic, hint: t('page.hints.contact') },
-      { id: 'identity', label: t('page.criteria.phone'), weight: 10, done: hasPhone, hint: t('page.hints.phone') },
-      { id: 'identity', label: t('page.criteria.address'), weight: 10, done: hasAddress, hint: t('page.hints.address') },
-      { id: 'about', label: t('page.criteria.about'), weight: 15, done: hasSummary, hint: t('page.hints.about') },
-      { id: 'skills', label: t('page.criteria.skills'), weight: 15, done: hasSkills, hint: t('page.hints.skills') },
-      { id: 'experience', label: t('page.criteria.experience'), weight: 15, done: hasExperience, hint: t('page.hints.experience') },
-      { id: 'education', label: t('page.criteria.education'), weight: 15, done: hasEducation, hint: t('page.hints.education') },
-      { id: 'identity', label: t('page.criteria.linkedin'), weight: 10, done: hasLinkedin, hint: t('page.hints.linkedin') },
-    ];
+  // ── Profile check — score and rows both come from calculateProfileStrength,
+  // so the checklist can never disagree with the percentage it explains. ──
+  const { profileStrength, criteria } = useMemo(() => {
+    const { score, criteria: source } = calculateProfileStrength(profile, user);
+    return {
+      profileStrength: score,
+      criteria: sortCriteriaByImpact(source).map<Criterion>((c) => ({
+        ...c,
+        sectionId: CRITERION_SECTION[c.key],
+        label: t(`page.criteria.${c.key}`),
+        hint: t(`page.hints.${c.key}`),
+      })),
+    };
   }, [profile, user, t]);
 
-  const profileStrength = criteria.reduce((sum, c) => sum + (c.done ? c.weight : 0), 0);
-  const openItems = criteria.filter((c) => !c.done);
+  const openItems = criteria.filter((c) => !c.completed);
   const nextOpen = openItems[0] ?? null;
   const isComplete = profileStrength >= 100;
 
@@ -1053,7 +1062,7 @@ export default function ProfilePage() {
     },
     [openSection, scrollToSection],
   );
-  const goToNext = () => { if (nextOpen) focusSection(nextOpen.id); };
+  const goToNext = () => { if (nextOpen) focusSection(nextOpen.sectionId); };
   const startTour = () => { setTourStep(0); openSection(tour[0].id); setActiveSection(tour[0].id); scrollToSection(tour[0].id); };
   const tourNext = () => {
     if (tourStep === null) return;
@@ -1747,13 +1756,20 @@ export default function ProfilePage() {
 
         {/* ════════ Right sidebar (1/3) ════════ */}
         <div className="space-y-5">
-          {/* Transparent profile check — hidden once the profile is complete */}
-          {!isComplete && (
-          <div className="rounded-[4px] border border-border bg-card p-6">
+          {/* Transparent profile check — resolves into a completion state at 100 % */}
+          <div className={cn('rounded-[4px] border bg-card p-6', isComplete ? 'border-[#BFE9CC] dark:border-green-400/30' : 'border-border')}>
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-brand" />
-                <h2 id="profile-check-title" className="font-semibold text-foreground">{t('page.profileCheck.title')}</h2>
+                {isComplete ? (
+                  <span className="grid h-5 w-5 shrink-0 place-items-center bg-[#ECFAF0] text-success dark:bg-green-400/10">
+                    <Check className="h-3 w-3" />
+                  </span>
+                ) : (
+                  <Sparkles className="h-4 w-4 text-brand" />
+                )}
+                <h2 id="profile-check-title" className="font-semibold text-foreground">
+                  {isComplete ? t('page.profileCheck.completeTitle') : t('page.profileCheck.title')}
+                </h2>
               </div>
               <span className={cn('font-mono text-xl font-bold tabular-nums', isComplete ? 'text-success' : 'text-brand')}>
                 {profileStrength}%
@@ -1773,36 +1789,64 @@ export default function ProfilePage() {
               />
             </div>
             <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-              {t('units.stepsRemaining', { count: openItems.length })}
+              {isComplete
+                ? t('page.profileCheck.completeBody')
+                : t('units.stepsRemaining', { count: openItems.length })}
             </p>
             <div className="mb-4 flex flex-col gap-0.5">
-              {criteria.map((c, i) => (
-                <button
-                  key={i}
-                  onClick={() => focusSection(c.id)}
-                  className="flex items-center gap-2.5 rounded-[3px] px-2.5 py-2 text-left transition-colors hover:bg-muted"
-                >
-                  <span
+              {criteria.map((c) => {
+                const isBiggestWin = c.key === nextOpen?.key;
+                return (
+                  <button
+                    key={c.key}
+                    onClick={() => focusSection(c.sectionId)}
                     className={cn(
-                      'grid h-5 w-5 shrink-0 place-items-center',
-                      c.done ? 'bg-[#ECFAF0] text-success dark:bg-green-400/10' : '',
+                      'flex items-start gap-2.5 rounded-[3px] px-2.5 py-2 text-left transition-colors hover:bg-muted',
+                      isBiggestWin && 'bg-primary-soft/60 dark:bg-brand/10',
                     )}
                   >
-                    {c.done ? (
-                      <Check className="h-3 w-3" />
-                    ) : (
-                      <span className="box-border h-3.5 w-3.5 border-[1.5px] border-muted-foreground/50" />
-                    )}
-                  </span>
-                  <span className="flex-1 text-[13px] font-medium text-foreground">{c.label}</span>
-                  <span className={cn('font-mono text-[11px] font-bold tabular-nums', c.done ? 'text-muted-foreground' : 'text-brand-strong')}>
-                    +{c.weight}%
-                  </span>
-                </button>
-              ))}
+                    <span
+                      className={cn(
+                        'mt-0.5 grid h-5 w-5 shrink-0 place-items-center',
+                        c.completed ? 'bg-[#ECFAF0] text-success dark:bg-green-400/10' : '',
+                      )}
+                    >
+                      {c.completed ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <span className="box-border h-3.5 w-3.5 border-[1.5px] border-muted-foreground/50" />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                        <span className="text-[13px] font-medium text-foreground">{c.label}</span>
+                        {isBiggestWin && (
+                          <span className="flex items-center gap-0.5 font-mono text-[9.5px] font-bold uppercase tracking-[.08em] text-brand-strong">
+                            <Zap className="h-2.5 w-2.5" />
+                            {t('page.profileCheck.biggestWin')}
+                          </span>
+                        )}
+                      </span>
+                      {isBiggestWin && (
+                        <span className="mt-0.5 block text-[11.5px] leading-snug text-muted-foreground">
+                          {c.hint}
+                        </span>
+                      )}
+                    </span>
+                    <span className={cn('mt-0.5 font-mono text-[11px] font-bold tabular-nums', c.completed ? 'text-muted-foreground' : 'text-brand-strong')}>
+                      +{c.weight}%
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex gap-2.5 border-l-[3px] border-brand bg-muted p-3 text-[11.5px] leading-relaxed text-foreground">
-              <span className="grid h-5 w-5 shrink-0 place-items-center bg-card text-brand">
+            <div
+              className={cn(
+                'flex gap-2.5 border-l-[3px] p-3 text-[11.5px] leading-relaxed text-foreground',
+                isComplete ? 'border-success bg-[#ECFAF0] dark:bg-green-400/10' : 'border-brand bg-muted',
+              )}
+            >
+              <span className={cn('grid h-5 w-5 shrink-0 place-items-center bg-card', isComplete ? 'text-success' : 'text-brand')}>
                 <Zap className="h-3 w-3" />
               </span>
               <span>
@@ -1812,7 +1856,6 @@ export default function ProfilePage() {
               </span>
             </div>
           </div>
-          )}
 
           {/* Sprachen */}
           <CollapsibleCard

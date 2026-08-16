@@ -9,6 +9,7 @@
 Sicherheitsdokumentation
 
 - **SECURITY.md** - Umfassende Sicherheitsübersicht
+- **LLM_USAGE_DATASET.md** - Anonymisierter `llm_usage_events`-Export: Schema, Transformationen, Anonymitätsgarantien (ML / Due Diligence)
 - **SECURITY_AUDIT_2026-08-13.md** - Aktuelles Security-Audit gegen die 20-Punkte-Checkliste (Findings F9–F19)
 - **SECURITY_AUDIT_2026-07-03.md** - Statisches Security-Audit (Findings F1–F8, abgelöst durch das Audit vom 2026-08-13)
 - **CORS_SECURITY.md** - CORS Konfiguration

@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useProfile } from '@/hooks/use-profile';
 import { api } from '@/lib/api-client';
 import { Application } from '@/types';
-import { calculateProfileStrength } from '@/lib/profile-utils';
+import { calculateProfileStrength, sortCriteriaByImpact } from '@/lib/profile-utils';
 import { UsageSummary } from '@/components/subscription';
 import {
   Card,
@@ -474,24 +474,26 @@ export default function DashboardPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    {profileStrength.suggestions.slice(0, 3).map((suggestion, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center gap-2 text-[12.5px] ${
-                          suggestion.completed ? 'text-muted-foreground' : 'font-medium text-foreground'
-                        }`}
-                      >
-                        {suggestion.completed ? (
-                          <svg width="16" height="16" viewBox="0 0 24 24" className="flex-none" aria-hidden>
-                            <rect x="1" y="1" width="22" height="22" className="fill-success" />
-                            <path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" />
-                          </svg>
-                        ) : (
-                          <span className="box-border h-[16px] w-[16px] flex-none border-2 border-muted-foreground/50" />
-                        )}
-                        <span>{suggestion.text}</span>
-                      </div>
-                    ))}
+                    {sortCriteriaByImpact(profileStrength.criteria)
+                      .slice(0, 3)
+                      .map((criterion) => (
+                        <div
+                          key={criterion.key}
+                          className={`flex items-center gap-2 text-[12.5px] ${
+                            criterion.completed ? 'text-muted-foreground' : 'font-medium text-foreground'
+                          }`}
+                        >
+                          {criterion.completed ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" className="flex-none" aria-hidden>
+                              <rect x="1" y="1" width="22" height="22" className="fill-success" />
+                              <path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" />
+                            </svg>
+                          ) : (
+                            <span className="box-border h-[16px] w-[16px] flex-none border-2 border-muted-foreground/50" />
+                          )}
+                          <span>{criterion.text}</span>
+                        </div>
+                      ))}
                   </div>
                   <Button
                     variant="outline"

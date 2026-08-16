@@ -1,4 +1,17 @@
 {
+  "meta": {
+    "title": "Applo – KI-Bewerbungen aus deinem echten Profil",
+    "description": "Anschreiben und Lebenslauf in Minuten: Applo erstellt ATS-optimierte Bewerbungsunterlagen aus deinem echten Profil – für jede Branche, DSGVO-konform und in der EU gehostet.",
+    "keywords": [
+      "Bewerbung schreiben",
+      "Anschreiben erstellen",
+      "Lebenslauf Generator",
+      "KI Bewerbung",
+      "ATS-optimiert",
+      "Bewerbungsunterlagen",
+      "Vorstellungsgespräch üben"
+    ]
+  },
   "mascot": {
     "wave": {
       "title": "Hi, ich bin Applo!",
