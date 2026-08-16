@@ -9,9 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { CenteredLoader } from '@/components/shared/loading';
+import { ErrorState } from '@/components/ui/error-state';
 import { 
   ArrowLeft, 
-  AlertCircle, 
   Building2, 
   MapPin, 
   Calendar,
@@ -29,7 +29,7 @@ export default function JobPostingDetailPage() {
   const t = useTranslations('jobs');
   const jobPostingId = params.id as string;
 
-  const { data: jobPosting, isLoading, error } = useQuery({
+  const { data: jobPosting, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['job-posting', jobPostingId],
     queryFn: () => api.jobPostings.getById(jobPostingId),
     enabled: !!jobPostingId,
@@ -46,22 +46,12 @@ export default function JobPostingDetailPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t('detail.back')}
         </Button>
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                {t('detail.notFound.title')}
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                {t('detail.notFound.description')}
-              </p>
-              <Button onClick={() => router.push('/applications')}>
-                {t('detail.notFound.toApplications')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <ErrorState
+          title={t('detail.notFound.title')}
+          description={t('detail.notFound.description')}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }

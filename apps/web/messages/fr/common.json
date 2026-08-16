@@ -42,6 +42,10 @@
     "retry": "Réessayer",
     "toDashboard": "Aller au tableau de bord"
   },
+  "errorState": {
+    "title": "Impossible de charger le contenu",
+    "description": "Une erreur s'est produite lors du chargement. Veuillez réessayer."
+  },
   "serviceWorker": {
     "updateTitle": "Nouvelle version disponible",
     "updateDescription": "Rechargez la page pour obtenir la dernière version d'Applo. Les saisies non enregistrées dans les formulaires ouverts seront perdues.",

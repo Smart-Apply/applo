@@ -42,6 +42,10 @@
     "retry": "Tentar novamente",
     "toDashboard": "Ir para o painel"
   },
+  "errorState": {
+    "title": "Não foi possível carregar os conteúdos",
+    "description": "Ocorreu um erro ao carregar. Tenta novamente."
+  },
   "serviceWorker": {
     "updateTitle": "Nova versão disponível",
     "updateDescription": "Recarrega a página para obteres a versão mais recente da Applo. As alterações não guardadas em formulários abertos serão perdidas.",

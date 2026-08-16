@@ -42,6 +42,10 @@
     "retry": "Erneut versuchen",
     "toDashboard": "Zum Dashboard"
   },
+  "errorState": {
+    "title": "Inhalte konnten nicht geladen werden",
+    "description": "Beim Laden ist ein Fehler aufgetreten. Bitte versuche es erneut."
+  },
   "serviceWorker": {
     "updateTitle": "Neue Version verfügbar",
     "updateDescription": "Lade die Seite neu, um die aktuelle Version von Applo zu sehen. Deine Eingaben in offenen Formularen gehen dabei verloren.",

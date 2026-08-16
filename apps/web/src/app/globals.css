@@ -954,3 +954,21 @@ h1, h2, h3, .font-heading {
 .tour-active {
   animation: tour-glow 2s ease-in-out infinite;
 }
+
+/* ============ LOADING STATES ============
+   Page and section skeletons fade in with a short delay. `both` keeps them
+   invisible while the delay runs, so a very fast load swaps straight to the
+   content without flashing a loading state — and nothing is added to the
+   time-to-content, because the delay only holds back the skeleton. */
+@keyframes loading-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.loading-in {
+  animation: loading-in .2s ease-out .15s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-in { animation: none; }
+}

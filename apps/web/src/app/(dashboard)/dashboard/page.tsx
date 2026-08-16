@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProfile } from '@/hooks/use-profile';
-import { api } from '@/lib/api-client';
+import { useApplications } from '@/hooks/use-applications';
 import { Application } from '@/types';
 import { calculateProfileStrength } from '@/lib/profile-utils';
 import { UsageSummary } from '@/components/subscription';
@@ -17,6 +17,9 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardSkeleton } from '@/components/shared/skeletons';
 import { StatusChip, TRACKING_STATUS_CHIP } from '@/components/ui/status-chip';
 import { HairlineGrid } from '@/components/ui/hairline-grid';
 import { SectionLabel } from '@/components/ui/section-label';
@@ -46,14 +49,30 @@ export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const { user } = useAuthStore();
   const { data: profile, isLoading: isProfileLoading } = useProfile();
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    interviews: 0,
-    offers: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useApplications({ includeJobPosting: true });
+
+  const applications = useMemo(() => data ?? [], [data]);
+
+  const stats = useMemo(
+    () => ({
+      total: applications.length,
+      active: applications.filter(
+        (a: Application) => !['REJECTED', 'ACCEPTED'].includes(a.applicationStatus)
+      ).length,
+      interviews: applications.filter(
+        (a: Application) => a.applicationStatus === 'INTERVIEW'
+      ).length,
+      offers: applications.filter((a: Application) => a.applicationStatus === 'ACCEPTED')
+        .length,
+    }),
+    [applications]
+  );
 
   // Mascot fly-in state machine: flying → landed. On landing Applo strikes
   // one of five poses (never the same twice in a row); the pose maps to a
@@ -85,8 +104,12 @@ export default function DashboardPage() {
   useEffect(() => {
     // Full reduced-motion fallback: no flight, mascot pinned at the end
     // position (CSS) in its first pose, calm face, no looping animation.
+    // The media query can only be read after mount (`window` doesn't exist
+    // during SSR), so this setState IS the synchronisation — the rule's
+    // suggestion (derive during render) would crash the prerender.
     prefersReducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFlyPhase('landed');
     }
   }, []);
@@ -108,35 +131,6 @@ export default function DashboardPage() {
 
   // Calculate profile strength using centralized utility
   const profileStrength = calculateProfileStrength(profile, user);
-
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const response = await api.applications.list({ includeJobPosting: true });
-        const apps = response.items; // Extract items from paginated response
-        setApplications(apps);
-
-        // Calculate stats
-        const newStats = {
-          total: apps.length,
-          active: apps.filter(
-            (a: Application) =>
-              !['REJECTED', 'ACCEPTED'].includes(a.applicationStatus)
-          ).length,
-          interviews: apps.filter((a: Application) => a.applicationStatus === 'INTERVIEW')
-            .length,
-          offers: apps.filter((a: Application) => a.applicationStatus === 'ACCEPTED').length,
-        };
-        setStats(newStats);
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadDashboardData();
-  }, []);
 
   useEffect(() => {
     // Only fit on desktop (md+); mobile stays a natural, scrollable column.
@@ -224,10 +218,12 @@ export default function DashboardPage() {
   const monthLabel = new Intl.DateTimeFormat(getIntlLocale(), { month: 'long', year: 'numeric' }).format(new Date());
 
   if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (isError) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
+      <ErrorState onRetry={() => refetch()} isRetrying={isFetching} />
     );
   }
 
@@ -438,8 +434,18 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="px-3.5 py-3">
               {isProfileLoading ? (
-                <div className="flex h-24 items-center justify-center">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                <div className="loading-in space-y-2">
+                  <div className="flex items-end justify-between">
+                    <Skeleton className="h-8 w-16" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-none" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-4 w-4/6" />
+                  </div>
+                  <Skeleton className="mt-1 h-8 w-full" />
                 </div>
               ) : (
                 <div className="space-y-2">

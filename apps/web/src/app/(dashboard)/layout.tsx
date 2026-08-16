@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/tooltip';
 import { CurrentTierBadge } from '@/components/subscription';
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
+import { CenteredLoader } from '@/components/shared/loading';
 import { useFeatureGate, type BooleanTierFeature } from '@/hooks/use-tier-gate';
 import {
   FileText,
@@ -61,15 +62,15 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations('dashboard');
+
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-muted/30">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-            <p className="mt-2 text-sm text-muted-foreground">Loading...</p>
-          </div>
-        </div>
+        <CenteredLoader
+          message={t('page.loading')}
+          className="min-h-screen bg-muted/30"
+        />
       }
     >
       <DashboardLayoutInner>{children}</DashboardLayoutInner>
@@ -157,14 +158,10 @@ function DashboardLayoutInner({
   // Show loading while hydrating, loading OAuth, or if not authenticated (redirect pending)
   if (!hasHydrated || isLoadingOAuth || !isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/30">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {isLoadingOAuth ? t('page.oauthFinishing') : t('page.loading')}
-          </p>
-        </div>
-      </div>
+      <CenteredLoader
+        message={isLoadingOAuth ? t('page.oauthFinishing') : t('page.loading')}
+        className="min-h-screen bg-muted/30"
+      />
     );
   }
 

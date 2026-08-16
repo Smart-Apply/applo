@@ -36,6 +36,7 @@ import {
 import { ApplicationCardSkeleton } from '@/components/shared/skeletons';
 import { ATSScoreCell } from '@/components/applications/ats-score-cell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import { StatusChip, TRACKING_STATUS_CHIP } from '@/components/ui/status-chip';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -214,7 +215,7 @@ export default function ApplicationsPage() {
   );
 
   // Fetch applications
-  const { data: applications, isLoading, refetch } = useApplications();
+  const { data: applications, isLoading, isError, isFetching, refetch } = useApplications();
 
   // Update URL when filters change
   useEffect(() => {
@@ -484,6 +485,8 @@ export default function ApplicationsPage() {
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
         </div>
+      ) : isError ? (
+        <ErrorState onRetry={() => refetch()} isRetrying={isFetching} />
       ) : applications && applications.length > 0 ? (
         <div className="flex min-h-0 flex-1 flex-col gap-5">
           {/* Search Input */}

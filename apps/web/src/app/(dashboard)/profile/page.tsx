@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { StatusChip } from '@/components/ui/status-chip';
 import { ProfilePhotoAvatar } from '@/components/profile/profile-photo-avatar';
 import { ProfileSkeleton } from '@/components/shared/skeletons';
+import { ErrorState } from '@/components/ui/error-state';
 import { ApploRig } from '@/components/ui/applo-rig';
 import type { ApploState } from '@/components/ui/applo-rig';
 import { sanitizeUrl, sanitizeHtml } from '@/lib/sanitize';
@@ -631,7 +632,7 @@ function educationToDto(list: Education[]): EducationDto[] {
 
 export default function ProfilePage() {
   const t = useTranslations('profile');
-  const { data: profile, isLoading, error } = useProfile();
+  const { data: profile, isLoading, error, isFetching, refetch } = useProfile();
   const updateProfile = useUpdateProfile();
   const user = useAuthStore((state) => state.user);
   const [cvDialogOpen, setCvDialogOpen] = useState(false);
@@ -1075,9 +1076,11 @@ export default function ProfilePage() {
 
   if (error) {
     return (
-      <div className="rounded-[4px] border border-[#F3C9C9] bg-[#FDEEEE] p-6 text-center text-destructive dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300">
-        {t('page.error')}
-      </div>
+      <ErrorState
+        description={t('page.error')}
+        onRetry={() => refetch()}
+        isRetrying={isFetching}
+      />
     );
   }
 
