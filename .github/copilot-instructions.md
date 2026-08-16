@@ -22,6 +22,7 @@ For specific tasks, refer to these specialized instruction files:
 - New auth flows (OAuth providers, 2FA, refresh-token strategy, sessions)
 - New API endpoints or breaking changes to existing ones
 - Deployment topology changes (Fly.io, Cloudflare Workers, CI/CD pipelines)
+- Anything that changes **which personal data is stored, sent to a third party, or deleted when** — see "When you touch personal data" below; the privacy policy, [SUBPROCESSORS.md](../docs/security/SUBPROCESSORS.md), [DELETION_CONCEPT.md](../docs/security/DELETION_CONCEPT.md) and [RECORDS_OF_PROCESSING.md](../docs/security/RECORDS_OF_PROCESSING.md) are part of the same change set
 
 Also update this `copilot-instructions.md` file (Tech Stack, Backend Modules, Data Model, API Endpoints, Env Variables sections) to keep agent context accurate. Treat doc drift as a bug — never ship architecture changes without the corresponding doc updates.
 
@@ -52,7 +53,7 @@ Also update this `copilot-instructions.md` file (Tech Stack, Backend Modules, Da
 
 ### PR + merge flow
 - All changes go through a PR — **never** propose `git push origin main` or any direct push to `main`.
-- CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs on every PR: lint + lockfile sync + unit tests (currently non-blocking) + per-PR Neon migration dry-run (only when schema changes).
+- CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs on every PR: lint + lockfile sync + sub-processor drift check + unit tests (currently non-blocking) + per-PR Neon migration dry-run (only when schema changes).
 - Wait for green checks before merging. Always **squash-merge**, never merge-commit (linear history is required for `release-please`).
 - Delete the branch after merge.
 - **NEVER** propose `git push --force` or `--no-verify` to main.
@@ -79,6 +80,15 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - **MANDATORY**: update `README.md` + `ARCHITECTURE.md` in the same PR. See "Documentation Sync" above.
 - If you change [`fly.prod.toml`](../fly.prod.toml) / [`fly.staging.toml`](../fly.staging.toml), env defaults, or pluggable provider behavior — also update this file's Tech Stack / Env Variables sections.
 - If you add a new secret — add it to `apps/api/.env.example` (placeholder), document the local source in [docs/security/SECRETS_ROTATION.md](../docs/security/SECRETS_ROTATION.md), and tell the user to set it via `fly secrets set --app smart-apply-api[-staging]`.
+
+### When you touch personal data
+The privacy policy is a **legal statement about what the code does**, so a code change can silently make it false. Issue #806 is what that looks like in practice: the page promised deletion the code didn't perform and omitted three recipients data was actually sent to. Every legal fact is therefore anchored to exactly one file that CI or code points at — keep the anchor, not a copy.
+
+- **New third-party service** (any provider that receives user data): add a row to [docs/security/SUBPROCESSORS.md](../docs/security/SUBPROCESSORS.md) **first**. `pnpm --filter @applo/api run check:subprocessors` fails the `lint-and-typecheck` job when a credential-shaped env var (`*_API_KEY`, `*_SECRET`, `*_TOKEN`, `*_DSN`, `*_ENDPOINT`, …) appears in [`env.schema.ts`](../apps/api/src/config/env.schema.ts) for a service the file doesn't mention. Then mirror the row into §6 of [`(legal)/datenschutz/page.tsx`](../apps/web/src/app/(legal)/datenschutz/page.tsx) and add the activity to [RECORDS_OF_PROCESSING.md](../docs/security/RECORDS_OF_PROCESSING.md).
+- **New retention period or cron**: [docs/security/DELETION_CONCEPT.md](../docs/security/DELETION_CONCEPT.md) is the source of truth; §9 of the privacy policy and `ACCESS_RIGHT_DISCLOSURE` in [`auth.service.ts`](../apps/api/src/auth/auth.service.ts) mirror it.
+- **New user-owned model**: add it to `exportUserData` (Art. 15/20 — the export must stay complete) and make sure deletion reaches it, either by an `onDelete: Cascade` FK or explicitly in `UserErasureService`. A model with no `User` FK (like `LlmUsageEvent`) needs an explicit delete **before** the user row.
+- **Never** add a user-facing privacy toggle that doesn't change behaviour at the sink — `profilePublic` was removed from the API + UI (issue #806) because there is no public profile for it to govern, and `analyticsEnabled` suppresses the `llm_usage_events` write itself rather than filtering on read. The `profilePublic` **column** survives until a follow-up release drops it (expand → migrate → contract).
+- Legal pages (Impressum/Datenschutz/AGB) are **German-only** by convention; don't add locale files for them. UI around them (e.g. the Art. 13 notice on the register form) *is* localized in all six locales.
 
 ### Secrets handling
 - **Never** commit secrets. `.env`, `.env.local`, `*-secrets.env`, and `*.bak` are all gitignored.
@@ -121,6 +131,9 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `form.watch(...)` inside a component body — use `useWatch({ control, name })`
 - Binding `getSessionIdentifier` (CSRF middleware in [apps/api/src/main.ts](apps/api/src/main.ts)) to any auth-lifecycle value (cookies, headers, user id)
 - Bumping `pdfjs-dist` in `apps/web` away from the exact version `react-pdf` pins (breaks every PDF preview — see "When you change `package.json`")
+- Deleting a user-owned row with a raw `prisma.<model>.delete` — route it through the owning service's hard-delete (or `UserErasureService`), otherwise the stored PDFs/uploads survive the row forever
+- Adding a credential env var for a new third-party service without a row in [docs/security/SUBPROCESSORS.md](../docs/security/SUBPROCESSORS.md) (CI-enforced) — and without the matching privacy-policy + Art. 30 entries
+- A privacy setting in the UI that nothing reads at the write path
 
 ## Non-Goals
 - Rich document editing beyond Tiptap StarterKit
@@ -194,7 +207,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   **`applications/headless/generate.ts` (#797)** — the same v1 chain as a pure function: plain objects in, plain objects out, zero persistence/auth/storage/metering. It exists so `applo-eval` (separate repo) can run the shipped pipeline through the `pnpm generate:headless` process seam (`apps/api/scripts/headless-generate.ts`, JSON in → one JSON document on stdout, `--score` embeds the product's own deterministic validators). Its `GenerationConfig` carries per-step model + `reasoningEffort` + prompt version + pipeline toggles so the eval matrix can vary one step at a time; the result carries intermediate drafts, per-guard outcomes and per-call telemetry. An optional `deps.onProgress(progress, message)` hook lets the live path forward coarse, **completion-based** milestones to the SSE stream (the writer steps run concurrently, so a per-step ladder cannot be truthful without serializing the chain). **Both** `GenerationService.createWithGeneration` and `generateWithSinglePipeline` call this function — there is no second copy of the chain, and `LLM_PROVIDER=fake pnpm --filter @applo/api run chain:equivalence -- --path create|single` (`apps/api/scripts/chain-equivalence.ts`) keeps it that way by recording every LLM call the service and the seam make and failing on any difference in template, rendered variables or generation params. Add a pass here and both paths get it; there is nothing to mirror by hand.
 - `appointments` — user-scoped interview-calendar entries (date-only + optional `startTime`, note, `emailReminder` intent). Plain CRUD (`GET/POST /appointments`, `PATCH/DELETE /appointments/:id`), no LLM. Backs the dashboard calendar card; reminder delivery is not yet wired.
 - `auth` — JWT, refresh-token rotation, OAuth (Google/Microsoft/Azure AD; email-match auto-linking + first-time signup only for provider-verified emails — nOAuth guard in `auth/utils/oauth-email-trust.util.ts`: Google `email_verified`, Microsoft MSA tenant or `xms_edov`), TOTP 2FA, password reset
-- `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@applo/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`)
+- `common` — guards, filters, decorators (`@Sanitize()`), AI prompt guardrails (`guardrails/` — `assertPromptWithinLimits` enforces per-surface char + token limits from `@applo/shared`, counting tokens with `gpt-tokenizer` model `gpt-4.1`; throws `AI_PROMPT_TOO_LONG`), plus the GDPR plumbing: `erasure/UserErasureService` (the **single** implementation both deletion paths call — purges storage by **prefix** `<userId>/`, `applications/<id>/`, `profiles/<id>/`, so an object the DB forgot still goes; deletes `llm_usage_events` before the user row, since that table has no FK to cascade through) and the retention crons in `cron/` (`CleanupCron` 30-day soft-delete sweep — routed through `ApplicationsService.hardDelete()`/`hardDeleteJobPosting()` so files die with the row, `OrphanedUploadCron` `UPLOAD_RETENTION_DAYS`, `MailboxEventRetentionCron` `MAILBOX_EVENT_RETENTION_DAYS`, `SessionCleanupCron`). ⚠️ Never delete a user-owned row with a raw `prisma.*.delete` — go through the owning service's hard-delete, or the storage object is orphaned forever. Retention periods live in [docs/security/DELETION_CONCEPT.md](../docs/security/DELETION_CONCEPT.md); the privacy policy §9 mirrors that table.
 - `config` — Zod env schema
 - `contact` — contact form
 - `email` — Resend transactional email
@@ -218,13 +231,13 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 
   ⚠️ **The dataset is pseudonymous, not anonymous** — despite the issue title. `actorHash` is stable per user, and the table sits beside `applications`/`validations`/`interview_sessions`, which carry `userId` + millisecond `createdAt`; a usage burst time-correlates back to the triggering row, recovering the `userId` **without** the salt. GDPR erasure obligations therefore apply and are wired in (audit 2026-08-13 F11): both account-deletion paths (`AuthService.deleteAccount`, admin `DELETE /admin/users/:email`) call `LlmUsageService.deleteEventsForActor` before the user row is deleted, and `LlmUsageRetentionCron` (daily 04:00) hard-deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90; also mops up rows an erasure can't match after a salt rotation). `LlmUsageEvent.language` is a structural field normalized against a fixed allow-list at the sink — never let free text into this table.
 - `logger` — Pino + Winston audit logger
-- `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification.
+- `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification. **Order matters for data minimisation:** the deterministic matcher (`application-matcher`) runs **before** the LLM call, so a message that can't be tied to one of the user's own applications is never transmitted to a third party and never stored; the transmitted body is capped at 1,200 chars, and `OTHER` classifications are dropped instead of persisted. Never reorder the matcher after the classifier "to improve recall" — that turns the user's whole inbox into LLM input. `ApplicationEmailEvent` rows age out after `MAILBOX_EVENT_RETENTION_DAYS` (default 180).
 - `pdf` — thin façade over `pdf-v2/ReactPdfRendererService`. Kept so external callers (`application.processor.ts`, tests) preserve the `PdfService` API surface. Throws when a template has no react-pdf factory registered.
 - `pdf-v2` — the active PDF subsystem. Owns `ReactPdfRendererService` (TSX → PDF buffer), `PreviewRendererService` (PDF → PNG via `pdfjs-dist` + `@napi-rs/canvas`), the template registry, `design-tokens.ts` (the per-application `TemplateSettings` scale math — font scale ±8 %, density spacing/line-height factors, `normalizeTemplateSettings` read-guard, `resolveFontStack` font selection; all templates resolve their base FS/SP tables through `resolveDesignTokens`), bundled **OFL font families** (Lato, Source Sans 3, Merriweather under `apps/api/assets/fonts/`, registered lazily by `react-pdf-loader.ts`; unregistered/missing families degrade to the design's built-in Helvetica/Times faces), and the shared template-data types. See [`.github/skills/pdf-react-pdf-template.md`](./skills/pdf-react-pdf-template.md) for the porting recipe. Quick standalone check (incl. the fontScale × density settings matrix + a render per bundled family): `npx ts-node -r tsconfig-paths/register scripts/validate-react-pdf-templates.ts`.
 - `prisma` — PrismaService
 - `profile` — CRUD with **differential updates** (Skills, Experiences, Education, Certificates, Projects, Languages)
 - `resume-parser` — PDF/DOCX → Profile bootstrap (pdf-parse + mammoth)
-- `storage` — pluggable providers (`disk` | `r2`)
+- `storage` — pluggable providers (`disk` | `r2`). The interface carries `list(prefix)` + `deleteByPrefix(prefix)` alongside the per-key operations, because erasure has to be able to clear everything under a user's prefix without trusting the database to remember every key it ever wrote.
 - `subscription` — plans & usage limits
 - `templates` — template catalog. Read paths are registry-filtered: `findAll`, `findByCategoryAndLanguage` and `findDefault` only return rows whose design resolves to a registered react-pdf factory (`pdf-v2/template-registry.ts#isRenderableTemplate`), so the wizard can never offer a template that would crash generation. Rows are seeded by `prisma/seed-react-pdf-templates.ts` (the canonical source; deactivates unresolvable active rows).
 - `uploads` — file uploads
@@ -273,7 +286,7 @@ is authoritative):
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
 - **LlmUsageEvent** (issue #522 — per-feature LLM token-usage event; NO `User` FK, keyed by an HMAC-SHA256 `actorHash` derived from `LLM_USAGE_HASH_SALT`; never stores prompt/response content; unset salt disables tracking entirely. **Pseudonymous, not anonymous** — erased on account deletion, swept after `LLM_USAGE_RETENTION_DAYS`; see the `llm` module notes)
-- Also present, not detailed above: **UserPreferences**, **SubscriptionUsage**, **BackgroundJob**, **TwoFactorAuth**, **TwoFactorBackupCode**, **TrustedDevice**, **OAuthProvider**, and the interview trio **InterviewSession**/**InterviewQuestion**/**InterviewFeedback** (the "Interview" shorthand above), plus **Template** (the "ResumeTemplate" shorthand)
+- Also present, not detailed above: **UserPreferences** (`analyticsEnabled` is a real opt-out — read by `LlmUsageService.record()` at the write path; `profilePublic` is RETIRED per issue #806 and kept as a column only until a follow-up release drops it), **SubscriptionUsage**, **BackgroundJob**, **TwoFactorAuth**, **TwoFactorBackupCode**, **TrustedDevice**, **OAuthProvider**, and the interview trio **InterviewSession**/**InterviewQuestion**/**InterviewFeedback** (the "Interview" shorthand above), plus **Template** (the "ResumeTemplate" shorthand)
 
 ## API Endpoints (v1)
 
@@ -284,7 +297,7 @@ All endpoints are prefixed with `/api/v1` and documented at `http://localhost:30
 **POST /api/v1/auth/register**
 - Register new user with email/password (argon2id hashed)
 - Rate limit: 5 attempts / 15 minutes (strict)
-- Sets HttpOnly cookies: `access_token` (~15 min) + `refresh_token` (7 days, rotated)
+- Sets HttpOnly cookies: `access_token` (~15 min) + `refresh_token` (30 days, rotated)
 - Returns: `{ user: { id, email, firstName, lastName } }`
 
 **POST /api/v1/auth/login**
@@ -323,6 +336,16 @@ All endpoints are prefixed with `/api/v1` and documented at `http://localhost:30
 
 **POST /api/v1/auth/2fa/setup** / **/2fa/verify** / **/2fa/disable**
 - TOTP enrollment (returns QR), verification, and disable flows (speakeasy)
+
+**GET /api/v1/auth/export**
+- GDPR Art. 15 / 20 — downloads every user-scoped record as JSON (`applo-export-YYYY-MM-DD.json`, `Cache-Control: no-store`)
+- Credential material (password hash, raw/hashed tokens, encrypted 2FA secrets, backup codes) is excluded via `select` at the query, not filtered afterwards
+- Carries the Art. 15(1)(c)–(h) disclosure (`ACCESS_RIGHT_DISCLOSURE` in `auth.service.ts`) — recipients, storage periods, and the complaint right. **Keep it in sync** with [SUBPROCESSORS.md](../docs/security/SUBPROCESSORS.md) + [DELETION_CONCEPT.md](../docs/security/DELETION_CONCEPT.md)
+- Any new user-owned model must be added here, or the export silently becomes incomplete
+
+**DELETE /api/v1/auth/account**
+- GDPR Art. 17 — permanent deletion, password-confirmed (OAuth-only accounts confirm by typing their email; `hasPassword` on `/auth/me` drives which prompt the UI shows)
+- Delegates to `UserErasureService`: storage prefixes purged, `llm_usage_events` deleted before the user row, then the cascade. Auth cookies cleared on the way out
 
 ### Resume Parser (Protected)
 
@@ -702,6 +725,9 @@ ENABLE_CSRF=false
 
 # Storage (pluggable)
 STORAGE_DRIVER=disk          # disk | r2 — NODE_ENV=production rejects 'disk'
+# Days an upload may sit unreferenced before the nightly cron deletes it
+# (Art. 5(1)(e) — see docs/security/DELETION_CONCEPT.md).
+UPLOAD_RETENTION_DAYS=7
 
 # Cloudflare R2 (S3-compatible) — required when STORAGE_DRIVER=r2
 # Use an EU-jurisdiction bucket + EU-scoped token for GDPR data residency.
@@ -821,6 +847,9 @@ MS_GRAPH_CLIENT_SECRET=<secret>
 MS_GRAPH_TENANT=common  # or a specific tenant id
 # MS_GRAPH_POST_CONNECT_REDIRECT=<defaults to APP_URL/settings?email_tracking=connected>
 # MAILBOX_SUBSCRIPTION_RENEWAL_MARGIN_MINUTES=360  # default 6h margin
+# Days an application_email_events row is kept before the nightly cron
+# deletes it (Art. 5(1)(e) — see docs/security/DELETION_CONCEPT.md).
+MAILBOX_EVENT_RETENTION_DAYS=180
 
 # PDF Generation
 # react-pdf has no env config of its own. PNG previews use pdfjs-dist +
@@ -912,7 +941,7 @@ Four workflows, each with a single purpose. **Never propose adding a fifth that 
 
 | Workflow | Trigger | Purpose |
 |---|---|---|
-| [`ci.yml`](../.github/workflows/ci.yml) | PR opened | Lint + lockfile sync check + unit tests (non-blocking) + per-PR Neon migration dry-run (only when `schema.prisma` or `migrations/**` changes) |
+| [`ci.yml`](../.github/workflows/ci.yml) | PR opened | Lint + lockfile sync check + **sub-processor drift check** (`check:subprocessors`) + unit tests (non-blocking) + per-PR Neon migration dry-run (only when `schema.prisma` or `migrations/**` changes) |
 | [`deploy-staging.yml`](../.github/workflows/deploy-staging.yml) | Push to `main` | Auto-deploy to `smart-apply-api-staging` (Fly, `fly.staging.toml`) + `smart-apply-web-staging` (Worker, `env.staging` block). No approval. Reads from `staging` GitHub Environment. The API image is **built once on the runner** (`docker/build-push-action` + GitHub-native `type=gha` cache), pushed to `registry.fly.io/smart-apply-api:sha-<gitsha>`, then shipped with `flyctl deploy --image` (no Fly-side build). |
 | [`release-please.yml`](../.github/workflows/release-please.yml) | Push to `main` | Maintains a Release PR + creates `v*.*.*` tags from Conventional Commits. Uses a PAT (`RELEASE_PLEASE_TOKEN`) so tag pushes trigger downstream workflows (default `GITHUB_TOKEN` doesn't). |
 | [`deploy-prod.yml`](../.github/workflows/deploy-prod.yml) | Tag `v*.*.*` push | Deploys to `smart-apply-api` (Fly, `fly.prod.toml`) + `smart-apply-web` (Worker, default env). Gated by `production` GitHub Environment (manual approval). **Build-once-promote:** the API job re-deploys the exact `sha-<gitsha>` image staging already built (`flyctl deploy --image`) — no prod rebuild; a `docker manifest inspect` race-guard rebuilds with the warm `type=gha` cache only if the image is missing. |

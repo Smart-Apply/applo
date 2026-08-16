@@ -17,6 +17,11 @@ Sicherheitsdokumentation
 - **RATE_LIMITING.md** - Rate Limiting Strategie
 - **CSP_BACKEND.md** - Content Security Policy
 - **REFRESH_TOKENS.md** - Refresh Token Implementation
+- **SUBPROCESSORS.md** - Auftragsverarbeiter (Art. 28) — Single Source of Truth für die Datenschutzerklärung, per CI-Check erzwungen
+- **DELETION_CONCEPT.md** - Löschkonzept: Speicherfristen und der Code, der sie durchsetzt
+- **RECORDS_OF_PROCESSING.md** - Verzeichnis von Verarbeitungstätigkeiten (Art. 30)
+- **TOM.md** - Technische und organisatorische Maßnahmen (Art. 32)
+- **DPIA_PRESCREENING.md** - DSFA-Vorprüfung (Art. 35) — Schwellwertanalyse je Verarbeitung
 
 ### ✨ [features/](./features/)
 
@@ -72,6 +77,7 @@ Ausführungspläne pro Backlog-Item (ein Plan je Issue + übergreifende Reihenfo
 | **Launch**     | [PUBLIC_LAUNCH_PLAN.md](./guides/PUBLIC_LAUNCH_PLAN.md)           | Pre-launch readiness checklist |
 | **Pläne**      | [plans/README.md](./plans/README.md)                              | Backlog-Reihenfolge + Pläne je Issue |
 | **Sicherheit** | [SECURITY.md](./security/SECURITY.md)                             | Sicherheitsübersicht        |
+| **Datenschutz**| [DELETION_CONCEPT.md](./security/DELETION_CONCEPT.md)             | Löschkonzept + Speicherfristen |
 | **Templates**  | [TEMPLATE_GUIDE.md](./guides/TEMPLATE_GUIDE.md)                   | Template System             |
 | **Testing**    | [TESTING_GUIDE.md](./guides/TESTING_GUIDE.md)                     | Test Anleitungen            |
 | **Azure**      | [AZURE_AI_FOUNDRY_AGENTS.md](./guides/AZURE_AI_FOUNDRY_AGENTS.md) | AI Foundry agents           |
