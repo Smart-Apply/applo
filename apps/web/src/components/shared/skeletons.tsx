@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
+import { Loader2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Spinner } from "@/components/ui/spinner"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
@@ -177,7 +177,11 @@ export function AppShellSkeleton({ message }: { message?: string }) {
         <div className="p-4 md:mx-auto md:w-full md:max-w-7xl md:p-8">
           {message && (
             <div className="mb-4 inline-flex items-center gap-2 border bg-card px-3 py-1.5 text-sm text-muted-foreground">
-              <Spinner size="sm" label={message} />
+              {/* Decorative: the wrapper above already owns the live region and
+                  this <span> already carries the text, so a <Spinner> here
+                  (which renders its own role="status" + sr-only label) would
+                  make assistive tech announce `message` three times. */}
+              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
               <span>{message}</span>
             </div>
           )}
