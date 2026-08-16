@@ -1,10 +1,10 @@
 # Open-issue backlog — order and priority
 
-> **Written:** 13 Aug 2026 · **Last updated:** 13 Aug 2026, after #790 and #780
-> closed and #797 filed. · **Basis:** all **15** open issues in
+> **Written:** 13 Aug 2026 · **Last updated:** 16 Aug 2026, after #797 and #764
+> closed. · **Basis:** all **13** open issues in
 > `Smart-Apply/applo`, read in full via `gh issue list --state open`.
-> **Verified against:** `main` @ `cf91b658` (`feat(web): Löschen im Profil
-> umkehrbar machen`, PR #793).
+> **Verified against:** `main` @ `487e08c4` (`feat(profile): validate the four
+> unchecked profile editor dialogs`, PR #804).
 >
 > Every "current state" line below was re-checked against the code on `main`,
 > not copied from the issue body. Where an issue disagrees with the code — or
@@ -41,27 +41,25 @@
 
 | # | Issue | Title | Prio | Size | Blocked by |
 |---:|---|---|---|---|---|
-| 1 | [#764](https://github.com/Smart-Apply/applo/issues/764) | Eingabe-Validierung für Profilfelder bauen | **P1** | M | — |
-| 2 | [#763](https://github.com/Smart-Apply/applo/issues/763) | Profil-Check sortieren und Abschlusszustand bauen | **P1** | S | — |
-| 3 | [#571](https://github.com/Smart-Apply/applo/issues/571) | Übergänge neu designen + Lade-Animationen | **P2** | M | — *(keystone)* |
-| 4 | [#746](https://github.com/Smart-Apply/applo/issues/746) | Loading State für die Seite bauen | **P2** | S | #571 |
-| 5 | [#761](https://github.com/Smart-Apply/applo/issues/761) | Speicher-Modell vereinheitlichen und Erfolgs-Feedback bauen | **P2** | L | #571 + a decision |
-| 6 | [#573](https://github.com/Smart-Apply/applo/issues/573) | Mobiles Design (Android/iOS) überarbeiten | **P2** | L | #571 |
-| 7 | [#797](https://github.com/Smart-Apply/applo/issues/797) | Reconcile the headless generation seam with main's pipeline | **P3** | L | — *(blocks 8)* |
-| 8 | [#572](https://github.com/Smart-Apply/applo/issues/572) | Generierungs-Output prüfen & Verbesserungspotenziale identifizieren | **P3** | M | #797 |
-| 9 | [#570](https://github.com/Smart-Apply/applo/issues/570) | Onboarding-Guide für alle Features | **P3** | L | #571, #573 |
-| 10 | [#332](https://github.com/Smart-Apply/applo/issues/332) | Add SSR to public pages (landing, marketing) for SEO | **P3** | M | plan 03 |
-| 11 | [#525](https://github.com/Smart-Apply/applo/issues/525) | LLM token-usage analytics aggregation endpoints | **P3** | M | — *(unblocked)* |
-| 12 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | re-scope first |
-| 13 | [#623](https://github.com/Smart-Apply/applo/issues/623) | Evaluation platform for application generation — separate repo | **P4** | XL | #797 |
-| 14 | [#133](https://github.com/Smart-Apply/applo/issues/133) | 🌙 Dark Mode — Theme Switcher | **P4** | M | #571, #573 |
-| 15 | [#524](https://github.com/Smart-Apply/applo/issues/524) | Model trained on anonymized AI-usage dataset (discovery) | **P4** | XL | #523 + data volume |
+| 1 | [#763](https://github.com/Smart-Apply/applo/issues/763) | Profil-Check sortieren und Abschlusszustand bauen | **P1** | S | — |
+| 2 | [#571](https://github.com/Smart-Apply/applo/issues/571) | Übergänge neu designen + Lade-Animationen | **P2** | M | — *(keystone)* |
+| 3 | [#746](https://github.com/Smart-Apply/applo/issues/746) | Loading State für die Seite bauen | **P2** | S | #571 |
+| 4 | [#761](https://github.com/Smart-Apply/applo/issues/761) | Speicher-Modell vereinheitlichen und Erfolgs-Feedback bauen | **P2** | L | #571 + a decision |
+| 5 | [#573](https://github.com/Smart-Apply/applo/issues/573) | Mobiles Design (Android/iOS) überarbeiten | **P2** | L | #571 |
+| 6 | [#572](https://github.com/Smart-Apply/applo/issues/572) | Generierungs-Output prüfen & Verbesserungspotenziale identifizieren | **P2** | M | — *(unblocked by #797)* |
+| 7 | [#570](https://github.com/Smart-Apply/applo/issues/570) | Onboarding-Guide für alle Features | **P3** | L | #571, #573 |
+| 8 | [#332](https://github.com/Smart-Apply/applo/issues/332) | Add SSR to public pages (landing, marketing) for SEO | **P3** | M | plan 03 |
+| 9 | [#525](https://github.com/Smart-Apply/applo/issues/525) | LLM token-usage analytics aggregation endpoints | **P3** | M | — *(its data only exists since #803)* |
+| 10 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | re-scope first |
+| 11 | [#623](https://github.com/Smart-Apply/applo/issues/623) | Evaluation platform for application generation — separate repo | **P4** | XL | — *(unblocked by #797)* |
+| 12 | [#133](https://github.com/Smart-Apply/applo/issues/133) | 🌙 Dark Mode — Theme Switcher | **P4** | M | #571, #573 |
+| 13 | [#524](https://github.com/Smart-Apply/applo/issues/524) | Model trained on anonymized AI-usage dataset (discovery) | **P4** | XL | #523 + data volume |
 
 **Ordering principle:** finish what is already open before starting what is
-not. Ranks 1–2 are unblocked, small, and each one closes a defect that is live
-in production today. Rank 3 is a keystone — three later issues explicitly say
-they should build on it — so it comes before its dependents rather than after,
-even though nothing forces that order technically.
+not. Rank 1 is unblocked, small, and closes a defect that is live in production
+today. Rank 2 is a keystone — three later issues explicitly say they should
+build on it — so it comes before its dependents rather than after, even though
+nothing forces that order technically.
 
 ---
 
@@ -71,9 +69,11 @@ even though nothing forces that order technically.
 |---|---|---|
 | **#790** a11y: dashboard, applications, settings | PR [#792](https://github.com/Smart-Apply/applo/pull/792) | **two items — see below** |
 | **#780** Löschen im Profil umkehrbar machen | PR [#793](https://github.com/Smart-Apply/applo/pull/793) | none |
+| **#797** reconcile the headless generation seam | PRs [#801](https://github.com/Smart-Apply/applo/pull/801) + [#802](https://github.com/Smart-Apply/applo/pull/802) | none — closing it unblocked #572 and #623 |
+| **#764** Eingabe-Validierung für Profilfelder | PR [#804](https://github.com/Smart-Apply/applo/pull/804) | **one item — see below** |
 
-Both were rank 1 and rank 6. Their removal is why the numbering above starts at
-#764.
+Four removals are why the numbering above starts at #763. #797 also **promoted
+#572 from P3 to P2**: the harness it was waiting on now exists.
 
 **#790 left two things unticked, and closing the issue removed their home.**
 Neither is covered by another open issue, so they will be lost unless filed:
@@ -97,37 +97,18 @@ Both are small. Suggested: one issue, **P1**, "verify the a11y result on a
 running stack + VoiceOver pass" — re-run the harness against `pnpm dev` on all
 five audited routes, then listen to them.
 
+**#764 left one item unticked, and closing it removed that item's home too.**
+*"E-Mail-Format prüfen und Status-Icon konsistent setzen."* PR #804 ticked every
+other box. Email is **read-only** in the contact dialog (immutable text beside a
+`Mail` icon) and `profileSchema.email` has carried `.email()` all along, so there
+is no input left to validate — what is missing is a product decision about where
+a verification/status icon belongs at all. Small, and currently tracked nowhere.
+
 ---
 
 ## P1 — next up
 
-### 1 · #764 — validate the profile editor dialogs
-
-**What it does.** Adds `react-hook-form` + Zod validation to the four profile
-editor dialogs that have none: date plausibility (end not before start,
-"laufend" excludes an end date), URL format for LinkedIn and project links,
-email and phone format, inline errors that name the next step, and a blocked
-save on an invalid required field.
-
-**Re-verified on `cf91b658`** — the issue's table still holds exactly:
-
-| Dialog | `useForm` / `zodResolver` / `zod` refs |
-|---|---:|
-| `contact-editor-dialog.tsx` | 4 |
-| `certificate-editor-dialog.tsx` | **0** |
-| `education-editor-dialog.tsx` | **0** |
-| `experience-editor-dialog.tsx` | **0** |
-| `project-editor-dialog.tsx` | **0** |
-
-**Why P1.** The profile is the *input* to the generation pipeline. An
-implausible date or a malformed URL does not fail loudly — it is rendered into
-a PDF the user sends to an employer. Four of five dialogs also deviate from the
-repo's stated convention, so this is convergence onto an existing pattern, not
-a new one.
-
-**Depends on:** nothing. New strings need all six locale trees.
-
-### 2 · #763 — one source of truth for the profile check
+### 1 · #763 — one source of truth for the profile check
 
 **What it does.** Points `/profile` at `calculateProfileStrength` instead of
 recomputing the score, returns the criteria (label, hint, weight) from that one
@@ -150,7 +131,7 @@ remaining gain, show a finished state) rides along for free.
 
 ## P2 — scheduled
 
-### 3 · #571 — motion and loading foundation *(keystone)*
+### 2 · #571 — motion and loading foundation *(keystone)*
 
 **What it does.** Route transitions, a reusable skeleton/loading component set,
 a progress animation bound to the SSE generation status, unified
@@ -176,7 +157,7 @@ bundle check before merge — see [plan 01](./01-error-monitoring.md).
 
 **Plan:** [07](./07-issue-571-motion-foundation.md).
 
-### 4 · #746 — page loading states
+### 3 · #746 — page loading states
 
 **What it does.** A visible loading state on initial page load and for
 data-dependent regions, a reusable skeleton, an error state, and no layout shift
@@ -187,7 +168,7 @@ says so. Doing it first would mean inventing the primitive twice.
 
 **Depends on:** #571. **Plan:** [08](./08-issue-746-loading-states.md).
 
-### 5 · #761 — unify the save model
+### 4 · #761 — unify the save model
 
 **What it does.** Picks *one* save model for the product and justifies it, adds
 an "all changes saved" indicator wherever autosave applies, unifies success
@@ -208,7 +189,7 @@ shipped undo toast as a fourth behaviour to reconcile, not a third.
 
 **Depends on:** #571 + an explicit decision.
 
-### 6 · #573 — mobile design pass
+### 5 · #573 — mobile design pass
 
 **What it does.** Touch-sized targets, mobile navigation, mobile-usable profile
 and application forms, a PDF preview/editor that works on a small screen, iOS
@@ -222,43 +203,7 @@ dashboard shell **already has a drawer and a bottom nav**. Audit first against
 
 **Depends on:** #571. **Plan:** [09](./09-issue-573-mobile.md).
 
----
-
-## P3 — planned, not scheduled
-
-### 7 · #797 — reconcile the headless seam with main's pipeline
-
-**What it does.** Rebases `feat/headless-generation` onto `main`, resolves the
-collision between the two extractions of the generation chain, and leaves the
-product with **one** implementation that both the live path and `applo-eval`
-call.
-
-**Why it exists as its own issue.** Split out of #623 after verifying that
-almost all remaining eval work lives in the other repo — this is the part that
-belongs here. Three things depend on it: #572 (below) cannot produce a
-trustworthy number without it, `applo-eval`'s CI is pinned to a feature branch
-until it lands, and until then every eval result describes the **July**
-pipeline rather than the shipped one.
-
-**Measured, not estimated.** A trial merge
-(`git merge-tree --write-tree origin/main feat/headless-generation`) reports
-**33 conflict hunks across 14 files**, 17 of them in the LLM layer alone
-(`llm.service.ts` 10, `azure-openai.provider.ts` 5, `azure-ai-foundry.provider.ts`
-2) — both sides built there independently, so there are now two GPT-5
-body-shaping implementations and one has to win.
-
-**The expensive part is invisible to git.** In the merged tree
-`generation.service.ts` arrives byte-identical to `main` (2414 lines) and
-`headless/generate.ts` (537 lines) lands beside it, with **zero** reported
-conflict — neither side touched the other's file. Two divergent copies of the
-same pipeline, and the seam is the older one: it lacks
-`shorten-cover-letter.md`, `fix-unsupported-numbers.md` and
-`fix-unsupported-numbers-resume.md`. Merging as-is would look successful and
-silently reinstate exactly the drift the seam exists to prevent.
-
-**Depends on:** nothing. **Blocks:** #572, and the CI pin in `applo-eval`.
-
-### 8 · #572 — review generation output quality
+### 6 · #572 — review generation output quality
 
 **What it does.** A structured review of the shipped generation output across
 several professions (healthcare, sales, trades, marketing, IT) in DE and EN,
@@ -266,23 +211,27 @@ categorising weaknesses (faithfulness, ATS coverage, tone, PDF formatting,
 cover-letter structure), then writing prioritised follow-ups into
 [LLM_OUTPUT_QUALITY.md](../implementation/LLM_OUTPUT_QUALITY.md).
 
-**Why P3 despite being the core product.** Quality work needs a metric that can
-resolve the effect, otherwise the conclusion is noise. A per-item pass/fail over
-~24 fixtures has a 95 % CI of roughly ±14 pp — wide enough to "detect"
+**Why it needs a harness, not a read-through.** Quality work needs a metric that
+can resolve the effect, otherwise the conclusion is noise. A per-item pass/fail
+over ~24 fixtures has a 95 % CI of roughly ±14 pp — wide enough to "detect"
 improvements that did not happen. It needs a harness that pools the underlying
 findings rather than collapsing them to per-item verdicts.
 
-**That harness now exists** — see [#623](#13--623--evaluation-platform).
+**That harness now exists** — see [#623](#11--623--evaluation-platform).
 `applo-eval` already carries 31 fixtures across 14+ professions in DE and EN and
 scores them with the product's own deterministic validators (grounding,
 style-lint, ATS coverage, guard-fallback rate). Running #572 by hand would
-re-do, worse, what is already built. **Promote this to P2 the moment #797
-lands** — at that point it stops being a manual review and becomes a matrix run
-with a report.
+re-do, worse, what is already built. Now that #797 has landed this stops being a
+manual review and becomes a matrix run with a report.
 
-**Depends on:** #797. **Plan:** [10](./10-issue-572-llm-output-review.md).
+**Depends on:** nothing — #797 closed (PRs #801/#802), which is what promoted
+this from P3 to P2. **Plan:** [10](./10-issue-572-llm-output-review.md).
 
-### 9 · #570 — onboarding guide
+---
+
+## P3 — planned, not scheduled
+
+### 7 · #570 — onboarding guide
 
 **What it does.** A guided first-login tour across profile/résumé import, job
 ingestion, generation, the PDF editor, the interview coach and email tracking,
@@ -293,7 +242,7 @@ are about to change. Building it now guarantees rework. It also still has two
 open design questions in the issue (interactive tour vs. static checklist; a
 library vs. existing primitives) — decide those before planning.
 
-### 10 · #332 — SSR for public pages
+### 8 · #332 — SSR for public pages
 
 **What it does.** Converts the landing/marketing pages from client rendering to
 Server Components with real `metadata`/OpenGraph, for indexability and FCP.
@@ -302,24 +251,30 @@ Server Components with real `metadata`/OpenGraph, for indexability and FCP.
 share assets and is cheaper. Fold #332 in only if plan 03 shows the landing
 page's CSR is actually hurting indexing — measure before rewriting.
 
-### 11 · #525 — admin LLM usage analytics endpoints
+### 9 · #525 — admin LLM usage analytics endpoints
 
 **What it does.** Read-only, admin-gated aggregation over `LlmUsageEvent` —
 tokens, cost, call counts and success rate grouped by feature, tier, language
 and day, under `/api/v1/admin/llm-usage/*` behind the existing `ADMIN_EMAILS`
 allow-list.
 
-**Status change.** Its blocker **#522 is merged** (PR #781), so this is now
-unblocked. `LlmUsageEvent` rows exist and are being written.
+**Status change.** Its blocker **#522 is merged** (PR #781) — but until
+**16 Aug 2026 it wrote nothing at all**. `llm_usage_events` was empty in *every*
+environment: `LlmUsageService` declared Prisma as a union-typed `@Optional()`
+parameter, TypeScript emitted `Object` for `design:paramtypes`, Nest could not
+derive the token and silently injected `undefined`, and `record()` returned early
+with no error ever logged. Fixed in PR
+[#803](https://github.com/Smart-Apply/applo/pull/803) and verified on staging.
+Rows only accrue from that deploy onward.
 
-**Why P3.** Nothing depends on it, and there is not much data yet. It becomes
-useful in proportion to how long tracking has been running — which is an
-argument for doing it later, not sooner.
+**Why P3.** Nothing depends on it, and the data only started accumulating on
+16 Aug 2026. It becomes useful in proportion to how long tracking has actually
+been running — which is an argument for doing it later, not sooner.
 
 **Constraint to carry over:** aggregates only. No drill-down that could resolve
 an `actorHash` back to a user.
 
-### 12 · #523 — usage dataset export
+### 10 · #523 — usage dataset export
 
 **What it does.** An admin-only export of `LlmUsageEvent` to CSV/Parquet/JSONL,
 with the schema and its anonymity guarantees documented for due diligence.
@@ -341,7 +296,7 @@ pseudonymous and handle it as personal data.
 
 ## P4 — icebox
 
-### 13 · #623 — evaluation platform
+### 11 · #623 — evaluation platform
 
 **What it does.** A standalone repo that runs a versioned fixture set
 (profile × job posting, DE/EN, across professions and edge cases) through the
@@ -392,13 +347,13 @@ forcing function is roughly twenty months out, not two. The platform is still
 worth having — it is what makes #572 measurable — but it is not a deadline.
 
 **Why it stays P4 in this repo.** Almost all remaining work lives in the other
-repo. What belonged *here* — merging the headless seam — is now tracked
-separately as [#797](#7--797--reconcile-the-headless-seam-with-mains-pipeline)
-at P3.
+repo. What belonged *here* — merging the headless seam — shipped as #797
+(PRs #801/#802), so this is no longer blocked; what remains is scheduling, not
+dependency.
 
 **Reference:** [EVAL_PLATFORM_FABLE5_PROMPT.md](../implementation/EVAL_PLATFORM_FABLE5_PROMPT.md).
 
-### 14 · #133 — dark mode
+### 12 · #133 — dark mode
 
 **What it does.** Light/dark/system themes, persisted preference, a toggle,
 Tailwind class-based dark mode.
@@ -410,7 +365,7 @@ references `tailwind.config.ts` — the app is on **Tailwind v4**, which is
 config-less by default, so the technical plan in the issue needs rewriting
 regardless.
 
-### 15 · #524 — ML on the usage dataset
+### 13 · #524 — ML on the usage dataset
 
 **What it does.** A discovery umbrella: token-cost forecasting, per-`actorHash`
 sequence modelling, tier-upgrade propensity, anomaly detection — trained only on
@@ -428,7 +383,6 @@ that is the correct state; leave it there.
 ```mermaid
 graph TD
   subgraph P1["P1 — next up"]
-    I764["#764 profile validation"]
     I763["#763 profile-check SSOT"]
   end
 
@@ -437,11 +391,10 @@ graph TD
     I746["#746 page loading states"]
     I761["#761 unify save model"]
     I573["#573 mobile pass"]
+    I572["#572 LLM output review"]
   end
 
   subgraph P3["P3 — planned"]
-    I797["#797 headless seam"]
-    I572["#572 LLM output review"]
     I570["#570 onboarding"]
     I332["#332 SSR / SEO"]
     I525["#525 usage analytics"]
@@ -461,8 +414,6 @@ graph TD
   I573 --> I570
   I571 --> I133
   I573 --> I133
-  I797 --> I572
-  I797 --> I623
   I523 --> I524
   I525 -.-> I523
 ```
@@ -506,6 +457,7 @@ under-serve them.
 |---|---|
 | VoiceOver / screen-reader pass | Never done. Carried #765 → #790 → nowhere. |
 | Re-measure the a11y result on a running stack | PR #792 measured against DOM fixtures; `/settings` passed only because jsdom has no layout. |
+| Email format + status icon in the profile contact block | Last unticked box on #764; PR #804 covered the rest. Needs a product decision, not code. |
 
 **Plans without issues** — from
 [PUBLIC_LAUNCH_PLAN.md](../guides/PUBLIC_LAUNCH_PLAN.md) via
@@ -527,6 +479,21 @@ out of PR #791 by design (§9.5):
 - Dependency bumps (§7) — hygiene, not urgent; no High advisory is
   runtime-reachable. Note the `pdfjs-dist` ↔ `react-pdf` pairing rule before
   touching them.
+
+**Cross-repo — `Smart-Apply/applo-eval`**, absorbed here on 16 Aug 2026 so the
+local session handoff can be deleted without losing them. That repo is owned by
+a separate agent; these are requests, not tasks for this repo:
+
+| Item | Status |
+|---|---|
+| Assert `schemaVersion` at runtime | It is *typed* in both repos (`runner/src/types.ts`, `web/src/lib/types.ts`) but never checked — `JSON.parse` casts blind, so a schema break lands as silently wrong numbers instead of a loud failure. ~5 lines in the cell reader. |
+| Correct the retirement date in `applo-eval/README.md` | It cites `gpt-4.1` retiring **2026-10-14** as the project's motivation. That is `gpt-4.1-nano`'s date; `gpt-4.1` retires **2027-04-14**. Last place the wrong date survives. |
+
+The process seam this repo must not break for them: `pnpm generate:headless`
+keeping its name, the `--score` flag, the `HeadlessOutput` JSON shape, the
+offline path (`LLM_PROVIDER=fake`), a committed lockfile, and `applo` staying
+**public** (their checkout uses the default `github.token` with no `token:`
+input).
 
 File issues for whichever of these are real, or accept that they will not be
 prioritised alongside everything else.
