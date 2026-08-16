@@ -6,6 +6,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { getLanguageLevelLabel } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { StatusChip } from '@/components/ui/status-chip';
+import { SaveStatus } from '@/components/ui/save-status';
+import type { SaveState } from '@/hooks/use-save-status';
 import { ProfilePhotoAvatar } from '@/components/profile/profile-photo-avatar';
 import { ProfileSkeleton } from '@/components/shared/skeletons';
 import { ApploRig } from '@/components/ui/applo-rig';
@@ -634,6 +636,20 @@ export default function ProfilePage() {
   const { data: profile, isLoading, error } = useProfile();
   const updateProfile = useUpdateProfile();
   const user = useAuthStore((state) => state.user);
+  // Every edit here persists straight away, so the shared indicator — not a
+  // toast per save — is what confirms the data is safe.
+  const saveState: SaveState = updateProfile.isPending
+    ? 'saving'
+    : updateProfile.isError
+      ? 'error'
+      : updateProfile.isSuccess
+        ? 'saved'
+        : 'idle';
+  const lastUpdate = updateProfile.variables;
+  const retryProfileSave = updateProfile.mutate;
+  const retrySave = useCallback(() => {
+    if (lastUpdate) retryProfileSave(lastUpdate);
+  }, [lastUpdate, retryProfileSave]);
   const [cvDialogOpen, setCvDialogOpen] = useState(false);
   const parseResume = useParseResume();
 
@@ -1857,6 +1873,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* ── Save indicator — profile edits persist immediately ── */}
+      <SaveStatus state={saveState} onRetry={retrySave} variant="floating" />
 
       {/* ── Floating "back to top" during tour ── */}
       <button

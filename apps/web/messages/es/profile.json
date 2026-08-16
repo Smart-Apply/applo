@@ -503,7 +503,6 @@
   },
   "hooks": {
     "updateError": "Error al actualizar el perfil",
-    "updateSuccess": "Perfil actualizado correctamente",
     "parseError": "Error al analizar el currículum"
   },
   "sections": {

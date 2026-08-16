@@ -19,8 +19,6 @@ export interface UnsavedChangesGuard {
   setDirty: (dirty: boolean) => void;
   /** Close request that may be intercepted (Escape, outside click, Abbrechen). */
   requestClose: () => void;
-  /** Close after a successful save — never prompts. */
-  closeSaved: () => void;
   confirmOpen: boolean;
   keepEditing: () => void;
   discard: () => void;
@@ -31,8 +29,12 @@ export interface UnsavedChangesGuard {
  * the user composes a whole record and "Abbrechen" has to keep meaning
  * "discard". That makes an accidental close the one remaining way to lose
  * work, so every such dialog guards it with this hook.
+ *
+ * Saving closes the dialog directly (never through `requestClose`), so a
+ * successful save is never questioned. The form re-reports its dirty state
+ * whenever it mounts, which is what resets the guard after a close.
  */
-export function useUnsavedChangesGuard(close: () => void): UnsavedChangesGuard {
+export function useUnsavedChangesGuard(open: boolean, close: () => void): UnsavedChangesGuard {
   const [dirty, setDirty] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -44,12 +46,6 @@ export function useUnsavedChangesGuard(close: () => void): UnsavedChangesGuard {
     close();
   }, [dirty, close]);
 
-  const closeSaved = useCallback(() => {
-    setDirty(false);
-    setConfirmOpen(false);
-    close();
-  }, [close]);
-
   const keepEditing = useCallback(() => setConfirmOpen(false), []);
 
   const discard = useCallback(() => {
@@ -58,7 +54,9 @@ export function useUnsavedChangesGuard(close: () => void): UnsavedChangesGuard {
     close();
   }, [close]);
 
-  return { setDirty, requestClose, closeSaved, confirmOpen, keepEditing, discard };
+  // The guard outlives the form it protects, so the prompt is scoped to the
+  // open dialog. `dirty` is re-reported by the form when it mounts again.
+  return { setDirty, requestClose, confirmOpen: open && confirmOpen, keepEditing, discard };
 }
 
 interface UnsavedChangesDialogProps {
