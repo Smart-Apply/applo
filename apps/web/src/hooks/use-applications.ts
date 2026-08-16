@@ -210,7 +210,6 @@ export function useDeleteApplication() {
 
 export function useUpdateApplicationResume(applicationId: string) {
   const queryClient = useQueryClient();
-  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (data: { resume: ResumeData }) =>
@@ -224,9 +223,9 @@ export function useUpdateApplicationResume(applicationId: string) {
       // which reports through the SaveStatus indicator. A toast per keystroke
       // batch would be noise, not confirmation.
     },
-    onError: (error: unknown) => {
-      toastError(error, t('hooks.resumeSaveError'));
-    },
+    // No onError toast either — the caller owns the failure. The auto-save runs
+    // through useSaveStatus, which shows the error state plus a retry action;
+    // a second toast from here would duplicate it.
   });
 }
 
@@ -247,9 +246,9 @@ export function useUpsertCoverLetter(applicationId: string) {
         toastSuccess(t('hooks.coverLetterUpdated'));
       }
     },
-    onError: (error: unknown) => {
-      toastError(error, t('hooks.coverLetterUpdateError'));
-    },
+    // No onError toast — the caller owns the failure: the auto-save reports it
+    // through useSaveStatus (error state + retry), the (re)generation actions
+    // show their own message.
   });
 }
 

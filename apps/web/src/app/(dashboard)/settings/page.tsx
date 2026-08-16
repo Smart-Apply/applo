@@ -58,7 +58,7 @@ import { SettingToggleRow } from '@/components/settings/setting-toggle-row';
 import { ThemeCards } from '@/components/settings/theme-cards';
 import { SettingsSearch } from '@/components/settings/settings-search';
 import { SaveStatus } from '@/components/ui/save-status';
-import { useSaveStatus } from '@/hooks/use-save-status';
+import { useSaveStatus, type SaveState } from '@/hooks/use-save-status';
 import { useLocaleSwitch } from '@/components/i18n/language-switcher';
 import { locales, type Locale } from '@/i18n/config';
 
@@ -110,6 +110,14 @@ export default function SettingsPage() {
   // confirmation and the retry affordance when a save fails.
   const profileSave = useSaveStatus();
   const { track: trackSave, retry: retrySave } = profileSave;
+  // A pending or failed save wins over "dirty": the fields still differ from
+  // the stored user while the request is in flight.
+  const saveState: SaveState =
+    profileSave.state === 'saving' || profileSave.state === 'error'
+      ? profileSave.state
+      : profileDirty
+        ? 'dirty'
+        : profileSave.state;
 
   // The auth store rehydrates asynchronously, so the inputs are seeded once the
   // user is known — otherwise the auto-save would persist the empty initial
@@ -659,11 +667,7 @@ export default function SettingsPage() {
       )}
 
       {/* Product-wide save indicator — every change here persists on its own */}
-      <SaveStatus
-        state={profileDirty && profileSave.state !== 'error' ? 'dirty' : profileSave.state}
-        onRetry={retrySave}
-        variant="floating"
-      />
+      <SaveStatus state={saveState} onRetry={retrySave} variant="floating" />
     </div>
   );
 }

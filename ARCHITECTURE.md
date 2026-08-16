@@ -400,6 +400,18 @@ User 1:1 Subscription
 | Markdown   | marked · turndown                                       |
 | Bundle     | Cloudflare Workers (OpenNext) · `@next/bundle-analyzer` |
 
+**Saving model (product-wide).** Every surface that persists user edits — the
+application editor, `/settings`, `/profile` — saves automatically (immediately
+or 800 ms debounced) and reports through the same two primitives:
+`useSaveStatus()` (`hooks/use-save-status.ts`) drives the
+`idle → dirty → saving → saved | error` states, `<SaveStatus>`
+(`components/ui/save-status.tsx`, built on `StatusChip`) is the single visible
+indicator, and a failed save is recoverable via its retry action plus the retry
+toast. Auto-saved changes therefore carry **no** success toast. Explicit saving
+survives only inside the profile's modal add/edit dialogs, which guard an
+accidental close with `useUnsavedChangesGuard` + `<UnsavedChangesDialog>`
+(`components/ui/unsaved-changes-dialog.tsx`).
+
 ### Infrastructure
 
 | Category   | Technology                                                                                                                                                            |
