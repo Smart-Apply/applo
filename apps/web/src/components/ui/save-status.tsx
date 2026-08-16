@@ -65,9 +65,10 @@ export function SaveStatus({ state, onRetry, variant = 'inline', className }: Sa
       <div
         role="status"
         aria-live="polite"
-        // Clears the desktop sidebar; the wrapper never swallows clicks on the
-        // page underneath while the indicator is idle.
-        className="pointer-events-none fixed bottom-6 left-4 z-40 md:left-[21rem]"
+        // Clears the desktop sidebar and the mobile bottom nav; the wrapper
+        // never swallows clicks on the page underneath while the indicator is
+        // idle.
+        className="pointer-events-none fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-4 z-40 md:bottom-6 md:left-[21rem]"
       >
         {/* Opaque backdrop so the tinted chip stays legible over page content
             (the dark-mode tones are translucent by design). */}

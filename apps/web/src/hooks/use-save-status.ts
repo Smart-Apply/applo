@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { getErrorMessage } from '@/lib/errors';
 import { toastErrorWithRetry } from '@/lib/toast';
 
 /**
@@ -23,9 +24,6 @@ export interface SaveStatusController {
   track: TrackFn;
   /** Re-runs the last failed save. Wired to the indicator's retry button. */
   retry: () => void;
-  /** Flags local edits that have not been persisted yet. */
-  markDirty: () => void;
-  reset: () => void;
 }
 
 /**
@@ -35,6 +33,9 @@ export interface SaveStatusController {
  */
 export function useSaveStatus(): SaveStatusController {
   const [state, setState] = useState<SaveState>('idle');
+  // One toast id per controller: a surface whose endpoint is down would
+  // otherwise stack a new toast per attempt instead of updating one.
+  const toastId = `save-error-${useId()}`;
   // `track` re-runs itself on retry; a ref breaks the self-reference without
   // making the callback unstable.
   const trackRef = useRef<TrackFn | null>(null);
@@ -51,10 +52,15 @@ export function useSaveStatus(): SaveStatusController {
       retryRef.current = () => {
         void trackRef.current?.(run, errorMessage);
       };
-      toastErrorWithRetry(error, () => retryRef.current?.(), errorMessage);
+      // Keep the underlying reason next to the surface's generic message.
+      const detail = getErrorMessage(error);
+      toastErrorWithRetry(error, () => retryRef.current?.(), errorMessage, undefined, {
+        id: toastId,
+        description: errorMessage && detail !== errorMessage ? detail : undefined,
+      });
       return undefined;
     }
-  }, []);
+  }, [toastId]);
 
   useEffect(() => {
     trackRef.current = track;
@@ -64,20 +70,8 @@ export function useSaveStatus(): SaveStatusController {
     retryRef.current?.();
   }, []);
 
-  const markDirty = useCallback(() => {
-    setState((current) => (current === 'saving' ? current : 'dirty'));
-  }, []);
-
-  const reset = useCallback(() => {
-    retryRef.current = null;
-    setState('idle');
-  }, []);
-
   // The actions are stable, so a caller may safely put `track` (not the whole
   // controller) into a `useCallback`/`useEffect` dependency list — a save loop
   // that re-schedules itself on every render would hammer a failing endpoint.
-  return useMemo(
-    () => ({ state, track, retry, markDirty, reset }),
-    [state, track, retry, markDirty, reset],
-  );
+  return useMemo(() => ({ state, track, retry }), [state, track, retry]);
 }

@@ -105,6 +105,10 @@ export default function SettingsPage() {
 
   const profileDirty =
     firstName !== (user?.firstName || '') || lastName !== (user?.lastName || '');
+  // A blank field mid-retype is a transient state, not an intent — auto-saving
+  // it would wipe the stored name. Submitting explicitly (Enter) still does.
+  const clearsStoredName =
+    (!firstName.trim() && !!user?.firstName) || (!lastName.trim() && !!user?.lastName);
 
   // Everything on this page persists on its own; the indicator is the visible
   // confirmation and the retry affordance when a save fails.
@@ -159,11 +163,11 @@ export default function SettingsPage() {
   // remembered so a failed save is not retried on a loop — recovery goes
   // through the indicator's retry action.
   useEffect(() => {
-    if (!nameSeeded || !profileDirty) return;
+    if (!nameSeeded || !profileDirty || clearsStoredName) return;
     if (lastAttemptedName.current === JSON.stringify({ firstName, lastName })) return;
     const timer = setTimeout(() => void saveProfile(), PROFILE_AUTOSAVE_MS);
     return () => clearTimeout(timer);
-  }, [nameSeeded, profileDirty, firstName, lastName, saveProfile]);
+  }, [nameSeeded, profileDirty, clearsStoredName, firstName, lastName, saveProfile]);
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();

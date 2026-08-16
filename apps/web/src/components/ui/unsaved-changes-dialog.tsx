@@ -35,8 +35,17 @@ export interface UnsavedChangesGuard {
  * whenever it mounts, which is what resets the guard after a close.
  */
 export function useUnsavedChangesGuard(open: boolean, close: () => void): UnsavedChangesGuard {
-  const [dirty, setDirty] = useState(false);
+  const [dirty, setDirtyState] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const setDirty = useCallback((next: boolean) => {
+    setDirtyState(next);
+    // A form that reports itself pristine — which every form does when it
+    // mounts — also clears a prompt left over from the previous session. The
+    // contact dialog closes asynchronously, so the prompt can outlive its
+    // dialog and would otherwise greet the next, untouched form.
+    if (!next) setConfirmOpen(false);
+  }, []);
 
   const requestClose = useCallback(() => {
     if (dirty) {
@@ -49,7 +58,7 @@ export function useUnsavedChangesGuard(open: boolean, close: () => void): Unsave
   const keepEditing = useCallback(() => setConfirmOpen(false), []);
 
   const discard = useCallback(() => {
-    setDirty(false);
+    setDirtyState(false);
     setConfirmOpen(false);
     close();
   }, [close]);
@@ -81,7 +90,12 @@ export function UnsavedChangesDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onKeepEditing}>{t('keepEditing')}</AlertDialogCancel>
-          <AlertDialogAction onClick={onDiscard}>{t('discard')}</AlertDialogAction>
+          <AlertDialogAction
+            onClick={onDiscard}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {t('discard')}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
