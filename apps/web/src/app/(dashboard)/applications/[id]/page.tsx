@@ -22,9 +22,9 @@ import { useAuthStore } from '@/stores/auth-store';
 import { api, authenticatedFetch } from '@/lib/api-client';
 import { useRetryApplication } from '@/hooks/use-applications';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { CenteredLoader } from '@/components/shared/loading';
+import { ErrorState } from '@/components/ui/error-state';
 import {
   ArrowLeft,
   ArrowRight,
@@ -126,6 +126,7 @@ export default function ApplicationDetailPage() {
   const {
     data: application,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -342,18 +343,12 @@ export default function ApplicationDetailPage() {
     return (
       <div className="mx-auto max-w-5xl space-y-6">
         <BackLink onClick={() => router.push('/applications')} />
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">{t('detail.notFoundTitle')}</h3>
-              <p className="text-muted-foreground mb-6">
-                {t('detail.notFoundDescription')}
-              </p>
-              <Button onClick={() => router.push('/applications')}>{t('detail.toApplications')}</Button>
-            </div>
-          </CardContent>
-        </Card>
+        <ErrorState
+          title={t('detail.notFoundTitle')}
+          description={t('detail.notFoundDescription')}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }

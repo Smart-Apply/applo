@@ -44,6 +44,10 @@
     "retry": "Try again",
     "toDashboard": "Go to dashboard"
   },
+  "errorState": {
+    "title": "Content could not be loaded",
+    "description": "Something went wrong while loading. Please try again."
+  },
   "serviceWorker": {
     "updateTitle": "New version available",
     "updateDescription": "Reload the page to get the latest version of Applo. Unsaved input in open forms will be lost.",

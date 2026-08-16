@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SkeletonScreen } from '@/components/shared/skeletons';
+import { ErrorState } from '@/components/ui/error-state';
 import { CheckStepper } from '@/components/validation/check-stepper';
 import { DocumentInput } from '@/components/validation/document-input';
 import { JobContextInput } from '@/components/validation/job-context-input';
@@ -48,9 +49,21 @@ export default function ValidatePage() {
   const [title, setTitle] = useState('');
   const [language, setLanguage] = useState('auto');
 
-  const { subscription, tier } = useSubscription();
-  const { data: history, isLoading: historyLoading } = useValidations();
-  const { data: activeRecord, isLoading: activeLoading } = useValidation(activeId);
+  const { subscription, tier, isLoading: subscriptionLoading } = useSubscription();
+  const {
+    data: history,
+    isLoading: historyLoading,
+    isError: historyError,
+    isFetching: historyFetching,
+    refetch: refetchHistory,
+  } = useValidations();
+  const {
+    data: activeRecord,
+    isLoading: activeLoading,
+    isError: activeError,
+    isFetching: activeFetching,
+    refetch: refetchActive,
+  } = useValidation(activeId);
   const createValidation = useCreateValidation();
   const deleteValidation = useDeleteValidation();
 
@@ -115,10 +128,14 @@ export default function ValidatePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {!isUnlimited && (
-            <Badge variant="secondary">
-              {t('page.quotaBadge', { remaining: Math.max(0, remaining), limit: validations?.limit ?? 0 })}
-            </Badge>
+          {subscriptionLoading ? (
+            <Skeleton className="h-[22px] w-[96px] rounded-[3px]" />
+          ) : (
+            !isUnlimited && (
+              <Badge variant="secondary">
+                {t('page.quotaBadge', { remaining: Math.max(0, remaining), limit: validations?.limit ?? 0 })}
+              </Badge>
+            )
           )}
           <Button
             variant="outline"
@@ -211,6 +228,8 @@ export default function ValidatePage() {
               <Skeleton className="h-40 w-full rounded-[4px]" />
               <Skeleton className="h-32 w-full rounded-[4px]" />
             </SkeletonScreen>
+          ) : activeError ? (
+            <ErrorState onRetry={() => refetchActive()} isRetrying={activeFetching} />
           ) : activeRecord ? (
             <ValidationResultView result={activeRecord.result} onNewCheck={handleNewCheck} />
           ) : null}
@@ -241,6 +260,8 @@ export default function ValidatePage() {
                 <Skeleton className="h-14 w-full rounded-[4px]" />
                 <Skeleton className="h-14 w-full rounded-[4px]" />
               </SkeletonScreen>
+            ) : historyError ? (
+              <ErrorState onRetry={() => refetchHistory()} isRetrying={historyFetching} />
             ) : !history || history.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 {t('page.noHistory')}

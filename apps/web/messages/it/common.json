@@ -44,6 +44,10 @@
     "retry": "Riprova",
     "toDashboard": "Vai alla dashboard"
   },
+  "errorState": {
+    "title": "Impossibile caricare i contenuti",
+    "description": "Si è verificato un errore durante il caricamento. Riprova."
+  },
   "serviceWorker": {
     "updateTitle": "Nuova versione disponibile",
     "updateDescription": "Ricarica la pagina per ottenere l'ultima versione di Applo. I dati non salvati nei moduli aperti andranno persi.",

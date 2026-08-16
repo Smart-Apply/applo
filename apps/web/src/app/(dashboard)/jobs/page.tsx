@@ -11,6 +11,7 @@ import { JobPostingForm } from '@/components/forms/job-posting-form';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SkeletonScreen } from '@/components/shared/skeletons';
+import { ErrorState } from '@/components/ui/error-state';
 import { useJobPostings, useDeleteJobPosting } from '@/hooks/use-job-postings';
 import {
   Plus,
@@ -46,7 +47,7 @@ export default function JobsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<{ id: string; title: string } | null>(null);
 
-  const { data: jobPostings, isLoading } = useJobPostings();
+  const { data: jobPostings, isLoading, isError, isFetching, refetch } = useJobPostings();
   const deleteJobPosting = useDeleteJobPosting();
 
   const handleSave = async () => {
@@ -159,6 +160,8 @@ export default function JobsPage() {
               </CardContent>
             </Card>
           </SkeletonScreen>
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()} isRetrying={isFetching} />
         ) : jobPostings && jobPostings.length > 0 ? (
           <Card>
             <CardContent className="p-0">

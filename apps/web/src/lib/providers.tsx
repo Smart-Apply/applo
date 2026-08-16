@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
-import { ApiError, ErrorType, shouldRetry } from './errors';
+import { ApiError, ErrorType } from './errors';
 import { getErrorMessage as getErrorMessageForCode } from './error-messages';
 import { toastError } from './toast';
 import { useAuthStore } from '@/stores/auth-store';
@@ -42,15 +42,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 60 * 1000, // 1 minute
-            retry: (failureCount, error) => {
-              // Don't retry on 4xx errors (except network errors)
-              if (ApiError.isApiError(error) && error.status >= 400 && error.status < 500) {
-                return false;
-              }
-              // Retry on network errors and 5xx errors
-              return shouldRetry(error, failureCount, 3);
-            },
-            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+            // The typed api client already retries network errors and 5xx
+            // three times with exponential backoff (see fetchApi in
+            // lib/api-client.ts). Retrying here as well multiplied the two
+            // layers: a failing request took 16 attempts / ~65s before
+            // `isError` flipped, so the error state was never actually
+            // reached by a user. One retry layer only.
+            retry: false,
           },
           mutations: {
             onError: handleError,
