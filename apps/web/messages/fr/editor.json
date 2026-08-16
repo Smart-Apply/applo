@@ -31,11 +31,6 @@
       "resume": "Cliquez sur n'importe quel texte pour le modifier.",
       "coverLetter": "Cliquez dans la lettre de motivation pour modifier le texte, la formule d'appel ou les paragraphes."
     },
-    "saveStatus": {
-      "saving": "Enregistrement…",
-      "dirty": "Modifications non enregistrées",
-      "saved": "Modifications enregistrées automatiquement"
-    },
     "export": {
       "button": "Exporter",
       "tooltip": "Exporter les PDF",

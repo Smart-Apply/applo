@@ -25,6 +25,19 @@
     "loading": "Lädt...",
     "understood": "Verstanden"
   },
+  "saveStatus": {
+    "saving": "Speichert …",
+    "dirty": "Nicht gespeicherte Änderungen",
+    "saved": "Alle Änderungen gespeichert",
+    "error": "Speichern fehlgeschlagen",
+    "retry": "Erneut versuchen"
+  },
+  "unsavedChanges": {
+    "title": "Ungespeicherte Änderungen",
+    "description": "Deine Eingaben in diesem Formular wurden noch nicht gespeichert. Wenn du jetzt schließt, gehen sie verloren.",
+    "keepEditing": "Weiter bearbeiten",
+    "discard": "Änderungen verwerfen"
+  },
   "loadingMessages": {
     "pdfPreview": "Lädt PDF-Vorschau...",
     "editor": "Lädt Editor...",

@@ -338,7 +338,6 @@
     "generateError": "Fehler beim Generieren der Bewerbung",
     "deleteError": "Fehler beim Löschen der Bewerbung",
     "deleteSuccess": "Bewerbung wurde gelöscht",
-    "resumeSaved": "Lebenslauf gespeichert",
     "resumeSaveError": "Lebenslauf konnte nicht gespeichert werden",
     "coverLetterUpdated": "Anschreiben aktualisiert",
     "coverLetterUpdateError": "Anschreiben konnte nicht aktualisiert werden",

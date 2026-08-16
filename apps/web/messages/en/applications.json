@@ -338,7 +338,6 @@
     "generateError": "Error generating the application",
     "deleteError": "Error deleting the application",
     "deleteSuccess": "Application was deleted",
-    "resumeSaved": "Résumé saved",
     "resumeSaveError": "Résumé could not be saved",
     "coverLetterUpdated": "Cover letter updated",
     "coverLetterUpdateError": "Cover letter could not be updated",

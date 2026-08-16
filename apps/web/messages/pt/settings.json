@@ -4,7 +4,6 @@
     "description": "Gere a tua conta, segurança e preferências.",
     "toasts": {
       "loadError": "Falha ao carregar as definições",
-      "preferenceSaved": "Definição guardada",
       "preferenceSaveError": "Falha ao guardar a definição"
     }
   },
@@ -89,7 +88,6 @@
       "deleting": "A eliminar..."
     },
     "toasts": {
-      "profileUpdated": "Perfil atualizado com sucesso",
       "profileUpdateError": "Falha ao atualizar o perfil",
       "emailConfirmRequired": "Introduz o teu endereço de e-mail para confirmar",
       "passwordRequired": "Introduz a tua palavra-passe",
@@ -228,10 +226,5 @@
       "cancel": "Cancelar",
       "connect": "Associar"
     }
-  },
-  "saveBar": {
-    "unsavedChanges": "Alterações não guardadas",
-    "discard": "Descartar",
-    "save": "Guardar"
   }
 }

@@ -4,7 +4,6 @@
     "description": "Gestisci il tuo account, la sicurezza e le preferenze.",
     "toasts": {
       "loadError": "Impossibile caricare le impostazioni",
-      "preferenceSaved": "Impostazione salvata",
       "preferenceSaveError": "Impossibile salvare l'impostazione"
     }
   },
@@ -89,7 +88,6 @@
       "deleting": "Eliminazione in corso..."
     },
     "toasts": {
-      "profileUpdated": "Profilo aggiornato con successo",
       "profileUpdateError": "Impossibile aggiornare il profilo",
       "emailConfirmRequired": "Inserisci il tuo indirizzo email per confermare",
       "passwordRequired": "Inserisci la tua password",
@@ -228,10 +226,5 @@
       "cancel": "Annulla",
       "connect": "Collega"
     }
-  },
-  "saveBar": {
-    "unsavedChanges": "Modifiche non salvate",
-    "discard": "Scarta",
-    "save": "Salva"
   }
 }

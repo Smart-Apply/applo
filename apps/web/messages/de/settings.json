@@ -4,7 +4,6 @@
     "description": "Verwalte deinen Account, deine Sicherheit und deine Präferenzen.",
     "toasts": {
       "loadError": "Fehler beim Laden der Einstellungen",
-      "preferenceSaved": "Einstellung gespeichert",
       "preferenceSaveError": "Fehler beim Speichern der Einstellung"
     }
   },
@@ -89,7 +88,6 @@
       "deleting": "Wird gelöscht..."
     },
     "toasts": {
-      "profileUpdated": "Profil erfolgreich aktualisiert",
       "profileUpdateError": "Fehler beim Aktualisieren des Profils",
       "emailConfirmRequired": "Bitte gib deine E-Mail-Adresse zur Bestätigung ein",
       "passwordRequired": "Bitte geben Sie Ihr Passwort ein",
@@ -228,10 +226,5 @@
       "cancel": "Abbrechen",
       "connect": "Verbinden"
     }
-  },
-  "saveBar": {
-    "unsavedChanges": "Ungespeicherte Änderungen",
-    "discard": "Verwerfen",
-    "save": "Speichern"
   }
 }

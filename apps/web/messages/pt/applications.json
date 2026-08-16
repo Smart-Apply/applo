@@ -338,7 +338,6 @@
     "generateError": "Erro ao gerar a candidatura",
     "deleteError": "Erro ao eliminar a candidatura",
     "deleteSuccess": "A candidatura foi eliminada",
-    "resumeSaved": "Currículo guardado",
     "resumeSaveError": "Não foi possível guardar o currículo",
     "coverLetterUpdated": "Carta de apresentação atualizada",
     "coverLetterUpdateError": "Não foi possível atualizar a carta de apresentação",

@@ -31,11 +31,6 @@
       "resume": "Klicke einen beliebigen Text an, um ihn zu bearbeiten.",
       "coverLetter": "Klicke in das Anschreiben, um Text, Anrede oder Absätze zu bearbeiten."
     },
-    "saveStatus": {
-      "saving": "Speichert…",
-      "dirty": "Nicht gespeicherte Änderungen",
-      "saved": "Änderungen automatisch gespeichert"
-    },
     "export": {
       "button": "Export",
       "tooltip": "PDFs exportieren",

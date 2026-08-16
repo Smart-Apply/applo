@@ -4,7 +4,6 @@
     "description": "Manage your account, security, and preferences.",
     "toasts": {
       "loadError": "Failed to load settings",
-      "preferenceSaved": "Setting saved",
       "preferenceSaveError": "Failed to save setting"
     }
   },
@@ -89,7 +88,6 @@
       "deleting": "Deleting..."
     },
     "toasts": {
-      "profileUpdated": "Profile updated successfully",
       "profileUpdateError": "Failed to update profile",
       "emailConfirmRequired": "Please enter your email address to confirm",
       "passwordRequired": "Please enter your password",
@@ -228,10 +226,5 @@
       "cancel": "Cancel",
       "connect": "Connect"
     }
-  },
-  "saveBar": {
-    "unsavedChanges": "Unsaved changes",
-    "discard": "Discard",
-    "save": "Save"
   }
 }

@@ -4,7 +4,6 @@
     "description": "Gérez votre compte, votre sécurité et vos préférences.",
     "toasts": {
       "loadError": "Échec du chargement des paramètres",
-      "preferenceSaved": "Paramètre enregistré",
       "preferenceSaveError": "Échec de l'enregistrement du paramètre"
     }
   },
@@ -89,7 +88,6 @@
       "deleting": "Suppression..."
     },
     "toasts": {
-      "profileUpdated": "Profil mis à jour avec succès",
       "profileUpdateError": "Échec de la mise à jour du profil",
       "emailConfirmRequired": "Veuillez saisir votre adresse e-mail pour confirmer",
       "passwordRequired": "Veuillez saisir votre mot de passe",
@@ -228,10 +226,5 @@
       "cancel": "Annuler",
       "connect": "Connecter"
     }
-  },
-  "saveBar": {
-    "unsavedChanges": "Modifications non enregistrées",
-    "discard": "Annuler",
-    "save": "Enregistrer"
   }
 }

@@ -338,7 +338,6 @@
     "generateError": "Erreur lors de la génération de la candidature",
     "deleteError": "Erreur lors de la suppression de la candidature",
     "deleteSuccess": "La candidature a été supprimée",
-    "resumeSaved": "CV enregistré",
     "resumeSaveError": "Le CV n'a pas pu être enregistré",
     "coverLetterUpdated": "Lettre de motivation mise à jour",
     "coverLetterUpdateError": "La lettre de motivation n'a pas pu être mise à jour",
