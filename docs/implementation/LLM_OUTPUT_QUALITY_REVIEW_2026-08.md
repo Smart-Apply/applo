@@ -23,7 +23,7 @@ Three headline results:
 
 1. **The grounding validator inspects 23 of 81 (28 %, 95 % CI 20–39 %) of the
    unambiguous impact claims that occur in the repo's own 24 fixtures.** Every miss is
-   a percentage written as a word — `18 Prozent`, `93 percent`, `12 percentage points`.
+   a percentage written as a word — `18 Prozent`, `93 percent`, `112 Prozent`.
    The extractor only matches the `%` *sign*
    ([`grounding-validator.service.ts:299`](../../apps/api/src/applications/grounding/grounding-validator.service.ts)).
    A German-first product whose anti-hallucination guard is blind to the German word
@@ -132,11 +132,12 @@ asymmetry in principle.
 **Bad example** (constructed, but every element is a form the fixtures actually use):
 
 > „In meiner jetzigen Position habe ich die Fluktuation um **42 Prozent** gesenkt, ein
-> **Team von 25** Pflegekräften geführt und die Auslastung **verdoppelt.“**
+> **Team von 25** Pflegekräften geführt und die Auslastung **verdoppelt**.“
 
-Three fabrications against a profile that states 18 %, a team of 12, and no
-doubling — and the validator reports `totalChecked = 0`. Rewrite the same sentence with
-`42 %` and it is caught. The guard is a spelling detector, not a claims detector.
+Three fabrications, and each one is individually invisible to the validator — the
+word-form percentage (P03), the two-digit head-count (P04) and the written-out doubling
+(P05) are all `checked=0`. Rewrite the first one as `42 %` and it is caught. The guard is
+closer to a spelling detector than a claims detector.
 
 P07/P08 are the subtler pair. P07 says a letter may safely quote a number that exists
 only in the job advert as if it were the candidate's own track record — the single most
@@ -195,10 +196,12 @@ idea and fires correctly (P13).
 **Bad example — and it is our own prompt.** Three of the four few-shots the writer model
 imitates are near-identical:
 
-> *"Dear Hiring Manager,
-> I am writing to express my strong interest in the **[Company]** … With over 6 years of
-> experience …, **I am confident that** my technical expertise and **track record of**
-> delivering high-impact solutions **align perfectly with** your team's needs."*
+> *"Dear Hiring Manager,*
+>
+> *I am writing to express my strong interest in the Senior Full-Stack Developer position
+> at **[Company]**. With over 6 years of experience …, **I am confident that** my technical
+> expertise and **track record of** delivering high-impact solutions **align perfectly with**
+> your team's needs."*
 
 Same skeleton for the healthcare and manufacturing variants; only the nouns change.
 Few-shots are the strongest signal in a prompt, so this teaches mode collapse *and*
@@ -219,8 +222,9 @@ marketing bullets. `cover-letter.md` has no equivalent; its guidance examples ar
 
 The salutation chain is genuinely good. `job-facts.md` extracts the contact person,
 `buildSalutation` composes the greeting deterministically instead of trusting the model,
-and it degrades to *"Sehr geehrte Damen und Herren,"* when no contact exists — correct
-behaviour, verified in P22's gendered case.
+and it degrades to *"Sehr geehrte Damen und Herren,"* when no contact exists. Verified
+directly: `{contact_name: 'Anna Hoffmann', contact_salutation: 'Frau'}` → *"Sehr geehrte
+Frau Anna Hoffmann,"*, and an empty contact → *"Sehr geehrte Damen und Herren,"*.
 
 ### What does not
 
@@ -339,7 +343,7 @@ mechanically checked — for R1–R8 by flipping the named probe from `GAP` to `
 | **R1** | **Complete the exported cover letter**: populate `date` + `closingPhrase` (localized for all six export locales) in the processor, render `companyName`/`recipientName`/`companyAddress` in the templates, add a `subject` field and a Betreffzeile | Ships a formally broken German business letter today; pure data-mapping, no LLM involved | S | P23–P26 OK; a rendered DE cover letter contains date, recipient, Betreff and *"Mit freundlichen Grüßen"* |
 | **R2** | **Teach the grounding validator to read numbers as humans write them**: word-form percentages (DE/EN), written-out magnitudes, unit-aware normalisation, and 1–2-digit counts when attached to a countable noun | The anti-hallucination guard currently inspects 28 % of claims; every other quality metric built on it inherits the blind spot | M | P01 recall ≥ 90 %; P03–P06 OK; no new false positives on the 24 fixtures |
 | **R3** | **Restore scorer parity**: pass `jobPostingText` in `headless-generate.ts --score`, and decide explicitly whether the job posting may ground a *candidate's own* claim (P07 suggests it should not) | Offline scores disagree with production by 100 points on the same input; every A/B built on them is unreliable | S | P07, P08 OK |
-| **R4** | **Rewrite the `cover-letter.md` few-shots**: profession-diverse (nurse, CNC lead, account manager, teacher), each with a distinct structure, no `[Company]` placeholder, no forbidden phrases; add a `## Domain Examples` section mirroring `resume-rewrite.md` | The few-shots teach exactly the clichés and the placeholder the same prompt bans, and 3 of 4 are IT | S | P09, P10 OK; the openings pass the linter after R5 |
+| **R4** | **Rewrite the `cover-letter.md` few-shots**: profession-diverse (nurse, CNC lead, account manager, teacher), each with a distinct structure, no `[Company]` placeholder, no forbidden phrases; add a `## Domain Examples` section mirroring `resume-rewrite.md` | The few-shots teach exactly the clichés and the placeholder the same prompt bans; only 1 of 4 is German, and it is an IT role | S | P09, P10 OK; the openings pass the linter after R5 |
 | **R5** | **Expand the cliché lists** to the dominant DE and EN families (German application boilerplate, English HR-speak) and add `"significantly improved"` | The style guard has teeth but almost nothing to bite; expansion is a data change, the enforcement path already exists | S | P02, P11, P12 OK; no regression in fixture style scores |
 | **R6** | **Fix keyword–profile matching**: include `experience.achievements` + `profile.summary`, replace the bidirectional substring test with token/word-boundary matching, add German compound + inflection handling | Simultaneously over- and under-reports; distorts the user-facing ATS score and can make the weave pass inject unsupported keywords | M | P15, P16, P17 OK; `"Go"` no longer supports `"Django"` |
 | **R7** | **Keep the contact name when gender is unknown** (e.g. *"Guten Tag Alex Weber,"*) and extend `SALUTATION_LINE_RE` in the same change | Silently drops personalization precisely for diverse and non-German names | S | P22 OK; P20 still OK |
