@@ -49,7 +49,7 @@
 | 6 | [#570](https://github.com/Smart-Apply/applo/issues/570) | Onboarding-Guide für alle Features | **P3** | L | #571, #573 |
 | 7 | [#332](https://github.com/Smart-Apply/applo/issues/332) | Add SSR to public pages (landing, marketing) for SEO | **P3** | M | plan 03 |
 | 8 | [#525](https://github.com/Smart-Apply/applo/issues/525) | LLM token-usage analytics aggregation endpoints | **P3** | M | — *(its data only exists since #803)* |
-| 9 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | re-scope first |
+| 9 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | ✅ delivered, re-scoped |
 | 10 | [#623](https://github.com/Smart-Apply/applo/issues/623) | Evaluation platform for application generation — separate repo | **P4** | XL | — *(unblocked by #797)* |
 | 11 | [#133](https://github.com/Smart-Apply/applo/issues/133) | 🌙 Dark Mode — Theme Switcher | **P4** | M | #571, #573 |
 | 12 | [#524](https://github.com/Smart-Apply/applo/issues/524) | Model trained on anonymized AI-usage dataset (discovery) | **P4** | XL | #523 + data volume |
@@ -251,23 +251,27 @@ been running — which is an argument for doing it later, not sooner.
 **Constraint to carry over:** aggregates only. No drill-down that could resolve
 an `actorHash` back to a user.
 
-### 9 · #523 — usage dataset export
+### 9 · #523 — usage dataset export — **delivered (re-scoped)**
 
-**What it does.** An admin-only export of `LlmUsageEvent` to CSV/Parquet/JSONL,
-with the schema and its anonymity guarantees documented for due diligence.
+**What it does.** An admin-only export of `LlmUsageEvent` to CSV/JSONL, with the
+schema and its anonymity guarantees documented for due diligence.
 
-**Why it needs re-scoping before it is worked.** The issue's central promise —
-"demonstrably anonymous" — is no longer accurate. The F11 finding in the
-13 Aug security audit established that the dataset is **pseudonymous**:
+**The re-scope this entry demanded was applied.** The issue's central promise —
+"demonstrably anonymous" — was not accurate for the live table. The F11 finding
+in the 13 Aug security audit established that the dataset is **pseudonymous**:
 `actorHash` is stable per user, and neighbouring tables (`applications`,
 `validations`, `interview_sessions`) carry `userId` plus millisecond
 `createdAt`, so a usage burst time-correlates back to the triggering row
 *without* the salt. That is why erasure-on-account-deletion and a retention
-sweep were added. An export sold as anonymous would be wrong.
+sweep were added. An export sold as anonymous would have been wrong.
 
-**Re-scope to:** timestamp bucketing, `actorHash` re-salting or dropping per
-export, and a k-anonymity threshold — or state plainly that the artefact is
-pseudonymous and handle it as personal data.
+**Shipped instead:** anonymisation happens *at export time* — timestamp
+bucketing (no raw-timestamp option), per-export re-salted or dropped
+`actorHash`, a k-anonymity threshold over a declared quasi-identifier set, and
+a manifest that states the guarantees and the residual risks for the exact
+parameters used. Parquet is a documented downstream conversion, not a backend
+dependency. See
+[docs/security/LLM_USAGE_DATASET.md](../security/LLM_USAGE_DATASET.md).
 
 ---
 
@@ -402,7 +406,7 @@ here rather than silently fixed, because each one changes a decision.
 |---|---|---|
 | #623 | `gpt-4.1` retires **2026-10-14**, so model migration is urgent | That is `gpt-4.1-nano`'s date. `gpt-4.1` (`2025-04-14`) retires **2027-04-14** per [Microsoft's schedule](https://learn.microsoft.com/azure/foundry/openai/concepts/model-retirement-schedule). Removes the deadline pressure that justified "why now" — and the same wrong date is repeated in `applo-eval/README.md` as the platform's stated motivation. |
 | #623 | The platform is unbuilt | It exists at `/Users/arian/VS-Projects/applo-eval` with M2–M4 done, and the in-repo enabler exists on `feat/headless-generation`. **Neither has a remote.** |
-| #523 | The `LlmUsageEvent` dataset is anonymous | It is **pseudonymous**. Finding F11 of the 13 Aug audit shows `actorHash` + neighbouring timestamped tables re-identify a user without the salt. Erasure + retention were added for this reason. |
+| #523 | The `LlmUsageEvent` dataset is anonymous | It is **pseudonymous**. Finding F11 of the 13 Aug audit shows `actorHash` + neighbouring timestamped tables re-identify a user without the salt. Erasure + retention were added for this reason. The delivered export therefore anonymises *at export time* rather than claiming the table is anonymous — see §10. |
 | #525 | Blocked on #522 | #522 merged in PR #781 — **unblocked**. |
 | #133 | Configure dark mode in `tailwind.config.ts` | The app runs **Tailwind v4**, config-less by default. The issue's technical section predates the upgrade. |
 

@@ -97,7 +97,7 @@ applo/
 │   │   │   ├── job-postings/      # Text/URL/file parsers
 │   │   │   ├── jobs/              # Queue providers (QStash / mem)
 │   │   │   ├── keywords/          # ATS keyword extraction & matching
-│   │   │   ├── llm/               # LLM provider abstraction
+│   │   │   ├── llm/               # LLM provider abstraction + usage telemetry & anonymised export
 │   │   │   ├── logger/            # Pino + Winston audit
 │   │   │   ├── mailbox-sync/      # Email Tracking (Premium): MS Graph OAuth + classifier
 │   │   │   ├── pdf/               # Thin façade over pdf-v2 (kept for caller API stability)
@@ -312,7 +312,7 @@ grounding-specific decisions live in
 | **InviteCode**     | RETIRED — beta gate removed; schema row kept until a follow-up release drops it (expand→contract) |
 | **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`) |
 | **AuditLog**       | Security event log                             |
-| **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure applies — both account-deletion paths erase by recomputed hash, and a daily cron deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90). Read back only through the aggregate-only `/admin/llm-usage/*` endpoints (`actorHash` is never filtered on, grouped by, or returned) |
+| **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure applies — both account-deletion paths erase by recomputed hash, and a daily cron deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90). Read back only through the aggregate-only `/admin/llm-usage/*` endpoints (`actorHash` is never filtered on, grouped by, or returned); the admin-only export (`/admin/llm-usage/export`) anonymises the rows for ML/due-diligence use — see [docs/security/LLM_USAGE_DATASET.md](docs/security/LLM_USAGE_DATASET.md) |
 
 ### Key Relations
 
@@ -474,6 +474,8 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/admin/llm-usage/summary`         | Admin: LLM token/cost totals for a window (aggregates only)                 |
 | GET      | `/admin/llm-usage/breakdown`       | Admin: totals grouped by feature/tier/language/model/provider/lane          |
 | GET      | `/admin/llm-usage/timeseries`      | Admin: totals per day/week/month, optionally split by a dimension           |
+| GET      | `/admin/llm-usage/export`          | Admin: anonymised `llm_usage_events` dataset (CSV/JSONL, bucketed, k-anonymous) |
+| GET      | `/admin/llm-usage/export/manifest` | Admin: manifest for that export (parameters, counts, guarantees)            |
 | GET/PUT  | `/user-preferences`                | Settings (incl. `onboardingCompleted` — the first-login product tour flag)  |
 
 ## 🚀 Deployment
