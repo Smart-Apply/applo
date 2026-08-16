@@ -1,9 +1,11 @@
 import { createHmac } from 'crypto';
-import type { ConfigService } from '../../../config/config.service';
-import type { PrismaService } from '../../../prisma/prisma.service';
+import { Test } from '@nestjs/testing';
+import { ConfigService } from '../../../config/config.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import type { GenerateOptions, LLMProvider } from '../../llm.interface';
 import { LLMService } from '../../llm.service';
 import { LlmUsageService } from '../../usage/llm-usage.service';
+import { LlmUsageRetentionCron } from '../../usage/llm-usage-retention.cron';
 import { featureForTemplate } from '../../usage/llm-feature.map';
 import type { LlmUsageRecordInput } from '../../usage/llm-usage.types';
 import {
@@ -256,5 +258,68 @@ describe('LlmUsageService', () => {
     await flush();
 
     expect(create).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Both usage classes take PrismaService as an `@Optional()` parameter typed
+ * `PrismaService | null`. TypeScript emits `Object` for that union, so without
+ * an explicit `@Inject` token Nest cannot derive the provider and silently
+ * injects undefined — `record()` and the retention sweep then return early
+ * forever, with no error. Every other test in this file uses `new`, which
+ * bypasses DI, so only a container-resolved instance catches it.
+ */
+describe('LLM usage DI wiring', () => {
+  const SALT = 'a'.repeat(64);
+
+  it('resolves PrismaService into LlmUsageService via the Nest container', async () => {
+    const create = vi.fn().mockResolvedValue(undefined);
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        LlmUsageService,
+        {
+          provide: PrismaService,
+          useValue: {
+            llmUsageEvent: { create },
+            subscription: { findUnique: vi.fn().mockResolvedValue(null) },
+          },
+        },
+        { provide: ConfigService, useValue: { llmUsageHashSalt: SALT } },
+      ],
+    }).compile();
+
+    const service = moduleRef.get(LlmUsageService);
+    expect(service.enabled).toBe(true);
+
+    service.record({
+      feature: LlmFeature.VALIDATION_CHECK,
+      provider: LlmProviderKind.AZURE_OPENAI,
+      model: 'gpt-5.4-mini',
+      lane: LlmRoutingLane.MID,
+      latencyMs: 5,
+      success: true,
+      circuitState: LlmCircuitState.CLOSED,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(create).toHaveBeenCalledOnce();
+  });
+
+  it('resolves PrismaService into LlmUsageRetentionCron via the Nest container', async () => {
+    const deleteMany = vi.fn().mockResolvedValue({ count: 0 });
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        LlmUsageRetentionCron,
+        { provide: PrismaService, useValue: { llmUsageEvent: { deleteMany } } },
+        {
+          provide: ConfigService,
+          useValue: { enableCronJobs: true, llmUsageRetentionDays: 90 },
+        },
+      ],
+    }).compile();
+
+    await moduleRef.get(LlmUsageRetentionCron).sweepExpiredUsageEvents();
+
+    expect(deleteMany).toHaveBeenCalledOnce();
   });
 });
