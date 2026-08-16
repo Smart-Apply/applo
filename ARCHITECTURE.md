@@ -109,7 +109,7 @@ applo/
 │   │   │   ├── subscription/      # Plans & usage limits
 │   │   │   ├── templates/         # Template catalog
 │   │   │   ├── uploads/           # Upload endpoints
-│   │   │   ├── user-preferences/  # Per-user settings
+│   │   │   ├── user-preferences/  # Per-user settings (incl. onboarding-tour flag)
 │   │   │   └── validation/        # Bewerbungs-Check (review external applications)
 │   │   ├── prisma/                # Schema, migrations, seeds
 │   │   └── test/                  # Unit / integration / e2e
@@ -118,7 +118,7 @@ applo/
 │       ├── messages/              # next-intl catalogs (de/en/fr/es/pt/it, one JSON per namespace)
 │       ├── src/
 │       │   ├── app/               # App Router (route groups)
-│       │   ├── components/        # UI + shadcn/ui + landing (server sections) + pdf + analytics (recharts) + i18n
+│       │   ├── components/        # UI + shadcn/ui + landing (server sections) + pdf + analytics (recharts) + i18n + onboarding tour
 │       │   ├── hooks/             # Custom React hooks
 │       │   ├── i18n/              # next-intl config (cookie-based de/en/fr/es/pt/it, no URL prefixes)
 │       │   ├── lib/               # api-client, providers, i18n-runtime, utils
@@ -308,6 +308,7 @@ grounding-specific decisions live in
 | **Interview**      | AI-generated interview Q&A                     |
 | **RefreshToken**   | Rotated refresh tokens                         |
 | **Session**        | Device/IP/UA tracking                          |
+| **UserPreferences**| Per-user settings — notifications, language, theme, privacy, and `onboardingCompleted` (guides the first-login product tour; set once the user finishes or skips it) |
 | **InviteCode**     | RETIRED — beta gate removed; schema row kept until a follow-up release drops it (expand→contract) |
 | **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`) |
 | **AuditLog**       | Security event log                             |
@@ -470,7 +471,7 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/admin/users?email=`              | Admin: search users (allow-listed)                                          |
 | POST     | `/admin/users/:email/tier`         | Admin: set subscription tier (allow-listed)                                 |
 | DELETE   | `/admin/users/:email`              | Admin: permanently delete user (allow-listed)                               |
-| GET/PUT  | `/user-preferences`                | Settings                                                                    |
+| GET/PUT  | `/user-preferences`                | Settings (incl. `onboardingCompleted` — the first-login product tour flag)  |
 
 ## 🚀 Deployment
 

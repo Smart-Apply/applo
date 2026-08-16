@@ -47,7 +47,8 @@
       "emailTracking": "Acompanhamento automático de candidaturas",
       "language": "Idioma e região",
       "theme": "Design / Tema",
-      "privacy": "Privacidade e exportação"
+      "privacy": "Privacidade e exportação",
+      "onboarding": "Visita guiada"
     },
     "keywords": {
       "name": "nome perfil profile nome próprio first name apelido last name",
@@ -61,7 +62,8 @@
       "emailTracking": "tracking caixa de entrada inbox outlook gmail automático automatic premium",
       "language": "idioma language região region português german english",
       "theme": "tema theme design modo escuro dark mode claro light aparência appearance",
-      "privacy": "privacidade privacy dados data exportar export transferir download rgpd gdpr público public"
+      "privacy": "privacidade privacy dados data exportar export transferir download rgpd gdpr público public",
+      "onboarding": "visita tour onboarding ajuda help guia introducao introdução inicio início"
     }
   },
   "account": {
@@ -157,6 +159,13 @@
         "title": "Dados de utilização anónimos",
         "description": "Ajuda-nos a melhorar a Applo. Sem conteúdo pessoal."
       }
+    },
+    "onboarding": {
+      "title": "Primeiros passos",
+      "description": "Conheça passo a passo o que a Applo faz.",
+      "tourTitle": "Visita guiada",
+      "tourDescription": "Mostra-lhe como passar do seu perfil a uma candidatura completa.",
+      "start": "Iniciar visita"
     },
     "export": {
       "title": "Exportar os meus dados",
