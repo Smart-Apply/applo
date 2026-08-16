@@ -481,7 +481,7 @@ export default function ApplicationResumeEditorPage() {
     <TooltipProvider>
       <div
         className={cn(
-          'sa-editor mx-auto animate-in fade-in duration-300',
+          'sa-editor mx-auto',
           activeTab === 'ats' ? 'max-w-[1400px]' : 'max-w-6xl',
         )}
       >

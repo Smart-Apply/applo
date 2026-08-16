@@ -28,7 +28,9 @@
   "loadingMessages": {
     "pdfPreview": "Caricamento anteprima PDF...",
     "editor": "Caricamento editor...",
-    "form": "Caricamento modulo..."
+    "form": "Caricamento modulo...",
+    "content": "Caricamento contenuti...",
+    "page": "Caricamento pagina..."
   },
   "cookieBanner": {
     "ariaLabel": "Informativa sui cookie",

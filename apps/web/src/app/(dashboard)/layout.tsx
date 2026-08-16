@@ -33,6 +33,7 @@ import {
 import { EmailVerificationBanner } from '@/components/auth/email-verification-banner';
 import { SettingsNavGroup } from '@/components/settings/settings-nav-group';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { AppShellSkeleton } from '@/components/shared/skeletons';
 
 interface NavItem {
   nameKey: string;
@@ -63,14 +64,7 @@ export default function DashboardLayout({
 }) {
   return (
     <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-muted/30">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-            <p className="mt-2 text-sm text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      }
+      fallback={<AppShellSkeleton />}
     >
       <DashboardLayoutInner>{children}</DashboardLayoutInner>
     </Suspense>
@@ -157,14 +151,9 @@ function DashboardLayoutInner({
   // Show loading while hydrating, loading OAuth, or if not authenticated (redirect pending)
   if (!hasHydrated || isLoadingOAuth || !isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/30">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {isLoadingOAuth ? t('page.oauthFinishing') : t('page.loading')}
-          </p>
-        </div>
-      </div>
+      <AppShellSkeleton
+        message={isLoadingOAuth ? t('page.oauthFinishing') : undefined}
+      />
     );
   }
 

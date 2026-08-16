@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { JobPostingParser } from '@/components/forms/job-posting-parser';
 import { JobPostingForm } from '@/components/forms/job-posting-form';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { useJobPostings, useDeleteJobPosting } from '@/hooks/use-job-postings';
 import {
   Plus,
@@ -73,7 +75,7 @@ export default function JobsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -140,15 +142,23 @@ export default function JobsPage() {
       {/* Job Postings List */}
       <div>
         {isLoading ? (
-          <Card>
-            <CardContent className="p-0">
-              <div className="divide-y">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-20 animate-pulse bg-muted/50" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <SkeletonScreen>
+            <Card>
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-center gap-4 p-4">
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                      <Skeleton className="h-7 w-20 flex-none" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </SkeletonScreen>
         ) : jobPostings && jobPostings.length > 0 ? (
           <Card>
             <CardContent className="p-0">

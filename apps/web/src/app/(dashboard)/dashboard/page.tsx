@@ -21,6 +21,8 @@ import { StatusChip, TRACKING_STATUS_CHIP } from '@/components/ui/status-chip';
 import { HairlineGrid } from '@/components/ui/hairline-grid';
 import { SectionLabel } from '@/components/ui/section-label';
 import { ApploFlyer } from '@/components/ui/applo-rig';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardSkeleton, SkeletonScreen } from '@/components/shared/skeletons';
 import { CalendarCard } from '@/components/dashboard/calendar-card';
 
 // Landing poses for the dashboard mascot — one is picked at random on each
@@ -225,14 +227,14 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
+      <SkeletonScreen>
+        <DashboardSkeleton />
+      </SkeletonScreen>
     );
   }
 
   return (
-    <div ref={contentRef} style={{ zoom: fitScale }} className="space-y-3 animate-fade-in">
+    <div ref={contentRef} style={{ zoom: fitScale }} className="space-y-3">
       {/* Welcome hero — soft blue band with the Applo fly-in. Click to replay.
           Compact density ported from the Dashboard.dc mock (min-height 172). */}
       <div
@@ -438,8 +440,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="px-3.5 py-3">
               {isProfileLoading ? (
-                <div className="flex h-24 items-center justify-center">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                <div className="flex h-24 flex-col justify-center gap-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-2 w-full" />
+                  <Skeleton className="h-3 w-2/3" />
                 </div>
               ) : (
                 <div className="space-y-2">
