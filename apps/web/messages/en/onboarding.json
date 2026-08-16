@@ -1,0 +1,106 @@
+{
+  "tour": {
+    "stepIndicator": "Step {current} of {total}",
+    "progressLabel": "Onboarding tour progress",
+    "badges": {
+      "pro": "Pro & Premium",
+      "premium": "Premium"
+    },
+    "actions": {
+      "skip": "Skip",
+      "back": "Back",
+      "next": "Next",
+      "finish": "Finish tour"
+    },
+    "steps": {
+      "welcome": {
+        "title": "Welcome to Applo",
+        "description": "In a few minutes we'll show you how your profile and a job posting turn into a finished application — whatever your industry or profession.",
+        "bullets": [
+          "Set up your profile once — Applo reuses it for every application.",
+          "Add a job posting and have your cover letter and CV generated.",
+          "Fine-tune the documents in the editor and download them as PDFs."
+        ]
+      },
+      "profile": {
+        "title": "Create your profile or import your CV",
+        "description": "Your profile is the basis for every application. Uploading a CV you already have is the quickest way to start.",
+        "bullets": [
+          "Upload your CV as a PDF or Word file — positions, qualifications and skills are imported automatically.",
+          "Add work experience, education, certificates, projects and languages — whether you're a nurse, a machine operator or a sales manager.",
+          "The more complete your profile, the more accurate the generated documents."
+        ],
+        "cta": "Open profile"
+      },
+      "jobs": {
+        "title": "Add a job posting & find jobs",
+        "description": "Applo reads the posting and recognises the position, the company and the requirements.",
+        "bullets": [
+          "Paste the posting as text, provide a link or upload a file.",
+          "Or browse the built-in job search for suitable positions.",
+          "Every saved posting can be reused for another application later."
+        ],
+        "cta": "Open jobs"
+      },
+      "generate": {
+        "title": "Generate an application",
+        "description": "Combine your profile with a job posting — Applo writes a cover letter and a CV tailored to the role.",
+        "bullets": [
+          "The assistant guides you through it in a few steps.",
+          "The status moves from queued to generating to ready on its own — you can leave the page in the meantime.",
+          "Key terms from the posting are woven in so your documents also pass applicant tracking systems (ATS)."
+        ],
+        "cta": "Start an application"
+      },
+      "editor": {
+        "title": "PDF editor & design templates",
+        "description": "Polishing without a word processor: adjust the content, pick a design, export.",
+        "bullets": [
+          "Edit the cover letter and CV right in the editor — with AI support for individual sections.",
+          "Several ATS-friendly templates plus accent colour, font and line spacing.",
+          "Export as a PDF, in another language if you need one."
+        ],
+        "cta": "Open applications"
+      },
+      "check": {
+        "title": "Application check",
+        "description": "Have documents you created outside Applo reviewed before you send them off.",
+        "bullets": [
+          "Paste your CV and, optionally, your cover letter — you can add the job posting as context.",
+          "You get an ATS assessment, your strengths and concrete suggestions for improvement."
+        ],
+        "cta": "Start a check"
+      },
+      "interviews": {
+        "title": "Interview coach",
+        "description": "Practise interviews — in writing via chat or out loud with an AI interviewer.",
+        "bullets": [
+          "The questions are based on your profile and the role.",
+          "Your answers are scored and you get concrete feedback.",
+          "In voice mode you speak the interview just like the real thing."
+        ],
+        "cta": "Open interview coach"
+      },
+      "tracking": {
+        "title": "Email tracking",
+        "description": "Applo spots replies from companies in your inbox and updates the application status automatically.",
+        "bullets": [
+          "Connect your mailbox once (currently Microsoft/Outlook).",
+          "Incoming replies are matched to the right application.",
+          "No email content is stored — only the detected status."
+        ],
+        "cta": "Open settings"
+      },
+      "done": {
+        "title": "You're all set — good luck!",
+        "description": "You now know the most important parts of Applo.",
+        "bullets": [
+          "You can restart this tour any time via “Help & tour” in the sidebar.",
+          "You will also find it in the settings under “Preferences”.",
+          "Next step: complete your profile and create your first application."
+        ],
+        "cta": "Create your first application"
+      }
+    }
+  }
+}

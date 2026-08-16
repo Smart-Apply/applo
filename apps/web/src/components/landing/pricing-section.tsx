@@ -1,8 +1,6 @@
-'use client';
-
 import Link from 'next/link';
 import { ArrowRight, Check, Minus, PackagePlus } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,8 +11,8 @@ import {
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-export function PricingSection() {
-  const t = useTranslations('landing');
+export async function PricingSection() {
+  const t = await getTranslations('landing');
 
   const plans = [
     {
