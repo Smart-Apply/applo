@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useProfile } from '@/hooks/use-profile';
 import { useApplications } from '@/hooks/use-applications';
 import { Application } from '@/types';
-import { calculateProfileStrength } from '@/lib/profile-utils';
+import { calculateProfileStrength, sortCriteriaByImpact } from '@/lib/profile-utils';
 import { UsageSummary } from '@/components/subscription';
 import {
   Card,
@@ -155,12 +155,16 @@ export default function DashboardPage() {
         //     wrapper (md:p-8) and <main> add bottom padding that isn't part of
         //     `el`. Without it the content overflows by that padding and the
         //     page keeps a few scroll pixels (which the scroll lock would clip).
-        const wrapperCS = el.parentElement ? getComputedStyle(el.parentElement) : null;
+        //     Walk the WHOLE chain up to <main> rather than reading
+        //     `el.parentElement` alone — the route-transition template adds a
+        //     wrapper between the two, and assuming a fixed depth silently
+        //     drops the padding term.
         const mainEl = el.closest('main');
-        const mainCS = mainEl ? getComputedStyle(mainEl) : null;
-        const bottomChrome =
-          (wrapperCS ? parseFloat(wrapperCS.paddingBottom) || 0 : 0) +
-          (mainCS ? parseFloat(mainCS.paddingBottom) || 0 : 0);
+        let bottomChrome = 0;
+        for (let node = el.parentElement; node; node = node.parentElement) {
+          bottomChrome += parseFloat(getComputedStyle(node).paddingBottom) || 0;
+          if (node === mainEl || node === document.body) break;
+        }
         const viewportH = window.visualViewport?.height ?? window.innerHeight;
         const topOffset = rect.top + window.scrollY;
         const available = viewportH - topOffset - bottomChrome - GAP;
@@ -228,7 +232,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div ref={contentRef} style={{ zoom: fitScale }} className="space-y-3 animate-fade-in">
+    <div ref={contentRef} style={{ zoom: fitScale }} className="space-y-3">
       {/* Welcome hero — soft blue band with the Applo fly-in. Click to replay.
           Compact density ported from the Dashboard.dc mock (min-height 172). */}
       <div
@@ -434,7 +438,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="px-3.5 py-3">
               {isProfileLoading ? (
-                <div className="loading-in space-y-2">
+                <div className="space-y-2">
                   <div className="flex items-end justify-between">
                     <Skeleton className="h-8 w-16" />
                     <Skeleton className="h-4 w-24" />
@@ -472,24 +476,26 @@ export default function DashboardPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    {profileStrength.suggestions.slice(0, 3).map((suggestion, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center gap-2 text-[12.5px] ${
-                          suggestion.completed ? 'text-muted-foreground' : 'font-medium text-foreground'
-                        }`}
-                      >
-                        {suggestion.completed ? (
-                          <svg width="16" height="16" viewBox="0 0 24 24" className="flex-none" aria-hidden>
-                            <rect x="1" y="1" width="22" height="22" className="fill-success" />
-                            <path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" />
-                          </svg>
-                        ) : (
-                          <span className="box-border h-[16px] w-[16px] flex-none border-2 border-muted-foreground/50" />
-                        )}
-                        <span>{suggestion.text}</span>
-                      </div>
-                    ))}
+                    {sortCriteriaByImpact(profileStrength.criteria)
+                      .slice(0, 3)
+                      .map((criterion) => (
+                        <div
+                          key={criterion.key}
+                          className={`flex items-center gap-2 text-[12.5px] ${
+                            criterion.completed ? 'text-muted-foreground' : 'font-medium text-foreground'
+                          }`}
+                        >
+                          {criterion.completed ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" className="flex-none" aria-hidden>
+                              <rect x="1" y="1" width="22" height="22" className="fill-success" />
+                              <path d="M7 12.5 L10.5 16 L17 8.5" fill="none" stroke="#fff" strokeWidth="2.6" />
+                            </svg>
+                          ) : (
+                            <span className="box-border h-[16px] w-[16px] flex-none border-2 border-muted-foreground/50" />
+                          )}
+                          <span>{criterion.text}</span>
+                        </div>
+                      ))}
                   </div>
                   <Button
                     variant="outline"

@@ -1,7 +1,7 @@
 # Open-issue backlog — order and priority
 
-> **Written:** 13 Aug 2026 · **Last updated:** 16 Aug 2026, after #797 and #764
-> closed. · **Basis:** all **13** open issues in
+> **Written:** 13 Aug 2026 · **Last updated:** 16 Aug 2026, after #797, #764 and
+> #763 closed. · **Basis:** all **12** open issues in
 > `Smart-Apply/applo`, read in full via `gh issue list --state open`.
 > **Verified against:** `main` @ `487e08c4` (`feat(profile): validate the four
 > unchecked profile editor dialogs`, PR #804).
@@ -41,25 +41,24 @@
 
 | # | Issue | Title | Prio | Size | Blocked by |
 |---:|---|---|---|---|---|
-| 1 | [#763](https://github.com/Smart-Apply/applo/issues/763) | Profil-Check sortieren und Abschlusszustand bauen | **P1** | S | — |
-| 2 | [#571](https://github.com/Smart-Apply/applo/issues/571) | Übergänge neu designen + Lade-Animationen | **P2** | M | — *(keystone)* |
-| 3 | [#746](https://github.com/Smart-Apply/applo/issues/746) | Loading State für die Seite bauen | **P2** | S | #571 |
-| 4 | [#761](https://github.com/Smart-Apply/applo/issues/761) | Speicher-Modell vereinheitlichen und Erfolgs-Feedback bauen | **P2** | L | #571 + a decision |
-| 5 | [#573](https://github.com/Smart-Apply/applo/issues/573) | Mobiles Design (Android/iOS) überarbeiten | **P2** | L | #571 |
-| 6 | [#572](https://github.com/Smart-Apply/applo/issues/572) | Generierungs-Output prüfen & Verbesserungspotenziale identifizieren | **P2** | M | — *(unblocked by #797)* |
-| 7 | [#570](https://github.com/Smart-Apply/applo/issues/570) | Onboarding-Guide für alle Features | **P3** | L | #571, #573 |
-| 8 | [#332](https://github.com/Smart-Apply/applo/issues/332) | Add SSR to public pages (landing, marketing) for SEO | **P3** | M | plan 03 |
-| 9 | [#525](https://github.com/Smart-Apply/applo/issues/525) | LLM token-usage analytics aggregation endpoints | **P3** | M | — *(its data only exists since #803)* |
-| 10 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | re-scope first |
-| 11 | [#623](https://github.com/Smart-Apply/applo/issues/623) | Evaluation platform for application generation — separate repo | **P4** | XL | — *(unblocked by #797)* |
-| 12 | [#133](https://github.com/Smart-Apply/applo/issues/133) | 🌙 Dark Mode — Theme Switcher | **P4** | M | #571, #573 |
-| 13 | [#524](https://github.com/Smart-Apply/applo/issues/524) | Model trained on anonymized AI-usage dataset (discovery) | **P4** | XL | #523 + data volume |
+| 1 | [#571](https://github.com/Smart-Apply/applo/issues/571) | Übergänge neu designen + Lade-Animationen | **P2** | M | — *(keystone)* |
+| 2 | [#746](https://github.com/Smart-Apply/applo/issues/746) | Loading State für die Seite bauen | **P2** | S | #571 |
+| 3 | [#761](https://github.com/Smart-Apply/applo/issues/761) | Speicher-Modell vereinheitlichen und Erfolgs-Feedback bauen | **P2** | L | #571 + a decision |
+| 4 | [#573](https://github.com/Smart-Apply/applo/issues/573) | Mobiles Design (Android/iOS) überarbeiten | **P2** | L | #571 |
+| 5 | [#572](https://github.com/Smart-Apply/applo/issues/572) | Generierungs-Output prüfen & Verbesserungspotenziale identifizieren | **P2** | M | — *(unblocked by #797)* |
+| 6 | [#570](https://github.com/Smart-Apply/applo/issues/570) | Onboarding-Guide für alle Features | **P3** | L | #571, #573 |
+| 7 | [#332](https://github.com/Smart-Apply/applo/issues/332) | Add SSR to public pages (landing, marketing) for SEO | **P3** | M | plan 03 |
+| 8 | [#525](https://github.com/Smart-Apply/applo/issues/525) | LLM token-usage analytics aggregation endpoints | **P3** | M | — *(its data only exists since #803)* |
+| 9 | [#523](https://github.com/Smart-Apply/applo/issues/523) | Anonymized usage dataset export for ML/due-diligence | **P3** | M | ✅ delivered, re-scoped |
+| 10 | [#623](https://github.com/Smart-Apply/applo/issues/623) | Evaluation platform for application generation — separate repo | **P4** | XL | — *(unblocked by #797)* |
+| 11 | [#133](https://github.com/Smart-Apply/applo/issues/133) | 🌙 Dark Mode — Theme Switcher | **P4** | M | #571, #573 |
+| 12 | [#524](https://github.com/Smart-Apply/applo/issues/524) | Model trained on anonymized AI-usage dataset (discovery) | **P4** | XL | #523 + data volume |
 
 **Ordering principle:** finish what is already open before starting what is
-not. Rank 1 is unblocked, small, and closes a defect that is live in production
-today. Rank 2 is a keystone — three later issues explicitly say they should
+not. Rank 1 is a keystone — three later issues explicitly say they should
 build on it — so it comes before its dependents rather than after, even though
-nothing forces that order technically.
+nothing forces that order technically. With #763 closed there is no open P1
+left; the list now starts at P2.
 
 ---
 
@@ -71,8 +70,9 @@ nothing forces that order technically.
 | **#780** Löschen im Profil umkehrbar machen | PR [#793](https://github.com/Smart-Apply/applo/pull/793) | none |
 | **#797** reconcile the headless generation seam | PRs [#801](https://github.com/Smart-Apply/applo/pull/801) + [#802](https://github.com/Smart-Apply/applo/pull/802) | none — closing it unblocked #572 and #623 |
 | **#764** Eingabe-Validierung für Profilfelder | PR [#804](https://github.com/Smart-Apply/applo/pull/804) | **one item — see below** |
+| **#763** Profil-Check sortieren und Abschlusszustand bauen | PR [#817](https://github.com/Smart-Apply/applo/pull/817) | none |
 
-Four removals are why the numbering above starts at #763. #797 also **promoted
+Five removals are why the numbering above starts at #571. #797 also **promoted
 #572 from P3 to P2**: the harness it was waiting on now exists.
 
 **#790 left two things unticked, and closing the issue removed their home.**
@@ -106,32 +106,9 @@ a verification/status icon belongs at all. Small, and currently tracked nowhere.
 
 ---
 
-## P1 — next up
-
-### 1 · #763 — one source of truth for the profile check
-
-**What it does.** Points `/profile` at `calculateProfileStrength` instead of
-recomputing the score, returns the criteria (label, hint, weight) from that one
-function, sorts open items to the top, and defines a 100 % completion state.
-
-**Re-verified on `cf91b658`** — the duplication is still live:
-`dashboard/page.tsx:110` calls `calculateProfileStrength`, while
-`profile/page.tsx:939` carries a comment reading *"mirrors
-calculateProfileStrength"* above its own criteria array and `reduce`.
-
-**Why P1.** The weights agree *today*, by hand. The next edit to
-`profile-utils.ts` makes the dashboard and the profile page show two different
-percentages for the same profile, silently, with no test to catch it. Small
-refactor, removes a whole class of future bug, and the UX half (sort by
-remaining gain, show a finished state) rides along for free.
-
-**Depends on:** nothing.
-
----
-
 ## P2 — scheduled
 
-### 2 · #571 — motion and loading foundation *(keystone)*
+### 1 · #571 — motion and loading foundation *(keystone)*
 
 **What it does.** Route transitions, a reusable skeleton/loading component set,
 a progress animation bound to the SSE generation status, unified
@@ -157,7 +134,7 @@ bundle check before merge — see [plan 01](./01-error-monitoring.md).
 
 **Plan:** [07](./07-issue-571-motion-foundation.md).
 
-### 3 · #746 — page loading states
+### 2 · #746 — page loading states
 
 **What it does.** A visible loading state on initial page load and for
 data-dependent regions, a reusable skeleton, an error state, and no layout shift
@@ -168,7 +145,7 @@ says so. Doing it first would mean inventing the primitive twice.
 
 **Depends on:** #571. **Plan:** [08](./08-issue-746-loading-states.md).
 
-### 4 · #761 — unify the save model
+### 3 · #761 — unify the save model
 
 **What it does.** Picks *one* save model for the product and justifies it, adds
 an "all changes saved" indicator wherever autosave applies, unifies success
@@ -189,7 +166,7 @@ shipped undo toast as a fourth behaviour to reconcile, not a third.
 
 **Depends on:** #571 + an explicit decision.
 
-### 5 · #573 — mobile design pass
+### 4 · #573 — mobile design pass
 
 **What it does.** Touch-sized targets, mobile navigation, mobile-usable profile
 and application forms, a PDF preview/editor that works on a small screen, iOS
@@ -203,7 +180,7 @@ dashboard shell **already has a drawer and a bottom nav**. Audit first against
 
 **Depends on:** #571. **Plan:** [09](./09-issue-573-mobile.md).
 
-### 6 · #572 — review generation output quality
+### 5 · #572 — review generation output quality
 
 **What it does.** A structured review of the shipped generation output across
 several professions (healthcare, sales, trades, marketing, IT) in DE and EN,
@@ -231,7 +208,7 @@ this from P3 to P2. **Plan:** [10](./10-issue-572-llm-output-review.md).
 
 ## P3 — planned, not scheduled
 
-### 7 · #570 — onboarding guide
+### 6 · #570 — onboarding guide
 
 **What it does.** A guided first-login tour across profile/résumé import, job
 ingestion, generation, the PDF editor, the interview coach and email tracking,
@@ -242,7 +219,7 @@ are about to change. Building it now guarantees rework. It also still has two
 open design questions in the issue (interactive tour vs. static checklist; a
 library vs. existing primitives) — decide those before planning.
 
-### 8 · #332 — SSR for public pages
+### 7 · #332 — SSR for public pages
 
 **What it does.** Converts the landing/marketing pages from client rendering to
 Server Components with real `metadata`/OpenGraph, for indexability and FCP.
@@ -251,7 +228,7 @@ Server Components with real `metadata`/OpenGraph, for indexability and FCP.
 share assets and is cheaper. Fold #332 in only if plan 03 shows the landing
 page's CSR is actually hurting indexing — measure before rewriting.
 
-### 9 · #525 — admin LLM usage analytics endpoints
+### 8 · #525 — admin LLM usage analytics endpoints
 
 **What it does.** Read-only, admin-gated aggregation over `LlmUsageEvent` —
 tokens, cost, call counts and success rate grouped by feature, tier, language
@@ -274,29 +251,33 @@ been running — which is an argument for doing it later, not sooner.
 **Constraint to carry over:** aggregates only. No drill-down that could resolve
 an `actorHash` back to a user.
 
-### 10 · #523 — usage dataset export
+### 9 · #523 — usage dataset export — **delivered (re-scoped)**
 
-**What it does.** An admin-only export of `LlmUsageEvent` to CSV/Parquet/JSONL,
-with the schema and its anonymity guarantees documented for due diligence.
+**What it does.** An admin-only export of `LlmUsageEvent` to CSV/JSONL, with the
+schema and its anonymity guarantees documented for due diligence.
 
-**Why it needs re-scoping before it is worked.** The issue's central promise —
-"demonstrably anonymous" — is no longer accurate. The F11 finding in the
-13 Aug security audit established that the dataset is **pseudonymous**:
+**The re-scope this entry demanded was applied.** The issue's central promise —
+"demonstrably anonymous" — was not accurate for the live table. The F11 finding
+in the 13 Aug security audit established that the dataset is **pseudonymous**:
 `actorHash` is stable per user, and neighbouring tables (`applications`,
 `validations`, `interview_sessions`) carry `userId` plus millisecond
 `createdAt`, so a usage burst time-correlates back to the triggering row
 *without* the salt. That is why erasure-on-account-deletion and a retention
-sweep were added. An export sold as anonymous would be wrong.
+sweep were added. An export sold as anonymous would have been wrong.
 
-**Re-scope to:** timestamp bucketing, `actorHash` re-salting or dropping per
-export, and a k-anonymity threshold — or state plainly that the artefact is
-pseudonymous and handle it as personal data.
+**Shipped instead:** anonymisation happens *at export time* — timestamp
+bucketing (no raw-timestamp option), per-export re-salted or dropped
+`actorHash`, a k-anonymity threshold over a declared quasi-identifier set, and
+a manifest that states the guarantees and the residual risks for the exact
+parameters used. Parquet is a documented downstream conversion, not a backend
+dependency. See
+[docs/security/LLM_USAGE_DATASET.md](../security/LLM_USAGE_DATASET.md).
 
 ---
 
 ## P4 — icebox
 
-### 11 · #623 — evaluation platform
+### 10 · #623 — evaluation platform
 
 **What it does.** A standalone repo that runs a versioned fixture set
 (profile × job posting, DE/EN, across professions and edge cases) through the
@@ -353,7 +334,7 @@ dependency.
 
 **Reference:** [EVAL_PLATFORM_FABLE5_PROMPT.md](../implementation/EVAL_PLATFORM_FABLE5_PROMPT.md).
 
-### 12 · #133 — dark mode
+### 11 · #133 — dark mode
 
 **What it does.** Light/dark/system themes, persisted preference, a toggle,
 Tailwind class-based dark mode.
@@ -365,7 +346,7 @@ references `tailwind.config.ts` — the app is on **Tailwind v4**, which is
 config-less by default, so the technical plan in the issue needs rewriting
 regardless.
 
-### 13 · #524 — ML on the usage dataset
+### 12 · #524 — ML on the usage dataset
 
 **What it does.** A discovery umbrella: token-cost forecasting, per-`actorHash`
 sequence modelling, tier-upgrade propensity, anomaly detection — trained only on
@@ -382,10 +363,6 @@ that is the correct state; leave it there.
 
 ```mermaid
 graph TD
-  subgraph P1["P1 — next up"]
-    I763["#763 profile-check SSOT"]
-  end
-
   subgraph P2["P2 — scheduled"]
     I571["#571 motion + loading<br/><b>keystone</b>"]
     I746["#746 page loading states"]
@@ -429,7 +406,7 @@ here rather than silently fixed, because each one changes a decision.
 |---|---|---|
 | #623 | `gpt-4.1` retires **2026-10-14**, so model migration is urgent | That is `gpt-4.1-nano`'s date. `gpt-4.1` (`2025-04-14`) retires **2027-04-14** per [Microsoft's schedule](https://learn.microsoft.com/azure/foundry/openai/concepts/model-retirement-schedule). Removes the deadline pressure that justified "why now" — and the same wrong date is repeated in `applo-eval/README.md` as the platform's stated motivation. |
 | #623 | The platform is unbuilt | It exists at `/Users/arian/VS-Projects/applo-eval` with M2–M4 done, and the in-repo enabler exists on `feat/headless-generation`. **Neither has a remote.** |
-| #523 | The `LlmUsageEvent` dataset is anonymous | It is **pseudonymous**. Finding F11 of the 13 Aug audit shows `actorHash` + neighbouring timestamped tables re-identify a user without the salt. Erasure + retention were added for this reason. |
+| #523 | The `LlmUsageEvent` dataset is anonymous | It is **pseudonymous**. Finding F11 of the 13 Aug audit shows `actorHash` + neighbouring timestamped tables re-identify a user without the salt. Erasure + retention were added for this reason. The delivered export therefore anonymises *at export time* rather than claiming the table is anonymous — see §10. |
 | #525 | Blocked on #522 | #522 merged in PR #781 — **unblocked**. |
 | #133 | Configure dark mode in `tailwind.config.ts` | The app runs **Tailwind v4**, config-less by default. The issue's technical section predates the upgrade. |
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { JobPostingParser } from '@/components/forms/job-posting-parser';
 import { JobPostingForm } from '@/components/forms/job-posting-form';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { ErrorState } from '@/components/ui/error-state';
-import { ListCardSkeleton } from '@/components/shared/skeletons';
 import { useJobPostings, useDeleteJobPosting } from '@/hooks/use-job-postings';
 import {
   Plus,
@@ -75,7 +76,7 @@ export default function JobsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -142,7 +143,23 @@ export default function JobsPage() {
       {/* Job Postings List */}
       <div>
         {isLoading ? (
-          <ListCardSkeleton rows={3} />
+          <SkeletonScreen>
+            <Card>
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-center gap-4 p-4">
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                      <Skeleton className="h-7 w-20 flex-none" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </SkeletonScreen>
         ) : isError ? (
           <ErrorState onRetry={() => refetch()} isRetrying={isFetching} />
         ) : jobPostings && jobPostings.length > 0 ? (
@@ -152,8 +169,8 @@ export default function JobsPage() {
                 {jobPostings.map((job, index) => (
                   <div
                     key={job.id}
-                    className="group hover:bg-muted/30 transition-colors p-4"
-                    style={{ animationDelay: `${index * 30}ms` }}
+                    className="motion-stagger group hover:bg-muted/30 transition-colors p-4"
+                    style={{ '--motion-index': Math.min(index, 8) } as CSSProperties}
                   >
                     <div className="flex items-start gap-4">
                       {/* Main Info */}

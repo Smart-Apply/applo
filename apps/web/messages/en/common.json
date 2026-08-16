@@ -28,7 +28,9 @@
   "loadingMessages": {
     "pdfPreview": "Loading PDF preview...",
     "editor": "Loading editor...",
-    "form": "Loading form..."
+    "form": "Loading form...",
+    "content": "Loading content...",
+    "page": "Loading page..."
   },
   "cookieBanner": {
     "ariaLabel": "Cookie notice",

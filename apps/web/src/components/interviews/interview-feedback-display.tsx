@@ -90,7 +90,11 @@ export function InterviewFeedbackDisplay({ session }: InterviewFeedbackDisplayPr
           </div>
         </CardHeader>
         <CardContent>
-          <Progress value={feedback.overallScore} className="h-3 mb-4" />
+          <Progress
+            value={feedback.overallScore}
+            className="h-3 mb-4"
+            aria-label={t('feedback.overallRating')}
+          />
           {feedback.recommendations && feedback.recommendations.length > 0 && (
             <p className="text-muted-foreground">{feedback.recommendations[0]}</p>
           )}
@@ -213,6 +217,7 @@ function CategoryScoreCard({
         <Progress
           value={score}
           className="h-2"
+          aria-label={title}
           // Use CSS variable to color the progress
           style={
             {

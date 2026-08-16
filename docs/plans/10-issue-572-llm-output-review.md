@@ -75,16 +75,36 @@ the output for `lane call failed` and for the expected model name.
 
 ## Acceptance criteria
 
-- [ ] ≥ 7 professions × 2 languages covered, with fixture list recorded.
+> **Status 2026-08-16 (#572).** Review delivered as
+> [docs/implementation/LLM_OUTPUT_QUALITY_REVIEW_2026-08.md](../implementation/LLM_OUTPUT_QUALITY_REVIEW_2026-08.md),
+> backed by a reproducible offline probe
+> ([`scripts/eval/output-quality-probe.ts`](../../apps/api/scripts/eval/output-quality-probe.ts),
+> `pnpm --filter @applo/api run eval:probe`). No paid LLM run was performed — see the
+> annotations below and §7 of the review for the pre-specified protocol.
+
+- [x] ≥ 7 professions × 2 languages covered, with fixture list recorded.
+      → 15 profession families / 24 fixtures, matrix recorded in the review.
 - [ ] A one-fixture smoke test confirming the intended model actually served
       the run, with no fallback warnings — run and recorded **before** the full
       batch.
-- [ ] Deterministic scores reported as pooled event counts with confidence
+      → **Deferred with the paid run** (no Azure credentials available). Kept as
+      step 1 of the protocol in review §7.
+- [x] Deterministic scores reported as pooled event counts with confidence
       intervals, not as per-fixture pass rates.
-- [ ] Written review with concrete good and bad examples quoted.
-- [ ] `LLM_OUTPUT_QUALITY.md` status table and changelog updated.
-- [ ] One follow-up issue per prioritised improvement, each with a measurable
+      → Pooled over all 24 fixtures with Wilson intervals (e.g. grounding-detector
+      recall 23/81 = 28 %, 95 % CI 20–39). Measured against the *checkers*, not
+      against model output, because the review found the checkers under-cover the
+      defect space — fix the instrument before buying the measurement.
+- [x] Written review with concrete good and bad examples quoted.
+      → Includes the rendered PDF's full extracted text and our own
+      `cover-letter.md` example openings as the worked bad case.
+- [x] `LLM_OUTPUT_QUALITY.md` status table and changelog updated.
+      → Follow-up table R1–R10 + dated changelog entry + Betreffzeile decision
+      re-opened.
+- [x] One follow-up issue per prioritised improvement, each with a measurable
       acceptance criterion.
+      → R1–R10 specified with probe-gated criteria (`GAP` → `OK`), ready to file
+      as issues.
 
 ## Risks and landmines
 

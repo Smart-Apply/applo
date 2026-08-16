@@ -44,7 +44,7 @@ export interface SettingsSearchEntry {
 }
 
 import {
-  Mail, Camera, Trash2, Key, Monitor, Globe, Lock, RefreshCw, Search,
+  Mail, Camera, Trash2, Key, Monitor, Globe, Lock, RefreshCw, Search, Compass,
 } from 'lucide-react';
 
 export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
@@ -60,6 +60,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { section: 'preferences', titleKey: 'search.items.language', keywordsKey: 'search.keywords.language', icon: Globe },
   { section: 'preferences', titleKey: 'search.items.theme', keywordsKey: 'search.keywords.theme', icon: Palette },
   { section: 'preferences', titleKey: 'search.items.privacy', keywordsKey: 'search.keywords.privacy', icon: Lock },
+  { section: 'preferences', titleKey: 'search.items.onboarding', keywordsKey: 'search.keywords.onboarding', icon: Compass },
 ];
 
 export const SETTINGS_SEARCH_ICON = Search;

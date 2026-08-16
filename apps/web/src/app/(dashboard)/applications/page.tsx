@@ -33,7 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ApplicationCardSkeleton } from '@/components/shared/skeletons';
+import { ApplicationCardSkeleton, SkeletonScreen } from '@/components/shared/skeletons';
 import { ATSScoreCell } from '@/components/applications/ats-score-cell';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
@@ -445,7 +445,7 @@ export default function ApplicationsPage() {
     // Desktop: fill the viewport (minus the layout padding) and never let the
     // page itself scroll — the table/card region below owns the scroll instead,
     // keeping the header + filters permanently in view on one screen.
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 md:h-[calc(100vh-5rem)] md:overflow-hidden">
+    <div className="flex flex-col gap-6 md:h-[calc(100vh-5rem)] md:overflow-hidden">
       {/* Header */}
       <div className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="border-l-[3px] border-brand pl-3.5">
@@ -477,18 +477,18 @@ export default function ApplicationsPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2 lg:grid-cols-3">
+        <SkeletonScreen className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2 lg:grid-cols-3">
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
           <ApplicationCardSkeleton />
-        </div>
+        </SkeletonScreen>
       ) : isError ? (
         <ErrorState onRetry={() => refetch()} isRetrying={isFetching} />
       ) : applications && applications.length > 0 ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-5">
+        <div className="motion-view-enter flex min-h-0 flex-1 flex-col gap-5">
           {/* Search Input */}
           <div className="relative w-full max-w-md shrink-0">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

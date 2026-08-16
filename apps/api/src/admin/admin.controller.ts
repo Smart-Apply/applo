@@ -11,16 +11,27 @@ import {
   Param,
   Post,
   Query,
+  Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
+import type { Response } from 'express';
+import { Readable } from 'stream';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { SubscriptionTier } from '../generated/prisma/client';
 import { LlmUsageService } from '../llm/usage/llm-usage.service';
+import {
+  LlmUsageExportService,
+  LLM_USAGE_EXPORT_SCHEMA_VERSION,
+  parseExportOptions,
+  type LlmUsageExportManifest,
+} from '../llm/usage/llm-usage-export.service';
+import { LlmUsageExportQueryDto } from '../llm/usage/dto/llm-usage-export-query.dto';
 import { AdminGuard } from './admin.guard';
 
 class SetTierDto {
@@ -53,6 +64,7 @@ export class AdminController {
     private readonly prisma: PrismaService,
     private readonly subscriptions: SubscriptionService,
     private readonly llmUsage: LlmUsageService,
+    private readonly llmUsageExport: LlmUsageExportService,
   ) {}
 
   /**
@@ -181,5 +193,75 @@ export class AdminController {
       deleted: true,
       user: { id: user.id, email: user.email, provider: user.provider },
     };
+  }
+
+  /**
+   * Anonymised export of `llm_usage_events` (issue #523) as JSON Lines or CSV.
+   *
+   * The live table is pseudonymous personal data; this endpoint is what turns
+   * it into a portable dataset for ML work and due diligence. The defaults are
+   * the documented configuration — see docs/security/LLM_USAGE_DATASET.md for
+   * the guarantees and the residual risks. Pair the download with
+   * `/export/manifest`, which describes the exact artefact produced.
+   *
+   * Example:
+   *   GET /api/v1/admin/llm-usage/export?format=csv&bucket=day&actor=none&k=5
+   */
+  @Get('llm-usage/export')
+  @ApiOperation({ summary: 'Export anonymised LLM usage events as JSONL/CSV (admin only)' })
+  async exportLlmUsage(
+    @Query() query: LlmUsageExportQueryDto,
+    @CurrentUser('email') actorEmail: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const options = parseExportOptions(query);
+    const dataset = await this.llmUsageExport.buildDataset(options);
+    const { counts } = dataset.manifest;
+
+    this.logger.log(
+      `Admin ${actorEmail} exported ${counts.exportedRows} LLM usage rows ` +
+        `(format=${options.format}, bucket=${options.bucket}, actor=${options.actor}, k=${options.k}, ` +
+        `suppressed=${counts.suppressedRows}, truncated=${counts.truncated})`,
+    );
+
+    const extension = options.format === 'csv' ? 'csv' : 'jsonl';
+    const date = dataset.manifest.generatedAt.split('T')[0];
+    res.set({
+      'Content-Type':
+        options.format === 'csv'
+          ? 'text/csv; charset=utf-8'
+          : 'application/x-ndjson; charset=utf-8',
+      'Content-Disposition': `attachment; filename="applo-llm-usage-${date}.${extension}"`,
+      'Cache-Control': 'no-store',
+      'X-Applo-Export-Schema-Version': String(LLM_USAGE_EXPORT_SCHEMA_VERSION),
+      'X-Applo-Export-Rows': String(counts.exportedRows),
+      'X-Applo-Export-Suppressed-Rows': String(counts.suppressedRows),
+    });
+
+    return new StreamableFile(Readable.from(this.llmUsageExport.serialize(dataset)));
+  }
+
+  /**
+   * Manifest for the export the same query parameters would produce: schema,
+   * anonymisation parameters, row/suppression counts, guarantees and residual
+   * risks. Ship it alongside the dataset — it is the due-diligence artefact.
+   */
+  @Get('llm-usage/export/manifest')
+  @ApiOperation({ summary: 'Describe the anonymised LLM usage export (admin only)' })
+  async exportLlmUsageManifest(
+    @Query() query: LlmUsageExportQueryDto,
+    @CurrentUser('email') actorEmail: string,
+  ): Promise<LlmUsageExportManifest> {
+    const options = parseExportOptions(query);
+    const dataset = await this.llmUsageExport.buildDataset(options);
+    const { counts } = dataset.manifest;
+
+    this.logger.log(
+      `Admin ${actorEmail} read the LLM usage export manifest for ${counts.exportedRows} rows ` +
+        `(bucket=${options.bucket}, actor=${options.actor}, k=${options.k}, ` +
+        `suppressed=${counts.suppressedRows}, truncated=${counts.truncated})`,
+    );
+
+    return dataset.manifest;
   }
 }

@@ -83,7 +83,7 @@ applo/
 ├── apps/
 │   ├── api/                  # @applo/api (NestJS 11)
 │   │   ├── src/
-│   │   │   ├── admin/             # Allow-listed admin endpoints (ADMIN_EMAILS)
+│   │   │   ├── admin/             # Allow-listed admin endpoints (ADMIN_EMAILS) + LLM usage analytics
 │   │   │   ├── agents/            # Azure AI Foundry agents
 │   │   │   ├── applications/      # Generation pipeline
 │   │   │   ├── appointments/      # Interview-calendar CRUD (date/time, note)
@@ -97,7 +97,7 @@ applo/
 │   │   │   ├── job-postings/      # Text/URL/file parsers
 │   │   │   ├── jobs/              # Queue providers (QStash / mem)
 │   │   │   ├── keywords/          # ATS keyword extraction & matching
-│   │   │   ├── llm/               # LLM provider abstraction
+│   │   │   ├── llm/               # LLM provider abstraction + usage telemetry & anonymised export
 │   │   │   ├── logger/            # Pino + Winston audit
 │   │   │   ├── mailbox-sync/      # Email Tracking (Premium): MS Graph OAuth + classifier
 │   │   │   ├── pdf/               # Thin façade over pdf-v2 (kept for caller API stability)
@@ -109,7 +109,7 @@ applo/
 │   │   │   ├── subscription/      # Plans & usage limits
 │   │   │   ├── templates/         # Template catalog
 │   │   │   ├── uploads/           # Upload endpoints
-│   │   │   ├── user-preferences/  # Per-user settings
+│   │   │   ├── user-preferences/  # Per-user settings (incl. onboarding-tour flag)
 │   │   │   └── validation/        # Bewerbungs-Check (review external applications)
 │   │   ├── prisma/                # Schema, migrations, seeds
 │   │   └── test/                  # Unit / integration / e2e
@@ -117,8 +117,8 @@ applo/
 │   └── web/                  # @applo/web (Next.js 16)
 │       ├── messages/              # next-intl catalogs (de/en/fr/es/pt/it, one JSON per namespace)
 │       ├── src/
-│       │   ├── app/               # App Router (route groups)
-│       │   ├── components/        # UI + shadcn/ui + pdf + analytics (recharts) + i18n
+│       │   ├── app/               # App Router (route groups + per-group template.tsx transition, per-route loading.tsx skeletons)
+│       │   ├── components/        # UI + shadcn/ui + landing (server sections) + pdf + analytics (recharts) + i18n + onboarding tour + shared loading skeletons
 │       │   ├── hooks/             # Custom React hooks
 │       │   ├── i18n/              # next-intl config (cookie-based de/en/fr/es/pt/it, no URL prefixes)
 │       │   ├── lib/               # api-client, providers, i18n-runtime, utils
@@ -308,10 +308,11 @@ grounding-specific decisions live in
 | **Interview**      | AI-generated interview Q&A                     |
 | **RefreshToken**   | Rotated refresh tokens                         |
 | **Session**        | Device/IP/UA tracking                          |
+| **UserPreferences**| Per-user settings — notifications, language, theme, privacy, and `onboardingCompleted` (guides the first-login product tour; set once the user finishes or skips it) |
 | **InviteCode**     | RETIRED — beta gate removed; schema row kept until a follow-up release drops it (expand→contract) |
 | **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`) |
 | **AuditLog**       | Security event log                             |
-| **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure applies — both account-deletion paths erase by recomputed hash, and a daily cron deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90) |
+| **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure applies — both account-deletion paths erase by recomputed hash, and a daily cron deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90). Read back only through the aggregate-only `/admin/llm-usage/*` endpoints (`actorHash` is never filtered on, grouped by, or returned); the admin-only export (`/admin/llm-usage/export`) anonymises the rows for ML/due-diligence use — see [docs/security/LLM_USAGE_DATASET.md](docs/security/LLM_USAGE_DATASET.md) |
 
 ### Key Relations
 
@@ -386,6 +387,7 @@ User 1:1 Subscription
 | Category   | Technology                                              |
 | ---------- | ------------------------------------------------------- |
 | Framework  | Next.js 16.1 (App Router, React Compiler enabled)       |
+| Rendering  | Server Components by default; the public landing page (`/`) is fully server-rendered (localized metadata, OG/Twitter, JSON-LD, no-JS readable) with only the mascot + scroll-reveal drivers as client components |
 | Language   | TypeScript (strict)                                     |
 | i18n       | next-intl 4 (cookie-based de/en/fr/es/pt/it, no URL routing) |
 | UI         | React 19.2 · shadcn/ui (Radix) · Tailwind v4            |
@@ -395,6 +397,7 @@ User 1:1 Subscription
 | Charts     | recharts (Analytics activity chart)                     |
 | Editor     | Tiptap 3 (StarterKit + TextStyle)                       |
 | Toast      | Sonner                                                  |
+| Motion     | CSS-only motion layer in `globals.css` (route transitions via `template.tsx`, skeleton shimmer, indeterminate progress) + `tw-animate-css`; global `prefers-reduced-motion` guard |
 | Files      | react-dropzone · jszip                                  |
 | Sanitize   | isomorphic-dompurify                                    |
 | Markdown   | marked · turndown                                       |
@@ -469,7 +472,12 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/admin/users?email=`              | Admin: search users (allow-listed)                                          |
 | POST     | `/admin/users/:email/tier`         | Admin: set subscription tier (allow-listed)                                 |
 | DELETE   | `/admin/users/:email`              | Admin: permanently delete user (allow-listed)                               |
-| GET/PUT  | `/user-preferences`                | Settings                                                                    |
+| GET      | `/admin/llm-usage/summary`         | Admin: LLM token/cost totals for a window (aggregates only)                 |
+| GET      | `/admin/llm-usage/breakdown`       | Admin: totals grouped by feature/tier/language/model/provider/lane          |
+| GET      | `/admin/llm-usage/timeseries`      | Admin: totals per day/week/month, optionally split by a dimension           |
+| GET      | `/admin/llm-usage/export`          | Admin: anonymised `llm_usage_events` dataset (CSV/JSONL, bucketed, k-anonymous) |
+| GET      | `/admin/llm-usage/export/manifest` | Admin: manifest for that export (parameters, counts, guarantees)            |
+| GET/PUT  | `/user-preferences`                | Settings (incl. `onboardingCompleted` — the first-login product tour flag)  |
 
 ## 🚀 Deployment
 

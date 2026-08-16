@@ -1,0 +1,106 @@
+{
+  "tour": {
+    "stepIndicator": "Passaggio {current} di {total}",
+    "progressLabel": "Avanzamento del tour introduttivo",
+    "badges": {
+      "pro": "Pro e Premium",
+      "premium": "Premium"
+    },
+    "actions": {
+      "skip": "Salta",
+      "back": "Indietro",
+      "next": "Avanti",
+      "finish": "Termina tour"
+    },
+    "steps": {
+      "welcome": {
+        "title": "Benvenuto in Applo",
+        "description": "In pochi minuti ti mostriamo come il tuo profilo e un annuncio di lavoro diventano una candidatura completa, qualunque sia il tuo settore o la tua professione.",
+        "bullets": [
+          "Crea il profilo una sola volta: Applo lo riutilizza per ogni candidatura.",
+          "Aggiungi un annuncio e lascia che Applo scriva lettera di presentazione e CV.",
+          "Perfeziona i documenti nell'editor e scaricali in PDF."
+        ]
+      },
+      "profile": {
+        "title": "Creare il profilo o importare il CV",
+        "description": "Il profilo è la base di ogni candidatura. Il modo più rapido è importare un CV già esistente.",
+        "bullets": [
+          "Carica il CV in PDF o Word: esperienze, titoli di studio e competenze vengono importati automaticamente.",
+          "Aggiungi esperienza, formazione, certificazioni, progetti e lingue, che tu sia infermiere, operatore di produzione o responsabile vendite.",
+          "Più il profilo è completo, più i documenti generati sono precisi."
+        ],
+        "cta": "Apri il profilo"
+      },
+      "jobs": {
+        "title": "Aggiungere un annuncio e cercare lavoro",
+        "description": "Applo analizza l'annuncio e riconosce posizione, azienda e requisiti.",
+        "bullets": [
+          "Incolla l'annuncio come testo, indica un link o carica un file.",
+          "Oppure cerca posizioni adatte con la ricerca di lavoro integrata.",
+          "Ogni annuncio salvato può essere riutilizzato in seguito per un'altra candidatura."
+        ],
+        "cta": "Apri le offerte"
+      },
+      "generate": {
+        "title": "Generare una candidatura",
+        "description": "Combina il profilo con un annuncio: Applo scrive lettera e CV su misura per la posizione.",
+        "bullets": [
+          "L'assistente ti guida in pochi passaggi.",
+          "Lo stato passa automaticamente da «in coda» a «in creazione» fino a «pronta»: nel frattempo puoi lasciare la pagina.",
+          "I termini chiave dell'annuncio vengono integrati, così i documenti superano anche i sistemi di selezione (ATS)."
+        ],
+        "cta": "Avvia una candidatura"
+      },
+      "editor": {
+        "title": "Editor PDF e modelli di design",
+        "description": "Rifiniture senza programmi di videoscrittura: modifica i contenuti, scegli il design ed esporta.",
+        "bullets": [
+          "Modifica lettera e CV direttamente nell'editor, con il supporto dell'IA per le singole sezioni.",
+          "Diversi modelli compatibili con gli ATS, oltre a colore, carattere e interlinea.",
+          "Esportazione in PDF e, se serve, in un'altra lingua."
+        ],
+        "cta": "Apri le candidature"
+      },
+      "check": {
+        "title": "Verifica della candidatura",
+        "description": "Fai analizzare i documenti creati fuori da Applo prima di inviarli.",
+        "bullets": [
+          "Incolla il CV e, se vuoi, la lettera di presentazione: puoi aggiungere l'annuncio come contesto.",
+          "Ricevi una valutazione ATS, i tuoi punti di forza e suggerimenti concreti di miglioramento."
+        ],
+        "cta": "Avvia la verifica"
+      },
+      "interviews": {
+        "title": "Coach per i colloqui",
+        "description": "Allenati ai colloqui per iscritto in chat o a voce con un intervistatore IA.",
+        "bullets": [
+          "Le domande si basano sul tuo profilo e sulla posizione.",
+          "Le risposte vengono valutate e ricevi un riscontro concreto.",
+          "In modalità vocale sostieni il colloquio come nella realtà."
+        ],
+        "cta": "Apri il coach per i colloqui"
+      },
+      "tracking": {
+        "title": "Monitoraggio e-mail",
+        "description": "Applo riconosce le risposte delle aziende nella tua casella di posta e aggiorna automaticamente lo stato della candidatura.",
+        "bullets": [
+          "Collega la casella di posta una sola volta (attualmente Microsoft/Outlook).",
+          "Le risposte in arrivo vengono associate alla candidatura corretta.",
+          "Non viene salvato il contenuto delle e-mail, ma solo lo stato rilevato."
+        ],
+        "cta": "Apri le impostazioni"
+      },
+      "done": {
+        "title": "Tutto pronto: in bocca al lupo!",
+        "description": "Ora conosci le funzioni più importanti di Applo.",
+        "bullets": [
+          "Puoi riavviare il tour in qualsiasi momento da «Aiuto e tour» nella barra laterale.",
+          "Lo trovi anche nelle impostazioni, alla voce «Preferenze».",
+          "Prossimo passo: completa il profilo e crea la prima candidatura."
+        ],
+        "cta": "Crea la prima candidatura"
+      }
+    }
+  }
+}

@@ -1,10 +1,147 @@
 "use client"
 
 import * as React from "react"
+import { useTranslations } from "next-intl"
+import { Loader2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { HairlineGrid } from "@/components/ui/hairline-grid"
 import { cn } from "@/lib/utils"
+
+/**
+ * SkeletonScreen - the single live region for a loading area.
+ *
+ * <Skeleton> blocks are decorative (aria-hidden), so exactly one wrapper per
+ * loading area carries `role="status"` and the localized label. That gives
+ * assistive tech one clear "content is loading" announcement instead of one
+ * per placeholder block.
+ */
+export function SkeletonScreen({
+  children,
+  label,
+  className,
+}: {
+  children: React.ReactNode
+  label?: string
+  className?: string
+}) {
+  const t = useTranslations("common.loadingMessages")
+
+  return (
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label={label ?? t("content")}
+      className={cn("motion-fade-enter", className)}
+    >
+      {children}
+    </div>
+  )
+}
+
+/**
+ * PageHeaderSkeleton - title + subtitle + primary action of a dashboard page.
+ */
+export function PageHeaderSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex flex-wrap items-start justify-between gap-4", className)}>
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-4 w-72" />
+      </div>
+      <Skeleton className="h-9 w-36" />
+    </div>
+  )
+}
+
+/**
+ * ListPageSkeleton - header + filter row + list rows. Matches the shape of the
+ * table-style pages (applications, jobs, sessions) so nothing jumps when the
+ * real content arrives.
+ */
+export function ListPageSkeleton({
+  rows = 6,
+  className,
+}: {
+  rows?: number
+  className?: string
+}) {
+  return (
+    <div className={cn("space-y-6", className)}>
+      <PageHeaderSkeleton />
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-9 w-64" />
+        <Skeleton className="h-9 w-32" />
+        <Skeleton className="h-9 w-32" />
+      </div>
+      <Card>
+        <CardContent className="p-0">
+          <div className="divide-y">
+            {Array.from({ length: rows }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4">
+                <Skeleton className="h-10 w-10 flex-none" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+                <Skeleton className="h-7 w-20 flex-none" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+/**
+ * AppShellSkeleton - the dashboard chrome (sidebar + content) while the auth
+ * state hydrates. Showing the real shell silhouette instead of a centred
+ * spinner means the layout is already in place when the session resolves, so
+ * entering the dashboard is a fade rather than a jump.
+ */
+export function AppShellSkeleton({ message }: { message?: string }) {
+  const t = useTranslations("common.loadingMessages")
+
+  return (
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label={message ?? t("page")}
+      className="flex min-h-screen bg-muted/30"
+    >
+      <div className="hidden w-[290px] flex-none bg-[#1B2A49] md:block">
+        <div className="flex h-16 items-center border-b border-white/10 px-4">
+          <Skeleton className="h-6 w-36 bg-white/10" />
+        </div>
+        <div className="space-y-2 px-4 py-6">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full bg-white/10" />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex h-16 items-center border-b border-border/50 px-4 md:hidden">
+          <Skeleton className="h-8 w-28" />
+        </div>
+        <div className="p-4 md:mx-auto md:w-full md:max-w-7xl md:p-8">
+          {message && (
+            <div className="mb-4 inline-flex items-center gap-2 border bg-card px-3 py-1.5 text-sm text-muted-foreground">
+              {/* Decorative: the wrapper above already owns the live region and
+                  this <span> already carries the text, so a <Spinner> here
+                  (which renders its own role="status" + sr-only label) would
+                  make assistive tech announce `message` three times. */}
+              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              <span>{message}</span>
+            </div>
+          )}
+          <DashboardSkeleton />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 /**
  * ProfileSkeleton - For profile sections
