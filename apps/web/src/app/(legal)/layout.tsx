@@ -2,6 +2,12 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { AppLogo } from '@/components/ui/app-logo';
 
+// Standalone nav links need a 44px touch target on phones; `md:` restores the
+// original text-sized box so the desktop footer keeps its metrics. `min-w-11`
+// matters for the short labels — "AGB" is only 30px wide on its own.
+const NAV_LINK =
+  'inline-flex min-h-11 min-w-11 items-center justify-center md:min-h-0 md:min-w-0';
+
 export default async function LegalLayout({
   children,
 }: {
@@ -19,7 +25,7 @@ export default async function LegalLayout({
           </Link>
           <Link
             href="/"
-            className="font-heading text-sm font-medium text-primary hover:opacity-70"
+            className={`font-heading text-sm font-medium text-primary hover:opacity-70 ${NAV_LINK}`}
           >
             {t('backHome')}
           </Link>
@@ -34,17 +40,17 @@ export default async function LegalLayout({
 
       <footer className="mt-16 border-t border-border py-8">
         <div className="container mx-auto px-4 md:px-8">
-          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-            <Link href="/impressum" className="hover:text-foreground">
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
+            <Link href="/impressum" className={`hover:text-foreground ${NAV_LINK}`}>
               Impressum
             </Link>
-            <Link href="/datenschutz" className="hover:text-foreground">
+            <Link href="/datenschutz" className={`hover:text-foreground ${NAV_LINK}`}>
               Datenschutz
             </Link>
-            <Link href="/agb" className="hover:text-foreground">
+            <Link href="/agb" className={`hover:text-foreground ${NAV_LINK}`}>
               AGB
             </Link>
-            <Link href="/" className="hover:text-foreground">
+            <Link href="/" className={`hover:text-foreground ${NAV_LINK}`}>
               {t('home')}
             </Link>
           </nav>
