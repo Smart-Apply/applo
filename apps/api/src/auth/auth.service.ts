@@ -30,9 +30,54 @@ import {
   ForbiddenWithCode,
 } from '../common/exceptions/coded-http.exception';
 import { SubscriptionService } from '../subscription/subscription.service';
-import { StorageService } from '../storage/storage.service';
+import { UserErasureService } from '../common/erasure/user-erasure.service';
 import { LlmUsageService } from '../llm/usage/llm-usage.service';
 import { PwnedPasswordService } from './services/pwned-password.service';
+
+/**
+ * Art. 15(1)(c)-(h) DSGVO information that has to accompany the copy of the
+ * data. Kept next to the export so a new recipient or a changed retention
+ * period is edited in the same place as the query that produces the copy;
+ * `docs/security/SUBPROCESSORS.md` is the authoritative recipient list and
+ * `docs/security/DELETION_CONCEPT.md` the authoritative retention list.
+ */
+const ACCESS_RIGHT_DISCLOSURE = {
+  recipients:
+    'Auftragsverarbeiter, an die Daten weitergegeben werden, sind in ' +
+    'docs/security/SUBPROCESSORS.md und in der Datenschutzerklärung unter /datenschutz ' +
+    'abschließend aufgeführt (u. a. Fly.io, Neon, Cloudflare, Microsoft Azure OpenAI, ' +
+    'Azure AI Foundry, Mistral AI, Upstash, Resend, Sentry, Microsoft Graph). ' +
+    'Lebenslauf-, Anschreiben- und Stellenanzeigen-Inhalte werden im Volltext an den ' +
+    'jeweils konfigurierten KI-Anbieter übermittelt.',
+  storagePeriod:
+    'Kontodaten bis zur Löschung des Kontos (sofortige, endgültige Löschung — kein ' +
+    'Papierkorb). Gelöschte Bewerbungen und Stellenanzeigen inklusive der erzeugten PDFs: ' +
+    '30 Tage. Verwaiste Uploads: 7 Tage. E-Mail-Tracking-Ereignisse: 180 Tage. ' +
+    'KI-Nutzungsstatistik: 90 Tage. Sicherheits-Logdateien: 90 Tage.',
+  rights:
+    'Du kannst Berichtigung, Löschung oder Einschränkung der Verarbeitung verlangen und ' +
+    'der Verarbeitung widersprechen (Art. 16, 17, 18, 21 DSGVO). Die Löschung deines ' +
+    'Kontos ist in den Einstellungen jederzeit selbst auslösbar.',
+  supervisoryAuthority:
+    'Du hast das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren ' +
+    '(Art. 77 DSGVO).',
+  dataSource:
+    'Alle Daten stammen von dir selbst (Eingaben, Uploads, hochgeladene Lebensläufe) oder ' +
+    'entstehen bei der Nutzung (Sitzungen, Sicherheitsereignisse, KI-Ergebnisse). ' +
+    'Ausnahme: Bei OAuth-Login stammen Name, E-Mail-Adresse und Profilbild vom gewählten ' +
+    'Anbieter; beim E-Mail-Tracking stammen Absender und Betreff aus deinem Postfach.',
+  automatedDecisionMaking:
+    'Es findet keine automatisierte Entscheidung im Sinne von Art. 22 DSGVO statt. ' +
+    'KI-Ergebnisse (Bewerbungsunterlagen, Bewerbungs-Check, Interview-Feedback) sind ' +
+    'Vorschläge, die du prüfst und änderst.',
+  securityLogs:
+    'Sicherheitsereignisse (Login, Passwortänderung, Kontolöschung) werden zusätzlich in ' +
+    'Logdateien auf dem Server festgehalten — mit E-Mail-Adresse, IP-Adresse und ' +
+    'User-Agent, Rechtsgrundlage Art. 6(1)(f) DSGVO. Diese Dateien liegen außerhalb der ' +
+    'Datenbank und rotieren nach 90 Tagen; sie sind deshalb nicht Teil dieser Datei. ' +
+    'Eine Kopie kannst du über die in der Datenschutzerklärung genannte Kontaktadresse ' +
+    'anfordern.',
+} as const;
 
 interface TokenPair {
   accessToken: string;
@@ -69,8 +114,8 @@ export class AuthService {
     private subscriptionService: SubscriptionService,
     private twoFactorService: TwoFactorService,
     private emailService: EmailService,
-    private storageService: StorageService,
-    private llmUsageService: LlmUsageService,
+    private userErasureService: UserErasureService,
+    private llmUsage: LlmUsageService,
     private pwnedPasswordService: PwnedPasswordService,
   ) {}
 
@@ -618,57 +663,23 @@ export class AuthService {
       }
     }
 
-    // Get all applications to clean up storage files
-    const applications = await this.prisma.application.findMany({
-      where: { userId },
-      select: { coverLetterFileKey: true, resumeFileKey: true },
-    });
+    // Collect every storage prefix this account owns. Prefixes, not keys:
+    // the previous key-based cleanup only knew about generated PDFs and the
+    // Bewerbungsfoto, so every uploaded original (résumés, job-posting files
+    // under `<userId>/`) survived the deletion indefinitely — Art. 17 /
+    // Art. 5(1)(e) DSGVO. `UserErasureService` owns the full list so the
+    // admin deletion path cannot drift from this one.
+    const erasure = await this.userErasureService.eraseUser(userId);
 
-    // Collect file keys to delete (will be handled by cascade delete from DB,
-    // but we need to track them for storage cleanup)
-    const fileKeysToDelete: string[] = [];
-    for (const app of applications) {
-      if (app.coverLetterFileKey) fileKeysToDelete.push(app.coverLetterFileKey);
-      if (app.resumeFileKey) fileKeysToDelete.push(app.resumeFileKey);
-    }
-
-    // The Bewerbungsfoto is personal data (GDPR) — its storage object MUST go
-    // with the account, not just the DB reference.
-    const profile = await this.prisma.profile.findUnique({
-      where: { userId },
-      select: { photoKey: true },
-    });
-    if (profile?.photoKey) fileKeysToDelete.push(profile.photoKey);
-
-    // Log account deletion event before deleting
+    // Logged after the fact so the audit trail records what actually
+    // happened — a failed erasure must not leave an ACCOUNT_DELETED entry.
     if (req) {
       this.auditLogger.logSecurityEvent('ACCOUNT_DELETED', user.email, req, user.id, {
-        applicationsDeleted: applications.length,
-        filesDeleted: fileKeysToDelete.length,
+        applicationsDeleted: erasure.applicationsDeleted,
+        storagePrefixesPurged: erasure.storagePrefixesPurged,
+        llmUsageEventsDeleted: erasure.llmUsageEventsDeleted,
       });
     }
-
-    // GDPR erasure for llm_usage_events (audit F11): keyed by actorHash with
-    // no User FK, so the cascade delete below cannot reach it. Runs BEFORE
-    // the delete and is allowed to throw — the user can retry the deletion,
-    // whereas a silently orphaned pseudonymous trail could never be erased.
-    await this.llmUsageService.deleteEventsForActor(userId);
-
-    // Delete user (cascade will delete Profile, Applications, JobPostings, Sessions, RefreshTokens, UserPreferences)
-    await this.prisma.user.delete({
-      where: { id: userId },
-    });
-
-    // Best-effort storage cleanup (photo + generated PDFs). Failures are
-    // logged, never surfaced — the account is already gone; an orphaned
-    // object must not break the deletion flow.
-    await Promise.all(
-      fileKeysToDelete.map((key) =>
-        this.storageService.delete(key).catch((err) => {
-          this.logger.warn(`Account cleanup: failed to delete storage object ${key}: ${err.message}`);
-        }),
-      ),
-    );
   }
 
   // ==========================================
@@ -1290,6 +1301,18 @@ export class AuthService {
    * raw tokens, encrypted 2FA secrets, OAuth tokens) is intentionally
    * excluded — GDPR access right does not require disclosure of security
    * material that would compromise the account if leaked.
+   *
+   * Every user-scoped relation in `schema.prisma` must be represented here.
+   * The export used to silently omit appointments, validations, mailbox
+   * connections, trusted devices, the 2FA status and the LLM usage events,
+   * and capped `auditLogs` at 500 rows — an Art. 15(1) disclosure cannot be
+   * paginated away (issue #806). When you add a user-scoped model, add it
+   * here and to {@link UserErasureService} in the same change.
+   *
+   * `auditLogs` is deliberately NOT included: nothing writes to that table
+   * (0 `prisma.auditLog.create` call sites), so the key only ever shipped an
+   * empty array and implied a record we do not keep. The security events are
+   * Winston files instead — described under `meta.securityLogs`.
    */
   async exportUserData(userId: string): Promise<Record<string, unknown>> {
     const user = await this.prisma.user.findUnique({
@@ -1308,8 +1331,9 @@ export class AuthService {
         preferences: true,
         jobPostings: true,
         applications: true,
+        validations: true,
+        appointments: true,
         sessions: true,
-        auditLogs: { orderBy: { createdAt: 'desc' }, take: 500 },
         subscription: { include: { usage: true } },
         interviewSessions: { include: { questions: true, feedback: true } },
         oauthProviders: {
@@ -1320,6 +1344,42 @@ export class AuthService {
             avatarUrl: true,
             lastUsedAt: true,
             createdAt: true,
+          },
+        },
+        // Device-trust cookies are matched by `deviceTokenHash`; disclosing it
+        // would hand over a 2FA bypass, so only the display metadata ships.
+        trustedDevices: {
+          select: {
+            id: true,
+            deviceName: true,
+            browser: true,
+            os: true,
+            ipAddress: true,
+            expiresAt: true,
+            lastUsedAt: true,
+            createdAt: true,
+          },
+        },
+        // Status only — the encrypted TOTP secret and its IV/auth tag are
+        // account-compromising material, not disclosable personal data.
+        twoFactorAuth: {
+          select: { isEnabled: true, verifiedAt: true, createdAt: true, updatedAt: true },
+        },
+        // Mailbox OAuth material (refresh-token ciphertext, IV, auth tag,
+        // webhook client state) is excluded for the same reason.
+        mailboxConnections: {
+          select: {
+            id: true,
+            provider: true,
+            status: true,
+            emailAddress: true,
+            scope: true,
+            subscriptionExpiresAt: true,
+            lastSyncedAt: true,
+            lastErrorAt: true,
+            createdAt: true,
+            updatedAt: true,
+            emailEvents: { orderBy: { createdAt: 'desc' } },
           },
         },
       },
@@ -1343,13 +1403,17 @@ export class AuthService {
 
     return {
       meta: {
-        format: 'applo.user-export.v1',
+        format: 'applo.user-export.v2',
         exportedAt: new Date().toISOString(),
         notice:
-          'This file contains your personal data exported from Applo per GDPR Art. 15 / Art. 20. ' +
-          'Sensitive credentials (password hashes, raw security tokens, encrypted 2FA secrets) are intentionally omitted.',
+          'Diese Datei enthält die personenbezogenen Daten, die Applo zu deinem Konto speichert ' +
+          '(Art. 15 und Art. 20 DSGVO). Sicherheitsmaterial (Passwort-Hash, Rohtokens, ' +
+          'verschlüsseltes 2FA-Geheimnis, OAuth-Refresh-Tokens) ist bewusst nicht enthalten: ' +
+          'seine Offenlegung würde das Konto kompromittieren.',
+        ...ACCESS_RIGHT_DISCLOSURE,
       },
       user: userPublic,
+      llmUsageEvents: await this.llmUsage.exportEventsForActor(userId),
     };
   }
 }

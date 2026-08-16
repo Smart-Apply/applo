@@ -149,13 +149,9 @@
     "privacy": {
       "title": "Confidentialité",
       "description": "Vous gardez le contrôle de vos données.",
-      "publicProfile": {
-        "title": "Profil public",
-        "description": "Votre profil peut être vu par d'autres personnes."
-      },
       "analytics": {
-        "title": "Données d'utilisation anonymes",
-        "description": "Aidez-nous à améliorer Applo. Aucun contenu personnel."
+        "title": "Statistiques d'utilisation",
+        "description": "Nous enregistrons la consommation des fonctions IA (modèle, jetons, durée) sous un pseudonyme — jamais le contenu des requêtes ou des réponses. Désactivé : nous n'enregistrons rien du tout."
       }
     },
     "onboarding": {
@@ -222,7 +218,7 @@
     },
     "enabled": "Activé",
     "disabled": "Désactivé",
-    "privacyNote": "Applo lit les e-mails uniquement à des fins de classification. Nous ne stockons <strong>aucun contenu d'e-mail</strong> — seulement l'expéditeur, l'objet et le résultat de la classification (voir confidentialité).",
+    "privacyNote": "Applo filtre d'abord les e-mails entrants localement : seuls les messages correspondant à l'une de tes candidatures sont traités. Pour ceux-ci, l'expéditeur, l'objet et un extrait du texte sont transmis à notre fournisseur d'IA. <strong>Aucun texte d'e-mail n'est conservé</strong> — uniquement l'expéditeur, l'objet et le résultat du classement, supprimés automatiquement après 180 jours (voir la politique de confidentialité).",
     "connection": {
       "comingSoon": "Bientôt disponible",
       "active": "Actif",
@@ -234,6 +230,18 @@
       "disconnectDescription": "Applo ne détectera plus les nouveaux e-mails de <strong>{email}</strong>. Les candidatures existantes restent, mais le statut ne se mettra plus à jour automatiquement.",
       "cancel": "Annuler",
       "connect": "Connecter"
+    },
+    "consent": {
+      "title": "Connecter la boîte mail",
+      "intro": "Avant de connecter ta boîte mail, voici ce qui se passe :",
+      "scope": "Microsoft accorde à Applo un accès en lecture à ta boîte mail (<strong>Mail.Read</strong>). Techniquement, cet accès ne peut pas être limité à certains expéditeurs.",
+      "prefilter": "Chaque message entrant est d'abord filtré <strong>localement</strong>. Il n'est traité que si l'expéditeur ou l'objet correspond à l'une de tes candidatures — tout le reste est immédiatement écarté.",
+      "llm": "Pour les messages correspondants, l'expéditeur, l'objet et un <strong>extrait du texte (1 200 caractères max.)</strong> sont transmis à notre fournisseur d'IA (Microsoft Azure OpenAI, UE) pour le classement.",
+      "stored": "Nous conservons uniquement l'expéditeur, l'objet, l'heure de réception et le résultat du classement — <strong>jamais le texte de l'e-mail</strong>. Ces entrées sont supprimées automatiquement après 180 jours.",
+      "revoke": "Tu peux déconnecter la boîte mail à tout moment ici ; nous révoquons alors aussi l'accès chez Microsoft.",
+      "privacyLink": "En savoir plus dans la politique de confidentialité",
+      "cancel": "Annuler",
+      "confirm": "Compris, connecter la boîte mail"
     }
   }
 }

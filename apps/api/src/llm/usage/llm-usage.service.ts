@@ -34,6 +34,7 @@ interface ActorStore {
   userId: string;
   language?: string;
   tier?: Promise<SubscriptionTier | null>;
+  consent?: Promise<boolean>;
 }
 
 /**
@@ -101,12 +102,14 @@ export class LlmUsageService {
     const actorHash = store ? this.hashActor(store.userId, salt) : undefined;
     const language = input.language ?? store?.language;
     const tierPromise = store ? this.resolveTier(store) : Promise.resolve(null);
+    const consentPromise = store ? this.resolveConsent(store) : Promise.resolve(true);
     const prisma = this.prisma;
     if (!prisma) return;
 
-    void tierPromise
-      .then((tier) =>
-        prisma.llmUsageEvent.create({
+    void Promise.all([tierPromise, consentPromise])
+      .then(([tier, consented]) => {
+        if (!consented) return undefined;
+        return prisma.llmUsageEvent.create({
           data: {
             actorHash: actorHash ?? null,
             feature: input.feature,
@@ -128,8 +131,8 @@ export class LlmUsageService {
             errorKind: input.errorKind ?? null,
             estimatedCostUsd: estimateCostUsd(input.model, input.usage),
           },
-        }),
-      )
+        });
+      })
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
         this.logger.warn(`Failed to record LLM usage event: ${message}`);
@@ -161,6 +164,24 @@ export class LlmUsageService {
   }
 
   /**
+   * GDPR access hook (Art. 15 / Art. 20, issue #806): the usage events this
+   * user's calls produced, resolved through the same keyed pseudonym
+   * {@link deleteEventsForActor} uses. Rows written under an earlier salt (or
+   * while the salt was unset) cannot be matched and are therefore not part of
+   * the copy — they carry no link back to the user either.
+   */
+  async exportEventsForActor(userId: string): Promise<unknown[]> {
+    const salt = this.config.llmUsageHashSalt;
+    if (!salt || !this.prisma) {
+      return [];
+    }
+    return this.prisma.llmUsageEvent.findMany({
+      where: { actorHash: this.hashActor(userId, salt) },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
    * Keyed pseudonym for the actor. HMAC rather than `sha256(userId + salt)`:
    * concatenating a secret onto a message is the wrong primitive for a keyed
    * digest, and HMAC states the intent (and the domain separation) explicitly.
@@ -171,6 +192,37 @@ export class LlmUsageService {
    */
   private hashActor(userId: string, salt: string): string {
     return createHmac('sha256', salt).update(userId).digest('hex');
+  }
+
+  /**
+   * Consent gate for the `analyticsEnabled` preference (issue #806). The
+   * switch used to be stored and never read, so a withdrawal under Art. 7(3)
+   * had no effect on a dataset that is pseudonymous — not anonymous — and
+   * therefore personal. Opting out now suppresses the row entirely; writing an
+   * `actorHash: null` row would not be enough, because the millisecond
+   * `createdAt` still time-correlates back to the `applications` /
+   * `validations` row that triggered the call.
+   *
+   * Memoised per actor scope like {@link resolveTier}, so one generation costs
+   * a single lookup. Fails CLOSED: a lookup error suppresses the row, because
+   * telemetry is expendable and a consent check that fails open is not a
+   * consent check.
+   */
+  private resolveConsent(store: ActorStore): Promise<boolean> {
+    const prisma = this.prisma;
+    if (!prisma) return Promise.resolve(false);
+    if (!store.consent) {
+      store.consent = prisma.userPreferences
+        .findUnique({ where: { userId: store.userId }, select: { analyticsEnabled: true } })
+        // No preferences row yet == the schema default, which is opted in.
+        .then((row) => row?.analyticsEnabled ?? true)
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : String(error);
+          this.logger.debug(`Analytics consent lookup failed, skipping usage event: ${message}`);
+          return false;
+        });
+    }
+    return store.consent;
   }
 
   private resolveTier(store: ActorStore): Promise<SubscriptionTier | null> {

@@ -299,6 +299,20 @@ const envSchema = z.object({
   // sweep (not recommended). Audit 2026-08-13, F11.
   LLM_USAGE_RETENTION_DAYS: z.string().default('90'),
 
+  // Retention (days) for uploaded originals that never became a JobPosting.
+  // `POST /uploads` stores the raw file under `<userId>/` and nothing records
+  // that key until it is parsed, so an abandoned upload used to live forever
+  // (Art. 5(1)(e) DSGVO). A daily cron deletes unreferenced objects older
+  // than this; 0 disables the sweep.
+  UPLOAD_RETENTION_DAYS: z.string().default('7'),
+
+  // Retention (days) for `application_email_events`. The rows hold sender,
+  // sender name and subject of mail in the user's private inbox; they explain
+  // an automatic status change and dedupe Graph replays, and neither purpose
+  // outlives the notification window (Art. 5(1)(e) DSGVO). 0 disables the
+  // sweep (not recommended).
+  MAILBOX_EVENT_RETENTION_DAYS: z.string().default('180'),
+
   // -------------------------------------------------------------------------
   // Email Tracking (Premium feature) — OAuth Inbox Sync
   // -------------------------------------------------------------------------

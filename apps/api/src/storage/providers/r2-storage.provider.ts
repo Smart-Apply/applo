@@ -4,10 +4,12 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
   HeadBucketCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { StorageProvider } from '../storage.interface';
+import { StorageObject, StorageProvider } from '../storage.interface';
 import { ConfigService } from '../../config/config.service';
 
 /**
@@ -116,6 +118,77 @@ export class R2StorageProvider implements StorageProvider {
     } catch (error) {
       this.logger.error(`Failed to delete from R2 ${key}: ${error.message}`);
       throw new Error(`Failed to delete file: ${error.message}`);
+    }
+  }
+
+  /**
+   * Paginated `ListObjectsV2` walk. R2 caps a page at 1000 keys, so the
+   * continuation token matters as soon as an account has a few hundred
+   * generated PDFs.
+   */
+  async list(prefix: string): Promise<StorageObject[]> {
+    const objects: StorageObject[] = [];
+    let continuationToken: string | undefined;
+
+    try {
+      do {
+        const page = await this.client.send(
+          new ListObjectsV2Command({
+            Bucket: this.bucket,
+            Prefix: prefix,
+            ContinuationToken: continuationToken,
+          }),
+        );
+
+        for (const entry of page.Contents ?? []) {
+          if (!entry.Key) continue;
+          objects.push({
+            key: entry.Key,
+            size: entry.Size ?? 0,
+            lastModified: entry.LastModified ?? null,
+          });
+        }
+
+        continuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
+      } while (continuationToken);
+
+      return objects;
+    } catch (error) {
+      this.logger.error(`Failed to list R2 prefix ${prefix}: ${error.message}`);
+      throw new Error(`Failed to list files: ${error.message}`);
+    }
+  }
+
+  async deleteByPrefix(prefix: string): Promise<number> {
+    const objects = await this.list(prefix);
+    if (objects.length === 0) return 0;
+
+    try {
+      // DeleteObjects accepts at most 1000 keys per request.
+      for (let i = 0; i < objects.length; i += 1000) {
+        const batch = objects.slice(i, i + 1000);
+        const result = await this.client.send(
+          new DeleteObjectsCommand({
+            Bucket: this.bucket,
+            Delete: { Objects: batch.map((object) => ({ Key: object.key })), Quiet: true },
+          }),
+        );
+
+        // Partial failures come back in the body with a 200 status — treating
+        // them as success would silently leave personal data in the bucket.
+        const errors = result.Errors ?? [];
+        if (errors.length > 0) {
+          throw new Error(
+            `${errors.length} object(s) could not be deleted (first: ${errors[0].Key} — ${errors[0].Message})`,
+          );
+        }
+      }
+
+      this.logger.log(`Deleted ${objects.length} object(s) from R2 under prefix ${prefix}`);
+      return objects.length;
+    } catch (error) {
+      this.logger.error(`Failed to delete R2 prefix ${prefix}: ${error.message}`);
+      throw new Error(`Failed to delete files: ${error.message}`);
     }
   }
 

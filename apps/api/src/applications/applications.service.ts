@@ -1015,8 +1015,13 @@ export class ApplicationsService {
       throw new NotFoundWithCode(ErrorCode.APPLICATION_NOT_FOUND);
     }
 
-    // Clean up generated files from storage
+    // Clean up generated files from storage. The prefix sweep is the
+    // authoritative step (Art. 17 DSGVO): every artefact for an application
+    // lives under `applications/<id>/`, so nothing survives just because the
+    // row forgot a key. The key-based cleanup stays for legacy rows whose
+    // keys predate that layout.
     await this.cleanupGeneratedFiles(application);
+    await this.storageService.tryDeleteByPrefix(`applications/${applicationId}/`);
 
     // Permanently delete application from database
     await this.prisma.application.delete({

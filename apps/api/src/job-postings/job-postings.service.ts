@@ -159,19 +159,11 @@ export class JobPostingsService {
    */
   private async parseFromFile(userId: string, fileId: string): Promise<string> {
     try {
-      // Decode storage key from base64 ID
-      const storageKey = Buffer.from(fileId, 'base64').toString('utf-8');
-
       // Reject path traversal / absolute paths and enforce per-user ownership.
       // Storage keys are minted as `${userId}/${timestamp}-${filename}` — any
       // key not prefixed with the caller's own userId was never issued to them.
-      if (
-        storageKey.includes('..') ||
-        storageKey.startsWith('/') ||
-        storageKey.startsWith('\\') ||
-        storageKey.includes('\0') ||
-        !storageKey.startsWith(`${userId}/`)
-      ) {
+      const storageKey = decodeOwnedFileId(fileId, userId);
+      if (!storageKey) {
         this.logger.warn(`Rejected fileId not owned by user ${userId}`);
         throw new NotFoundWithCode(ErrorCode.JOB_POSTING_NOT_FOUND, 'File not found');
       }
@@ -418,10 +410,28 @@ export class JobPostingsService {
   async hardDeleteJobPosting(userId: string, id: string): Promise<void> {
     const jobPosting = await this.prisma.jobPosting.findFirst({
       where: { id, userId },
+      include: {
+        applications: { select: { id: true } },
+      },
     });
 
     if (!jobPosting) {
       throw new NotFoundWithCode(ErrorCode.JOB_POSTING_NOT_FOUND);
+    }
+
+    // Storage cleanup BEFORE the row disappears (Art. 17 / Art. 5(1)(e)
+    // DSGVO). Deleting the posting cascades its applications away, so their
+    // generated PDFs would otherwise be unreachable — and therefore
+    // undeletable — forever. Best-effort: an orphaned object must not leave
+    // an undeletable database row behind.
+    for (const application of jobPosting.applications) {
+      await this.storageService.tryDeleteByPrefix(`applications/${application.id}/`);
+    }
+    const uploadKey = decodeOwnedFileId(jobPosting.fileId, userId);
+    if (uploadKey) {
+      await this.storageService.delete(uploadKey).catch((error) => {
+        this.logger.warn(`Failed to delete job posting upload ${uploadKey}: ${error.message}`);
+      });
     }
 
     // Permanently delete (cascades to applications via Prisma schema)
@@ -451,3 +461,39 @@ export class JobPostingsService {
     };
   }
 }
+
+/**
+ * Decode a base64 `fileId` into the storage key it references, or `null` when
+ * the value is malformed or was never issued to this user.
+ *
+ * Shared by the read path (`parseFromFile`) and the erasure path
+ * (`hardDeleteJobPosting`) on purpose: two copies of an ownership check drift,
+ * and the erasure copy drifting means either leaked deletions of other users'
+ * objects or personal data that never gets removed.
+ */
+function decodeOwnedFileId(fileId: string | null | undefined, userId: string): string | null {
+  if (!fileId) return null;
+
+  let storageKey: string;
+  try {
+    storageKey = Buffer.from(fileId, 'base64').toString('utf-8');
+  } catch {
+    return null;
+  }
+
+  if (
+    !storageKey ||
+    storageKey.includes('..') ||
+    storageKey.startsWith('/') ||
+    storageKey.startsWith('\\') ||
+    storageKey.includes('\0') ||
+    !storageKey.startsWith(`${userId}/`)
+  ) {
+    return null;
+  }
+
+  return storageKey;
+}
+
+// Exported for unit tests only.
+export { decodeOwnedFileId };

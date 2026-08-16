@@ -616,26 +616,13 @@ export default function SettingsPage() {
                 <PrefLoader />
               ) : (
                 <div className="space-y-1">
-                  <div className="divide-y divide-border">
-                    <div className="pb-3">
-                      <SettingToggleRow
-                        icon={User}
-                        title={t('preferences.privacy.publicProfile.title')}
-                        description={t('preferences.privacy.publicProfile.description')}
-                        checked={!!preferences?.profilePublic}
-                        onCheckedChange={(v) => handleUpdatePreference('profilePublic', v)}
-                      />
-                    </div>
-                    <div className="pt-3">
-                      <SettingToggleRow
-                        icon={BarChart3}
-                        title={t('preferences.privacy.analytics.title')}
-                        description={t('preferences.privacy.analytics.description')}
-                        checked={!!preferences?.analyticsEnabled}
-                        onCheckedChange={(v) => handleUpdatePreference('analyticsEnabled', v)}
-                      />
-                    </div>
-                  </div>
+                  <SettingToggleRow
+                    icon={BarChart3}
+                    title={t('preferences.privacy.analytics.title')}
+                    description={t('preferences.privacy.analytics.description')}
+                    checked={!!preferences?.analyticsEnabled}
+                    onCheckedChange={(v) => handleUpdatePreference('analyticsEnabled', v)}
+                  />
 
                   <Separator className="my-4" />
 

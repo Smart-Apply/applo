@@ -110,13 +110,13 @@ If it's anything other than `azure-openai`, fix before launch.
 ### 8. Document backup + restore procedures
 
 **Symptom:** [docs/security/MIGRATION_ROLLBACK.md](../security/MIGRATION_ROLLBACK.md) covers schema rollback. There's no runbook for:
-- "User wants their soft-deleted account restored within the 30-day window the privacy policy promises."
+- "User deleted their account by mistake and wants it back."
 - "R2 bucket got nuked / corrupted."
 - "Neon point-in-time-restore for partial data loss."
 
-The privacy policy at [apps/web/src/app/(legal)/datenschutz/page.tsx](../../apps/web/src/app/(legal)/datenschutz/page.tsx) explicitly promises 30-day soft-delete recovery — make sure the runbook delivers that.
+Account deletion is **immediate and irreversible** — `DELETE /auth/account` hard-deletes through `UserErasureService` (the privacy policy no longer promises a 30-day recovery window, because the code never implemented one; issue #806). The only recovery path is Neon PITR within 30 days, and it restores the *whole branch*, not one user. Retention periods that a runbook does have to respect are in [docs/security/DELETION_CONCEPT.md](../security/DELETION_CONCEPT.md) — note that restoring a branch past a retention sweep resurrects data that was lawfully deleted.
 
-**Action:** Add `docs/security/BACKUP_RESTORE.md` covering Neon PITR, R2 versioning status, and the soft-delete restore SQL.
+**Action:** Add `docs/security/BACKUP_RESTORE.md` covering Neon PITR, R2 versioning status, and the retention/erasure interaction above.
 
 **Owner:** dev. **Effort:** ~1 h.
 

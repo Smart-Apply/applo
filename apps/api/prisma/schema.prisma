@@ -89,9 +89,16 @@ model UserPreferences {
   emailTrackingNotify Boolean @default(true)
 
   // Preferences
-  language         String  @default("de")
-  theme            Theme   @default(SYSTEM)
-  profilePublic    Boolean @default(false)
+  language String @default("de")
+  theme    Theme  @default(SYSTEM)
+
+  // RETIRED (issue #806) — there is no public profile, so this switch never
+  // did anything. Removed from the API surface and the UI; the column stays
+  // until a follow-up release drops it (expand -> migrate -> contract).
+  profilePublic Boolean @default(false)
+
+  // Opt-out for the pseudonymous LLM usage telemetry (`llm_usage_events`).
+  // Read by `LlmUsageService.record()` — when false, no row is written.
   analyticsEnabled Boolean @default(true)
 
   // Onboarding guide: set once the user finished OR skipped the product tour.
@@ -648,6 +655,13 @@ enum AuditSeverity {
 }
 
 // Audit log for security events (optional persistence layer)
+/// RETIRED (issue #806) — nothing has ever written to this table (0
+/// `prisma.auditLog.create` call sites). Security events go to rotating
+/// Winston files instead (`common/audit-logger`, 90-day retention). The model
+/// stays until a follow-up release drops it (expand -> migrate -> contract);
+/// it is no longer part of the GDPR export, which only ever returned `[]`.
+/// Do not start writing rows here without a retention sweep and an erasure
+/// hook: `userId` is `onDelete: SetNull`, so rows would OUTLIVE the account.
 model AuditLog {
   id        String         @id @default(cuid())
   eventType AuditEventType // Type of security event

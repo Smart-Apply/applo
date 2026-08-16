@@ -79,12 +79,12 @@ export class UpdateUserPreferencesDto {
   @Transform(({ value }) => mapToTheme(value))
   theme?: Theme;
 
-  @ApiProperty({ example: false, required: false, description: 'Make profile visible to others' })
-  @IsOptional()
-  @IsBoolean()
-  profilePublic?: boolean;
-
-  @ApiProperty({ example: true, required: false, description: 'Allow analytics data collection' })
+  @ApiProperty({
+    example: true,
+    required: false,
+    description:
+      'Opt-out for pseudonymous LLM usage telemetry. When false, no llm_usage_events row is written for this user.',
+  })
   @IsOptional()
   @IsBoolean()
   analyticsEnabled?: boolean;
@@ -127,9 +127,6 @@ export class UserPreferencesResponseDto {
 
   @ApiProperty({ example: 'SYSTEM', enum: Theme })
   theme: Theme;
-
-  @ApiProperty({ example: false })
-  profilePublic: boolean;
 
   @ApiProperty({ example: true })
   analyticsEnabled: boolean;

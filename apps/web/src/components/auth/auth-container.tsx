@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -678,6 +679,28 @@ export function AuthContainer({ initialMode = 'login' }: AuthContainerProps) {
                         t('register.submit')
                       )}
                     </button>
+
+                    {/*
+                     * Art. 13 DSGVO wants the privacy information available at
+                     * the moment the data is collected, not only in the footer
+                     * of a page the user never opens. Placed below the submit
+                     * button so it also covers the OAuth buttons underneath —
+                     * those create an account just as much as the form does.
+                     */}
+                    <p className="legal-note">
+                      {t.rich('register.legalNote', {
+                        privacyLink: (chunks) => (
+                          <Link href="/datenschutz" target="_blank" rel="noopener noreferrer">
+                            {chunks}
+                          </Link>
+                        ),
+                        termsLink: (chunks) => (
+                          <Link href="/agb" target="_blank" rel="noopener noreferrer">
+                            {chunks}
+                          </Link>
+                        ),
+                      })}
+                    </p>
 
                     <div className="divider">{t('register.socialDivider')}</div>
                     <div className="social">

@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { MailboxConnectionService } from './mailbox-connection.service';
 import {
+  CLASSIFIER_BODY_MAX_CHARS,
   EmailClassifierService,
   MIN_CONFIDENCE_FOR_STATUS_CHANGE,
 } from './email-classifier.service';
@@ -19,12 +20,24 @@ import { LlmUsageService } from '../llm/usage/llm-usage.service';
 /**
  * End-to-end pipeline for one inbound email notification:
  *   1. fetch the message from the provider with a fresh access token
- *   2. classify it with the LLM
- *   3. match it to one of the user's recent applications (heuristic, no LLM)
- *   4. persist an `ApplicationEmailEvent` audit row (always)
+ *   2. match it to one of the user's recent applications (local heuristic
+ *      over sender domain + subject, no LLM) — an unmatched message stops
+ *      here: it is neither transmitted nor recorded
+ *   3. classify the matched message with the LLM, on a body excerpt
+ *   4. persist an `ApplicationEmailEvent` audit row unless the classifier
+ *      says OTHER
  *   5. only when classifier + matcher are BOTH confident AND the suggested
  *      status differs from the current one — flip the status and (optionally)
  *      send the user a notification email.
+ *
+ * Step 2 runs BEFORE step 3 on purpose (Art. 5(1)(c) DSGVO, data
+ * minimisation). The Graph scope is `Mail.Read`, i.e. the whole mailbox, so
+ * every message the subscription reports used to be shipped to the LLM
+ * provider — private mail, newsletters, medical appointments included — and
+ * its sender/subject persisted regardless of the verdict. The matcher is a
+ * purely local heuristic, so gating on it means only mail we can already tie
+ * to an application the user created ever leaves the system. It also removes
+ * one LLM call per irrelevant message.
  *
  * The orchestrator is the only place that writes
  * `Application.statusSource = EMAIL_TRACKING`. Everything else (manual UI
@@ -114,7 +127,37 @@ export class MailboxSyncOrchestrator {
 
     try {
       const accessToken = await this.connections.getFreshAccessToken(conn);
-      const message = await this.graph.fetchMessage({ accessToken, messageId });
+      const message = await this.graph.fetchMessage({
+        accessToken,
+        messageId,
+        // Only an excerpt is ever needed — the standard ATS auto-replies
+        // ("Wir haben Ihre Bewerbung erhalten", "… einen anderen Kandidaten")
+        // announce themselves in the first few hundred characters. Capping
+        // here keeps the rest of the mail out of the process entirely.
+        bodyMaxChars: CLASSIFIER_BODY_MAX_CHARS,
+      });
+
+      // Data-minimisation pre-filter. The matcher is local and LLM-free, so
+      // running it first means a message we cannot tie to one of the user's
+      // applications never reaches the LLM provider and never gets recorded.
+      const match = await this.matcher.match(conn.userId, {
+        subject: message.subject,
+        fromAddress: message.fromAddress,
+        fromName: message.fromName,
+        bodyText: message.bodyText,
+      });
+
+      if (!match) {
+        // Deliberately not persisted: an ApplicationEmailEvent for an
+        // unmatched message is sender + name + subject of a mail that has
+        // nothing to do with Applo. A Graph replay costs one more fetch and
+        // one more matcher run — no LLM call, no stored personal data.
+        this.logger.debug(
+          `Message ${messageId} did not match any application — skipped without classification`,
+        );
+        await this.connections.markHealthy(conn.id);
+        return;
+      }
 
       // Establish the usage-tracking actor scope (issue #522). This path is
       // reached from the public Graph webhook, so there is no JWT and the
@@ -128,19 +171,20 @@ export class MailboxSyncOrchestrator {
         }),
       );
 
-      const match = await this.matcher.match(conn.userId, {
-        subject: message.subject,
-        fromAddress: message.fromAddress,
-        fromName: message.fromName,
-        bodyText: message.bodyText,
-      });
+      if (classification.classification === EmailClassification.OTHER) {
+        // Matched by the heuristic but carrying no status signal (or the
+        // classifier failed, which also lands on OTHER). Nothing here is
+        // worth storing sender + subject for.
+        this.logger.debug(`Message ${messageId} classified as OTHER — not persisted`);
+        await this.connections.markHealthy(conn.id);
+        return;
+      }
 
-      // Decide whether to mutate state. Three gates must all pass:
+      // Decide whether to mutate state. Two gates remain (the matcher already
+      // gated above):
       //   (a) classifier confidence above threshold
-      //   (b) classifier returned a concrete status mapping (not OTHER / REQUEST_FOR_INFO)
-      //   (c) matcher linked the email to an application
+      //   (b) classifier returned a concrete status mapping (not REQUEST_FOR_INFO)
       const shouldFlipStatus =
-        match !== null &&
         classification.suggestedStatus !== null &&
         classification.confidence >= MIN_CONFIDENCE_FOR_STATUS_CHANGE;
 
@@ -149,7 +193,7 @@ export class MailboxSyncOrchestrator {
       let newStatus: ApplicationTrackingStatus | null = null;
       let notificationSent = false;
 
-      if (shouldFlipStatus && match) {
+      if (shouldFlipStatus) {
         const updated = await this.flipApplicationStatus({
           applicationId: match.applicationId,
           newStatus: classification.suggestedStatus!,
@@ -174,7 +218,7 @@ export class MailboxSyncOrchestrator {
       await this.prisma.applicationEmailEvent.create({
         data: {
           mailboxConnectionId: conn.id,
-          applicationId: match?.applicationId ?? null,
+          applicationId: match.applicationId,
           providerMessageId: messageId,
           fromAddress: message.fromAddress.slice(0, 320),
           fromName: message.fromName?.slice(0, 200) ?? null,
@@ -187,7 +231,7 @@ export class MailboxSyncOrchestrator {
           previousStatus: previousStatus ?? undefined,
           newStatus: newStatus ?? undefined,
           notificationSent,
-          reason: buildReason(classification.reason, match?.matchReason),
+          reason: buildReason(classification.reason, match.matchReason),
         },
       });
 

@@ -192,6 +192,14 @@ pnpm typecheck
 - Winston audit logs (daily rotation, 90-day retention)
 - Sentry error & performance monitoring
 
+### Data protection (GDPR)
+
+- **Erasure hangs off the storage, not the caller** — both deletion paths (self-service `deleteAccount` and admin `DELETE /admin/users/:email`) go through `UserErasureService`, which purges the user's storage *prefixes* (`<userId>/`, `applications/<id>/`, `profiles/<id>/`) rather than the keys the database happens to remember. The cleanup crons hard-delete through `ApplicationsService.hardDelete()` / `hardDeleteJobPosting()` for the same reason. Covered by an e2e test that asserts the prefix is empty afterwards
+- **Retention sweeps** — orphaned uploads (`UPLOAD_RETENTION_DAYS`, 7), email-tracking events (`MAILBOX_EVENT_RETENTION_DAYS`, 180), LLM usage (`LLM_USAGE_RETENTION_DAYS`, 90), sessions/refresh tokens (30 days)
+- **Data minimisation in email tracking** — a local matcher runs *before* the LLM classification, so a message that can't be tied to one of the user's applications is neither transmitted nor stored; bodies are capped at 1,200 characters and never persisted
+- **Sub-processor drift check** — `pnpm --filter @applo/api run check:subprocessors` fails CI when a credential env var for a new service is added without a row in [docs/security/SUBPROCESSORS.md](docs/security/SUBPROCESSORS.md), which the privacy policy mirrors
+- **Records** — [processing activities (Art. 30)](docs/security/RECORDS_OF_PROCESSING.md), [TOM (Art. 32)](docs/security/TOM.md), [deletion concept](docs/security/DELETION_CONCEPT.md), [DPIA pre-screening (Art. 35)](docs/security/DPIA_PRESCREENING.md)
+
 See [docs/security/](docs/security/) for details.
 
 ## 🌐 Deployment
@@ -261,6 +269,8 @@ via `/api/config`, the `PUBLIC_API_URL` GitHub Variable trap) lives in
 | [docs/guides/DEVOPS_ROADMAP.md](docs/guides/DEVOPS_ROADMAP.md)             | Multi-stage env, secrets, releases |
 | [docs/security/SECRETS_ROTATION.md](docs/security/SECRETS_ROTATION.md)     | How to rotate every credential     |
 | [docs/security/MIGRATION_ROLLBACK.md](docs/security/MIGRATION_ROLLBACK.md) | Schema rollback runbook            |
+| [docs/security/SUBPROCESSORS.md](docs/security/SUBPROCESSORS.md)           | Sub-processors (Art. 28) — source of truth for the privacy policy |
+| [docs/security/DELETION_CONCEPT.md](docs/security/DELETION_CONCEPT.md)     | Retention periods and who enforces them |
 | [docs/features/](docs/features/)                                           | Feature specs                      |
 | [docs/guides/](docs/guides/)                                               | Operational guides                 |
 | [docs/security/](docs/security/)                                           | Security documentation             |

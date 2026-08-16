@@ -115,6 +115,9 @@ export class MockHelper {
       upload: vi.fn().mockResolvedValue('file-key-123'),
       download: vi.fn().mockResolvedValue(Buffer.from('file content')),
       delete: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn().mockResolvedValue([]),
+      deleteByPrefix: vi.fn().mockResolvedValue(0),
+      tryDeleteByPrefix: vi.fn().mockResolvedValue(0),
       getSignedUrl: vi.fn().mockResolvedValue('https://blob.storage.azure.com/signed-url'),
       exists: vi.fn().mockResolvedValue(true),
     } as unknown as StorageService;

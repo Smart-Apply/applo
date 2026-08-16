@@ -33,6 +33,18 @@ export interface ClassifierResult {
 export const MIN_CONFIDENCE_FOR_STATUS_CHANGE = 0.75;
 
 /**
+ * Hard cap on how much of an email body is transmitted to the LLM provider
+ * (Art. 5(1)(c) DSGVO, data minimisation).
+ *
+ * The classifier only has to recognise the standard ATS auto-replies, which
+ * declare themselves in the opening lines; the rest of a message is body
+ * content the user never agreed to have processed by a third party. Enforced
+ * here rather than only at the caller so no future call site can widen it by
+ * accident — the provider fetch passes the same value as its own cap.
+ */
+export const CLASSIFIER_BODY_MAX_CHARS = 1200;
+
+/**
  * Classifies an inbound email using the LLM. Inherits the opossum circuit
  * breaker that wraps `LLMService.generateText`, so spikes in classifier
  * latency don't poison the rest of the app.
@@ -44,9 +56,10 @@ export class EmailClassifierService {
   constructor(private readonly llm: LLMService) {}
 
   async classify(input: ClassifierInput): Promise<ClassifierResult> {
-    // Keep the prompt compact — classifier is called once per inbound email
-    // and we want it cheap. The LLM only needs the subject, sender and a
-    // short body excerpt to recognise the standard ATS auto-replies.
+    // Keep the prompt compact — the classifier is called once per inbound
+    // email, we want it cheap, and every character of body text sent here is
+    // personal data handed to the LLM provider. Subject, sender and a short
+    // excerpt are enough to recognise the standard ATS auto-replies.
     const prompt = `You are an email-classification assistant for a job-application tracker.
 Classify the following email into EXACTLY ONE of these categories and return STRICT JSON.
 
@@ -73,8 +86,8 @@ für einen anderen Kandidaten entschieden") as authoritative.
 EMAIL
 From: ${input.fromAddress}
 Subject: ${input.subject}
-Body:
-${input.bodyText}
+Body (excerpt):
+${input.bodyText.slice(0, CLASSIFIER_BODY_MAX_CHARS)}
 `;
 
     const model = 'classifier-v1';

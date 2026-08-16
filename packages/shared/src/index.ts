@@ -815,7 +815,11 @@ export interface UserPreferences {
   emailTrackingNotify: boolean;
   language: string;
   theme: string;
-  profilePublic: boolean;
+  /**
+   * Opt-out for pseudonymous LLM usage telemetry (`llm_usage_events`).
+   * Honoured in `LlmUsageService.record()` — do not add a preference here
+   * without a code path that reads it (issue #806).
+   */
   analyticsEnabled: boolean;
   /**
    * True once the user finished or skipped the onboarding guide. Suppresses
@@ -833,7 +837,6 @@ export interface UpdateUserPreferencesDto {
   emailTrackingNotify?: boolean;
   language?: string;
   theme?: string;
-  profilePublic?: boolean;
   analyticsEnabled?: boolean;
   onboardingCompleted?: boolean;
 }

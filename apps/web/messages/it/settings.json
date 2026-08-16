@@ -149,13 +149,9 @@
     "privacy": {
       "title": "Privacy",
       "description": "Mantieni il controllo sui tuoi dati.",
-      "publicProfile": {
-        "title": "Profilo pubblico",
-        "description": "Il tuo profilo può essere visto da altri."
-      },
       "analytics": {
-        "title": "Dati di utilizzo anonimi",
-        "description": "Aiutaci a migliorare Applo. Nessun contenuto personale."
+        "title": "Statistiche di utilizzo",
+        "description": "Registriamo il consumo delle funzioni IA (modello, token, durata) sotto pseudonimo, mai il contenuto delle richieste o delle risposte. Disattivato: non salviamo nulla in merito."
       }
     },
     "onboarding": {
@@ -222,7 +218,7 @@
     },
     "enabled": "Attivato",
     "disabled": "Disattivato",
-    "privacyNote": "Applo legge le email solo per la classificazione. Non conserviamo <strong>alcun corpo delle email</strong> — solo mittente, oggetto e il risultato della classificazione (vedi privacy).",
+    "privacyNote": "Applo controlla prima le email in arrivo in locale: vengono elaborate solo quelle che corrispondono a una delle tue candidature. Di queste, mittente, oggetto e un estratto del testo vengono inviati al nostro fornitore di IA. <strong>Nessun testo delle email viene salvato</strong>: solo mittente, oggetto ed esito della classificazione, eliminati automaticamente dopo 180 giorni (vedi informativa sulla privacy).",
     "connection": {
       "comingSoon": "Prossimamente",
       "active": "Attiva",
@@ -234,6 +230,18 @@
       "disconnectDescription": "Applo non rileverà più le nuove email da <strong>{email}</strong>. Le candidature esistenti rimangono, ma lo stato non si aggiornerà più automaticamente.",
       "cancel": "Annulla",
       "connect": "Collega"
+    },
+    "consent": {
+      "title": "Collega la casella di posta",
+      "intro": "Prima di collegare la casella di posta, ecco che cosa succede:",
+      "scope": "Microsoft concede ad Applo l'accesso in lettura alla tua casella di posta (<strong>Mail.Read</strong>). Tecnicamente questo accesso non può essere limitato a singoli mittenti.",
+      "prefilter": "Ogni messaggio in arrivo viene prima filtrato <strong>in locale</strong>. Viene elaborato solo se mittente o oggetto corrispondono a una delle tue candidature: tutto il resto viene scartato subito.",
+      "llm": "Dei messaggi corrispondenti vengono inviati mittente, oggetto e un <strong>estratto del testo (max 1.200 caratteri)</strong> al nostro fornitore di IA (Microsoft Azure OpenAI, UE) per la classificazione.",
+      "stored": "Salviamo solo mittente, oggetto, orario di ricezione ed esito della classificazione, <strong>mai il testo dell'email</strong>. Queste voci vengono eliminate automaticamente dopo 180 giorni.",
+      "revoke": "Puoi scollegare la casella in qualsiasi momento da qui; revochiamo allora anche l'accesso presso Microsoft.",
+      "privacyLink": "Maggiori informazioni nell'informativa sulla privacy",
+      "cancel": "Annulla",
+      "confirm": "Ho capito, collega la casella"
     }
   }
 }

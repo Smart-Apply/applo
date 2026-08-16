@@ -502,6 +502,27 @@ export class ConfigService {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : 90;
   }
 
+  /**
+   * Days to keep uploaded originals that no `JobPosting.fileId` references;
+   * 0 disables the orphaned-upload sweep.
+   */
+  get uploadRetentionDays(): number {
+    const parsed = parseInt(this.nestConfig.get('UPLOAD_RETENTION_DAYS', { infer: true }), 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 7;
+  }
+
+  /**
+   * Days to keep `application_email_events` rows; 0 disables the retention
+   * sweep.
+   */
+  get mailboxEventRetentionDays(): number {
+    const parsed = parseInt(
+      this.nestConfig.get('MAILBOX_EVENT_RETENTION_DAYS', { infer: true }),
+      10,
+    );
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 180;
+  }
+
   // ---------------------------------------------------------------------------
   // Email Tracking (Premium feature) — OAuth Inbox Sync
   // ---------------------------------------------------------------------------

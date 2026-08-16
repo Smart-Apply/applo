@@ -149,13 +149,9 @@
     "privacy": {
       "title": "Privacidad",
       "description": "Mantienes el control de tus datos.",
-      "publicProfile": {
-        "title": "Perfil público",
-        "description": "Otras personas pueden ver tu perfil."
-      },
       "analytics": {
-        "title": "Datos de uso anónimos",
-        "description": "Ayúdanos a mejorar Applo. Sin contenido personal."
+        "title": "Estadísticas de uso",
+        "description": "Registramos el consumo de las funciones de IA (modelo, tokens, duración) bajo un seudónimo, nunca el contenido de las peticiones ni de las respuestas. Desactivado: no guardamos nada al respecto."
       }
     },
     "onboarding": {
@@ -222,7 +218,7 @@
     },
     "enabled": "Activado",
     "disabled": "Desactivado",
-    "privacyNote": "Applo lee los correos solo para clasificarlos. No almacenamos <strong>el cuerpo de los correos</strong> — solo el remitente, el asunto y el resultado de la clasificación (consulta la privacidad).",
+    "privacyNote": "Applo filtra primero los correos entrantes de forma local: solo se procesan los mensajes que coinciden con alguna de tus candidaturas. De esos, el remitente, el asunto y un extracto del texto se envían a nuestro proveedor de IA. <strong>No se almacena ningún texto de correo</strong>: solo remitente, asunto y el resultado de la clasificación, eliminados automáticamente a los 180 días (ver política de privacidad).",
     "connection": {
       "comingSoon": "Próximamente",
       "active": "Activo",
@@ -234,6 +230,18 @@
       "disconnectDescription": "Applo dejará de detectar nuevos correos de <strong>{email}</strong>. Las candidaturas existentes se mantienen, pero el estado ya no se actualizará automáticamente.",
       "cancel": "Cancelar",
       "connect": "Conectar"
+    },
+    "consent": {
+      "title": "Conectar buzón",
+      "intro": "Antes de conectar tu buzón, esto es lo que ocurre:",
+      "scope": "Microsoft concede a Applo acceso de lectura a tu buzón (<strong>Mail.Read</strong>). Técnicamente, ese acceso no puede limitarse a remitentes concretos.",
+      "prefilter": "Cada mensaje entrante se filtra primero <strong>de forma local</strong>. Solo se procesa si el remitente o el asunto coinciden con alguna de tus candidaturas; el resto se descarta de inmediato.",
+      "llm": "De los mensajes coincidentes se envían el remitente, el asunto y un <strong>extracto del texto (máx. 1.200 caracteres)</strong> a nuestro proveedor de IA (Microsoft Azure OpenAI, UE) para clasificarlos.",
+      "stored": "Solo guardamos remitente, asunto, hora de recepción y el resultado de la clasificación, <strong>nunca el texto del correo</strong>. Estas entradas se eliminan automáticamente a los 180 días.",
+      "revoke": "Puedes desconectar el buzón en cualquier momento aquí; entonces también revocamos el acceso en Microsoft.",
+      "privacyLink": "Más información en la política de privacidad",
+      "cancel": "Cancelar",
+      "confirm": "Entendido, conectar buzón"
     }
   }
 }

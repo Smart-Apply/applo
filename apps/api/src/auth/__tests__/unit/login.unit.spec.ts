@@ -10,7 +10,7 @@ import { SessionService } from '../../session.service';
 import { TwoFactorService } from '../../two-factor.service';
 import { EmailService } from '@/email/email.service';
 import { SubscriptionService } from '@/subscription/subscription.service';
-import { StorageService } from '@/storage/storage.service';
+import { UserErasureService } from '@/common/erasure/user-erasure.service';
 import { LlmUsageService } from '@/llm/usage/llm-usage.service';
 import { PwnedPasswordService } from '../../services/pwned-password.service';
 import { UnauthorizedWithCode } from '@/common/exceptions/coded-http.exception';
@@ -63,13 +63,14 @@ describe('AuthService.login (Unit)', () => {
         },
         { provide: EmailService, useValue: { sendVerificationEmail: vi.fn() } },
         {
-          // login() never touches storage; only deleteAccount does.
-          provide: StorageService,
-          useValue: { delete: vi.fn() },
+          // login() never erases anything; only deleteAccount does.
+          provide: UserErasureService,
+          useValue: { eraseUser: vi.fn() },
         },
         {
+          // Only the GDPR export reads usage events.
           provide: LlmUsageService,
-          useValue: { deleteEventsForActor: vi.fn().mockResolvedValue(0) },
+          useValue: { exportEventsForActor: vi.fn().mockResolvedValue([]) },
         },
         {
           provide: PwnedPasswordService,

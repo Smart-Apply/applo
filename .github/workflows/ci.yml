@@ -87,6 +87,14 @@ jobs:
         # twice (PR #534, then two Dependabot bumps).
         run: pnpm --filter @applo/web run check:pdfjs
 
+      - name: Verify every external service is documented as a sub-processor
+        # The privacy policy is a hand-maintained document with no coupling to
+        # the code, so it drifted: it described an architecture that never
+        # existed while omitting three recipients personal data is actually
+        # sent to (issue #806). Adding a credential env var for a new service
+        # now fails here until the service is named in SUBPROCESSORS.md.
+        run: pnpm --filter @applo/api run check:subprocessors
+
       - name: Lint
         run: pnpm lint
 

@@ -169,6 +169,10 @@
 .applo-auth .form-foot a:hover, .applo-auth .link:hover { color: var(--aa-accent); }
 .applo-auth .link-quiet { display: block; text-align: center; margin-top: -2px; color: var(--aa-muted); font-weight: 600; font-size: 14px; border-bottom: none; }
 .applo-auth .link-quiet:hover { color: var(--aa-accent); }
+/* Art. 13 DSGVO notice under the register submit button */
+.applo-auth .legal-note { margin-top: 10px; text-align: center; font-size: 12px; line-height: 1.5; color: var(--aa-muted); }
+.applo-auth .legal-note a { color: var(--aa-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.applo-auth .legal-note a:hover { color: var(--aa-accent); }
 /* divider + social */
 .applo-auth .divider { display: flex; align-items: center; gap: 14px; margin: 18px 0 14px;
   color: var(--aa-muted-2);

@@ -88,7 +88,7 @@ applo/
 │   │   │   ├── applications/      # Generation pipeline
 │   │   │   ├── appointments/      # Interview-calendar CRUD (date/time, note)
 │   │   │   ├── auth/              # JWT, OAuth, 2FA, sessions, refresh tokens
-│   │   │   ├── common/            # Guards, filters, decorators (@Sanitize)
+│   │   │   ├── common/            # Guards, filters, decorators (@Sanitize), erasure + retention crons
 │   │   │   ├── config/            # Zod env schema
 │   │   │   ├── contact/           # Contact form
 │   │   │   ├── email/             # Resend transactional email
@@ -333,7 +333,7 @@ User 1:1 Subscription
 1. Login (email/password OR OAuth: Google / Microsoft / Azure AD)
    → Optional 2FA challenge (TOTP via speakeasy)
    → Access token (HttpOnly cookie, ~15 min)
-   → Refresh token (HttpOnly cookie, 7 days, rotated)
+   → Refresh token (HttpOnly cookie, 30 days, rotated)
 2. Access token expires → silent refresh via /auth/refresh
 3. Refresh token rotation on every use; reuse triggers session revoke
 4. Max 5 concurrent sessions/user (oldest evicted)
@@ -355,7 +355,24 @@ User 1:1 Subscription
 | **CSRF**          | csrf-csrf (Double Submit Cookie, optional)                                                                    |
 | **Passwords**     | argon2id, strength regex, HIBP Pwned-Passwords check (k-anonymity, fail-open, `PWNED_PASSWORD_CHECK_ENABLED`) |
 | **Audit**         | Winston daily-rotated logs (90-day retention)                                                                 |
-| **Monitoring**    | Sentry (errors + performance)                                                                                 |
+| **Monitoring**    | Sentry (errors + performance) — server-side (`@sentry/node`) **and** browser-side (`@sentry/nextjs`, 10 % trace sample, no session replay, `sendDefaultPii: false`) |
+
+### Data protection (GDPR)
+
+The privacy policy used to be a hand-maintained page with no coupling to the
+code, and it drifted into describing an architecture that never existed while
+omitting three recipients personal data is actually sent to (issue #806). The
+fix was structural, not textual:
+
+| Concern | Implementation |
+| ------- | -------------- |
+| **Erasure (Art. 17)** | `common/erasure/UserErasureService` is the single implementation, shared by `AuthService.deleteAccount` and `DELETE /admin/users/:email`. It deletes storage by **prefix** (`<userId>/`, `applications/<id>/`, `profiles/<id>/`) plus the `llm_usage_events` rows (no `User` FK, so they must go **before** the user row). `CleanupCron` hard-deletes through `ApplicationsService.hardDelete()` / `JobPostingsService.hardDeleteJobPosting()` — the storage cleanup hangs off the deletion path, never beside it |
+| **Retention (Art. 5(1)(e))** | Daily crons: soft-deleted applications/job postings 30 d · orphaned uploads `UPLOAD_RETENTION_DAYS` (7) · `application_email_events` `MAILBOX_EVENT_RETENTION_DAYS` (180) · `llm_usage_events` `LLM_USAGE_RETENTION_DAYS` (90) · sessions/refresh tokens 30 d. Authoritative list: [docs/security/DELETION_CONCEPT.md](docs/security/DELETION_CONCEPT.md) |
+| **Data minimisation** | Email tracking runs the local matcher **before** the LLM classification (unmatched mail is neither transmitted nor stored), caps the transmitted body at 1,200 chars, never persists bodies, and skips `OTHER` classifications entirely |
+| **Consent that does something (Art. 7(3))** | The analytics switch suppresses the `llm_usage_events` row at the sink; `profilePublic` was removed rather than left as a switch with no effect |
+| **Access + portability (Art. 15/20)** | `exportUserData` covers every user-scoped relation, carries the Art. 15(1)(c)–(h) disclosure, and excludes credential material by `select` rather than post-filtering |
+| **Recipients (Art. 28/13(1)(e))** | [docs/security/SUBPROCESSORS.md](docs/security/SUBPROCESSORS.md) is the source of truth; `check:subprocessors` fails CI when a credential env var appears for an undocumented service, and `(legal)/datenschutz` §6 mirrors the file |
+| **Records** | [Art. 30](docs/security/RECORDS_OF_PROCESSING.md) · [Art. 32](docs/security/TOM.md) · [Art. 35 pre-screening](docs/security/DPIA_PRESCREENING.md) |
 
 ## 🔧 Technology Stack
 
@@ -454,6 +471,8 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/auth/logout`                     | Logout                                                                      |
 | POST     | `/auth/2fa/setup`                  | TOTP enrollment                                                             |
 | POST     | `/auth/2fa/verify`                 | TOTP verification                                                           |
+| GET      | `/auth/export`                     | GDPR Art. 15/20 data export (JSON, credentials excluded by `select`)        |
+| DELETE   | `/auth/account`                    | GDPR Art. 17 deletion → `UserErasureService` (storage prefixes + telemetry) |
 | GET/PUT  | `/profile`                         | Profile (differential)                                                      |
 | POST/GET/DELETE | `/profile/photo`            | Bewerbungsfoto (JPEG/PNG ≤ 2 MB; only rendered when `showPhoto` is enabled) |
 | POST     | `/resume-parser/parse`             | Resume → profile                                                            |
@@ -574,7 +593,7 @@ GitHub Actions
 | **Circuit breaker** | `opossum` around LLM calls                               |
 | **DB indexes**      | Targeted indexes; cursor-based pagination                |
 | **Compression**     | gzip middleware                                          |
-| **Soft delete**     | Logical deletion across user data                        |
+| **Soft delete**     | Logical deletion across user data — `CleanupCron` hard-deletes the row *and* its stored files after 30 days |
 | **SSE**             | Real-time pipeline status                                |
 | **N+1 prevention**  | Prisma `include`/select tuning                           |
 | **CDN**             | Cloudflare in front of Workers                           |
