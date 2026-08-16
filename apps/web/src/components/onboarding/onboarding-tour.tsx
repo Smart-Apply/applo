@@ -160,8 +160,8 @@ export function OnboardingTour() {
 
               {bullets.length > 0 && (
                 <ul className="space-y-2">
-                  {bullets.map((bullet) => (
-                    <li key={bullet} className="flex gap-2 text-sm leading-relaxed">
+                  {bullets.map((bullet, index) => (
+                    <li key={`${step.id}-${index}`} className="flex gap-2 text-sm leading-relaxed">
                       <Check className="text-brand mt-0.5 h-4 w-4 flex-none" />
                       <span className="text-muted-foreground">{bullet}</span>
                     </li>
