@@ -20,7 +20,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { SubscriptionTier } from '../generated/prisma/client';
-import { LlmUsageService } from '../llm/usage/llm-usage.service';
+import { UserErasureService } from '../common/erasure/user-erasure.service';
 import { AdminGuard } from './admin.guard';
 
 class SetTierDto {
@@ -52,7 +52,7 @@ export class AdminController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly subscriptions: SubscriptionService,
-    private readonly llmUsage: LlmUsageService,
+    private readonly userErasure: UserErasureService,
   ) {}
 
   /**
@@ -140,9 +140,9 @@ export class AdminController {
    *
    * Cascade: Prisma `onDelete: Cascade` cleans up Profile, Applications,
    * JobPostings, Sessions, RefreshTokens, UserPreferences, OAuthProviders,
-   * MailboxConnections, etc. Stored PDF files in R2/disk are NOT deleted
-   * here \u2014 same trade-off as `AuthService.deleteAccount`. A separate
-   * cleanup job handles orphaned blobs.
+   * MailboxConnections, etc. Object storage (generated PDFs, uploaded
+   * originals, Bewerbungsfoto) is purged by prefix through the shared
+   * `UserErasureService`, exactly as in `AuthService.deleteAccount`.
    *
    * Idempotent-ish: returns 404 if the user is already gone.
    *
@@ -165,16 +165,13 @@ export class AdminController {
       throw new NotFoundException(`User not found: ${email}`);
     }
 
-    // GDPR erasure for llm_usage_events (audit F11): the table has no User
-    // FK, so the cascade below cannot reach it. Runs BEFORE the delete and
-    // is allowed to throw — an orphaned pseudonymous trail is worse than a
-    // retried deletion.
-    await this.llmUsage.deleteEventsForActor(user.id);
-
-    await this.prisma.user.delete({ where: { id: user.id } });
+    // Shared Art. 17 erasure path: cascades the user row AND purges the two
+    // stores the cascade cannot reach — object storage (generated PDFs,
+    // uploads, Bewerbungsfoto) and the pseudonymous `llm_usage_events` trail.
+    const erasure = await this.userErasure.eraseUser(user.id);
 
     this.logger.warn(
-      `Admin ${actorEmail} permanently deleted user ${user.email} (id=${user.id}, provider=${user.provider ?? 'local'})`,
+      `Admin ${actorEmail} permanently deleted user ${user.email} (id=${user.id}, provider=${user.provider ?? 'local'}, storagePrefixesPurged=${erasure.storagePrefixesPurged})`,
     );
 
     return {

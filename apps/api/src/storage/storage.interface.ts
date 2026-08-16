@@ -1,3 +1,14 @@
+/**
+ * One object as returned by {@link StorageProvider.list}. `lastModified` is
+ * what the orphaned-upload sweep ages objects out by, so a provider that
+ * cannot supply it must return `null` rather than guessing.
+ */
+export interface StorageObject {
+  key: string;
+  size: number;
+  lastModified: Date | null;
+}
+
 export interface StorageProvider {
   /**
    * Upload a file to storage
@@ -21,6 +32,28 @@ export interface StorageProvider {
    * @returns Promise<void>
    */
   delete(key: string): Promise<void>;
+
+  /**
+   * List every object under a key prefix.
+   *
+   * Used by the GDPR erasure paths and the orphaned-upload sweep — both need
+   * to reason about objects the database no longer references, so they cannot
+   * work off stored keys alone.
+   *
+   * @param prefix - Key prefix, e.g. `"<userId>/"`
+   */
+  list(prefix: string): Promise<StorageObject[]>;
+
+  /**
+   * Delete every object under a key prefix.
+   *
+   * Erasure (Art. 17 DSGVO) must not depend on the caller remembering which
+   * keys exist — a forgotten key is an unbounded retention of personal data.
+   *
+   * @param prefix - Key prefix, e.g. `"<userId>/"`
+   * @returns Number of objects deleted
+   */
+  deleteByPrefix(prefix: string): Promise<number>;
 
   /**
    * Get a signed URL for temporary file access (Azure SAS or local path)

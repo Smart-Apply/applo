@@ -17,8 +17,7 @@ import { PwnedPasswordService } from './services/pwned-password.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '../config/config.service';
 import { ConfigModule } from '../config/config.module';
-import { StorageModule } from '../storage/storage.module';
-import { LLMModule } from '../llm/llm.module';
+import { UserErasureModule } from '../common/erasure/user-erasure.module';
 
 /**
  * OAuth strategies (Google, Microsoft) crash on instantiation when their
@@ -68,10 +67,9 @@ const microsoftStrategyProvider: Provider = {
     }),
     ScheduleModule.forRoot(),
     ConfigModule,
-    StorageModule,
-    // LlmUsageService for the GDPR erasure hook in deleteAccount (audit F11).
-    // No cycle: LLMModule imports only HttpModule.
-    LLMModule,
+    // Shared Art. 17 erasure path (storage prefixes + pseudonymous usage
+    // trail + user row), also used by the admin deletion endpoint.
+    UserErasureModule,
   ],
   controllers: [AuthController, SessionsController, TwoFactorController],
   providers: [

@@ -2,18 +2,39 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConfigService } from '../../config/config.service';
+import { ApplicationsService } from '../../applications/applications.service';
+import { JobPostingsService } from '../../job-postings/job-postings.service';
 
 /**
  * Cleanup cron job for soft-deleted items
  * Hard deletes items that have been soft-deleted for more than 30 days
+ *
+ * The cron deliberately goes through `ApplicationsService.hardDelete()` /
+ * `JobPostingsService.hardDeleteJobPosting()` instead of issuing its own
+ * `deleteMany`. Those methods own the storage cleanup; the bulk delete that
+ * used to live here removed the database row and left the generated PDFs
+ * (full résumés) in R2 forever — an unbounded retention of personal data
+ * (Art. 17 / Art. 5(1)(e) DSGVO). Deletion has to hang off the one path that
+ * knows about the files, never beside it.
  */
 @Injectable()
 export class CleanupCron {
   private readonly logger = new Logger(CleanupCron.name);
 
+  /**
+   * Safety cap per run. Deleting row-by-row costs storage round-trips, so a
+   * backlog is drained across runs instead of in one unbounded job.
+   */
+  private static readonly BATCH_SIZE = 500;
+
+  /** Items stay restorable for this long after a soft delete. */
+  private static readonly RETENTION_DAYS = 30;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly applicationsService: ApplicationsService,
+    private readonly jobPostingsService: JobPostingsService,
   ) {}
 
   /**
@@ -32,23 +53,35 @@ export class CleanupCron {
     const startTime = Date.now();
 
     try {
-      // Calculate cutoff date (30 days ago)
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-      // Hard delete applications that were soft-deleted more than 30 days ago
-      const result = await this.prisma.application.deleteMany({
+      const expired = await this.prisma.application.findMany({
         where: {
           deletedAt: {
             not: null,
-            lt: thirtyDaysAgo,
+            lt: CleanupCron.cutoff(),
           },
         },
+        select: { id: true, userId: true },
+        take: CleanupCron.BATCH_SIZE,
       });
 
-      const duration = Date.now() - startTime;
+      let deleted = 0;
+      let failed = 0;
+      for (const application of expired) {
+        try {
+          await this.applicationsService.hardDelete(application.userId, application.id);
+          deleted++;
+        } catch (error) {
+          // One bad row must not stall the sweep — the next run retries it.
+          failed++;
+          this.logger.warn(
+            `Failed to hard-delete application ${application.id}: ${errorMessage(error)}`,
+          );
+        }
+      }
 
+      const duration = Date.now() - startTime;
       this.logger.log(
-        `Application cleanup completed. Deleted ${result.count} applications older than 30 days in ${duration}ms`,
+        `Application cleanup completed. Deleted ${deleted} applications (${failed} failed) older than ${CleanupCron.RETENTION_DAYS} days in ${duration}ms`,
       );
     } catch (error) {
       this.logger.error('Application cleanup failed', error);
@@ -71,23 +104,34 @@ export class CleanupCron {
     const startTime = Date.now();
 
     try {
-      // Calculate cutoff date (30 days ago)
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-      // Hard delete job postings that were soft-deleted more than 30 days ago
-      const result = await this.prisma.jobPosting.deleteMany({
+      const expired = await this.prisma.jobPosting.findMany({
         where: {
           deletedAt: {
             not: null,
-            lt: thirtyDaysAgo,
+            lt: CleanupCron.cutoff(),
           },
         },
+        select: { id: true, userId: true },
+        take: CleanupCron.BATCH_SIZE,
       });
 
-      const duration = Date.now() - startTime;
+      let deleted = 0;
+      let failed = 0;
+      for (const jobPosting of expired) {
+        try {
+          await this.jobPostingsService.hardDeleteJobPosting(jobPosting.userId, jobPosting.id);
+          deleted++;
+        } catch (error) {
+          failed++;
+          this.logger.warn(
+            `Failed to hard-delete job posting ${jobPosting.id}: ${errorMessage(error)}`,
+          );
+        }
+      }
 
+      const duration = Date.now() - startTime;
       this.logger.log(
-        `Job postings cleanup completed. Deleted ${result.count} job postings older than 30 days in ${duration}ms`,
+        `Job postings cleanup completed. Deleted ${deleted} job postings (${failed} failed) older than ${CleanupCron.RETENTION_DAYS} days in ${duration}ms`,
       );
     } catch (error) {
       this.logger.error('Job postings cleanup failed', error);
@@ -117,4 +161,12 @@ export class CleanupCron {
       this.logger.error('Materialized views refresh failed', error);
     }
   }
+
+  private static cutoff(): Date {
+    return new Date(Date.now() - CleanupCron.RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

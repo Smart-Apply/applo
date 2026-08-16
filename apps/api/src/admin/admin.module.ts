@@ -1,18 +1,18 @@
 import { Module } from '@nestjs/common';
 import { AdminController } from './admin.controller';
 import { AdminGuard } from './admin.guard';
-import { LLMModule } from '../llm/llm.module';
+import { UserErasureModule } from '../common/erasure/user-erasure.module';
 
 /**
  * AdminModule
  *
  * Admin-only endpoints (allow-listed via `ADMIN_EMAILS`). PrismaService and
  * SubscriptionService are already global, so we only need to declare the
- * controller + guard here. LLMModule provides LlmUsageService for the GDPR
- * erasure hook on admin account deletion (audit F11).
+ * controller + guard here. UserErasureModule provides the shared Art. 17
+ * erasure path (storage prefixes + pseudonymous usage trail + user row).
  */
 @Module({
-  imports: [LLMModule],
+  imports: [UserErasureModule],
   controllers: [AdminController],
   providers: [AdminGuard],
 })

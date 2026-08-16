@@ -30,8 +30,7 @@ import {
   ForbiddenWithCode,
 } from '../common/exceptions/coded-http.exception';
 import { SubscriptionService } from '../subscription/subscription.service';
-import { StorageService } from '../storage/storage.service';
-import { LlmUsageService } from '../llm/usage/llm-usage.service';
+import { UserErasureService } from '../common/erasure/user-erasure.service';
 import { PwnedPasswordService } from './services/pwned-password.service';
 
 interface TokenPair {
@@ -69,8 +68,7 @@ export class AuthService {
     private subscriptionService: SubscriptionService,
     private twoFactorService: TwoFactorService,
     private emailService: EmailService,
-    private storageService: StorageService,
-    private llmUsageService: LlmUsageService,
+    private userErasureService: UserErasureService,
     private pwnedPasswordService: PwnedPasswordService,
   ) {}
 
@@ -618,57 +616,23 @@ export class AuthService {
       }
     }
 
-    // Get all applications to clean up storage files
-    const applications = await this.prisma.application.findMany({
-      where: { userId },
-      select: { coverLetterFileKey: true, resumeFileKey: true },
-    });
+    // Collect every storage prefix this account owns. Prefixes, not keys:
+    // the previous key-based cleanup only knew about generated PDFs and the
+    // Bewerbungsfoto, so every uploaded original (résumés, job-posting files
+    // under `<userId>/`) survived the deletion indefinitely — Art. 17 /
+    // Art. 5(1)(e) DSGVO. `UserErasureService` owns the full list so the
+    // admin deletion path cannot drift from this one.
+    const erasure = await this.userErasureService.eraseUser(userId);
 
-    // Collect file keys to delete (will be handled by cascade delete from DB,
-    // but we need to track them for storage cleanup)
-    const fileKeysToDelete: string[] = [];
-    for (const app of applications) {
-      if (app.coverLetterFileKey) fileKeysToDelete.push(app.coverLetterFileKey);
-      if (app.resumeFileKey) fileKeysToDelete.push(app.resumeFileKey);
-    }
-
-    // The Bewerbungsfoto is personal data (GDPR) — its storage object MUST go
-    // with the account, not just the DB reference.
-    const profile = await this.prisma.profile.findUnique({
-      where: { userId },
-      select: { photoKey: true },
-    });
-    if (profile?.photoKey) fileKeysToDelete.push(profile.photoKey);
-
-    // Log account deletion event before deleting
+    // Logged after the fact so the audit trail records what actually
+    // happened — a failed erasure must not leave an ACCOUNT_DELETED entry.
     if (req) {
       this.auditLogger.logSecurityEvent('ACCOUNT_DELETED', user.email, req, user.id, {
-        applicationsDeleted: applications.length,
-        filesDeleted: fileKeysToDelete.length,
+        applicationsDeleted: erasure.applicationsDeleted,
+        storagePrefixesPurged: erasure.storagePrefixesPurged,
+        llmUsageEventsDeleted: erasure.llmUsageEventsDeleted,
       });
     }
-
-    // GDPR erasure for llm_usage_events (audit F11): keyed by actorHash with
-    // no User FK, so the cascade delete below cannot reach it. Runs BEFORE
-    // the delete and is allowed to throw — the user can retry the deletion,
-    // whereas a silently orphaned pseudonymous trail could never be erased.
-    await this.llmUsageService.deleteEventsForActor(userId);
-
-    // Delete user (cascade will delete Profile, Applications, JobPostings, Sessions, RefreshTokens, UserPreferences)
-    await this.prisma.user.delete({
-      where: { id: userId },
-    });
-
-    // Best-effort storage cleanup (photo + generated PDFs). Failures are
-    // logged, never surfaced — the account is already gone; an orphaned
-    // object must not break the deletion flow.
-    await Promise.all(
-      fileKeysToDelete.map((key) =>
-        this.storageService.delete(key).catch((err) => {
-          this.logger.warn(`Account cleanup: failed to delete storage object ${key}: ${err.message}`);
-        }),
-      ),
-    );
   }
 
   // ==========================================
