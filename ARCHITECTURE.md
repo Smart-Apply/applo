@@ -117,8 +117,8 @@ applo/
 │   └── web/                  # @applo/web (Next.js 16)
 │       ├── messages/              # next-intl catalogs (de/en/fr/es/pt/it, one JSON per namespace)
 │       ├── src/
-│       │   ├── app/               # App Router (route groups)
-│       │   ├── components/        # UI + shadcn/ui + landing (server sections) + pdf + analytics (recharts) + i18n + onboarding tour
+│       │   ├── app/               # App Router (route groups + per-group template.tsx transition, per-route loading.tsx skeletons)
+│       │   ├── components/        # UI + shadcn/ui + landing (server sections) + pdf + analytics (recharts) + i18n + onboarding tour + shared loading skeletons
 │       │   ├── hooks/             # Custom React hooks
 │       │   ├── i18n/              # next-intl config (cookie-based de/en/fr/es/pt/it, no URL prefixes)
 │       │   ├── lib/               # api-client, providers, i18n-runtime, utils
@@ -397,6 +397,7 @@ User 1:1 Subscription
 | Charts     | recharts (Analytics activity chart)                     |
 | Editor     | Tiptap 3 (StarterKit + TextStyle)                       |
 | Toast      | Sonner                                                  |
+| Motion     | CSS-only motion layer in `globals.css` (route transitions via `template.tsx`, skeleton shimmer, indeterminate progress) + `tw-animate-css`; global `prefers-reduced-motion` guard |
 | Files      | react-dropzone · jszip                                  |
 | Sanitize   | isomorphic-dompurify                                    |
 | Markdown   | marked · turndown                                       |

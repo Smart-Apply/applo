@@ -954,3 +954,134 @@ h1, h2, h3, .font-heading {
 .tour-active {
   animation: tour-glow 2s ease-in-out infinite;
 }
+
+/* ============ MOTION LAYER ============
+   Shared enter/loading animations. Every transition here is compositor-only
+   (opacity + transform), so route changes never contribute to CLS.
+   `animation-fill-mode: backwards` is load-bearing: it applies the *first*
+   keyframe before the run and drops all animation styles afterwards, so the
+   element is left with `transform: none` and never becomes a containing
+   block for `position: fixed` descendants (modals, overlays). */
+
+@keyframes app-enter {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes app-fade-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Route/page transition — used by the route-group template.tsx files. */
+.motion-page-enter {
+  animation: app-enter 260ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* In-page view swap (loading -> loaded, step -> step). */
+.motion-view-enter {
+  animation: app-enter 200ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* Opacity-only swap for content that must not move (e.g. under a fixed header). */
+.motion-fade-enter {
+  animation: app-fade-enter 200ms ease-out backwards;
+}
+
+/* Staggered list reveal: set `--motion-index` per item. */
+.motion-stagger {
+  animation: app-enter 260ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  animation-delay: calc(var(--motion-index, 0) * 45ms);
+}
+
+/* Skeleton sweep — layered on top of the base pulse for a calmer, more
+   "premium" loading read than a spinner. The host element supplies
+   `relative overflow-hidden` via Tailwind so consumers can still override
+   positioning through `cn()`; this rule only owns the sweep itself. */
+@keyframes app-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.motion-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  /* The skeleton base (`bg-muted`) is near-white in the light theme, so a
+     classic white highlight would be invisible — sweep a subtle ink tint
+     instead. The dark theme keeps the conventional light sweep. */
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgba(15, 23, 42, 0.055),
+    transparent
+  );
+  animation: app-shimmer 1.8s ease-in-out infinite;
+}
+
+.dark .motion-shimmer::after {
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.07),
+    transparent
+  );
+}
+
+/* Indeterminate progress bar — for "work started, no percentage yet"
+   (the PENDING window before the first SSE progress event arrives). */
+@keyframes app-progress-indeterminate {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
+.motion-progress-indeterminate {
+  width: 40%;
+  animation: app-progress-indeterminate 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* ---- prefers-reduced-motion (global) ----
+   Fast-forward rather than `animation: none`: Radix unmounts exit animations
+   on `animationend`, so removing the animation outright would leave popovers
+   and dialogs mounted forever. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Loading indicators are the one exception: a frozen spinner reads as
+     "broken" and removes the only signal that work is still running. Slow,
+     steady, non-vestibular motion is kept instead. */
+  .animate-spin,
+  .motion-progress-indeterminate {
+    animation-duration: 1.6s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  .animate-pulse {
+    animation-duration: 2.4s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  /* The sweep is decorative on top of the pulse — drop it entirely. */
+  .motion-shimmer::after {
+    display: none;
+  }
+
+  /* The tour ring is an affordance, not decoration: it is the only thing that
+     marks the element the tour is pointing at. Clamping the pulse to a single
+     0.01ms run would leave no fill and the ring would vanish, so swap the
+     animation for the equivalent static ring. */
+  .tour-active {
+    animation: none !important;
+    box-shadow: 0 0 0 5px rgba(85, 129, 199, 0.4);
+  }
+}

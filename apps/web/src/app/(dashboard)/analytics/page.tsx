@@ -14,6 +14,7 @@ import type { AnalyticsOverview } from '@/types';
 import type { AnalyticsRange } from '@/lib/analytics-utils';
 
 import { AnalyticsSkeleton } from '@/components/analytics/analytics-skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { AnalyticsUpgrade } from '@/components/analytics/analytics-upgrade';
 import { AnalyticsEmptyState } from '@/components/analytics/analytics-empty-state';
 import { InsightStrip } from '@/components/analytics/insight-strip';
@@ -62,7 +63,11 @@ export default function AnalyticsPage() {
   );
 
   if (gateLoading || isLoading) {
-    return <AnalyticsSkeleton />;
+    return (
+      <SkeletonScreen>
+        <AnalyticsSkeleton />
+      </SkeletonScreen>
+    );
   }
 
   if (!hasAccess) {

@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import {
   Tooltip,
   TooltipContent,
@@ -271,7 +272,9 @@ export default function InterviewsPage() {
             {showIntro ? (
               <InterviewIntro onStart={() => setDialogOpen(true)} />
             ) : !stats ? (
-              <DashboardSkeleton />
+              <SkeletonScreen>
+                <DashboardSkeleton />
+              </SkeletonScreen>
             ) : (
               <div className="space-y-6">
                 {/* Stat strip */}
@@ -334,7 +337,7 @@ export default function InterviewsPage() {
                         </div>
                       </div>
 
-                      <div className="mt-3 divide-y">
+                      <div className="mt-3 divide-y" aria-busy={sessionsLoading}>
                         {sessionsLoading ? (
                           <SessionRowsSkeleton />
                         ) : sessionsData?.sessions?.length ? (
