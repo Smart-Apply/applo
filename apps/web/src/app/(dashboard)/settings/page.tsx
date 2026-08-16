@@ -7,7 +7,8 @@
  *     sidebar dropdown (SettingsNavGroup) and search can deep-link into it.
  *   • Aktiviert/Deaktiviert buttons → real <Switch> rows (SettingToggleRow).
  *   • Theme <Select> → visual ThemeCards.
- *   • Profile "Speichern" button → sticky ProfileSaveBar (only on dirty edits).
+ *   • Profile "Speichern" button → debounced auto-save + the shared
+ *     SaveStatus indicator (product-wide save model).
  *   • Added SettingsSearch (find any setting), icon section headers, a
  *     mobile-only section pill strip (the desktop nav lives in the sidebar).
  *
@@ -21,7 +22,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -57,11 +58,15 @@ import {
 } from '@/lib/settings-sections';
 import { SettingToggleRow } from '@/components/settings/setting-toggle-row';
 import { ThemeCards } from '@/components/settings/theme-cards';
-import { ProfileSaveBar } from '@/components/settings/profile-save-bar';
 import { SettingsSearch } from '@/components/settings/settings-search';
+import { SaveStatus } from '@/components/ui/save-status';
+import { useSaveStatus, type SaveState } from '@/hooks/use-save-status';
 import { useLocaleSwitch } from '@/components/i18n/language-switcher';
 import { locales, type Locale } from '@/i18n/config';
 import { useOnboardingTourStore } from '@/stores/onboarding-store';
+
+/** Same debounce as the application editor — one auto-save rhythm product-wide. */
+const PROFILE_AUTOSAVE_MS = 800;
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -75,7 +80,7 @@ export default function SettingsPage() {
   const setSection = (id: SettingsSectionId) =>
     router.push(`/settings?section=${id}`, { scroll: false });
 
-  const { user, clearAuth, updateUser } = useAuthStore();
+  const { user, clearAuth, updateUser, hasHydrated } = useAuthStore();
   const openTour = useOnboardingTourStore((state) => state.openTour);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -85,7 +90,10 @@ export default function SettingsPage() {
   // Form states
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
-  const [email] = useState(user?.email || '');
+  const email = user?.email || '';
+  const [nameSeeded, setNameSeeded] = useState(false);
+  // Payload of the last auto-save attempt; keeps a failing save from looping.
+  const lastAttemptedName = useRef<string | null>(null);
 
   // Password change
   const [currentPassword, setCurrentPassword] = useState('');
@@ -101,6 +109,33 @@ export default function SettingsPage() {
 
   const profileDirty =
     firstName !== (user?.firstName || '') || lastName !== (user?.lastName || '');
+  // A blank field mid-retype is a transient state, not an intent — auto-saving
+  // it would wipe the stored name. Submitting explicitly (Enter) still does.
+  const clearsStoredName =
+    (!firstName.trim() && !!user?.firstName) || (!lastName.trim() && !!user?.lastName);
+
+  // Everything on this page persists on its own; the indicator is the visible
+  // confirmation and the retry affordance when a save fails.
+  const profileSave = useSaveStatus();
+  const { track: trackSave, retry: retrySave } = profileSave;
+  // A pending or failed save wins over "dirty": the fields still differ from
+  // the stored user while the request is in flight.
+  const saveState: SaveState =
+    profileSave.state === 'saving' || profileSave.state === 'error'
+      ? profileSave.state
+      : profileDirty
+        ? 'dirty'
+        : profileSave.state;
+
+  // The auth store rehydrates asynchronously, so the inputs are seeded once the
+  // user is known — otherwise the auto-save would persist the empty initial
+  // state over the real name.
+  useEffect(() => {
+    if (nameSeeded || !hasHydrated || !user) return;
+    setFirstName(user.firstName || '');
+    setLastName(user.lastName || '');
+    setNameSeeded(true);
+  }, [nameSeeded, hasHydrated, user]);
 
   // User preferences
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
@@ -120,31 +155,27 @@ export default function SettingsPage() {
     loadPreferences();
   }, [t]);
 
-  const saveProfile = async () => {
-    setIsLoading(true);
-    try {
+  const saveProfile = useCallback(async () => {
+    lastAttemptedName.current = JSON.stringify({ firstName, lastName });
+    await trackSave(async () => {
       const updatedUser = await api.auth.updateProfile({ firstName, lastName });
       updateUser({ firstName: updatedUser.firstName, lastName: updatedUser.lastName });
-      toast.success(t('account.toasts.profileUpdated'));
-    } catch (error) {
-      if (error instanceof ApiError) {
-        toast.error(error.message || t('account.toasts.profileUpdateError'));
-      } else {
-        toast.error(t('account.toasts.profileUpdateError'));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    }, t('account.toasts.profileUpdateError'));
+  }, [firstName, lastName, updateUser, trackSave, t]);
+
+  // Debounced auto-save for the name fields. The attempted payload is
+  // remembered so a failed save is not retried on a loop — recovery goes
+  // through the indicator's retry action.
+  useEffect(() => {
+    if (!nameSeeded || !profileDirty || clearsStoredName) return;
+    if (lastAttemptedName.current === JSON.stringify({ firstName, lastName })) return;
+    const timer = setTimeout(() => void saveProfile(), PROFILE_AUTOSAVE_MS);
+    return () => clearTimeout(timer);
+  }, [nameSeeded, profileDirty, clearsStoredName, firstName, lastName, saveProfile]);
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
     void saveProfile();
-  };
-
-  const discardProfile = () => {
-    setFirstName(user?.firstName || '');
-    setLastName(user?.lastName || '');
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -213,17 +244,10 @@ export default function SettingsPage() {
 
   const handleUpdatePreference = async (key: keyof UserPreferences, value: boolean | string) => {
     if (!preferences) return;
-    try {
+    await trackSave(async () => {
       const updatedPreferences = await api.userPreferences.update({ [key]: value });
       setPreferences(updatedPreferences);
-      toast.success(t('page.toasts.preferenceSaved'));
-    } catch (error) {
-      if (error instanceof ApiError) {
-        toast.error(error.message || t('page.toasts.preferenceSaveError'));
-      } else {
-        toast.error(t('page.toasts.preferenceSaveError'));
-      }
-    }
+    }, t('page.toasts.preferenceSaveError'));
   };
 
   const PrefLoader = () => (
@@ -316,7 +340,7 @@ export default function SettingsPage() {
                     <Lock className="h-3 w-3" /> {t('account.profile.emailLinked')}
                   </p>
                 </div>
-                {/* submit handled by the sticky ProfileSaveBar; this enables Enter-to-save */}
+                {/* fields auto-save; this only makes Enter flush the change immediately */}
                 <button type="submit" className="hidden" aria-hidden tabIndex={-1} />
               </form>
             </CardContent>
@@ -671,13 +695,8 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Sticky save bar — profile edits only */}
-      <ProfileSaveBar
-        visible={section === 'account' && profileDirty}
-        saving={isLoading}
-        onSave={saveProfile}
-        onDiscard={discardProfile}
-      />
+      {/* Product-wide save indicator — every change here persists on its own */}
+      <SaveStatus state={saveState} onRetry={retrySave} variant="floating" />
     </div>
   );
 }

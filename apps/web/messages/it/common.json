@@ -25,6 +25,19 @@
     "loading": "Caricamento...",
     "understood": "Ho capito"
   },
+  "saveStatus": {
+    "saving": "Salvataggio …",
+    "dirty": "Modifiche non salvate",
+    "saved": "Tutte le modifiche sono state salvate",
+    "error": "Salvataggio non riuscito",
+    "retry": "Riprova"
+  },
+  "unsavedChanges": {
+    "title": "Modifiche non salvate",
+    "description": "I dati inseriti in questo modulo non sono ancora stati salvati. Se chiudi ora, andranno persi.",
+    "keepEditing": "Continua a modificare",
+    "discard": "Annulla le modifiche"
+  },
   "loadingMessages": {
     "pdfPreview": "Caricamento anteprima PDF...",
     "editor": "Caricamento editor...",

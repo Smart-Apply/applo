@@ -4,7 +4,6 @@
     "description": "Gestiona tu cuenta, la seguridad y tus preferencias.",
     "toasts": {
       "loadError": "Error al cargar los ajustes",
-      "preferenceSaved": "Ajuste guardado",
       "preferenceSaveError": "Error al guardar el ajuste"
     }
   },
@@ -91,7 +90,6 @@
       "deleting": "Eliminando..."
     },
     "toasts": {
-      "profileUpdated": "Perfil actualizado correctamente",
       "profileUpdateError": "Error al actualizar el perfil",
       "emailConfirmRequired": "Introduce tu dirección de correo electrónico para confirmar",
       "passwordRequired": "Introduce tu contraseña",
@@ -237,10 +235,5 @@
       "cancel": "Cancelar",
       "connect": "Conectar"
     }
-  },
-  "saveBar": {
-    "unsavedChanges": "Cambios sin guardar",
-    "discard": "Descartar",
-    "save": "Guardar"
   }
 }

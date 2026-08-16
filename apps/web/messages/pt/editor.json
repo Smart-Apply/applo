@@ -31,11 +31,6 @@
       "resume": "Clica em qualquer texto para o editar.",
       "coverLetter": "Clica dentro da carta de apresentação para editar o texto, a saudação ou os parágrafos."
     },
-    "saveStatus": {
-      "saving": "A guardar…",
-      "dirty": "Alterações não guardadas",
-      "saved": "Alterações guardadas automaticamente"
-    },
     "export": {
       "button": "Exportar",
       "tooltip": "Exportar PDFs",

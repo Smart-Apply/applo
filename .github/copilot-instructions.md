@@ -243,7 +243,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
     - `<segment>/loading.tsx` - route-level skeleton fallbacks built from `components/shared/skeletons.tsx`
   - `page.tsx` - Landing page (**Server Component**: `generateMetadata` + JSON-LD, sections composed from `components/landing/*`)
 - `components/`
-  - `ui/` - shadcn/ui components
+  - `ui/` - shadcn/ui components, plus the shared save-feedback primitives `save-status.tsx` (the single save indicator) and `unsaved-changes-dialog.tsx` (`useUnsavedChangesGuard` for modal composition forms)
   - `forms/` - Custom form components
   - `landing/` - Landing sections (server) + the three client-only drivers (`applo-companion`, `cta-mascot`, `scroll-reveal`)
   - `pdf/` - PDF preview & editing components
@@ -265,8 +265,11 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `hooks/`
   - `use-profile.ts` - Profile data fetching & mutations
   - `use-applications.ts` - Applications data fetching & mutations
+  - `use-save-status.ts` - Shared save-state machine (`idle → dirty → saving → saved | error`) with a retry for the failed save
 - `types/`
   - `index.ts` - TypeScript types (User, Profile, JobPosting, Application)
+
+**Saving model (product-wide):** edits persist automatically — immediately, or debounced (800 ms) in the application editor and the `/settings` name form — and every surface reports through `useSaveStatus()` + `<SaveStatus>` instead of its own toast/bar. Auto-saved changes get no success toast; failures show the error state plus a retry (indicator action and toast). Explicit saving survives only in the profile's modal add/edit dialogs, which guard an accidental close with `useUnsavedChangesGuard` + `<UnsavedChangesDialog>`.
 
 ## Data Model (Prisma 6)
 31 models in `apps/api/prisma/schema.prisma` (the highlights below are a

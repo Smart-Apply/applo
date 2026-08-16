@@ -506,7 +506,6 @@
   },
   "hooks": {
     "updateError": "Error updating profile",
-    "updateSuccess": "Profile updated successfully",
     "parseError": "Error analyzing résumé"
   },
   "sections": {

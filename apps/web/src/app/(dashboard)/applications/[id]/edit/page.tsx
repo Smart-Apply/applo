@@ -12,7 +12,6 @@ import {
   Check,
   Download,
   Lock,
-  Loader2,
   Pencil,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,6 +38,8 @@ import {
 import { useResumeTemplates } from '@/hooks/use-templates';
 import { useProfilePhoto } from '@/hooks/use-profile';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
+import { useSaveStatus, type SaveState } from '@/hooks/use-save-status';
+import { SaveStatus } from '@/components/ui/save-status';
 import { parseResumeDraft, normalizeResumeForSave } from '@/lib/resume';
 import type { ResumeData } from '@/types';
 import { toast } from 'sonner';
@@ -142,6 +143,13 @@ export default function ApplicationResumeEditorPage() {
   const lastAttemptedResume = useRef<string | null>(null);
   const lastAttemptedCover = useRef<string | null>(null);
 
+  // One save-state machine per document tab — same primitives as /profile and
+  // /settings, so the auto-save reports identically across the product.
+  const resumeSave = useSaveStatus();
+  const coverSave = useSaveStatus();
+  const { track: trackResumeSave } = resumeSave;
+  const { track: trackCoverSave } = coverSave;
+
   const resumeText = application?.resumeText ?? null;
   const coverLetterText = application ? (application.coverLetterText ?? '') : null;
 
@@ -213,8 +221,8 @@ export default function ApplicationResumeEditorPage() {
     if (!parsedResume) return;
     const snapshot = JSON.stringify(parsedResume);
     lastAttemptedResume.current = snapshot;
-    try {
-      const normalized = normalizeResumeForSave(parsedResume);
+    const normalized = normalizeResumeForSave(parsedResume);
+    await trackResumeSave(async () => {
       await updateResume.mutateAsync({ resume: normalized });
       // Reconcile to the normalized value so we don't loop on trim/format diffs —
       // but ONLY if nothing was edited (e.g. via the AI assistant) while this save
@@ -222,13 +230,8 @@ export default function ApplicationResumeEditorPage() {
       // just triggers the next auto-save cycle.
       setParsedResume((current) => (JSON.stringify(current) === snapshot ? normalized : current));
       setLastSavedResume(normalized);
-    } catch (err) {
-      toast.error(t('page.toasts.resumeSaveFailed'), {
-        id: 'resume-autosave-error',
-        description: (err as Error).message,
-      });
-    }
-  }, [parsedResume, updateResume, t]);
+    }, t('page.toasts.resumeSaveFailed'));
+  }, [parsedResume, updateResume, trackResumeSave, t]);
 
   useEffect(() => {
     if (!resumeInitialized || !hasResumeChanges || updateResume.isPending) return;
@@ -242,13 +245,11 @@ export default function ApplicationResumeEditorPage() {
   const autoSaveCover = useCallback(async () => {
     if (!coverHasContent) return;
     lastAttemptedCover.current = coverLetterValue;
-    try {
+    await trackCoverSave(async () => {
       await upsertCoverLetter.mutateAsync({ content: coverLetterValue });
       setLastSavedCoverLetter(coverLetterValue);
-    } catch {
-      toast.error(t('page.toasts.coverLetterSaveFailed'), { id: 'cover-autosave-error' });
-    }
-  }, [coverHasContent, coverLetterValue, upsertCoverLetter, t]);
+    }, t('page.toasts.coverLetterSaveFailed'));
+  }, [coverHasContent, coverLetterValue, upsertCoverLetter, trackCoverSave, t]);
 
   useEffect(() => {
     if (!coverInitialized || !hasCoverChanges || upsertCoverLetter.isPending) return;
@@ -475,9 +476,11 @@ export default function ApplicationResumeEditorPage() {
   const letterLocation = [parsedResume?.city, parsedResume?.country].filter(Boolean).join(', ') || parsedResume?.fullAddress;
 
   // Auto-save status for the current document tab.
+  const tabSave = activeTab === 'resume' ? resumeSave : coverSave;
   const tabSaving = activeTab === 'resume' ? updateResume.isPending : upsertCoverLetter.isPending;
   const tabDirty = activeTab === 'resume' ? hasResumeChanges : hasCoverChanges;
-  const saveStatus = tabSaving ? 'saving' : tabDirty ? 'dirty' : 'saved';
+  const saveStatus: SaveState =
+    tabSave.state === 'error' ? 'error' : tabSaving ? 'saving' : tabDirty ? 'dirty' : 'saved';
 
   const tabs: { id: Tab; label: string; icon: typeof FileText; locked?: boolean }[] = [
     { id: 'resume', label: t('page.tabs.resume'), icon: FileText },
@@ -626,26 +629,7 @@ export default function ApplicationResumeEditorPage() {
                 ? t('page.editHint.resume')
                 : t('page.editHint.coverLetter')}
             </span>
-            <span
-              className={cn(
-                "inline-flex items-center gap-2 font-['IBM_Plex_Mono'] text-[11px] font-semibold tracking-[0.06em] uppercase",
-                saveStatus === 'saving' && 'text-[#6b6969]',
-                saveStatus === 'dirty' && 'text-[#92400e]',
-                saveStatus === 'saved' && 'text-[#16a34a]',
-              )}
-            >
-              {saveStatus === 'saving' ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('page.saveStatus.saving')}
-                </>
-              ) : saveStatus === 'dirty' ? (
-                t('page.saveStatus.dirty')
-              ) : (
-                <>
-                  <span className="livedot" /> {t('page.saveStatus.saved')}
-                </>
-              )}
-            </span>
+            <SaveStatus state={saveStatus} onRetry={tabSave.retry} />
           </div>
         )}
 

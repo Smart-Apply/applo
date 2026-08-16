@@ -210,7 +210,6 @@ export function useDeleteApplication() {
 
 export function useUpdateApplicationResume(applicationId: string) {
   const queryClient = useQueryClient();
-  const t = useTranslations('applications');
 
   return useMutation({
     mutationFn: (data: { resume: ResumeData }) =>
@@ -220,11 +219,13 @@ export function useUpdateApplicationResume(applicationId: string) {
       queryClient.setQueryData(['applications', applicationId], updatedApplication);
       // Invalidate keywords query (secondary data)
       queryClient.invalidateQueries({ queryKey: ['applications', applicationId, 'keywords'] });
-      toastSuccess(t('hooks.resumeSaved'));
+      // No success toast: the résumé is only written by the editor's auto-save,
+      // which reports through the SaveStatus indicator. A toast per keystroke
+      // batch would be noise, not confirmation.
     },
-    onError: (error: unknown) => {
-      toastError(error, t('hooks.resumeSaveError'));
-    },
+    // No onError toast either — the caller owns the failure. The auto-save runs
+    // through useSaveStatus, which shows the error state plus a retry action;
+    // a second toast from here would duplicate it.
   });
 }
 
@@ -235,14 +236,19 @@ export function useUpsertCoverLetter(applicationId: string) {
   return useMutation({
     mutationFn: (data: { instructions?: string; content?: string; regenerate?: boolean }) =>
       api.applications.upsertCoverLetter(applicationId, data),
-    onSuccess: (updatedApplication) => {
+    onSuccess: (updatedApplication, variables) => {
       // Optimistic update: Update cache directly without refetching
       queryClient.setQueryData(['applications', applicationId], updatedApplication);
-      toastSuccess(t('hooks.coverLetterUpdated'));
+      // Plain content writes are the editor's auto-save — the SaveStatus
+      // indicator confirms those. Only the explicit (re)generation, which the
+      // user waits for, is worth a toast.
+      if (variables.regenerate) {
+        toastSuccess(t('hooks.coverLetterUpdated'));
+      }
     },
-    onError: (error: unknown) => {
-      toastError(error, t('hooks.coverLetterUpdateError'));
-    },
+    // No onError toast — the caller owns the failure: the auto-save reports it
+    // through useSaveStatus (error state + retry), the (re)generation actions
+    // show their own message.
   });
 }
 

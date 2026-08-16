@@ -25,6 +25,19 @@
     "loading": "Chargement...",
     "understood": "Compris"
   },
+  "saveStatus": {
+    "saving": "Enregistrement …",
+    "dirty": "Modifications non enregistrées",
+    "saved": "Toutes les modifications sont enregistrées",
+    "error": "Échec de l'enregistrement",
+    "retry": "Réessayer"
+  },
+  "unsavedChanges": {
+    "title": "Modifications non enregistrées",
+    "description": "Vos saisies dans ce formulaire n'ont pas encore été enregistrées. Si vous fermez maintenant, elles seront perdues.",
+    "keepEditing": "Continuer la modification",
+    "discard": "Abandonner les modifications"
+  },
   "loadingMessages": {
     "pdfPreview": "Chargement de l'aperçu PDF...",
     "editor": "Chargement de l'éditeur...",

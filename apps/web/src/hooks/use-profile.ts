@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/stores/auth-store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { toastSuccess, toastError } from '@/lib/toast';
+import { toastSuccess, toastError, toastErrorWithRetry } from '@/lib/toast';
 import type { Profile, UpdateProfileDto } from '@/types';
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
@@ -35,8 +35,11 @@ export function useUpdateProfile() {
   const queryClient = useQueryClient();
   const updateUser = useAuthStore((state) => state.updateUser);
   const t = useTranslations('profile');
+  // Lets the error toast re-dispatch the exact failed update; the mutation
+  // doesn't exist yet while its options object is built.
+  const retryRef = useRef<((data: UpdateProfileDto) => void) | null>(null);
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: (data: UpdateProfileDto) => api.profile.update(data),
     
     // Optimistic update: Apply changes immediately to cache
@@ -68,11 +71,13 @@ export function useUpdateProfile() {
     },
     
     // Rollback on error
-    onError: (error: unknown, _variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousProfile) {
         queryClient.setQueryData(['profile'], context.previousProfile);
       }
-      toastError(error, t('hooks.updateError'));
+      // A failed save must stay recoverable — the SaveStatus indicator shows
+      // the error state, the toast carries the same retry.
+      toastErrorWithRetry(error, () => retryRef.current?.(variables), t('hooks.updateError'));
     },
     
     // Replace optimistic data with server response on success
@@ -87,10 +92,16 @@ export function useUpdateProfile() {
           lastName: variables.lastName 
         });
       }
-      
-      toastSuccess(t('hooks.updateSuccess'));
+      // No success toast: profile edits persist immediately and are confirmed
+      // by the SaveStatus indicator, like every other auto-saving surface.
     },
   });
+
+  useEffect(() => {
+    retryRef.current = mutation.mutate;
+  }, [mutation.mutate]);
+
+  return mutation;
 }
 
 /**

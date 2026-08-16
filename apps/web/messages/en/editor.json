@@ -31,11 +31,6 @@
       "resume": "Click any text to edit it.",
       "coverLetter": "Click inside the cover letter to edit text, salutation, or paragraphs."
     },
-    "saveStatus": {
-      "saving": "Saving…",
-      "dirty": "Unsaved changes",
-      "saved": "Changes saved automatically"
-    },
     "export": {
       "button": "Export",
       "tooltip": "Export PDFs",

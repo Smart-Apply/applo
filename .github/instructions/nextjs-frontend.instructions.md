@@ -56,6 +56,32 @@ export function useCreateThing() {
   returns an unstable ref and trips `react-hooks/incompatible-library`, silently disabling
   memoisation for the whole component. Use `useWatch({ control, name })` instead.
 
+## Saving & feedback (one model product-wide)
+
+**Edits persist automatically, the save state is always visible, a failed save is
+retryable.** Don't invent a fourth pattern — the product previously had three
+(per-dialog save, sticky save bar, silent autosave) and that taught users three
+different meanings for "sichern".
+
+- Persist field-level edits yourself (immediately, or debounced with
+  `PROFILE_AUTOSAVE_MS`/`AUTOSAVE_MS` = 800 ms). No "Speichern" button, no save bar.
+- Report every save through `useSaveStatus()` (`@/hooks/use-save-status`) and render
+  `<SaveStatus state={…} onRetry={…} />` (`@/components/ui/save-status`) — `inline`
+  inside a document surface, `floating` on long scrolling pages.
+- `track(run, errorMessage)` drives the states and raises a retry toast on failure;
+  put the **destructured** `track` (stable) into dependency arrays, never the
+  controller object.
+- **No success toast for an auto-saved change** — the indicator is the confirmation.
+  Toasts stay for undoable deletions, imports, generation/export and account-level
+  actions.
+- Never auto-save before the source of truth has hydrated (the auth store rehydrates
+  asynchronously) and remember the attempted payload so a failing endpoint isn't
+  hammered — recovery goes through the retry action.
+- Explicit save survives **only** in modal composition forms (the profile add/edit
+  dialogs) where "Abbrechen" must keep meaning "discard". Those must guard closing
+  with `useUnsavedChangesGuard(open, close)` + `<UnsavedChangesDialog>`; the inner
+  form reports `useFormState({ control }).isDirty` through an `onDirtyChange` prop.
+
 ## UI
 
 - Compose from **shadcn/ui** (Radix) components in `apps/web/src/components/ui/`. Add a

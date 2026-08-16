@@ -555,7 +555,6 @@
   },
   "hooks": {
     "updateError": "Fehler beim Aktualisieren des Profils",
-    "updateSuccess": "Profil erfolgreich aktualisiert",
     "parseError": "Fehler beim Analysieren des Lebenslaufs"
   },
   "sections": {

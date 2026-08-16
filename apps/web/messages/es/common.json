@@ -25,6 +25,19 @@
     "loading": "Cargando...",
     "understood": "Entendido"
   },
+  "saveStatus": {
+    "saving": "Guardando …",
+    "dirty": "Cambios sin guardar",
+    "saved": "Todos los cambios guardados",
+    "error": "Error al guardar",
+    "retry": "Reintentar"
+  },
+  "unsavedChanges": {
+    "title": "Cambios sin guardar",
+    "description": "Los datos de este formulario aún no se han guardado. Si cierras ahora, se perderán.",
+    "keepEditing": "Seguir editando",
+    "discard": "Descartar cambios"
+  },
   "loadingMessages": {
     "pdfPreview": "Cargando vista previa del PDF...",
     "editor": "Cargando editor...",
