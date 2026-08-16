@@ -1008,10 +1008,13 @@ h1, h2, h3, .font-heading {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
+  /* The skeleton base (`bg-muted`) is near-white in the light theme, so a
+     classic white highlight would be invisible — sweep a subtle ink tint
+     instead. The dark theme keeps the conventional light sweep. */
   background-image: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.62),
+    rgba(15, 23, 42, 0.055),
     transparent
   );
   animation: app-shimmer 1.8s ease-in-out infinite;
@@ -1071,5 +1074,14 @@ h1, h2, h3, .font-heading {
   /* The sweep is decorative on top of the pulse — drop it entirely. */
   .motion-shimmer::after {
     display: none;
+  }
+
+  /* The tour ring is an affordance, not decoration: it is the only thing that
+     marks the element the tour is pointing at. Clamping the pulse to a single
+     0.01ms run would leave no fill and the ring would vanish, so swap the
+     animation for the equivalent static ring. */
+  .tour-active {
+    animation: none !important;
+    box-shadow: 0 0 0 5px rgba(85, 129, 199, 0.4);
   }
 }
