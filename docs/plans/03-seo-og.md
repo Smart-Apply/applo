@@ -82,6 +82,12 @@ seekers, that is a direct, measurable cost on click-through.
 
 ## Notes on #332
 
+**Status:** #332 shipped separately (landing page converted to Server
+Components, with page-level metadata and JSON-LD). This plan's scope is
+untouched by it: `sitemap.ts`, `robots.ts`, and `og-default.png` still don't
+exist, and the landing page still points OG/Twitter at `/Logo/Full Logo.png`
+rather than a purpose-built 1200×630 card.
+
 #332 proposes converting the landing page from CSR to SSR for SEO. Do this plan
 first and measure: if Google Search Console shows the landing page indexed with
 its real content, the CSR is not actually blocking indexing and #332 becomes a

@@ -94,6 +94,11 @@ model UserPreferences {
   profilePublic    Boolean @default(false)
   analyticsEnabled Boolean @default(true)
 
+  // Onboarding guide: set once the user finished OR skipped the product tour.
+  // Drives the "auto-open on first login" behaviour — the tour stays manually
+  // re-openable from the help entry / settings regardless of this flag.
+  onboardingCompleted Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

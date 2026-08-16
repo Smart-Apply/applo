@@ -228,20 +228,22 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
 - `subscription` — plans & usage limits
 - `templates` — template catalog. Read paths are registry-filtered: `findAll`, `findByCategoryAndLanguage` and `findDefault` only return rows whose design resolves to a registered react-pdf factory (`pdf-v2/template-registry.ts#isRenderableTemplate`), so the wizard can never offer a template that would crash generation. Rows are seeded by `prisma/seed-react-pdf-templates.ts` (the canonical source; deactivates unresolvable active rows).
 - `uploads` — file uploads
-- `user-preferences` — per-user settings
+- `user-preferences` — per-user settings (notifications, language, theme, privacy, `onboardingCompleted` — the flag that stops the first-login product tour from auto-opening again)
 - `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Applo. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 3/month, Pro 15/month, Premium 35/month); quota is reserved atomically before the LLM call and refunded when the request fails. Each successful check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`). A **content-hash dedupe cache** (`Validation.contentHash`, xxHash-64 over the normalized résumé + cover letter + jobContext + language, `title` excluded) short-circuits an exact re-submit in the controller **before** `reserveUsage` — so a replay costs neither an LLM call nor a credit; the lookup is always scoped by `userId`. Free-tier checks are additionally routed to the **mid lane** (`gpt-5.4-mini`) via the opt-in `midLane: true` option on `callJson`, leaving PRO/PREMIUM on the flagship default as a paid quality differentiator. The mid model is an Azure OpenAI deployment, so it supports this template's strict `json_schema` natively — which is why it replaced the earlier (dormant) attempt to route Free checks to Mistral. No-op when `LLM_MID_MODEL` is unset.
 
 ## Frontend Structure
-- `messages/` - next-intl message catalogs (`{de,en,fr,es,pt,it}/*.json`, one file per namespace: common, auth, twoFactor, applications, editor, wizard, profile, dashboard, settings, analytics, subscription, jobs, interviews, validation, templates, landing, faq). All six key trees must stay identical.
+- `messages/` - next-intl message catalogs (`{de,en,fr,es,pt,it}/*.json`, one file per namespace: common, auth, twoFactor, applications, editor, wizard, profile, dashboard, settings, analytics, subscription, jobs, interviews, validation, templates, landing, faq, onboarding). All six key trees must stay identical.
 - `app/` (App Router with route groups)
   - `(auth)/` - Login, Register pages
   - `(dashboard)/` - Profile, Job Postings, Applications, PDF Preview
-  - `page.tsx` - Landing page
+  - `page.tsx` - Landing page (**Server Component**: `generateMetadata` + JSON-LD, sections composed from `components/landing/*`)
 - `components/`
   - `ui/` - shadcn/ui components
   - `forms/` - Custom form components
+  - `landing/` - Landing sections (server) + the three client-only drivers (`applo-companion`, `cta-mascot`, `scroll-reveal`)
   - `pdf/` - PDF preview & editing components
   - `i18n/` - LanguageSwitcher + useLocaleSwitch + LocaleRuntimeSync
+  - `onboarding/` - in-app product tour (modal step guide, mounted once in the dashboard layout)
 - `i18n/`
   - `config.ts` - locales (de/en/fr/es/pt/it), cookie name, Accept-Language picker
   - `request.ts` - next-intl per-request config (cookie → header → de)
@@ -250,6 +252,7 @@ Resulting flow: PR → merge to main → staging deploys + Release PR opens/upda
   - `api-client.ts` - Typed fetch wrapper for backend API
   - `providers.tsx` - React Query & Toaster providers
   - `i18n-runtime.ts` - active-locale access for non-React modules (getActiveLocale, pick, setLocaleCookie, getIntlLocale)
+  - `site-url.ts` - public origin (`SITE_URL` / `SITE_METADATA_BASE`) for `metadataBase`, canonicals and JSON-LD
   - `utils.ts` - Helper functions (cn, formatDate, truncate)
 - `stores/`
   - `auth-store.ts` - Zustand store (user, token, isAuthenticated)
@@ -273,7 +276,7 @@ is authoritative):
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
 - **LlmUsageEvent** (issue #522 — per-feature LLM token-usage event; NO `User` FK, keyed by an HMAC-SHA256 `actorHash` derived from `LLM_USAGE_HASH_SALT`; never stores prompt/response content; unset salt disables tracking entirely. **Pseudonymous, not anonymous** — erased on account deletion, swept after `LLM_USAGE_RETENTION_DAYS`; see the `llm` module notes)
-- Also present, not detailed above: **UserPreferences**, **SubscriptionUsage**, **BackgroundJob**, **TwoFactorAuth**, **TwoFactorBackupCode**, **TrustedDevice**, **OAuthProvider**, and the interview trio **InterviewSession**/**InterviewQuestion**/**InterviewFeedback** (the "Interview" shorthand above), plus **Template** (the "ResumeTemplate" shorthand)
+- Also present, not detailed above: **UserPreferences** (incl. `onboardingCompleted` — first-login product-tour flag), **SubscriptionUsage**, **BackgroundJob**, **TwoFactorAuth**, **TwoFactorBackupCode**, **TrustedDevice**, **OAuthProvider**, and the interview trio **InterviewSession**/**InterviewQuestion**/**InterviewFeedback** (the "Interview" shorthand above), plus **Template** (the "ResumeTemplate" shorthand)
 
 ## API Endpoints (v1)
 
@@ -366,7 +369,7 @@ Implementation note: aggregation uses composed `Prisma.sql` (Prisma's typed `gro
 
 ### User Preferences (Protected)
 
-**GET/PUT /api/v1/user-preferences** — per-user settings
+**GET/PUT /api/v1/user-preferences** — per-user settings, incl. `onboardingCompleted` (set to `true` once the user finishes or skips the in-app product tour, so it never auto-opens again)
 
 ### Interviews (Protected, Pro/Premium — `@RequiresFeature('interviewCoach')`)
 
