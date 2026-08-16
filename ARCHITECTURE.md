@@ -83,7 +83,7 @@ applo/
 ├── apps/
 │   ├── api/                  # @applo/api (NestJS 11)
 │   │   ├── src/
-│   │   │   ├── admin/             # Allow-listed admin endpoints (ADMIN_EMAILS)
+│   │   │   ├── admin/             # Allow-listed admin endpoints (ADMIN_EMAILS) + LLM usage analytics
 │   │   │   ├── agents/            # Azure AI Foundry agents
 │   │   │   ├── applications/      # Generation pipeline
 │   │   │   ├── appointments/      # Interview-calendar CRUD (date/time, note)
@@ -312,7 +312,7 @@ grounding-specific decisions live in
 | **InviteCode**     | RETIRED — beta gate removed; schema row kept until a follow-up release drops it (expand→contract) |
 | **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`) |
 | **AuditLog**       | Security event log                             |
-| **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure applies — both account-deletion paths erase by recomputed hash, and a daily cron deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90) |
+| **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure applies — both account-deletion paths erase by recomputed hash, and a daily cron deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90). Read back only through the aggregate-only `/admin/llm-usage/*` endpoints (`actorHash` is never filtered on, grouped by, or returned) |
 
 ### Key Relations
 
@@ -471,6 +471,9 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/admin/users?email=`              | Admin: search users (allow-listed)                                          |
 | POST     | `/admin/users/:email/tier`         | Admin: set subscription tier (allow-listed)                                 |
 | DELETE   | `/admin/users/:email`              | Admin: permanently delete user (allow-listed)                               |
+| GET      | `/admin/llm-usage/summary`         | Admin: LLM token/cost totals for a window (aggregates only)                 |
+| GET      | `/admin/llm-usage/breakdown`       | Admin: totals grouped by feature/tier/language/model/provider/lane          |
+| GET      | `/admin/llm-usage/timeseries`      | Admin: totals per day/week/month, optionally split by a dimension           |
 | GET/PUT  | `/user-preferences`                | Settings (incl. `onboardingCompleted` — the first-login product tour flag)  |
 
 ## 🚀 Deployment
