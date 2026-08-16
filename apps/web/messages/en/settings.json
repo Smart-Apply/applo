@@ -215,7 +215,7 @@
     },
     "enabled": "Enabled",
     "disabled": "Disabled",
-    "privacyNote": "Applo reads emails only for classification. We store <strong>no email bodies</strong> — only sender, subject, and the classification result (see privacy).",
+    "privacyNote": "Applo screens incoming mail locally first: only messages that match one of your applications are processed further. For those, the sender, subject and a text excerpt go to our AI provider. <strong>No email text is stored</strong> — only sender, subject and the classification result, deleted automatically after 180 days (see privacy policy).",
     "connection": {
       "comingSoon": "Coming soon",
       "active": "Active",
@@ -227,6 +227,18 @@
       "disconnectDescription": "Applo will no longer detect new emails from <strong>{email}</strong>. Existing applications remain, but the status will no longer update automatically.",
       "cancel": "Cancel",
       "connect": "Connect"
+    },
+    "consent": {
+      "title": "Connect mailbox",
+      "intro": "Before you connect your mailbox, here is what happens:",
+      "scope": "Microsoft grants Applo read access to your mailbox (<strong>Mail.Read</strong>). That access cannot technically be limited to individual senders.",
+      "prefilter": "Every incoming message is screened <strong>locally</strong> first. Only if the sender or subject matches one of your applications is it processed further — everything else is discarded immediately.",
+      "llm": "For matching messages, the sender, subject and a <strong>text excerpt (max. 1,200 characters)</strong> are sent to our AI provider (Microsoft Azure OpenAI, EU) for classification.",
+      "stored": "We store only sender, subject, receipt time and the classification result — <strong>never the email text</strong>. These entries are deleted automatically after 180 days.",
+      "revoke": "You can disconnect at any time here; we then also revoke the access at Microsoft.",
+      "privacyLink": "More in the privacy policy",
+      "cancel": "Cancel",
+      "confirm": "Understood, connect mailbox"
     }
   },
   "saveBar": {

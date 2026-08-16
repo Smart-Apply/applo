@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 import { useFeatureGate } from '@/hooks/use-tier-gate';
 import { api } from '@/lib/api-client';
@@ -39,6 +40,12 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import type { MailboxConnection, UserPreferences } from '@/types';
+
+/**
+ * Order of the disclosure bullets in the connect-consent dialog. Kept as data
+ * so the six locale files stay the single source of the wording.
+ */
+const CONSENT_POINTS = ['scope', 'prefilter', 'llm', 'stored', 'revoke'] as const;
 
 interface EmailTrackingSectionProps {
   preferences: UserPreferences | null;
@@ -327,20 +334,53 @@ function ConnectionRow({
             </AlertDialogContent>
           </AlertDialog>
         ) : (
-          <Button
-            size="sm"
-            onClick={onConnect}
-            disabled={comingSoon || isConnecting}
-          >
-            {isConnecting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <Plug className="h-4 w-4 mr-1" />
-                {t('emailTracking.connection.connect')}
-              </>
-            )}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" disabled={comingSoon || isConnecting}>
+                {isConnecting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Plug className="h-4 w-4 mr-1" />
+                    {t('emailTracking.connection.connect')}
+                  </>
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            {/* Art. 13 DSGVO: the scope (whole mailbox), the transmission of a
+                body excerpt to the LLM provider and the retention have to be
+                named BEFORE the user is redirected to the Microsoft consent
+                screen — Microsoft only asks about the OAuth scope, not about
+                what we then do with the mail. */}
+            <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('emailTracking.consent.title')}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('emailTracking.consent.intro')}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+                {CONSENT_POINTS.map((point) => (
+                  <li key={point}>
+                    {t.rich(`emailTracking.consent.${point}`, {
+                      strong: (chunks) => <strong>{chunks}</strong>,
+                    })}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-sm text-muted-foreground">
+                <Link href="/datenschutz" className="underline underline-offset-4">
+                  {t('emailTracking.consent.privacyLink')}
+                </Link>
+              </p>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t('emailTracking.consent.cancel')}</AlertDialogCancel>
+                <AlertDialogAction onClick={onConnect}>
+                  {t('emailTracking.consent.confirm')}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
     </div>

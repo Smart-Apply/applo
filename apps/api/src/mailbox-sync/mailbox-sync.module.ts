@@ -14,6 +14,7 @@ import { MailboxSyncOrchestrator } from './mailbox-sync.orchestrator';
 import { MailboxConnectionController } from './mailbox-connection.controller';
 import { MailboxWebhookController } from './mailbox-webhook.controller';
 import { MailboxSubscriptionRenewalCron } from './mailbox-subscription-renewal.cron';
+import { MailboxEventRetentionCron } from './mailbox-event-retention.cron';
 
 /**
  * Email Tracking (Premium feature).
@@ -36,6 +37,7 @@ import { MailboxSubscriptionRenewalCron } from './mailbox-subscription-renewal.c
     EmailClassifierService,
     MailboxSyncOrchestrator,
     MailboxSubscriptionRenewalCron,
+    MailboxEventRetentionCron,
   ],
 })
 export class MailboxSyncModule {}

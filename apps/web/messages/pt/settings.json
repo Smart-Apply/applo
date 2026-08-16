@@ -215,7 +215,7 @@
     },
     "enabled": "Ativado",
     "disabled": "Desativado",
-    "privacyNote": "A Applo lê os e-mails apenas para classificação. Não armazenamos <strong>o corpo dos e-mails</strong> — apenas o remetente, o assunto e o resultado da classificação (ver privacidade).",
+    "privacyNote": "A Applo filtra primeiro as mensagens recebidas localmente: só são processadas as que correspondem a uma das tuas candidaturas. Dessas, o remetente, o assunto e um excerto do texto seguem para o nosso fornecedor de IA. <strong>Nenhum texto de e-mail é guardado</strong> — apenas remetente, assunto e o resultado da classificação, eliminados automaticamente ao fim de 180 dias (ver política de privacidade).",
     "connection": {
       "comingSoon": "Brevemente",
       "active": "Ativa",
@@ -227,6 +227,18 @@
       "disconnectDescription": "A Applo deixará de detetar novos e-mails de <strong>{email}</strong>. As candidaturas existentes mantêm-se, mas o estado deixará de ser atualizado automaticamente.",
       "cancel": "Cancelar",
       "connect": "Associar"
+    },
+    "consent": {
+      "title": "Ligar caixa de correio",
+      "intro": "Antes de ligares a tua caixa de correio, é isto que acontece:",
+      "scope": "A Microsoft concede à Applo acesso de leitura à tua caixa de correio (<strong>Mail.Read</strong>). Tecnicamente, esse acesso não pode ser limitado a remetentes específicos.",
+      "prefilter": "Cada mensagem recebida é primeiro filtrada <strong>localmente</strong>. Só é processada se o remetente ou o assunto corresponderem a uma das tuas candidaturas — todas as outras são descartadas de imediato.",
+      "llm": "Das mensagens correspondentes, o remetente, o assunto e um <strong>excerto do texto (máx. 1200 caracteres)</strong> são enviados ao nosso fornecedor de IA (Microsoft Azure OpenAI, UE) para classificação.",
+      "stored": "Guardamos apenas remetente, assunto, hora de receção e o resultado da classificação — <strong>nunca o texto do e-mail</strong>. Estes registos são eliminados automaticamente ao fim de 180 dias.",
+      "revoke": "Podes desligar a caixa de correio a qualquer momento aqui; revogamos então também o acesso na Microsoft.",
+      "privacyLink": "Mais informação na política de privacidade",
+      "cancel": "Cancelar",
+      "confirm": "Compreendido, ligar caixa de correio"
     }
   },
   "saveBar": {

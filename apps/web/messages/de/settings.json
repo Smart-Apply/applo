@@ -215,7 +215,7 @@
     },
     "enabled": "Aktiviert",
     "disabled": "Deaktiviert",
-    "privacyNote": "Applo liest E-Mails ausschließlich zur Klassifikation. Wir speichern <strong>keine E-Mail-Texte</strong> — nur Absender, Betreff und das Klassifikations-Ergebnis (siehe Datenschutz).",
+    "privacyNote": "Applo prüft eingehende Mails zuerst lokal: Nur Mails, die zu einer deiner Bewerbungen passen, werden weiterverarbeitet. Von diesen gehen Absender, Betreff und ein Textauszug an unseren KI-Anbieter. Gespeichert werden <strong>keine E-Mail-Texte</strong> — nur Absender, Betreff und das Klassifikations-Ergebnis, automatisch gelöscht nach 180 Tagen (siehe Datenschutz).",
     "connection": {
       "comingSoon": "Bald verfügbar",
       "active": "Aktiv",
@@ -227,6 +227,18 @@
       "disconnectDescription": "Applo wird keine neuen E-Mails von <strong>{email}</strong> mehr erkennen. Bestehende Bewerbungen bleiben erhalten, aber der Status aktualisiert sich nicht mehr automatisch.",
       "cancel": "Abbrechen",
       "connect": "Verbinden"
+    },
+    "consent": {
+      "title": "Postfach verbinden",
+      "intro": "Bevor du dein Postfach verbindest, solltest du wissen, was dabei passiert:",
+      "scope": "Applo erhält von Microsoft Lesezugriff auf dein Postfach (<strong>Mail.Read</strong>). Dieser Zugriff lässt sich technisch nicht auf einzelne Absender einschränken.",
+      "prefilter": "Jede eingehende Mail wird zuerst <strong>lokal</strong> geprüft. Nur wenn Absender oder Betreff zu einer deiner Bewerbungen passen, wird sie weiterverarbeitet — alle anderen Mails werden sofort verworfen.",
+      "llm": "Von passenden Mails gehen Absender, Betreff und ein <strong>Textauszug (max. 1.200 Zeichen)</strong> zur Einordnung an unseren KI-Anbieter (Microsoft Azure OpenAI, EU).",
+      "stored": "Gespeichert werden nur Absender, Betreff, Empfangszeit und das Ergebnis der Einordnung — <strong>keine E-Mail-Texte</strong>. Diese Einträge löschen wir automatisch nach 180 Tagen.",
+      "revoke": "Du kannst die Verbindung jederzeit hier trennen; wir widerrufen dann auch den Zugriff bei Microsoft.",
+      "privacyLink": "Mehr dazu in der Datenschutzerklärung",
+      "cancel": "Abbrechen",
+      "confirm": "Verstanden, Postfach verbinden"
     }
   },
   "saveBar": {
