@@ -66,7 +66,10 @@ curl -sS --cookie "access_token=$ADMIN_JWT" \
 
 The manifest is the due-diligence artefact: it records the parameters, the row
 and suppression counts, the column schema, the guarantees and the residual
-risks for the exact export those parameters produce.
+risks for the exact export those parameters produce. It is computed by running
+the same export again, so request it with **identical parameters over a closed
+window** — otherwise its counts describe a slightly different run than the file
+you shipped.
 
 The data response is a download (`Content-Disposition: attachment;
 filename="applo-llm-usage-<date>.<ext>"`, `Cache-Control: no-store`) and repeats

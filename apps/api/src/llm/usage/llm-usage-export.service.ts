@@ -469,7 +469,7 @@ export class LlmUsageExportService {
   private guarantees(options: LlmUsageExportOptions): string[] {
     return [
       'No User foreign key, email or name is read: the export selects an explicit column allow-list from llm_usage_events, a table that never stores prompt or response content.',
-      'The source row id is used for cursor pagination only and is never exported — it is a cuid embedding a millisecond timestamp, which would undo the bucketing below.',
+      'The source row id is used for cursor pagination only and is never exported — it is a cuid embedding a millisecond timestamp, which would undo the timestamp bucketing.',
       `createdAt is truncated to the start of its UTC ${options.bucket}; no sub-bucket timestamp is exported, so a row cannot be time-correlated at millisecond precision with applications, validations or interview_sessions.`,
       `latencyMs is rounded to the nearest ${LATENCY_ROUNDING_MS} ms.`,
       options.actor === 'none'

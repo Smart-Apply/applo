@@ -250,8 +250,18 @@ export class AdminController {
   @ApiOperation({ summary: 'Describe the anonymised LLM usage export (admin only)' })
   async exportLlmUsageManifest(
     @Query() query: LlmUsageExportQueryDto,
+    @CurrentUser('email') actorEmail: string,
   ): Promise<LlmUsageExportManifest> {
-    const dataset = await this.llmUsageExport.buildDataset(parseExportOptions(query));
+    const options = parseExportOptions(query);
+    const dataset = await this.llmUsageExport.buildDataset(options);
+    const { counts } = dataset.manifest;
+
+    this.logger.log(
+      `Admin ${actorEmail} read the LLM usage export manifest for ${counts.exportedRows} rows ` +
+        `(bucket=${options.bucket}, actor=${options.actor}, k=${options.k}, ` +
+        `suppressed=${counts.suppressedRows}, truncated=${counts.truncated})`,
+    );
+
     return dataset.manifest;
   }
 }
