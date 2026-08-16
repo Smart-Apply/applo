@@ -45,7 +45,7 @@ export function CertificateEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
+      <DialogContent className="max-h-[90dvh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>
             {isEditing ? t('certificates.editTitle') : t('certificates.newTitle')}
