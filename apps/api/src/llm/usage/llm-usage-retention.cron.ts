@@ -1,4 +1,4 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConfigService } from '../../config/config.service';
@@ -18,9 +18,9 @@ export class LlmUsageRetentionCron {
   private readonly logger = new Logger(LlmUsageRetentionCron.name);
 
   constructor(
-    // Optional for the same reason as in LlmUsageService: the headless
-    // generation seam (#797) resolves LLMModule without a database.
-    @Optional() private readonly prisma: PrismaService | null,
+    // Optional for the same reason as in LlmUsageService, and @Inject is
+    // load-bearing there for the same reason too — see that constructor.
+    @Optional() @Inject(PrismaService) private readonly prisma: PrismaService | null = null,
     private readonly configService: ConfigService,
   ) {}
 

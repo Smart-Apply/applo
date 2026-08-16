@@ -1,4 +1,4 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { createHmac } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -59,7 +59,9 @@ export class LlmUsageService {
     // Optional so a persistence-free Nest context can still resolve LLMModule.
     // The headless generation seam (#797) boots ConfigModule + LLMModule with no
     // database on purpose; without this the whole module graph fails to load.
-    @Optional() private readonly prisma: PrismaService | null,
+    // @Inject is load-bearing: the `| null` union makes TypeScript emit `Object`
+    // for design:paramtypes, so Nest would silently inject undefined without it.
+    @Optional() @Inject(PrismaService) private readonly prisma: PrismaService | null = null,
     private readonly config: ConfigService,
   ) {}
 
