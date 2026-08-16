@@ -7,6 +7,7 @@ import { ShieldCheck, History, Trash2, Lock, RotateCcw, ExternalLink } from 'luc
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { CheckStepper } from '@/components/validation/check-stepper';
 import { DocumentInput } from '@/components/validation/document-input';
 import { JobContextInput } from '@/components/validation/job-context-input';
@@ -206,10 +207,10 @@ export default function ValidatePage() {
       {step === 'result' && (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
           {activeLoading ? (
-            <div className="space-y-4">
+            <SkeletonScreen className="space-y-4">
               <Skeleton className="h-40 w-full rounded-[4px]" />
               <Skeleton className="h-32 w-full rounded-[4px]" />
-            </div>
+            </SkeletonScreen>
           ) : activeRecord ? (
             <ValidationResultView result={activeRecord.result} onNewCheck={handleNewCheck} />
           ) : null}
@@ -236,10 +237,10 @@ export default function ValidatePage() {
             </div>
 
             {historyLoading ? (
-              <div className="space-y-3">
+              <SkeletonScreen className="space-y-3">
                 <Skeleton className="h-14 w-full rounded-[4px]" />
                 <Skeleton className="h-14 w-full rounded-[4px]" />
-              </div>
+              </SkeletonScreen>
             ) : !history || history.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 {t('page.noHistory')}

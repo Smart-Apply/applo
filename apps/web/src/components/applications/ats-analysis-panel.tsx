@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import {
   Tooltip,
   TooltipContent,
@@ -64,7 +65,7 @@ export function ATSAnalysisPanel({
 
   if (isLoading) {
     return (
-      <div className={cn('space-y-4', className)}>
+      <SkeletonScreen className={cn('space-y-4', className)}>
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-48" />
@@ -81,7 +82,7 @@ export function ATSAnalysisPanel({
         </Card>
         <Skeleton className="h-64 w-full" />
         <Skeleton className="h-48 w-full" />
-      </div>
+      </SkeletonScreen>
     );
   }
 

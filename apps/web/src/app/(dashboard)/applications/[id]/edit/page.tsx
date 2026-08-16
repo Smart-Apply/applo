@@ -21,6 +21,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredLoader } from '@/components/shared/loading';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { EditableResume, resolveResumeDesign } from '@/components/applications/editable-resume';
 import { AtsOptimizer } from '@/components/applications/ats-optimizer';
 import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
@@ -53,7 +54,14 @@ const EditableCoverLetter = dynamic(
     import('@/components/applications/editable-cover-letter').then((m) => ({
       default: m.EditableCoverLetter,
     })),
-  { loading: () => <Skeleton className="mx-auto h-96 w-full max-w-[820px] rounded-[4px]" />, ssr: false },
+  {
+    loading: () => (
+      <SkeletonScreen>
+        <Skeleton className="mx-auto h-96 w-full max-w-[820px] rounded-[4px]" />
+      </SkeletonScreen>
+    ),
+    ssr: false,
+  },
 );
 const CoverLetterCTA = dynamic(
   () =>

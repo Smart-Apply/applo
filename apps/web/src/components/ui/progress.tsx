@@ -14,7 +14,11 @@ export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
     ({ className, value, indeterminate = false, ...props }, ref) => {
-        const clamped = Math.min(100, Math.max(0, value ?? 0))
+        // `Number.isFinite` rather than `value ?? 0`: callers derive the value
+        // from divisions that can yield NaN (a 0-of-0 usage quota), and NaN
+        // would survive the clamp and render `translateX(-NaN%)` — an invalid
+        // declaration the CSSOM drops, leaving a bar that looks 100 % full.
+        const clamped = Number.isFinite(value) ? Math.min(100, Math.max(0, value as number)) : 0
 
         return (
             <div

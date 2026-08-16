@@ -163,12 +163,16 @@ export default function DashboardPage() {
         //     wrapper (md:p-8) and <main> add bottom padding that isn't part of
         //     `el`. Without it the content overflows by that padding and the
         //     page keeps a few scroll pixels (which the scroll lock would clip).
-        const wrapperCS = el.parentElement ? getComputedStyle(el.parentElement) : null;
+        //     Walk the WHOLE chain up to <main> rather than reading
+        //     `el.parentElement` alone — the route-transition template adds a
+        //     wrapper between the two, and assuming a fixed depth silently
+        //     drops the padding term.
         const mainEl = el.closest('main');
-        const mainCS = mainEl ? getComputedStyle(mainEl) : null;
-        const bottomChrome =
-          (wrapperCS ? parseFloat(wrapperCS.paddingBottom) || 0 : 0) +
-          (mainCS ? parseFloat(mainCS.paddingBottom) || 0 : 0);
+        let bottomChrome = 0;
+        for (let node = el.parentElement; node; node = node.parentElement) {
+          bottomChrome += parseFloat(getComputedStyle(node).paddingBottom) || 0;
+          if (node === mainEl || node === document.body) break;
+        }
         const viewportH = window.visualViewport?.height ?? window.innerHeight;
         const topOffset = rect.top + window.scrollY;
         const available = viewportH - topOffset - bottomChrome - GAP;

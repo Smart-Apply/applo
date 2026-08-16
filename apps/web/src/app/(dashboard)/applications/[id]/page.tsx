@@ -52,6 +52,7 @@ import dynamic from 'next/dynamic';
 import type { ApplicationGenerationStatus, ApplicationTrackingStatus } from '@/types';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { handleDownload, handleZipDownload, generateFilename } from '@/lib/pdf-utils';
 import { EditableTitle } from '@/components/applications/editable-title';
 import { StatusDropdown } from '@/components/applications/status-dropdown';
@@ -1141,7 +1142,12 @@ function FailedView({
 function AtsAnalysisSection({ applicationId }: { applicationId: string }) {
   const t = useTranslations('applications');
   const { hasAccess, isLoading } = useFeatureGate('atsOptimization');
-  if (isLoading) return <Skeleton className="h-48 w-full" />;
+  if (isLoading)
+    return (
+      <SkeletonScreen>
+        <Skeleton className="h-48 w-full" />
+      </SkeletonScreen>
+    );
   if (!hasAccess) {
     return (
       <UpgradePrompt
