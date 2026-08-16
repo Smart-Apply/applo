@@ -192,10 +192,18 @@ describe('LlmUsageService', () => {
     circuitState: LlmCircuitState.CLOSED,
   };
 
-  function createFakePrisma(create: ReturnType<typeof vi.fn>): PrismaService {
+  function createFakePrisma(
+    create: ReturnType<typeof vi.fn>,
+    analyticsEnabled: boolean | null = true,
+  ): PrismaService {
     return {
       llmUsageEvent: { create },
       subscription: { findUnique: vi.fn().mockResolvedValue(null) },
+      userPreferences: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue(analyticsEnabled === null ? null : { analyticsEnabled }),
+      },
     } as unknown as PrismaService;
   }
 
@@ -246,6 +254,49 @@ describe('LlmUsageService', () => {
     await flush();
 
     expect(create.mock.calls[0]?.[0].data.language).toBe(expected);
+  });
+
+  // The analyticsEnabled preference used to be stored and never read, so a
+  // withdrawal under Art. 7(3) had no effect on a dataset that is pseudonymous
+  // (i.e. personal), not anonymous — issue #806.
+  it('writes nothing when the user opted out of usage statistics', async () => {
+    const create = vi.fn();
+    const service = new LlmUsageService(createFakePrisma(create, false), createFakeConfig(KNOWN_SALT));
+
+    await service.runWithActor({ userId: KNOWN_USER_ID }, async () => {
+      service.record(baseInput);
+    });
+    await flush();
+
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('records when no preferences row exists yet (schema default is opted in)', async () => {
+    const create = vi.fn().mockResolvedValue(undefined);
+    const service = new LlmUsageService(createFakePrisma(create, null), createFakeConfig(KNOWN_SALT));
+
+    await service.runWithActor({ userId: KNOWN_USER_ID }, async () => {
+      service.record(baseInput);
+    });
+    await flush();
+
+    expect(create).toHaveBeenCalledOnce();
+  });
+
+  it('resolves the consent lookup once per actor scope', async () => {
+    const create = vi.fn().mockResolvedValue(undefined);
+    const prisma = createFakePrisma(create);
+    const service = new LlmUsageService(prisma, createFakeConfig(KNOWN_SALT));
+
+    await service.runWithActor({ userId: KNOWN_USER_ID }, async () => {
+      service.record(baseInput);
+      service.record(baseInput);
+      service.record(baseInput);
+    });
+    await flush();
+
+    expect(create).toHaveBeenCalledTimes(3);
+    expect(prisma.userPreferences.findUnique).toHaveBeenCalledOnce();
   });
 
   it('writes nothing when LLM_USAGE_HASH_SALT is unset', async () => {

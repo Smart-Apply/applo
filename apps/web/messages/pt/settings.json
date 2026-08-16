@@ -149,13 +149,9 @@
     "privacy": {
       "title": "Privacidade",
       "description": "Manténs o controlo dos teus dados.",
-      "publicProfile": {
-        "title": "Perfil público",
-        "description": "O teu perfil pode ser visto por outras pessoas."
-      },
       "analytics": {
-        "title": "Dados de utilização anónimos",
-        "description": "Ajuda-nos a melhorar a Applo. Sem conteúdo pessoal."
+        "title": "Estatísticas de utilização",
+        "description": "Registamos o consumo das funcionalidades de IA (modelo, tokens, duração) sob um pseudónimo — nunca o conteúdo dos pedidos ou das respostas. Desligado: não guardamos absolutamente nada."
       }
     },
     "export": {

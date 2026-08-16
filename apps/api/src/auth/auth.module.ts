@@ -18,6 +18,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '../config/config.service';
 import { ConfigModule } from '../config/config.module';
 import { UserErasureModule } from '../common/erasure/user-erasure.module';
+import { LLMModule } from '../llm/llm.module';
 
 /**
  * OAuth strategies (Google, Microsoft) crash on instantiation when their
@@ -70,6 +71,9 @@ const microsoftStrategyProvider: Provider = {
     // Shared Art. 17 erasure path (storage prefixes + pseudonymous usage
     // trail + user row), also used by the admin deletion endpoint.
     UserErasureModule,
+    // For LlmUsageService — the Art. 15 export has to include the
+    // pseudonymous usage events, which have no FK to resolve them by.
+    LLMModule,
   ],
   controllers: [AuthController, SessionsController, TwoFactorController],
   providers: [

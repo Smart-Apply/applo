@@ -56,7 +56,6 @@ export class UserPreferencesService {
       data.emailTrackingNotify = dto.emailTrackingNotify;
     if (dto.language !== undefined) data.language = dto.language;
     if (dto.theme !== undefined) data.theme = dto.theme;
-    if (dto.profilePublic !== undefined) data.profilePublic = dto.profilePublic;
     if (dto.analyticsEnabled !== undefined) data.analyticsEnabled = dto.analyticsEnabled;
 
     return data;
@@ -72,7 +71,6 @@ export class UserPreferencesService {
       emailTrackingNotify: preferences.emailTrackingNotify,
       language: preferences.language,
       theme: preferences.theme,
-      profilePublic: preferences.profilePublic,
       analyticsEnabled: preferences.analyticsEnabled,
       createdAt: preferences.createdAt,
       updatedAt: preferences.updatedAt,

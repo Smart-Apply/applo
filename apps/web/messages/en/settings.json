@@ -149,13 +149,9 @@
     "privacy": {
       "title": "Privacy",
       "description": "You stay in control of your data.",
-      "publicProfile": {
-        "title": "Public profile",
-        "description": "Your profile can be seen by others."
-      },
       "analytics": {
-        "title": "Anonymous usage data",
-        "description": "Help us improve Applo. No personal content."
+        "title": "Usage statistics",
+        "description": "We record how much the AI features consume (model, tokens, duration) under a pseudonym — never prompt or response content. Off: we store nothing about it at all."
       }
     },
     "export": {

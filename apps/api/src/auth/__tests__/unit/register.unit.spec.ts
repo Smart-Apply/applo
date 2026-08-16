@@ -11,6 +11,7 @@ import { TwoFactorService } from '../../two-factor.service';
 import { EmailService } from '@/email/email.service';
 import { SubscriptionService } from '@/subscription/subscription.service';
 import { UserErasureService } from '@/common/erasure/user-erasure.service';
+import { LlmUsageService } from '@/llm/usage/llm-usage.service';
 import { PwnedPasswordService } from '../../services/pwned-password.service';
 import { ConflictWithCode } from '@/common/exceptions/coded-http.exception';
 import { MockHelper } from '../../../../test/helpers/mock.helper';
@@ -62,6 +63,11 @@ describe('AuthService.register (Unit)', () => {
           // register() never erases anything; only deleteAccount does.
           provide: UserErasureService,
           useValue: { eraseUser: vi.fn() },
+        },
+        {
+          // Only the GDPR export reads usage events.
+          provide: LlmUsageService,
+          useValue: { exportEventsForActor: vi.fn().mockResolvedValue([]) },
         },
         {
           provide: PwnedPasswordService,

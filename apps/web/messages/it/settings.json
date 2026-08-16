@@ -149,13 +149,9 @@
     "privacy": {
       "title": "Privacy",
       "description": "Mantieni il controllo sui tuoi dati.",
-      "publicProfile": {
-        "title": "Profilo pubblico",
-        "description": "Il tuo profilo può essere visto da altri."
-      },
       "analytics": {
-        "title": "Dati di utilizzo anonimi",
-        "description": "Aiutaci a migliorare Applo. Nessun contenuto personale."
+        "title": "Statistiche di utilizzo",
+        "description": "Registriamo il consumo delle funzioni IA (modello, token, durata) sotto pseudonimo, mai il contenuto delle richieste o delle risposte. Disattivato: non salviamo nulla in merito."
       }
     },
     "export": {
