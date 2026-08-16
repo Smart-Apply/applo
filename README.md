@@ -102,7 +102,7 @@ applo/
 ├── apps/
 │   ├── api/                      # NestJS backend (Port 3000)
 │   │   ├── src/
-│   │   │   ├── admin/            # Admin dashboard endpoints
+│   │   │   ├── admin/            # Admin dashboard endpoints + LLM usage analytics
 │   │   │   ├── agents/           # Azure AI Foundry agents
 │   │   │   ├── applications/     # Generation pipeline
 │   │   │   ├── appointments/     # Interview-calendar CRUD
@@ -185,7 +185,7 @@ pnpm typecheck
 - Input sanitization (`@Sanitize()` + DOMPurify)
 - SSRF protection on job-posting URL parsing — public-address allow-list, DNS pinning on the axios path, and a loopback egress proxy that enforces the policy at connect time for the headless-Chromium path (WebSockets blocked)
 - AI prompt guardrails — per-surface character + token limits on every AI input, enforced live in the UI and authoritatively on the server (cost & abuse control)
-- Per-feature LLM usage telemetry — no prompt/response content, no `User` FK, actor keyed by an HMAC-SHA256 pseudonym (pseudonymous, not anonymous — still personal data under GDPR: erased on account deletion, aged out after `LLM_USAGE_RETENTION_DAYS`, default 90)
+- Per-feature LLM usage telemetry — no prompt/response content, no `User` FK, actor keyed by an HMAC-SHA256 pseudonym (pseudonymous, not anonymous — still personal data under GDPR: erased on account deletion, aged out after `LLM_USAGE_RETENTION_DAYS`, default 90). Read back only via the aggregate-only admin analytics endpoints (`GET /admin/llm-usage/{summary,breakdown,timeseries}`) — token/cost totals grouped by feature, tier, language, model, provider, lane or day; the pseudonym is never a filter, a group key or part of a response
 - Winston audit logs (daily rotation, 90-day retention)
 - Sentry error & performance monitoring
 
