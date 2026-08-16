@@ -48,7 +48,7 @@ export default function ValidatePage() {
   const [title, setTitle] = useState('');
   const [language, setLanguage] = useState('auto');
 
-  const { subscription, tier } = useSubscription();
+  const { subscription, tier, isLoading: subscriptionLoading } = useSubscription();
   const {
     data: history,
     isLoading: historyLoading,
@@ -127,10 +127,14 @@ export default function ValidatePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {!isUnlimited && (
-            <Badge variant="secondary">
-              {t('page.quotaBadge', { remaining: Math.max(0, remaining), limit: validations?.limit ?? 0 })}
-            </Badge>
+          {subscriptionLoading ? (
+            <Skeleton className="h-[22px] w-[96px] rounded-[3px]" />
+          ) : (
+            !isUnlimited && (
+              <Badge variant="secondary">
+                {t('page.quotaBadge', { remaining: Math.max(0, remaining), limit: validations?.limit ?? 0 })}
+              </Badge>
+            )
           )}
           <Button
             variant="outline"
