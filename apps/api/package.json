@@ -14,6 +14,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node ../../dist/apps/api/main",
     "lint": "eslint \"{src,test}/**/*.ts\" \"scripts/eval/**/*.ts\" --fix",
+    "check:subprocessors": "node scripts/check-subprocessors.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
