@@ -70,7 +70,7 @@ left; the list now starts at P2.
 | **#780** Löschen im Profil umkehrbar machen | PR [#793](https://github.com/Smart-Apply/applo/pull/793) | none |
 | **#797** reconcile the headless generation seam | PRs [#801](https://github.com/Smart-Apply/applo/pull/801) + [#802](https://github.com/Smart-Apply/applo/pull/802) | none — closing it unblocked #572 and #623 |
 | **#764** Eingabe-Validierung für Profilfelder | PR [#804](https://github.com/Smart-Apply/applo/pull/804) | **one item — see below** |
-| **#763** Profil-Check sortieren und Abschlusszustand bauen | _PR pending — fill in on merge_ | none |
+| **#763** Profil-Check sortieren und Abschlusszustand bauen | PR [#817](https://github.com/Smart-Apply/applo/pull/817) | none |
 
 Five removals are why the numbering above starts at #571. #797 also **promoted
 #572 from P3 to P2**: the harness it was waiting on now exists.
