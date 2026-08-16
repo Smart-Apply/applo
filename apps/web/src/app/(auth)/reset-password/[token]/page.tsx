@@ -164,7 +164,7 @@ export default function ResetPasswordPage() {
                     <Input
                       type="password"
                       placeholder={t('resetPassword.passwordPlaceholder')}
-                      className={`h-10 rounded-[4px] border bg-transparent px-3.5 text-[15px] placeholder:text-muted-foreground focus:border-primary ${
+                      className={`h-10 rounded-[4px] border bg-transparent px-3.5 text-base placeholder:text-muted-foreground focus:border-primary md:text-[15px] ${
                         fieldState.error
                           ? 'border-destructive focus:border-destructive'
                           : fieldState.isDirty && !fieldState.invalid
@@ -192,7 +192,7 @@ export default function ResetPasswordPage() {
                     <Input
                       type="password"
                       placeholder={t('resetPassword.confirmPasswordPlaceholder')}
-                      className={`h-10 rounded-[4px] border bg-transparent px-3.5 text-[15px] placeholder:text-muted-foreground focus:border-primary ${
+                      className={`h-10 rounded-[4px] border bg-transparent px-3.5 text-base placeholder:text-muted-foreground focus:border-primary md:text-[15px] ${
                         fieldState.error
                           ? 'border-destructive focus:border-destructive'
                           : fieldState.isDirty && !fieldState.invalid

@@ -115,6 +115,7 @@ export function UsageIndicator({
       {/* Progress bar */}
       <Progress
         value={percentage}
+        aria-label={label}
         className={cn(
           config.progress,
           // Usage bars in transparent warning (amber) colours — a light amber

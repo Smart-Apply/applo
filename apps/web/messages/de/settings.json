@@ -4,7 +4,6 @@
     "description": "Verwalte deinen Account, deine Sicherheit und deine Präferenzen.",
     "toasts": {
       "loadError": "Fehler beim Laden der Einstellungen",
-      "preferenceSaved": "Einstellung gespeichert",
       "preferenceSaveError": "Fehler beim Speichern der Einstellung"
     }
   },
@@ -47,7 +46,8 @@
       "emailTracking": "Automatisches Bewerbungs-Tracking",
       "language": "Sprache & Region",
       "theme": "Design / Theme",
-      "privacy": "Datenschutz & Export"
+      "privacy": "Datenschutz & Export",
+      "onboarding": "Einführungstour"
     },
     "keywords": {
       "name": "name profil profile vorname first name nachname last name",
@@ -61,7 +61,8 @@
       "emailTracking": "tracking postfach inbox outlook gmail automatisch automatic premium",
       "language": "sprache language region deutsch german english",
       "theme": "theme design dark mode hell light dunkel dark erscheinungsbild appearance",
-      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public"
+      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public",
+      "onboarding": "tour onboarding einfuehrung einführung hilfe help guide anleitung rundgang"
     }
   },
   "account": {
@@ -89,7 +90,6 @@
       "deleting": "Wird gelöscht..."
     },
     "toasts": {
-      "profileUpdated": "Profil erfolgreich aktualisiert",
       "profileUpdateError": "Fehler beim Aktualisieren des Profils",
       "emailConfirmRequired": "Bitte gib deine E-Mail-Adresse zur Bestätigung ein",
       "passwordRequired": "Bitte geben Sie Ihr Passwort ein",
@@ -153,6 +153,13 @@
         "title": "Nutzungsstatistiken",
         "description": "Wir erfassen den Verbrauch der KI-Funktionen (Modell, Tokens, Dauer) unter einem Pseudonym — keine Prompt- oder Antwortinhalte. Aus: Wir speichern dazu gar nichts."
       }
+    },
+    "onboarding": {
+      "title": "Einführung",
+      "description": "Lerne die Funktionen von Applo Schritt für Schritt kennen.",
+      "tourTitle": "Einführungstour",
+      "tourDescription": "Zeigt dir, wie du von deinem Profil zur fertigen Bewerbung kommst.",
+      "start": "Tour starten"
     },
     "export": {
       "title": "Meine Daten exportieren",
@@ -236,10 +243,5 @@
       "cancel": "Abbrechen",
       "confirm": "Verstanden, Postfach verbinden"
     }
-  },
-  "saveBar": {
-    "unsavedChanges": "Ungespeicherte Änderungen",
-    "discard": "Verwerfen",
-    "save": "Speichern"
   }
 }

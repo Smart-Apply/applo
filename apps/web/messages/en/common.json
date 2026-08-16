@@ -25,10 +25,25 @@
     "loading": "Loading...",
     "understood": "Got it"
   },
+  "saveStatus": {
+    "saving": "Saving …",
+    "dirty": "Unsaved changes",
+    "saved": "All changes saved",
+    "error": "Saving failed",
+    "retry": "Retry"
+  },
+  "unsavedChanges": {
+    "title": "Unsaved changes",
+    "description": "Your entries in this form haven't been saved yet. If you close now, they will be lost.",
+    "keepEditing": "Keep editing",
+    "discard": "Discard changes"
+  },
   "loadingMessages": {
     "pdfPreview": "Loading PDF preview...",
     "editor": "Loading editor...",
-    "form": "Loading form..."
+    "form": "Loading form...",
+    "content": "Loading content...",
+    "page": "Loading page..."
   },
   "cookieBanner": {
     "ariaLabel": "Cookie notice",
@@ -41,6 +56,10 @@
     "errorMessageLabel": "Error message:",
     "retry": "Try again",
     "toDashboard": "Go to dashboard"
+  },
+  "errorState": {
+    "title": "Content could not be loaded",
+    "description": "Something went wrong while loading. Please try again."
   },
   "serviceWorker": {
     "updateTitle": "New version available",

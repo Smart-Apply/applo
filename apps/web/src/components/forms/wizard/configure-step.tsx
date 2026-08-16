@@ -582,7 +582,7 @@ export function ConfigureStep({
 
               {/* Template list — fills the left column (under "Anschreiben generieren").
                   Scroll-capped so the column never grows past the preview. */}
-              <div className="space-y-2.5 lg:max-h-[calc(100vh-470px)] lg:overflow-y-auto lg:pr-1">
+              <div className="space-y-2.5 lg:max-h-[calc(100dvh-470px)] lg:overflow-y-auto lg:pr-1">
                 {resumeTemplateGroups.map(group => {
                   const selected = isGroupSelected(group);
                   return (
@@ -707,7 +707,7 @@ export function ConfigureStep({
                       type="button"
                       onClick={() => setZoomOpen(true)}
                       title={t('configureStep.preview.zoomTitle')}
-                      className="group relative aspect-[8.5/11] h-[560px] max-h-[calc(100vh-540px)] cursor-zoom-in overflow-hidden border border-[#B0B0B0] bg-white shadow-[8px_8px_0_#E5E9F2] transition-shadow hover:shadow-[8px_8px_0_#D8E0EF]"
+                      className="group relative aspect-[8.5/11] w-full max-w-[300px] cursor-zoom-in overflow-hidden border border-[#B0B0B0] bg-white shadow-[8px_8px_0_#E5E9F2] transition-shadow hover:shadow-[8px_8px_0_#D8E0EF] lg:h-[560px] lg:w-auto lg:max-w-none lg:max-h-[calc(100dvh-540px)]"
                     >
                       <Image
                         key={shownTemplateId}

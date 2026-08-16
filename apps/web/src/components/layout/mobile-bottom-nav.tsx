@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * Items shown on the always-visible mobile bottom navigation. We pick the
- * five highest-value destinations and surface everything else behind the
+ * highest-value destinations and surface everything else behind the
  * existing hamburger Sheet (rendered via the `onMoreClick` prop).
  *
  * Why not include every nav item:
@@ -24,6 +24,10 @@ import { cn } from '@/lib/utils';
  *    wide which iOS HIG / Material guidelines call out as too small.
  *  - The Sheet drawer remains the source of truth for the full menu, so
  *    nothing is hidden — just deprioritised on a narrow screen.
+ *
+ * The grid column count below must stay `items + 1` (the trailing "Mehr"
+ * button). A mismatch leaves a dead column and visibly shoves the whole
+ * row off-centre.
  */
 interface BottomNavItem {
   nameKey: string;
@@ -61,11 +65,13 @@ export function MobileBottomNav({ onMoreClick }: MobileBottomNavProps) {
       aria-label={t('nav.mainNavigation')}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden',
-        // Respect the iOS home indicator so the tap row never sits under it.
-        'pb-[env(safe-area-inset-bottom)]',
+        // Respect the iOS home indicator so the tap row never sits under it,
+        // and the landscape notch so the outer tabs stay reachable.
+        'pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]',
       )}
     >
-      <ul className="grid grid-cols-5">
+      {/* Keep in sync with BOTTOM_NAV_ITEMS.length + 1 ("Mehr"). */}
+      <ul className="grid grid-cols-4">
         {BOTTOM_NAV_ITEMS.map((item) => (
           <li key={item.href} className="contents">
             <BottomNavLink item={item} pathname={pathname} />

@@ -175,7 +175,7 @@ export function TwoFactorSetupDialog({ open, onOpenChange }: TwoFactorSetupDialo
                   <Input
                     value={setupMutation.data.tempSecret}
                     readOnly
-                    className="font-mono text-xs"
+                    className="font-mono text-base md:text-xs"
                   />
                   <Button
                     variant="outline"

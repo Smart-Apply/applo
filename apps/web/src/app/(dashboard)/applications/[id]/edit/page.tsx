@@ -12,7 +12,6 @@ import {
   Check,
   Download,
   Lock,
-  Loader2,
   Pencil,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredLoader } from '@/components/shared/loading';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { EditableResume, resolveResumeDesign } from '@/components/applications/editable-resume';
 import { AtsOptimizer } from '@/components/applications/ats-optimizer';
 import { AiAssistantPopover } from '@/components/ui/ai-assistant-popover';
@@ -38,6 +38,8 @@ import {
 import { useResumeTemplates } from '@/hooks/use-templates';
 import { useProfilePhoto } from '@/hooks/use-profile';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
+import { useSaveStatus, type SaveState } from '@/hooks/use-save-status';
+import { SaveStatus } from '@/components/ui/save-status';
 import { parseResumeDraft, normalizeResumeForSave } from '@/lib/resume';
 import type { ResumeData } from '@/types';
 import { toast } from 'sonner';
@@ -53,7 +55,14 @@ const EditableCoverLetter = dynamic(
     import('@/components/applications/editable-cover-letter').then((m) => ({
       default: m.EditableCoverLetter,
     })),
-  { loading: () => <Skeleton className="mx-auto h-96 w-full max-w-[820px] rounded-[4px]" />, ssr: false },
+  {
+    loading: () => (
+      <SkeletonScreen>
+        <Skeleton className="mx-auto h-96 w-full max-w-[820px] rounded-[4px]" />
+      </SkeletonScreen>
+    ),
+    ssr: false,
+  },
 );
 const CoverLetterCTA = dynamic(
   () =>
@@ -134,6 +143,13 @@ export default function ApplicationResumeEditorPage() {
   const lastAttemptedResume = useRef<string | null>(null);
   const lastAttemptedCover = useRef<string | null>(null);
 
+  // One save-state machine per document tab — same primitives as /profile and
+  // /settings, so the auto-save reports identically across the product.
+  const resumeSave = useSaveStatus();
+  const coverSave = useSaveStatus();
+  const { track: trackResumeSave } = resumeSave;
+  const { track: trackCoverSave } = coverSave;
+
   const resumeText = application?.resumeText ?? null;
   const coverLetterText = application ? (application.coverLetterText ?? '') : null;
 
@@ -205,8 +221,8 @@ export default function ApplicationResumeEditorPage() {
     if (!parsedResume) return;
     const snapshot = JSON.stringify(parsedResume);
     lastAttemptedResume.current = snapshot;
-    try {
-      const normalized = normalizeResumeForSave(parsedResume);
+    const normalized = normalizeResumeForSave(parsedResume);
+    await trackResumeSave(async () => {
       await updateResume.mutateAsync({ resume: normalized });
       // Reconcile to the normalized value so we don't loop on trim/format diffs —
       // but ONLY if nothing was edited (e.g. via the AI assistant) while this save
@@ -214,13 +230,8 @@ export default function ApplicationResumeEditorPage() {
       // just triggers the next auto-save cycle.
       setParsedResume((current) => (JSON.stringify(current) === snapshot ? normalized : current));
       setLastSavedResume(normalized);
-    } catch (err) {
-      toast.error(t('page.toasts.resumeSaveFailed'), {
-        id: 'resume-autosave-error',
-        description: (err as Error).message,
-      });
-    }
-  }, [parsedResume, updateResume, t]);
+    }, t('page.toasts.resumeSaveFailed'));
+  }, [parsedResume, updateResume, trackResumeSave, t]);
 
   useEffect(() => {
     if (!resumeInitialized || !hasResumeChanges || updateResume.isPending) return;
@@ -234,13 +245,11 @@ export default function ApplicationResumeEditorPage() {
   const autoSaveCover = useCallback(async () => {
     if (!coverHasContent) return;
     lastAttemptedCover.current = coverLetterValue;
-    try {
+    await trackCoverSave(async () => {
       await upsertCoverLetter.mutateAsync({ content: coverLetterValue });
       setLastSavedCoverLetter(coverLetterValue);
-    } catch {
-      toast.error(t('page.toasts.coverLetterSaveFailed'), { id: 'cover-autosave-error' });
-    }
-  }, [coverHasContent, coverLetterValue, upsertCoverLetter, t]);
+    }, t('page.toasts.coverLetterSaveFailed'));
+  }, [coverHasContent, coverLetterValue, upsertCoverLetter, trackCoverSave, t]);
 
   useEffect(() => {
     if (!coverInitialized || !hasCoverChanges || upsertCoverLetter.isPending) return;
@@ -467,9 +476,11 @@ export default function ApplicationResumeEditorPage() {
   const letterLocation = [parsedResume?.city, parsedResume?.country].filter(Boolean).join(', ') || parsedResume?.fullAddress;
 
   // Auto-save status for the current document tab.
+  const tabSave = activeTab === 'resume' ? resumeSave : coverSave;
   const tabSaving = activeTab === 'resume' ? updateResume.isPending : upsertCoverLetter.isPending;
   const tabDirty = activeTab === 'resume' ? hasResumeChanges : hasCoverChanges;
-  const saveStatus = tabSaving ? 'saving' : tabDirty ? 'dirty' : 'saved';
+  const saveStatus: SaveState =
+    tabSave.state === 'error' ? 'error' : tabSaving ? 'saving' : tabDirty ? 'dirty' : 'saved';
 
   const tabs: { id: Tab; label: string; icon: typeof FileText; locked?: boolean }[] = [
     { id: 'resume', label: t('page.tabs.resume'), icon: FileText },
@@ -481,7 +492,7 @@ export default function ApplicationResumeEditorPage() {
     <TooltipProvider>
       <div
         className={cn(
-          'sa-editor mx-auto animate-in fade-in duration-300',
+          'sa-editor mx-auto',
           activeTab === 'ats' ? 'max-w-[1400px]' : 'max-w-6xl',
         )}
       >
@@ -509,7 +520,13 @@ export default function ApplicationResumeEditorPage() {
 
         {/* Tab bar */}
         <div className="mt-5 mb-5 flex flex-wrap items-center justify-between gap-3 border border-[#e0e0e0] bg-white p-2">
-          <div role="tablist" aria-label={t('page.tabs.ariaLabel')} className="flex items-center border border-[#e0e0e0] bg-[#e0e0e0]">
+          <div
+            role="tablist"
+            aria-label={t('page.tabs.ariaLabel')}
+            // The three labels are wider than a 360px phone, so the strip
+            // scrolls horizontally instead of pushing the page sideways.
+            className="flex max-w-full items-center overflow-x-auto border border-[#e0e0e0] bg-[#e0e0e0]"
+          >
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -526,7 +543,7 @@ export default function ApplicationResumeEditorPage() {
                           aria-selected="false"
                           tabIndex={-1}
                           disabled
-                          className="inline-flex cursor-not-allowed items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-[#94a3b8]"
+                          className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-[#94a3b8]"
                         >
                           <Icon className="h-4 w-4" /> {tab.label} <Lock className="h-3 w-3" />
                         </button>
@@ -552,7 +569,7 @@ export default function ApplicationResumeEditorPage() {
                   tabIndex={active ? 0 : -1}
                   onClick={() => handleTabChange(tab.id)}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors",
+                    'inline-flex shrink-0 items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors',
                     active
                       ? 'bg-[#1b2a49] text-white'
                       : 'bg-white text-[#6b6969] hover:bg-[#f5f6f8] hover:text-[#1b2a49]',
@@ -564,7 +581,7 @@ export default function ApplicationResumeEditorPage() {
             })}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {activeTab === 'cover-letter' && hasCover && (
               <AiAssistantPopover
                 open={aiPopoverOpen}
@@ -618,26 +635,7 @@ export default function ApplicationResumeEditorPage() {
                 ? t('page.editHint.resume')
                 : t('page.editHint.coverLetter')}
             </span>
-            <span
-              className={cn(
-                "inline-flex items-center gap-2 font-['IBM_Plex_Mono'] text-[11px] font-semibold tracking-[0.06em] uppercase",
-                saveStatus === 'saving' && 'text-[#6b6969]',
-                saveStatus === 'dirty' && 'text-[#92400e]',
-                saveStatus === 'saved' && 'text-[#16a34a]',
-              )}
-            >
-              {saveStatus === 'saving' ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('page.saveStatus.saving')}
-                </>
-              ) : saveStatus === 'dirty' ? (
-                t('page.saveStatus.dirty')
-              ) : (
-                <>
-                  <span className="livedot" /> {t('page.saveStatus.saved')}
-                </>
-              )}
-            </span>
+            <SaveStatus state={saveStatus} onRetry={tabSave.retry} />
           </div>
         )}
 
@@ -679,7 +677,7 @@ export default function ApplicationResumeEditorPage() {
         )}
 
         {activeTab === 'ats' && parsedResume && (
-          <div id="tabpanel-ats" role="tabpanel" aria-labelledby="tab-ats" className="h-[calc(100vh-15rem)] min-h-[520px] pb-2">
+          <div id="tabpanel-ats" role="tabpanel" aria-labelledby="tab-ats" className="h-[calc(100dvh-15rem)] min-h-[520px] pb-2">
             <AtsOptimizer
               applicationId={applicationId}
               resume={parsedResume}

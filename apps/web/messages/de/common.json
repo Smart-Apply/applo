@@ -25,10 +25,25 @@
     "loading": "Lädt...",
     "understood": "Verstanden"
   },
+  "saveStatus": {
+    "saving": "Speichert …",
+    "dirty": "Nicht gespeicherte Änderungen",
+    "saved": "Alle Änderungen gespeichert",
+    "error": "Speichern fehlgeschlagen",
+    "retry": "Erneut versuchen"
+  },
+  "unsavedChanges": {
+    "title": "Ungespeicherte Änderungen",
+    "description": "Deine Eingaben in diesem Formular wurden noch nicht gespeichert. Wenn du jetzt schließt, gehen sie verloren.",
+    "keepEditing": "Weiter bearbeiten",
+    "discard": "Änderungen verwerfen"
+  },
   "loadingMessages": {
     "pdfPreview": "Lädt PDF-Vorschau...",
     "editor": "Lädt Editor...",
-    "form": "Lädt Formular..."
+    "form": "Lädt Formular...",
+    "content": "Inhalte werden geladen...",
+    "page": "Seite wird geladen..."
   },
   "cookieBanner": {
     "ariaLabel": "Cookie-Hinweis",
@@ -41,6 +56,10 @@
     "errorMessageLabel": "Fehlermeldung:",
     "retry": "Erneut versuchen",
     "toDashboard": "Zum Dashboard"
+  },
+  "errorState": {
+    "title": "Inhalte konnten nicht geladen werden",
+    "description": "Beim Laden ist ein Fehler aufgetreten. Bitte versuche es erneut."
   },
   "serviceWorker": {
     "updateTitle": "Neue Version verfügbar",

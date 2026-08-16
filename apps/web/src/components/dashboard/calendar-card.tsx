@@ -299,7 +299,7 @@ export function CalendarCard({ className }: { className?: string }) {
 
       {/* Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-3xl">
+        <DialogContent className="max-h-[90dvh] gap-0 overflow-y-auto p-0 sm:max-w-3xl">
           <DialogHeader className="space-y-0 border-b px-5 py-4 text-left">
             <DialogTitle className="font-heading text-lg font-bold tracking-[-.01em]">
               {t('page.calendar.modalTitle')}

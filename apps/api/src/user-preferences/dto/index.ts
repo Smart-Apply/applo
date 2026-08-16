@@ -88,6 +88,16 @@ export class UpdateUserPreferencesDto {
   @IsOptional()
   @IsBoolean()
   analyticsEnabled?: boolean;
+
+  @ApiProperty({
+    example: true,
+    required: false,
+    description:
+      'Whether the user finished or skipped the onboarding guide. Once true, the guided tour is no longer auto-opened on login (it stays manually re-openable).',
+  })
+  @IsOptional()
+  @IsBoolean()
+  onboardingCompleted?: boolean;
 }
 
 export class UserPreferencesResponseDto {
@@ -120,6 +130,12 @@ export class UserPreferencesResponseDto {
 
   @ApiProperty({ example: true })
   analyticsEnabled: boolean;
+
+  @ApiProperty({
+    example: false,
+    description: 'Onboarding guide finished or skipped (suppresses the auto-opened tour)',
+  })
+  onboardingCompleted: boolean;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   createdAt: Date;

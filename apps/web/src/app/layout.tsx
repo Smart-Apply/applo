@@ -10,6 +10,7 @@ import { CookieBanner } from "@/components/cookie-banner";
 import { LocaleRuntimeSync } from "@/components/i18n/locale-runtime-sync";
 import type { Locale } from "@/i18n/config";
 import { X_HANDLE } from "@/lib/social-links";
+import { SITE_METADATA_BASE } from "@/lib/site-url";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,20 +39,19 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  // Load-bearing for every `env(safe-area-inset-*)` in the app: WebKit
+  // resolves those to 0px unless the viewport meta carries
+  // `viewport-fit=cover`. Without it the bottom nav, the cookie banner and
+  // the dashboard's bottom padding all sit under the iPhone home indicator
+  // even though the CSS looks correct.
+  viewportFit: 'cover',
 };
-
-// Base URL used to resolve relative metadata (OG/Twitter images, canonicals)
-// into absolute URLs. Falls back to the production origin so social previews
-// work even when NEXT_PUBLIC_APP_URL isn't set (e.g. Cloudflare prod bundle).
-const metadataBase = new URL(
-  process.env.NEXT_PUBLIC_APP_URL ?? 'https://applo.ai',
-);
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('common.meta');
 
   return {
-    metadataBase,
+    metadataBase: SITE_METADATA_BASE,
     title: t('title'),
     description: t('description'),
     manifest: '/manifest.json',

@@ -1,6 +1,7 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import { useForm, useFormState } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -22,6 +23,10 @@ import {
 } from '@/components/ui/form';
 import { Mail } from 'lucide-react';
 import { profileFormSchema, type ProfileFormValues } from '@/lib/validation/profile-schema';
+import {
+  UnsavedChangesDialog,
+  useUnsavedChangesGuard,
+} from '@/components/ui/unsaved-changes-dialog';
 import { useTranslations } from 'next-intl';
 
 /** Contact / identity fields the dialog owns (summary is edited inline elsewhere). */
@@ -65,22 +70,35 @@ export function ContactEditorDialog({
 }: ContactEditorDialogProps) {
   const t = useTranslations('profile');
 
+  const guard = useUnsavedChangesGuard(open, () => onOpenChange(false));
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>{t('edit.basic.title')}</DialogTitle>
-          <DialogDescription>{t('edit.basic.description')}</DialogDescription>
-        </DialogHeader>
-        <ContactForm
-          email={email}
-          defaultValues={defaultValues}
-          onSubmit={onSubmit}
-          onCancel={() => onOpenChange(false)}
-          pending={pending}
-        />
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => (next ? onOpenChange(true) : guard.requestClose())}
+      >
+        <DialogContent className="max-h-[90dvh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
+          <DialogHeader className="px-6 pt-6 pb-2">
+            <DialogTitle>{t('edit.basic.title')}</DialogTitle>
+            <DialogDescription>{t('edit.basic.description')}</DialogDescription>
+          </DialogHeader>
+          <ContactForm
+            email={email}
+            defaultValues={defaultValues}
+            onDirtyChange={guard.setDirty}
+            onSubmit={onSubmit}
+            onCancel={guard.requestClose}
+            pending={pending}
+          />
+        </DialogContent>
+      </Dialog>
+      <UnsavedChangesDialog
+        open={guard.confirmOpen}
+        onKeepEditing={guard.keepEditing}
+        onDiscard={guard.discard}
+      />
+    </>
   );
 }
 
@@ -90,12 +108,14 @@ function ContactForm({
   onSubmit,
   onCancel,
   pending,
+  onDirtyChange,
 }: {
   email?: string;
   defaultValues: ContactValues;
   onSubmit: (values: ContactValues) => void;
   onCancel: () => void;
   pending: boolean;
+  onDirtyChange: (dirty: boolean) => void;
 }) {
   const t = useTranslations('profile');
 
@@ -103,6 +123,12 @@ function ContactForm({
     resolver: zodResolver(profileFormSchema),
     defaultValues,
   });
+
+  // Lets the dialog warn before an accidental close throws the entry away.
+  const { isDirty } = useFormState({ control: form.control });
+  useEffect(() => {
+    onDirtyChange(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   return (
     <Form {...form}>

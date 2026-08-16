@@ -244,7 +244,7 @@ export function DocumentInput({
               placeholder={t('documentInput.resumePlaceholder')}
               value={resumeText}
               onChange={(e) => onResumeChange(e.target.value)}
-              className="resize-y text-sm"
+              className="resize-y text-base md:text-sm"
               style={{ minHeight: 150 }}
             />
             <span
@@ -324,7 +324,7 @@ export function DocumentInput({
                   placeholder={t('documentInput.coverLetterPlaceholder')}
                   value={coverLetterText}
                   onChange={(e) => onCoverLetterChange(e.target.value)}
-                  className="resize-y text-sm"
+                  className="resize-y text-base md:text-sm"
                   style={{ minHeight: 120 }}
                 />
                 <span

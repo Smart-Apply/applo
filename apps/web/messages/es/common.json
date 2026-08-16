@@ -25,10 +25,25 @@
     "loading": "Cargando...",
     "understood": "Entendido"
   },
+  "saveStatus": {
+    "saving": "Guardando …",
+    "dirty": "Cambios sin guardar",
+    "saved": "Todos los cambios guardados",
+    "error": "Error al guardar",
+    "retry": "Reintentar"
+  },
+  "unsavedChanges": {
+    "title": "Cambios sin guardar",
+    "description": "Los datos de este formulario aún no se han guardado. Si cierras ahora, se perderán.",
+    "keepEditing": "Seguir editando",
+    "discard": "Descartar cambios"
+  },
   "loadingMessages": {
     "pdfPreview": "Cargando vista previa del PDF...",
     "editor": "Cargando editor...",
-    "form": "Cargando formulario..."
+    "form": "Cargando formulario...",
+    "content": "Cargando contenido...",
+    "page": "Cargando página..."
   },
   "cookieBanner": {
     "ariaLabel": "Aviso de cookies",
@@ -41,6 +56,10 @@
     "errorMessageLabel": "Mensaje de error:",
     "retry": "Volver a intentar",
     "toDashboard": "Ir al panel"
+  },
+  "errorState": {
+    "title": "No se pudo cargar el contenido",
+    "description": "Se produjo un error al cargar. Vuelve a intentarlo."
   },
   "serviceWorker": {
     "updateTitle": "Nueva versión disponible",

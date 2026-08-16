@@ -74,7 +74,7 @@ export default async function FaqPage() {
         <div className="mt-3 space-y-3">
           {generalFaqKeys.map((key) => (
             <details key={key} className="group rounded-[4px] border border-border bg-card p-4">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-heading text-base font-semibold text-primary [&::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between font-heading text-base font-semibold text-primary md:min-h-0 [&::-webkit-details-marker]:hidden">
                 <span>{t(`items.${key}.q`)}</span>
                 <span
                   className="ml-4 select-none text-xl text-muted-foreground transition-transform group-open:rotate-45"

@@ -57,6 +57,7 @@ export class UserPreferencesService {
     if (dto.language !== undefined) data.language = dto.language;
     if (dto.theme !== undefined) data.theme = dto.theme;
     if (dto.analyticsEnabled !== undefined) data.analyticsEnabled = dto.analyticsEnabled;
+    if (dto.onboardingCompleted !== undefined) data.onboardingCompleted = dto.onboardingCompleted;
 
     return data;
   }
@@ -72,6 +73,7 @@ export class UserPreferencesService {
       language: preferences.language,
       theme: preferences.theme,
       analyticsEnabled: preferences.analyticsEnabled,
+      onboardingCompleted: preferences.onboardingCompleted,
       createdAt: preferences.createdAt,
       updatedAt: preferences.updatedAt,
     };

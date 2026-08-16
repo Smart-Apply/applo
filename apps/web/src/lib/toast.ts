@@ -149,12 +149,20 @@ export function toastErrorWithRetry(
   error: unknown,
   onRetry: () => void,
   fallbackMessage?: string,
-  retryLabel?: string
+  retryLabel?: string,
+  /**
+   * `id` collapses repeated failures of the same operation onto one toast
+   * (an auto-save against a dead endpoint would otherwise stack them);
+   * `description` carries the underlying reason next to the generic message.
+   */
+  options?: { id?: string | number; description?: string }
 ) {
   const message = fallbackMessage || getErrorMessage(error);
   
   sonnerToast.error(message, {
+    id: options?.id,
     duration: 6000,
+    description: options?.description,
     action: {
       label: retryLabel ?? pick(TOAST_MESSAGES.retryLabel),
       onClick: onRetry,

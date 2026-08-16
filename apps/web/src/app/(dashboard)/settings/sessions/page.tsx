@@ -1,6 +1,6 @@
 'use client';
 
-import { Monitor, Smartphone, LogOut, AlertTriangle, Shield } from 'lucide-react';
+import { Monitor, Smartphone, LogOut, Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSessions, useRevokeSession, useRevokeAllSessions } from '@/hooks/use-sessions';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { SessionCardSkeleton } from '@/components/shared/skeletons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -137,7 +139,7 @@ function SessionCard({ session, isCurrentSession, onRevoke }: {
  */
 export default function SessionsPage() {
   const t = useTranslations('settings');
-  const { data, isLoading, error } = useSessions();
+  const { data, isLoading, isFetching, error, refetch } = useSessions();
   const revokeSession = useRevokeSession();
   const revokeAllSessions = useRevokeAllSessions();
 
@@ -158,15 +160,7 @@ export default function SessionsPage() {
         </p>
         <div className="space-y-4">
           {[1, 2].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-5 bg-muted rounded w-1/3" />
-                <div className="h-4 bg-muted rounded w-1/2 mt-2" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-4 bg-muted rounded w-1/4" />
-              </CardContent>
-            </Card>
+            <SessionCardSkeleton key={i} />
           ))}
         </div>
       </div>
@@ -177,17 +171,12 @@ export default function SessionsPage() {
     return (
       <div className="container mx-auto py-8 px-4">
         <h1 className="mb-2 font-heading text-[26px] font-extrabold tracking-[-.025em] text-foreground md:text-[30px]">{t('sessions.title')}</h1>
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              {t('sessions.loadErrorTitle')}
-            </CardTitle>
-            <CardDescription>
-              {error.message || t('sessions.loadErrorDescription')}
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <ErrorState
+          title={t('sessions.loadErrorTitle')}
+          description={error.message || t('sessions.loadErrorDescription')}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }

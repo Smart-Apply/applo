@@ -19,7 +19,7 @@ html { scroll-behavior: smooth; }
   --mono:var(--font-mono-plex),"IBM Plex Mono",ui-monospace,monospace;
   --heading:var(--font-archivo),"Archivo",system-ui,sans-serif;
 
-  min-height:100vh;
+  min-height:100dvh;
   font-family:var(--font-inter),"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   color:var(--ink); background:#FFFFFF; -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
@@ -293,6 +293,14 @@ html { scroll-behavior: smooth; }
 .applo-home .footer .pill { display:inline-block; border:1px solid rgba(255,255,255,.25);
   padding:5px 12px; font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:rgba(229,233,242,.85); margin-top:6px; }
 @media(max-width:680px) { .applo-home .footer .fmeta { margin-left:0; text-align:left; align-items:flex-start; } }
+/* Touch: footer/nav links are the only remaining sub-44px targets on a phone,
+   so give them a full-height hit area without changing how they look. */
+@media(max-width:767px) {
+  .applo-home .footer .fcol a, .applo-home .footer .fsocial a { display:inline-flex; align-items:center; min-height:44px; }
+  .applo-home .footer .fcol { gap:0; }
+  .applo-home a.brand { min-height:44px; }
+  .applo-home .btn { min-height:44px; }
+}
 
 /* reveal */
 .applo-home .reveal { opacity:0; transform:translateY(20px); transition:opacity .65s ease, transform .65s ease; transition-delay:var(--d,0s); }

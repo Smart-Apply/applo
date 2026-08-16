@@ -15,12 +15,14 @@ import { estimateCostUsd } from './llm-pricing';
  * reading an attacker-controllable page). Normalising against a fixed
  * allow-list here keeps the invariant true regardless of upstream validation.
  */
-const TRACKED_LANGUAGES = new Set(['de', 'en', 'fr', 'es', 'pt', 'it']);
+export const TRACKED_LANGUAGES = ['de', 'en', 'fr', 'es', 'pt', 'it'] as const;
+
+const TRACKED_LANGUAGE_SET = new Set<string>(TRACKED_LANGUAGES);
 
 function normalizeLanguage(value: string | undefined): string | null {
   if (!value) return null;
   const normalized = value.trim().toLowerCase();
-  return TRACKED_LANGUAGES.has(normalized) ? normalized : null;
+  return TRACKED_LANGUAGE_SET.has(normalized) ? normalized : null;
 }
 
 /**

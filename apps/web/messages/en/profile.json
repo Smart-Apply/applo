@@ -122,6 +122,9 @@
     },
     "profileCheck": {
       "title": "Profile check",
+      "completeTitle": "Profile ready",
+      "completeBody": "Everything is filled in. Applo now has all it needs to write precise applications for you.",
+      "biggestWin": "Biggest win",
       "why": "<bold>Why?</bold> Every completed field makes Applo’s AI applications more accurate and unlocks more suitable jobs."
     },
     "privacy": {
@@ -503,7 +506,6 @@
   },
   "hooks": {
     "updateError": "Error updating profile",
-    "updateSuccess": "Profile updated successfully",
     "parseError": "Error analyzing résumé"
   },
   "sections": {

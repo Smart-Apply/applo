@@ -1,0 +1,106 @@
+{
+  "tour": {
+    "stepIndicator": "Étape {current} sur {total}",
+    "progressLabel": "Progression de la visite guidée",
+    "badges": {
+      "pro": "Pro & Premium",
+      "premium": "Premium"
+    },
+    "actions": {
+      "skip": "Passer",
+      "back": "Retour",
+      "next": "Suivant",
+      "finish": "Terminer la visite"
+    },
+    "steps": {
+      "welcome": {
+        "title": "Bienvenue sur Applo",
+        "description": "En quelques minutes, découvrez comment votre profil et une offre d'emploi deviennent une candidature complète, quel que soit votre secteur ou votre métier.",
+        "bullets": [
+          "Créez votre profil une seule fois – Applo le réutilise pour chaque candidature.",
+          "Ajoutez une offre d'emploi et laissez Applo rédiger la lettre de motivation et le CV.",
+          "Ajustez les documents dans l'éditeur et téléchargez-les en PDF."
+        ]
+      },
+      "profile": {
+        "title": "Créer votre profil ou importer votre CV",
+        "description": "Votre profil est la base de toutes vos candidatures. Le plus rapide : importer un CV existant.",
+        "bullets": [
+          "Importez votre CV au format PDF ou Word – postes, diplômes et compétences sont repris automatiquement.",
+          "Complétez expériences, formation, certifications, projets et langues – que vous soyez infirmier, technicien de production ou responsable commerciale.",
+          "Plus votre profil est complet, plus les documents générés sont précis."
+        ],
+        "cta": "Ouvrir le profil"
+      },
+      "jobs": {
+        "title": "Ajouter une offre & trouver des emplois",
+        "description": "Applo analyse l'offre et identifie le poste, l'entreprise et les exigences.",
+        "bullets": [
+          "Collez l'offre sous forme de texte, indiquez un lien ou importez un fichier.",
+          "Ou utilisez la recherche d'emploi intégrée pour trouver des postes adaptés.",
+          "Chaque offre enregistrée peut servir plus tard à une nouvelle candidature."
+        ],
+        "cta": "Ouvrir les offres"
+      },
+      "generate": {
+        "title": "Générer une candidature",
+        "description": "Associez votre profil à une offre – Applo rédige une lettre de motivation et un CV adaptés au poste.",
+        "bullets": [
+          "L'assistant vous guide en quelques étapes.",
+          "Le statut passe automatiquement de « en attente » à « en cours » puis « prête » – vous pouvez quitter la page entre-temps.",
+          "Les termes clés de l'offre sont intégrés pour que vos documents passent aussi les logiciels de recrutement (ATS)."
+        ],
+        "cta": "Lancer une candidature"
+      },
+      "editor": {
+        "title": "Éditeur PDF & modèles de mise en page",
+        "description": "Les finitions sans traitement de texte : ajuster le contenu, choisir un design, exporter.",
+        "bullets": [
+          "Modifiez la lettre et le CV directement dans l'éditeur – avec l'aide de l'IA pour chaque section.",
+          "Plusieurs modèles compatibles ATS, ainsi que la couleur d'accent, la police et l'interligne.",
+          "Export en PDF, dans une autre langue si besoin."
+        ],
+        "cta": "Ouvrir les candidatures"
+      },
+      "check": {
+        "title": "Vérification de candidature",
+        "description": "Faites analyser des documents créés en dehors d'Applo avant de les envoyer.",
+        "bullets": [
+          "Collez votre CV et, si vous le souhaitez, votre lettre – vous pouvez ajouter l'offre comme contexte.",
+          "Vous recevez une évaluation ATS, vos points forts et des pistes d'amélioration concrètes."
+        ],
+        "cta": "Lancer la vérification"
+      },
+      "interviews": {
+        "title": "Coach d'entretien",
+        "description": "Entraînez-vous aux entretiens – par écrit dans le chat ou à l'oral avec un intervieweur IA.",
+        "bullets": [
+          "Les questions s'appuient sur votre profil et sur le poste.",
+          "Vos réponses sont évaluées et vous recevez un retour concret.",
+          "En mode vocal, vous menez l'entretien comme en situation réelle."
+        ],
+        "cta": "Ouvrir le coach d'entretien"
+      },
+      "tracking": {
+        "title": "Suivi des e-mails",
+        "description": "Applo repère les réponses des entreprises dans votre boîte mail et met à jour le statut automatiquement.",
+        "bullets": [
+          "Connectez votre boîte mail une seule fois (actuellement Microsoft/Outlook).",
+          "Les réponses reçues sont associées à la bonne candidature.",
+          "Aucun contenu d'e-mail n'est conservé – uniquement le statut détecté."
+        ],
+        "cta": "Ouvrir les paramètres"
+      },
+      "done": {
+        "title": "Tout est prêt – bonne chance !",
+        "description": "Vous connaissez maintenant les fonctions essentielles d'Applo.",
+        "bullets": [
+          "Vous pouvez relancer cette visite à tout moment via « Aide & visite » dans la barre latérale.",
+          "Vous la retrouvez aussi dans les paramètres, section « Préférences ».",
+          "Prochaine étape : compléter votre profil et créer votre première candidature."
+        ],
+        "cta": "Créer ma première candidature"
+      }
+    }
+  }
+}

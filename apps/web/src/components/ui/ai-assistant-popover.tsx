@@ -112,7 +112,7 @@ export function AiAssistantPopover({
             rows={3}
             disabled={isLoading}
             aria-invalid={usage.isOverLimit}
-            className="resize-none text-sm"
+            className="resize-none text-base md:text-sm"
           />
           <PromptUsageMeter usage={usage} />
           <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded">

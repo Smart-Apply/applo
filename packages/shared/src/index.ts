@@ -821,6 +821,11 @@ export interface UserPreferences {
    * without a code path that reads it (issue #806).
    */
   analyticsEnabled: boolean;
+  /**
+   * True once the user finished or skipped the onboarding guide. Suppresses
+   * the auto-opened tour on login; the tour stays manually re-openable.
+   */
+  onboardingCompleted: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -833,6 +838,7 @@ export interface UpdateUserPreferencesDto {
   language?: string;
   theme?: string;
   analyticsEnabled?: boolean;
+  onboardingCompleted?: boolean;
 }
 
 // ============================================

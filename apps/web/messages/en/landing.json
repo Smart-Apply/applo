@@ -1,4 +1,17 @@
 {
+  "meta": {
+    "title": "Applo – AI job applications built from your real profile",
+    "description": "Cover letters and CVs in minutes: Applo turns your real profile into ATS-optimised application documents for any profession – GDPR-compliant and hosted in the EU.",
+    "keywords": [
+      "job application",
+      "cover letter generator",
+      "CV builder",
+      "resume builder",
+      "AI job application",
+      "ATS optimised",
+      "interview practice"
+    ]
+  },
   "mascot": {
     "wave": {
       "title": "Hi, I’m Applo!",

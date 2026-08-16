@@ -153,7 +153,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-2xl mx-auto space-y-8 py-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="font-heading text-3xl font-extrabold tracking-[-.025em] text-foreground">

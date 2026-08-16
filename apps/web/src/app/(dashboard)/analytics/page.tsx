@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Send, Sparkles, Trophy, Target } from 'lucide-react';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ErrorState } from '@/components/ui/error-state';
 import { useFeatureGate } from '@/hooks/use-tier-gate';
 import { api } from '@/lib/api-client';
 import { ApiError } from '@/lib/errors';
@@ -14,6 +14,7 @@ import type { AnalyticsOverview } from '@/types';
 import type { AnalyticsRange } from '@/lib/analytics-utils';
 
 import { AnalyticsSkeleton } from '@/components/analytics/analytics-skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { AnalyticsUpgrade } from '@/components/analytics/analytics-upgrade';
 import { AnalyticsEmptyState } from '@/components/analytics/analytics-empty-state';
 import { InsightStrip } from '@/components/analytics/insight-strip';
@@ -39,7 +40,7 @@ export default function AnalyticsPage() {
   const { hasAccess, isLoading: gateLoading } = useFeatureGate('advancedAnalytics');
   const [range, setRange] = useState<AnalyticsRange>(30);
 
-  const { data, isLoading, error } = useQuery<AnalyticsOverview>({
+  const { data, isLoading, isFetching, error, refetch } = useQuery<AnalyticsOverview>({
     queryKey: ['analytics', 'overview'],
     queryFn: () => api.analytics.getOverview(),
     enabled: hasAccess,
@@ -62,7 +63,11 @@ export default function AnalyticsPage() {
   );
 
   if (gateLoading || isLoading) {
-    return <AnalyticsSkeleton />;
+    return (
+      <SkeletonScreen>
+        <AnalyticsSkeleton />
+      </SkeletonScreen>
+    );
   }
 
   if (!hasAccess) {
@@ -72,14 +77,12 @@ export default function AnalyticsPage() {
   if (error || !data || !kpis || !funnel) {
     return (
       <div className="container max-w-7xl py-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('page.errorTitle')}</CardTitle>
-            <CardDescription>
-              {error instanceof Error ? error.message : t('page.unknownError')}
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <ErrorState
+          title={t('page.errorTitle')}
+          description={error instanceof Error ? error.message : t('page.unknownError')}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }
