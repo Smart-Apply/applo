@@ -31,11 +31,6 @@
       "resume": "Fai clic su qualsiasi testo per modificarlo.",
       "coverLetter": "Fai clic all'interno della lettera di presentazione per modificare testo, formula di apertura o paragrafi."
     },
-    "saveStatus": {
-      "saving": "Salvataggio…",
-      "dirty": "Modifiche non salvate",
-      "saved": "Modifiche salvate automaticamente"
-    },
     "export": {
       "button": "Esporta",
       "tooltip": "Esporta PDF",

@@ -56,6 +56,32 @@ export function useCreateThing() {
   returns an unstable ref and trips `react-hooks/incompatible-library`, silently disabling
   memoisation for the whole component. Use `useWatch({ control, name })` instead.
 
+## Saving & feedback (one model product-wide)
+
+**Edits persist automatically, the save state is always visible, a failed save is
+retryable.** Don't invent a fourth pattern — the product previously had three
+(per-dialog save, sticky save bar, silent autosave) and that taught users three
+different meanings for "sichern".
+
+- Persist field-level edits yourself (immediately, or debounced with
+  `PROFILE_AUTOSAVE_MS`/`AUTOSAVE_MS` = 800 ms). No "Speichern" button, no save bar.
+- Report every save through `useSaveStatus()` (`@/hooks/use-save-status`) and render
+  `<SaveStatus state={…} onRetry={…} />` (`@/components/ui/save-status`) — `inline`
+  inside a document surface, `floating` on long scrolling pages.
+- `track(run, errorMessage)` drives the states and raises a retry toast on failure;
+  put the **destructured** `track` (stable) into dependency arrays, never the
+  controller object.
+- **No success toast for an auto-saved change** — the indicator is the confirmation.
+  Toasts stay for undoable deletions, imports, generation/export and account-level
+  actions.
+- Never auto-save before the source of truth has hydrated (the auth store rehydrates
+  asynchronously) and remember the attempted payload so a failing endpoint isn't
+  hammered — recovery goes through the retry action.
+- Explicit save survives **only** in modal composition forms (the profile add/edit
+  dialogs) where "Abbrechen" must keep meaning "discard". Those must guard closing
+  with `useUnsavedChangesGuard(open, close)` + `<UnsavedChangesDialog>`; the inner
+  form reports `useFormState({ control }).isDirty` through an `onDirtyChange` prop.
+
 ## UI
 
 - Compose from **shadcn/ui** (Radix) components in `apps/web/src/components/ui/`. Add a
@@ -64,6 +90,30 @@ export function useCreateThing() {
 - Icons from `lucide-react`. Toasts via `sonner`. Merge classes with the existing `cn()`
   helper from `@/lib/utils`.
 - Tailwind v4 — use utility classes; don't introduce a competing styling system.
+
+## Loading states & motion
+
+- Reuse the motion layer in `apps/web/src/app/globals.css` — `.motion-page-enter`,
+  `.motion-view-enter`, `.motion-fade-enter`, `.motion-stagger` (+ `--motion-index`),
+  `.motion-shimmer`, `.motion-progress-indeterminate`. Don't add new `@keyframes` for a
+  one-off.
+- Animate **only** `opacity` and `transform` so a transition can never cause CLS, and keep
+  `animation-fill-mode: backwards` on enter animations — a lingering `transform` makes the
+  element a containing block and breaks `position: fixed` descendants (modals, overlays).
+- `prefers-reduced-motion` is handled globally by *fast-forwarding* animations
+  (`animation-duration: 0.01ms`), never `animation: none` — Radix `Presence` unmounts on
+  `animationend`, so removing the animation would leave dialogs mounted forever. Loading
+  indicators are deliberately exempt and keep looping slowly.
+- Prefer **skeletons over spinners** for content that has a known shape. Build them from
+  `@/components/shared/skeletons` (`SkeletonScreen`, `PageHeaderSkeleton`,
+  `ListPageSkeleton`, `DashboardSkeleton`, `AppShellSkeleton`, …) — no ad-hoc
+  `animate-pulse bg-muted` blocks or hand-rolled border spinners.
+- A11y contract: `<Skeleton>` blocks are decorative (`aria-hidden`); exactly **one**
+  `<SkeletonScreen>` per loading area carries the localized `role="status"` live region.
+  Never put `role="status"` on individual placeholder blocks.
+- Route-level fallbacks belong in a `loading.tsx` next to the `page.tsx`; the group-level
+  `template.tsx` already owns the page-enter transition, so don't re-add
+  `animate-in fade-in …` to a page root.
 
 ## Copy & domain-neutrality (important)
 

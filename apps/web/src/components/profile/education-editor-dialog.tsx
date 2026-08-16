@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFormState } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,10 @@ import {
 } from '@/components/ui/form';
 import { educationSchema, type EducationFormValues } from '@/lib/validation/schemas';
 import type { Education } from '@/types';
+import {
+  UnsavedChangesDialog,
+  useUnsavedChangesGuard,
+} from '@/components/ui/unsaved-changes-dialog';
 import { useTranslations } from 'next-intl';
 
 interface EducationEditorDialogProps {
@@ -47,25 +51,38 @@ export function EducationEditorDialog({
   const t = useTranslations('profile');
   const isEditing = !!initial;
 
+  const guard = useUnsavedChangesGuard(open, () => onOpenChange(false));
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>
-            {isEditing ? t('education.editTitle') : t('education.newTitle')}
-          </DialogTitle>
-        </DialogHeader>
-        <EducationForm
-          initial={initial}
-          isEditing={isEditing}
-          onSubmit={(edu) => {
-            onSubmit(edu);
-            onOpenChange(false);
-          }}
-          onCancel={() => onOpenChange(false)}
-        />
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => (next ? onOpenChange(true) : guard.requestClose())}
+      >
+        <DialogContent className="max-h-[90dvh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
+          <DialogHeader className="px-6 pt-6 pb-2">
+            <DialogTitle>
+              {isEditing ? t('education.editTitle') : t('education.newTitle')}
+            </DialogTitle>
+          </DialogHeader>
+          <EducationForm
+            onDirtyChange={guard.setDirty}
+            initial={initial}
+            isEditing={isEditing}
+            onSubmit={(edu) => {
+              onSubmit(edu);
+              onOpenChange(false);
+            }}
+            onCancel={guard.requestClose}
+          />
+        </DialogContent>
+      </Dialog>
+      <UnsavedChangesDialog
+        open={guard.confirmOpen}
+        onKeepEditing={guard.keepEditing}
+        onDiscard={guard.discard}
+      />
+    </>
   );
 }
 
@@ -74,11 +91,13 @@ function EducationForm({
   isEditing,
   onSubmit,
   onCancel,
+  onDirtyChange,
 }: {
   initial?: Education | null;
   isEditing: boolean;
   onSubmit: (education: Education) => void;
   onCancel: () => void;
+  onDirtyChange: (dirty: boolean) => void;
 }) {
   const t = useTranslations('profile');
   const maxYear = new Date().getFullYear() + 10;
@@ -98,6 +117,12 @@ function EducationForm({
   });
 
   const { control, setFocus } = form;
+
+  // Lets the dialog warn before an accidental close throws the entry away.
+  const { isDirty } = useFormState({ control });
+  useEffect(() => {
+    onDirtyChange(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
     // Radix moves focus into the dialog on open; wait for it to settle.

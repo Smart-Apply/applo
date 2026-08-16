@@ -21,6 +21,7 @@ import deFaq from '../../messages/de/faq.json';
 import deInterviews from '../../messages/de/interviews.json';
 import deJobs from '../../messages/de/jobs.json';
 import deLanding from '../../messages/de/landing.json';
+import deOnboarding from '../../messages/de/onboarding.json';
 import deProfile from '../../messages/de/profile.json';
 import deSettings from '../../messages/de/settings.json';
 import deSubscription from '../../messages/de/subscription.json';
@@ -39,6 +40,7 @@ import enFaq from '../../messages/en/faq.json';
 import enInterviews from '../../messages/en/interviews.json';
 import enJobs from '../../messages/en/jobs.json';
 import enLanding from '../../messages/en/landing.json';
+import enOnboarding from '../../messages/en/onboarding.json';
 import enProfile from '../../messages/en/profile.json';
 import enSettings from '../../messages/en/settings.json';
 import enSubscription from '../../messages/en/subscription.json';
@@ -57,6 +59,7 @@ import frFaq from '../../messages/fr/faq.json';
 import frInterviews from '../../messages/fr/interviews.json';
 import frJobs from '../../messages/fr/jobs.json';
 import frLanding from '../../messages/fr/landing.json';
+import frOnboarding from '../../messages/fr/onboarding.json';
 import frProfile from '../../messages/fr/profile.json';
 import frSettings from '../../messages/fr/settings.json';
 import frSubscription from '../../messages/fr/subscription.json';
@@ -75,6 +78,7 @@ import esFaq from '../../messages/es/faq.json';
 import esInterviews from '../../messages/es/interviews.json';
 import esJobs from '../../messages/es/jobs.json';
 import esLanding from '../../messages/es/landing.json';
+import esOnboarding from '../../messages/es/onboarding.json';
 import esProfile from '../../messages/es/profile.json';
 import esSettings from '../../messages/es/settings.json';
 import esSubscription from '../../messages/es/subscription.json';
@@ -93,6 +97,7 @@ import ptFaq from '../../messages/pt/faq.json';
 import ptInterviews from '../../messages/pt/interviews.json';
 import ptJobs from '../../messages/pt/jobs.json';
 import ptLanding from '../../messages/pt/landing.json';
+import ptOnboarding from '../../messages/pt/onboarding.json';
 import ptProfile from '../../messages/pt/profile.json';
 import ptSettings from '../../messages/pt/settings.json';
 import ptSubscription from '../../messages/pt/subscription.json';
@@ -111,6 +116,7 @@ import itFaq from '../../messages/it/faq.json';
 import itInterviews from '../../messages/it/interviews.json';
 import itJobs from '../../messages/it/jobs.json';
 import itLanding from '../../messages/it/landing.json';
+import itOnboarding from '../../messages/it/onboarding.json';
 import itProfile from '../../messages/it/profile.json';
 import itSettings from '../../messages/it/settings.json';
 import itSubscription from '../../messages/it/subscription.json';
@@ -131,6 +137,7 @@ const messages = {
     interviews: deInterviews,
     jobs: deJobs,
     landing: deLanding,
+    onboarding: deOnboarding,
     profile: deProfile,
     settings: deSettings,
     subscription: deSubscription,
@@ -150,6 +157,7 @@ const messages = {
     interviews: enInterviews,
     jobs: enJobs,
     landing: enLanding,
+    onboarding: enOnboarding,
     profile: enProfile,
     settings: enSettings,
     subscription: enSubscription,
@@ -169,6 +177,7 @@ const messages = {
     interviews: frInterviews,
     jobs: frJobs,
     landing: frLanding,
+    onboarding: frOnboarding,
     profile: frProfile,
     settings: frSettings,
     subscription: frSubscription,
@@ -188,6 +197,7 @@ const messages = {
     interviews: esInterviews,
     jobs: esJobs,
     landing: esLanding,
+    onboarding: esOnboarding,
     profile: esProfile,
     settings: esSettings,
     subscription: esSubscription,
@@ -207,6 +217,7 @@ const messages = {
     interviews: ptInterviews,
     jobs: ptJobs,
     landing: ptLanding,
+    onboarding: ptOnboarding,
     profile: ptProfile,
     settings: ptSettings,
     subscription: ptSubscription,
@@ -226,6 +237,7 @@ const messages = {
     interviews: itInterviews,
     jobs: itJobs,
     landing: itLanding,
+    onboarding: itOnboarding,
     profile: itProfile,
     settings: itSettings,
     subscription: itSubscription,

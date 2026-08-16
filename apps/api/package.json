@@ -42,6 +42,7 @@
     "templates:seed-with-previews": "pnpm run prisma:seed:templates && pnpm run templates:generate-previews",
     "eval:llm": "dotenv -e .env -- ts-node -r tsconfig-paths/register scripts/eval/run-eval.ts",
     "eval:compare": "ts-node -r tsconfig-paths/register scripts/eval/compare.ts",
+    "eval:probe": "ts-node -r tsconfig-paths/register scripts/eval/output-quality-probe.ts",
     "eval:validate": "ts-node -r tsconfig-paths/register scripts/eval/run-eval.ts --validate"
   },
   "dependencies": {

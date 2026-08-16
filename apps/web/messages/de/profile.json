@@ -122,6 +122,9 @@
     },
     "profileCheck": {
       "title": "Profil-Check",
+      "completeTitle": "Profil startklar",
+      "completeBody": "Alle Angaben sind vollständig. Applo hat jetzt alles, was es für treffsichere Bewerbungen braucht.",
+      "biggestWin": "Größter Gewinn",
       "why": "<bold>Warum?</bold> Jedes ausgefüllte Feld macht Applos KI-Bewerbungen genauer und schaltet mehr passende Stellen frei."
     },
     "privacy": {
@@ -552,7 +555,6 @@
   },
   "hooks": {
     "updateError": "Fehler beim Aktualisieren des Profils",
-    "updateSuccess": "Profil erfolgreich aktualisiert",
     "parseError": "Fehler beim Analysieren des Lebenslaufs"
   },
   "sections": {

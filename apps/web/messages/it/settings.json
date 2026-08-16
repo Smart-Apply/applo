@@ -4,7 +4,6 @@
     "description": "Gestisci il tuo account, la sicurezza e le preferenze.",
     "toasts": {
       "loadError": "Impossibile caricare le impostazioni",
-      "preferenceSaved": "Impostazione salvata",
       "preferenceSaveError": "Impossibile salvare l'impostazione"
     }
   },
@@ -47,7 +46,8 @@
       "emailTracking": "Tracciamento automatico delle candidature",
       "language": "Lingua e area geografica",
       "theme": "Design / Tema",
-      "privacy": "Privacy ed esportazione"
+      "privacy": "Privacy ed esportazione",
+      "onboarding": "Tour introduttivo"
     },
     "keywords": {
       "name": "name profil profile vorname first name nachname last name",
@@ -61,7 +61,8 @@
       "emailTracking": "tracking postfach inbox outlook gmail automatisch automatic premium",
       "language": "sprache language region deutsch german english",
       "theme": "theme design dark mode hell light dunkel dark erscheinungsbild appearance",
-      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public"
+      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public",
+      "onboarding": "tour onboarding aiuto help guida introduzione avvio"
     }
   },
   "account": {
@@ -89,7 +90,6 @@
       "deleting": "Eliminazione in corso..."
     },
     "toasts": {
-      "profileUpdated": "Profilo aggiornato con successo",
       "profileUpdateError": "Impossibile aggiornare il profilo",
       "emailConfirmRequired": "Inserisci il tuo indirizzo email per confermare",
       "passwordRequired": "Inserisci la tua password",
@@ -157,6 +157,13 @@
         "title": "Dati di utilizzo anonimi",
         "description": "Aiutaci a migliorare Applo. Nessun contenuto personale."
       }
+    },
+    "onboarding": {
+      "title": "Primi passi",
+      "description": "Scopri passo dopo passo che cosa fa Applo.",
+      "tourTitle": "Tour introduttivo",
+      "tourDescription": "Ti mostra come passare dal profilo a una candidatura completa.",
+      "start": "Avvia il tour"
     },
     "export": {
       "title": "Esporta i miei dati",
@@ -228,10 +235,5 @@
       "cancel": "Annulla",
       "connect": "Collega"
     }
-  },
-  "saveBar": {
-    "unsavedChanges": "Modifiche non salvate",
-    "discard": "Scarta",
-    "save": "Salva"
   }
 }

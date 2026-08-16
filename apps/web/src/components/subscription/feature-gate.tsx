@@ -8,6 +8,7 @@ import {
 } from '@/hooks/use-tier-gate';
 import { UpgradePrompt } from './upgrade-prompt';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import type { SubscriptionTier } from '@/types';
 
 interface FeatureGateProps {
@@ -70,10 +71,10 @@ export function FeatureGate({
   // Show loading state
   if (isLoading && showLoadingSkeleton) {
     return (
-      <div className="space-y-4 p-4">
+      <SkeletonScreen className="space-y-4 p-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-32 w-full" />
-      </div>
+      </SkeletonScreen>
     );
   }
 
@@ -142,10 +143,10 @@ export function FeatureFeatureGate({
   // Show loading state
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4">
+      <SkeletonScreen className="space-y-4 p-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-32 w-full" />
-      </div>
+      </SkeletonScreen>
     );
   }
 

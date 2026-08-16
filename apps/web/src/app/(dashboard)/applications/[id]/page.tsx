@@ -22,9 +22,9 @@ import { useAuthStore } from '@/stores/auth-store';
 import { api, authenticatedFetch } from '@/lib/api-client';
 import { useRetryApplication } from '@/hooks/use-applications';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { CenteredLoader } from '@/components/shared/loading';
+import { ErrorState } from '@/components/ui/error-state';
 import {
   ArrowLeft,
   ArrowRight,
@@ -52,6 +52,7 @@ import dynamic from 'next/dynamic';
 import type { ApplicationGenerationStatus, ApplicationTrackingStatus } from '@/types';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import { handleDownload, handleZipDownload, generateFilename } from '@/lib/pdf-utils';
 import { EditableTitle } from '@/components/applications/editable-title';
 import { StatusDropdown } from '@/components/applications/status-dropdown';
@@ -125,6 +126,7 @@ export default function ApplicationDetailPage() {
   const {
     data: application,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -341,18 +343,12 @@ export default function ApplicationDetailPage() {
     return (
       <div className="mx-auto max-w-5xl space-y-6">
         <BackLink onClick={() => router.push('/applications')} />
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">{t('detail.notFoundTitle')}</h3>
-              <p className="text-muted-foreground mb-6">
-                {t('detail.notFoundDescription')}
-              </p>
-              <Button onClick={() => router.push('/applications')}>{t('detail.toApplications')}</Button>
-            </div>
-          </CardContent>
-        </Card>
+        <ErrorState
+          title={t('detail.notFoundTitle')}
+          description={t('detail.notFoundDescription')}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }
@@ -1041,9 +1037,10 @@ function MetaFooter({
 /* ---- GENERATING ---- */
 function GeneratingView({ progress, message }: { progress: number; message: string }) {
   const t = useTranslations('applications');
+  const hasProgress = progress > 0;
 
   return (
-    <div className="flex flex-col items-center rounded-[4px] border bg-card px-6 py-9 text-center">
+    <div className="motion-view-enter flex flex-col items-center rounded-[4px] border bg-card px-6 py-9 text-center">
       <ApploRig state="process" size={140} aria-hidden />
       <h2 className="font-heading mt-2 text-[23px] font-bold tracking-[-.02em] text-foreground">
         {t('detail.generating.title')}
@@ -1052,12 +1049,23 @@ function GeneratingView({ progress, message }: { progress: number; message: stri
         {t('detail.generating.description')}
       </p>
       <div className="mt-6 w-full max-w-[440px]">
-        <Progress value={progress} className="h-2.5" />
-        <div className="mt-3 flex items-center justify-between text-[13.5px]">
+        <Progress
+          value={progress}
+          indeterminate={!hasProgress}
+          className="h-2.5"
+          aria-label={t('detail.generating.title')}
+        />
+        <div className="mt-3 flex items-center justify-between text-[13.5px]" aria-live="polite">
           <span className="font-semibold text-foreground">{message || t('detail.generating.preparing')}</span>
-          {progress > 0 && (
-            <span className="font-mono font-semibold tabular-nums text-muted-foreground">{progress}%</span>
-          )}
+          {/* Reserve the digit column even at 0 % so the label never reflows (CLS). */}
+          <span
+            className={cn(
+              'font-mono font-semibold tabular-nums text-muted-foreground transition-opacity duration-300',
+              !hasProgress && 'opacity-0'
+            )}
+          >
+            {progress}%
+          </span>
         </div>
       </div>
     </div>
@@ -1129,7 +1137,12 @@ function FailedView({
 function AtsAnalysisSection({ applicationId }: { applicationId: string }) {
   const t = useTranslations('applications');
   const { hasAccess, isLoading } = useFeatureGate('atsOptimization');
-  if (isLoading) return <Skeleton className="h-48 w-full" />;
+  if (isLoading)
+    return (
+      <SkeletonScreen>
+        <Skeleton className="h-48 w-full" />
+      </SkeletonScreen>
+    );
   if (!hasAccess) {
     return (
       <UpgradePrompt

@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonScreen } from '@/components/shared/skeletons';
 import {
   InterviewChat,
   InterviewVoice,
@@ -72,7 +73,7 @@ export default function InterviewSessionPage() {
 
   if (isLoading) {
     return (
-      <div className="container max-w-4xl py-6 space-y-6">
+      <SkeletonScreen className="container max-w-4xl py-6 space-y-6">
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-10" />
           <div className="space-y-2">
@@ -81,7 +82,7 @@ export default function InterviewSessionPage() {
           </div>
         </div>
         <Skeleton className="h-[600px] w-full" />
-      </div>
+      </SkeletonScreen>
     );
   }
 

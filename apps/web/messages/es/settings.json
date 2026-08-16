@@ -4,7 +4,6 @@
     "description": "Gestiona tu cuenta, la seguridad y tus preferencias.",
     "toasts": {
       "loadError": "Error al cargar los ajustes",
-      "preferenceSaved": "Ajuste guardado",
       "preferenceSaveError": "Error al guardar el ajuste"
     }
   },
@@ -47,7 +46,8 @@
       "emailTracking": "Seguimiento automático de candidaturas",
       "language": "Idioma y región",
       "theme": "Diseño / Tema",
-      "privacy": "Privacidad y exportación"
+      "privacy": "Privacidad y exportación",
+      "onboarding": "Guía de introducción"
     },
     "keywords": {
       "name": "name profil profile vorname first name nachname last name nombre apellido apellidos",
@@ -61,7 +61,8 @@
       "emailTracking": "tracking postfach inbox outlook gmail automatisch automatic premium seguimiento bandeja entrada",
       "language": "sprache language region deutsch german english idioma español región",
       "theme": "theme design dark mode hell light dunkel dark erscheinungsbild appearance tema oscuro claro",
-      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public privacidad datos exportar"
+      "privacy": "datenschutz privacy daten data export download dsgvo gdpr oeffentlich öffentlich public privacidad datos exportar",
+      "onboarding": "guia guía tour onboarding ayuda help introduccion introducción inicio"
     }
   },
   "account": {
@@ -89,7 +90,6 @@
       "deleting": "Eliminando..."
     },
     "toasts": {
-      "profileUpdated": "Perfil actualizado correctamente",
       "profileUpdateError": "Error al actualizar el perfil",
       "emailConfirmRequired": "Introduce tu dirección de correo electrónico para confirmar",
       "passwordRequired": "Introduce tu contraseña",
@@ -157,6 +157,13 @@
         "title": "Datos de uso anónimos",
         "description": "Ayúdanos a mejorar Applo. Sin contenido personal."
       }
+    },
+    "onboarding": {
+      "title": "Primeros pasos",
+      "description": "Descubre paso a paso lo que puede hacer Applo.",
+      "tourTitle": "Guía de introducción",
+      "tourDescription": "Te muestra cómo pasar de tu perfil a una candidatura completa.",
+      "start": "Iniciar guía"
     },
     "export": {
       "title": "Exportar mis datos",
@@ -228,10 +235,5 @@
       "cancel": "Cancelar",
       "connect": "Conectar"
     }
-  },
-  "saveBar": {
-    "unsavedChanges": "Cambios sin guardar",
-    "discard": "Descartar",
-    "save": "Guardar"
   }
 }

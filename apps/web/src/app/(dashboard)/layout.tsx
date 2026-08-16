@@ -29,10 +29,14 @@ import {
   MessagesSquare,
   BarChart3,
   ShieldCheck,
+  HelpCircle,
 } from 'lucide-react';
 import { EmailVerificationBanner } from '@/components/auth/email-verification-banner';
 import { SettingsNavGroup } from '@/components/settings/settings-nav-group';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { AppShellSkeleton } from '@/components/shared/skeletons';
+import { OnboardingTour } from '@/components/onboarding';
+import { useOnboardingTourStore } from '@/stores/onboarding-store';
 
 interface NavItem {
   nameKey: string;
@@ -63,14 +67,7 @@ export default function DashboardLayout({
 }) {
   return (
     <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-muted/30">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-            <p className="mt-2 text-sm text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      }
+      fallback={<AppShellSkeleton />}
     >
       <DashboardLayoutInner>{children}</DashboardLayoutInner>
     </Suspense>
@@ -157,14 +154,9 @@ function DashboardLayoutInner({
   // Show loading while hydrating, loading OAuth, or if not authenticated (redirect pending)
   if (!hasHydrated || isLoadingOAuth || !isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/30">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {isLoadingOAuth ? t('page.oauthFinishing') : t('page.loading')}
-          </p>
-        </div>
-      </div>
+      <AppShellSkeleton
+        message={isLoadingOAuth ? t('page.oauthFinishing') : undefined}
+      />
     );
   }
 
@@ -197,6 +189,7 @@ function DashboardLayoutInner({
                   />
                 ),
               )}
+              <HelpTourButton />
             </nav>
 
             <div className="p-4 border-t border-white/10">
@@ -303,6 +296,7 @@ function DashboardLayoutInner({
                       />
                     ),
                   )}
+                  <HelpTourButton onSelected={() => setMobileMenuOpen(false)} />
                 </nav>
 
                 <div className="p-4 border-t border-white/10">
@@ -356,8 +350,39 @@ function DashboardLayoutInner({
           <MobileBottomNav onMoreClick={() => setMobileMenuOpen(true)} />
         </div>
       </div>
+
+      {/* First-login product tour — re-openable from the help entry above */}
+      <OnboardingTour />
     </div>
     </TooltipProvider>
+  );
+}
+
+/**
+ * Sidebar entry that (re-)opens the onboarding product tour. Rendered in both
+ * the desktop sidebar and the mobile drawer, so the guide stays reachable at
+ * any time — not just on first login.
+ *
+ * `onSelected` lets the mobile drawer close itself before the tour opens; the
+ * tour doesn't navigate, so the route-change auto-close wouldn't fire and two
+ * modals would stack.
+ */
+function HelpTourButton({ onSelected }: { onSelected?: () => void }) {
+  const t = useTranslations('dashboard');
+  const openTour = useOnboardingTourStore((state) => state.openTour);
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        onSelected?.();
+        openTour();
+      }}
+      className="group flex w-full items-center gap-3 border-l-[3px] border-transparent px-3 py-2.5 text-left text-sm font-medium text-[rgba(229,233,242,.72)] transition-colors duration-150 hover:bg-white/5 hover:text-white"
+    >
+      <HelpCircle className="h-5 w-5 text-[rgba(229,233,242,.72)] transition-colors group-hover:text-white" />
+      {t('nav.help')}
+    </button>
   );
 }
 
