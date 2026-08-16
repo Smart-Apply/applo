@@ -1053,7 +1053,12 @@ function GeneratingView({ progress, message }: { progress: number; message: stri
         {t('detail.generating.description')}
       </p>
       <div className="mt-6 w-full max-w-[440px]">
-        <Progress value={progress} indeterminate={!hasProgress} className="h-2.5" />
+        <Progress
+          value={progress}
+          indeterminate={!hasProgress}
+          className="h-2.5"
+          aria-label={t('detail.generating.title')}
+        />
         <div className="mt-3 flex items-center justify-between text-[13.5px]" aria-live="polite">
           <span className="font-semibold text-foreground">{message || t('detail.generating.preparing')}</span>
           {/* Reserve the digit column even at 0 % so the label never reflows (CLS). */}
