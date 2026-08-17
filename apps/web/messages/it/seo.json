@@ -1,0 +1,75 @@
+{
+  "hub": {
+    "metaTitle": "Guide alla candidatura per professione – lettera, CV e colloquio",
+    "metaDescription": "Aiuto concreto per dodici professioni: parole chiave ATS, i documenti che vengono verificati, esempi di apertura e le domande che vengono poste davvero.",
+    "eyebrow": "Guide",
+    "heading": "Guide alla candidatura per professione",
+    "intro": "Un infermiere non si candida come uno sviluppatore: altri documenti, altre parole chiave, altre domande al colloquio. Queste pagine sono scritte per professione, non in generale.",
+    "familiesHeading": "Due guide per professione",
+    "professionsHeading": "Tutte le professioni",
+    "professionsIntro": "Scegli la tua professione: ognuna ha una pagina per i documenti e una per il colloquio.",
+    "backToHome": "Torna alla pagina iniziale"
+  },
+  "families": {
+    "application": {
+      "name": "Documenti di candidatura",
+      "shortName": "Documenti",
+      "cardDescription": "Cosa deve contenere la lettera e il CV, quali termini riconosce un sistema di selezione e quali documenti possono mancare — e quali no.",
+      "hubMetaTitle": "Lettera di presentazione e CV per professione",
+      "hubMetaDescription": "Candidatura per professione: parole chiave ATS, competenze e titoli attesi, esempi di apertura ed errori frequenti — per dodici professioni.",
+      "hubHeading": "Lettera di presentazione e CV — per professione",
+      "hubIntro": "I consigli generali servono a poco quando la riga che manca nel tuo CV è proprio quella su cui la tua professione viene filtrata per prima. Queste pagine la nominano."
+    },
+    "interview": {
+      "name": "Colloquio di lavoro",
+      "shortName": "Colloquio",
+      "cardDescription": "Le domande che in questa professione vengono poste davvero, cosa valutano, come strutturare la risposta — e cosa chiedere a tua volta.",
+      "hubMetaTitle": "Domande di colloquio di lavoro per professione",
+      "hubMetaDescription": "Domande di colloquio per professione: cosa viene chiesto, cosa valuta ogni domanda, come rispondere e cosa chiedere a tua volta — per dodici professioni.",
+      "hubHeading": "Domande di colloquio — per professione",
+      "hubIntro": "Le domande standard le conoscono tutti. A decidere sono quelle che riceve la tua professione — e ciò che chi ti ha di fronte vuole verificare con esse."
+    }
+  },
+  "sections": {
+    "atsKeywords": "I termini su cui si filtra",
+    "atsKeywordsHint": "I sistemi di selezione confrontano formulazioni, non significati. Usa la grafia che compare nell’annuncio — ma solo per ciò che sai davvero fare.",
+    "hardSkills": "Cosa viene guardato per primo",
+    "softSkills": "Le qualità che contano qui",
+    "certifications": "Titoli e formazione",
+    "cvFocus": "Nel CV",
+    "coverLetterOpener": "Un’apertura che funziona",
+    "coverLetterOpenerHint": "Pensata come schema, non da copiare: sostituisci numeri e nomi con i tuoi. Una frase presa in prestito si riconosce subito.",
+    "mistakes": "Gli errori più frequenti",
+    "faq": "Domande frequenti",
+    "questions": "Le domande che riceverai",
+    "questionWhy": "Cosa viene valutato",
+    "questionTip": "Come rispondere",
+    "redFlags": "Risposte che costano il posto",
+    "askThem": "Domande che vale la pena fare",
+    "related": "Altre professioni",
+    "crossFamily": {
+      "application": "I documenti per questa professione",
+      "interview": "Il colloquio per questa professione"
+    },
+    "crossFamilyHint": {
+      "application": "Lettera, CV e titoli per: {profession}.",
+      "interview": "Le domande poste al colloquio a: {profession}."
+    }
+  },
+  "cta": {
+    "heading": "Scritto dal tuo profilo, non da un modello",
+    "body": "Applo scrive la tua lettera e il tuo CV a partire dal tuo percorso reale e adatta entrambi all’annuncio — ottimizzati per gli ATS, in sei lingue e ospitati nell’UE.",
+    "primary": "Inizia gratis",
+    "secondary": "Come funziona Applo"
+  },
+  "breadcrumb": {
+    "home": "Inizio",
+    "guides": "Guide"
+  },
+  "meta": {
+    "professionLabel": "Professione",
+    "languageLabel": "Cambia lingua",
+    "updatedLabel": "Contenuto redazionale aggiornato"
+  },
+  "disclaimer": "Questa pagina è un orientamento redazionale di Applo. I requisiti variano a seconda del datore di lavoro, del paese e del contratto — in caso di dubbio vale l’annuncio di lavoro."
+}

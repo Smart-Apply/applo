@@ -191,6 +191,7 @@ The privacy policy is a **legal statement about what the code does**, so a code 
   - **TanStack Query 5.90** (server state, caching, optimistic updates)
 - **Forms:** react-hook-form 7.66 + Zod 3.25 (`@hookform/resolvers`)
 - **PDF:** react-pdf 10 + pdfjs-dist 5 — `pdfjs-dist` is pinned to the **exact** version `react-pdf` bundles (the pdf.js worker and API must match); enforced by `pnpm --filter @applo/web run check:pdfjs`
+- **SEO:** programmatic pages under `app/(seo)` (12 professions × 2 families × 6 locales = 144 entity pages + 12 family hubs + 6 guide hubs). Content is a hand-written per-locale dataset in `src/data/seo/professions/*.ts`, typed as `ProfessionCatalog` so a missing profession or field fails the build. Adding a profession = add its id to `PROFESSION_IDS` and write the record in **all six** catalogs — TypeScript will list what is missing. Copy is **market-adapted, not translated** (German nursing pages reference Berufsurkunde/TVöD-P, English ones NMC registration/IELTS); `pnpm --filter @applo/web run check:seo` ([apps/web/scripts/check-seo-data.mjs](../apps/web/scripts/check-seo-data.mjs)) fails CI on duplicate slugs, duplicate meta titles, and prose repeated verbatim across locales, and runs in `cf:build`.
 - **Charts:** recharts (Analytics activity chart only — the rest of `apps/web/src/components/analytics/*` uses Tailwind/inline SVG, no chart lib)
 - **Editor:** Tiptap 3.10 (StarterKit + TextStyle)
 - **Sanitization:** isomorphic-dompurify
@@ -198,7 +199,7 @@ The privacy policy is a **legal statement about what the code does**, so a code 
 - **Markdown:** marked, turndown
 - **Toast:** sonner
 - **Monitoring:** Sentry (`@sentry/nextjs`) — **client-side only**. `src/instrumentation-client.ts` initialises it (no-op without `NEXT_PUBLIC_SENTRY_DSN`); `withSentryConfig` in `next.config.ts` uploads source maps and deletes them after upload. There is deliberately no `sentry.server.config.ts`: the Worker runtime would need the separate `@sentry/cloudflare` adapter, and the API already reports server errors via `@sentry/node`. Source-map upload needs `SENTRY_ORG` + `SENTRY_PROJECT` (repo vars) and `SENTRY_AUTH_TOKEN` (secret) at build time — without them the build still succeeds but stack traces stay minified. Costs ~519 KiB gzipped on the Worker upload (4627 → 5146 KiB measured). Suspect commits come from `release.setCommits.auto`, which **requires `fetch-depth: 0`** on the `deploy-web` checkout in both deploy workflows — the default shallow clone makes it warn and skip silently.
-- **i18n:** next-intl 4 — cookie-based (`NEXT_LOCALE`, `Accept-Language` fallback, default `de`), **no URL locale prefixes**. Six UI locales: **de/en/fr/es/pt/it** (pt = European Portuguese). Namespaced messages under `apps/web/messages/{de,en,fr,es,pt,it}/*.json` (statically imported by `src/i18n/messages.ts`; all six key trees must stay identical); per-request config in `src/i18n/request.ts`; `LanguageSwitcher`/`useLocaleSwitch` in `components/i18n/`. Non-React modules (error messages, Zod schemas, date/enum-label formatting) read the locale via `lib/i18n-runtime.ts` (`getActiveLocale`/`pick`) with small in-code locale dicts (`Record<Locale, string>` — every locale required) — NOT the JSON messages. Legal pages (Impressum/Datenschutz/AGB) stay German-only; the FAQ and everything else is localized. Document language (generated PDFs, template mimic) remains driven by `Application.language`, independent of the UI locale — generation is de/en (job-posting driven), exports translate to all six.
+- **i18n:** next-intl 4 — cookie-based (`NEXT_LOCALE`, `Accept-Language` fallback, default `de`), **no URL locale prefixes outside the `app/(seo)` route group** (those paths carry `/{locale}` and the URL wins over the cookie — the middleware forwards the prefix as `x-applo-locale` and `request.ts` prefers it). Six UI locales: **de/en/fr/es/pt/it** (pt = European Portuguese). Namespaced messages under `apps/web/messages/{de,en,fr,es,pt,it}/*.json` (statically imported by `src/i18n/messages.ts`; all six key trees must stay identical); per-request config in `src/i18n/request.ts`; `LanguageSwitcher`/`useLocaleSwitch` in `components/i18n/`. Non-React modules (error messages, Zod schemas, date/enum-label formatting) read the locale via `lib/i18n-runtime.ts` (`getActiveLocale`/`pick`) with small in-code locale dicts (`Record<Locale, string>` — every locale required) — NOT the JSON messages. Legal pages (Impressum/Datenschutz/AGB) stay German-only; the FAQ and everything else is localized. Document language (generated PDFs, template mimic) remains driven by `Application.language`, independent of the UI locale — generation is de/en (job-posting driven), exports translate to all six.
 - **Deployment:** **Cloudflare Workers** via `@opennextjs/cloudflare` 1.19 + `wrangler` 4.85
 
 ## Backend Modules (`apps/api/src/`)
@@ -248,30 +249,36 @@ The privacy policy is a **legal statement about what the code does**, so a code 
 - `validation` — **Bewerbungs-Check** (issue #569): standalone AI quality + ATS review of an application the user created **outside** Applo. The user submits their own résumé (+ optional cover letter + optional job/target-role context) to `POST /validation`; the LLM (`v1/application-validation.md`, strict `json_schema`) returns an `ApplicationValidationResult` (overall + ATS score, `verdict`, per-category traffic-lights, `blockers` vs. `recommendations`, `strengths`). Independent of the generation pipeline — NOT tied to a generated `Application`/`JobPosting`. Metered via `UsageLimitGuard` + `@CheckUsage('validation')` (Free 3/month, Pro 15/month, Premium 35/month); quota is reserved atomically before the LLM call and refunded when the request fails. Each successful check is persisted as a `Validation` row (inputs + result) so it can be revisited without re-spending quota (`GET /validation`, `GET /validation/:id`, `DELETE /validation/:id`). A **content-hash dedupe cache** (`Validation.contentHash`, xxHash-64 over the normalized résumé + cover letter + jobContext + language, `title` excluded) short-circuits an exact re-submit in the controller **before** `reserveUsage` — so a replay costs neither an LLM call nor a credit; the lookup is always scoped by `userId`. Free-tier checks are additionally routed to the **mid lane** (`gpt-5.4-mini`) via the opt-in `midLane: true` option on `callJson`, leaving PRO/PREMIUM on the flagship default as a paid quality differentiator. The mid model is an Azure OpenAI deployment, so it supports this template's strict `json_schema` natively — which is why it replaced the earlier (dormant) attempt to route Free checks to Mistral. No-op when `LLM_MID_MODEL` is unset.
 
 ## Frontend Structure
-- `messages/` - next-intl message catalogs (`{de,en,fr,es,pt,it}/*.json`, one file per namespace: common, auth, twoFactor, applications, editor, wizard, profile, dashboard, settings, analytics, subscription, jobs, interviews, validation, templates, landing, faq, onboarding). All six key trees must stay identical.
+- `messages/` - next-intl message catalogs (`{de,en,fr,es,pt,it}/*.json`, one file per namespace: common, auth, twoFactor, applications, editor, wizard, profile, dashboard, settings, analytics, subscription, jobs, interviews, validation, templates, landing, faq, onboarding, seo). All six key trees must stay identical.
+- `data/seo/` - the pSEO content: `types.ts` (`ProfessionId` union + shapes), `families.ts` (localized family slugs — permanent identifiers; changing one needs a redirect), `professions/{de,en,fr,es,pt,it}.ts`
 - `app/` (App Router with route groups)
   - `(auth)/` - Login, Register pages
   - `(dashboard)/` - Profile, Job Postings, Applications, PDF Preview
     - `template.tsx` - zero-JS Server Component route transition (`.motion-page-enter`). Templates are keyed by **pathname only**, so `?section=`/`?status=` navigations do NOT remount and never discard in-progress form state.
     - `<segment>/loading.tsx` - route-level skeleton fallbacks built from `components/shared/skeletons.tsx`
+  - `(legal)/` - Impressum, Datenschutz, AGB, FAQ
+  - `(seo)/[locale]/…` - **programmatic SEO** (162 indexable pages). `[locale]` → guide hub, `[locale]/[family]` → family hub, `[locale]/[family]/[slug]` → entity page. Localized family + profession slugs; a slug from the wrong locale 404s. All Server Components; each page builds canonical + 6 hreflang + `x-default` via `lib/seo/urls.ts#alternatesFor`.
+  - `sitemap.ts` / `robots.ts` - discovery (167 URLs with `xhtml:link` alternates; app routes disallowed). Both are statically prerendered.
   - `page.tsx` - Landing page (**Server Component**: `generateMetadata` + JSON-LD, sections composed from `components/landing/*`)
 - `components/`
   - `ui/` - shadcn/ui components, plus the shared save-feedback primitives `save-status.tsx` (the single save indicator) and `unsaved-changes-dialog.tsx` (`useUnsavedChangesGuard` for modal composition forms)
   - `forms/` - Custom form components
   - `landing/` - Landing sections (server) + the three client-only drivers (`applo-companion`, `cta-mascot`, `scroll-reveal`)
   - `pdf/` - PDF preview & editing components
-  - `i18n/` - LanguageSwitcher + useLocaleSwitch + LocaleRuntimeSync
+  - `i18n/` - LanguageSwitcher + useLocaleSwitch + LocaleRuntimeSync. `LanguageSwitcher` takes an optional `localeUrls` map so the SEO pages navigate to the translated URL instead of refreshing in place.
+  - `seo/` - guide chrome (nav, breadcrumbs, CTA band) + the two article bodies (`application-article`, `interview-article`)
   - `shared/skeletons.tsx` - the reusable loading library (`SkeletonScreen`, `PageHeaderSkeleton`, `ListPageSkeleton`, `DashboardSkeleton`, `AppShellSkeleton`, `ProfileSkeleton`, …). Prefer these over ad-hoc spinners/`animate-pulse` blocks.
   - `onboarding/` - in-app product tour (modal step guide, mounted once in the dashboard layout)
 - `i18n/`
   - `config.ts` - locales (de/en/fr/es/pt/it), cookie name, Accept-Language picker
-  - `request.ts` - next-intl per-request config (cookie → header → de)
+  - `request.ts` - next-intl per-request config (explicit locale → `/{locale}` URL prefix header → cookie → Accept-Language → de)
   - `messages.ts` - static loader for the namespace JSONs
 - `lib/`
   - `api-client.ts` - Typed fetch wrapper for backend API
   - `providers.tsx` - React Query & Toaster providers
   - `i18n-runtime.ts` - active-locale access for non-React modules (getActiveLocale, pick, setLocaleCookie, getIntlLocale)
   - `site-url.ts` - public origin (`SITE_URL` / `SITE_METADATA_BASE`) for `metadataBase`, canonicals and JSON-LD
+  - `seo/` - `urls.ts` (localized path builders + the single hreflang-cluster builder) and `json-ld.ts` (BreadcrumbList / Article / FAQPage / ItemList + the `</script>` escaper). Build SEO URLs and alternates **only** through these — a hand-rolled hreflang set is how a cluster silently becomes asymmetric and Google drops all of it.
   - `utils.ts` - Helper functions (cn, formatDate, truncate)
 - `stores/`
   - `auth-store.ts` - Zustand store (user, token, isAuthenticated)

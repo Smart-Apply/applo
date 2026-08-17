@@ -1,0 +1,122 @@
+/* ============================================================
+   Programmatic SEO pages — styles layered on top of home.css.
+
+   The SEO pages reuse the landing design system by rendering inside
+   `.applo-home` (same tokens, .wrap, .section, .card, .btn, .h2 …).
+   This file only adds what the landing page has no equivalent for:
+   breadcrumbs, keyword chips, the definition-style detail lists and
+   the interview question blocks. Everything stays scoped under
+   `.applo-home` so none of it can leak into the app.
+   ============================================================ */
+
+/* breadcrumbs */
+.applo-home .seo-crumbs { padding: 20px 0 0; }
+.applo-home .seo-crumbs ol { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-2); }
+.applo-home .seo-crumbs li + li::before { content: "/"; margin-right: 8px; color: var(--border); }
+.applo-home .seo-crumbs a { border-bottom: 1px solid transparent; transition: border-color .15s ease, color .15s ease; }
+.applo-home .seo-crumbs a:hover { color: var(--ink); border-color: var(--blue); }
+.applo-home .seo-crumbs [aria-current="page"] { color: var(--ink); }
+
+/* page head */
+.applo-home .seo-head { padding: clamp(28px, 4vw, 52px) 0 clamp(40px, 5vw, 64px);
+  background: radial-gradient(120% 100% at 82% -30%, #EAF0F9 0%, rgba(234, 240, 249, 0) 58%), #fff;
+  border-bottom: 1px solid var(--border); }
+/* home.css styles the eyebrow's leading square only under `.hero`. */
+.applo-home .seo-head .eyebrow .sq { width: 8px; height: 8px; background: var(--blue); flex: none; }
+.applo-home .seo-head h1 { font-family: var(--heading); font-size: clamp(30px, 4.4vw, 50px); line-height: 1.05;
+  font-weight: 800; letter-spacing: -.03em; text-wrap: balance; margin-top: 16px; max-width: 18ch; }
+/* German and Portuguese compounds ("Vorstellungsgespräch",
+   "Bewerbermanagementsysteme") are single words wider than a 320px phone at
+   heading sizes. `<html lang>` is always set, so `hyphens: auto` breaks them
+   at real syllable boundaries; `overflow-wrap` is the backstop for locales
+   without hyphenation data. */
+.applo-home .seo-head h1,
+.applo-home .seo-qa h3,
+.applo-home .seo-details dt { hyphens: auto; overflow-wrap: break-word; }
+.applo-home .seo-head .lead { margin-top: 20px; max-width: 62ch; }
+
+/* article sections: mono-numbered heading + body */
+.applo-home .seo-block { padding: clamp(40px, 5vw, 72px) 0; border-bottom: 1px solid var(--border); }
+.applo-home .seo-block.alt { background: var(--surface); }
+.applo-home .seo-block > .wrap > .h2 { font-size: clamp(23px, 2.6vw, 32px); margin-bottom: 8px; }
+.applo-home .seo-block .hint { font-size: 14px; line-height: 1.6; color: var(--muted); max-width: 68ch; margin-bottom: 26px; }
+.applo-home .seo-block .hint:last-child { margin-bottom: 0; }
+
+/* keyword chips */
+.applo-home .seo-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.applo-home .seo-chips li { font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--ink);
+  background: #fff; border: 1px solid var(--border); padding: 7px 12px; }
+.applo-home .seo-block.alt .seo-chips li { background: #fff; }
+
+/* label + detail lists (skills, cv focus, mistakes) */
+.applo-home .seo-details { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border);
+  grid-template-columns: 1fr; margin: 0; padding: 0; }
+@media (min-width: 760px) { .applo-home .seo-details { grid-template-columns: repeat(2, 1fr); } }
+.applo-home .seo-details > div { background: #fff; padding: 22px 24px; }
+/* The hairline grid draws its 1px rules with the container's background
+   showing through the gaps, so an unfilled cell in the last row reads as a
+   grey block. Let a lone trailing item span the row instead. */
+.applo-home .seo-details > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.applo-home .seo-details dt { font-family: var(--heading); font-size: 16.5px; font-weight: 700; letter-spacing: -.01em; }
+.applo-home .seo-details dd { margin: 8px 0 0; font-size: 14.5px; line-height: 1.65; color: var(--muted); }
+
+/* plain bullet lists (soft skills, certifications, red flags, ask-them) */
+.applo-home .seo-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-width: 74ch; }
+.applo-home .seo-list li { position: relative; padding-left: 22px; font-size: 15px; line-height: 1.65; color: var(--ink); }
+.applo-home .seo-list li::before { content: ""; position: absolute; left: 0; top: 9px; width: 8px; height: 8px; background: var(--blue); }
+.applo-home .seo-list.warn li::before { background: var(--red); }
+
+/* quoted sample (cover-letter opener) */
+.applo-home .seo-sample { border-left: 3px solid var(--blue); background: #fff; border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding: 22px 26px; font-size: 16px; line-height: 1.7; color: var(--ink); max-width: 74ch; }
+
+/* interview questions */
+.applo-home .seo-qa { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+.applo-home .seo-qa article { background: #fff; padding: 24px; }
+.applo-home .seo-qa h3 { font-family: var(--heading); font-size: 17.5px; font-weight: 700; letter-spacing: -.01em;
+  line-height: 1.35; margin-bottom: 16px; }
+.applo-home .seo-qa .qa-row { display: grid; gap: 4px; margin-top: 12px; }
+@media (min-width: 720px) { .applo-home .seo-qa .qa-row { grid-template-columns: 160px minmax(0, 1fr); gap: 16px; } }
+.applo-home .seo-qa .qa-label { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--blue); padding-top: 3px; }
+.applo-home .seo-qa .qa-text { font-size: 14.5px; line-height: 1.65; color: var(--muted); }
+
+/* card grids (hub pages, related professions, cross-family link) */
+.applo-home .seo-cards { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border);
+  grid-template-columns: 1fr; }
+@media (min-width: 640px) { .applo-home .seo-cards.cols-2 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 640px) { .applo-home .seo-cards.cols-3 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 960px) { .applo-home .seo-cards.cols-3 { grid-template-columns: repeat(3, 1fr); } }
+.applo-home .seo-cards a { background: #fff; padding: 26px; display: flex; flex-direction: column; gap: 8px;
+  transition: background .15s ease; }
+.applo-home .seo-cards a:hover { background: #F5F6F8; }
+/* Same trailing-gap fix as .seo-details — a 3-card row at the 2-column
+   breakpoint would otherwise leave one grey cell. */
+@media (min-width: 640px) and (max-width: 959px) {
+  .applo-home .seo-cards.cols-3 a:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+.applo-home .seo-cards .h3 { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.applo-home .seo-cards .h3::after { content: "→"; font-family: var(--mono); font-weight: 500; color: var(--blue); }
+.applo-home .seo-cards p { font-size: 14.5px; line-height: 1.6; color: var(--muted); }
+
+/* compact profession index (hub) */
+.applo-home .seo-index { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border);
+  grid-template-columns: 1fr; }
+@media (min-width: 620px) { .applo-home .seo-index { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .applo-home .seo-index { grid-template-columns: repeat(3, 1fr); } }
+.applo-home .seo-index > div { background: #fff; padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; }
+.applo-home .seo-index .name { font-family: var(--heading); font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.applo-home .seo-index .links { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; }
+.applo-home .seo-index .links a { color: var(--blue2); border-bottom: 1px solid transparent; }
+.applo-home .seo-index .links a:hover { border-color: var(--blue2); }
+
+/* editorial disclaimer */
+.applo-home .seo-note { padding: 28px 0 40px; font-size: 13px; line-height: 1.65; color: var(--muted-2); max-width: 78ch; }
+
+/* touch targets */
+@media (max-width: 767px) {
+  .applo-home .seo-crumbs a,
+  .applo-home .seo-index .links a { display: inline-flex; align-items: center; min-height: 40px; }
+}

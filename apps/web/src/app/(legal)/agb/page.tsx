@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Allgemeine Geschäftsbedingungen – Applo",
@@ -153,7 +154,7 @@ export default function AgbPage() {
       <h2>§ 11 Datenschutz</h2>
       <p>
         Informationen zur Verarbeitung personenbezogener Daten findest du in
-        unserer <a href="/datenschutz">Datenschutzerklärung</a>.
+        unserer <Link href="/datenschutz">Datenschutzerklärung</Link>.
       </p>
 
       <h2>§ 12 Änderungen der AGB</h2>

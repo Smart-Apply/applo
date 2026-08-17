@@ -1,0 +1,75 @@
+{
+  "hub": {
+    "metaTitle": "Bewerbungs-Ratgeber nach Beruf – Anschreiben, Lebenslauf, Vorstellungsgespräch",
+    "metaDescription": "Konkrete Bewerbungshilfe für zwölf Berufe: ATS-Keywords, gefragte Nachweise, Beispiel-Einstiege fürs Anschreiben und die Fragen, die im Vorstellungsgespräch wirklich kommen.",
+    "eyebrow": "Ratgeber",
+    "heading": "Bewerbungs-Ratgeber nach Beruf",
+    "intro": "Eine Pflegefachkraft bewirbt sich anders als ein Softwareentwickler – andere Nachweise, andere Keywords, andere Fragen im Gespräch. Diese Seiten sind pro Beruf geschrieben, nicht allgemein.",
+    "familiesHeading": "Zwei Wegweiser pro Beruf",
+    "professionsHeading": "Alle Berufe",
+    "professionsIntro": "Wähle deinen Beruf – jede Seite gibt es für Unterlagen und für das Vorstellungsgespräch.",
+    "backToHome": "Zur Startseite"
+  },
+  "families": {
+    "application": {
+      "name": "Bewerbungsunterlagen",
+      "shortName": "Unterlagen",
+      "cardDescription": "Was in Anschreiben und Lebenslauf gehört, welche Begriffe ein Bewerbermanagementsystem erkennt und welche Nachweise fehlen dürfen – und welche nicht.",
+      "hubMetaTitle": "Bewerbung schreiben nach Beruf – Anschreiben und Lebenslauf",
+      "hubMetaDescription": "Bewerbung nach Beruf: ATS-Keywords, gefragte Skills und Nachweise, Beispiel-Einstiege fürs Anschreiben und die häufigsten Fehler – für zwölf Berufe.",
+      "hubHeading": "Bewerbung schreiben – nach Beruf",
+      "hubIntro": "Allgemeine Bewerbungstipps helfen wenig, wenn im Lebenslauf die eine Zeile fehlt, nach der in deinem Beruf zuerst gefiltert wird. Diese Seiten benennen sie."
+    },
+    "interview": {
+      "name": "Vorstellungsgespräch",
+      "shortName": "Gespräch",
+      "cardDescription": "Die Fragen, die in diesem Beruf wirklich gestellt werden, was dahinter geprüft wird, wie du strukturiert antwortest – und was du selbst fragen solltest.",
+      "hubMetaTitle": "Vorstellungsgespräch nach Beruf – Fragen und Antworten",
+      "hubMetaDescription": "Vorstellungsgespräch nach Beruf: die typischen Fragen, was dahinter geprüft wird, wie du antwortest und welche Rückfragen sich lohnen – für zwölf Berufe.",
+      "hubHeading": "Vorstellungsgespräch – Fragen nach Beruf",
+      "hubIntro": "Die Standardfragen kennt jeder. Entscheidend sind die Fragen, die in deinem Beruf gestellt werden – und was die Person gegenüber damit prüfen will."
+    }
+  },
+  "sections": {
+    "atsKeywords": "Begriffe, nach denen gefiltert wird",
+    "atsKeywordsHint": "Bewerbermanagementsysteme gleichen Wortlaute ab, keine Bedeutungen. Übernimm die Schreibweise, die in der Stellenanzeige steht – aber nur, was du wirklich kannst.",
+    "hardSkills": "Worauf zuerst geschaut wird",
+    "softSkills": "Persönliche Stärken, die hier zählen",
+    "certifications": "Nachweise und Weiterbildungen",
+    "cvFocus": "Im Lebenslauf",
+    "coverLetterOpener": "Ein Einstieg, der funktioniert",
+    "coverLetterOpenerHint": "Als Muster gedacht, nicht zum Abschreiben: ersetze Zahlen und Namen durch deine eigenen. Wörtlich übernommene Sätze erkennt jede Personalabteilung.",
+    "mistakes": "Die häufigsten Fehler",
+    "faq": "Häufige Fragen",
+    "questions": "Diese Fragen kommen",
+    "questionWhy": "Was geprüft wird",
+    "questionTip": "So antwortest du",
+    "redFlags": "Antworten, die dich die Stelle kosten",
+    "askThem": "Fragen, die du selbst stellen solltest",
+    "related": "Andere Berufe",
+    "crossFamily": {
+      "application": "Unterlagen für diesen Beruf",
+      "interview": "Vorstellungsgespräch in diesem Beruf"
+    },
+    "crossFamilyHint": {
+      "application": "Anschreiben, Lebenslauf und Nachweise für {profession}.",
+      "interview": "Die Fragen, die {profession} im Gespräch gestellt bekommen."
+    }
+  },
+  "cta": {
+    "heading": "Aus deinem Profil, nicht aus einer Vorlage",
+    "body": "Applo schreibt Anschreiben und Lebenslauf aus deinem echten Werdegang und passt beides auf die Stellenanzeige an – ATS-optimiert, in sechs Sprachen, in der EU gehostet.",
+    "primary": "Kostenlos starten",
+    "secondary": "Wie Applo funktioniert"
+  },
+  "breadcrumb": {
+    "home": "Start",
+    "guides": "Ratgeber"
+  },
+  "meta": {
+    "professionLabel": "Beruf",
+    "languageLabel": "Sprache wechseln",
+    "updatedLabel": "Redaktionell gepflegt"
+  },
+  "disclaimer": "Diese Seite ist eine redaktionelle Orientierungshilfe von Applo. Anforderungen unterscheiden sich je nach Arbeitgeber, Bundesland und Tarif – im Zweifel gilt die Stellenanzeige."
+}

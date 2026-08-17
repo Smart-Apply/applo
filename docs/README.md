@@ -32,6 +32,7 @@ Feature-Dokumentation
 - **PDF_GENERATION.md** - PDF-Generierung
 - **ATS_SCORE_WEIGHTING.md** - ATS Score Berechnung
 - **AUTOMATIC_LANGUAGE_DETECTION.md** - Spracherkennung
+- **PROGRAMMATIC_SEO.md** - Berufs-Ratgeber unter `/{locale}/{family}/{beruf}`: URL-Schema, Locale-Auflösung, Content-Modell, hreflang und der CI-Datencheck
 
 ### 🔧 [implementation/](./implementation/)
 

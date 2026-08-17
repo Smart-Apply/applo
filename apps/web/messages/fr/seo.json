@@ -1,0 +1,75 @@
+{
+  "hub": {
+    "metaTitle": "Guides de candidature par métier – lettre, CV, entretien",
+    "metaDescription": "Une aide concrète pour douze métiers : mots-clés ATS, justificatifs vérifiés, exemples d’accroche et les questions réellement posées en entretien.",
+    "eyebrow": "Guides",
+    "heading": "Guides de candidature par métier",
+    "intro": "Un infirmier ne postule pas comme un développeur : justificatifs différents, mots-clés différents, questions différentes en entretien. Ces pages sont écrites par métier, pas en général.",
+    "familiesHeading": "Deux guides par métier",
+    "professionsHeading": "Tous les métiers",
+    "professionsIntro": "Choisissez votre métier — chacun a une page pour le dossier et une page pour l’entretien.",
+    "backToHome": "Retour à l’accueil"
+  },
+  "families": {
+    "application": {
+      "name": "Dossier de candidature",
+      "shortName": "Dossier",
+      "cardDescription": "Ce qui doit figurer dans la lettre et le CV, les termes qu’un logiciel de tri reconnaît, et les justificatifs que l’on peut omettre — et ceux que l’on ne peut pas.",
+      "hubMetaTitle": "Lettre de motivation et CV par métier",
+      "hubMetaDescription": "Candidature par métier : mots-clés ATS, compétences et justificatifs attendus, exemples d’accroche et erreurs fréquentes — pour douze métiers.",
+      "hubHeading": "Lettre de motivation et CV — par métier",
+      "hubIntro": "Les conseils généraux servent peu quand la ligne qui manque à votre CV est précisément celle sur laquelle votre métier est filtré en premier. Ces pages la nomment."
+    },
+    "interview": {
+      "name": "Entretien d’embauche",
+      "shortName": "Entretien",
+      "cardDescription": "Les questions réellement posées dans ce métier, ce qu’elles évaluent, comment structurer votre réponse — et ce qu’il faut demander en retour.",
+      "hubMetaTitle": "Questions d’entretien d’embauche par métier",
+      "hubMetaDescription": "Questions d’entretien par métier : ce qui est demandé, ce que chaque question évalue vraiment, comment répondre et quoi demander en retour — pour douze métiers.",
+      "hubHeading": "Questions d’entretien — par métier",
+      "hubIntro": "Tout le monde connaît les questions classiques. Ce qui décide, ce sont celles que votre métier reçoit — et ce que la personne en face cherche à vérifier."
+    }
+  },
+  "sections": {
+    "atsKeywords": "Les termes sur lesquels on filtre",
+    "atsKeywordsHint": "Les logiciels de tri comparent des formulations, pas des significations. Reprenez l’orthographe de l’annonce — mais uniquement pour ce que vous savez réellement faire.",
+    "hardSkills": "Ce que l’on regarde en premier",
+    "softSkills": "Les qualités qui comptent ici",
+    "certifications": "Diplômes et formations",
+    "cvFocus": "Dans le CV",
+    "coverLetterOpener": "Une accroche qui fonctionne",
+    "coverLetterOpenerHint": "À prendre comme modèle, pas à recopier : remplacez chiffres et noms par les vôtres. Une phrase empruntée se repère immédiatement.",
+    "mistakes": "Les erreurs les plus fréquentes",
+    "faq": "Questions fréquentes",
+    "questions": "Les questions que vous aurez",
+    "questionWhy": "Ce qui est évalué",
+    "questionTip": "Comment répondre",
+    "redFlags": "Les réponses qui coûtent le poste",
+    "askThem": "Les questions à poser en retour",
+    "related": "Autres métiers",
+    "crossFamily": {
+      "application": "Le dossier pour ce métier",
+      "interview": "L’entretien pour ce métier"
+    },
+    "crossFamilyHint": {
+      "application": "Lettre, CV et justificatifs pour : {profession}.",
+      "interview": "Les questions posées en entretien à : {profession}."
+    }
+  },
+  "cta": {
+    "heading": "Écrit à partir de votre profil, pas d’un modèle",
+    "body": "Applo rédige votre lettre et votre CV à partir de votre parcours réel et les adapte à l’annonce — optimisés pour les ATS, en six langues, hébergés dans l’UE.",
+    "primary": "Commencer gratuitement",
+    "secondary": "Comment fonctionne Applo"
+  },
+  "breadcrumb": {
+    "home": "Accueil",
+    "guides": "Guides"
+  },
+  "meta": {
+    "professionLabel": "Métier",
+    "languageLabel": "Changer de langue",
+    "updatedLabel": "Contenu éditorial suivi"
+  },
+  "disclaimer": "Cette page est un repère éditorial proposé par Applo. Les exigences varient selon l’employeur, le pays et la convention collective — en cas de doute, l’annonce fait foi."
+}
