@@ -19,8 +19,14 @@ import { setLocaleCookie } from '@/lib/i18n-runtime';
  * Applies a locale choice: persists the NEXT_LOCALE cookie and refreshes
  * the current route so server components re-render in the new language.
  * Exposed for surfaces with their own UI (e.g. the settings page select).
+ *
+ * `localeUrls` is for the SEO route group, whose URLs carry a `/{locale}`
+ * prefix and localized slugs. There, refreshing in place would leave the
+ * visitor on a URL that promises one language while the page renders
+ * another — so the switch navigates to the translated URL instead. Pages
+ * without prefixed URLs (the whole app) omit it and keep the refresh.
  */
-export function useLocaleSwitch() {
+export function useLocaleSwitch(localeUrls?: Partial<Record<Locale, string>>) {
   const router = useRouter();
   const activeLocale = useLocale();
   const [isPending, startTransition] = useTransition();
@@ -28,8 +34,13 @@ export function useLocaleSwitch() {
   const switchLocale = (locale: Locale) => {
     if (locale === activeLocale) return;
     setLocaleCookie(locale);
+    const target = localeUrls?.[locale];
     startTransition(() => {
-      router.refresh();
+      if (target) {
+        router.push(target);
+      } else {
+        router.refresh();
+      }
     });
   };
 
@@ -44,12 +55,14 @@ interface LanguageSwitcherProps {
    */
   variant?: 'icon' | 'labeled' | 'code';
   className?: string;
+  /** Locale → URL map; see `useLocaleSwitch`. */
+  localeUrls?: Partial<Record<Locale, string>>;
 }
 
 /** Compact language dropdown for headers, sidebar and auth pages. */
-export function LanguageSwitcher({ variant = 'icon', className }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ variant = 'icon', className, localeUrls }: LanguageSwitcherProps) {
   const t = useTranslations('common.language');
-  const { switchLocale, activeLocale } = useLocaleSwitch();
+  const { switchLocale, activeLocale } = useLocaleSwitch(localeUrls);
 
   return (
     <DropdownMenu>

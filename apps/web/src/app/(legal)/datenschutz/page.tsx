@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Datenschutzerklärung – Applo",
@@ -116,7 +117,7 @@ export default function DatenschutzPage() {
           Funktion, Tokenzahl, Zeitpunkt — ohne Prompt- oder Antwortinhalte).
           Diese Statistik ist pseudonym, nicht anonym, und damit
           personenbezogen; du kannst sie in den{" "}
-          <a href="/settings">Einstellungen</a> abschalten.
+          <Link href="/settings">Einstellungen</Link> abschalten.
         </li>
       </ul>
 
@@ -380,7 +381,7 @@ export default function DatenschutzPage() {
       </ul>
       <p>
         Du kannst die Verbindung jederzeit in den{" "}
-        <a href="/settings">Einstellungen</a> trennen; das dort gespeicherte
+        <Link href="/settings">Einstellungen</Link> trennen; das dort gespeicherte
         Zugriffstoken wird dabei gelöscht und das Abonnement bei Microsoft
         widerrufen.
       </p>
@@ -472,7 +473,7 @@ export default function DatenschutzPage() {
       </ul>
       <p>
         Auskunft und Datenübertragbarkeit kannst du selbst auslösen: In den{" "}
-        <a href="/settings">Einstellungen</a> erzeugst du eine vollständige
+        <Link href="/settings">Einstellungen</Link> erzeugst du eine vollständige
         Kopie aller zu dir gespeicherten Daten als maschinenlesbare Datei,
         einschließlich der nach Art. 15 Abs. 1 lit. c–h DSGVO erforderlichen
         Angaben. Ebenfalls dort löschst du deinen gesamten Account. Die

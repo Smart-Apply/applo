@@ -1,0 +1,75 @@
+{
+  "hub": {
+    "metaTitle": "Job Application Guides by Profession – Cover Letters, CVs, Interviews",
+    "metaDescription": "Concrete application help for twelve professions: ATS keywords, the credentials that get checked, sample opening lines, and the questions interviews actually ask.",
+    "eyebrow": "Guides",
+    "heading": "Application guides by profession",
+    "intro": "A nurse applies differently from a software developer — different credentials, different keywords, different questions in the room. These pages are written per profession, not in general.",
+    "familiesHeading": "Two guides per profession",
+    "professionsHeading": "All professions",
+    "professionsIntro": "Pick your profession — each one has a page for the documents and a page for the interview.",
+    "backToHome": "Back to the homepage"
+  },
+  "families": {
+    "application": {
+      "name": "Application documents",
+      "shortName": "Documents",
+      "cardDescription": "What belongs in the cover letter and CV, which terms an applicant tracking system recognises, and which credentials you can leave out — and which you cannot.",
+      "hubMetaTitle": "Cover Letter and Résumé Guides by Profession",
+      "hubMetaDescription": "Applications by profession: ATS keywords, the skills and credentials that matter, sample opening lines, and the most common mistakes — for twelve professions.",
+      "hubHeading": "Cover letters and résumés — by profession",
+      "hubIntro": "General application advice is little use when the missing line in your CV is the one your profession gets filtered on first. These pages name it."
+    },
+    "interview": {
+      "name": "Interview questions",
+      "shortName": "Interview",
+      "cardDescription": "The questions this profession actually gets asked, what each one is testing, how to structure your answer — and what to ask back.",
+      "hubMetaTitle": "Interview Questions by Profession, with Answers",
+      "hubMetaDescription": "Interview questions by profession: what gets asked, what each question is really testing, how to answer, and what to ask back — for twelve professions.",
+      "hubHeading": "Interview questions — by profession",
+      "hubIntro": "Everyone knows the standard questions. What decides it are the questions your profession gets — and what the person across the table is testing with them."
+    }
+  },
+  "sections": {
+    "atsKeywords": "The terms you get filtered on",
+    "atsKeywordsHint": "Applicant tracking systems match wording, not meaning. Use the spelling the job posting uses — but only for things you can actually do.",
+    "hardSkills": "What gets looked at first",
+    "softSkills": "The personal strengths that count here",
+    "certifications": "Credentials and training",
+    "cvFocus": "On the CV",
+    "coverLetterOpener": "An opening that works",
+    "coverLetterOpenerHint": "Meant as a pattern, not to copy: replace the numbers and names with your own. Recruiters recognise a borrowed sentence immediately.",
+    "mistakes": "The most common mistakes",
+    "faq": "Common questions",
+    "questions": "The questions you will get",
+    "questionWhy": "What it is testing",
+    "questionTip": "How to answer",
+    "redFlags": "Answers that cost people the offer",
+    "askThem": "Questions worth asking back",
+    "related": "Other professions",
+    "crossFamily": {
+      "application": "Documents for this profession",
+      "interview": "Interview for this profession"
+    },
+    "crossFamilyHint": {
+      "application": "Cover letter, CV and credentials for {profession}.",
+      "interview": "The questions {profession} get asked in the interview."
+    }
+  },
+  "cta": {
+    "heading": "Written from your profile, not from a template",
+    "body": "Applo writes your cover letter and CV from your actual career history and tailors both to the job posting — ATS-optimised, in six languages, hosted in the EU.",
+    "primary": "Start for free",
+    "secondary": "How Applo works"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "guides": "Guides"
+  },
+  "meta": {
+    "professionLabel": "Profession",
+    "languageLabel": "Change language",
+    "updatedLabel": "Editorially maintained"
+  },
+  "disclaimer": "This page is editorial guidance from Applo. Requirements differ by employer, country and sector — where they conflict, the job posting wins."
+}

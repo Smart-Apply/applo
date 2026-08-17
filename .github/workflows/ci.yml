@@ -87,6 +87,16 @@ jobs:
         # twice (PR #534, then two Dependabot bumps).
         run: pnpm --filter @applo/web run check:pdfjs
 
+      - name: Verify the programmatic SEO catalogs are internally consistent
+        # The 144 profession pages are generated from six hand-written
+        # catalogs. TypeScript enforces that every locale has every field; it
+        # cannot see the problems that only exist between records — two
+        # professions sharing a URL slug (one page becomes unreachable),
+        # duplicate meta titles, or prose that was copied between locales and
+        # never translated. All three are invisible in review and expensive
+        # once indexed.
+        run: pnpm --filter @applo/web run check:seo
+
       - name: Verify every external service is documented as a sub-processor
         # The privacy policy is a hand-maintained document with no coupling to
         # the code, so it drifted: it described an architecture that never

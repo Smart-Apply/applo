@@ -1,14 +1,28 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Instagram, Linkedin, X as XIcon } from 'lucide-react';
 import { BrandMark, TikTokIcon } from '@/components/landing/landing-icons';
+import { defaultLocale, isLocale } from '@/i18n/config';
+import { familyPath, guideHubPath } from '@/lib/seo/urls';
 import { SOCIAL_LINKS } from '@/lib/social-links';
 
 const hasSocialLinks = Object.values(SOCIAL_LINKS).some(Boolean);
 
-/** Landing footer with legal links and (when configured) social profiles. */
+/**
+ * Landing footer with legal links and (when configured) social profiles.
+ *
+ * Also the only crawlable path from the landing page into the SEO guides.
+ * Without it those 160-odd pages would be discoverable through the sitemap
+ * alone — indexable in principle, but with no internal link equity reaching
+ * them from the site's strongest page.
+ */
 export async function LandingFooter() {
-  const t = await getTranslations('landing');
+  const [t, tSeo, rawLocale] = await Promise.all([
+    getTranslations('landing'),
+    getTranslations('seo'),
+    getLocale(),
+  ]);
+  const locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
 
   return (
     <footer className="footer">
@@ -45,6 +59,13 @@ export async function LandingFooter() {
               )}
             </div>
           )}
+        </div>
+        <div className="fcol">
+          <Link href={guideHubPath(locale)}>{tSeo('breadcrumb.guides')}</Link>
+          <Link href={familyPath(locale, 'application')}>
+            {tSeo('families.application.name')}
+          </Link>
+          <Link href={familyPath(locale, 'interview')}>{tSeo('families.interview.name')}</Link>
         </div>
         <div className="fcol">
           <Link href="/impressum">Impressum</Link>

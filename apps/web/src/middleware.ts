@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { LOCALE_HEADER, localeFromPathname } from '@/i18n/config';
 
 /**
  * Safely extract origin from a URL string. Returns null if invalid.
@@ -13,6 +14,30 @@ function safeOrigin(url: string | undefined): string | null {
   }
 }
 
+/**
+ * Forward the `/{locale}` URL prefix (SEO route group only) to the server as a
+ * request header, so `src/i18n/request.ts` can prefer it over the NEXT_LOCALE
+ * cookie. Without this, `/en/cover-letter/nurse` would render in German for
+ * every visitor carrying a German cookie — including Googlebot after it has
+ * been served a Set-Cookie once — which would collapse all six hreflang
+ * variants onto one language.
+ *
+ * The header is always overwritten (never merged), so a client cannot inject
+ * its own value on a non-prefixed path.
+ */
+function withLocaleHeader(request: NextRequest) {
+  const locale = localeFromPathname(request.nextUrl.pathname);
+
+  const requestHeaders = new Headers(request.headers);
+  if (locale) {
+    requestHeaders.set(LOCALE_HEADER, locale);
+  } else {
+    requestHeaders.delete(LOCALE_HEADER);
+  }
+
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 // Edge Middleware (runs on Cloudflare Workers via OpenNext, and on the
 // Next.js Edge runtime when self-hosted).
 //
@@ -22,7 +47,7 @@ function safeOrigin(url: string | undefined): string | null {
 //   so we keep the legacy `middleware.ts` (Edge runtime) for portability.
 //   This file does no Node-specific work — just response header writes.
 export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+  const response = withLocaleHeader(request);
 
   // ---- Build the list of allowed API origins for CSP ----
   //

@@ -118,10 +118,13 @@ applo/
 │       ├── messages/              # next-intl catalogs (de/en/fr/es/pt/it, one JSON per namespace)
 │       ├── src/
 │       │   ├── app/               # App Router (route groups + per-group template.tsx transition, per-route loading.tsx skeletons)
-│       │   ├── components/        # UI + shadcn/ui + landing (server sections) + pdf + analytics (recharts) + i18n + onboarding tour + shared loading skeletons
+│       │   │   ├── (seo)/         # Programmatic SEO: /{locale}/{family}/{profession} (+ sitemap.ts, robots.ts at app root)
+│       │   │   └── …
+│       │   ├── components/        # UI + shadcn/ui + landing (server sections) + seo (guide chrome) + pdf + analytics (recharts) + i18n + onboarding tour + shared loading skeletons
+│       │   ├── data/seo/          # Per-locale profession catalogs (the pSEO content), typed for structural parity
 │       │   ├── hooks/             # Custom React hooks
-│       │   ├── i18n/              # next-intl config (cookie-based de/en/fr/es/pt/it, no URL prefixes)
-│       │   ├── lib/               # api-client, providers, i18n-runtime, utils
+│       │   ├── i18n/              # next-intl config (cookie-based de/en/fr/es/pt/it; URL prefix wins inside (seo))
+│       │   ├── lib/               # api-client, providers, i18n-runtime, seo/ (URLs + JSON-LD), utils
 │       │   ├── stores/            # Zustand
 │       │   └── types/             # Shared TS types
 │       └── public/                # Static assets
@@ -404,9 +407,10 @@ fix was structural, not textual:
 | Category   | Technology                                              |
 | ---------- | ------------------------------------------------------- |
 | Framework  | Next.js 16.1 (App Router, React Compiler enabled)       |
-| Rendering  | Server Components by default; the public landing page (`/`) is fully server-rendered (localized metadata, OG/Twitter, JSON-LD, no-JS readable) with only the mascot + scroll-reveal drivers as client components |
+| Rendering  | Server Components by default; the public landing page (`/`) and the SEO guide surface (`app/(seo)`) are fully server-rendered (localized metadata, OG/Twitter, JSON-LD, no-JS readable) with only the mascot + scroll-reveal drivers as client components |
 | Language   | TypeScript (strict)                                     |
-| i18n       | next-intl 4 (cookie-based de/en/fr/es/pt/it, no URL routing) |
+| i18n       | next-intl 4 (cookie-based de/en/fr/es/pt/it; no URL routing except the `/{locale}`-prefixed SEO route group) |
+| SEO        | `app/(seo)` programmatic pages · `sitemap.ts` + `robots.ts` · hreflang clusters built in `lib/seo/urls.ts` · dataset guarded by `check:seo` |
 | UI         | React 19.2 · shadcn/ui (Radix) · Tailwind v4            |
 | State      | Zustand 5 · TanStack Query 5                            |
 | Forms      | react-hook-form 7 · Zod (`@hookform/resolvers`)         |
@@ -431,6 +435,59 @@ toast. Auto-saved changes therefore carry **no** success toast. Explicit saving
 survives only inside the profile's modal add/edit dialogs, which guard an
 accidental close with `useUnsavedChangesGuard` + `<UnsavedChangesDialog>`
 (`components/ui/unsaved-changes-dialog.tsx`).
+
+**Programmatic SEO surface (`app/(seo)`).** 162 indexable pages: 12 professions
+× 2 families (application documents / interview questions) × 6 locales, plus 12
+family hubs and 6 guide hubs.
+
+```
+/{locale}                          guide hub          → /de,  /en
+/{locale}/{family}                 family hub         → /de/bewerbung-schreiben
+/{locale}/{family}/{profession}    entity page        → /en/interview-questions/nurse
+```
+
+Family and profession slugs are localized (`FAMILY_SLUGS` in
+`data/seo/families.ts`; the per-profession slug lives in each locale's
+catalog), so a German slug on an English URL 404s rather than resolving —
+otherwise every page would be reachable at six near-duplicate URLs.
+
+**Locale resolution is URL-aware for these routes only.** `i18n/request.ts`
+resolves in this order:
+
+1. an explicit locale passed to `getTranslations({locale})`,
+2. the `/{locale}` URL prefix, forwarded by `middleware.ts` as the
+   `x-applo-locale` request header,
+3. the `NEXT_LOCALE` cookie,
+4. `Accept-Language`,
+5. German.
+
+Step 2 is the load-bearing addition: without it a visitor (or Googlebot)
+carrying a German cookie would be served German content at
+`/en/interview-questions/nurse`, collapsing all six hreflang variants onto one
+language. Every path outside `(seo)` is unprefixed, so step 2 never fires there
+and the app's cookie-based behaviour is unchanged.
+
+Metadata is centralised so the hreflang cluster cannot drift:
+`lib/seo/urls.ts#alternatesFor` builds the canonical plus all six alternates
+and `x-default` from a single locale→path function, and `sitemap.ts` reuses the
+same builders. Structured data (`lib/seo/json-ld.ts`) is deliberately limited to
+types that accurately describe the page — `BreadcrumbList`, `Article`,
+`FAQPage`, `ItemList`; no `HowTo` (retired by Google) and no `QAPage` (that
+describes user-generated threads).
+
+Content lives in `data/seo/professions/{de,en,fr,es,pt,it}.ts`, each typed as
+`ProfessionCatalog`, so a missing profession or field is a compile error.
+`scripts/check-seo-data.mjs` (`pnpm --filter @applo/web check:seo`, wired into
+CI and `cf:build`) covers what types cannot: duplicate slugs within a
+(locale, family), non-URL-safe slugs, duplicate meta titles/descriptions,
+under-length sections, and prose that appears identically in two locales — the
+signature of a record copied and never translated.
+
+> **Note.** These pages are server-rendered per request like the rest of the
+> app: the root layout calls `cookies()` via next-intl, which opts every route
+> out of static prerendering. Making the SEO tree prerenderable would require
+> the root layout to stop reading cookies — a larger refactor than this
+> surface justifies today. `sitemap.xml` and `robots.txt` *are* static.
 
 ### Infrastructure
 

@@ -1,0 +1,75 @@
+{
+  "hub": {
+    "metaTitle": "Guias de candidatura por profissão – carta, CV e entrevista",
+    "metaDescription": "Ajuda concreta para doze profissões: palavras-chave ATS, a documentação que é verificada, exemplos de abertura e as perguntas que são mesmo feitas.",
+    "eyebrow": "Guias",
+    "heading": "Guias de candidatura por profissão",
+    "intro": "Um enfermeiro não se candidata como um programador: outra documentação, outras palavras-chave, outras perguntas na entrevista. Estas páginas são escritas por profissão, não em geral.",
+    "familiesHeading": "Dois guias por profissão",
+    "professionsHeading": "Todas as profissões",
+    "professionsIntro": "Escolha a sua profissão — cada uma tem uma página para a documentação e outra para a entrevista.",
+    "backToHome": "Voltar ao início"
+  },
+  "families": {
+    "application": {
+      "name": "Documentação de candidatura",
+      "shortName": "Documentação",
+      "cardDescription": "O que deve constar da carta e do CV, que termos um sistema de triagem reconhece e que documentação pode faltar — e qual não pode.",
+      "hubMetaTitle": "Carta de apresentação e CV por profissão",
+      "hubMetaDescription": "Candidatura por profissão: palavras-chave ATS, competências e habilitações esperadas, exemplos de abertura e erros frequentes — para doze profissões.",
+      "hubHeading": "Carta de apresentação e CV — por profissão",
+      "hubIntro": "Os conselhos gerais servem de pouco quando a linha que falta no seu CV é justamente aquela por onde a sua profissão é filtrada primeiro. Estas páginas nomeiam-na."
+    },
+    "interview": {
+      "name": "Entrevista de emprego",
+      "shortName": "Entrevista",
+      "cardDescription": "As perguntas que são realmente feitas nesta profissão, o que avaliam, como estruturar a resposta — e o que perguntar de volta.",
+      "hubMetaTitle": "Perguntas de entrevista de emprego por profissão",
+      "hubMetaDescription": "Perguntas de entrevista por profissão: o que é perguntado, o que cada pergunta avalia, como responder e o que perguntar de volta — para doze profissões.",
+      "hubHeading": "Perguntas de entrevista — por profissão",
+      "hubIntro": "As perguntas padrão toda a gente conhece. O que decide são as que a sua profissão recebe — e o que a pessoa à sua frente quer verificar com elas."
+    }
+  },
+  "sections": {
+    "atsKeywords": "Os termos pelos quais se filtra",
+    "atsKeywordsHint": "Os sistemas de triagem comparam formulações, não significados. Use a grafia que aparece no anúncio — mas apenas para aquilo que sabe mesmo fazer.",
+    "hardSkills": "O que é visto primeiro",
+    "softSkills": "As qualidades que contam aqui",
+    "certifications": "Habilitações e formação",
+    "cvFocus": "No CV",
+    "coverLetterOpener": "Uma abertura que funciona",
+    "coverLetterOpenerHint": "Pensado como padrão, não para copiar: substitua números e nomes pelos seus. Uma frase emprestada é reconhecida de imediato.",
+    "mistakes": "Os erros mais frequentes",
+    "faq": "Perguntas frequentes",
+    "questions": "As perguntas que vai receber",
+    "questionWhy": "O que é avaliado",
+    "questionTip": "Como responder",
+    "redFlags": "Respostas que custam a vaga",
+    "askThem": "Perguntas que vale a pena fazer",
+    "related": "Outras profissões",
+    "crossFamily": {
+      "application": "A documentação para esta profissão",
+      "interview": "A entrevista para esta profissão"
+    },
+    "crossFamilyHint": {
+      "application": "Carta, CV e documentação para: {profession}.",
+      "interview": "As perguntas feitas na entrevista a: {profession}."
+    }
+  },
+  "cta": {
+    "heading": "Escrito a partir do seu perfil, não de um modelo",
+    "body": "A Applo redige a sua carta e o seu CV a partir do seu percurso real e adapta ambos ao anúncio — otimizados para ATS, em seis línguas e alojados na UE.",
+    "primary": "Começar gratuitamente",
+    "secondary": "Como funciona a Applo"
+  },
+  "breadcrumb": {
+    "home": "Início",
+    "guides": "Guias"
+  },
+  "meta": {
+    "professionLabel": "Profissão",
+    "languageLabel": "Mudar de língua",
+    "updatedLabel": "Conteúdo editorial mantido"
+  },
+  "disclaimer": "Esta página é uma orientação editorial da Applo. Os requisitos variam consoante o empregador, o país e o setor — em caso de dúvida, prevalece o anúncio de emprego."
+}
