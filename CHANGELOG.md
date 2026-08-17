@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.16.0](https://github.com/Smart-Apply/applo/compare/v4.15.0...v4.16.0) (2026-08-17)
+
+
+### Features
+
+* **web:** programmatic SEO — 162 indexable pages in six languages ([#821](https://github.com/Smart-Apply/applo/issues/821)) ([e1b83a7](https://github.com/Smart-Apply/applo/commit/e1b83a744b37bebbaa749a4bc99de0301e3c3bac))
+
 ## [4.15.0](https://github.com/Smart-Apply/applo/compare/v4.14.0...v4.15.0) (2026-08-16)
 
 
