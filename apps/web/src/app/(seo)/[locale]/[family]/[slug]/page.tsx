@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -16,22 +17,18 @@ import {
   type ProfessionId,
   type SeoFamily,
 } from '@/data/seo';
-import { isLocale, type Locale, toIntlLocale } from '@/i18n/config';
+import { isLocale, type Locale } from '@/i18n/config';
 import {
   article,
   breadcrumbList,
   faqPage,
   graph,
+  organization,
   serializeJsonLd,
   type Crumb,
 } from '@/lib/seo/json-ld';
-import {
-  alternatesFor,
-  familyPath,
-  guideHubPath,
-  localeUrlMap,
-  professionPath,
-} from '@/lib/seo/urls';
+import { seoMetadata } from '@/lib/seo/metadata';
+import { familyPath, guideHubPath, localeUrlMap, professionPath } from '@/lib/seo/urls';
 
 type Params = { params: Promise<{ locale: string; family: string; slug: string }> };
 
@@ -49,7 +46,7 @@ interface Resolved {
  * quietly resolve — otherwise every profession would be reachable at six
  * wrong URLs, each of them a duplicate of the right one.
  */
-async function resolve(params: Params['params']): Promise<Resolved | null> {
+const resolve = cache(async (params: Params['params']): Promise<Resolved | null> => {
   const { locale, family: familySlug, slug } = await params;
   if (!isLocale(locale)) return null;
   const family = familyFromSlug(locale, familySlug);
@@ -57,7 +54,7 @@ async function resolve(params: Params['params']): Promise<Resolved | null> {
   const id = professionIdFromSlug(locale, family, slug);
   if (!id) return null;
   return { locale, family, id };
-}
+});
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const resolved = await resolve(params);
@@ -65,27 +62,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { locale, family, id } = resolved;
 
   const content = contentForFamily(professionFor(locale, id), family);
-  const pathFor = (l: Locale) => professionPath(l, family, id);
 
-  return {
+  return seoMetadata({
+    locale,
+    pathFor: (l: Locale) => professionPath(l, family, id),
     title: content.metaTitle,
     description: content.metaDescription,
-    alternates: alternatesFor(locale, pathFor),
-    robots: { index: true, follow: true },
-    openGraph: {
-      type: 'article',
-      url: pathFor(locale),
-      siteName: 'Applo',
-      locale: toIntlLocale(locale).replace('-', '_'),
-      title: content.metaTitle,
-      description: content.metaDescription,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: content.metaTitle,
-      description: content.metaDescription,
-    },
-  };
+    type: 'article',
+  });
 }
 
 /** The entity page: one profession, one family, one language. */
@@ -109,6 +93,7 @@ export default async function ProfessionPage({ params }: Params) {
   ];
 
   const jsonLd = graph([
+    organization(),
     breadcrumbList(crumbs),
     article({
       path: professionPath(locale, family, id),
@@ -208,7 +193,7 @@ export default async function ProfessionPage({ params }: Params) {
           </div>
         </section>
 
-        <SeoCtaBand />
+        <SeoCtaBand locale={locale} />
       </main>
     </>
   );

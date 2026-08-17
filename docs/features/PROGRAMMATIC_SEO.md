@@ -194,9 +194,19 @@ The root layout calls `cookies()` through next-intl, which opts the entire
 route tree out of static generation — `.next/prerender-manifest.json` lists
 only `/_global-error`, `/icon.svg`, `/robots.txt` and `/sitemap.xml`.
 
+**They are also uncacheable at the edge.** `middleware.ts` stamps
+`Cache-Control: no-cache` on every navigable document (deliberately — it is
+what stops a shared cache pinning an old HTML document that references the
+previous build's content-hashed chunks). Combined with dynamic rendering, no
+Cloudflare edge cache, tiered cache or Cache Reserve can serve these pages, so
+every crawl is a cold Worker render. That is the main lever left on TTFB for
+this surface, and it needs the prerendering work below before it can move.
+
 That is a pre-existing property of the app rather than something this feature
 introduced, and the pages are cheap to render (all data is imported at build
 time; there is no I/O on the request path). Making the SEO tree prerenderable
 would mean the root layout could no longer read cookies — a larger refactor
-than this surface justifies today. The design is ready for it: pass an explicit
-locale and nothing in `app/(seo)` touches a request API.
+than this surface justifies today. The design is ready for it: every component
+under `app/(seo)` takes its locale as a prop and resolves translations with an
+explicit `getTranslations({ locale })`, so nothing in the route group reads a
+request API of its own.

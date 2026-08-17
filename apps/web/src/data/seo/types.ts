@@ -42,10 +42,6 @@ export const PROFESSION_IDS = [
 
 export type ProfessionId = (typeof PROFESSION_IDS)[number];
 
-export function isProfessionId(value: string): value is ProfessionId {
-  return (PROFESSION_IDS as readonly string[]).includes(value);
-}
-
 /** A heading plus the sentence that explains it. */
 export interface DetailItem {
   label: string;

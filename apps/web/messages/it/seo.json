@@ -7,8 +7,7 @@
     "intro": "Un infermiere non si candida come uno sviluppatore: altri documenti, altre parole chiave, altre domande al colloquio. Queste pagine sono scritte per professione, non in generale.",
     "familiesHeading": "Due guide per professione",
     "professionsHeading": "Tutte le professioni",
-    "professionsIntro": "Scegli la tua professione: ognuna ha una pagina per i documenti e una per il colloquio.",
-    "backToHome": "Torna alla pagina iniziale"
+    "professionsIntro": "Scegli la tua professione: ognuna ha una pagina per i documenti e una per il colloquio."
   },
   "families": {
     "application": {
@@ -65,11 +64,6 @@
   "breadcrumb": {
     "home": "Inizio",
     "guides": "Guide"
-  },
-  "meta": {
-    "professionLabel": "Professione",
-    "languageLabel": "Cambia lingua",
-    "updatedLabel": "Contenuto redazionale aggiornato"
   },
   "disclaimer": "Questa pagina è un orientamento redazionale di Applo. I requisiti variano a seconda del datore di lavoro, del paese e del contratto — in caso di dubbio vale l’annuncio di lavoro."
 }

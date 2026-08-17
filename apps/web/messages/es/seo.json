@@ -7,8 +7,7 @@
     "intro": "Un enfermero no se presenta como un desarrollador: otra documentación, otras palabras clave, otras preguntas en la entrevista. Estas páginas están escritas por profesión, no en general.",
     "familiesHeading": "Dos guías por profesión",
     "professionsHeading": "Todas las profesiones",
-    "professionsIntro": "Elige tu profesión: cada una tiene una página para la documentación y otra para la entrevista.",
-    "backToHome": "Volver al inicio"
+    "professionsIntro": "Elige tu profesión: cada una tiene una página para la documentación y otra para la entrevista."
   },
   "families": {
     "application": {
@@ -65,11 +64,6 @@
   "breadcrumb": {
     "home": "Inicio",
     "guides": "Guías"
-  },
-  "meta": {
-    "professionLabel": "Profesión",
-    "languageLabel": "Cambiar de idioma",
-    "updatedLabel": "Contenido editorial revisado"
   },
   "disclaimer": "Esta página es una orientación editorial de Applo. Los requisitos varían según el empleador, el país y el convenio — en caso de duda, manda la oferta de empleo."
 }

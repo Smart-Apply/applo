@@ -36,11 +36,15 @@ export function useLocaleSwitch(localeUrls?: Partial<Record<Locale, string>>) {
     setLocaleCookie(locale);
     const target = localeUrls?.[locale];
     startTransition(() => {
-      if (target) {
-        router.push(target);
-      } else {
-        router.refresh();
-      }
+      // `router.refresh()` is required in BOTH branches, and the push alone is
+      // not enough. A client-side navigation only re-renders the segments that
+      // differ, and the root layout is shared by every locale — so without the
+      // refresh it keeps the previous language: `NextIntlClientProvider` still
+      // serves the old messages (making `useLocale()` stale, so the guard above
+      // then blocks switching *back*), `<html lang>` stays wrong, and the
+      // cookie banner renders in the language you just left.
+      if (target) router.push(target);
+      router.refresh();
     });
   };
 

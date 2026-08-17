@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -11,7 +12,7 @@ import {
   familyFromSlug,
   type SeoFamily,
 } from '@/data/seo';
-import { isLocale, type Locale, toIntlLocale } from '@/i18n/config';
+import { isLocale, type Locale } from '@/i18n/config';
 import {
   breadcrumbList,
   graph,
@@ -19,24 +20,19 @@ import {
   serializeJsonLd,
   type Crumb,
 } from '@/lib/seo/json-ld';
-import {
-  alternatesFor,
-  familyPath,
-  guideHubPath,
-  localeUrlMap,
-  professionPath,
-} from '@/lib/seo/urls';
+import { seoMetadata } from '@/lib/seo/metadata';
+import { familyPath, guideHubPath, localeUrlMap, professionPath } from '@/lib/seo/urls';
 
 type Params = { params: Promise<{ locale: string; family: string }> };
 
 /** Resolve and validate both route params in one place. */
-async function resolve(params: Params['params']): Promise<{ locale: Locale; family: SeoFamily } | null> {
+const resolve = cache(async (params: Params['params']): Promise<{ locale: Locale; family: SeoFamily } | null> => {
   const { locale, family: familySlug } = await params;
   if (!isLocale(locale)) return null;
   const family = familyFromSlug(locale, familySlug);
   if (!family) return null;
   return { locale, family };
-}
+});
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const resolved = await resolve(params);
@@ -44,25 +40,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { locale, family } = resolved;
 
   const t = await getTranslations({ locale, namespace: `seo.families.${family}` });
-  const title = t('hubMetaTitle');
-  const description = t('hubMetaDescription');
-  const pathFor = (l: Locale) => familyPath(l, family);
 
-  return {
-    title,
-    description,
-    alternates: alternatesFor(locale, pathFor),
-    robots: { index: true, follow: true },
-    openGraph: {
-      type: 'website',
-      url: pathFor(locale),
-      siteName: 'Applo',
-      locale: toIntlLocale(locale).replace('-', '_'),
-      title,
-      description,
-    },
-    twitter: { card: 'summary_large_image', title, description },
-  };
+  return seoMetadata({
+    locale,
+    pathFor: (l: Locale) => familyPath(l, family),
+    title: t('hubMetaTitle'),
+    description: t('hubMetaDescription'),
+  });
 }
 
 /**
@@ -138,7 +122,7 @@ export default async function FamilyHubPage({ params }: Params) {
           </div>
         </section>
 
-        <SeoCtaBand />
+        <SeoCtaBand locale={locale} />
       </main>
     </>
   );

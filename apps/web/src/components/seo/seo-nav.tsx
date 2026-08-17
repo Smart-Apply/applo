@@ -21,9 +21,12 @@ interface SeoNavProps {
  * here has never seen the landing sections the anchors point at.
  */
 export async function SeoNav({ locale, localeUrls }: SeoNavProps) {
+  // Explicit locale, not the ambient request header: the page already knows
+  // which language it is, and reading it back out of a request API is what
+  // would block prerendering this route group later.
   const [t, tLanding] = await Promise.all([
-    getTranslations('seo'),
-    getTranslations('landing'),
+    getTranslations({ locale, namespace: 'seo' }),
+    getTranslations({ locale, namespace: 'landing' }),
   ]);
 
   return (

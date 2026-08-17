@@ -26,6 +26,8 @@ import { professionsEs } from '../src/data/seo/professions/es.ts';
 import { professionsFr } from '../src/data/seo/professions/fr.ts';
 import { professionsIt } from '../src/data/seo/professions/it.ts';
 import { professionsPt } from '../src/data/seo/professions/pt.ts';
+import { locales } from '../src/i18n/config.ts';
+import { SEO_FAMILIES, PROFESSION_IDS } from '../src/data/seo/types.ts';
 
 const CATALOGS = {
   de: professionsDe,
@@ -36,7 +38,15 @@ const CATALOGS = {
   it: professionsIt,
 };
 
-const FAMILIES = ['application', 'interview'];
+const FAMILIES = SEO_FAMILIES;
+
+// Cross-check the wiring itself: a seventh locale added to i18n/config without
+// a catalog here would otherwise compile, ship, and go silently unchecked.
+const missingCatalogs = locales.filter((l) => !(l in CATALOGS));
+if (missingCatalogs.length > 0) {
+  console.error(`\n✖ No SEO catalog wired up for locale(s): ${missingCatalogs.join(', ')}\n`);
+  process.exit(1);
+}
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const errors = [];
@@ -151,7 +161,7 @@ for (const [text, wheres] of prose) {
   }
 }
 
-const pages = Object.keys(CATALOGS).length * FAMILIES.length * Object.keys(professionsDe).length;
+const pages = locales.length * FAMILIES.length * PROFESSION_IDS.length;
 
 if (errors.length > 0) {
   console.error(`\n✖ SEO data check failed with ${errors.length} problem(s):\n`);

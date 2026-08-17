@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import type { Locale } from '@/i18n/config';
 
 /**
  * Closing conversion band, shared by all SEO pages.
@@ -8,8 +9,8 @@ import { getTranslations } from 'next-intl/server';
  * a question someone typed into a search engine, and a page that interrupts
  * its own answer to sell is the pattern search quality guidelines single out.
  */
-export async function SeoCtaBand() {
-  const t = await getTranslations('seo.cta');
+export async function SeoCtaBand({ locale }: { locale: Locale }) {
+  const t = await getTranslations({ locale, namespace: 'seo.cta' });
 
   return (
     <section className="section final">

@@ -6,7 +6,7 @@ import { SeoBreadcrumbs } from '@/components/seo/breadcrumbs';
 import { SeoCtaBand } from '@/components/seo/cta-band';
 import { SeoNav } from '@/components/seo/seo-nav';
 import { allProfessions, SEO_FAMILIES } from '@/data/seo';
-import { isLocale, toIntlLocale } from '@/i18n/config';
+import { isLocale } from '@/i18n/config';
 import {
   breadcrumbList,
   graph,
@@ -14,13 +14,8 @@ import {
   serializeJsonLd,
   type Crumb,
 } from '@/lib/seo/json-ld';
-import {
-  alternatesFor,
-  familyPath,
-  guideHubPath,
-  localeUrlMap,
-  professionPath,
-} from '@/lib/seo/urls';
+import { seoMetadata } from '@/lib/seo/metadata';
+import { familyPath, guideHubPath, localeUrlMap, professionPath } from '@/lib/seo/urls';
 
 type Params = { params: Promise<{ locale: string }> };
 
@@ -29,24 +24,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!isLocale(locale)) return {};
 
   const t = await getTranslations({ locale, namespace: 'seo.hub' });
-  const title = t('metaTitle');
-  const description = t('metaDescription');
 
-  return {
-    title,
-    description,
-    alternates: alternatesFor(locale, guideHubPath),
-    robots: { index: true, follow: true },
-    openGraph: {
-      type: 'website',
-      url: guideHubPath(locale),
-      siteName: 'Applo',
-      locale: toIntlLocale(locale).replace('-', '_'),
-      title,
-      description,
-    },
-    twitter: { card: 'summary_large_image', title, description },
-  };
+  return seoMetadata({
+    locale,
+    pathFor: guideHubPath,
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+  });
 }
 
 /**
@@ -141,7 +125,7 @@ export default async function GuideHubPage({ params }: Params) {
           </div>
         </section>
 
-        <SeoCtaBand />
+        <SeoCtaBand locale={locale} />
       </main>
     </>
   );
