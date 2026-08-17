@@ -7,8 +7,7 @@
     "intro": "A nurse applies differently from a software developer — different credentials, different keywords, different questions in the room. These pages are written per profession, not in general.",
     "familiesHeading": "Two guides per profession",
     "professionsHeading": "All professions",
-    "professionsIntro": "Pick your profession — each one has a page for the documents and a page for the interview.",
-    "backToHome": "Back to the homepage"
+    "professionsIntro": "Pick your profession — each one has a page for the documents and a page for the interview."
   },
   "families": {
     "application": {
@@ -65,11 +64,6 @@
   "breadcrumb": {
     "home": "Home",
     "guides": "Guides"
-  },
-  "meta": {
-    "professionLabel": "Profession",
-    "languageLabel": "Change language",
-    "updatedLabel": "Editorially maintained"
   },
   "disclaimer": "This page is editorial guidance from Applo. Requirements differ by employer, country and sector — where they conflict, the job posting wins."
 }

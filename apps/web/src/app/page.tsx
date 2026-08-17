@@ -13,6 +13,7 @@ import { PricingSection } from '@/components/landing/pricing-section';
 import { ScrollReveal } from '@/components/landing/scroll-reveal';
 import { ValuesSection } from '@/components/landing/values-section';
 import { defaultLocale, isLocale, locales, toIntlLocale } from '@/i18n/config';
+import { ORGANIZATION_ID } from '@/lib/seo/json-ld';
 import { SITE_URL } from '@/lib/site-url';
 import { SOCIAL_LINKS, X_HANDLE } from '@/lib/social-links';
 
@@ -80,7 +81,7 @@ export default async function Home() {
   const { t, locale } = await getLandingContext();
   const description = t('meta.description');
   const socialProfiles = Object.values(SOCIAL_LINKS).filter(Boolean);
-  const organizationId = `${SITE_URL}/#organization`;
+  const organizationId = ORGANIZATION_ID;
 
   const jsonLd = {
     '@context': 'https://schema.org',

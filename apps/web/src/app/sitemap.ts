@@ -24,6 +24,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     { url: absoluteUrl('/faq'), changeFrequency: 'monthly', priority: 0.5 },
+    // robots.ts deliberately keeps these crawlable, so list them here too.
+    { url: absoluteUrl('/login'), changeFrequency: 'yearly', priority: 0.3 },
+    { url: absoluteUrl('/register'), changeFrequency: 'yearly', priority: 0.4 },
     { url: absoluteUrl('/impressum'), changeFrequency: 'yearly', priority: 0.2 },
     { url: absoluteUrl('/datenschutz'), changeFrequency: 'yearly', priority: 0.2 },
     { url: absoluteUrl('/agb'), changeFrequency: 'yearly', priority: 0.2 },

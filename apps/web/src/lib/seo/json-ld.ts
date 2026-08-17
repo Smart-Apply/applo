@@ -7,12 +7,29 @@ import { absoluteUrl } from './urls';
  * Deliberately conservative about which types are emitted: `HowTo` rich
  * results were retired by Google, and `QAPage` describes user-generated
  * question threads rather than editorial content, so neither belongs here.
- * What is emitted — `BreadcrumbList`, `ItemList`, `FAQPage`, `Article` — is
- * each an accurate description of what is actually on the page.
+ * `FAQPage` no longer produces a rich result for a site like this one (Google
+ * restricted it to government and health sources in 2023) — it is emitted
+ * because it describes the block accurately, not for a SERP feature.
  */
 
-/** The Organization node the landing page defines; referenced, not redefined. */
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+
+/**
+ * The publisher/author node, emitted on every page that references it.
+ *
+ * `@id` references resolve **per document**, so pointing at the Organization
+ * the landing page declares would be a dangling reference on all 144 entity
+ * pages — worse than omitting the property. Each page therefore carries its
+ * own copy; the shared `@id` is what lets a consumer merge them.
+ */
+export function organization() {
+  return {
+    '@type': 'Organization',
+    '@id': ORGANIZATION_ID,
+    name: 'Applo',
+    url: `${SITE_URL}/`,
+  };
+}
 
 /**
  * JSON-LD is injected as raw HTML, so any `<` inside a string could otherwise
@@ -78,6 +95,8 @@ export function article(params: {
     description: params.description,
     inLanguage: params.locale,
     about: { '@type': 'Thing', name: params.about },
+    // Both resolve against the Organization node the page also emits.
+    author: { '@id': ORGANIZATION_ID },
     publisher: { '@id': ORGANIZATION_ID },
     isAccessibleForFree: true,
   };

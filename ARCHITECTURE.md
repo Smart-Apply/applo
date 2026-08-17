@@ -451,6 +451,12 @@ Family and profession slugs are localized (`FAMILY_SLUGS` in
 catalog), so a German slug on an English URL 404s rather than resolving —
 otherwise every page would be reachable at six near-duplicate URLs.
 
+> **Constraint this creates.** `[locale]` occupies the top-level dynamic
+> segment, so no other one can exist: adding `app/[slug]` or `app/[...rest]`
+> later fails the build with *"You cannot use different slug names for the same
+> dynamic path"*. Static routes still win over it, so every existing and future
+> **static** top-level route (`/login`, `/faq`, a new `/pricing`) is unaffected.
+
 **Locale resolution is URL-aware for these routes only.** `i18n/request.ts`
 resolves in this order:
 

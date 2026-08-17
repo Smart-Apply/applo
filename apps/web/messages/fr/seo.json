@@ -7,8 +7,7 @@
     "intro": "Un infirmier ne postule pas comme un développeur : justificatifs différents, mots-clés différents, questions différentes en entretien. Ces pages sont écrites par métier, pas en général.",
     "familiesHeading": "Deux guides par métier",
     "professionsHeading": "Tous les métiers",
-    "professionsIntro": "Choisissez votre métier — chacun a une page pour le dossier et une page pour l’entretien.",
-    "backToHome": "Retour à l’accueil"
+    "professionsIntro": "Choisissez votre métier — chacun a une page pour le dossier et une page pour l’entretien."
   },
   "families": {
     "application": {
@@ -65,11 +64,6 @@
   "breadcrumb": {
     "home": "Accueil",
     "guides": "Guides"
-  },
-  "meta": {
-    "professionLabel": "Métier",
-    "languageLabel": "Changer de langue",
-    "updatedLabel": "Contenu éditorial suivi"
   },
   "disclaimer": "Cette page est un repère éditorial proposé par Applo. Les exigences varient selon l’employeur, le pays et la convention collective — en cas de doute, l’annonce fait foi."
 }

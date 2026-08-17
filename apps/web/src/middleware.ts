@@ -28,6 +28,14 @@ function safeOrigin(url: string | undefined): string | null {
 function withLocaleHeader(request: NextRequest) {
   const locale = localeFromPathname(request.nextUrl.pathname);
 
+  // The matcher is `/:path*`, so this runs on every request including static
+  // chunks. Cloning the whole header set is only useful when there is a prefix
+  // to forward — or an inbound header to strip — so skip the copy otherwise
+  // rather than making 100% of traffic pay for ~162 URLs.
+  if (!locale && !request.headers.has(LOCALE_HEADER)) {
+    return NextResponse.next();
+  }
+
   const requestHeaders = new Headers(request.headers);
   if (locale) {
     requestHeaders.set(LOCALE_HEADER, locale);

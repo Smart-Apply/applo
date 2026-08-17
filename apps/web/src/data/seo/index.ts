@@ -1,4 +1,4 @@
-import { type Locale, locales } from '@/i18n/config';
+import type { Locale } from '@/i18n/config';
 import { professionsDe } from './professions/de';
 import { professionsEn } from './professions/en';
 import { professionsEs } from './professions/es';
@@ -22,8 +22,11 @@ export * from './families';
  * adding a locale to `i18n/config` fails the build here until its catalog
  * exists — the SEO surface can never be silently missing a language.
  *
- * These are server-only imports (every consumer is a Server Component or a
- * route handler), so the ~200 KB of copy never reaches the browser bundle.
+ * Every consumer must stay a Server Component or a route handler: these
+ * catalogs are ~200 KB of copy, and a single `'use client'` importer would
+ * ship all of it to the browser. Nothing enforces that today — adding the
+ * `server-only` package would turn it into a build error and is worth doing
+ * if this module ever grows more callers.
  */
 const CATALOGS: Record<Locale, ProfessionCatalog> = {
   de: professionsDe,
@@ -90,6 +93,3 @@ export function relatedProfessions(
 ): Array<{ id: ProfessionId; content: ProfessionContent }> {
   return RELATED[id].map((relatedId) => ({ id: relatedId, content: CATALOGS[locale][relatedId] }));
 }
-
-/** Total indexable entity pages, for the hub copy and for sanity checks. */
-export const PROFESSION_PAGE_COUNT = PROFESSION_IDS.length * locales.length * 2;

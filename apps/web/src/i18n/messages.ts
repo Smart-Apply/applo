@@ -23,8 +23,8 @@ import deJobs from '../../messages/de/jobs.json';
 import deLanding from '../../messages/de/landing.json';
 import deOnboarding from '../../messages/de/onboarding.json';
 import deProfile from '../../messages/de/profile.json';
-import deSettings from '../../messages/de/settings.json';
 import deSeo from '../../messages/de/seo.json';
+import deSettings from '../../messages/de/settings.json';
 import deSubscription from '../../messages/de/subscription.json';
 import deTemplates from '../../messages/de/templates.json';
 import deTwoFactor from '../../messages/de/two-factor.json';
@@ -43,8 +43,8 @@ import enJobs from '../../messages/en/jobs.json';
 import enLanding from '../../messages/en/landing.json';
 import enOnboarding from '../../messages/en/onboarding.json';
 import enProfile from '../../messages/en/profile.json';
-import enSettings from '../../messages/en/settings.json';
 import enSeo from '../../messages/en/seo.json';
+import enSettings from '../../messages/en/settings.json';
 import enSubscription from '../../messages/en/subscription.json';
 import enTemplates from '../../messages/en/templates.json';
 import enTwoFactor from '../../messages/en/two-factor.json';
@@ -63,8 +63,8 @@ import frJobs from '../../messages/fr/jobs.json';
 import frLanding from '../../messages/fr/landing.json';
 import frOnboarding from '../../messages/fr/onboarding.json';
 import frProfile from '../../messages/fr/profile.json';
-import frSettings from '../../messages/fr/settings.json';
 import frSeo from '../../messages/fr/seo.json';
+import frSettings from '../../messages/fr/settings.json';
 import frSubscription from '../../messages/fr/subscription.json';
 import frTemplates from '../../messages/fr/templates.json';
 import frTwoFactor from '../../messages/fr/two-factor.json';
@@ -83,8 +83,8 @@ import esJobs from '../../messages/es/jobs.json';
 import esLanding from '../../messages/es/landing.json';
 import esOnboarding from '../../messages/es/onboarding.json';
 import esProfile from '../../messages/es/profile.json';
-import esSettings from '../../messages/es/settings.json';
 import esSeo from '../../messages/es/seo.json';
+import esSettings from '../../messages/es/settings.json';
 import esSubscription from '../../messages/es/subscription.json';
 import esTemplates from '../../messages/es/templates.json';
 import esTwoFactor from '../../messages/es/two-factor.json';
@@ -103,8 +103,8 @@ import ptJobs from '../../messages/pt/jobs.json';
 import ptLanding from '../../messages/pt/landing.json';
 import ptOnboarding from '../../messages/pt/onboarding.json';
 import ptProfile from '../../messages/pt/profile.json';
-import ptSettings from '../../messages/pt/settings.json';
 import ptSeo from '../../messages/pt/seo.json';
+import ptSettings from '../../messages/pt/settings.json';
 import ptSubscription from '../../messages/pt/subscription.json';
 import ptTemplates from '../../messages/pt/templates.json';
 import ptTwoFactor from '../../messages/pt/two-factor.json';
@@ -123,8 +123,8 @@ import itJobs from '../../messages/it/jobs.json';
 import itLanding from '../../messages/it/landing.json';
 import itOnboarding from '../../messages/it/onboarding.json';
 import itProfile from '../../messages/it/profile.json';
-import itSettings from '../../messages/it/settings.json';
 import itSeo from '../../messages/it/seo.json';
+import itSettings from '../../messages/it/settings.json';
 import itSubscription from '../../messages/it/subscription.json';
 import itTemplates from '../../messages/it/templates.json';
 import itTwoFactor from '../../messages/it/two-factor.json';
@@ -145,8 +145,8 @@ const messages = {
     landing: deLanding,
     onboarding: deOnboarding,
     profile: deProfile,
-    settings: deSettings,
     seo: deSeo,
+    settings: deSettings,
     subscription: deSubscription,
     templates: deTemplates,
     twoFactor: deTwoFactor,
@@ -166,8 +166,8 @@ const messages = {
     landing: enLanding,
     onboarding: enOnboarding,
     profile: enProfile,
-    settings: enSettings,
     seo: enSeo,
+    settings: enSettings,
     subscription: enSubscription,
     templates: enTemplates,
     twoFactor: enTwoFactor,
@@ -187,8 +187,8 @@ const messages = {
     landing: frLanding,
     onboarding: frOnboarding,
     profile: frProfile,
-    settings: frSettings,
     seo: frSeo,
+    settings: frSettings,
     subscription: frSubscription,
     templates: frTemplates,
     twoFactor: frTwoFactor,
@@ -208,8 +208,8 @@ const messages = {
     landing: esLanding,
     onboarding: esOnboarding,
     profile: esProfile,
-    settings: esSettings,
     seo: esSeo,
+    settings: esSettings,
     subscription: esSubscription,
     templates: esTemplates,
     twoFactor: esTwoFactor,
@@ -229,8 +229,8 @@ const messages = {
     landing: ptLanding,
     onboarding: ptOnboarding,
     profile: ptProfile,
-    settings: ptSettings,
     seo: ptSeo,
+    settings: ptSettings,
     subscription: ptSubscription,
     templates: ptTemplates,
     twoFactor: ptTwoFactor,
@@ -250,8 +250,8 @@ const messages = {
     landing: itLanding,
     onboarding: itOnboarding,
     profile: itProfile,
-    settings: itSettings,
     seo: itSeo,
+    settings: itSettings,
     subscription: itSubscription,
     templates: itTemplates,
     twoFactor: itTwoFactor,

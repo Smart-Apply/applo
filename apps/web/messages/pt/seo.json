@@ -7,8 +7,7 @@
     "intro": "Um enfermeiro não se candidata como um programador: outra documentação, outras palavras-chave, outras perguntas na entrevista. Estas páginas são escritas por profissão, não em geral.",
     "familiesHeading": "Dois guias por profissão",
     "professionsHeading": "Todas as profissões",
-    "professionsIntro": "Escolha a sua profissão — cada uma tem uma página para a documentação e outra para a entrevista.",
-    "backToHome": "Voltar ao início"
+    "professionsIntro": "Escolha a sua profissão — cada uma tem uma página para a documentação e outra para a entrevista."
   },
   "families": {
     "application": {
@@ -65,11 +64,6 @@
   "breadcrumb": {
     "home": "Início",
     "guides": "Guias"
-  },
-  "meta": {
-    "professionLabel": "Profissão",
-    "languageLabel": "Mudar de língua",
-    "updatedLabel": "Conteúdo editorial mantido"
   },
   "disclaimer": "Esta página é uma orientação editorial da Applo. Os requisitos variam consoante o empregador, o país e o setor — em caso de dúvida, prevalece o anúncio de emprego."
 }

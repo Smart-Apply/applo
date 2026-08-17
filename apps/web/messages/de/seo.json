@@ -7,8 +7,7 @@
     "intro": "Eine Pflegefachkraft bewirbt sich anders als ein Softwareentwickler – andere Nachweise, andere Keywords, andere Fragen im Gespräch. Diese Seiten sind pro Beruf geschrieben, nicht allgemein.",
     "familiesHeading": "Zwei Wegweiser pro Beruf",
     "professionsHeading": "Alle Berufe",
-    "professionsIntro": "Wähle deinen Beruf – jede Seite gibt es für Unterlagen und für das Vorstellungsgespräch.",
-    "backToHome": "Zur Startseite"
+    "professionsIntro": "Wähle deinen Beruf – jede Seite gibt es für Unterlagen und für das Vorstellungsgespräch."
   },
   "families": {
     "application": {
@@ -65,11 +64,6 @@
   "breadcrumb": {
     "home": "Start",
     "guides": "Ratgeber"
-  },
-  "meta": {
-    "professionLabel": "Beruf",
-    "languageLabel": "Sprache wechseln",
-    "updatedLabel": "Redaktionell gepflegt"
   },
   "disclaimer": "Diese Seite ist eine redaktionelle Orientierungshilfe von Applo. Anforderungen unterscheiden sich je nach Arbeitgeber, Bundesland und Tarif – im Zweifel gilt die Stellenanzeige."
 }
