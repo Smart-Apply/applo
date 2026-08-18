@@ -418,23 +418,55 @@ const envSchema = z.object({
     }
   }
 
+  // Stripe key shape and mode, checked against APP_ENV rather than NODE_ENV.
+  //
+  // NODE_ENV is 'production' for EVERY deployed stage — staging and prod alike
+  // — so keying this off NODE_ENV forced staging to run a LIVE key or no
+  // payments at all. APP_ENV is the logical stage and is what these rules
+  // belong on.
+  if (env.STRIPE_SECRET_KEY) {
+    const key = env.STRIPE_SECRET_KEY;
+
+    // Catch a placeholder or a truncated paste before it reaches Stripe. A
+    // malformed value is worse than a missing one: `paymentsEnabled` only
+    // checks that the key is non-empty, so the app boots, advertises billing
+    // as live, and then 500s on the first checkout with `Invalid API Key`.
+    if (!/^(sk|rk)_(test|live)_[A-Za-z0-9_]+$/.test(key)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['STRIPE_SECRET_KEY'],
+        message:
+          'STRIPE_SECRET_KEY is not a Stripe key. Expected sk_test_… / rk_test_… / sk_live_… / rk_live_… — check for an unsubstituted placeholder.',
+      });
+    } else {
+      // Restricted keys (rk_…) are Stripe's recommended type over secret keys,
+      // so match on the mode segment rather than an `sk_` prefix.
+      const isLiveKey = key.includes('_live_');
+
+      if (env.APP_ENV === 'prod' && !isLiveKey) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['STRIPE_SECRET_KEY'],
+          message:
+            'STRIPE_SECRET_KEY is a TEST key but APP_ENV=prod. Test keys never move real money — checkouts would appear to succeed and never pay out.',
+        });
+      }
+
+      if (env.APP_ENV !== 'prod' && isLiveKey) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['STRIPE_SECRET_KEY'],
+          message: `STRIPE_SECRET_KEY is a LIVE key but APP_ENV=${env.APP_ENV}. A live key outside prod charges real cards from a test environment.`,
+        });
+      }
+    }
+  }
+
   // Prod hardening: the `disk` and `in-memory` drivers exist for local dev
   // only — they silently lose data when the Fly machine restarts. Refuse
   // to boot if a production build is configured to use them. Override
   // (e.g. for a one-off forensic image) by setting NODE_ENV=development.
   if (env.NODE_ENV !== 'production') return;
-
-  // A test-mode key in prod takes real checkout attempts and silently never
-  // charges anyone; a live key outside prod charges real cards from staging.
-  // Both are quiet failures, so make them loud at boot.
-  if (env.STRIPE_SECRET_KEY?.startsWith('sk_test_')) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['STRIPE_SECRET_KEY'],
-      message:
-        'STRIPE_SECRET_KEY is a TEST key (sk_test_…) but NODE_ENV=production. Test keys never move real money — checkouts would appear to succeed and never pay out.',
-    });
-  }
 
   if (env.STORAGE_DRIVER !== 'r2') {
     ctx.addIssue({

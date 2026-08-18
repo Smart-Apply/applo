@@ -645,9 +645,18 @@ export class ConfigService {
     );
   }
 
-  /** True when the configured key is a Stripe test-mode key. Surfaced in the UI. */
+  /**
+   * True when the configured key is a Stripe test-mode key. Surfaced in the UI.
+   *
+   * Matches the `_test_` mode segment rather than an `sk_test_` prefix:
+   * restricted keys (`rk_test_…`) are the type Stripe recommends over secret
+   * keys, and a prefix check misreads them as live — hiding the "test mode"
+   * banner on a deployment that cannot take real money.
+   */
   get stripeTestMode(): boolean {
-    return this.stripeSecretKey?.startsWith('sk_test_') ?? true;
+    const key = this.stripeSecretKey;
+    if (!key) return true;
+    return key.includes('_test_');
   }
 
   /**

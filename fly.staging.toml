@@ -43,6 +43,7 @@ primary_region = 'fra'
   LLM_PROVIDER = 'azure-openai'
   LOG_LEVEL = 'info'
   NODE_ENV = 'production'
+  APP_ENV = 'int'
   PORT = '3000'
   STORAGE_DRIVER = 'r2'
   # Single staging machine → no need for distributed throttling. Saves the
