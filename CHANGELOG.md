@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.17.0](https://github.com/Smart-Apply/applo/compare/v4.16.0...v4.17.0) (2026-08-18)
+
+
+### Features
+
+* **payments:** Stripe Checkout, Customer Portal, webhook & § 312k cancellation ([#827](https://github.com/Smart-Apply/applo/issues/827)) ([ee6601e](https://github.com/Smart-Apply/applo/commit/ee6601e93801593e322b10a6265a45aadae0f088))
+
+
+### Bug Fixes
+
+* **config:** validate the Stripe key against APP_ENV, not NODE_ENV ([#828](https://github.com/Smart-Apply/applo/issues/828)) ([d8acd83](https://github.com/Smart-Apply/applo/commit/d8acd83d7d49c9c83da3c26397ffff3d6fdd9f15))
+* **web:** correct SEO metadata, JSON-LD and the locale switcher ([#821](https://github.com/Smart-Apply/applo/issues/821) follow-up) ([#824](https://github.com/Smart-Apply/applo/issues/824)) ([8daff56](https://github.com/Smart-Apply/applo/commit/8daff569ee8cb9676d34aa8e016de09e4f50a0dc))
+
 ## [4.16.0](https://github.com/Smart-Apply/applo/compare/v4.15.0...v4.16.0) (2026-08-17)
 
 
