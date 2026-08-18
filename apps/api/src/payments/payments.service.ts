@@ -153,6 +153,15 @@ export class PaymentsService {
       // allowing Stripe to write the collected address back onto them.
       customer_update: { address: 'auto', name: 'auto' },
 
+      // Managed Payments makes Stripe the merchant of record and, as a
+      // side effect, forbids `custom_text` — the API rejects the whole session
+      // with "custom_text cannot be used with Managed Payments". It is ON by
+      // default on new accounts, so this must be set explicitly rather than
+      // relying on the dashboard toggle: the § 356 Abs. 4 BGB waiver and the
+      // § 19 UStG notice below are legally required text, so losing them to an
+      // account-level default flipping is not an acceptable failure mode.
+      managed_payments: { enabled: false },
+
       // Restates the waiver on Stripe's own page, so the last screen before
       // payment carries it too rather than only our pricing page.
       custom_text: {
@@ -657,6 +666,22 @@ export class PaymentsService {
       email: user.email,
       name: [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined,
       metadata: { [CHECKOUT_METADATA.userId]: userId },
+
+      // § 19 UStG notice on the CUSTOMER, not just the one-off checkout.
+      //
+      // `invoice_creation.invoice_data.footer` below only reaches `mode:
+      // 'payment'` sessions — Checkout ignores it for subscriptions, whose
+      // invoices Billing generates itself on every renewal. Setting it here
+      // makes every invoice for this customer inherit the notice: the first
+      // one, and each monthly renewal we never touch again.
+      //
+      // Caveat: this is stamped at customer-creation time. If the business
+      // later leaves the Kleinunternehmerregelung, existing customers keep the
+      // footer until it is cleared — that migration has to update customers,
+      // not just flip PAYMENTS_SMALL_BUSINESS.
+      ...(this.config.paymentsSmallBusiness
+        ? { invoice_settings: { footer: SMALL_BUSINESS_INVOICE_FOOTER } }
+        : {}),
     });
 
     const claimed = await this.prisma.subscription.updateMany({
