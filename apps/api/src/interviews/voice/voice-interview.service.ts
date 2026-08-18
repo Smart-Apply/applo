@@ -86,7 +86,7 @@ export class VoiceInterviewService {
         error: 'VOICE_LIMIT_EXCEEDED',
         remaining: 0,
         limit: Math.floor(capSeconds / 60),
-        upgradeUrl: '/#preise',
+        upgradeUrl: '/pricing',
       });
     }
 

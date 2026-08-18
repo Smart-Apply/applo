@@ -819,6 +819,13 @@ export class SubscriptionService {
       },
       periodStart: usage.periodStart,
       periodEnd: usage.periodEnd,
+      // Billing period (Stripe), distinct from the usage period above: quotas
+      // reset monthly regardless of tier, but a paid plan runs to the date the
+      // customer actually paid through. The cancellation page must quote THIS
+      // one — telling someone their Pro access ends on the quota-reset date
+      // would be wrong.
+      currentPeriodEnd: subscription.currentPeriodEnd,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
       features: limits.features,
     };
   }

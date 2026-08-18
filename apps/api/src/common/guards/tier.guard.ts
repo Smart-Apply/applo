@@ -70,7 +70,7 @@ export class TierGuard implements CanActivate {
         error: 'TIER_REQUIRED',
         requiredTier,
         currentTier,
-        upgradeUrl: '/#preise',
+        upgradeUrl: '/pricing',
       });
     }
 

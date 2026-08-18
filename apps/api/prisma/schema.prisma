@@ -820,6 +820,27 @@ model SubscriptionUsage {
   @@map("subscription_usage")
 }
 
+// Ledger of Stripe webhook events we have already applied.
+//
+// Stripe retries a webhook until it gets a 2xx, and it does not promise
+// exactly-once delivery — the same event id can arrive several times. Most of
+// our handlers are naturally idempotent (setting a tier twice is harmless),
+// but granting add-on credits is not: a replayed
+// `checkout.session.completed` would hand out the pack again for free.
+//
+// The `id` IS the Stripe event id, so the insert itself is the lock: the
+// handler inserts first and treats a unique-constraint violation as "already
+// processed, skip". No advisory locks, no read-then-write race.
+model StripeEvent {
+  id   String @id // Stripe event id (evt_…) — deliberately not a cuid
+  type String
+
+  processedAt DateTime @default(now())
+
+  @@index([processedAt])
+  @@map("stripe_events")
+}
+
 // =====================================
 // KI INTERVIEW COACH (Pro/Premium Feature)
 // =====================================

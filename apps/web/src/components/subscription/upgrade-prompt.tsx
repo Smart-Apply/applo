@@ -58,7 +58,7 @@ export function UpgradePrompt({
   const defaultCta = t('upgradePrompt.defaultCta', { tier: tierLabel });
 
   const handleUpgrade = () => {
-    router.push('/#preise');
+    router.push('/pricing');
   };
 
   // Inline variant - minimal styling
@@ -204,7 +204,7 @@ export function LimitReachedPrompt({
                 {t('limit.description', { used, limit, action: actionLabel })}
               </p>
             </div>
-            <Button onClick={() => router.push('/#preise')} size="sm">
+            <Button onClick={() => router.push('/pricing')} size="sm">
               <Sparkles className="mr-2 h-4 w-4" />
               {t('upgradePrompt.upgradeNow')}
             </Button>

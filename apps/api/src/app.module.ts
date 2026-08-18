@@ -35,6 +35,7 @@ import { UpstashThrottlerStorage } from './common/throttler/upstash-throttler-st
 import { AdminModule } from './admin/admin.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MailboxSyncModule } from './mailbox-sync/mailbox-sync.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -105,6 +106,15 @@ import { MailboxSyncModule } from './mailbox-sync/mailbox-sync.module';
               ttl: 3600000, // 1 hour
               limit: 3, // 3 email requests per hour per user - prevent spam
             },
+            {
+              name: 'payments',
+              ttl: 900000, // 15 minutes
+              // Checkout/portal/cancel are redirect-issuing endpoints: a human
+              // needs a handful, a script hammering them creates Stripe
+              // customers and sessions on our account. NOT applied to the
+              // webhook, which Stripe controls and @SkipThrottle exempts.
+              limit: 20,
+            },
           ],
         };
       },
@@ -128,6 +138,7 @@ import { MailboxSyncModule } from './mailbox-sync/mailbox-sync.module';
     AdminModule,
     AnalyticsModule,
     MailboxSyncModule,
+    PaymentsModule,
     HealthModule,
   ],
   controllers: [CSPViolationController],

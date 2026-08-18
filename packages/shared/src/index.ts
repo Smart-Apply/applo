@@ -99,6 +99,14 @@ export interface SubscriptionUsageStats {
   applicationsToday?: DailyUsageStat;
   periodStart: string;
   periodEnd: string;
+  /**
+   * End of the paid BILLING period (null on FREE). Distinct from `periodEnd`,
+   * which is the monthly quota window — quote this one when telling a user
+   * when their paid access ends.
+   */
+  currentPeriodEnd?: string | null;
+  /** True once the user has cancelled but the paid period is still running. */
+  cancelAtPeriodEnd?: boolean;
   features: TierFeatures;
 }
 
@@ -127,6 +135,52 @@ export interface AddonPackageInfo {
 export interface TiersResponse {
   tiers: TierInfo[];
   addonPackages: AddonPackageInfo[];
+}
+
+// ============================================
+// Payments (Stripe)
+// ============================================
+
+/** Whether this deployment can actually take money. */
+export interface PaymentsConfig {
+  enabled: boolean;
+  /** null when billing is off; true on Stripe test keys. */
+  testMode: boolean | null;
+  /**
+   * Kleinunternehmerregelung (§ 19 UStG). When true the seller charges no VAT,
+   * so the UI must not claim any is included.
+   */
+  smallBusiness: boolean;
+}
+
+export type CheckoutKind = 'subscription' | 'addon';
+
+export interface CreateCheckoutSessionInput {
+  kind: CheckoutKind;
+  /** Required when kind='subscription'. */
+  tier?: 'PRO' | 'PREMIUM';
+  /** Required when kind='addon'. */
+  pack?: 'SMALL' | 'MEDIUM' | 'LARGE';
+  locale?: string;
+  /**
+   * Consent to immediate performance + waiver of the 14-day withdrawal right
+   * (§ 356 Abs. 4 BGB). The API rejects the checkout without it.
+   */
+  withdrawalWaiver: boolean;
+}
+
+/** Both Checkout and Customer Portal answer with a URL to redirect to. */
+export interface StripeRedirect {
+  url: string;
+}
+
+/** Result of the § 312k BGB cancellation route. */
+export interface CancellationResult {
+  cancelAtPeriodEnd: true;
+  /** When paid access actually ends — null if Stripe didn't report a period. */
+  effectiveAt: string | null;
+  /** Address the text-form confirmation went to, or null if it couldn't be sent. */
+  confirmationSentTo: string | null;
 }
 
 export interface CanPerformActionResult {

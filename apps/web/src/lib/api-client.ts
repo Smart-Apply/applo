@@ -32,6 +32,10 @@ import type {
   TierLimits,
   TiersResponse,
   CanPerformActionResult,
+  PaymentsConfig,
+  CreateCheckoutSessionInput,
+  StripeRedirect,
+  CancellationResult,
   Appointment,
   CreateAppointmentInput,
   UpdateAppointmentInput,
@@ -1124,6 +1128,27 @@ export const api = {
 
     canPerform: (action: 'application' | 'interview') =>
       apiRequest<CanPerformActionResult>(`/subscription/can-perform/${action}`),
+  },
+
+  // Payments (Stripe)
+  payments: {
+    /** Public — tells the pricing page whether checkout is live on this deployment. */
+    getConfig: () => apiRequest<PaymentsConfig>('/payments/config'),
+
+    /** Returns a Stripe-hosted URL; the caller navigates to it. */
+    createCheckoutSession: (input: CreateCheckoutSessionInput) =>
+      apiRequest<StripeRedirect>('/payments/checkout-session', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+
+    /** Stripe Customer Portal: payment method, invoices, plan change. */
+    createPortalSession: () =>
+      apiRequest<StripeRedirect>('/payments/portal-session', { method: 'POST' }),
+
+    /** § 312k BGB cancellation — first-party, not a portal deep-link. */
+    cancelSubscription: () =>
+      apiRequest<CancellationResult>('/payments/cancel-subscription', { method: 'POST' }),
   },
 
   // Interview Coach (Pro/Premium feature)

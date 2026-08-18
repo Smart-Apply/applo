@@ -47,7 +47,7 @@ export default async function FaqPage() {
       <Link href="/datenschutz" className="underline">{chunks}</Link>
     ),
     pricing: (chunks: React.ReactNode) => (
-      <Link href="/#preise" className="underline">{chunks}</Link>
+      <Link href="/pricing" className="underline">{chunks}</Link>
     ),
     home: (chunks: React.ReactNode) => (
       <Link href="/" className="underline">{chunks}</Link>

@@ -71,6 +71,9 @@ export async function LandingFooter() {
           <Link href="/impressum">Impressum</Link>
           <Link href="/datenschutz">Datenschutz</Link>
           <Link href="/agb">AGB</Link>
+          {/* § 312k BGB: the wording is prescribed and the link must be
+              permanently available — do not rename or move behind a login. */}
+          <Link href="/kuendigung">Verträge hier kündigen</Link>
         </div>
         <div className="fcol fmeta">
           <div>{t('footer.compliance')}</div>
