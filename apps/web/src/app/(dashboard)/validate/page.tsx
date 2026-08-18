@@ -169,7 +169,7 @@ export default function ValidatePage() {
             <p className="mt-0.5">
               {t.rich('page.limitReachedDescription', {
                 pricing: (chunks) => (
-                  <Link href="/#preise" className="font-medium underline">
+                  <Link href="/pricing" className="font-medium underline">
                     {chunks}
                   </Link>
                 ),

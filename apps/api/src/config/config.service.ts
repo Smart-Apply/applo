@@ -599,4 +599,64 @@ export class ConfigService {
       this.mailboxTokenEncryptionKey && this.msGraphClientId && this.msGraphClientSecret,
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Payments (Stripe)
+  // ---------------------------------------------------------------------------
+
+  get stripeSecretKey(): string | undefined {
+    return this.nestConfig.get('STRIPE_SECRET_KEY', { infer: true });
+  }
+
+  get stripeWebhookSecret(): string | undefined {
+    return this.nestConfig.get('STRIPE_WEBHOOK_SECRET', { infer: true });
+  }
+
+  /**
+   * Stripe price ids keyed by what the customer is buying. The env schema
+   * guarantees these are all set when `paymentsEnabled` is true, so callers
+   * that go through `paymentsEnabled` can treat a missing value as a bug.
+   */
+  get stripePrices(): {
+    PRO?: string;
+    PREMIUM?: string;
+    ADDON_SMALL?: string;
+    ADDON_MEDIUM?: string;
+    ADDON_LARGE?: string;
+  } {
+    return {
+      PRO: this.nestConfig.get('STRIPE_PRICE_PRO', { infer: true }),
+      PREMIUM: this.nestConfig.get('STRIPE_PRICE_PREMIUM', { infer: true }),
+      ADDON_SMALL: this.nestConfig.get('STRIPE_PRICE_ADDON_SMALL', { infer: true }),
+      ADDON_MEDIUM: this.nestConfig.get('STRIPE_PRICE_ADDON_MEDIUM', { infer: true }),
+      ADDON_LARGE: this.nestConfig.get('STRIPE_PRICE_ADDON_LARGE', { infer: true }),
+    };
+  }
+
+  /**
+   * Whether checkout/portal endpoints may move money. Requires the explicit
+   * `PAYMENTS_ENABLED` switch *and* the secrets — so flipping the switch on a
+   * machine that never got the secrets fails closed instead of 500ing mid-checkout.
+   */
+  get paymentsEnabled(): boolean {
+    return (
+      this.nestConfig.get('PAYMENTS_ENABLED', { infer: true }) === 'true' &&
+      Boolean(this.stripeSecretKey && this.stripeWebhookSecret)
+    );
+  }
+
+  /** True when the configured key is a Stripe test-mode key. Surfaced in the UI. */
+  get stripeTestMode(): boolean {
+    return this.stripeSecretKey?.startsWith('sk_test_') ?? true;
+  }
+
+  /**
+   * Kleinunternehmerregelung (§ 19 UStG). Drives three things that must agree:
+   * whether Stripe Tax computes VAT, whether a USt-IdNr is collected, and what
+   * the pricing page is allowed to say about tax. Defaults to true — see the
+   * env schema for why that is the safe default.
+   */
+  get paymentsSmallBusiness(): boolean {
+    return this.nestConfig.get('PAYMENTS_SMALL_BUSINESS', { infer: true }) !== 'false';
+  }
 }

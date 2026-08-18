@@ -250,7 +250,7 @@ export default function InterviewsPage() {
         </div>
         {isLocked ? (
           <Button asChild size="lg" className="gap-2">
-            <Link href="/#preise">
+            <Link href="/pricing">
               <Lock className="h-4 w-4" />
               {t('page.unlockInterviews')}
             </Link>
@@ -439,7 +439,7 @@ export default function InterviewsPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/#preise"
+                  href="/pricing"
                   aria-label={t('page.lockedAria')}
                   className="absolute inset-0 z-10 flex cursor-not-allowed items-start justify-center rounded-[3px] pt-12"
                 >

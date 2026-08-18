@@ -45,6 +45,7 @@ der Drift-Check prüft.
 | **Upstash Redis** | Upstash Inc., USA — Region EU | Verteiltes Rate-Limiting | Zähler je Nutzerkennung bzw. IP-Adresse, kurze TTL | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` |
 | **Upstash QStash** | Upstash Inc., USA — Region EU | Job-Queue für die Generierungs-Pipeline | **Job-Payloads mit Anwendungs-IDs** (keine Profilinhalte); die Payload wird über QStash transportiert und an unseren Webhook zugestellt | `QSTASH_URL`, `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY`, `QSTASH_WEBHOOK_URL` |
 | **Resend** | Resend Inc., USA | Transaktionale E-Mails (Verifizierung, Passwort-Reset, Benachrichtigungen) | E-Mail-Adresse, Name, Inhalt der jeweiligen Nachricht | `RESEND_API_KEY` |
+| **Stripe** | Stripe Payments Europe Ltd., Irland | Zahlungsabwicklung für Pro/Premium-Abos und Credit-Pakete: Checkout, Kundenkonto-Portal, Rechnungen, wiederkehrende Abbuchungen | E-Mail-Adresse, Name, Rechnungsadresse, ggf. USt-IdNr., gekaufter Tarif bzw. Paket, Zahlungs- und Abo-Verlauf. **Zahlungsdaten (Kartennummer o. Ä.) werden ausschließlich von Stripe erhoben und erreichen unsere Server nie** — der Bezahlvorgang läuft auf einer von Stripe gehosteten Seite. | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | **Sentry** | Functional Software Inc., USA | Fehler-Monitoring **server- und clientseitig** | Stack-Traces, Request-Metadaten, `tracesSampleRate: 0.1` im Browser; personenbezogene Felder werden vor Versand gefiltert | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN` |
 
 ## Offene Punkte

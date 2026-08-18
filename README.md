@@ -24,6 +24,7 @@ AI-powered job application assistant — generate tailored, ATS-optimized cover 
 - **Email tracking (Premium)** — Connect Outlook/Microsoft 365; applo detects company replies (interview invites, confirmations, rejections) and updates the application status automatically. No email bodies are persisted.
 - **Auth & security** — JWT in HttpOnly cookies, refresh-token rotation, multi-device sessions, OAuth (Google, Microsoft, Azure AD) with verified-email account linking (nOAuth guard), 2FA (TOTP), CSRF, rate limiting, audit logs, Sentry
 - **Subscriptions** — Tiered plans with monthly hard limits for AI applications (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95), application checks (3/15/35), and mock interviews (0/5/20). Free PDF downloads have no watermark and use a 15-second ad-supported wait. Add-on packages (10 for €2.99 / 30 for €6.99 / 75 for €14.99) persist until used and are consumed only after the monthly allowance.
+- **Payments (Stripe)** — `/pricing` sells the tiers and the credit packs through Stripe Checkout; the Stripe Customer Portal handles payment method, invoices and plan changes. A paid tier is granted **only** by the signature-verified webhook, never by the browser returning from Stripe, so a closed tab still gets what it paid for. Cancellation is a first-party route (`/kuendigung`) rather than a portal deep-link, because § 312k BGB prescribes the button wording, a confirmation step and an immediate text-form confirmation. Billing is off by default (`PAYMENTS_ENABLED=false`) and the whole app runs without Stripe configured.
 - **Transactional email** — Resend integration
 
 ## 🛠️ Tech Stack
@@ -120,6 +121,7 @@ applo/
 │   │   │   ├── keywords/         # ATS keyword matching
 │   │   │   ├── llm/              # LLM provider abstraction
 │   │   │   ├── mailbox-sync/     # Email Tracking (Premium): MS Graph OAuth + classifier
+│   │   │   ├── payments/         # Stripe Checkout, Customer Portal, webhook, § 312k cancellation
 │   │   │   ├── pdf/              # Thin façade over pdf-v2 (kept for API stability)
 │   │   │   ├── pdf-v2/           # @react-pdf/renderer (TSX templates) + PNG preview generator
 │   │   │   ├── profile/          # Profile CRUD

@@ -5,6 +5,40 @@
 
 ---
 
+## RESOLVED — 2026-08-18: Option A (Stripe), shipped in test mode
+
+Decision taken by the owner after a fee/merchant-of-record comparison. Summary
+of the reasoning, because the landscape moved since this plan was written:
+
+- **Stripe now sells its own Merchant-of-Record product** ("Managed Payments",
+  3.5 % on top of payment fees, indirect-tax compliance in 75+ countries), and
+  **Lemon Squeezy is being folded into it**. So the MoR escape hatch no longer
+  requires a different vendor — it is a config change on the same integration.
+- **Paddle was rejected on price shape, not price level.** Its 5 % + $0.50 is
+  fine at €19.95 and punitive at €2.99, and its own pricing page routes
+  sub-$10 products to custom pricing. Two of the three add-on packs are below
+  that line.
+- Fees on the actual price points (EEA standard card, gross prices): Stripe DIY
+  keeps €7.84 of a €9.95 Pro subscription vs €7.61 on Stripe MoR and €7.40 on
+  Paddle; on the €2.99 pack it is €2.20 / €2.11 / €1.90.
+- Since Stripe standard → Stripe Managed Payments is not a migration, the VAT
+  question does **not** have to be answered before taking the first payment.
+
+**Shipped:** `apps/api/src/payments/` (Checkout, Customer Portal, webhook,
+§ 312k cancellation), `apps/web/src/app/pricing/`,
+`apps/web/src/app/kuendigung/`, `StripeEvent` idempotency model. Billing stays
+behind `PAYMENTS_ENABLED=false` with test keys until the business registration
+and Stripe activation are done.
+
+**Still open (not code):** Gewerbeanmeldung + Steuernummer, Stripe account
+activation, creating the tax-inclusive prices in the Stripe dashboard, and a
+lawyer's read of the § 312k flow (specifically whether the cancellation page
+may require login).
+
+The original decision write-up follows for context.
+
+---
+
 ## Goal
 
 Resolve the gap between a product that enforces paid tiers and a product that

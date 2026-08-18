@@ -315,6 +315,21 @@ export default function DatenschutzPage() {
             </td>
           </tr>
           <tr>
+            <td>Stripe</td>
+            <td>Stripe Payments Europe Ltd., Irland</td>
+            <td>
+              Zahlungsabwicklung für kostenpflichtige Tarife und
+              Credit-Pakete: Bezahlvorgang, Kundenkonto-Portal, Rechnungen und
+              wiederkehrende Abbuchungen. Übermittelt werden E-Mail-Adresse,
+              Name, Rechnungsadresse, ggf. USt-IdNr. sowie der gekaufte Tarif.{' '}
+              <strong>
+                Zahlungsdaten wie Kartennummern erhebt ausschließlich Stripe
+                auf einer von Stripe gehosteten Seite; sie erreichen unsere
+                Server zu keinem Zeitpunkt.
+              </strong>
+            </td>
+          </tr>
+          <tr>
             <td>Sentry</td>
             <td>Functional Software Inc., USA</td>
             <td>

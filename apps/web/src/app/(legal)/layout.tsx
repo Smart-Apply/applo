@@ -50,6 +50,10 @@ export default async function LegalLayout({
             <Link href="/agb" className={`hover:text-foreground ${NAV_LINK}`}>
               AGB
             </Link>
+            {/* § 312k BGB — prescribed wording, permanently available. */}
+            <Link href="/kuendigung" className={`hover:text-foreground ${NAV_LINK}`}>
+              Verträge hier kündigen
+            </Link>
             <Link href="/" className={`hover:text-foreground ${NAV_LINK}`}>
               {t('home')}
             </Link>

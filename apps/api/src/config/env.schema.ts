@@ -345,12 +345,96 @@ const envSchema = z.object({
   // at 4230 minutes (~70.5 h). We renew on a daily cron with a comfortable
   // safety margin. Override only for testing.
   MAILBOX_SUBSCRIPTION_RENEWAL_MARGIN_MINUTES: z.string().default('360'), // 6h
+
+  // -------------------------------------------------------------------------
+  // Payments (Stripe)
+  // -------------------------------------------------------------------------
+  // Master switch. The module always loads (so /payments/config can answer
+  // "billing is off"), but every money-moving endpoint 503s unless this is
+  // true AND the secrets below are present. Keeping it separate from
+  // "are the keys set" means a half-configured deploy fails closed rather
+  // than charging someone with the wrong price id.
+  PAYMENTS_ENABLED: z.enum(['true', 'false']).default('false'),
+
+  // Restricted or standard secret key. `sk_test_…` in dev/staging,
+  // `sk_live_…` only in prod. Never ships to the frontend.
+  STRIPE_SECRET_KEY: z.string().optional(),
+
+  // Signing secret for POST /payments/webhook (`whsec_…`). Each endpoint in
+  // the Stripe dashboard has its own; `stripe listen` prints a different one
+  // for local forwarding.
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+
+  // Price ids (price_…, NOT product ids) for the recurring tiers. These are
+  // the single source of truth for what a customer is charged — TIER_LIMITS
+  // only describes what they get. A mismatch between the two is a silent
+  // billing bug, so `PaymentsService` refuses to start a checkout for a tier
+  // whose price id is unset rather than falling back to anything.
+  STRIPE_PRICE_PRO: z.string().optional(),
+  STRIPE_PRICE_PREMIUM: z.string().optional(),
+
+  // One-off price ids for the persistent add-on credit packs. Keys mirror
+  // ADDON_PACKAGES in subscription.service.ts.
+  STRIPE_PRICE_ADDON_SMALL: z.string().optional(),
+  STRIPE_PRICE_ADDON_MEDIUM: z.string().optional(),
+  STRIPE_PRICE_ADDON_LARGE: z.string().optional(),
+
+  // Kleinunternehmerregelung (§ 19 UStG). Defaults to TRUE because that is the
+  // safe side of this fork: a small business that wrongly displays "inkl. 19 %
+  // MwSt." is claiming to collect a tax it never remits, which is a far worse
+  // failure than a VAT-registered seller temporarily under-advertising.
+  //
+  // When true we must NOT show or charge VAT anywhere: Stripe Tax stays off,
+  // no USt-IdNr is collected (reverse charge is meaningless without VAT), and
+  // every invoice carries the § 19 UStG notice instead of a tax line.
+  // Flip to false only once the Finanzamt has you on Regelbesteuerung AND
+  // Stripe Dashboard → Tax → Locations shows Germany as "Collecting".
+  PAYMENTS_SMALL_BUSINESS: z.enum(['true', 'false']).default('true'),
 }).superRefine((env, ctx) => {
+  // Payments completeness — checked in EVERY environment, deliberately above
+  // the production-only early return below. A half-configured billing setup
+  // is dangerous locally too: without the price ids a checkout silently has
+  // nothing to charge for, and without the webhook secret we accept payment
+  // and never grant the tier.
+  if (env.PAYMENTS_ENABLED === 'true') {
+    const required = [
+      'STRIPE_SECRET_KEY',
+      'STRIPE_WEBHOOK_SECRET',
+      'STRIPE_PRICE_PRO',
+      'STRIPE_PRICE_PREMIUM',
+      'STRIPE_PRICE_ADDON_SMALL',
+      'STRIPE_PRICE_ADDON_MEDIUM',
+      'STRIPE_PRICE_ADDON_LARGE',
+    ] as const;
+
+    for (const key of required) {
+      if (!env[key]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message: `${key} is required when PAYMENTS_ENABLED=true. Set PAYMENTS_ENABLED=false to run without billing.`,
+        });
+      }
+    }
+  }
+
   // Prod hardening: the `disk` and `in-memory` drivers exist for local dev
   // only — they silently lose data when the Fly machine restarts. Refuse
   // to boot if a production build is configured to use them. Override
   // (e.g. for a one-off forensic image) by setting NODE_ENV=development.
   if (env.NODE_ENV !== 'production') return;
+
+  // A test-mode key in prod takes real checkout attempts and silently never
+  // charges anyone; a live key outside prod charges real cards from staging.
+  // Both are quiet failures, so make them loud at boot.
+  if (env.STRIPE_SECRET_KEY?.startsWith('sk_test_')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['STRIPE_SECRET_KEY'],
+      message:
+        'STRIPE_SECRET_KEY is a TEST key (sk_test_…) but NODE_ENV=production. Test keys never move real money — checkouts would appear to succeed and never pay out.',
+    });
+  }
 
   if (env.STORAGE_DRIVER !== 'r2') {
     ctx.addIssue({

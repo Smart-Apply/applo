@@ -100,6 +100,7 @@ applo/
 │   │   │   ├── llm/               # LLM provider abstraction + usage telemetry & anonymised export
 │   │   │   ├── logger/            # Pino + Winston audit
 │   │   │   ├── mailbox-sync/      # Email Tracking (Premium): MS Graph OAuth + classifier
+│   │   │   ├── payments/          # Stripe: Checkout, Customer Portal, webhook, § 312k cancellation
 │   │   │   ├── pdf/               # Thin façade over pdf-v2 (kept for caller API stability)
 │   │   │   ├── pdf-v2/            # @react-pdf/renderer (TSX templates) + PNG previews
 │   │   │   ├── prisma/            # PrismaService (pg adapter)
@@ -313,7 +314,8 @@ grounding-specific decisions live in
 | **Session**        | Device/IP/UA tracking                          |
 | **UserPreferences**| Per-user settings — notifications, language, theme, privacy, and `onboardingCompleted` (guides the first-login product tour; set once the user finishes or skips it) |
 | **InviteCode**     | RETIRED — beta gate removed; schema row kept until a follow-up release drops it (expand→contract) |
-| **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`) |
+| **Subscription**   | Plan, usage counters & persistent add-on credits (`addonCreditsRemaining`), plus the Stripe link (`stripeCustomerId` / `stripeSubscriptionId` / `stripePriceId`, `currentPeriodEnd`, `cancelAtPeriodEnd`) |
+| **StripeEvent**    | Idempotency ledger for Stripe webhooks. The `id` IS the Stripe event id, so the insert is the lock — a replayed `checkout.session.completed` hits the unique constraint instead of granting a credit pack twice |
 | **AuditLog**       | Security event log                             |
 | **LlmUsageEvent**  | Per-feature LLM token-usage event — NO `User` FK, keyed by an HMAC-SHA256 `actorHash`; no prompt/response content ever stored. **Pseudonymous, not anonymous**: a row burst is time-correlatable to the `Application`/`Validation`/`InterviewSession` that triggered it, so GDPR erasure applies — both account-deletion paths erase by recomputed hash, and a daily cron deletes rows older than `LLM_USAGE_RETENTION_DAYS` (default 90). Read back only through the aggregate-only `/admin/llm-usage/*` endpoints (`actorHash` is never filtered on, grouped by, or returned); the admin-only export (`/admin/llm-usage/export`) anonymises the rows for ML/due-diligence use — see [docs/security/LLM_USAGE_DATASET.md](docs/security/LLM_USAGE_DATASET.md) |
 
@@ -525,6 +527,12 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET    | `/health`               | Health check (infra deps only — DB, storage, queue, templates; no LLM probe) |
 | GET    | `/health/live` · `/health/ready` | Liveness/readiness probes (throttle-exempt; used by Fly checks)     |
 | POST   | `/contact`              | Contact form                                                                 |
+| GET    | `/payments/config`      | Whether checkout is live on this deployment (drives the pricing-page CTA)    |
+| POST   | `/payments/webhook`     | Stripe webhook — signature-verified on the raw body, CSRF-exempt, the ONLY path that grants a paid tier |
+
+> **VAT depends on `PAYMENTS_SMALL_BUSINESS` (default `true`).** Under the Kleinunternehmerregelung (§ 19 UStG) the seller charges no VAT, so Checkout sends `automatic_tax: { enabled: false }`, collects no USt-IdNr, prints the § 19 notice on invoices, and `/pricing` says "Kein Ausweis von Umsatzsteuer" instead of "inkl. 19 % MwSt.". Set the flag to `false` only on Regelbesteuerung: Checkout then enables `automatic_tax` with tax-inclusive prices (§ 1 PAngV gross display) and `tax_id_collection` for EU reverse charge. Tax is only actually collected where an active registration exists — Stripe returns zero tax without one and raises no error, so registrations must be verified per environment before going live.
+
+> **Right of withdrawal (§ 356 Abs. 4 BGB).** Applo is a digital service that starts immediately, so a purchase is only final once the customer expressly consents to immediate performance and acknowledges losing the 14-day withdrawal right. `POST /payments/checkout-session` **rejects** a request without `withdrawalWaiver: true`, the consent timestamp is written into the Stripe session metadata as dispute evidence, and the waiver is restated on Stripe's own page via `custom_text`. Without this, a customer can use a whole credit pack and still demand a full refund on day 13.
 
 ### Protected
 
@@ -558,6 +566,9 @@ All routes are prefixed `/api/v1` and documented at <http://localhost:3000/docs>
 | GET      | `/mailbox-sync/microsoft/callback` | OAuth redirect target (public)                                              |
 | POST     | `/mailbox-sync/microsoft/webhook`  | MS Graph push notifications (public)                                        |
 | DELETE   | `/mailbox-sync/connections/:id`    | Disconnect mailbox (Premium)                                                |
+| POST     | `/payments/checkout-session`       | Start a Stripe Checkout session (tier subscription or one-off credit pack)   |
+| POST     | `/payments/portal-session`         | Open the Stripe Customer Portal (payment method, invoices, plan change)      |
+| POST     | `/payments/cancel-subscription`    | § 312k BGB cancellation — cancels at period end + sends the text-form confirmation |
 | GET      | `/templates`                       | Template catalog (registry-filtered: only designs with a react-pdf factory) |
 | GET      | `/sessions`                        | Active sessions                                                             |
 | DELETE   | `/sessions/:id`                    | Remote logout                                                               |

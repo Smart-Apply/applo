@@ -269,15 +269,17 @@ async function bootstrap() {
   //   token to fetch a CSRF token, but refresh is called precisely when the
   //   access token has expired.
   // - External webhooks — POSTed by third-party services (QStash, Microsoft
-  //   Graph) that cannot carry our CSRF token. They authenticate via their own
-  //   signature (Upstash-Signature) / per-connection clientState secret, which
-  //   is the real trust boundary. Without these exemptions, enabling CSRF in
-  //   prod silently 403s every QStash delivery → application generation jobs
-  //   dead-letter and stick in GENERATING forever.
+  //   Graph, Stripe) that cannot carry our CSRF token. They authenticate via
+  //   their own signature (Upstash-Signature, Stripe-Signature) / per-connection
+  //   clientState secret, which is the real trust boundary. Without these
+  //   exemptions, enabling CSRF in prod silently 403s every QStash delivery →
+  //   application generation jobs dead-letter and stick in GENERATING forever,
+  //   and every Stripe delivery → paying customers never get their tier.
   const csrfExemptPaths = new Set([
     '/api/v1/auth/refresh',
     '/api/v1/jobs/qstash-webhook',
     '/api/v1/mailbox-sync/microsoft/webhook',
+    '/api/v1/payments/webhook',
   ]);
   if (configService.enableCsrf && doubleCsrfProtection) {
     app.use((req, res, next) => {

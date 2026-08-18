@@ -237,6 +237,12 @@ The privacy policy is a **legal statement about what the code does**, so a code 
 - `logger` — Pino + Winston audit logger
 - `mailbox-sync` — **Email Tracking (Premium)**: OAuth inbox sync (Microsoft Graph; Gmail planned). Detects company replies in the user's inbox, classifies them with the LLM, and updates the matching `Application.applicationStatus` automatically. Encrypts refresh tokens at rest (AES-256-GCM, `MAILBOX_TOKEN_ENCRYPTION_KEY`). No email bodies are persisted — only metadata + classification. **Order matters for data minimisation:** the deterministic matcher (`application-matcher`) runs **before** the LLM call, so a message that can't be tied to one of the user's own applications is never transmitted to a third party and never stored; the transmitted body is capped at 1,200 chars, and `OTHER` classifications are dropped instead of persisted. Never reorder the matcher after the classifier "to improve recall" — that turns the user's whole inbox into LLM input. `ApplicationEmailEvent` rows age out after `MAILBOX_EVENT_RETENTION_DAYS` (default 180).
 - `pdf` — thin façade over `pdf-v2/ReactPdfRendererService`. Kept so external callers (`application.processor.ts`, tests) preserve the `PdfService` API surface. Throws when a template has no react-pdf factory registered.
+- `payments` — Stripe billing. `StripeService` owns the lazily-built client and the "is billing live?" question (`PAYMENTS_ENABLED` **and** the secrets); `PaymentsService` owns checkout, the Customer Portal, the § 312k cancellation and the webhook dispatcher. Three rules this module is built around, none of them optional:
+  1. **The webhook is the only grant path.** A paid tier comes from `customer.subscription.*` and a credit pack from `checkout.session.completed` / `checkout.session.async_payment_succeeded` — never from the browser returning to `/pricing?checkout=success`, which the user controls and may never visit. Handling subscriptions in *both* places would grant twice on purchase and never on renewal.
+  2. **Every event is claimed before it is applied** via the `StripeEvent` insert (see Data Model). Stripe retries until it gets a 2xx and does not promise exactly-once delivery.
+  3. **The tier is read from the price id, not the checkout metadata** (`tierForPriceId`), because a plan change made inside the Customer Portal swaps the price and leaves the original metadata behind.
+
+  `POST /payments/webhook` must stay in `csrfExemptPaths` ([main.ts](../apps/api/src/main.ts)) and `@SkipThrottle()` — Stripe can carry neither a CSRF token nor our rate-limit budget; its `Stripe-Signature` (verified against `req.rawBody`, constant-time + 5-minute timestamp tolerance) is the trust boundary. A dropped exemption is silent: deliveries 403, paying customers simply never get upgraded. The module loads unconditionally so `GET /payments/config` can answer "billing is off" on a deploy with no Stripe secrets at all.
 - `pdf-v2` — the active PDF subsystem. Owns `ReactPdfRendererService` (TSX → PDF buffer), `PreviewRendererService` (PDF → PNG via `pdfjs-dist` + `@napi-rs/canvas`), the template registry, `design-tokens.ts` (the per-application `TemplateSettings` scale math — font scale ±8 %, density spacing/line-height factors, `normalizeTemplateSettings` read-guard, `resolveFontStack` font selection; all templates resolve their base FS/SP tables through `resolveDesignTokens`), bundled **OFL font families** (Lato, Source Sans 3, Merriweather under `apps/api/assets/fonts/`, registered lazily by `react-pdf-loader.ts`; unregistered/missing families degrade to the design's built-in Helvetica/Times faces), and the shared template-data types. See [`.github/skills/pdf-react-pdf-template.md`](./skills/pdf-react-pdf-template.md) for the porting recipe. Quick standalone check (incl. the fontScale × density settings matrix + a render per bundled family): `npx ts-node -r tsconfig-paths/register scripts/validate-react-pdf-templates.ts`.
 - `prisma` — PrismaService
 - `profile` — CRUD with **differential updates** (Skills, Experiences, Education, Certificates, Projects, Languages)
@@ -257,6 +263,8 @@ The privacy policy is a **legal statement about what the code does**, so a code 
     - `template.tsx` - zero-JS Server Component route transition (`.motion-page-enter`). Templates are keyed by **pathname only**, so `?section=`/`?status=` navigations do NOT remount and never discard in-progress form state.
     - `<segment>/loading.tsx` - route-level skeleton fallbacks built from `components/shared/skeletons.tsx`
   - `(legal)/` - Impressum, Datenschutz, AGB, FAQ
+  - `pricing/` - **static top-level** route (works logged-out): tier cards → Stripe Checkout, add-on credit packs, Customer Portal entry point. Deliberately outside `(dashboard)` because a paywall must be reachable before login.
+  - `kuendigung/` - § 312k BGB cancellation. Linked from both footers with the statute's prescribed wording ("Verträge hier kündigen"); the confirm button must stay labelled "jetzt kündigen". Not a Stripe-portal deep-link — the statute requires the route, its confirmation page and its text-form acknowledgement to be ours.
   - `(seo)/[locale]/…` - **programmatic SEO** (162 indexable pages). `[locale]` → guide hub, `[locale]/[family]` → family hub, `[locale]/[family]/[slug]` → entity page. Localized family + profession slugs; a slug from the wrong locale 404s. All Server Components; each page builds canonical + 6 hreflang + `x-default` via `lib/seo/urls.ts#alternatesFor`.
   - `sitemap.ts` / `robots.ts` - discovery (167 URLs with `xhtml:link` alternates; app routes disallowed). Both are statically prerendered.
   - `page.tsx` - Landing page (**Server Component**: `generateMetadata` + JSON-LD, sections composed from `components/landing/*`)
@@ -301,7 +309,8 @@ is authoritative):
 - **Appointment** (dashboard interview-calendar entry — `date` (date-only) + optional `startTime` "HH:mm", `note`, `emailReminder` intent; user-scoped, `@@index([userId, date])`)
 - **RefreshToken**, **Session** (auth/security)
 - **InviteCode** (RETIRED — the closed-beta gate was removed; the model + `User.inviteCodeRedeemed` stay in the schema only until a follow-up release drops them, per the expand→contract rule)
-- **Subscription** (plans & usage) — monthly hard limits for applications (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95), Bewerbungs-Checks (3/15/35), and mock interviews (0/5/20), with `Subscription.addonCreditsRemaining` holding purchased add-on credits (packages of 10/30/75) that persist until used and are consumed after the tier allowance
+- **Subscription** (plans & usage) — monthly hard limits for applications (Free 3 / Pro 50 @ €9.95 / Premium 100 @ €19.95), Bewerbungs-Checks (3/15/35), and mock interviews (0/5/20), with `Subscription.addonCreditsRemaining` holding purchased add-on credits (packages of 10/30/75) that persist until used and are consumed after the tier allowance. Also carries the Stripe link (`stripeCustomerId`/`stripeSubscriptionId`/`stripePriceId`, `currentPeriodEnd`, `cancelAtPeriodEnd`) written by the payments webhook.
+- **StripeEvent** (`stripe_events`) — webhook idempotency ledger. The `id` IS the Stripe event id, so the INSERT is the lock: `PaymentsService.handleEvent` claims the event before doing any work and treats a P2002 as "already applied". Without it a replayed `checkout.session.completed` grants a credit pack twice. ⚠️ The claim is **deleted again if the handler throws** — the row commits on its own transaction, so leaving it behind would make Stripe's retry short-circuit as a duplicate and answer 200, losing the purchase the retry existed to save.
 - **AuditLog** (security events)
 - **MailboxConnection**, **ApplicationEmailEvent** (email tracking — Premium)
 - **LlmUsageEvent** (issue #522 — per-feature LLM token-usage event; NO `User` FK, keyed by an HMAC-SHA256 `actorHash` derived from `LLM_USAGE_HASH_SALT`; never stores prompt/response content; unset salt disables tracking entirely. **Pseudonymous, not anonymous** — erased on account deletion, swept after `LLM_USAGE_RETENTION_DAYS`; see the `llm` module notes)
@@ -415,6 +424,24 @@ Implementation note: aggregation uses composed `Prisma.sql` (Prisma's typed `gro
 ### User Preferences (Protected)
 
 **GET/PUT /api/v1/user-preferences** — per-user settings, incl. `onboardingCompleted` (set to `true` once the user finishes or skips the in-app product tour, so it never auto-opens again)
+
+### Payments (Stripe)
+
+Off by default — `GET /payments/config` reports `{ enabled: false }` and every other route 503s until `PAYMENTS_ENABLED=true` **and** the Stripe secrets are present.
+
+**GET /api/v1/payments/config** — public. `{ enabled, testMode }`; drives whether the pricing page renders a buy button or a "billing not live yet" notice.
+**POST /api/v1/payments/checkout-session** — `{ kind: 'subscription' | 'addon', tier?: 'PRO'|'PREMIUM', pack?: 'SMALL'|'MEDIUM'|'LARGE', locale?, withdrawalWaiver: true }` → `{ url }`. Every selector field is an allow-listed enum: the value picks a Stripe **price id**, so a free string would let the caller choose what they're charged. Throttled `payments` (20/15min).
+
+⚠️ **`withdrawalWaiver` is not optional and must not be defaulted server-side.** Applo is a digital service that starts immediately, so under § 356 Abs. 4 BGB the 14-day right of withdrawal only lapses if the consumer *expressly* consented to immediate performance and acknowledged losing it. The endpoint 400s (`WITHDRAWAL_WAIVER_REQUIRED`) without it, the consent timestamp goes into the Stripe session metadata as dispute evidence, and `custom_text` restates it on Stripe's page. Remove the check and every purchase becomes refundable for 14 days *after* the customer has consumed the allowance. The matching checkbox is on `/pricing` and starts unticked.
+**POST /api/v1/payments/portal-session** — → `{ url }` for the Stripe Customer Portal.
+**POST /api/v1/payments/cancel-subscription** — § 312k BGB. Sets `cancel_at_period_end` (never immediate — the period is paid for) and sends the text-form confirmation stating contract, receipt date/time and end date. Returns `{ cancelAtPeriodEnd, effectiveAt, confirmationSentTo }`.
+**POST /api/v1/payments/webhook** — public, Stripe-signed, CSRF-exempt, `@SkipThrottle()`. Handles `checkout.session.completed` + `checkout.session.async_payment_succeeded` (add-on credits only), `checkout.session.async_payment_failed`, `customer.subscription.created|updated|deleted`, `invoice.payment_failed`. A 400 is returned for a bad signature (retrying can't help); anything else rethrows so Stripe retries — a swallowed error means someone paid and never got their tier.
+
+⚠️ **Delayed payment methods pay late.** SEPA Direct Debit, Sofort and Klarna are common in DE and settle hours-to-days after checkout. `checkout.session.completed` therefore arrives with `payment_status: 'unpaid'` and grants nothing; `async_payment_succeeded` is the real fulfilment signal and re-enters the same handler. Fulfilling on `completed` alone would grant credits for payments that later fail *and* never grant the ones that succeed.
+
+⚠️ **PAST_DUE keeps the tier.** `invoice.payment_failed` sets the status but not the tier; Stripe's dunning gets a chance to recover the card, and `customer.subscription.deleted` is what downgrades to FREE. Yanking access on the first failed charge punishes an expired card. Add-on credits **survive** a downgrade — they were bought outright, not rented with the tier.
+
+Frontend: `/pricing` (static top-level route, works logged-out) and `/kuendigung` (§ 312k, linked from both footers with the prescribed wording "Verträge hier kündigen"). Never rename that link or move it behind a login.
 
 ### Interviews (Protected, Pro/Premium — `@RequiresFeature('interviewCoach')`)
 
@@ -870,6 +897,28 @@ SENTRY_ENVIRONMENT=development
 
 # Admin (comma-separated, case-insensitive). Leave empty to disable /admin/*.
 ADMIN_EMAILS=you@example.com,coworker@example.com
+
+# Payments (Stripe). Off by default; the app runs fine without it. When true,
+# ALL of the values below are required or the API refuses to boot (env schema).
+# NODE_ENV=production additionally rejects an sk_test_ key.
+PAYMENTS_ENABLED=false
+STRIPE_SECRET_KEY=sk_test_...
+# Per-endpoint secret. `stripe listen --forward-to \
+#   localhost:3000/api/v1/payments/webhook` prints a DIFFERENT one for local use.
+STRIPE_WEBHOOK_SECRET=whsec_...
+# PRICE ids (price_…), not product ids. Create them tax-INCLUSIVE — German B2C
+# prices must be displayed gross (§ 1 PAngV) and €9.95 is the gross figure the
+# UI advertises.
+STRIPE_PRICE_PRO=price_...
+STRIPE_PRICE_PREMIUM=price_...
+STRIPE_PRICE_ADDON_SMALL=price_...
+STRIPE_PRICE_ADDON_MEDIUM=price_...
+STRIPE_PRICE_ADDON_LARGE=price_...
+# Kleinunternehmerregelung (§ 19 UStG). TRUE is the safe default — a small
+# business charges no VAT, so "inkl. 19 % MwSt." would advertise a tax that is
+# never remitted. Drives THREE things that must agree: automatic_tax off,
+# no tax_id_collection, § 19 footer on invoices, and the /pricing VAT line.
+PAYMENTS_SMALL_BUSINESS=true
 
 # Email Tracking (Premium feature) — OAuth Inbox Sync
 # AES-256-GCM key (32 bytes hex) for encrypting persisted refresh tokens.

@@ -118,7 +118,7 @@ export default async function Home() {
           name: t(`pricing.plans.${plan}.name`),
           price: PLAN_PRICES[plan],
           priceCurrency: 'EUR',
-          url: `${SITE_URL}/#preise`,
+          url: `${SITE_URL}/pricing`,
         })),
       },
     ],

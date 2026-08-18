@@ -78,7 +78,7 @@ export function PremiumSupportCard() {
       </CardHeader>
       <CardContent>
         <Button asChild variant="outline" className="gap-2">
-          <Link href="/#preise">
+          <Link href="/pricing">
             <Lock className="h-4 w-4" />
             {t('premiumSupport.unlock')}
           </Link>
